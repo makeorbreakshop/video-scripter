@@ -61,7 +61,7 @@ interface ProcessStatus {
 
 // Types for debug data
 interface DebugData {
-  status: 'loading' | 'success' | 'error';
+  status: 'loading' | 'success' | 'error' | 'initial';
   videoId: string;
   videoTitle?: string;
   transcriptLength?: number;
@@ -107,7 +107,7 @@ export default function DatabasePage() {
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [debugModalOpen, setDebugModalOpen] = useState(false);
   const [debugData, setDebugData] = useState<DebugData>({
-    status: 'loading',
+    status: 'initial',
     videoId: '',
   });
   
@@ -323,32 +323,152 @@ export default function DatabasePage() {
   
   // Analyze a processed video with Skyscraper method
   const analyzeVideo = async (videoId: string) => {
+    // Get video details
+    const video = videos.find(v => v.id === videoId);
+    
+    // Create the full system prompt based on the Skyscraper Analysis Framework
+    const fullSystemPrompt = `
+You are an expert video content analyzer using the Skyscraper Analysis Framework. Your task is to analyze a YouTube video based on its transcript and comments.
+
+The Skyscraper Analysis Framework consists of:
+
+1. Content Analysis: Structure, key points, technical information, expertise elements, visual cues
+2. Audience Analysis: Sentiment, praise points, questions/gaps, use cases, demographic signals, engagement patterns
+3. Content Gap Assessment: Missing information, follow-up opportunities, clarity issues, depth/breadth balance
+4. Framework Elements: Overall structure, section ratios, information hierarchy, pacing/flow
+5. Engagement Techniques: Hook strategy, retention mechanisms, pattern interrupts, interaction prompts
+6. Value Delivery Methods: Information packaging, problem-solution framing, practical application, trust building
+7. Implementation Blueprint: Content template, key sections, engagement points, differentiation opportunities, CTA strategy
+
+Provide a comprehensive analysis with specific, actionable insights. Format your response as a structured JSON object that matches the following schema:
+
+{
+  "content_analysis": {
+    "structural_organization": [
+      {"title": "Section Name", "start_time": "MM:SS", "end_time": "MM:SS", "description": "Brief description"}
+    ],
+    "key_points": [
+      {"point": "Main point", "timestamp": "MM:SS", "elaboration": "Details about this point"}
+    ],
+    "technical_information": [
+      {"topic": "Technical topic", "details": "Specific technical details mentioned"}
+    ],
+    "expertise_elements": "Analysis of how expertise is demonstrated",
+    "visual_elements": [
+      {"element": "Visual element", "purpose": "How it supports the content"}
+    ]
+  },
+  "audience_analysis": {
+    "sentiment_overview": {
+      "positive": 0.7,
+      "neutral": 0.2,
+      "negative": 0.1,
+      "key_themes": ["Theme 1", "Theme 2"]
+    },
+    "praise_points": [
+      {"topic": "What viewers praised", "frequency": "high/medium/low", "examples": ["Example comment"]}
+    ],
+    "questions_gaps": [
+      {"question": "Common question", "frequency": "high/medium/low", "context": "When/why this comes up"}
+    ],
+    "use_cases": [
+      {"case": "How viewers use this information", "context": "Details about this use case"}
+    ],
+    "demographic_signals": {
+      "expertise_level": "beginner/intermediate/advanced",
+      "industry_focus": ["Industry 1", "Industry 2"],
+      "notable_segments": ["Segment description"]
+    },
+    "engagement_patterns": [
+      {"pattern": "Engagement pattern", "indicators": ["Indicator 1", "Indicator 2"]}
+    ]
+  },
+  "content_gaps": {
+    "missing_information": [
+      {"topic": "Missing topic", "importance": "high/medium/low", "context": "Why this matters"}
+    ],
+    "follow_up_opportunities": "Analysis of potential follow-up content",
+    "clarity_issues": "Areas where viewers expressed confusion",
+    "depth_breadth_balance": "Assessment of content depth vs breadth"
+  },
+  "framework_elements": {
+    "overall_structure": "Analysis of the video's structural approach",
+    "section_ratios": {
+      "introduction": 0.1,
+      "main_content": 0.7,
+      "conclusion": 0.2
+    },
+    "information_hierarchy": "How information is prioritized and organized",
+    "pacing_flow": "Analysis of content pacing and transitions"
+  },
+  "engagement_techniques": {
+    "hook_strategy": "Analysis of how the video hooks viewers",
+    "retention_mechanisms": [
+      {"technique": "Retention technique", "implementation": "How it's used", "effectiveness": "high/medium/low"}
+    ],
+    "pattern_interrupts": [
+      {"type": "Type of pattern interrupt", "timestamp": "MM:SS", "purpose": "Why it's used here"}
+    ],
+    "interaction_prompts": [
+      {"prompt_type": "Type of prompt", "implementation": "How it's presented"}
+    ]
+  },
+  "value_delivery": {
+    "information_packaging": "How information is structured for value",
+    "problem_solution_framing": "How problems and solutions are presented",
+    "practical_application": [
+      {"application": "Practical use", "context": "How it's presented"}
+    ],
+    "trust_building": [
+      {"element": "Trust element", "implementation": "How trust is built"}
+    ]
+  },
+  "implementation_blueprint": {
+    "content_template": "Template for similar content",
+    "key_sections": [
+      {"section": "Recommended section", "purpose": "Why include this", "content_guidance": "What to include"}
+    ],
+    "engagement_points": [
+      {"point": "Engagement opportunity", "implementation": "How to implement"}
+    ],
+    "differentiation_opportunities": [
+      {"opportunity": "Way to differentiate", "implementation": "How to implement"}
+    ],
+    "cta_strategy": "Call-to-action approach"
+  }
+}
+
+Ensure your analysis is comprehensive, specific, and actionable. Focus on extracting patterns that can be applied to future content creation.
+`;
+
+    const fullUserPrompt = `Please analyze this video content using the Skyscraper Analysis Framework to understand its structure, audience response, and key success factors. The video has ${video?.transcriptLength?.toLocaleString()} characters of transcript content and ${video?.commentCount} comments to analyze.
+
+Focus on:
+1. Identifying the key structural elements and how they contribute to the video's effectiveness
+2. Understanding audience engagement patterns and sentiment through comment analysis
+3. Extracting actionable insights that can be applied to future content creation
+4. Identifying content gaps and opportunities for follow-up content
+5. Understanding the video's hook strategy and retention mechanisms
+6. Analyzing how value is delivered and trust is built with the audience
+7. Creating a practical implementation blueprint for similar content`;
+
     // Initialize debug data
     setDebugData({
-      status: 'loading',
+      status: 'initial',
       videoId,
-      videoTitle: videos.find(v => v.id === videoId)?.title,
-      transcriptLength: videos.find(v => v.id === videoId)?.transcriptLength,
-      commentCount: videos.find(v => v.id === videoId)?.commentCount,
-      systemPrompt: "You are an expert video content analyzer. Your task is to analyze the video's transcript and comments to extract insights about its structure, audience engagement, and success factors.",
-      userPrompt: "Please analyze this video content using the Skyscraper Analysis Framework to understand its structure, audience response, and key success factors.",
+      videoTitle: video?.title,
+      transcriptLength: video?.transcriptLength,
+      commentCount: video?.commentCount,
+      systemPrompt: fullSystemPrompt,
+      userPrompt: fullUserPrompt,
     });
     
-    // Update process status
-    setProcessStatus(prev => ({
-      ...prev,
-      status: 'processing',
-      progress: 0,
-      message: 'Starting analysis...',
-      isOpen: true
-    }));
-
     // Show the debug modal without starting analysis
     setDebugModalOpen(true);
   };
   
   // Update the startAnalysis function
-  const startAnalysis = async () => {
+  const startAnalysis = async (modelId?: string) => {
     try {
       const videoId = debugData.videoId;
       
@@ -358,7 +478,7 @@ export default function DatabasePage() {
         message: 'Starting video analysis...',
         step: 1,
         progress: 5,
-        isOpen: true
+        isOpen: false
       });
 
       // Simulate progress for demo purposes
@@ -407,7 +527,8 @@ export default function DatabasePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           videoId,
-          userId: "00000000-0000-0000-0000-000000000000"
+          userId: "00000000-0000-0000-0000-000000000000",
+          modelId: modelId || "claude-3-7-sonnet-20240620" // Use provided model or default to Claude 3.7 Sonnet
         }),
       });
       
@@ -434,7 +555,7 @@ export default function DatabasePage() {
         message: 'Video analyzed successfully with Claude!',
         step: 'analyzing-pattern',
         progress: 100,
-        isOpen: true
+        isOpen: false
       });
       
       toast({
@@ -453,7 +574,7 @@ export default function DatabasePage() {
         status: 'error',
         message: error instanceof Error ? error.message : "Failed to analyze video",
         progress: 0,
-        isOpen: true
+        isOpen: false
       });
       
       toast({
