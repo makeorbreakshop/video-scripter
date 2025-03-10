@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getUserVideos } from '@/lib/vector-db-service';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -18,90 +17,103 @@ import { supabase } from '@/lib/supabase';
  *     processed: boolean,
  *     processingDate: string,
  *     analyzed: boolean,
- *     analysisPhases: number
+ *     analysisPhases: number,
+ *     transcriptLength: number,
+ *     wordCount: number,
+ *     commentCount: number
  *   }>
  * }
  */
 export async function GET(request: Request) {
   try {
-    // For now we're using a default user ID
-    // In a production app, you'd get this from an auth session
-    const userId = "00000000-0000-0000-0000-000000000000";
-    
-    // Get videos from the database
-    const videos = await getUserVideos(userId);
-    
-    if (videos.length === 0) {
-      return NextResponse.json({ videos: [] });
+    // Get user ID from query params, use default if not provided
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || '00000000-0000-0000-0000-000000000000';
+
+    console.log('🔍 Retrieving videos for user', userId);
+
+    // First get all videos for this user
+    const { data: videos, error: videosError } = await supabase
+      .from('videos')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (videosError) {
+      console.error('Error fetching videos:', videosError);
+      return NextResponse.json(
+        { error: 'Failed to fetch videos' },
+        { status: 500 }
+      );
     }
-    
-    // Get chunk counts for all videos in a more efficient way
-    // First get all chunks for these videos
-    const { data: chunks, error: chunksError } = await supabase
-      .from('chunks')
-      .select('video_id')
-      .eq('user_id', userId)
-      .in('video_id', videos.map(v => v.id));
-    
-    if (chunksError) {
-      console.error('Error retrieving chunks:', chunksError);
-    }
-    
-    // Count chunks per video
-    const chunkCountMap: Record<string, number> = {};
-    (chunks || []).forEach(chunk => {
-      chunkCountMap[chunk.video_id] = (chunkCountMap[chunk.video_id] || 0) + 1;
-    });
-    
-    // Get analysis data for all videos
-    const { data: analyses, error: analysesError } = await supabase
-      .from('analyses')
-      .select('video_id, phase')
-      .eq('user_id', userId)
-      .in('video_id', videos.map(v => v.id));
-      
-    if (analysesError) {
-      console.error('Error retrieving analyses:', analysesError);
-    }
-    
-    // Count analysis phases per video
-    const analysisMap: Record<string, number[]> = {};
-    (analyses || []).forEach(analysis => {
-      if (!analysisMap[analysis.video_id]) {
-        analysisMap[analysis.video_id] = [];
+
+    // For each video, get the chunks to calculate comment count and transcript length
+    const videosWithCounts = await Promise.all(videos.map(async (video) => {
+      // Get all chunks for this video
+      const { data: chunks, error: chunksError } = await supabase
+        .from('chunks')
+        .select('content, content_type, metadata')
+        .eq('video_id', video.id);
+
+      if (chunksError) {
+        console.error('Error fetching chunks for video', video.id, chunksError);
+        return video;
       }
-      if (!analysisMap[analysis.video_id].includes(analysis.phase)) {
-        analysisMap[analysis.video_id].push(analysis.phase);
-      }
-    });
-    
-    // Transform the data for the frontend
-    const formattedVideos = videos.map((video) => {
-      const videoAnalyses = analysisMap[video.id] || [];
+
+      // Get transcript chunks and calculate total length
+      const transcriptChunks = chunks?.filter(chunk => chunk.content_type === 'transcript') || [];
+      const transcriptLength = transcriptChunks.reduce((acc, chunk) => acc + chunk.content.length, 0);
       
+      // Calculate word count from transcript chunks
+      const wordCount = transcriptChunks.reduce((acc, chunk) => {
+        return acc + (chunk.content.split(/\s+/).length || 0);
+      }, 0);
+
+      // Get comment chunks and count unique comments
+      const commentChunks = chunks?.filter(chunk => 
+        chunk.content_type === 'comment' || chunk.content_type === 'comment_cluster'
+      ) || [];
+
+      // Count comments properly
+      let commentCount = 0;
+
+      // Process both standard comments and comment clusters
+      commentChunks.forEach(chunk => {
+        if (chunk.content_type === 'comment_cluster') {
+          // For clusters, use the commentCount from metadata
+          commentCount += chunk.metadata?.commentCount || 0;
+        } else {
+          // For standard comments, count each as 1
+          commentCount += 1;
+        }
+      });
+
+      // Format for the client interface
       return {
         id: video.id,
-        title: video.title,
-        channelTitle: video.channelId,
-        viewCount: video.viewCount,
-        totalChunks: chunkCountMap[video.id] || 0,
+        title: video.title || 'Untitled',
+        channelTitle: video.channel_id || 'Unknown Channel',
+        viewCount: video.view_count || 0,
+        totalChunks: chunks?.length || 0,
         processed: true,
-        processingDate: video.updated_at || video.publishedAt,
-        analyzed: videoAnalyses.length > 0,
-        analysisPhases: videoAnalyses.length
+        processingDate: video.created_at || video.updated_at,
+        analyzed: !!video.analyzed,
+        analysisPhases: video.analysis_phases || 0,
+        transcriptLength,
+        wordCount,
+        commentCount: commentCount
       };
-    });
-    
+    }));
+
+    console.log(`✅ Found ${videos.length} videos for user ${userId}`);
+
     return NextResponse.json({
-      videos: formattedVideos
+      videos: videosWithCounts
     });
+
   } catch (error) {
-    console.error('🚨 API: Error fetching videos:', error);
-    
+    console.error('Error in videos endpoint:', error);
     return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
