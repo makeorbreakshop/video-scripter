@@ -65,4 +65,7 @@ The application follows a 5-phase workflow for creating YouTube scripts:
 4. **Refinement**: Polish and improve the script
 5. **Export**: Format and export the final script
 
-Refer to the code documentation for details on implementation. 
+Refer to the code documentation for details on implementation.
+
+## Updated Repository
+This repository has been updated and is now properly deployed to GitHub. 
