@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 13% 8%; /* Much darker background */
+    --foreground: 0 0% 100%;
+
+    --card: 220 13% 8%; /* Same as background for seamless look */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 220 13% 8%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 210 100% 60%; /* Bright blue for primary actions */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 13% 12%; /* Very subtle contrast for secondary elements */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 13% 12%;
+    --muted-foreground: 220 13% 70%;
+
+    --accent: 220 13% 12%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 14%; /* Very subtle borders */
+    --input: 220 13% 14%;
+    --ring: 210 100% 60%;
+
+    --radius: 0.25rem; /* Smaller radius for more modern look */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-light tracking-tight;
+  }
+  input,
+  textarea {
+    @apply bg-transparent focus:outline-none focus:ring-0 border-0;
+  }
+}
+
+@layer components {
+  /* Main layout */
+  .app-container {
+    @apply h-screen w-screen flex overflow-hidden bg-background;
+  }
+
+  /* Sidebar styling - much more minimal */
+  .sidebar {
+    @apply h-full bg-background border-r border-border flex flex-col py-2 transition-all duration-200;
+  }
+
+  .sidebar-icon {
+    @apply h-5 w-5 text-muted-foreground opacity-50 transition-opacity;
+  }
+
+  .sidebar-button {
+    @apply w-10 h-10 rounded-md flex items-center justify-center transition-colors;
+  }
+
+  .sidebar-button:hover {
+    @apply bg-secondary;
+  }
+
+  .sidebar-button.active {
+    @apply bg-secondary;
+  }
+
+  .sidebar-button.active .sidebar-icon {
+    @apply opacity-100;
+  }
+
+  /* Document container - clean and minimal */
+  .document-container {
+    @apply flex-1 h-full overflow-hidden flex flex-col;
+  }
+
+  .document-header {
+    @apply h-14 border-b border-border flex items-center px-6;
+  }
+
+  .document-content {
+    @apply flex-1 overflow-auto;
+  }
+
+  /* Workspace panel - clean and minimal */
+  .resource-panel {
+    @apply h-full bg-background border-l border-border flex flex-col;
+  }
+
+  .resource-panel-header {
+    @apply h-14 border-b border-border flex items-center px-4;
+  }
+
+  /* Resize handle */
+  .resize-handle {
+    @apply w-1 bg-transparent hover:bg-primary/10 cursor-col-resize transition-colors;
+  }
+
+  /* Split view */
+  .split-container {
+    @apply h-full w-full flex;
+  }
+
+  .split-vertical {
+    @apply flex-row;
+  }
+
+  .split-horizontal {
+    @apply flex-col;
+  }
+
+  .split-pane {
+    @apply h-full overflow-hidden;
+  }
+
+  .split-resize-handle {
+    @apply bg-transparent hover:bg-primary/20 active:bg-primary/30 transition-colors;
+  }
+
+  .split-resize-handle.vertical {
+    @apply w-1 cursor-col-resize;
+  }
+
+  .split-resize-handle.horizontal {
+    @apply h-1 cursor-row-resize;
+  }
+
+  /* Editor styling */
+  .craft-editor {
+    @apply w-full h-full bg-background text-foreground p-0 border-0;
+  }
+
+  .craft-editor:focus {
+    @apply outline-none ring-0;
+  }
+
+  /* TipTap specific styles */
+  .ProseMirror {
+    outline: none;
+    min-height: 300px;
+    color: hsl(var(--foreground));
+  }
+
+  .ProseMirror p {
+    @apply my-2;
+  }
+
+  .ProseMirror h1 {
+    @apply text-2xl font-light mt-6 mb-4;
+  }
+
+  .ProseMirror h2 {
+    @apply text-xl font-light mt-5 mb-3;
+  }
+
+  .ProseMirror h3 {
+    @apply text-lg font-light mt-4 mb-2;
+  }
+}
+
