@@ -6,7 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Database, Search, Video, RefreshCw, AlertCircle, FileDown, Trash2, Check, ExternalLink } from "lucide-react";
+import { 
+  Database, 
+  Search, 
+  Video, 
+  RefreshCw, 
+  AlertCircle, 
+  FileDown, 
+  Trash2, 
+  Check, 
+  ExternalLink, 
+  MoreVertical, 
+  FileText, 
+  ChevronDown,
+  RefreshCcw, 
+  DownloadCloud,
+  Clipboard,
+  CheckSquare
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -18,6 +35,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { toast } from "@/components/ui/use-toast";
 import SkyscraperDebugModal from '../components/SkyscraperDebugModal';
@@ -1355,6 +1381,139 @@ Focus on:
     }
   };
   
+  // Add batch download functions
+  const batchDownloadScripts = async () => {
+    if (selectedVideos.size === 0) return;
+    
+    try {
+      toast({
+        title: "Preparing Downloads",
+        description: `Retrieving transcripts and comments for ${selectedVideos.size} videos...`,
+      });
+      
+      setIsLoading(true);
+      
+      // Get video details for selected videos
+      const selectedVideoDetails = videos.filter(v => selectedVideos.has(v.id));
+      
+      // Build a request that includes all selected video IDs
+      const response = await fetch(`/api/vector/comments/batch-download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoIds: Array.from(selectedVideos),
+          includeTranscript: true,
+          includeComments: true
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch batch transcripts");
+      }
+      
+      const data = await response.json();
+      
+      if (!data.content) {
+        throw new Error("No content available for the selected videos");
+      }
+      
+      // Create and trigger download
+      const blob = new Blob([data.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `batch-transcripts-${new Date().toISOString().slice(0, 10)}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Complete",
+        description: `Downloaded content for ${selectedVideos.size} videos`,
+      });
+      
+    } catch (error) {
+      console.error("Error downloading batch transcripts:", error);
+      toast({
+        title: "Batch Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download batch transcripts",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const batchDownloadAnalyses = async () => {
+    if (selectedVideos.size === 0) return;
+    
+    try {
+      toast({
+        title: "Preparing Downloads",
+        description: `Retrieving analyses for ${selectedVideos.size} videos...`,
+      });
+      
+      setIsLoading(true);
+      
+      // Get video details for selected videos
+      const selectedVideoDetails = videos.filter(v => selectedVideos.has(v.id));
+      
+      // Verify all selected videos have analyses
+      const videosWithoutAnalysis = selectedVideoDetails.filter(v => !v.hasSkyscraperAnalysis);
+      if (videosWithoutAnalysis.length > 0) {
+        throw new Error(`${videosWithoutAnalysis.length} of the selected videos do not have analyses`);
+      }
+      
+      // Build a request that includes all selected video IDs
+      const response = await fetch(`/api/skyscraper/batch-download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoIds: Array.from(selectedVideos)
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch batch analyses");
+      }
+      
+      const data = await response.json();
+      
+      if (!data.content) {
+        throw new Error("No analysis content available for the selected videos");
+      }
+      
+      // Create and trigger download
+      const blob = new Blob([data.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `batch-analyses-${new Date().toISOString().slice(0, 10)}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Complete",
+        description: `Downloaded analyses for ${selectedVideos.size} videos`,
+      });
+      
+    } catch (error) {
+      console.error("Error downloading batch analyses:", error);
+      toast({
+        title: "Batch Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download batch analyses",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between gap-2 mb-6">
@@ -1488,15 +1647,39 @@ Focus on:
                         {selectedVideos.size} selected
                       </span>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleBatchDeleteClick}
-                      className="flex items-center"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Selected
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={batchDownloadScripts}
+                        disabled={selectedVideos.size === 0 || isLoading}
+                        className="flex items-center bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Download Scripts
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={batchDownloadAnalyses}
+                        disabled={selectedVideos.size === 0 || isLoading || videos.filter(v => selectedVideos.has(v.id) && v.hasSkyscraperAnalysis).length === 0}
+                        className="flex items-center bg-green-900 border-green-800 text-green-200 hover:bg-green-800"
+                      >
+                        <FileDown className="h-4 w-4 mr-2" />
+                        Download Analyses
+                      </Button>
+                      
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBatchDeleteClick}
+                        className="flex items-center"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Selected
+                      </Button>
+                    </div>
                   </div>
                 )}
                 <div className="divide-y divide-gray-800">
@@ -1537,83 +1720,82 @@ Focus on:
                           <span>{video.wordCount ? `${video.wordCount.toLocaleString()} words` : (video.transcriptLength ? `${Math.round(video.transcriptLength / 5).toLocaleString()} words` : '0 words')}</span>
                           <span className="mx-2">•</span>
                           <span>{video.totalChunks || 0} chunks</span>
+                          {video.hasSkyscraperAnalysis && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <span className="text-green-500 flex items-center">
+                                <Check className="h-3.5 w-3.5 mr-1" />
+                                Analyzed
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
+                        {/* Main action buttons */}
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => downloadTranscript(video.id, video.title)}
-                          className="bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
+                          onClick={() => window.open(`/analysis/${video.id}`, '_blank')}
+                          className="bg-blue-900 border-blue-800 text-blue-200 hover:bg-blue-800 hover:text-white"
                         >
-                          <FileDown className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => analyzeVideo(video.id)}
-                          disabled={isLoading}
-                          className={`${
-                            video.hasSkyscraperAnalysis 
-                              ? "bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white" 
-                              : "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
-                          }`}
-                        >
-                          {video.hasSkyscraperAnalysis ? (
-                            <>
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Reanalyze
-                            </>
-                          ) : (
-                            <>
-                              <Video className="h-4 w-4 mr-2" />
-                              {video.analysisPhases ? 'Continue Analysis' : 'Analyze'}
-                            </>
-                          )}
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Details
                         </Button>
                         
-                        {/* Add the Download Analysis button */}
-                        {video.hasSkyscraperAnalysis && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => downloadAnalysis(video.id, video.title)}
-                              className="bg-green-900 border-green-800 text-green-200 hover:bg-green-800 hover:text-white"
-                            >
-                              <FileDown className="h-4 w-4 mr-2" />
-                              Download Analysis
+                        {/* Dropdown menu for more actions */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white">
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => window.open(`/analysis/${video.id}`, '_blank')}
-                              className="bg-blue-900 border-blue-800 text-blue-200 hover:bg-blue-800 hover:text-white"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View Details
-                            </Button>
-                          </>
-                        )}
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(video.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => reprocessVideo(video.id)}
-                          disabled={isLoading}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 bg-gray-900 border-gray-800 text-gray-200">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-gray-800" />
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem
+                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
+                                onClick={() => downloadTranscript(video.id, video.title)}
+                              >
+                                <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                                <span>Download Script</span>
+                              </DropdownMenuItem>
+                              {video.hasSkyscraperAnalysis && (
+                                <DropdownMenuItem
+                                  className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
+                                  onClick={() => downloadAnalysis(video.id, video.title)}
+                                >
+                                  <FileDown className="h-4 w-4 mr-2 text-green-500" />
+                                  <span>Download Analysis</span>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator className="bg-gray-800" />
+                              <DropdownMenuItem
+                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
+                                onClick={() => reprocessVideo(video.id)}
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2 text-yellow-500" />
+                                <span>Redownload Script</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
+                                onClick={() => analyzeVideo(video.id)}
+                              >
+                                <RefreshCcw className="h-4 w-4 mr-2 text-purple-500" />
+                                <span>Reanalyze</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-gray-800" />
+                              <DropdownMenuItem
+                                className="focus:bg-red-900 focus:text-red-200 cursor-pointer text-red-400"
+                                onClick={() => handleDeleteClick(video.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span>Delete Video</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   ))}

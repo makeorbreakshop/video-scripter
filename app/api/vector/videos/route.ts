@@ -46,6 +46,11 @@ export async function GET(request: Request) {
       );
     }
 
+    // Log the first video to see the actual field structure
+    if (videos && videos.length > 0) {
+      console.log('Sample video object structure:', JSON.stringify(videos[0], null, 2));
+    }
+
     // For each video, get the chunks to calculate comment count and transcript length
     const videosWithCounts = await Promise.all(videos.map(async (video) => {
       // Get all chunks for this video
