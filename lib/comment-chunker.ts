@@ -295,4 +295,313 @@ export function processComments(
   }
   
   return clusterCommentsByKeywords(comments, options);
+}
+
+// New imports for OpenAI-based clustering
+import { getOpenAIApiKey } from "./env-config";
+import OpenAI from 'openai';
+
+/**
+ * Cluster comments using OpenAI embeddings for better semantic grouping
+ * This provides much more accurate clustering than keyword-based methods
+ */
+export async function clusterCommentsWithEmbeddings(
+  comments: YouTubeComment[],
+  options: {
+    maxClusters?: number;
+    minCommentsPerCluster?: number;
+  } = {}
+): Promise<CommentCluster[]> {
+  const {
+    maxClusters = 10,
+    minCommentsPerCluster = 3
+  } = options;
+  
+  if (!comments || comments.length === 0) {
+    return [];
+  }
+  
+  // If not enough comments to form meaningful clusters
+  if (comments.length < minCommentsPerCluster) {
+    return createSingleCluster(comments);
+  }
+  
+  try {
+    // Get OpenAI API key
+    const apiKey = getOpenAIApiKey();
+    if (!apiKey) {
+      console.warn("OpenAI API key not found, falling back to keyword-based clustering");
+      return clusterCommentsByKeywords(comments, options);
+    }
+    
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: apiKey
+    });
+    
+    // Generate embeddings for all comments
+    console.log(`🧠 Generating embeddings for ${comments.length} comments`);
+    const commentTexts = comments.map(c => cleanHtmlContent(c.textDisplay));
+    
+    // Use a smaller dimension for clustering to save on computation
+    // We're using these embeddings just for clustering, not for storage
+    const embeddingResponse = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: commentTexts,
+      dimensions: 256 // Smaller dimension is sufficient for clustering
+    });
+    
+    const embeddings = embeddingResponse.data.map(item => item.embedding);
+    
+    // Perform k-means clustering on the embeddings
+    const clusters = await performKMeansClustering(
+      embeddings, 
+      Math.min(maxClusters, Math.ceil(comments.length / minCommentsPerCluster))
+    );
+    
+    // Group comments by cluster
+    const commentClusters: YouTubeComment[][] = Array(clusters.k).fill(null).map(() => []);
+    
+    clusters.assignments.forEach((clusterIndex, commentIndex) => {
+      commentClusters[clusterIndex].push(comments[commentIndex]);
+    });
+    
+    // Filter out clusters that are too small
+    const validClusters = commentClusters
+      .filter(cluster => cluster.length >= minCommentsPerCluster)
+      .map(cluster => formatCluster(cluster));
+    
+    console.log(`✅ Created ${validClusters.length} semantic clusters from ${comments.length} comments`);
+    return validClusters;
+  } catch (error) {
+    console.error("Error in embedding-based clustering:", error);
+    console.log("Falling back to keyword-based clustering");
+    return clusterCommentsByKeywords(comments, options);
+  }
+}
+
+/**
+ * Clean HTML content from comments
+ */
+function cleanHtmlContent(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&[^;]+;/g, match => { // Replace HTML entities
+      switch (match) {
+        case '&amp;': return '&';
+        case '&lt;': return '<';
+        case '&gt;': return '>';
+        case '&quot;': return '"';
+        case '&#39;': return "'";
+        default: return match;
+      }
+    })
+    .trim();
+}
+
+/**
+ * Perform k-means clustering on embeddings
+ * A simple implementation of k-means for clustering comment embeddings
+ */
+async function performKMeansClustering(
+  embeddings: number[][],
+  k: number
+): Promise<{ k: number; assignments: number[]; centroids: number[][] }> {
+  // If we have fewer embeddings than clusters, adjust k
+  if (embeddings.length < k) {
+    k = embeddings.length;
+  }
+  
+  // Initialize centroids randomly
+  const centroids: number[][] = [];
+  const usedIndices = new Set<number>();
+  
+  for (let i = 0; i < k; i++) {
+    let randomIndex;
+    do {
+      randomIndex = Math.floor(Math.random() * embeddings.length);
+    } while (usedIndices.has(randomIndex));
+    
+    usedIndices.add(randomIndex);
+    centroids.push([...embeddings[randomIndex]]);
+  }
+  
+  // Maximum iterations to prevent infinite loops
+  const maxIterations = 100;
+  let iterations = 0;
+  let assignments: number[] = [];
+  let oldAssignments: number[] = Array(embeddings.length).fill(-1);
+  
+  // Iterate until convergence or max iterations
+  while (iterations < maxIterations) {
+    // Assign each point to nearest centroid
+    assignments = embeddings.map(embedding => {
+      let minDistance = Infinity;
+      let closestCentroid = 0;
+      
+      for (let i = 0; i < centroids.length; i++) {
+        const distance = calculateCosineSimilarity(embedding, centroids[i]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCentroid = i;
+        }
+      }
+      
+      return closestCentroid;
+    });
+    
+    // Check for convergence
+    if (arraysEqual(assignments, oldAssignments)) {
+      break;
+    }
+    
+    // Update centroids
+    for (let i = 0; i < k; i++) {
+      const clusterPoints = embeddings.filter((_, index) => assignments[index] === i);
+      
+      if (clusterPoints.length > 0) {
+        // Calculate new centroid as average of points
+        const newCentroid = Array(clusterPoints[0].length).fill(0);
+        
+        for (const point of clusterPoints) {
+          for (let j = 0; j < point.length; j++) {
+            newCentroid[j] += point[j];
+          }
+        }
+        
+        for (let j = 0; j < newCentroid.length; j++) {
+          newCentroid[j] /= clusterPoints.length;
+        }
+        
+        // Normalize the centroid
+        const norm = Math.sqrt(newCentroid.reduce((sum, val) => sum + val * val, 0));
+        for (let j = 0; j < newCentroid.length; j++) {
+          newCentroid[j] /= norm;
+        }
+        
+        centroids[i] = newCentroid;
+      }
+    }
+    
+    oldAssignments = [...assignments];
+    iterations++;
+  }
+  
+  return { k, assignments, centroids };
+}
+
+/**
+ * Calculate cosine similarity between two vectors
+ * Returns a value between 0 and 2, where 0 is most similar
+ */
+function calculateCosineSimilarity(a: number[], b: number[]): number {
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  normA = Math.sqrt(normA);
+  normB = Math.sqrt(normB);
+  
+  // Cosine distance = 1 - cosine similarity
+  return 1 - (dotProduct / (normA * normB));
+}
+
+/**
+ * Check if two arrays are equal
+ */
+function arraysEqual(a: any[], b: any[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+/**
+ * Create a single cluster from all comments
+ */
+function createSingleCluster(comments: YouTubeComment[]): CommentCluster[] {
+  const allKeywords = findTopKeywords(comments, 5);
+  const timestampRefs = comments.map(c => extractTimestamp(c.textDisplay)).filter(Boolean) as number[];
+  const uniqueAuthors = new Set(comments.map(c => c.authorDisplayName));
+  const avgLikes = comments.reduce((sum, c) => sum + c.likeCount, 0) / comments.length;
+  
+  return [{
+    content: comments.map(c => cleanHtmlContent(c.textDisplay)).join('\n\n'),
+    keywords: allKeywords,
+    commentCount: comments.length,
+    hasTimestampReferences: timestampRefs.length > 0,
+    authorCount: uniqueAuthors.size,
+    averageLikeCount: avgLikes,
+    timestamps: timestampRefs.length > 0 ? timestampRefs : undefined,
+    representativeComments: comments.slice(0, 3).map(c => cleanHtmlContent(c.textDisplay))
+  }];
+}
+
+/**
+ * Format a cluster of comments into the CommentCluster format
+ */
+function formatCluster(cluster: YouTubeComment[]): CommentCluster {
+  const keywords = findTopKeywords(cluster, 5);
+  const allText = cluster.map(c => cleanHtmlContent(c.textDisplay)).join('\n\n');
+  const timestampRefs = cluster
+    .map(c => extractTimestamp(c.textDisplay))
+    .filter(Boolean) as number[];
+  const uniqueAuthors = new Set(cluster.map(c => c.authorDisplayName));
+  const avgLikes = cluster.reduce((sum, c) => sum + c.likeCount, 0) / cluster.length;
+  
+  // Find most representative comments (highest likes and best keyword match)
+  const representativeComments = [...cluster]
+    .sort((a, b) => b.likeCount - a.likeCount)
+    .slice(0, 3)
+    .map(c => cleanHtmlContent(c.textDisplay));
+  
+  return {
+    content: allText,
+    keywords,
+    commentCount: cluster.length,
+    hasTimestampReferences: timestampRefs.length > 0,
+    authorCount: uniqueAuthors.size,
+    averageLikeCount: avgLikes,
+    timestamps: timestampRefs.length > 0 ? timestampRefs : undefined,
+    representativeComments
+  };
+}
+
+/**
+ * Enhanced comment processing function that uses OpenAI embeddings
+ * for semantic clustering when available
+ */
+export async function processCommentsEnhanced(
+  comments: YouTubeComment[],
+  options: {
+    similarityThreshold?: number;
+    maxClusters?: number;
+    minCommentsPerCluster?: number;
+    useEmbeddings?: boolean;
+  } = {}
+): Promise<CommentCluster[]> {
+  if (!comments || comments.length === 0) {
+    return [];
+  }
+  
+  const { useEmbeddings = true } = options;
+  
+  if (useEmbeddings) {
+    try {
+      return await clusterCommentsWithEmbeddings(comments, options);
+    } catch (error) {
+      console.error("Error in embedding-based clustering:", error);
+      console.log("Falling back to keyword-based clustering");
+    }
+  }
+  
+  // Fallback to keyword-based clustering
+  return clusterCommentsByKeywords(comments, options);
 } 

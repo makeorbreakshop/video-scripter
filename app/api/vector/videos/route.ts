@@ -87,6 +87,19 @@ export async function GET(request: Request) {
         }
       });
 
+      // Check if this video has a skyscraper analysis
+      const { data: skyscraperAnalysis, error: skyscraperError } = await supabase
+        .from('skyscraper_analyses')
+        .select('id')
+        .eq('video_id', video.id)
+        .limit(1);
+        
+      if (skyscraperError) {
+        console.error('Error checking skyscraper analysis for video', video.id, skyscraperError);
+      }
+      
+      const hasSkyscraperAnalysis = skyscraperAnalysis && skyscraperAnalysis.length > 0;
+
       // Format for the client interface
       return {
         id: video.id,
@@ -100,7 +113,8 @@ export async function GET(request: Request) {
         analysisPhases: video.analysis_phases || 0,
         transcriptLength,
         wordCount,
-        commentCount: commentCount
+        commentCount: commentCount,
+        hasSkyscraperAnalysis: hasSkyscraperAnalysis
       };
     }));
 

@@ -5,7 +5,7 @@
  */
 
 import { getYoutubeTranscript } from "./youtube-transcript";
-import { fetchYoutubeComments } from "./youtube-api";
+import { fetchYoutubeComments, fetchAllYoutubeComments } from "./youtube-api";
 import { getYoutubeVideoMetadata } from "./youtube-utils";
 import { extractYouTubeId } from './utils';
 import { processTranscript } from "./transcript-chunker";
@@ -25,6 +25,9 @@ interface ProcessingResult {
   videoId: string;
   totalChunks: number;
   error?: string;
+  chunks?: VideoChunk[];
+  wordCount?: number;
+  commentCount?: number;
 }
 
 // Define the expected YouTube metadata format with all possible properties
@@ -65,23 +68,77 @@ function cleanHtmlContent(html: string): string {
  */
 async function processVideoComments(
   videoUrl: string, 
-  commentLimit: number = 50
+  commentLimit: number = 500,
+  chunkingMethod: 'standard' | 'enhanced' = 'standard'
 ): Promise<VideoChunk[]> {
   try {
-    console.log(`🔄 Processing comments for video: ${videoUrl}`);
+    console.log(`🔄 Processing comments for video: ${videoUrl} with limit: ${commentLimit}, method: ${chunkingMethod}`);
     
     const videoId = extractYouTubeId(videoUrl);
     if (!videoId) throw new Error("Invalid YouTube URL");
     
-    // Fetch comments using existing functionality
-    const comments = await fetchYoutubeComments(videoUrl, commentLimit);
+    // Use fetchAllYoutubeComments directly to get all comments
+    console.log(`💬 Fetching comments directly with fetchAllYoutubeComments for video ID: ${videoId}`);
+    const comments = await fetchAllYoutubeComments(videoUrl);
+    
     if (!comments || comments.length === 0) {
-      console.log("⚠️ No comments found for video");
+      console.log(`⚠️ No comments found for video ID: ${videoId}`);
       return [];
     }
     
-    // Process each comment as a separate chunk
-    const commentChunks: VideoChunk[] = comments.map(comment => ({
+    console.log(`📊 Retrieved ${comments.length} real comments for video ID: ${videoId}`);
+    
+    // Limit the number of comments if needed
+    const limitedComments = comments.slice(0, commentLimit);
+    console.log(`📊 Using ${limitedComments.length} comments based on limit of ${commentLimit}`);
+    
+    // For enhanced mode, use OpenAI-powered comment clustering
+    if (chunkingMethod === 'enhanced' && limitedComments.length > 10) {
+      try {
+        // Import the enhanced comment clustering functionality
+        const { processCommentsEnhanced } = await import('./comment-chunker');
+        
+        // Convert to the expected format
+        const formattedComments = limitedComments.map(comment => ({
+          textDisplay: comment.textDisplay,
+          authorDisplayName: comment.authorDisplayName,
+          likeCount: comment.likeCount,
+          publishedAt: comment.publishedAt
+        }));
+        
+        // Process comments with OpenAI-powered clustering
+        const commentClusters = await processCommentsEnhanced(formattedComments, {
+          maxClusters: Math.min(20, Math.ceil(limitedComments.length / 5)),
+          minCommentsPerCluster: 3,
+          useEmbeddings: true // Use OpenAI embeddings for clustering
+        });
+        
+        // Convert clusters to storage format
+        const clusterChunks: VideoChunk[] = commentClusters.map(cluster => ({
+          videoId,
+          content: cluster.content,
+          contentType: 'comment_cluster',
+          metadata: {
+            keywords: cluster.keywords,
+            commentCount: cluster.commentCount,
+            authorCount: cluster.authorCount,
+            averageLikeCount: cluster.averageLikeCount,
+            hasTimestampReferences: cluster.hasTimestampReferences,
+            timestamps: cluster.timestamps
+          }
+        }));
+        
+        console.log(`✅ Processed ${limitedComments.length} comments into ${clusterChunks.length} semantic clusters using OpenAI`);
+        return clusterChunks;
+      } catch (clusterError) {
+        console.error(`🚨 Error clustering comments with OpenAI: ${clusterError}`);
+        console.log(`⚠️ Falling back to standard comment processing`);
+        // Fall back to standard processing if clustering fails
+      }
+    }
+    
+    // Standard processing: each comment as a separate chunk
+    const commentChunks: VideoChunk[] = limitedComments.map((comment: any) => ({
       videoId,
       content: cleanHtmlContent(comment.textDisplay),
       contentType: 'comment',
@@ -92,10 +149,10 @@ async function processVideoComments(
       }
     }));
     
-    console.log(`✅ Processed ${commentChunks.length} comment chunks`);
+    console.log(`✅ Processed ${commentChunks.length} comment chunks for video ID: ${videoId}`);
     return commentChunks;
   } catch (error) {
-    console.error("🚨 Error processing video comments:", error);
+    console.error(`🚨 Error processing video comments for ${videoUrl}:`, error);
     return [];
   }
 }
@@ -123,8 +180,8 @@ function processVideoDescription(
 }
 
 /**
- * Main function to process a YouTube video
- * Retrieves transcript, comments, metadata and stores vectorized chunks
+ * Process a YouTube video end-to-end: fetch metadata, transcript, comments,
+ * generate embeddings, and store in the database
  */
 export async function processYoutubeVideo(
   videoUrl: string, 
@@ -143,9 +200,9 @@ export async function processYoutubeVideo(
       };
     }
     
-    const { userId, maxChunkSize = 512, commentLimit = 50 } = options;
+    const { userId, maxChunkSize = 512, commentLimit = 500 } = options;
     
-    // Check if OpenAI API key is available (replacing Anthropic check)
+    // Check if OpenAI API key is available
     const openAIApiKey = getOpenAIApiKey();
     
     if (!openAIApiKey) {
@@ -155,6 +212,12 @@ export async function processYoutubeVideo(
         totalChunks: 0,
         error: "OpenAI API key not configured"
       };
+    }
+    
+    // Check if YouTube API key is available
+    const youtubeApiKey = getYouTubeApiKey();
+    if (!youtubeApiKey) {
+      console.warn('⚠️ No YouTube API key found - comments will be simulated');
     }
     
     // Step 1: Get video metadata
@@ -242,7 +305,8 @@ export async function processYoutubeVideo(
     });
     
     // Step 5: Process comments
-    const commentChunks = await processVideoComments(videoUrl, commentLimit);
+    const commentChunks = await processVideoComments(videoUrl, commentLimit, options.chunkingMethod);
+    console.log(`📊 Created ${commentChunks.length} comment chunks`);
     
     // Step 6: Combine all chunks
     const allChunks = [
@@ -297,10 +361,21 @@ export async function processYoutubeVideo(
     
     console.log(`✅ Successfully processed video ${videoId} with ${allChunks.length} chunks`);
     
+    // Calculate word count from transcript and description chunks
+    const wordCount = allChunks
+      .filter(chunk => chunk.contentType === 'transcript' || chunk.contentType === 'description')
+      .reduce((count, chunk) => count + (chunk.content?.split(/\s+/).length || 0), 0);
+
+    // Calculate comment count
+    const commentCount = commentChunks.length;
+    
     return {
       success: true,
       videoId,
-      totalChunks: allChunks.length
+      totalChunks: allChunks.length,
+      chunks: allChunks,
+      wordCount,
+      commentCount
     };
   } catch (error) {
     console.error(`🚨 Error processing video:`, error);

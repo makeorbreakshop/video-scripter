@@ -1,6 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { Fragment, useState, useEffect } from 'react'
-import { XMarkIcon, ClipboardIcon, CheckCircleIcon, ExclamationCircleIcon, CalculatorIcon } from '@heroicons/react/24/outline'
+import { Fragment, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { XMarkIcon, ClipboardIcon, CheckCircleIcon, ExclamationCircleIcon, CalculatorIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -8,56 +8,149 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { InfoIcon } from "lucide-react"
 import { Label } from "@/components/ui/label"
-
-// Define available Claude models with their details
-const CLAUDE_MODELS = [
-  { 
-    id: "claude-3-7-sonnet-20240620", 
-    name: "Claude 3.7 Sonnet", 
-    contextWindow: 200000,
-    inputCostPer1kTokens: 0.003,
-    outputCostPer1kTokens: 0.015,
-    description: "Most capable Claude model with superior intelligence and reasoning"
-  },
-  { 
-    id: "claude-3-5-sonnet-20240620", 
-    name: "Claude 3.5 Sonnet", 
-    contextWindow: 200000,
-    inputCostPer1kTokens: 0.0025,
-    outputCostPer1kTokens: 0.0125,
-    description: "Powerful model balancing intelligence and efficiency"
-  },
-  { 
-    id: "claude-3-opus-20240229", 
-    name: "Claude 3 Opus", 
-    contextWindow: 200000,
-    inputCostPer1kTokens: 0.015,
-    outputCostPer1kTokens: 0.075,
-    description: "Most powerful model for complex tasks requiring deep understanding"
-  },
-  { 
-    id: "claude-3-sonnet-20240229", 
-    name: "Claude 3 Sonnet", 
-    contextWindow: 200000,
-    inputCostPer1kTokens: 0.003,
-    outputCostPer1kTokens: 0.015,
-    description: "Excellent balance of intelligence and speed"
-  },
-  { 
-    id: "claude-3-haiku-20240307", 
-    name: "Claude 3 Haiku", 
-    contextWindow: 200000,
-    inputCostPer1kTokens: 0.00025,
-    outputCostPer1kTokens: 0.00125,
-    description: "Fastest and most compact model for high-volume, simple tasks"
-  }
-];
+import { CLAUDE_MODELS } from "@/app/constants/claude-models"
+import { useChat } from 'ai/react'
+import { toast } from "@/components/ui/use-toast"
 
 // Helper function to estimate token count (rough approximation)
 const estimateTokenCount = (text: string): number => {
   if (!text) return 0;
   // Rough approximation: 1 token ≈ 4 characters for English text
   return Math.ceil(text.length / 4);
+};
+
+// Helper function to safely parse JSON even if incomplete
+const safeParseJSON = (text: string) => {
+  if (!text || typeof text !== 'string' || text.trim() === '') {
+    console.log('Empty or invalid text provided to safeParseJSON');
+    return null;
+  }
+  
+  // Process markdown code blocks if present
+  let processedText = text;
+  const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (markdownMatch && markdownMatch[1]) {
+    console.log('Found markdown code block, extracting content');
+    processedText = markdownMatch[1].trim();
+    
+    // If the extracted content seems to be valid JSON, use it directly
+    if (processedText.startsWith('{') && processedText.endsWith('}')) {
+      try {
+        const result = JSON.parse(processedText);
+        console.log('Successfully parsed markdown code block content:', 
+          Object.keys(result).join(', '));
+        return result;
+      } catch (e) {
+        // If direct parsing failed, continue with other methods
+        console.log('Failed to parse markdown content directly');
+      }
+    }
+  }
+  
+  // Only try to parse text that looks like JSON
+  if (!processedText.trim().startsWith('{')) {
+    console.log('Processed text does not appear to be JSON (no opening brace)');
+    return null;
+  }
+  
+  try {
+    // First, try to parse it directly
+    const result = JSON.parse(processedText);
+    console.log('Successfully parsed complete JSON directly:', 
+      Object.keys(result).join(', '));
+    return result;
+  } catch (e) {
+    console.log('Direct JSON parsing failed, trying extraction methods');
+    
+    try {
+      // If direct parsing fails, try to find a complete JSON object
+      // First, look for the last complete JSON object using a more robust pattern
+      const jsonPattern = /\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\}/g;
+      let matches = [...processedText.matchAll(jsonPattern)];
+      
+      if (matches.length > 0) {
+        // Get the largest match, which is likely the most complete
+        let largestMatch = matches[0][0];
+        let largestLength = largestMatch.length;
+        
+        for (const match of matches) {
+          if (match[0].length > largestLength) {
+            largestMatch = match[0];
+            largestLength = match[0].length;
+          }
+        }
+        
+        console.log('Found JSON object with regex pattern, length:', largestLength);
+        try {
+          const result = JSON.parse(largestMatch);
+          console.log('Successfully parsed extracted JSON:', 
+            Object.keys(result).join(', '));
+          return result;
+        } catch (parseErr) {
+          console.log('Failed to parse extracted JSON match');
+        }
+      }
+      
+      // If the robust pattern fails, try a simpler approach
+      const simpleMatch = processedText.match(/\{[\s\S]*\}/);
+      if (simpleMatch) {
+        try {
+          console.log('Found JSON with simple pattern, length:', simpleMatch[0].length);
+          const result = JSON.parse(simpleMatch[0]);
+          console.log('Successfully parsed simple match:', 
+            Object.keys(result).join(', '));
+          return result;
+        } catch (parseErr) {
+          console.log('Failed to parse simple match JSON');
+        }
+      }
+      
+      // Last resort: try to find the largest balanced braces block
+      let maxStart = -1;
+      let maxEnd = -1;
+      let maxLength = 0;
+      
+      for (let i = 0; i < processedText.length; i++) {
+        if (processedText[i] === '{') {
+          // Found an opening brace, try to find the matching closing brace
+          let depth = 1;
+          for (let j = i + 1; j < processedText.length; j++) {
+            if (processedText[j] === '{') depth++;
+            else if (processedText[j] === '}') depth--;
+            
+            if (depth === 0) {
+              // Found a balanced block
+              const length = j - i + 1;
+              if (length > maxLength) {
+                maxStart = i;
+                maxEnd = j;
+                maxLength = length;
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      if (maxStart >= 0 && maxLength > 10) { // Minimum size to consider valid
+        try {
+          const jsonCandidate = processedText.substring(maxStart, maxEnd + 1);
+          console.log('Found balanced JSON with manual parsing, length:', jsonCandidate.length);
+          const result = JSON.parse(jsonCandidate);
+          console.log('Successfully parsed manual balanced match:', 
+            Object.keys(result).join(', '));
+          return result;
+        } catch (parseErr) {
+          console.log('Failed to parse manually balanced JSON');
+        }
+      }
+    } catch (e2) {
+      console.log('All JSON extraction methods failed:', e2);
+    }
+    
+    console.log('Could not extract valid JSON after trying all methods');
+    return null;
+  }
 };
 
 interface DebugModalProps {
@@ -77,13 +170,188 @@ interface DebugModalProps {
   }
   onSaveAnalysis?: () => void
   onStartAnalysis?: (modelId?: string) => void
+  onStartStreamAnalysis?: (modelId?: string) => void
+  parsedStreamData?: any
+  setParsedStreamData?: React.Dispatch<React.SetStateAction<any>>
 }
 
-export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSaveAnalysis, onStartAnalysis }: DebugModalProps) {
+// Helper function to combine class names
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(' ')
+}
+
+const SkyscraperDebugModal = forwardRef<{streamedText: string}, DebugModalProps>(function SkyscraperDebugModal(props, ref) {
+  const {
+    isOpen, 
+    onClose, 
+    debugData, 
+    onSaveAnalysis, 
+    onStartAnalysis,
+    onStartStreamAnalysis,
+    parsedStreamData: externalParsedStreamData,
+    setParsedStreamData: setExternalParsedStreamData
+  } = props;
+  
   const [selectedModel, setSelectedModel] = useState(CLAUDE_MODELS[0].id);
   const [costEstimate, setCostEstimate] = useState({ inputCost: 0, outputCost: 0, totalCost: 0 });
   const [showReasoning, setShowReasoning] = useState(false);
   const [activeTab, setActiveTab] = useState("prompts");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamedText, setStreamedText] = useState("");
+  const [streamedReasoning, setStreamedReasoning] = useState<string[]>([]);
+  const [parsedStreamData, setParsedStreamData] = useState<any>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  
+  // Expose streamedText through ref
+  useImperativeHandle(ref, () => ({
+    streamedText
+  }));
+  
+  // Update both internal and external state when parsed data changes
+  const updateParsedData = (data: any) => {
+    setParsedStreamData(data);
+    if (setExternalParsedStreamData) {
+      setExternalParsedStreamData(data);
+    }
+  };
+  
+  // Set up chat for streaming
+  const { messages, setMessages, append, isLoading } = useChat({
+    api: "/api/skyscraper/analyze-stream",
+    body: {
+      videoId: debugData.videoId,
+      userId: "00000000-0000-0000-0000-000000000000", // Default user ID for demonstration
+    },
+    onResponse: (response) => {
+      setIsStreaming(true);
+      setActiveTab("results");
+    },
+    onFinish: () => {
+      setIsStreaming(false);
+    },
+    sendExtraMessageFields: true
+  });
+
+  // Listen for streaming message updates
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      
+      // Extract text and reasoning from the message
+      let textContent = "";
+      let reasoningContent: string[] = [];
+      
+      if (lastMessage.role === 'assistant') {
+        lastMessage.parts?.forEach((part) => {
+          if (part.type === 'text') {
+            textContent = part.text;
+            setStreamedText(part.text);
+            
+            // Check if the message contains markdown code block markers
+            if (textContent.includes('```json') || (textContent.includes('```') && textContent.includes('{'))) {
+              console.log('Detected markdown code block in streamed text');
+              
+              // Extract the JSON from the markdown code block
+              const markdownMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+              if (markdownMatch && markdownMatch[1]) {
+                const jsonContent = markdownMatch[1].trim();
+                console.log('Extracted content from markdown block, attempting to parse');
+                
+                try {
+                  const parsed = JSON.parse(jsonContent);
+                  console.log('Successfully parsed markdown code block:', 
+                    Object.keys(parsed).join(', '));
+                  updateParsedData(parsed);
+                } catch (e) {
+                  console.log('Failed to parse extracted markdown content:', e);
+                  
+                  // Fall back to our more robust parsing methods
+                  const fallbackParsed = safeParseJSON(textContent);
+                  if (fallbackParsed) {
+                    updateParsedData(fallbackParsed);
+                  }
+                }
+              } else {
+                // If we can't extract with the regex, fallback to safe parsing
+                const fallbackParsed = safeParseJSON(textContent);
+                if (fallbackParsed) {
+                  updateParsedData(fallbackParsed);
+                }
+              }
+            } 
+            // Only try regular JSON parsing if the text contains JSON-like patterns
+            else if (textContent && textContent.includes('{') && textContent.includes('}')) {
+              console.log('Attempting to parse JSON from streamed text...');
+              
+              // Try to parse JSON from the streamed text
+              const parsed = safeParseJSON(textContent);
+              if (parsed) {
+                updateParsedData(parsed);
+              }
+            }
+          }
+          
+          // Handle reasoning parts if they exist
+          // Check first if it's a reasoning part
+          if (part.type === 'reasoning') {
+            // @ts-ignore - Handle reasoning part based on its type
+            if (part.details && Array.isArray(part.details)) {
+              // @ts-ignore - Extract text from reasoning details
+              part.details.forEach(detail => {
+                if (detail.type === 'text' && detail.text) {
+                  reasoningContent.push(detail.text);
+                }
+              });
+              
+              if (reasoningContent.length > 0) {
+                setStreamedReasoning(prev => [...prev, ...reasoningContent]);
+              }
+            }
+          }
+        });
+      }
+    }
+  }, [messages]);
+  
+  // Try one more parse when streaming ends
+  useEffect(() => {
+    // When streaming ends, make one final attempt to parse the text
+    if (!isStreaming && streamedText && (!parsedStreamData || Object.keys(parsedStreamData).length === 0)) {
+      console.log('Streaming ended, making final parse attempt...');
+      
+      // First check specifically for markdown code blocks
+      if (streamedText.includes('```json') || (streamedText.includes('```') && streamedText.includes('{'))) {
+        console.log('Detected markdown code block in final parse');
+        
+        // Extract the JSON from the markdown code block
+        const markdownMatch = streamedText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (markdownMatch && markdownMatch[1]) {
+          const jsonContent = markdownMatch[1].trim();
+          console.log('Extracted content from markdown block, attempting final parse');
+          
+          try {
+            const parsed = JSON.parse(jsonContent);
+            console.log('Successfully parsed markdown in final attempt:', 
+              Object.keys(parsed).join(', '));
+            updateParsedData(parsed);
+            return; // Exit early if successful
+          } catch (e) {
+            console.log('Failed to parse markdown in final attempt:', e);
+            // Continue to fallback methods
+          }
+        }
+      }
+      
+      // Fall back to regular parsing if markdown extraction failed
+      const finalParsed = safeParseJSON(streamedText);
+      if (finalParsed) {
+        console.log('Final parse was successful, updating data');
+        updateParsedData(finalParsed);
+      } else {
+        console.log('Final parse attempt failed, no valid JSON found');
+      }
+    }
+  }, [isStreaming, streamedText]);
   
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -128,6 +396,64 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
   // Add a toggle for showing reasoning
   const toggleReasoning = () => {
     setShowReasoning(!showReasoning);
+  };
+  
+  // Start streaming analysis
+  const handleStartStreaming = () => {
+    // Clear previous streaming data
+    setStreamedText("");
+    setStreamedReasoning([]);
+    updateParsedData(null);
+    setMessages([]);
+    setIsSaved(false); // Reset saved state
+    
+    // Add the system and user prompts to messages
+    append({
+      role: "user",
+      content: debugData.userPrompt || "Please analyze this video content.",
+      id: Date.now().toString(),
+    });
+    
+    if (onStartStreamAnalysis) {
+      onStartStreamAnalysis(selectedModel);
+    }
+  };
+
+  // Auto-save when streaming completes
+  useEffect(() => {
+    if (!isStreaming && parsedStreamData && Object.keys(parsedStreamData).length > 0) {
+      // Wait a moment to ensure all data is processed
+      const timer = setTimeout(() => {
+        if (onSaveAnalysis) {
+          console.log('Streaming completed, auto-saving analysis data...');
+          onSaveAnalysis();
+          setIsSaved(true);
+          
+          // Show a toast notification or update UI to indicate auto-save
+          try {
+            // If you're using shadcn UI toast
+            toast({
+              title: "Analysis Auto-Saved",
+              description: "The analysis has been automatically saved to the database.",
+              duration: 3000,
+            });
+          } catch (e) {
+            // Fallback if toast isn't directly available
+            console.log('Analysis has been automatically saved');
+          }
+        }
+      }, 1000); // Small delay to ensure everything is processed
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isStreaming, parsedStreamData, onSaveAnalysis]);
+
+  // Also add a handler for the manual save button click
+  const handleSaveClick = () => {
+    if (onSaveAnalysis) {
+      onSaveAnalysis();
+      setIsSaved(true);
+    }
   };
 
   return (
@@ -227,6 +553,56 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
                     </p>
                   </div>
                   
+                  {/* Action Buttons */}
+                  <div className="flex space-x-4 mt-6">
+                    <Button
+                      onClick={handleStartStreaming}
+                      className="flex-1"
+                      variant="default"
+                    >
+                      Stream Analysis
+                    </Button>
+                    <Button
+                      onClick={handleSaveClick}
+                      variant={isSaved ? "outline" : "secondary"}
+                      className={`flex-1 ${isSaved ? 'bg-green-900/20 hover:bg-green-900/30 text-green-500' : ''}`}
+                      disabled={isStreaming || (!parsedStreamData && !debugData.analysisResults)}
+                    >
+                      {isStreaming 
+                        ? "Streaming..."
+                        : isSaved
+                          ? "✓ Saved to DB"
+                          : parsedStreamData 
+                            ? `Save to DB (${Object.keys(parsedStreamData).length} keys)`
+                            : debugData.analysisResults
+                              ? `Save to DB (${Object.keys(debugData.analysisResults).length} keys)`
+                              : "No Data to Save"
+                      }
+                    </Button>
+                    
+                    {/* Button explanation tooltip */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <InfoIcon className="h-5 w-5 text-gray-400 self-center" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="start" className="max-w-xs">
+                          <p className="text-xs">
+                            This button saves the analyzed data to the database. 
+                            {isStreaming 
+                              ? " Wait for streaming to complete."
+                              : !parsedStreamData && !debugData.analysisResults
+                                ? " No valid analysis data found to save."
+                                : parsedStreamData
+                                  ? ` Found ${Object.keys(parsedStreamData).length} keys in parsed stream data.`
+                                  : ` Found ${Object.keys(debugData.analysisResults).length} keys in analysis results.`
+                            }
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  
                   {/* Tab Navigation */}
                   <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
@@ -302,89 +678,148 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
                   
                   {activeTab === "results" && (
                     <div className="space-y-6">
-                      {/* Analysis Results */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Results</h4>
-                          <div className="flex items-center gap-2">
-                            {debugData.reasoning && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={toggleReasoning}
-                                className="h-8 px-2"
-                              >
-                                {showReasoning ? 'Hide Reasoning' : 'Show Reasoning'}
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(JSON.stringify(debugData.analysisResults, null, 2) || '')}
-                              className="h-8 px-2"
-                            >
-                              <ClipboardIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* Show reasoning if available */}
-                        {showReasoning && debugData.reasoning && (
-                          <div className="mb-4">
-                            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Model Reasoning Process</h5>
-                            <pre className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm overflow-auto max-h-[300px]">
-                              <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                                {debugData.reasoning}
-                              </code>
+                      {/* Status Indicator */}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Status:
+                        </span>
+                        <Badge
+                          variant={
+                            debugData.status === 'success' || !isLoading 
+                              ? 'secondary' 
+                              : debugData.status === 'loading' || isLoading || isStreaming
+                              ? 'default'
+                              : 'destructive'
+                          }
+                          className="px-2 py-0.5"
+                        >
+                          {isLoading || isStreaming
+                            ? "Streaming..."
+                            : debugData.status === 'success'
+                            ? "Complete"
+                            : debugData.status === 'error'
+                            ? "Error"
+                            : debugData.status}
+                        </Badge>
+                      </div>
+                      
+                      {/* Toggle for Reasoning */}
+                      <div className="flex items-center space-x-2 mb-4">
+                        <button
+                          onClick={toggleReasoning}
+                          className={`px-3 py-1 text-xs font-medium rounded-md ${
+                            showReasoning
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                          }`}
+                        >
+                          {showReasoning ? 'Hide Reasoning' : 'Show Reasoning'}
+                        </button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <InfoIcon className="h-4 w-4 text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs max-w-xs">View Claude's reasoning process</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      
+                      {/* Reasoning Display */}
+                      {showReasoning && (streamedReasoning.length > 0 || debugData.reasoning) && (
+                        <div className="space-y-2 mb-6">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Claude's Reasoning</h4>
+                          <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950 text-sm overflow-auto max-h-[300px] border border-amber-200 dark:border-amber-800">
+                            <pre className="text-amber-800 dark:text-amber-200 whitespace-pre-wrap text-xs">
+                              {streamedReasoning.length > 0 
+                                ? streamedReasoning.join('\n\n')
+                                : debugData.reasoning}
                             </pre>
                           </div>
-                        )}
-                        
-                        <pre className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm overflow-auto max-h-[500px]">
-                          <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                            {JSON.stringify(debugData.analysisResults, null, 2)}
-                          </code>
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Error Display */}
-                  {debugData.error && (
-                    <div className="mt-6">
-                      <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-                        <div className="flex">
-                          <ExclamationCircleIcon className="h-5 w-5 text-red-400 dark:text-red-500" aria-hidden="true" />
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-                            <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                              <p>{debugData.error}</p>
+                        </div>
+                      )}
+                      
+                      {/* Error Display */}
+                      {debugData.error && (
+                        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 text-sm border border-red-200 dark:border-red-900">
+                          <div className="flex items-start">
+                            <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="text-sm font-medium text-red-800 dark:text-red-300">Error</h4>
+                              <p className="mt-1 text-sm text-red-700 dark:text-red-400">{debugData.error}</p>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      )}
+                      
+                      {/* Streaming Results Display */}
+                      {isStreaming || streamedText ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {isStreaming ? "Streaming Response..." : "Streamed Response"}
+                            </h4>
+                            {streamedText && (
+                              <Button
+                                onClick={() => copyToClipboard(streamedText)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 hover:bg-gray-100 dark:hover:bg-gray-800"
+                              >
+                                <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
+                                <span className="text-xs">Copy</span>
+                              </Button>
+                            )}
+                          </div>
+                          
+                          {/* Small parsing status indicator */}
+                          {streamedText && !isStreaming && (
+                            <div className="flex items-center text-xs mb-2">
+                              <div className={`h-2 w-2 rounded-full mr-2 ${parsedStreamData ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                              <span className="text-gray-600 dark:text-gray-400">
+                                {parsedStreamData 
+                                  ? `Parsed ${Object.keys(parsedStreamData).length} keys: ${Object.keys(parsedStreamData).join(', ')}`
+                                  : 'No valid JSON structure detected'
+                                }
+                              </span>
+                            </div>
+                          )}
+                          
+                          <div
+                            className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm overflow-auto max-h-[500px]"
+                          >
+                            <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                              {streamedText || "Waiting for streaming to begin..."}
+                            </code>
+                          </div>
+                        </div>
+                      ) : (
+                        // Show normal analysis results from debugData if not streaming
+                        debugData.analysisResults && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Results</h4>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => copyToClipboard(JSON.stringify(debugData.analysisResults, null, 2))}
+                                className="h-8 px-2"
+                              >
+                                <ClipboardIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <pre className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm overflow-auto max-h-[500px]">
+                              <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                                {JSON.stringify(debugData.analysisResults, null, 2)}
+                              </code>
+                            </pre>
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
-
-                  {/* Action Buttons */}
-                  <div className="mt-8 flex justify-end gap-3">
-                    <Button variant="outline" onClick={onClose}>
-                      Close
-                    </Button>
-                    {debugData.status === 'loading' ? (
-                      <Button disabled>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Processing...
-                      </Button>
-                    ) : (
-                      <Button onClick={() => onStartAnalysis?.(selectedModel)}>
-                        {debugData.status === 'success' ? 'Re-analyze' : 'Start Analysis'} with {currentModel.name}
-                      </Button>
-                    )}
-                  </div>
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -392,10 +827,7 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
         </div>
       </Dialog>
     </Transition.Root>
-  );
-}
+  )
+})
 
-// Helper function for class name conditionals
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-} 
+export default SkyscraperDebugModal; 

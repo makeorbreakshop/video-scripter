@@ -1,8 +1,10 @@
 'use server'
 
 import { anthropic } from '@ai-sdk/anthropic';
-import { generateObject } from 'ai';
+import { generateText } from 'ai';
 import { supabase } from '@/lib/supabase';
+import { CLAUDE_MODELS } from '@/app/constants/claude-models';
+import { z } from 'zod';
 
 // Define the expected response structure
 interface SkyscraperAnalysisResponse {
@@ -127,31 +129,6 @@ interface SkyscraperAnalysisResponse {
   };
 }
 
-// Available Claude models
-export const CLAUDE_MODELS = [
-  {
-    id: "claude-3-7-sonnet-20250219",
-    name: "Claude 3.7 Sonnet",
-    inputCostPer1kTokens: 0.015,
-    outputCostPer1kTokens: 0.075,
-    maxTokens: 200000
-  },
-  {
-    id: "claude-3-5-sonnet-20240620",
-    name: "Claude 3.5 Sonnet",
-    inputCostPer1kTokens: 0.008,
-    outputCostPer1kTokens: 0.024,
-    maxTokens: 200000
-  },
-  {
-    id: "claude-3-haiku-20240307",
-    name: "Claude 3 Haiku",
-    inputCostPer1kTokens: 0.003,
-    outputCostPer1kTokens: 0.015,
-    maxTokens: 180000
-  },
-];
-
 export async function analyzeVideoWithSkyscraper(
   videoId: string, 
   userId: string,
@@ -172,171 +149,253 @@ export async function analyzeVideoWithSkyscraper(
       throw new Error(`Failed to fetch video: ${videoError?.message || 'Not found'}`);
     }
     
-    // Fetch transcript data
+    console.log(`Video data found: ${videoData.title}`);
+    
+    // Fetch transcript data from the chunks table with content_type = 'transcript'
     const { data: transcriptData, error: transcriptError } = await supabase
-      .from('video_chunks')
-      .select('content')
+      .from('chunks')
+      .select('content, start_time, end_time')
       .eq('video_id', videoId)
-      .order('chunk_index', { ascending: true });
+      .eq('content_type', 'transcript')
+      .order('start_time', { ascending: true });
       
     if (transcriptError) {
       console.error('Error fetching transcript chunks:', transcriptError);
       throw new Error(`Failed to fetch transcript: ${transcriptError.message}`);
     }
     
-    // Fetch comments
-    const { data: commentsData, error: commentsError } = await supabase
-      .from('video_comments')
-      .select('*')
-      .eq('video_id', videoId);
-      
-    if (commentsError) {
-      console.error('Error fetching comments:', commentsError);
-      throw new Error(`Failed to fetch comments: ${commentsError.message}`);
-    }
+    console.log(`Found ${transcriptData?.length || 0} transcript chunks`);
     
     // Combine all transcript chunks into a single text
     const fullTranscript = transcriptData.map(chunk => chunk.content).join('\n\n');
     
+    if (fullTranscript.length === 0) {
+      throw new Error('No transcript content found for this video');
+    }
+    
+    // Fetch comments from the chunks table with content_type = 'comment_cluster'
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('chunks')
+      .select('content, metadata, user_id, created_at')
+      .eq('video_id', videoId)
+      .eq('content_type', 'comment_cluster')
+      .order('created_at', { ascending: true });
+      
+    if (commentsError) {
+      console.error('Error fetching comments:', commentsError);
+      // Continue without comments
+    }
+    
     // Process comments into a readable format
-    const formattedComments = commentsData.map(comment => {
-      return `${comment.author} (Likes: ${comment.like_count}, Date: ${comment.published_at}): ${comment.text}`;
-    }).join('\n\n');
+    let formattedComments = "";
+    let totalCommentCount = 0;
+    if (commentsData && commentsData.length > 0) {
+      console.log(`Found ${commentsData.length} comment clusters`);
+      
+      // Calculate the total number of individual comments
+      totalCommentCount = commentsData.reduce((total, cluster) => {
+        return total + (Number(cluster.metadata?.commentCount) || 0);
+      }, 0);
+      console.log(`Total individual comments: ${totalCommentCount}`);
+      
+      formattedComments = commentsData.map(commentCluster => {
+        // Extract metadata from the comment cluster
+        const commentCount = commentCluster.metadata?.commentCount || 'Unknown';
+        const authorCount = commentCluster.metadata?.authorCount || 'Unknown';
+        const keywords = commentCluster.metadata?.keywords?.join(', ') || 'None';
+        const averageLikes = commentCluster.metadata?.averageLikeCount || 0;
+        
+        return `COMMENT CLUSTER (${commentCount} comments from ${authorCount} authors, Keywords: ${keywords}, Avg. Likes: ${averageLikes}):\n${commentCluster.content}`;
+      }).join('\n\n');
+    } else {
+      console.log('No comments found for this video');
+      formattedComments = "";
+    }
+    
+    console.log(`Transcript length: ${fullTranscript.length} characters`);
+    console.log(`Comments count: ${totalCommentCount}`);
     
     // Create system prompt
     const systemPrompt = `
-You are an expert video content analyzer using the Skyscraper Analysis Framework. Your task is to analyze a YouTube video based on its transcript and comments.
+You are an expert video content analyzer using the Skyscraper Analysis Framework. Your task is to analyze a YouTube video based on its transcript${commentsData && commentsData.length > 0 ? ' and comments' : ''}.
 
 The Skyscraper Analysis Framework consists of:
 
 1. Content Analysis: Structure, key points, technical information, expertise elements, visual cues
-2. Audience Analysis: Sentiment, praise points, questions/gaps, use cases, demographic signals, engagement patterns
+2. Audience Analysis: Sentiment, ${commentsData && commentsData.length > 0 ? 'praise points, questions/gaps, ' : 'prediction of audience response, '}use cases, demographic signals${commentsData && commentsData.length > 0 ? ', engagement patterns' : ''}
 3. Content Gap Assessment: Missing information, follow-up opportunities, clarity issues, depth/breadth balance
 4. Framework Elements: Overall structure, section ratios, information hierarchy, pacing/flow
 5. Engagement Techniques: Hook strategy, retention mechanisms, pattern interrupts, interaction prompts
 6. Value Delivery Methods: Information packaging, problem-solution framing, practical application, trust building
 7. Implementation Blueprint: Content template, key sections, engagement points, differentiation opportunities, CTA strategy
 
-Provide a comprehensive analysis with specific, actionable insights in a structured format.
+Provide a comprehensive analysis with specific, actionable insights in a structured format.${commentsData && commentsData.length === 0 ? ' Note that for this analysis you\'ll need to rely solely on the transcript as comment data is not available.' : ''}
 `;
 
     // Create user prompt
-    const userPrompt = `Please analyze this video content using the Skyscraper Analysis Framework to understand its structure, audience response, and key success factors. The video has ${fullTranscript.length} characters of transcript content and ${commentsData.length} comments to analyze.
+    const userPrompt = `Please analyze this video content using the Skyscraper Analysis Framework to understand its structure${commentsData && commentsData.length > 0 ? ', audience response, ' : ' and '}key success factors. The video has ${fullTranscript.length} characters of transcript content${commentsData && commentsData.length > 0 ? ` and ${totalCommentCount} comments to analyze` : ''}.
 
 TRANSCRIPT:
 ${fullTranscript}
-
+${commentsData && commentsData.length > 0 ? `
 COMMENTS:
 ${formattedComments}
+` : ''}
 
 Focus on:
 1. Identifying the key structural elements and how they contribute to the video's effectiveness
-2. Understanding audience engagement patterns and sentiment through comment analysis
+2. ${commentsData && commentsData.length > 0 ? 'Understanding audience engagement patterns and sentiment through comment analysis' : 'Predicting audience engagement patterns based on the content'}
 3. Extracting actionable insights that can be applied to future content creation
 4. Identifying content gaps and opportunities for follow-up content
 5. Understanding the video's hook strategy and retention mechanisms
 6. Analyzing how value is delivered and trust is built with the audience
 7. Creating a practical implementation blueprint for similar content`;
 
-    // Use AI SDK to generate a structured object response
-    const { object } = await generateObject<SkyscraperAnalysisResponse>({
+    // Use AI SDK to generate a structured response using generateText
+    const { text } = await generateText({
       model: anthropic(modelId as any),
-      schema: {
-        type: 'object',
-        properties: {
-          content_analysis: {
-            type: 'object',
-            properties: {
-              structural_organization: { type: 'array' },
-              key_points: { type: 'array' },
-              technical_information: { type: 'array' },
-              expertise_elements: { type: 'string' },
-              visual_elements: { type: 'array' },
-            },
-            required: ['structural_organization', 'key_points', 'expertise_elements'],
-          },
-          audience_analysis: {
-            type: 'object',
-            properties: {
-              sentiment_overview: { type: 'object' },
-              praise_points: { type: 'array' },
-              questions_gaps: { type: 'array' },
-              use_cases: { type: 'array' },
-              demographic_signals: { type: 'object' },
-              engagement_patterns: { type: 'array' },
-            },
-            required: ['sentiment_overview', 'praise_points'],
-          },
-          content_gaps: {
-            type: 'object',
-            properties: {
-              missing_information: { type: 'array' },
-              follow_up_opportunities: { type: 'string' },
-              clarity_issues: { type: 'string' },
-              depth_breadth_balance: { type: 'string' },
-            },
-            required: ['missing_information', 'follow_up_opportunities'],
-          },
-          framework_elements: {
-            type: 'object',
-            properties: {
-              overall_structure: { type: 'string' },
-              section_ratios: { type: 'object' },
-              information_hierarchy: { type: 'string' },
-              pacing_flow: { type: 'string' },
-            },
-            required: ['overall_structure', 'section_ratios'],
-          },
-          engagement_techniques: {
-            type: 'object',
-            properties: {
-              hook_strategy: { type: 'string' },
-              retention_mechanisms: { type: 'array' },
-              pattern_interrupts: { type: 'array' },
-              interaction_prompts: { type: 'array' },
-            },
-            required: ['hook_strategy', 'retention_mechanisms'],
-          },
-          value_delivery: {
-            type: 'object',
-            properties: {
-              information_packaging: { type: 'string' },
-              problem_solution_framing: { type: 'string' },
-              practical_application: { type: 'array' },
-              trust_building: { type: 'array' },
-            },
-            required: ['information_packaging', 'problem_solution_framing'],
-          },
-          implementation_blueprint: {
-            type: 'object',
-            properties: {
-              content_template: { type: 'string' },
-              key_sections: { type: 'array' },
-              engagement_points: { type: 'array' },
-              differentiation_opportunities: { type: 'array' },
-              cta_strategy: { type: 'string' },
-            },
-            required: ['content_template', 'key_sections'],
-          },
-        },
-        required: [
-          'content_analysis',
-          'audience_analysis',
-          'content_gaps',
-          'framework_elements',
-          'engagement_techniques',
-          'value_delivery',
-          'implementation_blueprint'
-        ],
-      } as any,
-      system: systemPrompt,
-      prompt: userPrompt,
-      providerOptions: {
-        anthropic: {
-          thinking: { type: 'enabled', budgetTokens: 10000 },
-        },
-      },
+      system: systemPrompt + "\n\nProvide your response as a valid JSON object with the expected structure, without any markdown formatting or explanatory text.",
+      messages: [{ role: 'user', content: userPrompt }],
+      temperature: 0.3,
+      maxTokens: 4000
     });
+    
+    // Parse the JSON response
+    let analysisObject;
+    try {
+      analysisObject = JSON.parse(text);
+      
+      // Apply Zod validation to ensure the response matches our expected schema
+      const schema = z.object({
+        content_analysis: z.object({
+          structural_organization: z.array(z.object({
+            title: z.string(),
+            start_time: z.string(),
+            end_time: z.string(),
+            description: z.string(),
+          })),
+          key_points: z.array(z.object({
+            point: z.string(),
+            timestamp: z.string(),
+            elaboration: z.string(),
+          })),
+          technical_information: z.array(z.object({
+            topic: z.string(),
+            details: z.string(),
+          })),
+          expertise_elements: z.string(),
+          visual_elements: z.array(z.object({
+            element: z.string(),
+            purpose: z.string(),
+          })),
+        }),
+        audience_analysis: z.object({
+          sentiment_overview: z.object({
+            positive: z.number(),
+            neutral: z.number(),
+            negative: z.number(),
+            key_themes: z.array(z.string()),
+          }),
+          praise_points: z.array(z.object({
+            topic: z.string(),
+            frequency: z.string(),
+            examples: z.array(z.string()),
+          })),
+          questions_gaps: z.array(z.object({
+            question: z.string(),
+            frequency: z.string(),
+            context: z.string(),
+          })),
+          use_cases: z.array(z.object({
+            case: z.string(),
+            context: z.string(),
+          })),
+          demographic_signals: z.object({
+            expertise_level: z.string(),
+            industry_focus: z.array(z.string()),
+            notable_segments: z.array(z.string()),
+          }),
+          engagement_patterns: z.array(z.object({
+            pattern: z.string(),
+            indicators: z.array(z.string()),
+          })),
+        }),
+        content_gaps: z.object({
+          missing_information: z.array(z.object({
+            topic: z.string(),
+            importance: z.string(),
+            context: z.string(),
+          })),
+          follow_up_opportunities: z.string(),
+          clarity_issues: z.string(),
+          depth_breadth_balance: z.string(),
+        }),
+        framework_elements: z.object({
+          overall_structure: z.string(),
+          section_ratios: z.object({
+            introduction: z.number(),
+            main_content: z.number(),
+            conclusion: z.number(),
+          }),
+          information_hierarchy: z.string(),
+          pacing_flow: z.string(),
+        }),
+        engagement_techniques: z.object({
+          hook_strategy: z.string(),
+          retention_mechanisms: z.array(z.object({
+            technique: z.string(),
+            implementation: z.string(),
+            effectiveness: z.string(),
+          })),
+          pattern_interrupts: z.array(z.object({
+            type: z.string(),
+            timestamp: z.string(),
+            purpose: z.string(),
+          })),
+          interaction_prompts: z.array(z.object({
+            prompt_type: z.string(),
+            implementation: z.string(),
+          })),
+        }),
+        value_delivery: z.object({
+          information_packaging: z.string(),
+          problem_solution_framing: z.string(),
+          practical_application: z.array(z.object({
+            application: z.string(),
+            context: z.string(),
+          })),
+          trust_building: z.array(z.object({
+            element: z.string(),
+            implementation: z.string(),
+          })),
+        }),
+        implementation_blueprint: z.object({
+          content_template: z.string(),
+          key_sections: z.array(z.object({
+            section: z.string(),
+            purpose: z.string(),
+            content_guidance: z.string(),
+          })),
+          engagement_points: z.array(z.object({
+            point: z.string(),
+            implementation: z.string(),
+          })),
+          differentiation_opportunities: z.array(z.object({
+            opportunity: z.string(),
+            implementation: z.string(),
+          })),
+          cta_strategy: z.string(),
+        }),
+      });
+      
+      // Validate the response (this will throw if validation fails)
+      schema.parse(analysisObject);
+    } catch (error) {
+      console.error('Error parsing or validating JSON response:', error);
+      throw new Error('Failed to parse AI response as JSON or response did not match expected schema');
+    }
+
+    console.log("Analysis complete, saving to skyscraper_analyses table");
 
     // Save the analysis results to the database
     const { data: analysisData, error: analysisError } = await supabase
@@ -346,10 +405,20 @@ Focus on:
         user_id: userId,
         analysis_date: new Date().toISOString(),
         model_id: modelId,
-        analysis_data: object as any,
-        system_prompt: systemPrompt,
-        user_prompt: userPrompt,
-        reasoning: '', // Currently not capturing reasoning
+        content_analysis: analysisObject.content_analysis,
+        audience_analysis: analysisObject.audience_analysis,
+        content_gaps: analysisObject.content_gaps,
+        structure_elements: analysisObject.framework_elements,
+        engagement_techniques: analysisObject.engagement_techniques,
+        value_delivery: analysisObject.value_delivery,
+        implementation_blueprint: analysisObject.implementation_blueprint,
+        model_used: CLAUDE_MODELS.find(model => model.id === modelId)?.name || modelId,
+        tokens_used: Math.round(fullTranscript.length / 4), // Rough estimate
+        cost: 0, // You can calculate this more precisely if needed
+        status: 'completed',
+        progress: 100,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
       })
       .select('id')
       .single();
@@ -359,10 +428,12 @@ Focus on:
       throw new Error(`Failed to save analysis: ${analysisError.message}`);
     }
 
+    console.log(`Analysis saved with ID: ${analysisData.id}`);
+
     return {
       success: true,
       videoId,
-      analysisResults: object,
+      analysisResults: analysisObject,
       analysisId: analysisData.id,
       systemPrompt,
       userPrompt,

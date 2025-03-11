@@ -12,9 +12,22 @@ export const getSupabaseAnonKey = (): string => {
   return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 };
 
+export const getSupabaseServiceKey = (): string => {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+};
+
 // YouTube API configuration
 export const getYouTubeApiKey = (): string => {
-  return process.env.YOUTUBE_API_KEY || '';
+  // Try localStorage (client-side only)
+  if (typeof window !== 'undefined') {
+    const localStorageKey = localStorage.getItem('YOUTUBE_API_KEY');
+    if (localStorageKey) {
+      return localStorageKey;
+    }
+  }
+  
+  // Fallback to environment variable
+  return process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY || '';
 };
 
 // Anthropic API configuration

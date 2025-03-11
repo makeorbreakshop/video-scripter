@@ -68,4 +68,65 @@ The application follows a 5-phase workflow for creating YouTube scripts:
 Refer to the code documentation for details on implementation.
 
 ## Updated Repository
-This repository has been updated and is now properly deployed to GitHub. 
+This repository has been updated and is now properly deployed to GitHub.
+
+## Database Access
+
+The application connects to a Supabase database with the following structure:
+
+### Tables
+
+1. `videos` - Stores YouTube video metadata
+2. `chunks` - Stores transcript chunks for videos
+3. `analyses` - General analysis results
+4. `patterns` - Content pattern data
+5. `scripts` - Script content
+6. `skyscraper_analyses` - Detailed analyses using the Skyscraper framework
+7. `profiles` - User profiles
+8. `projects` - Project data
+9. `documents` - Document storage
+10. `script_data` - Script-related structured data
+
+### Database Access via MCP
+
+AI assistants (Claude) can access the database directly through MCP integration using read-only SQL queries. This allows for:
+
+- Checking saved analysis results
+- Viewing database structure
+- Verifying data integrity
+- Providing insights based on stored data
+
+Example database query through MCP:
+```sql
+SELECT id, video_id, model_used, created_at FROM skyscraper_analyses ORDER BY created_at DESC LIMIT 5;
+```
+
+### Skyscraper Analysis Schema
+
+The `skyscraper_analyses` table stores comprehensive video analyses with the following structure:
+
+```sql
+CREATE TABLE IF NOT EXISTS public.skyscraper_analyses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  video_id TEXT NOT NULL,
+  content_analysis JSONB,
+  audience_analysis JSONB,
+  content_gaps JSONB,
+  structure_elements JSONB,
+  engagement_techniques JSONB,
+  value_delivery JSONB,
+  implementation_blueprint JSONB,
+  model_used TEXT,
+  tokens_used INTEGER,
+  cost DOUBLE PRECISION,
+  status TEXT,
+  progress INTEGER,
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  user_id UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+For more detailed schema information, see [skyscraper-schema-simple-README.md](./skyscraper-schema-simple-README.md). 

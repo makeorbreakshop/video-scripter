@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     }
     
     const apiKey = getYouTubeApiKey();
+    console.log(`🔑 YouTube API Key available: ${apiKey ? 'YES' : 'NO'}`);
     
     // If we have an API key, try to fetch all comments with pagination
     if (apiKey) {
@@ -129,10 +130,15 @@ export async function POST(request: Request) {
             apiUrl += `&pageToken=${nextPageToken}`;
           }
           
+          console.log(`🔗 API URL: ${apiUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
+          
           const response = await fetch(apiUrl);
           
+          console.log(`📥 Response status for page ${page}: ${response.status} ${response.statusText}`);
+          
           if (!response.ok) {
-            console.error(`🚨 Failed to fetch comments with API key: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`🚨 Failed to fetch comments with API key: ${response.status}`, errorText);
             // If we've fetched some comments already, return them; otherwise fall back to simulated comments
             if (allComments.length > 0) {
               return NextResponse.json({ 
@@ -142,9 +148,11 @@ export async function POST(request: Request) {
                 totalFetched: allComments.length
               });
             }
+            console.log(`⚠️ Falling back to simulated comments for ${videoId}`);
             return NextResponse.json({ 
               comments: simulateComments(videoId),
-              simulated: true
+              simulated: true,
+              error: `API error: ${response.status} ${response.statusText}`
             });
           }
           

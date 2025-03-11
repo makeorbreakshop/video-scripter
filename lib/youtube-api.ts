@@ -3,20 +3,28 @@ import { getValidAccessToken, isAuthenticated } from './youtube-oauth';
 
 // Helper function to get the API key from localStorage
 const getYouTubeApiKey = (): string | null => {
+  // Try environment variable first (server-side)
+  if (process.env.YOUTUBE_API_KEY) {
+    console.log('🔑 Using YouTube API key from process.env.YOUTUBE_API_KEY');
+    return process.env.YOUTUBE_API_KEY;
+  }
+  
+  // Try public environment variable (client-side)
+  if (process.env.NEXT_PUBLIC_YOUTUBE_API_KEY) {
+    console.log('🔑 Using YouTube API key from process.env.NEXT_PUBLIC_YOUTUBE_API_KEY');
+    return process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  }
+  
   // Try localStorage (client-side only)
   if (typeof window !== 'undefined') {
     const localStorageKey = localStorage.getItem('YOUTUBE_API_KEY');
     if (localStorageKey) {
+      console.log('🔑 Using YouTube API key from localStorage');
       return localStorageKey;
     }
   }
   
-  // Fallback to environment variable (for backward compatibility)
-  if (process.env.NEXT_PUBLIC_YOUTUBE_API_KEY) {
-    return process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-  }
-  
-  // No API key found
+  console.log('⚠️ No YouTube API key found in any location');
   return null;
 };
 
@@ -205,7 +213,8 @@ export async function fetchYoutubeComments(videoUrl: string, maxResults: number 
       const accessToken = await getValidAccessToken();
       if (!accessToken) {
         console.error('🚨 Valid OAuth access token not available for comments');
-        return await fetchCommentsWithApiKey(videoId, maxResults) || simulateComments(videoId);
+        const apiKeyComments = await fetchCommentsWithApiKey(videoId, maxResults);
+        return apiKeyComments || [];
       }
       
       const response = await fetch(
@@ -220,7 +229,8 @@ export async function fetchYoutubeComments(videoUrl: string, maxResults: number 
       
       if (!response.ok) {
         console.error('🚨 Failed to fetch comments with OAuth:', await response.text());
-        return await fetchCommentsWithApiKey(videoId, maxResults) || simulateComments(videoId);
+        const apiKeyComments = await fetchCommentsWithApiKey(videoId, maxResults);
+        return apiKeyComments || [];
       }
       
       const data = await response.json();
@@ -243,12 +253,14 @@ export async function fetchYoutubeComments(videoUrl: string, maxResults: number 
       });
     } catch (error) {
       console.error('🚨 Error fetching comments with OAuth:', error);
-      return await fetchCommentsWithApiKey(videoId, maxResults) || simulateComments(videoId);
+      const apiKeyComments = await fetchCommentsWithApiKey(videoId, maxResults);
+      return apiKeyComments || [];
     }
   } else {
     // No OAuth, try API key
     console.log(`🔑 OAuth not available, trying API key for comments`);
-    return await fetchCommentsWithApiKey(videoId, maxResults) || simulateComments(videoId);
+    const apiKeyComments = await fetchCommentsWithApiKey(videoId, maxResults);
+    return apiKeyComments || [];
   }
 }
 
@@ -264,63 +276,71 @@ async function fetchCommentsWithApiKey(videoId: string, maxResults: number): Pro
   }
   
   try {
-    console.log(`💬 Fetching comments for video ID: ${videoId} with API key`);
+    console.log(`🔑 Attempting to fetch comments with API key for video ID: ${videoId}`);
     
-    // Debug the API call
-    debugApiCall('commentThreads', { 
-      videoId, 
-      maxResults, 
-      part: 'snippet', 
-      order: 'relevance'
-    });
-    
-    const apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=${maxResults}&order=relevance&key=${apiKey}`;
-    console.log(`🌐 API URL (partial): ${apiUrl.substring(0, apiUrl.indexOf('key=') + 4)}...`);
-    
-    const response = await fetch(apiUrl);
-    
-    // Log the response status and headers
-    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
-    console.log(`📥 Response headers:`, Object.fromEntries([...response.headers.entries()]));
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=${maxResults}&order=relevance&key=${apiKey}`
+    );
     
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('🚨 Comments API error details:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      });
-      
-      if (response.status === 403 || response.status === 401) {
-        console.error('🔑 Authentication error - likely an API key issue');
-        return null;
-      }
-      
+      console.error('🚨 Failed to fetch comments with API key:', await response.text());
       return null;
     }
     
     const data = await response.json();
-    console.log(`✅ Received ${data.items?.length || 0} comments with API key`);
+    console.log(`✅ Successfully fetched ${data.items?.length || 0} comment threads with API key`);
     
-    // Extract the relevant comment information
     if (!data.items || data.items.length === 0) {
-      console.log(`⚠️ No comments found for video ID: ${videoId}`);
+      console.log('⚠️ No comments found for this video');
       return [];
     }
     
-    return data.items.map((item: any) => {
-      const comment = item.snippet.topLevelComment.snippet;
-      return {
-        authorDisplayName: comment.authorDisplayName,
-        authorProfileImageUrl: comment.authorProfileImageUrl,
-        textDisplay: comment.textDisplay,
-        likeCount: comment.likeCount,
-        publishedAt: comment.publishedAt
-      };
-    });
+    let comments: Array<{
+      authorDisplayName: string;
+      authorProfileImageUrl: string;
+      textDisplay: string;
+      likeCount: number;
+      publishedAt: string;
+      isReply: boolean;
+      parentId: string | null;
+    }> = [];
     
+    // Process each comment thread (top-level comment + replies)
+    for (const item of data.items) {
+      // Add the top-level comment
+      const topLevelComment = item.snippet.topLevelComment.snippet;
+      comments.push({
+        authorDisplayName: topLevelComment.authorDisplayName,
+        authorProfileImageUrl: topLevelComment.authorProfileImageUrl,
+        textDisplay: topLevelComment.textDisplay,
+        likeCount: topLevelComment.likeCount,
+        publishedAt: topLevelComment.publishedAt,
+        isReply: false,
+        parentId: null
+      });
+      
+      // Add replies if they exist
+      if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
+        const parentId = item.id;
+        const replyComments = item.replies.comments.map((reply: any) => ({
+          authorDisplayName: reply.snippet.authorDisplayName,
+          authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
+          textDisplay: reply.snippet.textDisplay,
+          likeCount: reply.snippet.likeCount,
+          publishedAt: reply.snippet.publishedAt,
+          isReply: true,
+          parentId: parentId
+        }));
+        
+        comments = [...comments, ...replyComments];
+        console.log(`📝 Added ${replyComments.length} replies to comment ${parentId}`);
+      }
+    }
+    
+    console.log(`✅ Total comments including replies: ${comments.length}`);
+    return comments;
   } catch (error) {
-    console.error('🚨 Error fetching YouTube comments with API key:', error);
+    console.error('🚨 Error fetching comments with API key:', error);
     return null;
   }
 }
@@ -341,11 +361,30 @@ export async function fetchAllYoutubeComments(videoUrl: string): Promise<any[]> 
   
   // Try OAuth first if available
   if (isAuthenticated()) {
-    return await fetchAllCommentsWithOAuth(videoId) || await fetchAllCommentsWithApiKey(videoId) || simulateComments(videoId);
+    const oauthComments = await fetchAllCommentsWithOAuth(videoId);
+    if (oauthComments && oauthComments.length > 0) {
+      return oauthComments;
+    }
+    
+    const apiKeyComments = await fetchAllCommentsWithApiKey(videoId);
+    if (apiKeyComments && apiKeyComments.length > 0) {
+      return apiKeyComments;
+    }
+    
+    // Return empty array instead of simulated comments
+    console.log('⚠️ No real comments found, returning empty array');
+    return [];
   } else {
     // No OAuth, try API key
     console.log(`🔑 OAuth not available, trying API key for ALL comments`);
-    return await fetchAllCommentsWithApiKey(videoId) || simulateComments(videoId);
+    const apiKeyComments = await fetchAllCommentsWithApiKey(videoId);
+    if (apiKeyComments && apiKeyComments.length > 0) {
+      return apiKeyComments;
+    }
+    
+    // Return empty array instead of simulated comments
+    console.log('⚠️ No real comments found, returning empty array');
+    return [];
   }
 }
 
@@ -369,13 +408,13 @@ async function fetchAllCommentsWithOAuth(videoId: string): Promise<any[] | null>
     do {
       console.log(`📃 Fetching comments page ${page} with OAuth...`);
       
-      // Construct URL with page token if available
-      let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&order=relevance`;
+      // Construct URL with page token if available - include replies in the request
+      let apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=100&order=relevance`;
       if (nextPageToken) {
-        url += `&pageToken=${nextPageToken}`;
+        apiUrl += `&pageToken=${nextPageToken}`;
       }
       
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
@@ -391,24 +430,61 @@ async function fetchAllCommentsWithOAuth(videoId: string): Promise<any[] | null>
       
       // Extract and transform comments
       if (data.items && data.items.length > 0) {
-        const comments = data.items.map((item: any) => {
-          const comment = item.snippet.topLevelComment.snippet;
-          return {
-            authorDisplayName: comment.authorDisplayName,
-            authorProfileImageUrl: comment.authorProfileImageUrl,
-            textDisplay: comment.textDisplay,
-            likeCount: comment.likeCount,
-            publishedAt: comment.publishedAt
-          };
-        });
+        let comments: Array<{
+          authorDisplayName: string;
+          authorProfileImageUrl: string;
+          textDisplay: string;
+          likeCount: number;
+          publishedAt: string;
+          isReply: boolean;
+          parentId: string | null;
+        }> = [];
+        
+        // Process each comment thread (top-level comment + replies)
+        for (const item of data.items) {
+          // Add the top-level comment
+          const topLevelComment = item.snippet.topLevelComment.snippet;
+          comments.push({
+            authorDisplayName: topLevelComment.authorDisplayName,
+            authorProfileImageUrl: topLevelComment.authorProfileImageUrl,
+            textDisplay: topLevelComment.textDisplay,
+            likeCount: topLevelComment.likeCount,
+            publishedAt: topLevelComment.publishedAt,
+            isReply: false,
+            parentId: null
+          });
+          
+          // Add replies if they exist
+          if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
+            const parentId = item.id;
+            const replyComments = item.replies.comments.map((reply: any) => ({
+              authorDisplayName: reply.snippet.authorDisplayName,
+              authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
+              textDisplay: reply.snippet.textDisplay,
+              likeCount: reply.snippet.likeCount,
+              publishedAt: reply.snippet.publishedAt,
+              isReply: true,
+              parentId: parentId
+            }));
+            
+            comments = [...comments, ...replyComments];
+            console.log(`📝 Added ${replyComments.length} replies to comment ${parentId}`);
+          }
+        }
         
         // Add comments to our collection
         allComments = [...allComments, ...comments];
-        console.log(`✅ Got ${comments.length} comments (total: ${allComments.length})`);
+        console.log(`✅ Got ${comments.length} comments including replies (total: ${allComments.length})`);
       }
       
       // Check if there are more pages
       nextPageToken = data.nextPageToken || null;
+      if (nextPageToken) {
+        console.log(`📄 Next page token found: ${nextPageToken.substring(0, 10)}...`);
+      } else {
+        console.log(`📄 No more pages available`);
+      }
+      
       page++;
       
       // Safety check to avoid infinite loops
@@ -418,7 +494,7 @@ async function fetchAllCommentsWithOAuth(videoId: string): Promise<any[] | null>
       }
     } while (nextPageToken);
     
-    console.log(`✅ Finished fetching all comments with OAuth: ${allComments.length} total comments`);
+    console.log(`✅ Finished fetching all comments with OAuth: ${allComments.length} total comments (including replies)`);
     return allComments;
   } catch (error) {
     console.error('🚨 Error fetching all comments with OAuth:', error);
@@ -439,19 +515,22 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
   
   try {
     console.log(`💬 Fetching ALL comments for video ID: ${videoId} with API key`);
+    console.log(`🔑 API key available: ${apiKey ? 'YES (starts with ' + apiKey.substring(0, 3) + '...)' : 'NO'}`);
     
     let allComments: any[] = [];
     let nextPageToken: string | null = null;
     let page = 1;
     
     do {
-      console.log(`📃 Fetching comments page ${page} with API key...`);
+      console.log(`📃 Fetching comments page ${page} for ${videoId} with API key...`);
       
-      // Construct URL with page token if available
-      let apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&order=relevance&key=${apiKey}`;
+      // Construct URL with page token if available - include replies in the request
+      let apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=100&order=relevance&key=${apiKey}`;
       if (nextPageToken) {
         apiUrl += `&pageToken=${nextPageToken}`;
       }
+      
+      console.log(`🔗 API URL: ${apiUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
       
       const response = await fetch(apiUrl);
       
@@ -459,9 +538,11 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
       console.log(`📥 Response status for page ${page}: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
+        const errorText = await response.text();
         console.error('🚨 Comments API error:', {
           status: response.status,
-          statusText: response.statusText
+          statusText: response.statusText,
+          error: errorText
         });
         
         if (response.status === 403 || response.status === 401) {
@@ -477,24 +558,63 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
       
       // Extract and transform comments
       if (data.items && data.items.length > 0) {
-        const comments = data.items.map((item: any) => {
-          const comment = item.snippet.topLevelComment.snippet;
-          return {
-            authorDisplayName: comment.authorDisplayName,
-            authorProfileImageUrl: comment.authorProfileImageUrl,
-            textDisplay: comment.textDisplay,
-            likeCount: comment.likeCount,
-            publishedAt: comment.publishedAt
-          };
-        });
+        let comments: Array<{
+          authorDisplayName: string;
+          authorProfileImageUrl: string;
+          textDisplay: string;
+          likeCount: number;
+          publishedAt: string;
+          isReply: boolean;
+          parentId: string | null;
+        }> = [];
+        
+        // Process each comment thread (top-level comment + replies)
+        for (const item of data.items) {
+          // Add the top-level comment
+          const topLevelComment = item.snippet.topLevelComment.snippet;
+          comments.push({
+            authorDisplayName: topLevelComment.authorDisplayName,
+            authorProfileImageUrl: topLevelComment.authorProfileImageUrl,
+            textDisplay: topLevelComment.textDisplay,
+            likeCount: topLevelComment.likeCount,
+            publishedAt: topLevelComment.publishedAt,
+            isReply: false,
+            parentId: null
+          });
+          
+          // Add replies if they exist
+          if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
+            const parentId = item.id;
+            const replyComments = item.replies.comments.map((reply: any) => ({
+              authorDisplayName: reply.snippet.authorDisplayName,
+              authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
+              textDisplay: reply.snippet.textDisplay,
+              likeCount: reply.snippet.likeCount,
+              publishedAt: reply.snippet.publishedAt,
+              isReply: true,
+              parentId: parentId
+            }));
+            
+            comments = [...comments, ...replyComments];
+            console.log(`📝 Added ${replyComments.length} replies to comment ${parentId}`);
+          }
+        }
         
         // Add comments to our collection
         allComments = [...allComments, ...comments];
-        console.log(`✅ Got ${comments.length} comments (total: ${allComments.length})`);
+        console.log(`✅ Got ${comments.length} comments including replies (total: ${allComments.length})`);
+      } else {
+        console.log(`⚠️ No comments found on page ${page}`);
       }
       
       // Check if there are more pages
       nextPageToken = data.nextPageToken || null;
+      if (nextPageToken) {
+        console.log(`📄 Next page token found: ${nextPageToken.substring(0, 10)}...`);
+      } else {
+        console.log(`📄 No more pages available`);
+      }
+      
       page++;
       
       // Safety check to avoid infinite loops
@@ -504,7 +624,7 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
       }
     } while (nextPageToken);
     
-    console.log(`✅ Finished fetching all comments with API key: ${allComments.length} total comments`);
+    console.log(`✅ Finished fetching all comments with API key: ${allComments.length} total comments (including replies)`);
     return allComments;
   } catch (error) {
     console.error('🚨 Error fetching ALL comments with API key:', error);

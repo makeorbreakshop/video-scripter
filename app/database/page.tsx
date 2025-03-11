@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Database, Search, Video, RefreshCw, AlertCircle, FileDown, Trash2, Check } from "lucide-react";
+import { Database, Search, Video, RefreshCw, AlertCircle, FileDown, Trash2, Check, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -23,7 +23,9 @@ import { toast } from "@/components/ui/use-toast";
 import SkyscraperDebugModal from '../components/SkyscraperDebugModal';
 import { extractYouTubeId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { analyzeVideoWithSkyscraper, CLAUDE_MODELS } from '@/app/actions/skyscraper-analysis';
+import { analyzeVideoWithSkyscraper } from '@/app/actions/skyscraper-analysis';
+import { CLAUDE_MODELS } from '@/app/constants/claude-models';
+import { formatAnalysisMarkdown } from "@/app/utils/formatAnalysisMarkdown";
 
 // Types for our video data
 interface VideoItem {
@@ -39,6 +41,7 @@ interface VideoItem {
   commentCount?: number;
   transcriptLength?: number;
   wordCount?: number;
+  hasSkyscraperAnalysis?: boolean;
 }
 
 interface ProcessStatus {
@@ -72,6 +75,7 @@ interface DebugData {
   analysisResults?: any;
   error?: string;
   reasoning?: string;
+  modelId?: string;
 }
 
 // Add this after the ProcessStatus interface
@@ -140,6 +144,12 @@ export default function DatabasePage() {
   
   // Add activeTab state
   const [activeTab, setActiveTab] = useState("import");
+  
+  // Ensure parsedStreamData is passed to DatabasePage
+  const [parsedStreamData, setParsedStreamData] = useState<any>(null);
+  
+  // Add useRef import
+  const debugModalRef = useRef<{streamedText: string} | null>(null);
   
   // Fetch existing videos when the page loads
   useEffect(() => {
@@ -684,19 +694,302 @@ Focus on:
     }
   };
   
+  // Helper function to validate analysis results structure
+  const validateAnalysisResults = (data: any) => {
+    // Check if the data has at least one of the expected top-level keys
+    const requiredKeys = ['content_analysis', 'audience_analysis', 'framework_elements', 
+      'content_gaps', 'engagement_techniques', 'value_delivery', 'implementation_blueprint'];
+    
+    if (!data) {
+      console.error('Analysis results is null or undefined');
+      return false;
+    }
+    
+    if (typeof data !== 'object') {
+      console.error('Analysis results is not an object:', typeof data);
+      return false;
+    }
+    
+    // If we got a string (perhaps markdown or raw text), try to extract JSON
+    if (typeof data === 'string') {
+      console.log('Received string data, attempting to parse as JSON');
+      try {
+        // Check for markdown
+        const markdownMatch = data.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (markdownMatch && markdownMatch[1]) {
+          console.log('Found markdown code block in validation');
+          data = JSON.parse(markdownMatch[1].trim());
+        } else {
+          // Try direct parsing
+          data = JSON.parse(data);
+        }
+        console.log('Successfully parsed string into JSON object');
+      } catch (e) {
+        console.error('Failed to parse string as JSON:', e);
+        return false;
+      }
+    }
+    
+    // Check if there are any keys at all
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      console.error('Analysis results is an empty object');
+      return false;
+    }
+    
+    // Double check the data structure of content_analysis if present
+    if (data.content_analysis) {
+      console.log('Found content_analysis key, checking structure');
+      const contentKeys = Object.keys(data.content_analysis);
+      console.log('Content analysis keys:', contentKeys.join(', '));
+    }
+    
+    // Check if at least one of the required keys exists
+    const hasRequiredKey = requiredKeys.some(key => key in data);
+    if (!hasRequiredKey) {
+      console.error('Analysis results missing required keys. Found:', keys.join(', '));
+    } else {
+      console.log('Validation passed: found required keys in analysis results');
+    }
+    
+    return hasRequiredKey;
+  };
+
+  // Enhanced JSON extraction for streamed responses
+  const extractJsonFromStream = (text: string) => {
+    if (!text || typeof text !== 'string') {
+      console.error('Invalid text provided to extractJsonFromStream:', text);
+      return null;
+    }
+    
+    console.log('Attempting to extract JSON from text length:', text.length);
+    
+    // First check if we have a markdown code block and strip it
+    let processedText = text;
+    const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (markdownMatch && markdownMatch[1]) {
+      console.log('Found markdown code block, extracting content');
+      processedText = markdownMatch[1].trim();
+    }
+    
+    // First try direct parsing
+    try {
+      const parsed = JSON.parse(processedText);
+      console.log('Successfully parsed complete JSON directly');
+      return parsed;
+    } catch (e) {
+      // Direct parsing failed, try extraction methods
+    }
+    
+    // Look for complete JSON objects with a robust pattern
+    try {
+      // Try to find all JSON-like patterns
+      const jsonPattern = /\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\}/g;
+      const matches = [...processedText.matchAll(jsonPattern)];
+      
+      if (matches.length > 0) {
+        // Get the largest match, which is likely the most complete
+        let largestMatch = matches[0][0];
+        let largestLength = largestMatch.length;
+        
+        for (const match of matches) {
+          if (match[0].length > largestLength) {
+            largestMatch = match[0];
+            largestLength = match[0].length;
+          }
+        }
+        
+        console.log('Found JSON object in stream with length:', largestLength);
+        const parsed = JSON.parse(largestMatch);
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to extract with robust pattern:', e);
+    }
+    
+    // Try a simpler approach with regex for JSON-like structure
+    try {
+      const simpleMatch = processedText.match(/\{[\s\S]*\}/);
+      if (simpleMatch) {
+        console.log('Found JSON with simple pattern, length:', simpleMatch[0].length);
+        const parsed = JSON.parse(simpleMatch[0]);
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to extract with simple pattern:', e);
+    }
+    
+    // Last resort: try to find the largest balanced braces block
+    try {
+      let maxStart = -1;
+      let maxEnd = -1;
+      let maxLength = 0;
+      
+      for (let i = 0; i < processedText.length; i++) {
+        if (processedText[i] === '{') {
+          // Found an opening brace, try to find the matching closing brace
+          let depth = 1;
+          for (let j = i + 1; j < processedText.length; j++) {
+            if (processedText[j] === '{') depth++;
+            else if (processedText[j] === '}') depth--;
+            
+            if (depth === 0) {
+              // Found a balanced block
+              const length = j - i + 1;
+              if (length > maxLength) {
+                maxStart = i;
+                maxEnd = j;
+                maxLength = length;
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      if (maxStart >= 0 && maxLength > 10) { // Minimum size to consider valid
+        const jsonCandidate = processedText.substring(maxStart, maxEnd + 1);
+        console.log('Found balanced JSON with manual parsing, length:', jsonCandidate.length);
+        const parsed = JSON.parse(jsonCandidate);
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed with manual balanced brace extraction:', e);
+    }
+    
+    console.error('Could not extract valid JSON after trying all methods');
+    return null;
+  };
+
   // Function to handle saving analysis results to database
   const handleSaveAnalysis = async () => {
     try {
-      // TODO: Implement database save functionality
+      // Get the selected model from debugData
+      const selectedModel = debugData.modelId || 'claude-3-7-sonnet-20240620'; // Default model
+
+      // Determine which analysis results to use
+      let analysisResults = null;
+      
+      // Try multiple sources for analysis results in order of preference
+      if (parsedStreamData && Object.keys(parsedStreamData).length > 0) {
+        console.log('Using parsedStreamData:', Object.keys(parsedStreamData).join(', '));
+        analysisResults = parsedStreamData;
+      } else if (debugData.analysisResults && Object.keys(debugData.analysisResults).length > 0) {
+        console.log('Using debugData.analysisResults:', Object.keys(debugData.analysisResults).join(', '));
+        analysisResults = debugData.analysisResults;
+      } else if (debugModalRef.current?.streamedText) {
+        const streamedText = debugModalRef.current.streamedText;
+        console.log('Attempting extraction from streamedText length:', streamedText.length);
+        
+        // Check for markdown code block markers
+        if (streamedText.includes('```json') || (streamedText.includes('```') && streamedText.includes('{'))) {
+          console.log('Detected markdown code block in streamedText');
+          
+          // Extract the JSON from the markdown code block
+          const markdownMatch = streamedText.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (markdownMatch && markdownMatch[1]) {
+            const jsonContent = markdownMatch[1].trim();
+            console.log('Extracted content from markdown block, attempting to parse');
+            
+            try {
+              analysisResults = JSON.parse(jsonContent);
+              console.log('Successfully parsed markdown code block:', 
+                Object.keys(analysisResults).join(', '));
+            } catch (e) {
+              console.log('Failed to parse extracted markdown content:', e);
+            }
+          }
+        }
+        
+        // If markdown extraction failed, try the full extraction method
+        if (!analysisResults) {
+          analysisResults = extractJsonFromStream(streamedText);
+        }
+        
+        if (analysisResults) {
+          console.log('Successfully extracted JSON from streamedText:', Object.keys(analysisResults).join(', '));
+          
+          // If we successfully parse, update the parsedStreamData state as well
+          setParsedStreamData(analysisResults);
+        }
+      }
+      
+      // Complete debug logging to help diagnose issues
+      console.log('Analysis sources status:', {
+        hasParsedStreamData: !!parsedStreamData,
+        parsedStreamDataKeys: parsedStreamData ? Object.keys(parsedStreamData) : 'none',
+        hasDebugDataResults: !!debugData.analysisResults,
+        debugDataResultsKeys: debugData.analysisResults ? Object.keys(debugData.analysisResults) : 'none',
+        hasStreamedText: !!debugModalRef.current?.streamedText,
+        streamedTextLength: debugModalRef.current?.streamedText?.length || 0,
+        extractedResults: !!analysisResults,
+        extractedResultsKeys: analysisResults ? Object.keys(analysisResults) : 'none'
+      });
+      
+      if (!analysisResults) {
+        console.error('No analysis results available from any source');
+        throw new Error('No analysis results available to save');
+      }
+      
+      // Validate that analysis results have the expected structure
+      if (!validateAnalysisResults(analysisResults)) {
+        console.error('Invalid analysis results structure:', analysisResults);
+        
+        // Create a more specific error message
+        let errorMessage = 'Analysis results are not in the expected format';
+        
+        if (typeof analysisResults !== 'object') {
+          errorMessage = `Invalid type: expected object but got ${typeof analysisResults}`;
+        } else if (Object.keys(analysisResults).length === 0) {
+          errorMessage = 'Empty object: analysis results contains no data';
+        } else {
+          const requiredKeys = ['content_analysis', 'audience_analysis', 'framework_elements', 
+            'content_gaps', 'engagement_techniques', 'value_delivery', 'implementation_blueprint'];
+          const foundKeys = Object.keys(analysisResults);
+          errorMessage = `Missing required keys. Found: ${foundKeys.join(', ')}. Need at least one of: ${requiredKeys.join(', ')}`;
+        }
+        
+        throw new Error(`Invalid analysis results structure: ${errorMessage}`);
+      }
+
+      console.log('Saving analysis results:', {
+        videoId: debugData.videoId,
+        modelId: selectedModel,
+        hasData: !!analysisResults,
+        dataKeys: Object.keys(analysisResults)
+      });
+
+      const response = await fetch('/api/skyscraper/analyze-single', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: debugData.videoId,
+          userId: '00000000-0000-0000-0000-000000000000', // Default user ID
+          modelId: selectedModel,
+          analysisResults: analysisResults,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to save analysis results: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Save response:', result);
+      
       toast({
-        title: "Not Implemented",
-        description: "Database save functionality will be implemented in the next step.",
+        title: 'Save Successful',
+        description: 'Analysis results saved to the database.',
       });
     } catch (error) {
+      console.error('Error saving analysis:', error);
       toast({
-        title: "Save Failed",
-        description: error instanceof Error ? error.message : "Failed to save analysis results",
-        variant: "destructive",
+        title: 'Save Failed',
+        description: error instanceof Error ? error.message : 'Failed to save analysis results',
+        variant: 'destructive',
       });
     }
   };
@@ -964,6 +1257,104 @@ Focus on:
     }
   };
   
+  // Add this function after the startAnalysis function
+  const startStreamAnalysis = async (modelId?: string) => {
+    try {
+      const videoId = debugData.videoId;
+      
+      // Update UI to show processing
+      setProcessStatus({ 
+        status: 'processing', 
+        message: 'Starting streaming analysis...',
+        step: 1,
+        progress: 5,
+        isOpen: false
+      });
+
+      // Update debug data to show loading state and save the modelId
+      setDebugData(prev => ({
+        ...prev,
+        status: 'loading',
+        modelId: modelId || 'claude-3-7-sonnet-20240620' // Save the selected model ID
+      }));
+
+      toast({
+        title: "Streaming Started",
+        description: "Claude is analyzing the video content in streaming mode.",
+      });
+      
+      // Note: The actual streaming happens in the SkyscraperDebugModal component using the useChat hook
+      
+    } catch (error) {
+      console.error("Error starting streaming analysis:", error);
+      
+      // Update debug data with error
+      setDebugData(prev => ({
+        ...prev,
+        status: 'error',
+        error: error instanceof Error ? error.message : "Failed to start streaming analysis"
+      }));
+      
+      toast({
+        title: "Streaming Failed",
+        description: error instanceof Error ? error.message : "Failed to start streaming analysis with Claude.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // First add the import for the formatAnalysisMarkdown utility
+  const downloadAnalysis = async (videoId: string, title: string) => {
+    try {
+      // Fetch the analysis data
+      const response = await fetch(`/api/skyscraper/get-analysis?videoId=${videoId}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch analysis data");
+      }
+      
+      const data = await response.json();
+      
+      // Format the analysis as markdown
+      const markdown = formatAnalysisMarkdown(
+        { 
+          title: data.video.title, 
+          channelTitle: data.video.channelTitle // This is actually channel_id in the database
+        }, 
+        data.analysis
+      );
+      
+      // Create a blob from the markdown content
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      
+      // Create a download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_analysis.md`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+      
+      toast({
+        title: "Analysis Downloaded",
+        description: "The analysis has been downloaded as a markdown file.",
+      });
+    } catch (error) {
+      console.error("Error downloading analysis:", error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the analysis. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between gap-2 mb-6">
@@ -1163,12 +1554,16 @@ Focus on:
                           size="sm"
                           onClick={() => analyzeVideo(video.id)}
                           disabled={isLoading}
-                          className="bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
+                          className={`${
+                            video.hasSkyscraperAnalysis 
+                              ? "bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white" 
+                              : "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
+                          }`}
                         >
-                          {video.analysisPhases === 5 ? (
+                          {video.hasSkyscraperAnalysis ? (
                             <>
                               <RefreshCw className="h-4 w-4 mr-2" />
-                              Re-analyze
+                              Reanalyze
                             </>
                           ) : (
                             <>
@@ -1177,6 +1572,31 @@ Focus on:
                             </>
                           )}
                         </Button>
+                        
+                        {/* Add the Download Analysis button */}
+                        {video.hasSkyscraperAnalysis && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => downloadAnalysis(video.id, video.title)}
+                              className="bg-green-900 border-green-800 text-green-200 hover:bg-green-800 hover:text-white"
+                            >
+                              <FileDown className="h-4 w-4 mr-2" />
+                              Download Analysis
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(`/analysis/${video.id}`, '_blank')}
+                              className="bg-blue-900 border-blue-800 text-blue-200 hover:bg-blue-800 hover:text-white"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </>
+                        )}
+                        
                         <Button
                           variant="ghost"
                           size="sm"
@@ -1205,11 +1625,15 @@ Focus on:
       </Tabs>
       
       <SkyscraperDebugModal
+        ref={debugModalRef}
         isOpen={debugModalOpen}
         onClose={() => setDebugModalOpen(false)}
         debugData={debugData}
         onSaveAnalysis={handleSaveAnalysis}
         onStartAnalysis={startAnalysis}
+        onStartStreamAnalysis={startStreamAnalysis}
+        parsedStreamData={parsedStreamData}
+        setParsedStreamData={setParsedStreamData}
       />
       
       {/* Add Alert Dialogs */}
