@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { InfoIcon } from "lucide-react"
+import { Label } from "@/components/ui/label"
 
 // Define available Claude models with their details
 const CLAUDE_MODELS = [
@@ -82,6 +83,7 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
   const [selectedModel, setSelectedModel] = useState(CLAUDE_MODELS[0].id);
   const [costEstimate, setCostEstimate] = useState({ inputCost: 0, outputCost: 0, totalCost: 0 });
   const [showReasoning, setShowReasoning] = useState(false);
+  const [activeTab, setActiveTab] = useState("prompts");
   
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -155,150 +157,107 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-5xl">
-                {/* Header with close button */}
-                <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-                  <Dialog.Title as="h3" className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Skyscraper Analysis Debug Info
-                  </Dialog.Title>
+                <div className="absolute right-0 top-0 pr-4 pt-4">
                   <button
                     type="button"
-                    className="rounded-full p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+                    className="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     onClick={onClose}
                   >
                     <span className="sr-only">Close</span>
                     <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
-
-                <div className="px-6 py-5">
-                  {/* Status indicator */}
+                
+                <div className="border-b border-gray-200 dark:border-gray-700">
+                  <Dialog.Title className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 p-6">
+                    Skyscraper Analysis Debug Info
+                  </Dialog.Title>
+                </div>
+                
+                <div className="p-6">
+                  {/* Video Info Section */}
+                  <div className="mb-6 grid grid-cols-2 gap-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Video ID</h3>
+                        <p className="mt-1 text-sm font-mono text-gray-900 dark:text-gray-200">{debugData.videoId}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Title</h3>
+                        <p className="mt-1 text-sm text-gray-900 dark:text-gray-200">{debugData.videoTitle}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Transcript Length</h3>
+                        <p className="mt-1 text-sm text-gray-900 dark:text-gray-200">{debugData.transcriptLength?.toLocaleString()} characters</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</h3>
+                        <p className="mt-1 text-sm text-gray-900 dark:text-gray-200">{debugData.commentCount} comments</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Model Selection */}
                   <div className="mb-6">
-                    {debugData.status === 'loading' && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1 text-sm flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Processing Analysis...
-                      </Badge>
-                    )}
-                    {debugData.status === 'success' && (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800 px-3 py-1 text-sm flex items-center gap-2">
-                        <CheckCircleIcon className="h-4 w-4" />
-                        Analysis Complete
-                      </Badge>
-                    )}
-                    {debugData.status === 'error' && (
-                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800 px-3 py-1 text-sm flex items-center gap-2">
-                        <ExclamationCircleIcon className="h-4 w-4" />
-                        Analysis Failed
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Model selection and cost estimation */}
-                  {debugData.status === 'loading' && (
-                    <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-100 dark:border-blue-900">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Claude Model</h4>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <InfoIcon className="h-4 w-4 text-gray-400" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>{currentModel.description}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <Select value={selectedModel} onValueChange={handleModelChange}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CLAUDE_MODELS.map(model => (
-                              <SelectItem key={model.id} value={model.id}>
-                                {model.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {currentModel.contextWindow.toLocaleString()} token context window
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Estimated Cost</h4>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <InfoIcon className="h-4 w-4 text-gray-400" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>This is an estimate based on approximate token counts. Actual costs may vary.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Input:</span>
-                            <span className="font-medium">${costEstimate.inputCost.toFixed(4)}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm mt-1">
-                            <span className="text-gray-600 dark:text-gray-400">Output:</span>
-                            <span className="font-medium">${costEstimate.outputCost.toFixed(4)}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <span className="font-medium">Total:</span>
-                            <span className="font-bold text-blue-600 dark:text-blue-400">${costEstimate.totalCost.toFixed(4)}</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                          <CalculatorIcon className="h-3 w-3" />
-                          Based on {debugData.transcriptLength?.toLocaleString() || 0} chars and {debugData.commentCount || 0} comments
-                        </p>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="model-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">Claude Model</Label>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Estimated Cost: ${costEstimate.totalCost.toFixed(4)}
                       </div>
                     </div>
-                  )}
-
-                  {/* Video metadata */}
-                  <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Video ID</p>
-                      <p className="font-mono text-sm text-gray-900 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{debugData.videoId}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Title</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-200">{debugData.videoTitle || 'N/A'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Transcript Length</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                        <span className="text-lg font-semibold">{debugData.transcriptLength?.toLocaleString() || 'N/A'}</span> characters
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                        <span className="text-lg font-semibold">{debugData.commentCount?.toLocaleString() || 'N/A'}</span> comments
-                      </p>
-                    </div>
+                    <Select
+                      value={selectedModel}
+                      onValueChange={handleModelChange}
+                    >
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="Select Claude model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CLAUDE_MODELS.map(model => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.name} (${model.inputCostPer1kTokens}/${model.outputCostPer1kTokens} per 1k tokens)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Input: ${costEstimate.inputCost.toFixed(4)} | Output: ${costEstimate.outputCost.toFixed(4)}
+                    </p>
                   </div>
-
-                  {/* Tabs for different sections */}
-                  <Tabs defaultValue="prompts" className="mt-6">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="prompts">Prompts</TabsTrigger>
-                      <TabsTrigger value="results">Analysis Results</TabsTrigger>
-                    </TabsList>
-
-                    {/* Prompts Tab */}
-                    <TabsContent value="prompts" className="space-y-6">
+                  
+                  {/* Tab Navigation */}
+                  <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                      <button
+                        onClick={() => setActiveTab("prompts")}
+                        className={classNames(
+                          activeTab === "prompts"
+                            ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300",
+                          "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                        )}
+                      >
+                        Prompts
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("results")}
+                        className={classNames(
+                          activeTab === "results"
+                            ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300",
+                          "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                        )}
+                      >
+                        Analysis Results
+                      </button>
+                    </nav>
+                  </div>
+                  
+                  {/* Tab Contents */}
+                  {activeTab === "prompts" && (
+                    <div className="space-y-6">
                       {/* System Prompt */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -338,10 +297,12 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
                           </code>
                         </pre>
                       </div>
-                    </TabsContent>
-
-                    {/* Analysis Results Tab */}
-                    <TabsContent value="results">
+                    </div>
+                  )}
+                  
+                  {activeTab === "results" && (
+                    <div className="space-y-6">
+                      {/* Analysis Results */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Results</h4>
@@ -385,39 +346,9 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
                           </code>
                         </pre>
                       </div>
-                    </TabsContent>
-                  </Tabs>
-
-                  {/* Video Info */}
-                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Video Info</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Video ID:</span>
-                          <span className="font-mono">{debugData.videoId}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Title:</span>
-                          <span>{debugData.videoTitle}</span>
-                        </div>
-                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Analysis Stats</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Transcript Length:</span>
-                          <span>{debugData.transcriptLength?.toLocaleString()} characters</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Comments:</span>
-                          <span>{debugData.commentCount?.toLocaleString()} comments</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+                  )}
+                  
                   {/* Error Display */}
                   {debugData.error && (
                     <div className="mt-6">
@@ -461,5 +392,10 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
         </div>
       </Dialog>
     </Transition.Root>
-  )
+  );
+}
+
+// Helper function for class name conditionals
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
 } 
