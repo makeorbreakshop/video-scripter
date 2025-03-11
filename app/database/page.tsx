@@ -23,6 +23,7 @@ import { toast } from "@/components/ui/use-toast";
 import SkyscraperDebugModal from '../components/SkyscraperDebugModal';
 import { extractYouTubeId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { analyzeVideoWithSkyscraper, CLAUDE_MODELS } from '@/app/actions/skyscraper-analysis';
 
 // Types for our video data
 interface VideoItem {
@@ -70,6 +71,7 @@ interface DebugData {
   userPrompt?: string;
   analysisResults?: any;
   error?: string;
+  reasoning?: string;
 }
 
 // Add this after the ProcessStatus interface
@@ -481,6 +483,12 @@ Focus on:
         isOpen: false
       });
 
+      // Update debug data to show loading state
+      setDebugData(prev => ({
+        ...prev,
+        status: 'loading'
+      }));
+
       // Simulate progress for demo purposes
       const simulateAnalysisProgress = () => {
         const phases = [
@@ -518,53 +526,50 @@ Focus on:
         
         return interval;
       };
-      
+
+      // Start the interval for progress simulation
       const progressInterval = simulateAnalysisProgress();
       
-      // Call the API to analyze the video with Claude
-      const response = await fetch("/api/skyscraper/analyze-single", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      try {
+        // Call the Server Action to analyze the video with Claude via AI SDK
+        const result = await analyzeVideoWithSkyscraper(
           videoId,
-          userId: "00000000-0000-0000-0000-000000000000",
-          modelId: modelId || "claude-3-7-sonnet-20240620" // Use provided model or default to Claude 3.7 Sonnet
-        }),
-      });
-      
-      clearInterval(progressInterval);
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to analyze video");
+          "00000000-0000-0000-0000-000000000000", // Default user ID
+          modelId
+        );
+        
+        // Update debug data with the results
+        setDebugData((prev: DebugData) => ({
+          ...prev,
+          status: 'success',
+          systemPrompt: result.systemPrompt,
+          userPrompt: result.userPrompt,
+          analysisResults: result.analysisResults,
+          reasoning: '', // We're not currently returning reasoning from the server action
+        }));
+        
+        // Update the success status
+        setProcessStatus({
+          status: 'success',
+          message: 'Video analyzed successfully with Claude!',
+          step: 'analyzing-pattern',
+          progress: 100,
+          isOpen: false
+        });
+        
+        toast({
+          title: "Analysis Complete",
+          description: "Claude has analyzed the video content successfully.",
+        });
+        
+        // Refresh the video list
+        fetchVideos();
+      } catch (error) {
+        console.error("Error in Server Action:", error);
+        throw error;
+      } finally {
+        clearInterval(progressInterval);
       }
-      
-      // Update debug data with the results
-      setDebugData((prev: DebugData) => ({
-        ...prev,
-        status: 'success',
-        systemPrompt: data.systemPrompt,
-        userPrompt: data.userPrompt,
-        analysisResults: data.analysisResults,
-      }));
-      
-      // Update the success status
-      setProcessStatus({
-        status: 'success',
-        message: 'Video analyzed successfully with Claude!',
-        step: 'analyzing-pattern',
-        progress: 100,
-        isOpen: false
-      });
-      
-      toast({
-        title: "Analysis Complete",
-        description: "Claude has analyzed the video content successfully.",
-      });
-      
-      // Refresh the video list
-      fetchVideos();
       
     } catch (error) {
       console.error("Error analyzing video:", error);
@@ -577,9 +582,16 @@ Focus on:
         isOpen: false
       });
       
+      // Update debug data with error
+      setDebugData(prev => ({
+        ...prev,
+        status: 'error',
+        error: error instanceof Error ? error.message : "Failed to analyze video"
+      }));
+      
       toast({
         title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: error instanceof Error ? error.message : "Failed to analyze the video with Claude.",
         variant: "destructive",
       });
     }

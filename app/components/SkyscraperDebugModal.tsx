@@ -72,6 +72,7 @@ interface DebugModalProps {
     analysisResults?: any
     error?: string
     status: 'loading' | 'success' | 'error' | 'initial'
+    reasoning?: string
   }
   onSaveAnalysis?: () => void
   onStartAnalysis?: (modelId?: string) => void
@@ -80,6 +81,7 @@ interface DebugModalProps {
 export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSaveAnalysis, onStartAnalysis }: DebugModalProps) {
   const [selectedModel, setSelectedModel] = useState(CLAUDE_MODELS[0].id);
   const [costEstimate, setCostEstimate] = useState({ inputCost: 0, outputCost: 0, totalCost: 0 });
+  const [showReasoning, setShowReasoning] = useState(false);
   
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -120,6 +122,11 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
 
   // Get current model info
   const currentModel = CLAUDE_MODELS.find(model => model.id === selectedModel) || CLAUDE_MODELS[0];
+
+  // Add a toggle for showing reasoning
+  const toggleReasoning = () => {
+    setShowReasoning(!showReasoning);
+  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -338,15 +345,40 @@ export default function SkyscraperDebugModal({ isOpen, onClose, debugData, onSav
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Results</h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(JSON.stringify(debugData.analysisResults, null, 2) || '')}
-                            className="h-8 px-2"
-                          >
-                            <ClipboardIcon className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {debugData.reasoning && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={toggleReasoning}
+                                className="h-8 px-2"
+                              >
+                                {showReasoning ? 'Hide Reasoning' : 'Show Reasoning'}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(JSON.stringify(debugData.analysisResults, null, 2) || '')}
+                              className="h-8 px-2"
+                            >
+                              <ClipboardIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
+                        
+                        {/* Show reasoning if available */}
+                        {showReasoning && debugData.reasoning && (
+                          <div className="mb-4">
+                            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Model Reasoning Process</h5>
+                            <pre className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm overflow-auto max-h-[300px]">
+                              <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                                {debugData.reasoning}
+                              </code>
+                            </pre>
+                          </div>
+                        )}
+                        
                         <pre className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm overflow-auto max-h-[500px]">
                           <code className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                             {JSON.stringify(debugData.analysisResults, null, 2)}
