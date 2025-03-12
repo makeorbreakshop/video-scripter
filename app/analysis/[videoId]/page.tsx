@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, MessageSquare, ScrollText } from "lucide-react";
+import { FileText, MessageSquare, ScrollText, Layers, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function AnalysisDetailPage() {
   const params = useParams();
@@ -278,17 +279,20 @@ export default function AnalysisDetailPage() {
                   {analysis.audience_analysis.demographic_signals && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-blue-400 mb-2">Demographic Signals</h3>
+                      
                       {analysis.audience_analysis.demographic_signals.expertise_level && (
-                        <div className="mb-3">
-                          <h4 className="text-md font-medium text-gray-300 mb-1">Expertise Level</h4>
-                          <p className="text-gray-300">{analysis.audience_analysis.demographic_signals.expertise_level}</p>
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-300 mb-2">Expertise Level</h4>
+                          <p className="text-gray-300 pl-4 border-l-2 border-gray-700">
+                            {analysis.audience_analysis.demographic_signals.expertise_level}
+                          </p>
                         </div>
                       )}
                       
                       {analysis.audience_analysis.demographic_signals.industry_focus && (
-                        <div className="mb-3">
-                          <h4 className="text-md font-medium text-gray-300 mb-1">Industry Focus</h4>
-                          <div className="flex flex-wrap gap-2">
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-300 mb-2">Industry Focus</h4>
+                          <div className="flex flex-wrap gap-2 pl-4">
                             {analysis.audience_analysis.demographic_signals.industry_focus.map((industry: string, i: number) => (
                               <span key={i} className="px-2 py-1 bg-gray-800 text-gray-300 rounded text-sm">
                                 {industry}
@@ -300,12 +304,12 @@ export default function AnalysisDetailPage() {
                       
                       {analysis.audience_analysis.demographic_signals.notable_segments && (
                         <div>
-                          <h4 className="text-md font-medium text-gray-300 mb-1">Notable Segments</h4>
-                          <ul className="list-disc ml-5 space-y-1 text-gray-300">
+                          <h4 className="text-sm font-medium text-gray-300 mb-2">Notable Segments</h4>
+                          <div className="pl-4 space-y-2">
                             {analysis.audience_analysis.demographic_signals.notable_segments.map((segment: string, i: number) => (
-                              <li key={i}>{segment}</li>
+                              <p key={i} className="text-gray-300 text-sm">• {segment}</p>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -332,8 +336,19 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.audience_analysis.praise_points.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.point && <p className="text-gray-300">{item.point}</p>}
-                            {item.frequency && <p className="text-sm text-gray-400 mt-1">Frequency: {item.frequency}</p>}
+                            {item.topic && <h4 className="font-medium text-white">{item.topic}</h4>}
+                            {item.frequency && (
+                              <div className="inline-flex items-center mt-1 px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-300">
+                                Frequency: {item.frequency}
+                              </div>
+                            )}
+                            {item.examples && item.examples.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {item.examples.map((example: string, exIndex: number) => (
+                                  <p key={exIndex} className="text-gray-400 text-sm italic">"{example}"</p>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -346,8 +361,15 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.audience_analysis.questions_gaps.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.question && <p className="text-gray-300">{item.question}</p>}
-                            {item.frequency && <p className="text-sm text-gray-400 mt-1">Frequency: {item.frequency}</p>}
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium text-white">{item.question}</h4>
+                              <span className="px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-300">
+                                {item.frequency}
+                              </span>
+                            </div>
+                            {item.context && (
+                              <p className="text-gray-300 mt-1 text-sm">{item.context}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -357,11 +379,18 @@ export default function AnalysisDetailPage() {
                   {analysis.audience_analysis.engagement_patterns && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-blue-400 mb-2">Engagement Patterns</h3>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {analysis.audience_analysis.engagement_patterns.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.pattern && <p className="font-medium text-white">{item.pattern}</p>}
-                            {item.description && <p className="text-gray-300 mt-1">{item.description}</p>}
+                            <h4 className="font-medium text-white">{item.pattern}</h4>
+                            {item.indicators && item.indicators.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm text-gray-400">Example comments:</p>
+                                {item.indicators.map((indicator: string, i: number) => (
+                                  <p key={i} className="text-gray-300 text-sm pl-3 border-l border-gray-600">"{indicator}"</p>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -395,13 +424,25 @@ export default function AnalysisDetailPage() {
                   {analysis.content_gaps.missing_information && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-blue-400 mb-2">Missing Information</h3>
-                      <ul className="list-disc ml-5 space-y-1 text-gray-300">
-                        {analysis.content_gaps.missing_information.map((item: any, i: number) => (
-                          <li key={i}>
-                            {typeof item === 'string' ? item : (item.topic || item.item || JSON.stringify(item))}
-                          </li>
+                      <div className="space-y-3">
+                        {analysis.content_gaps.missing_information.map((item: any, index: number) => (
+                          <div key={index} className="pl-4 border-l-2 border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium text-white">{item.topic}</h4>
+                              <span className={`px-2 py-0.5 rounded text-xs ${
+                                item.importance === 'high' ? 'bg-red-900/50 text-red-300' :
+                                item.importance === 'medium' ? 'bg-yellow-900/50 text-yellow-300' :
+                                'bg-blue-900/50 text-blue-300'
+                              }`}>
+                                {item.importance} priority
+                              </span>
+                            </div>
+                            {item.context && (
+                              <p className="text-gray-300 mt-1 text-sm">{item.context}</p>
+                            )}
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
                   
@@ -507,9 +548,19 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.engagement_techniques.retention_mechanisms.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.technique && <h4 className="font-medium text-white">{item.technique}</h4>}
-                            {item.effectiveness && <p className="text-sm text-gray-400">Effectiveness: {item.effectiveness}</p>}
-                            {item.implementation && <p className="text-gray-300 mt-1">{item.implementation}</p>}
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium text-white">{item.technique}</h4>
+                              <span className={`px-2 py-0.5 rounded text-xs ${
+                                item.effectiveness === 'high' ? 'bg-green-900/50 text-green-300' :
+                                item.effectiveness === 'medium' ? 'bg-yellow-900/50 text-yellow-300' :
+                                'bg-red-900/50 text-red-300'
+                              }`}>
+                                {item.effectiveness} effectiveness
+                              </span>
+                            </div>
+                            {item.implementation && (
+                              <p className="text-gray-300 mt-1 text-sm">{item.implementation}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -562,45 +613,45 @@ export default function AnalysisDetailPage() {
               
               {valueExpanded && (
                 <div className="p-4 space-y-6">
-                  {analysis.value_delivery.information_packaging && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-blue-400 mb-2">Information Packaging</h3>
-                      <p className="text-gray-300">{analysis.value_delivery.information_packaging}</p>
-                    </div>
-                  )}
-                  
-                  {analysis.value_delivery.problem_solution_framing && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-blue-400 mb-2">Problem-Solution Framing</h3>
-                      <p className="text-gray-300">{analysis.value_delivery.problem_solution_framing}</p>
-                    </div>
-                  )}
-                  
-                  {analysis.value_delivery.practical_application && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-blue-400 mb-2">Practical Application</h3>
-                      <div className="space-y-3">
-                        {analysis.value_delivery.practical_application.map((item: any, index: number) => (
-                          <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.application && <h4 className="font-medium text-white">{item.application}</h4>}
-                            {item.context && <p className="text-gray-300 mt-1">{item.context}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                   {analysis.value_delivery.trust_building && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-blue-400 mb-2">Trust Building</h3>
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Trust Building Elements</h4>
                       <div className="space-y-3">
                         {analysis.value_delivery.trust_building.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.element && <h4 className="font-medium text-white">{item.element}</h4>}
-                            {item.implementation && <p className="text-gray-300 mt-1">{item.implementation}</p>}
+                            <h5 className="font-medium text-white">{item.element}</h5>
+                            <p className="text-gray-300 mt-1 text-sm">{item.implementation}</p>
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {analysis.value_delivery.information_packaging && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Information Packaging</h4>
+                      <p className="text-gray-300 pl-4 border-l-2 border-gray-700">{analysis.value_delivery.information_packaging}</p>
+                    </div>
+                  )}
+
+                  {analysis.value_delivery.practical_application && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Practical Applications</h4>
+                      <div className="space-y-3">
+                        {analysis.value_delivery.practical_application.map((item: any, index: number) => (
+                          <div key={index} className="pl-4 border-l-2 border-gray-700">
+                            <h5 className="font-medium text-white">{item.application}</h5>
+                            <p className="text-gray-300 mt-1 text-sm">{item.context}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {analysis.value_delivery.problem_solution_framing && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Problem-Solution Framing</h4>
+                      <p className="text-gray-300 pl-4 border-l-2 border-gray-700">{analysis.value_delivery.problem_solution_framing}</p>
                     </div>
                   )}
                 </div>
@@ -624,7 +675,11 @@ export default function AnalysisDetailPage() {
                   {analysis.implementation_blueprint.content_template && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-blue-400 mb-2">Content Template</h3>
-                      <pre className="whitespace-pre-line text-gray-300">{analysis.implementation_blueprint.content_template}</pre>
+                      <div className="pl-4 border-l-2 border-gray-700 space-y-2">
+                        {analysis.implementation_blueprint.content_template.split('\n').map((line: string, index: number) => (
+                          <p key={index} className="text-gray-300 text-sm">{line}</p>
+                        ))}
+                      </div>
                     </div>
                   )}
                   
@@ -634,9 +689,13 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.implementation_blueprint.key_sections.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.section && <h4 className="font-medium text-white">{item.section}</h4>}
-                            {item.purpose && <p className="text-sm text-gray-400">{item.purpose}</p>}
-                            {item.content_guidance && <p className="text-gray-300 mt-1">{item.content_guidance}</p>}
+                            <div className="flex items-center gap-2">
+                              <h5 className="font-medium text-white">{item.section}</h5>
+                              <span className="text-xs text-gray-400">({item.purpose})</span>
+                            </div>
+                            {item.content_guidance && (
+                              <p className="text-gray-300 mt-1 text-sm">{item.content_guidance}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -649,8 +708,8 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.implementation_blueprint.engagement_points.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.point && <h4 className="font-medium text-white">{item.point}</h4>}
-                            {item.implementation && <p className="text-gray-300 mt-1">{item.implementation}</p>}
+                            <h5 className="font-medium text-white">{item.point}</h5>
+                            <p className="text-gray-300 mt-1 text-sm">{item.implementation}</p>
                           </div>
                         ))}
                       </div>
@@ -663,8 +722,8 @@ export default function AnalysisDetailPage() {
                       <div className="space-y-3">
                         {analysis.implementation_blueprint.differentiation_opportunities.map((item: any, index: number) => (
                           <div key={index} className="pl-4 border-l-2 border-gray-700">
-                            {item.opportunity && <h4 className="font-medium text-white">{item.opportunity}</h4>}
-                            {item.implementation && <p className="text-gray-300 mt-1">{item.implementation}</p>}
+                            <h5 className="font-medium text-white">{item.opportunity}</h5>
+                            <p className="text-gray-300 mt-1 text-sm">{item.implementation}</p>
                           </div>
                         ))}
                       </div>
@@ -674,7 +733,7 @@ export default function AnalysisDetailPage() {
                   {analysis.implementation_blueprint.cta_strategy && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium text-blue-400 mb-2">CTA Strategy</h3>
-                      <p className="text-gray-300">{analysis.implementation_blueprint.cta_strategy}</p>
+                      <p className="text-gray-300 pl-4 border-l-2 border-gray-700">{analysis.implementation_blueprint.cta_strategy}</p>
                     </div>
                   )}
                 </div>
@@ -745,6 +804,315 @@ export default function AnalysisDetailPage() {
     );
   };
 
+  // Function to render enriched transcript with sections and markers
+  const renderEnrichedTranscript = () => {
+    if (!transcript || !analysis?.content_analysis?.structural_organization) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-400 italic">
+            {!transcript 
+              ? "No transcript available for this video." 
+              : !analysis?.content_analysis?.structural_organization 
+                ? "No structural data available to enrich the transcript."
+                : "Unable to generate enriched transcript."}
+          </p>
+        </div>
+      );
+    }
+
+    const structuralOrganization = analysis.content_analysis.structural_organization;
+    const keyPoints = analysis.content_analysis.key_points || [];
+    const patternInterrupts = analysis.engagement_techniques?.pattern_interrupts || [];
+    
+    // Define types for our data structures
+    type Section = {
+      title: string;
+      start_time: string;
+      end_time: string;
+      description?: string;
+    };
+
+    type KeyPoint = {
+      point: string;
+      timestamp?: string;
+      elaboration?: string;
+    };
+    
+    // Function to convert timestamp string (e.g. "1:05") to seconds
+    const timestampToSeconds = (timestamp: string) => {
+      if (!timestamp) return 0;
+      const parts = timestamp.split(':').map(part => parseInt(part, 10));
+      if (parts.length === 2) {
+        return parts[0] * 60 + parts[1]; // minutes:seconds
+      } else if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2]; // hours:minutes:seconds
+      }
+      return 0;
+    };
+
+    // Determine if transcript is a string or array
+    const isTranscriptString = typeof transcript === 'string';
+    const isTranscriptArray = Array.isArray(transcript);
+    
+    // Check if transcript array has timestamp information
+    let hasTimeInfo = false;
+    if (isTranscriptArray && transcript.length > 0) {
+      const firstItem = transcript[0];
+      hasTimeInfo = ('start' in firstItem && 'text' in firstItem) || 
+                   ('timestamp' in firstItem && 'content' in firstItem);
+    }
+
+    // If transcript is a string, split it into segments for display
+    let fullTranscriptText = '';
+    if (isTranscriptString) {
+      fullTranscriptText = transcript as string;
+    } else if (isTranscriptArray && !hasTimeInfo) {
+      // If it's an array without time info, join it
+      fullTranscriptText = transcript.map((item: any) => {
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item !== null) {
+          // Try to extract text from common formats
+          return item.text || item.content || JSON.stringify(item);
+        }
+        return String(item);
+      }).join(' ');
+    }
+
+    // Split full transcript into sections when no timestamp info is available
+    const distributeTranscriptToSections = () => {
+      if (!fullTranscriptText) return {};
+      
+      const sections: Record<number, string> = {};
+      const sectionCount = structuralOrganization.length;
+      
+      // Simple approach: Divide transcript by number of sections
+      const words = fullTranscriptText.split(/\s+/);
+      const wordsPerSection = Math.ceil(words.length / sectionCount);
+      
+      for (let i = 0; i < sectionCount; i++) {
+        const startIndex = i * wordsPerSection;
+        const endIndex = Math.min(startIndex + wordsPerSection, words.length);
+        sections[i] = words.slice(startIndex, endIndex).join(' ');
+      }
+      
+      return sections;
+    };
+
+    // Format transcript text to be more readable with paragraphs and structure
+    const formatTranscriptForReadability = (text: string) => {
+      if (!text) return "";
+      
+      // Step 1: Split into sentences (period followed by space and capital letter)
+      let formatted = text.replace(/\.\s+([A-Z])/g, '.\n\n$1');
+      
+      // Step 2: Break at question marks and exclamation points when followed by spaces and capital letters
+      formatted = formatted.replace(/([?!])\s+([A-Z])/g, '$1\n\n$2');
+      
+      // Step 3: Look for transition phrases that suggest new thoughts
+      const transitionPhrases = [
+        'however', 'moreover', 'furthermore', 'in addition', 
+        'on the other hand', 'for example', 'for instance', 
+        'first', 'second', 'third', 'finally', 'ultimately', 
+        'in conclusion', 'to sum up'
+      ];
+      
+      transitionPhrases.forEach(phrase => {
+        const regex = new RegExp(`\\s+${phrase}\\s+`, 'gi');
+        formatted = formatted.replace(regex, (match) => `\n\n${match.trim()} `);
+      });
+      
+      // Step 4: Identify and format potential dialogue/quotes
+      // Look for phrases that might indicate speech
+      formatted = formatted.replace(/(["'].*?["'])/g, '\n$1\n');
+      
+      // Return the formatted text with extra newlines removed
+      return formatted.replace(/\n{3,}/g, '\n\n').trim();
+    };
+
+    // Get transcript text for a specific section
+    const getTranscriptText = (section: Section, sectionIndex: number) => {
+      // If we have timestamp information in the transcript
+      if (isTranscriptArray && hasTimeInfo) {
+        try {
+          const sectionStartSec = timestampToSeconds(section.start_time);
+          const sectionEndSec = timestampToSeconds(section.end_time);
+          
+          // Filter transcript entries that belong to this section
+          if ('start' in transcript[0] && 'text' in transcript[0]) {
+            const relevantEntries = transcript.filter((entry: any) => {
+              const entryStartSec = parseFloat(entry.start);
+              return entryStartSec >= sectionStartSec && entryStartSec < sectionEndSec;
+            });
+            
+            if (relevantEntries.length > 0) {
+              const rawText = relevantEntries.map((entry: any) => entry.text).join(' ');
+              return formatTranscriptForReadability(rawText);
+            }
+          }
+          
+          // Alternative format with timestamp/content
+          if ('timestamp' in transcript[0] && 'content' in transcript[0]) {
+            const relevantEntries = transcript.filter((entry: any) => {
+              const entryTimeSec = timestampToSeconds(entry.timestamp);
+              return entryTimeSec >= sectionStartSec && entryTimeSec < sectionEndSec;
+            });
+            
+            if (relevantEntries.length > 0) {
+              const rawText = relevantEntries.map((entry: any) => entry.content).join(' ');
+              return formatTranscriptForReadability(rawText);
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing transcript by timestamps:", error);
+        }
+      }
+      
+      // Fallback: If we couldn't segment by timestamps, use distributed transcript
+      const distributedSections = distributeTranscriptToSections();
+      return formatTranscriptForReadability(distributedSections[sectionIndex] || "");
+    };
+
+    // Get section color based on index
+    const getSectionColor = (index: number) => {
+      const colors = [
+        '#ef4444', // red (Introduction)
+        '#f97316', // orange (Printer Comparison)
+        '#eab308', // yellow (Primary Recommendation)
+        '#10b981', // green (Alternative Recommendation)
+        '#3b82f6', // blue (Getting Started Guide)
+        '#8b5cf6', // purple
+        '#ec4899', // pink
+      ];
+      
+      return colors[index % colors.length];
+    };
+
+    // Get key points relevant to a section
+    const getRelevantKeyPoints = (section: Section) => {
+      const sectionStartTime = timestampToSeconds(section.start_time);
+      const sectionEndTime = timestampToSeconds(section.end_time);
+      
+      return keyPoints.filter((point: KeyPoint) => {
+        if (!point.timestamp) return false;
+        const pointTime = timestampToSeconds(point.timestamp);
+        return pointTime >= sectionStartTime && pointTime < sectionEndTime;
+      });
+    };
+
+    // Display debug info only if needed
+    const renderDebugInfo = () => {
+      if (isTranscriptString || (isTranscriptArray && !hasTimeInfo)) {
+        return (
+          <div className="mb-6 p-3 bg-gray-800 border border-gray-700 rounded text-sm">
+            <p className="text-yellow-400 mb-2">⚠️ Transcript Information</p>
+            <p className="text-gray-300">
+              The transcript doesn't contain timestamp information to properly segment content.
+              Section content has been approximated based on available structure.
+            </p>
+          </div>
+        );
+      }
+      return null;
+    };
+
+    // Render the navigation bar at the top
+    const renderNavigationBar = () => (
+      <div className="border border-gray-800 rounded-lg bg-gray-900 p-4 mb-6">
+        <h3 className="text-sm font-medium text-gray-300 mb-3">Navigate Sections</h3>
+        <div className="flex flex-wrap gap-2 pb-2">
+          {structuralOrganization.map((section: Section, index: number) => (
+            <a 
+              key={index}
+              href={`#section-${index}`}
+              className="px-3 py-1.5 bg-gray-800 rounded text-sm text-white whitespace-nowrap hover:bg-gray-700 transition-colors flex-shrink-0 border-l-2"
+              style={{ borderLeftColor: getSectionColor(index) }}
+            >
+              {section.title}
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="max-w-4xl mx-auto">
+        {renderNavigationBar()}
+        {renderDebugInfo()}
+
+        <div className="space-y-16">
+          {structuralOrganization.map((section: Section, index: number) => {
+            const relevantKeyPoints = getRelevantKeyPoints(section);
+            const transcriptText = getTranscriptText(section, index);
+            
+            return (
+              <div key={index} id={`section-${index}`} className="scroll-mt-6">
+                {/* Section header with colored marker */}
+                <div className="flex items-start gap-3 mb-4">
+                  <div 
+                    className="w-1.5 h-full min-h-[24px] rounded-full flex-shrink-0 mt-1.5" 
+                    style={{ backgroundColor: getSectionColor(index) }}
+                  />
+                  <div>
+                    <h2 className="text-xl font-medium text-white flex items-baseline">
+                      {section.title}
+                      <span className="text-sm text-gray-400 ml-2 font-normal">
+                        {section.start_time}
+                      </span>
+                    </h2>
+                
+                    {/* Section description */}
+                    {section.description && (
+                      <p className="text-gray-400 italic mt-1 text-sm">
+                        {section.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Key Points */}
+                {relevantKeyPoints.length > 0 && (
+                  <div className="mb-4 bg-gray-800/50 rounded p-4 border-l-2 ml-4" style={{ borderLeftColor: '#eab308' }}>
+                    <h4 className="text-sm font-medium text-yellow-400 mb-3">Key Points</h4>
+                    <ul className="space-y-3">
+                      {relevantKeyPoints.map((point: KeyPoint, pointIndex: number) => (
+                        <li key={pointIndex} className="text-sm">
+                          <div className="font-medium text-white flex items-start">
+                            <span className="mr-2">•</span>
+                            <div>
+                              <div>{point.point}</div>
+                              {point.elaboration && (
+                                <p className="text-gray-300 text-sm mt-1">{point.elaboration}</p>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Transcript content */}
+                <div className="text-gray-300 leading-relaxed ml-4 mt-6">
+                  {transcriptText ? (
+                    <div className="prose prose-invert max-w-none">
+                      {transcriptText.split('\n\n').map((paragraph, pIndex) => (
+                        <p key={pIndex} className="mb-4 text-base">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="italic text-gray-500">No transcript content available for this section.</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-950 text-white p-6">
@@ -767,6 +1135,19 @@ export default function AnalysisDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      <div className="max-w-6xl mx-auto mb-6 flex items-center gap-3">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="w-4 h-4 text-gray-400" />
+          </div>
+          <Input 
+            type="search" 
+            placeholder="Search videos by title..." 
+            className="pl-10 bg-gray-800 border-gray-700 text-white w-full focus:ring-blue-500 focus:border-blue-500" 
+          />
+        </div>
+      </div>
+      
       <Card className="w-full max-w-6xl mx-auto bg-gray-900 border-gray-800">
         <CardContent className="p-6">
           {loading ? (
@@ -788,6 +1169,10 @@ export default function AnalysisDetailPage() {
                     <ScrollText className="h-4 w-4" />
                     <span>Skyscraper Analysis</span>
                   </TabsTrigger>
+                  <TabsTrigger value="enriched-transcript" className="flex items-center gap-2 data-[state=active]:bg-gray-700">
+                    <Layers className="h-4 w-4" />
+                    <span>Enriched Transcript</span>
+                  </TabsTrigger>
                   <TabsTrigger value="transcript" className="flex items-center gap-2 data-[state=active]:bg-gray-700">
                     <FileText className="h-4 w-4" />
                     <span>Transcript</span>
@@ -801,6 +1186,12 @@ export default function AnalysisDetailPage() {
                 <TabsContent value="analysis" className="mt-0">
                   <div className="bg-gray-800/50 rounded-lg p-6">
                     {renderAnalysis()}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="enriched-transcript" className="mt-0">
+                  <div className="bg-gray-800/50 rounded-lg p-6">
+                    {renderEnrichedTranscript()}
                   </div>
                 </TabsContent>
                 

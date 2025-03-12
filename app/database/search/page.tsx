@@ -3,214 +3,185 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, RefreshCw, AlertCircle, ArrowUpRight, Youtube } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { ChevronLeft, Search, X, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
-interface SearchResult {
+interface VideoItem {
   id: string;
-  videoId: string;
-  content: string;
-  contentType: string;
-  startTime?: number;
-  endTime?: number;
-  similarity: number;
-  metadata?: Record<string, any>;
+  title: string;
+  channelTitle: string;
+  viewCount: number;
+  totalChunks: number;
+  processed: boolean;
+  processingDate: string;
+  analyzed?: boolean;
+  commentCount?: number;
+  transcriptLength?: number;
+  wordCount?: number;
 }
 
 export default function SearchPage() {
-  const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [error, setError] = useState("");
-  const [videoIdFilter, setVideoIdFilter] = useState<string | null>(null);
-  
-  const searchParams = useSearchParams();
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
+
+  // Fetch all videos on page load
   useEffect(() => {
-    const videoId = searchParams.get('videoId');
-    if (videoId) {
-      setVideoIdFilter(videoId);
-      setQuery(`content from video ${videoId}`);
-    }
-  }, [searchParams]);
-  
-  const performSearch = async () => {
-    if (!query.trim()) return;
-    
+    fetchVideos();
+  }, []);
+
+  // Function to fetch processed videos from the database
+  const fetchVideos = async () => {
     try {
-      setSearching(true);
-      setError("");
-      setResults([]);
+      setIsLoading(true);
       
-      const response = await fetch("/api/vector/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query,
-          userId: "00000000-0000-0000-0000-000000000000", // Default user ID
-          videoId: videoIdFilter,
-        }),
+      const response = await fetch("/api/vector/videos?userId=00000000-0000-0000-0000-000000000000", {
+        method: "GET",
       });
       
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || "Search failed");
+        throw new Error("Failed to fetch videos");
       }
       
-      setResults(data.results || []);
+      const data = await response.json();
+      setVideos(data.videos || []);
+      setFilteredVideos(data.videos || []);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      console.error("Error fetching videos:", error);
     } finally {
-      setSearching(false);
+      setIsLoading(false);
     }
   };
   
-  // Format time from seconds to MM:SS
-  const formatTime = (seconds?: number) => {
-    if (seconds == null) return "N/A";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-  
-  // Handle Enter key press
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !searching && query.trim()) {
-      performSearch();
+  // Filter videos when search term changes
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredVideos(videos);
+      return;
     }
+    
+    const filtered = videos.filter(video => 
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.channelTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFilteredVideos(filtered);
+  }, [searchTerm, videos]);
+  
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm("");
   };
   
-  // Get content type badge color
-  const getContentTypeColor = (type: string) => {
-    switch (type) {
-      case 'transcript': return 'bg-blue-100 text-blue-800';
-      case 'comment': return 'bg-green-100 text-green-800';
-      case 'description': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
-  
+
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Search className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Semantic Search</h1>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Link href="/database">
+            <Button variant="outline" size="icon" className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold">Video Search</h1>
+        </div>
+        
+        {/* Search input */}
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="h-4 w-4 text-gray-500" />
+          </div>
+          <Input
+            type="search"
+            placeholder="Search video titles or channels..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-10 bg-background"
+            autoFocus
+          />
+          {searchTerm && (
+            <button 
+              onClick={clearSearch}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
       
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Search Video Content</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Search across all processed videos using Claude's semantic understanding. 
-          Results are ordered by relevance and include timestamps for transcript content.
-        </p>
-        
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder="Enter your search query..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={searching}
-            className="flex-grow"
-          />
-          <Button 
-            onClick={performSearch} 
-            disabled={!query.trim() || searching}
-          >
-            {searching ? (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="mr-2 h-4 w-4" />
-            )}
-            Search
-          </Button>
-        </div>
-        
-        {videoIdFilter && (
-          <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded-md">
-            <Badge>Filtering by Video ID: {videoIdFilter}</Badge>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setVideoIdFilter(null)}
-              className="h-7 px-2 text-xs"
-            >
-              Clear Filter
-            </Button>
-          </div>
-        )}
-        
-        {error && (
-          <div className="rounded-md p-4 mb-4 bg-red-50">
-            <div className="flex items-start gap-2 text-red-700">
-              <AlertCircle className="h-5 w-5 mt-0.5" />
-              <p>{error}</p>
+      {/* Results */}
+      <Card className="bg-gray-900 border-gray-800 text-white">
+        <CardHeader>
+          <CardTitle>Search Results</CardTitle>
+          <CardDescription>
+            {isLoading ? 
+              "Loading videos..." : 
+              filteredVideos.length > 0 ? 
+                `Found ${filteredVideos.length} video${filteredVideos.length === 1 ? '' : 's'}` : 
+                searchTerm ? 
+                  "No videos match your search" : 
+                  "Enter a search term to find videos"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="py-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading videos...</p>
             </div>
-          </div>
-        )}
-      </Card>
-      
-      {results.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Search Results</h2>
-            <p className="text-sm text-gray-500">Found {results.length} matches</p>
-          </div>
-          
-          <div className="space-y-4">
-            {results.map((result) => (
-              <Card key={result.id} className="p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <Badge className={`${getContentTypeColor(result.contentType)}`}>
-                      {result.contentType.charAt(0).toUpperCase() + result.contentType.slice(1)}
-                    </Badge>
-                    <div className="text-sm text-gray-500">
-                      Relevance: {Math.round(result.similarity * 100)}%
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm">{result.content}</p>
-                  
-                  <div className="flex justify-between items-center mt-2 text-xs text-gray-500 border-t pt-2">
-                    <div className="flex items-center gap-1">
-                      <Youtube className="h-3.5 w-3.5" />
-                      <span>Video ID: {result.videoId}</span>
+          ) : filteredVideos.length === 0 ? (
+            <div className="py-8 text-center">
+              {searchTerm ? (
+                <div>
+                  <p className="text-gray-400 mb-4">No videos match your search terms.</p>
+                  <Button variant="outline" onClick={clearSearch}>
+                    Clear Search
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-gray-400">Enter a search term to find videos.</p>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredVideos.map(video => (
+                <div key={video.id} className="border border-gray-800 rounded-lg p-4 hover:bg-gray-800/50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg">{video.title}</h3>
+                      <p className="text-gray-400 text-sm">{video.channelTitle}</p>
+                      
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+                        <span>Processed: {formatDate(video.processingDate)}</span>
+                        <span>•</span>
+                        <span>{video.wordCount?.toLocaleString() || 0} words</span>
+                        <span>•</span>
+                        <span>{video.commentCount || 0} comments</span>
+                      </div>
                     </div>
                     
-                    {result.startTime != null && (
-                      <div className="flex items-center">
-                        <Badge variant="outline" className="text-xs">
-                          {formatTime(result.startTime)} - {formatTime(result.endTime)}
-                        </Badge>
-                        <a 
-                          href={`https://youtube.com/watch?v=${result.videoId}&t=${Math.floor(result.startTime || 0)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 text-blue-600 hover:text-blue-800 flex items-center"
-                        >
-                          <ArrowUpRight className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
+                    <Link href={`/analysis/${video.id}`}>
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <ExternalLink className="h-3 w-3" />
+                        View
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {!searching && query && results.length === 0 && !error && (
-        <Card className="p-6 text-center">
-          <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500 mb-2">No results found</p>
-          <p className="text-sm text-gray-400">Try a different search query or process more videos</p>
-        </Card>
-      )}
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 } 

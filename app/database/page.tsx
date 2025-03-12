@@ -22,7 +22,9 @@ import {
   RefreshCcw, 
   DownloadCloud,
   Clipboard,
-  CheckSquare
+  CheckSquare,
+  X,
+  Youtube
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -52,6 +54,8 @@ import { Label } from "@/components/ui/label";
 import { analyzeVideoWithSkyscraper } from '@/app/actions/skyscraper-analysis';
 import { CLAUDE_MODELS } from '@/app/constants/claude-models';
 import { formatAnalysisMarkdown } from "@/app/utils/formatAnalysisMarkdown";
+import YouTubeSearchTab from './youtube-search-tab';
+import ImportResultsDialog from './import-results-dialog';
 
 // Types for our video data
 interface VideoItem {
@@ -158,6 +162,10 @@ export default function DatabasePage() {
     progress: 0,
   });
   
+  // Add state for search functionality
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
+  
   // Define the steps array at the component level so it can be used in both the simulation and the UI
   const processingSteps = [
     { name: 'downloading', label: 'Download', message: 'Downloading video metadata...' },
@@ -177,6 +185,10 @@ export default function DatabasePage() {
   // Add useRef import
   const debugModalRef = useRef<{streamedText: string} | null>(null);
   
+  // State for YouTube search results import dialog
+  const [showYoutubeImportResults, setShowYoutubeImportResults] = useState(false);
+  const [youtubeImportResults, setYoutubeImportResults] = useState<any | null>(null);
+  
   // Fetch existing videos when the page loads
   useEffect(() => {
     fetchVideos();
@@ -187,8 +199,8 @@ export default function DatabasePage() {
     try {
       setIsLoading(true);
       
-      // You'll need to create this API endpoint
-      const response = await fetch("/api/vector/videos?userId=00000000-0000-0000-0000-000000000000", {
+      // Make sure to request analysis data in the API call
+      const response = await fetch("/api/vector/videos?userId=00000000-0000-0000-0000-000000000000&includeAnalysisData=true", {
         method: "GET",
       });
       
@@ -198,6 +210,9 @@ export default function DatabasePage() {
       
       const data = await response.json();
       setVideos(data.videos || []);
+      
+      // Log the response for debugging
+      console.log("API response:", data);
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
@@ -1033,13 +1048,16 @@ Focus on:
     });
   };
 
+  // Toggle all videos selection
   const toggleAllVideos = () => {
-    setSelectedVideos(prev => {
-      if (prev.size === videos.length) {
-        return new Set();
-      }
-      return new Set(videos.map(v => v.id));
-    });
+    // If all filtered videos are selected, clear the selection
+    if (selectedVideos.size === filteredVideos.length && filteredVideos.length > 0) {
+      setSelectedVideos(new Set());
+    } 
+    // Otherwise, select all filtered videos
+    else {
+      setSelectedVideos(new Set(filteredVideos.map(video => video.id)));
+    }
   };
 
   // Updated delete functions with confirmation handling
@@ -1514,24 +1532,105 @@ Focus on:
     }
   };
   
+  // Filter videos when search term changes
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredVideos(videos);
+      return;
+    }
+    
+    const filtered = videos.filter(video => 
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.channelTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFilteredVideos(filtered);
+  }, [searchTerm, videos]);
+
+  // Use a separate useEffect to initialize filteredVideos when videos are loaded
+  useEffect(() => {
+    setFilteredVideos(videos);
+  }, [videos]);
+
+  // Add clearSearch function
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
+  
+  // Function to handle import completion from the YouTube search tab
+  const handleImportComplete = (results: any) => {
+    setYoutubeImportResults(results);
+    setShowYoutubeImportResults(true);
+    
+    // Refresh the video list
+    fetchVideos();
+  };
+  
+  // After the existing useEffect hooks
+
+  // Debug useEffect to log video properties
+  useEffect(() => {
+    if (videos.length > 0) {
+      console.log("Video object properties:", Object.keys(videos[0]));
+      console.log("First video data:", videos[0]);
+      
+      // Check specifically for analysis-related properties
+      const analysisProps = {
+        analyzed: videos[0].analyzed,
+        analysisPhases: videos[0].analysisPhases,
+        hasSkyscraperAnalysis: videos[0].hasSkyscraperAnalysis
+      };
+      console.log("Analysis properties:", analysisProps);
+      
+      // Count videos with any kind of analysis indicator
+      const analyzedCount = videos.filter(v => 
+        v.analyzed === true || 
+        (v.analysisPhases && v.analysisPhases > 0) || 
+        v.hasSkyscraperAnalysis === true
+      ).length;
+      
+      console.log(`Videos with analysis indicators: ${analyzedCount} out of ${videos.length}`);
+    }
+  }, [videos]);
+
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between gap-2 mb-6">
-        <div className="flex items-center gap-2">
-          <Database className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Vector Database</h1>
+      <div className="flex flex-col gap-2 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Vector Database</h1>
+          </div>
         </div>
-        <Link href="/database/search">
-          <Button variant="outline" className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            Semantic Search
-          </Button>
-        </Link>
+        
+        {/* Replace the Semantic Search button with a search field */}
+        <div className="relative w-full max-w-md">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="h-4 w-4 text-gray-500" />
+          </div>
+          <Input
+            type="search"
+            placeholder="Search video titles or channels..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-10 bg-background border-input focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring"
+          />
+          {searchTerm && (
+            <button 
+              onClick={clearSearch}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
       
-      <Tabs defaultValue="import" className="w-full">
+      <Tabs defaultValue="import" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="import">Import Videos</TabsTrigger>
+          <TabsTrigger value="search">YouTube Search</TabsTrigger>
           <TabsTrigger value="manage">Manage Database</TabsTrigger>
         </TabsList>
         
@@ -1607,13 +1706,20 @@ Focus on:
           </Card>
         </TabsContent>
         
+        <TabsContent value="search">
+          <YouTubeSearchTab 
+            onImportComplete={handleImportComplete}
+            chunkingMethod={chunkingMethod}
+          />
+        </TabsContent>
+        
         <TabsContent value="manage">
           <Card className="p-6 bg-gray-900 border-gray-800 text-white">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Processed Videos</h2>
               <Button 
                 variant="outline" 
-                onClick={fetchVideos} 
+                onClick={fetchVideos}
                 disabled={isLoading}
                 className="bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
               >
@@ -1639,7 +1745,7 @@ Focus on:
                   <div className="bg-gray-800 border-b border-gray-700 py-3 px-4 flex items-center justify-between sticky top-0 z-10">
                     <div className="flex items-center">
                       <Checkbox
-                        checked={selectedVideos.size === videos.length}
+                        checked={selectedVideos.size === filteredVideos.length}
                         onClick={toggleAllVideos}
                         className="mr-3"
                       />
@@ -1647,34 +1753,60 @@ Focus on:
                         {selectedVideos.size} selected
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={batchDownloadScripts}
-                        disabled={selectedVideos.size === 0 || isLoading}
-                        className="flex items-center bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Download Scripts
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={batchDownloadAnalyses}
-                        disabled={selectedVideos.size === 0 || isLoading || videos.filter(v => selectedVideos.has(v.id) && v.hasSkyscraperAnalysis).length === 0}
-                        className="flex items-center bg-green-900 border-green-800 text-green-200 hover:bg-green-800"
-                      >
-                        <FileDown className="h-4 w-4 mr-2" />
-                        Download Analyses
-                      </Button>
-                      
+                    <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white"
+                          >
+                            <span>Bulk Actions</span>
+                            <ChevronDown className="h-4 w-4 ml-2" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
+                          <DropdownMenuItem 
+                            onClick={batchDownloadScripts}
+                            className="hover:bg-gray-700 cursor-pointer"
+                          >
+                            <FileDown className="h-4 w-4 mr-2 text-green-400" />
+                            Download All Transcripts
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={batchDownloadAnalyses}
+                            className="hover:bg-gray-700 cursor-pointer"
+                          >
+                            <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
+                            Download All Analyses
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              // Here you would implement batch reprocessing
+                              toast({
+                                title: "Batch Reprocessing",
+                                description: `Reprocessing ${selectedVideos.size} videos...`,
+                              });
+                            }}
+                            className="hover:bg-gray-700 cursor-pointer"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2 text-blue-400" />
+                            Reprocess Selected
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-gray-700" />
+                          <DropdownMenuItem 
+                            onClick={handleBatchDeleteClick}
+                            className="hover:bg-gray-700 cursor-pointer text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Selected
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={handleBatchDeleteClick}
-                        className="flex items-center"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Selected
@@ -1683,7 +1815,7 @@ Focus on:
                   </div>
                 )}
                 <div className="divide-y divide-gray-800">
-                  {videos.map(video => (
+                  {filteredVideos.map(video => (
                     <div key={video.id} className="py-4 flex items-center hover:bg-gray-800/50">
                       <div className="flex-shrink-0 pr-4">
                         <Checkbox
@@ -1694,6 +1826,25 @@ Focus on:
                       <div className="flex-grow">
                         <div className="flex items-center">
                           <h3 className="font-medium text-white mr-2">{video.title}</h3>
+                          
+                          {/* Add analysis badge - checking multiple possible properties */}
+                          {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                            <span 
+                              className="inline-flex items-center rounded-full bg-purple-600/20 px-2.5 py-0.5 text-xs font-medium text-purple-300 border border-purple-500/30 mr-2"
+                              title="Skyscraper Analysis Complete"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                className="h-3 w-3 mr-1" 
+                                viewBox="0 0 20 20" 
+                                fill="currentColor"
+                              >
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                              </svg>
+                              Analyzed
+                            </span>
+                          )}
+
                           <a 
                             href={`https://www.youtube.com/watch?v=${video.id}`}
                             target="_blank"
@@ -1720,80 +1871,81 @@ Focus on:
                           <span>{video.wordCount ? `${video.wordCount.toLocaleString()} words` : (video.transcriptLength ? `${Math.round(video.transcriptLength / 5).toLocaleString()} words` : '0 words')}</span>
                           <span className="mx-2">•</span>
                           <span>{video.totalChunks || 0} chunks</span>
-                          {video.hasSkyscraperAnalysis && (
-                            <>
-                              <span className="mx-2">•</span>
-                              <span className="text-green-500 flex items-center">
-                                <Check className="h-3.5 w-3.5 mr-1" />
-                                Analyzed
-                              </span>
-                            </>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
-                        {/* Main action buttons */}
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`/analysis/${video.id}`, '_blank')}
-                          className="bg-blue-900 border-blue-800 text-blue-200 hover:bg-blue-800 hover:text-white"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        
-                        {/* Dropdown menu for more actions */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white">
+                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-300">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56 bg-gray-900 border-gray-800 text-gray-200">
+                          <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-gray-800" />
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem
-                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
-                                onClick={() => downloadTranscript(video.id, video.title)}
-                              >
-                                <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                                <span>Download Script</span>
-                              </DropdownMenuItem>
-                              {video.hasSkyscraperAnalysis && (
-                                <DropdownMenuItem
-                                  className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
-                                  onClick={() => downloadAnalysis(video.id, video.title)}
+                            <DropdownMenuSeparator className="bg-gray-700" />
+                            <DropdownMenuItem 
+                              onClick={() => reprocessVideo(video.id)}
+                              disabled={isLoading}
+                              className="hover:bg-gray-700 cursor-pointer"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2 text-blue-400" />
+                              Reprocess Video
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => downloadTranscript(video.id, video.title)}
+                              className="hover:bg-gray-700 cursor-pointer"
+                            >
+                              <FileDown className="h-4 w-4 mr-2 text-green-400" />
+                              Download Transcript
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => analyzeVideo(video.id)}
+                              className="hover:bg-gray-700 cursor-pointer"
+                            >
+                              <Video className="h-4 w-4 mr-2 text-purple-400" />
+                              {video.analysisPhases === 5 ? 'Re-analyze' : (video.analysisPhases ? 'Continue Analysis' : 'Analyze')}
+                            </DropdownMenuItem>
+                            {/* Add View Analysis option if the video has an analysis */}
+                            {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                              <>
+                                <DropdownMenuItem 
+                                  className="hover:bg-gray-700 cursor-pointer"
+                                  asChild
                                 >
-                                  <FileDown className="h-4 w-4 mr-2 text-green-500" />
-                                  <span>Download Analysis</span>
+                                  <Link 
+                                    href={`/analysis/${video.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center"
+                                  >
+                                    <svg 
+                                      xmlns="http://www.w3.org/2000/svg" 
+                                      className="h-4 w-4 mr-2 text-indigo-400" 
+                                      viewBox="0 0 20 20" 
+                                      fill="currentColor"
+                                    >
+                                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                    </svg>
+                                    View Analysis
+                                  </Link>
                                 </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator className="bg-gray-800" />
-                              <DropdownMenuItem
-                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
-                                onClick={() => reprocessVideo(video.id)}
-                              >
-                                <RefreshCw className="h-4 w-4 mr-2 text-yellow-500" />
-                                <span>Redownload Script</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="focus:bg-gray-800 focus:text-gray-200 cursor-pointer"
-                                onClick={() => analyzeVideo(video.id)}
-                              >
-                                <RefreshCcw className="h-4 w-4 mr-2 text-purple-500" />
-                                <span>Reanalyze</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-gray-800" />
-                              <DropdownMenuItem
-                                className="focus:bg-red-900 focus:text-red-200 cursor-pointer text-red-400"
-                                onClick={() => handleDeleteClick(video.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                <span>Delete Video</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
+                                <DropdownMenuItem 
+                                  onClick={() => downloadAnalysis(video.id, video.title)}
+                                  className="hover:bg-gray-700 cursor-pointer"
+                                >
+                                  <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
+                                  Download Analysis
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            <DropdownMenuSeparator className="bg-gray-700" />
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick(video.id)}
+                              className="hover:bg-gray-700 cursor-pointer text-red-400"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Video
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1806,19 +1958,23 @@ Focus on:
         </TabsContent>
       </Tabs>
       
+      {/* YouTube Import Results Dialog */}
+      <ImportResultsDialog 
+        isOpen={showYoutubeImportResults}
+        onClose={() => setShowYoutubeImportResults(false)}
+        results={youtubeImportResults}
+        onViewDatabase={() => setActiveTab("manage")}
+      />
+      
       <SkyscraperDebugModal
-        ref={debugModalRef}
         isOpen={debugModalOpen}
         onClose={() => setDebugModalOpen(false)}
         debugData={debugData}
         onSaveAnalysis={handleSaveAnalysis}
         onStartAnalysis={startAnalysis}
-        onStartStreamAnalysis={startStreamAnalysis}
-        parsedStreamData={parsedStreamData}
-        setParsedStreamData={setParsedStreamData}
       />
       
-      {/* Add Alert Dialogs */}
+      {/* Delete confirmation dialogs */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1861,7 +2017,7 @@ Focus on:
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Add Reprocess Modal */}
+      {/* Reprocess Modal */}
       <AlertDialog open={reprocessStatus.isOpen} onOpenChange={(open) => !open && setReprocessStatus(prev => ({ ...prev, isOpen: false }))}>
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
@@ -1894,7 +2050,7 @@ Focus on:
                   <div className="grid grid-cols-6 gap-1">
                     {processingSteps.map((step, index) => (
                       <div 
-                        key={index} 
+                        key={index}
                         className={`h-1.5 ${index === 0 ? 'rounded-l-full' : ''} ${index === processingSteps.length - 1 ? 'rounded-r-full' : ''} ${
                           processingSteps.slice(0, processingSteps.findIndex(s => s.name === reprocessStatus.step) + 1).some(s => s.name === step.name) 
                             ? 'bg-blue-500' 
@@ -1921,238 +2077,17 @@ Focus on:
                   </svg>
                   <span className="font-medium">{reprocessStatus.message}</span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Word Count</div>
-                    <div className="text-2xl font-semibold text-gray-900 dark:text-white">{reprocessStatus.wordCount?.toLocaleString() || '0'}</div>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</div>
-                    <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {reprocessStatus.commentCount?.toLocaleString() || '0'}
-                    </div>
-                    {reprocessStatus.commentGroups && reprocessStatus.commentGroups.length > 0 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Grouped into {reprocessStatus.commentGroups.length} semantic clusters
-                      </div>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Chunks</div>
-                    <div className="text-2xl font-semibold text-gray-900 dark:text-white">{reprocessStatus.totalChunks || '0'}</div>
-                  </div>
-                </div>
-                
-                {reprocessStatus.commentGroups && reprocessStatus.commentGroups.length > 0 && (
-                  <div className="mt-2">
-                    <Button 
-                      variant="outline" 
-                      className="w-full flex items-center justify-center gap-2 text-sm font-medium h-10"
-                      onClick={() => setReprocessStatus(prev => ({ ...prev, showCommentGroups: !prev.showCommentGroups }))}
-                    >
-                      {reprocessStatus.showCommentGroups ? (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                          Hide Comment Groups
-                        </>
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                          View Semantic Comment Groups
-                        </>
-                      )}
-                    </Button>
-                    
-                    {reprocessStatus.showCommentGroups && (
-                      <div className="mt-4 space-y-1">
-                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-t-md border border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center">
-                            <span className="text-sm font-medium">{reprocessStatus.commentGroups.length}</span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1.5">Semantic Comment Groups</span>
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Powered by OpenAI embeddings
-                          </div>
-                        </div>
-                        
-                        <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-b-md divide-y divide-gray-200 dark:divide-gray-700 dark:border-gray-700 bg-white dark:bg-gray-900">
-                          {reprocessStatus.commentGroups.map((group, index) => (
-                            <div key={index} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                              <div className="flex justify-between items-start mb-3">
-                                <div className="flex flex-wrap gap-1.5 max-w-[85%]">
-                                  {group.keywords.map((keyword, kidx) => (
-                                    <span key={kidx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                                      {keyword}
-                                    </span>
-                                  ))}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center whitespace-nowrap">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                  </svg>
-                                  <span>{group.commentCount} {group.commentCount === 1 ? 'comment' : 'comments'}</span>
-                                </div>
-                              </div>
-                              <div className="space-y-2.5">
-                                {group.representativeComments.map((comment, cidx) => (
-                                  <div key={cidx} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700 relative">
-                                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    {comment.length > 150 ? comment.substring(0, 150) + '...' : comment}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {reprocessStatus.status === 'error' && (
-              <div className="flex items-center gap-2 text-red-600 dark:text-red-500 mt-2">
-                <AlertCircle className="h-5 w-5" />
-                <span className="font-medium">{reprocessStatus.message}</span>
               </div>
             )}
           </div>
           
           <AlertDialogFooter>
-            <AlertDialogAction
-              className="min-w-24"
-              onClick={() => setReprocessStatus(prev => ({ ...prev, isOpen: false }))}
-            >
-              {reprocessStatus.status === 'processing' ? 'Close' : 'Done'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Add Process Modal */}
-      <AlertDialog open={processStatus.isOpen} onOpenChange={(open) => !open && setProcessStatus(prev => ({ ...prev, isOpen: false }))}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {processStatus.status === 'success' ? 'Video Processed Successfully' : 
-               processStatus.status === 'error' ? 'Processing Error' : 
-               'Processing Video'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {/* Simple text description can go here if needed */}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          {/* Move content outside of AlertDialogDescription */}
-          {processStatus.status === 'processing' && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">{processStatus.message}</span>
-                <span className="text-sm font-medium">{Math.round(processStatus.progress)}%</span>
-              </div>
-              <Progress value={processStatus.progress} className="h-2" />
-              
-              <div className="mt-6 space-y-2">
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${Number(processStatus.step) >= 1 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {Number(processStatus.step) >= 1 ? <Check className="h-3 w-3 text-white" /> : <span className="text-xs text-gray-600">1</span>}
-                  </div>
-                  <span className={Number(processStatus.step) >= 1 ? 'text-green-500' : ''}>Downloading video</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${Number(processStatus.step) >= 2 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {Number(processStatus.step) >= 2 ? <Check className="h-3 w-3 text-white" /> : <span className="text-xs text-gray-600">2</span>}
-                  </div>
-                  <span className={Number(processStatus.step) >= 2 ? 'text-green-500' : ''}>Transcribing content</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${Number(processStatus.step) >= 3 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {Number(processStatus.step) >= 3 ? <Check className="h-3 w-3 text-white" /> : <span className="text-xs text-gray-600">3</span>}
-                  </div>
-                  <span className={Number(processStatus.step) >= 3 ? 'text-green-500' : ''}>
-                    {chunkingMethod === 'enhanced' ? 'Creating semantic groups' : 'Chunking content'}
-                  </span>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${Number(processStatus.step) >= 4 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {Number(processStatus.step) >= 4 ? <Check className="h-3 w-3 text-white" /> : <span className="text-xs text-gray-600">4</span>}
-                  </div>
-                  <span className={Number(processStatus.step) >= 4 ? 'text-green-500' : ''}>Vectorizing content</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {processStatus.status === 'success' && (
-            <div className="mt-4 space-y-4">
-              <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-md">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Video Title</p>
-                    <p className="font-medium">{processStatus.videoTitle}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Channel</p>
-                    <p className="font-medium">{processStatus.channelTitle}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Transcript Length</p>
-                    <p className="font-medium">{processStatus.wordCount ? `${processStatus.wordCount.toLocaleString()} words` : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Comments Processed</p>
-                    <p className="font-medium">{processStatus.commentCount?.toLocaleString() || 0}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Chunks</p>
-                    <p className="font-medium">{processStatus.totalChunks || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {processStatus.commentGroups && processStatus.commentGroups.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Comment Groups</h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                    {processStatus.commentGroups.map((group: {topic: string, count: number}, index: number) => (
-                      <div key={index} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
-                        <p className="text-sm font-medium mb-1">{group.topic}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{group.count} comments</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {processStatus.status === 'error' && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md">
-              <p className="font-medium">Error: {processStatus.message}</p>
-              {processStatus.message === 'Video already exists in database' && (
-                <p className="mt-2 text-sm">This video has already been processed. You can find it in the "Manage" tab.</p>
-              )}
-            </div>
-          )}
-          
-          <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
-            {processStatus.status === 'success' && (
-              <Button onClick={() => {
-                setProcessStatus(prev => ({ ...prev, isOpen: false }));
-                setActiveTab("manage");
-              }}>
-                View in Database
-              </Button>
+            {reprocessStatus.status !== 'processing' && (
+              <AlertDialogAction
+                onClick={() => setReprocessStatus(prev => ({ ...prev, isOpen: false }))}
+              >
+                Close
+              </AlertDialogAction>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>
