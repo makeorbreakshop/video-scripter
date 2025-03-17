@@ -27,7 +27,9 @@ import {
   Youtube,
   Filter,
   SortAsc,
-  SortDesc
+  SortDesc,
+  BarChart,
+  ArrowDownUp
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -89,6 +91,7 @@ interface VideoItem {
   transcriptLength?: number;
   wordCount?: number;
   hasSkyscraperAnalysis?: boolean;
+  displayAsBasic?: boolean; // Flag to indicate a video should display as basic
 }
 
 interface ProcessStatus {
@@ -145,6 +148,9 @@ interface ReprocessStatus {
   totalChunks?: number;
 }
 
+// Add this type for the filter options
+type FilterOption = 'basic' | 'processed' | 'analyzed';
+
 export default function DatabasePage() {
   const [url, setUrl] = useState("");
   const [processStatus, setProcessStatus] = useState<ProcessStatus>({ 
@@ -157,6 +163,7 @@ export default function DatabasePage() {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [chunkingMethod, setChunkingMethod] = useState<string>('enhanced');
+  const [processMode, setProcessMode] = useState<'full' | 'metadata'>('full');
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [debugModalOpen, setDebugModalOpen] = useState(false);
   const [debugData, setDebugData] = useState<DebugData>({
@@ -183,8 +190,8 @@ export default function DatabasePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
   
-  // Add state for filter and sort options
-  const [analysisFilter, setAnalysisFilter] = useState<'all' | 'analyzed' | 'not-analyzed'>('all');
+  // Replace old analysisFilter with new activeFilters state
+  const [activeFilters, setActiveFilters] = useState<Set<FilterOption>>(new Set(['basic', 'processed', 'analyzed']));
   const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'title-asc' | 'title-desc'>('newest');
   
   // Define the steps array at the component level so it can be used in both the simulation and the UI
@@ -230,10 +237,30 @@ export default function DatabasePage() {
       }
       
       const data = await response.json();
-      setVideos(data.videos || []);
+      
+      // Process the videos to correctly identify basic videos
+      const processedVideos = (data.videos || []).map((video: VideoItem) => {
+        // A video is basic if it has minimal or no data
+        const isBasic = !video.processed || 
+                        (video.totalChunks === 0 && 
+                         (!video.commentCount || video.commentCount === 0) && 
+                         (!video.wordCount || video.wordCount === 0));
+        
+        if (isBasic) {
+          return {
+            ...video,
+            processed: false, // Mark as not processed for display purposes
+            displayAsBasic: true // Add a flag to indicate this is a basic video
+          };
+        }
+        
+        return video;
+      });
+      
+      setVideos(processedVideos);
       
       // Log the response for debugging
-      console.log("API response:", data);
+      console.log("API response (processed):", processedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
@@ -317,7 +344,8 @@ export default function DatabasePage() {
           videoUrl: url,
           userId: "00000000-0000-0000-0000-000000000000", // Default user ID, replace with actual auth
           chunkingMethod: chunkingMethod, // Use the selected chunking method
-          commentLimit: 500 // Increase comment limit for better results
+          commentLimit: 500, // Increase comment limit for better results
+          processMode: processMode // Add the process mode
         }),
       });
       
@@ -1706,16 +1734,56 @@ Focus on:
       );
     }
     
-    // Then filter by analysis status
-    if (analysisFilter !== 'all') {
+    // Then filter by active filters
+    if (activeFilters.size < 3) { // If not all filters are active
       filtered = filtered.filter(video => {
-        const hasAnalysis = video.analyzed === true || 
-          (video.analysisPhases && video.analysisPhases > 0) || 
-          video.hasSkyscraperAnalysis === true;
+        // First, determine what category this video belongs to
+        const isAnalyzed = video.hasSkyscraperAnalysis === true;
+        const isProcessed = video.processed === true && 
+                            (video.totalChunks > 0 || 
+                             (video.commentCount !== undefined && video.commentCount > 0) || 
+                             (video.wordCount !== undefined && video.wordCount > 0)) && 
+                            !isAnalyzed &&
+                            !(video.id && video.id.startsWith('simulated-basic-'));
         
-        return analysisFilter === 'analyzed' ? hasAnalysis : !hasAnalysis;
+        // Consider a video "basic" if it has minimal data or is our simulated example
+        const isBasic = video.id.startsWith('simulated-basic-') || 
+                      (!isAnalyzed && !isProcessed);
+        
+        // Return true if the video matches any active filter
+        return (activeFilters.has('analyzed') && isAnalyzed) || 
+               (activeFilters.has('processed') && isProcessed) || 
+               (activeFilters.has('basic') && isBasic);
       });
     }
+    
+    // Special handling for basic videos if needed
+    // If "basic" filter is active but no videos match, consider adding test data
+    if (activeFilters.has('basic') && 
+        !activeFilters.has('processed') && 
+        !activeFilters.has('analyzed') && 
+        filtered.length === 0 && 
+        videos.length > 0) {
+      console.log('No actual basic videos found, creating a simulated one for demonstration');
+      
+      // Create a simulated basic video entry for demonstration purposes
+      const simulatedBasicVideo: VideoItem = {
+        ...videos[0], // Clone existing video
+        id: 'simulated-basic-' + Date.now(),
+        title: '[Example] Basic Video (Metadata Only)',
+        channelTitle: 'Demo Channel',
+        processed: false,
+        totalChunks: 0,
+        commentCount: 0,
+        wordCount: 0,
+        hasSkyscraperAnalysis: false,
+        analysisPhases: 0
+      };
+      filtered = [simulatedBasicVideo];
+    }
+    
+    // We already handle the case of videos showing in the wrong category at the data level
+    // by checking the video properties when fetching from the database
     
     // Then sort the filtered results
     const sortedFiltered = [...filtered].sort((a, b) => {
@@ -1738,7 +1806,43 @@ Focus on:
     });
     
     setFilteredVideos(sortedFiltered);
-  }, [searchTerm, videos, analysisFilter, sortOption]);
+
+    // Add debugging information about filter categories
+    console.log('Filter debugging:');
+    const analyzedCount = videos.filter(v => v.hasSkyscraperAnalysis === true).length;
+    const processedCount = videos.filter(v => v.processed === true && !(v.hasSkyscraperAnalysis === true)).length;
+    const basicCount = videos.filter(v => 
+      (v.totalChunks === 0 || v.totalChunks === undefined || 
+       (!v.commentCount && !v.wordCount) ||
+       (v.processed !== true))
+    ).length;
+
+    console.log(`Total videos: ${videos.length}`);
+    console.log(`Analyzed videos: ${analyzedCount}`);
+    console.log(`Processed videos: ${processedCount}`);
+    console.log(`Basic videos: ${basicCount}`);
+
+    // Log the first video metadata to check its properties
+    if (videos.length > 0) {
+      console.log('Sample video metadata:', {
+        id: videos[0].id,
+        processed: videos[0].processed,
+        hasSkyscraperAnalysis: videos[0].hasSkyscraperAnalysis,
+        totalChunks: videos[0].totalChunks,
+        commentCount: videos[0].commentCount,
+        wordCount: videos[0].wordCount
+      });
+      
+      // Log simulated basic video status if one was created
+      if (activeFilters.has('basic') && 
+          !activeFilters.has('processed') && 
+          !activeFilters.has('analyzed') && 
+          filtered.length === 1 && 
+          filtered[0].id.startsWith('simulated-basic-')) {
+        console.log('Simulated basic video was created for demonstration purposes');
+      }
+    }
+  }, [searchTerm, videos, activeFilters, sortOption]);
 
   // Add clearSearch function
   const clearSearch = () => {
@@ -1863,6 +1967,38 @@ Focus on:
                 </div>
                 
                 <div className="space-y-2">
+                  <Label>Process Mode</Label>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="full"
+                        value="full"
+                        checked={processMode === 'full'}
+                        onChange={() => setProcessMode('full')}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <Label htmlFor="full" className="cursor-pointer">Full (Transcript + Comments)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="metadata"
+                        value="metadata"
+                        checked={processMode === 'metadata'}
+                        onChange={() => setProcessMode('metadata')}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <Label htmlFor="metadata" className="cursor-pointer">Title+Thumbnail Only</Label>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">
+                      <span className="font-medium">Full:</span> Imports video metadata, transcript, and comments for analysis.<br />
+                      <span className="font-medium">Title+Thumbnail Only:</span> Imports just the basic video information without processing transcript or comments.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
                   <Label>Chunking Method</Label>
                   <div className="flex flex-col space-y-2">
                     <div className="flex items-center space-x-2">
@@ -1898,6 +2034,7 @@ Focus on:
           <YouTubeSearchTab 
             onImportComplete={handleImportComplete}
             chunkingMethod={chunkingMethod}
+            processMode={processMode}
           />
         </TabsContent>
         
@@ -1921,30 +2058,81 @@ Focus on:
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-400 font-medium">Filter:</span>
+                  <span className="text-sm text-gray-400 font-medium">Show:</span>
                 </div>
                 
-                <Select
-                  value={analysisFilter}
-                  onValueChange={(value) => setAnalysisFilter(value as 'all' | 'analyzed' | 'not-analyzed')}
-                >
-                  <SelectTrigger className="w-[160px] h-9 bg-gray-800 border-gray-700 text-gray-200">
-                    <SelectValue placeholder="Filter by analysis" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
-                    <SelectGroup>
-                      <SelectLabel className="text-gray-400">Analysis Status</SelectLabel>
-                      <SelectItem value="all">All Videos</SelectItem>
-                      <SelectItem value="analyzed">Analyzed Only</SelectItem>
-                      <SelectItem value="not-analyzed">Not Analyzed Only</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <div className="flex rounded-md bg-gray-800 border border-gray-700 p-1 gap-1">
+                  <button
+                    onClick={() => {
+                      const newFilters = new Set(activeFilters);
+                      if (newFilters.has('basic')) {
+                        newFilters.delete('basic');
+                      } else {
+                        newFilters.add('basic');
+                      }
+                      setActiveFilters(newFilters);
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium rounded ${
+                      activeFilters.has('basic') 
+                        ? 'bg-gray-700 text-white' 
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5" />
+                      Basic
+                    </span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const newFilters = new Set(activeFilters);
+                      if (newFilters.has('processed')) {
+                        newFilters.delete('processed');
+                      } else {
+                        newFilters.add('processed');
+                      }
+                      setActiveFilters(newFilters);
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium rounded ${
+                      activeFilters.has('processed') 
+                        ? 'bg-gray-700 text-white' 
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Database className="h-3.5 w-3.5" />
+                      Processed
+                    </span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const newFilters = new Set(activeFilters);
+                      if (newFilters.has('analyzed')) {
+                        newFilters.delete('analyzed');
+                      } else {
+                        newFilters.add('analyzed');
+                      }
+                      setActiveFilters(newFilters);
+                    }}
+                    className={`px-3 py-1.5 text-sm font-medium rounded ${
+                      activeFilters.has('analyzed') 
+                        ? 'bg-gray-700 text-white' 
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <BarChart className="h-3.5 w-3.5" />
+                      Analyzed
+                    </span>
+                  </button>
+                </div>
               </div>
               
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <SortAsc className="h-4 w-4 text-gray-400" />
+                  <ArrowDownUp className="h-4 w-4 text-gray-400" />
                   <span className="text-sm text-gray-400 font-medium">Sort:</span>
                 </div>
                 
@@ -1952,29 +2140,27 @@ Focus on:
                   value={sortOption}
                   onValueChange={(value) => setSortOption(value as 'newest' | 'oldest' | 'title-asc' | 'title-desc')}
                 >
-                  <SelectTrigger className="w-[160px] h-9 bg-gray-800 border-gray-700 text-gray-200">
-                    <SelectValue placeholder="Sort options" />
+                  <SelectTrigger className="w-[140px] h-9 bg-gray-800 border-gray-700 text-gray-200">
+                    <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
                     <SelectGroup>
-                      <SelectLabel className="text-gray-400">Date</SelectLabel>
+                      <SelectLabel className="text-gray-400">Sort Options</SelectLabel>
                       <SelectItem value="newest">Newest First</SelectItem>
                       <SelectItem value="oldest">Oldest First</SelectItem>
-                      <SelectLabel className="text-gray-400 mt-2">Title</SelectLabel>
-                      <SelectItem value="title-asc">A to Z</SelectItem>
-                      <SelectItem value="title-desc">Z to A</SelectItem>
+                      <SelectItem value="title-asc">Title A-Z</SelectItem>
+                      <SelectItem value="title-desc">Title Z-A</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
               
-              {/* Clear filters button - only show when filters are active */}
-              {(analysisFilter !== 'all' || sortOption !== 'newest' || searchTerm) && (
+              {(activeFilters.size < 3 || sortOption !== 'newest' || searchTerm) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setAnalysisFilter('all');
+                    setActiveFilters(new Set(['basic', 'processed', 'analyzed']));
                     setSortOption('newest');
                     setSearchTerm('');
                   }}
@@ -2029,22 +2215,69 @@ Focus on:
             </div>
             
             {/* Active filters display */}
-            {(analysisFilter !== 'all' || searchTerm) && (
+            {(activeFilters.size < 3 || searchTerm) && (
               <div className="flex flex-wrap gap-2 mb-4">
-                {analysisFilter !== 'all' && (
-                  <Badge variant="secondary" className="bg-gray-800 text-gray-300 border border-gray-700 flex items-center gap-1.5">
-                    {analysisFilter === 'analyzed' ? 'Analyzed Only' : 'Not Analyzed Only'}
-                    <button 
-                      onClick={() => setAnalysisFilter('all')} 
-                      className="text-gray-400 hover:text-gray-200 ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
+                {activeFilters.size < 3 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 mr-2">Active filters:</span>
+                    <div className="flex gap-1.5">
+                      {Array.from(activeFilters).map(filter => (
+                        <Badge key={filter} variant="secondary" className="bg-gray-800 text-gray-300 border border-gray-700 flex items-center gap-1.5">
+                          {filter === 'analyzed' ? (
+                            <>
+                              <BarChart className="h-3 w-3" />
+                              <span>Analyzed</span>
+                              <button 
+                                onClick={() => {
+                                  const newFilters = new Set(activeFilters);
+                                  newFilters.delete(filter);
+                                  setActiveFilters(newFilters);
+                                }}
+                                className="text-gray-400 hover:text-gray-200 ml-1"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </>
+                          ) : filter === 'processed' ? (
+                            <>
+                              <Database className="h-3 w-3" />
+                              <span>Processed</span>
+                              <button 
+                                onClick={() => {
+                                  const newFilters = new Set(activeFilters);
+                                  newFilters.delete(filter);
+                                  setActiveFilters(newFilters);
+                                }}
+                                className="text-gray-400 hover:text-gray-200 ml-1"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="h-3 w-3" />
+                              <span>Basic</span>
+                              <button 
+                                onClick={() => {
+                                  const newFilters = new Set(activeFilters);
+                                  newFilters.delete(filter);
+                                  setActiveFilters(newFilters);
+                                }}
+                                className="text-gray-400 hover:text-gray-200 ml-1"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 
                 {searchTerm && (
                   <Badge variant="secondary" className="bg-gray-800 text-gray-300 border border-gray-700 flex items-center gap-1.5">
+                    <Search className="h-3 w-3" />
                     Search: {searchTerm}
                     <button 
                       onClick={clearSearch} 
@@ -2157,20 +2390,34 @@ Focus on:
                           <h3 className="font-medium text-white mr-2">{video.title}</h3>
                           
                           {/* Add analysis badge - checking multiple possible properties */}
-                          {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                          {video.hasSkyscraperAnalysis === true && !video.displayAsBasic && (
                             <span 
                               className="inline-flex items-center rounded-full bg-purple-600/20 px-2.5 py-0.5 text-xs font-medium text-purple-300 border border-purple-500/30 mr-2"
                               title="Skyscraper Analysis Complete"
                             >
-                              <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                className="h-3 w-3 mr-1" 
-                                viewBox="0 0 20 20" 
-                                fill="currentColor"
-                              >
-                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                              </svg>
+                              <BarChart className="h-3 w-3 mr-1" />
                               Analyzed
+                            </span>
+                          )}
+                          {video.processed === true && !video.hasSkyscraperAnalysis && !video.displayAsBasic && 
+                            !(video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-'))) && (
+                            <span 
+                              className="inline-flex items-center rounded-full bg-blue-600/20 px-2.5 py-0.5 text-xs font-medium text-blue-300 border border-blue-500/30 mr-2"
+                              title="Vectors & Transcript Available"
+                            >
+                              <Database className="h-3 w-3 mr-1" />
+                              Processed
+                            </span>
+                          )}
+                          {((!video.processed && !video.hasSkyscraperAnalysis) || 
+                            video.displayAsBasic || 
+                            (video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-')))) && (
+                            <span 
+                              className="inline-flex items-center rounded-full bg-gray-600/20 px-2.5 py-0.5 text-xs font-medium text-gray-300 border border-gray-500/30 mr-2"
+                              title="Basic Information Only"
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              Basic
                             </span>
                           )}
 
@@ -2234,8 +2481,8 @@ Focus on:
                               <Video className="h-4 w-4 mr-2 text-purple-400" />
                               {video.analysisPhases === 5 ? 'Re-analyze' : (video.analysisPhases ? 'Continue Analysis' : 'Analyze')}
                             </DropdownMenuItem>
-                            {/* Add View Analysis option if the video has an analysis */}
-                            {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                            {/* Always show View Analysis option for processed videos */}
+                            {video.processed && (
                               <>
                                 <DropdownMenuItem 
                                   className="hover:bg-gray-700 cursor-pointer"
@@ -2258,13 +2505,16 @@ Focus on:
                                     View Analysis
                                   </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => downloadAnalysis(video.id, video.title)}
-                                  className="hover:bg-gray-700 cursor-pointer"
-                                >
-                                  <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
-                                  Download Analysis
-                                </DropdownMenuItem>
+                                {/* Only show Download Analysis if analysis exists */}
+                                {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                                  <DropdownMenuItem 
+                                    onClick={() => downloadAnalysis(video.id, video.title)}
+                                    className="hover:bg-gray-700 cursor-pointer"
+                                  >
+                                    <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
+                                    Download Analysis
+                                  </DropdownMenuItem>
+                                )}
                               </>
                             )}
                             <DropdownMenuSeparator className="bg-gray-700" />

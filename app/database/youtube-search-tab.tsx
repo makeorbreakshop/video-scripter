@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Database, ExternalLink, RefreshCw, Youtube } from "lucide-react";
+import { AlertCircle, Database, ExternalLink, RefreshCw, Youtube, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { ProcessingImportDialog } from "./import-results-dialog";
 
 interface YouTubeSearchTabProps {
   onImportComplete: (results: any) => void;
   chunkingMethod: string;
+  processMode: 'full' | 'metadata';
 }
 
-export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: YouTubeSearchTabProps) {
+export default function YouTubeSearchTab({ onImportComplete, chunkingMethod, processMode }: YouTubeSearchTabProps) {
   const { toast } = useToast();
   
   // State for YouTube search
@@ -26,6 +28,11 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
   const [importingVideos, setImportingVideos] = useState(false);
   const [importResults, setImportResults] = useState<any | null>(null);
   const [showImportResults, setShowImportResults] = useState(false);
+  // Add state to track videos that already exist in the database
+  const [existingVideos, setExistingVideos] = useState<Record<string, boolean>>({});
+  const [checkingExistence, setCheckingExistence] = useState(false);
+  // Add state for showing processing dialog
+  const [showProcessingDialog, setShowProcessingDialog] = useState(false);
   
   // Function to search YouTube
   const searchYoutube = async () => {
@@ -48,11 +55,51 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
       
       const data = await response.json();
       setYoutubeSearchResults(data.videos || []);
+      
+      // After getting search results, check which videos already exist in the database
+      if (data.videos && data.videos.length > 0) {
+        checkExistingVideos(data.videos.map((v: any) => v.id));
+      }
     } catch (error) {
       console.error("Error searching YouTube:", error);
       setYoutubeError(error instanceof Error ? error.message : "Failed to search YouTube");
     } finally {
       setYoutubeSearching(false);
+    }
+  };
+  
+  // New function to check which videos already exist in the database
+  const checkExistingVideos = async (videoIds: string[]) => {
+    try {
+      setCheckingExistence(true);
+      
+      const response = await fetch("/api/vector/check-videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoIds }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to check videos");
+      }
+      
+      const data = await response.json();
+      setExistingVideos(data.results || {});
+      
+      // Count how many videos already exist
+      const existingCount = Object.values(data.results).filter(Boolean).length;
+      if (existingCount > 0) {
+        toast({
+          title: "Database Check",
+          description: `${existingCount} of the ${videoIds.length} videos are already in your database.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error checking existing videos:", error);
+      // Don't show error toast here, just log it
+    } finally {
+      setCheckingExistence(false);
     }
   };
   
@@ -85,6 +132,8 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
     try {
       setImportingVideos(true);
       setImportResults(null);
+      // Show the processing dialog immediately
+      setShowProcessingDialog(true);
       
       const response = await fetch("/api/vector/bulk-process", {
         method: "POST",
@@ -102,6 +151,9 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
       }
       
       const results = await response.json();
+      
+      // Hide processing dialog and show results
+      setShowProcessingDialog(false);
       setImportResults(results);
       setShowImportResults(true);
       
@@ -118,6 +170,9 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
       });
     } catch (error) {
       console.error("Error importing videos:", error);
+      
+      // Hide processing dialog on error
+      setShowProcessingDialog(false);
       
       toast({
         title: "Import Failed",
@@ -222,7 +277,8 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
                 </div>
               </div>
               
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+              {/* Remove max-height constraint to make results take up full page */}
+              <div className="space-y-3 pr-2">
                 {youtubeSearchResults.map((video) => (
                   <div 
                     key={video.id} 
@@ -243,9 +299,27 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
                         alt={video.title}
                         className="w-full h-full object-cover rounded-md"
                       />
+                      
+                      {/* Add indicator badge for videos already in database */}
+                      {existingVideos[video.id] && (
+                        <div className="absolute top-0 right-0 bg-green-600 text-white text-xs px-2 py-1 m-1 rounded-md flex items-center">
+                          <Check className="h-3 w-3 mr-1" />
+                          In Database
+                        </div>
+                      )}
                     </div>
                     <div className="flex-grow overflow-hidden">
-                      <h4 className="font-medium text-white truncate">{video.title}</h4>
+                      <div className="flex items-center">
+                        <h4 className="font-medium text-white truncate">{video.title}</h4>
+                        
+                        {/* Alternative indicator next to title */}
+                        {existingVideos[video.id] && (
+                          <span className="ml-2 flex items-center text-xs text-green-400 border border-green-600/30 bg-green-600/10 rounded-full px-2 py-0.5">
+                            <Check className="h-3 w-3 mr-1" />
+                            Imported
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-400 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                         <span className="flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -310,6 +384,13 @@ export default function YouTubeSearchTab({ onImportComplete, chunkingMethod }: Y
           )}
         </div>
       </CardContent>
+      
+      {/* Add the ProcessingImportDialog */}
+      <ProcessingImportDialog
+        isOpen={showProcessingDialog}
+        onClose={() => setShowProcessingDialog(false)}
+        videoCount={selectedYoutubeVideos.size}
+      />
     </Card>
   );
 } 
