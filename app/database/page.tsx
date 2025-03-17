@@ -1885,6 +1885,31 @@ Focus on:
     }
   }, [videos]);
 
+  // Add this function after the other download functions
+  const downloadSelectedTitles = () => {
+    // Get the selected videos
+    const selectedVideosList = videos.filter(video => selectedVideos.has(video.id));
+    
+    // Create the content for the file
+    const content = selectedVideosList.map(video => video.title).join('\n');
+    
+    // Create a blob and download link
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected-video-titles.txt';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Titles Downloaded",
+      description: `Downloaded titles for ${selectedVideosList.length} videos`,
+    });
+  };
+
   return (
     <div className="p-6 h-full overflow-auto">
       <div className="flex flex-col gap-2 mb-6">
@@ -1924,6 +1949,7 @@ Focus on:
           <TabsTrigger value="import">Import Videos</TabsTrigger>
           <TabsTrigger value="search">YouTube Search</TabsTrigger>
           <TabsTrigger value="manage">Manage Database</TabsTrigger>
+          <TabsTrigger value="tools">Tools</TabsTrigger>
         </TabsList>
         
         <TabsContent value="import">
@@ -2329,6 +2355,13 @@ Focus on:
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
                           <DropdownMenuItem 
+                            onClick={downloadSelectedTitles}
+                            className="hover:bg-gray-700 cursor-pointer"
+                          >
+                            <FileText className="h-4 w-4 mr-2 text-yellow-400" />
+                            Download Titles
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
                             onClick={batchDownloadScripts}
                             className="hover:bg-gray-700 cursor-pointer"
                           >
@@ -2533,6 +2566,62 @@ Focus on:
                 </div>
               </>
             )}
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="tools">
+          <Card className="p-6 bg-gray-900 border-gray-800 text-white">
+            <CardHeader>
+              <CardTitle>Database Tools</CardTitle>
+              <CardDescription>
+                Utility tools for managing your video database
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Export Tools</h3>
+                  <div className="grid gap-4">
+                    <div className="p-4 border border-gray-800 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-medium">Download All Video Titles</h4>
+                          <p className="text-sm text-gray-400">
+                            Export all video titles from your database into a single text file
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            // Create content with all video titles
+                            const content = videos.map(video => video.title).join('\n');
+                            
+                            // Create and trigger download
+                            const blob = new Blob([content], { type: 'text/plain' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `all-video-titles-${new Date().toISOString().slice(0, 10)}.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            toast({
+                              title: "Download Complete",
+                              description: `Downloaded ${videos.length} video titles`,
+                            });
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <FileDown className="h-4 w-4 mr-2" />
+                          Download Titles
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

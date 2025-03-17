@@ -162,6 +162,35 @@ export async function POST(request: Request) {
     try {
       console.log('Storing analysis results in the database...');
       
+      // If the analysis results don't match our expected format,
+      // ensure we have at least the minimal required structure
+      const processedResults = {
+        content_analysis: analysisResults.content_analysis || 
+                          { description: "Content analysis not available" },
+                          
+        audience_analysis: analysisResults.audience_analysis || 
+                           { description: "Audience analysis not available" },
+                           
+        content_gaps: analysisResults.content_gaps || 
+                      { description: "Content gaps analysis not available" },
+                      
+        structure_elements: analysisResults.framework_elements || 
+                            analysisResults.structure_elements ||
+                            { description: "Structure elements not available" },
+                            
+        engagement_techniques: analysisResults.engagement_techniques || 
+                              { description: "Engagement techniques not available" },
+                              
+        value_delivery: analysisResults.value_delivery || 
+                        { description: "Value delivery analysis not available" },
+                        
+        implementation_blueprint: analysisResults.implementation_blueprint || 
+                                 { description: "Implementation blueprint not available" }
+      };
+      
+      // Debug the processed results
+      console.log('Processed analysis results keys:', Object.keys(processedResults).join(', '));
+      
       // Insert the analysis results into the skyscraper_analyses table
       const { data: insertData, error: insertError } = await supabase
         .from('skyscraper_analyses')
@@ -169,13 +198,13 @@ export async function POST(request: Request) {
           video_id: videoId,
           user_id: transformedData.userId,
           model_used: selectedModelId,
-          content_analysis: analysisResults.content_analysis || null,
-          audience_analysis: analysisResults.audience_analysis || null,
-          content_gaps: analysisResults.content_gaps || null,
-          structure_elements: analysisResults.framework_elements || null, // Map framework_elements to structure_elements
-          engagement_techniques: analysisResults.engagement_techniques || null,
-          value_delivery: analysisResults.value_delivery || null,
-          implementation_blueprint: analysisResults.implementation_blueprint || null,
+          content_analysis: processedResults.content_analysis,
+          audience_analysis: processedResults.audience_analysis,
+          content_gaps: processedResults.content_gaps,
+          structure_elements: processedResults.structure_elements, // Map framework_elements to structure_elements
+          engagement_techniques: processedResults.engagement_techniques,
+          value_delivery: processedResults.value_delivery,
+          implementation_blueprint: processedResults.implementation_blueprint,
           tokens_used: tokensUsed,
           cost: cost,
           status: 'completed',

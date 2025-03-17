@@ -421,9 +421,111 @@ const SkyscraperDebugModal = forwardRef<{streamedText: string}, DebugModalProps>
 
   // Auto-save when streaming completes
   useEffect(() => {
-    if (!isStreaming && parsedStreamData && Object.keys(parsedStreamData).length > 0) {
+    if (!isStreaming && streamedText && streamedText.length > 0) {
       // Wait a moment to ensure all data is processed
       const timer = setTimeout(() => {
+        console.log('Auto-save timer triggered. Stream data status:', {
+          hasStreamText: !!streamedText,
+          streamTextLength: streamedText?.length || 0,
+          hasParsedData: !!parsedStreamData,
+          parsedDataKeys: parsedStreamData ? Object.keys(parsedStreamData) : 'none'
+        });
+        
+        // Try to extract JSON from the streamed text if not already parsed
+        let extractedData = null;
+        if (!parsedStreamData && streamedText) {
+          // Look for JSON in markdown code blocks
+          const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)```/;
+          const match = streamedText.match(jsonBlockRegex);
+          
+          if (match && match[1]) {
+            try {
+              extractedData = JSON.parse(match[1].trim());
+              console.log('Auto-extracted JSON from streamed text:', Object.keys(extractedData));
+              
+              // Update parsed data state
+              if (setExternalParsedStreamData) {
+                setExternalParsedStreamData(extractedData);
+              }
+              setParsedStreamData(extractedData);
+            } catch (e) {
+              console.error('Failed to parse JSON from markdown block:', e);
+            }
+          } else {
+            // Try finding JSON object pattern
+            const jsonPattern = /\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\}/;
+            const objectMatch = streamedText.match(jsonPattern);
+            
+            if (objectMatch) {
+              try {
+                extractedData = JSON.parse(objectMatch[0]);
+                console.log('Auto-extracted JSON using pattern matching:', Object.keys(extractedData));
+                
+                // Update parsed data state
+                if (setExternalParsedStreamData) {
+                  setExternalParsedStreamData(extractedData);
+                }
+                setParsedStreamData(extractedData);
+              } catch (e) {
+                console.error('Failed to parse JSON from pattern match:', e);
+              }
+            }
+          }
+          
+          // If we still couldn't parse, try one more approach
+          if (!extractedData) {
+            try {
+              // Try to find JSON content by key patterns
+              if (streamedText.includes('"content_analysis"') || 
+                  streamedText.includes('"audience_analysis"') || 
+                  streamedText.includes('"framework_elements"')) {
+                
+                // Find the first opening brace
+                const startIdx = streamedText.indexOf('{');
+                if (startIdx !== -1) {
+                  // Find balanced closing brace
+                  let depth = 1;
+                  let endIdx = -1;
+                  for (let i = startIdx + 1; i < streamedText.length; i++) {
+                    if (streamedText[i] === '{') depth++;
+                    else if (streamedText[i] === '}') depth--;
+                    
+                    if (depth === 0) {
+                      endIdx = i;
+                      break;
+                    }
+                  }
+                  
+                  if (endIdx !== -1) {
+                    const jsonContent = streamedText.substring(startIdx, endIdx + 1);
+                    try {
+                      extractedData = JSON.parse(jsonContent);
+                      console.log('Successfully extracted JSON by balanced braces:', 
+                        Object.keys(extractedData).join(', '));
+                        
+                      // Update parsed data state
+                      if (setExternalParsedStreamData) {
+                        setExternalParsedStreamData(extractedData);
+                      }
+                      setParsedStreamData(extractedData);
+                    } catch (e) {
+                      console.error('Failed to parse balanced braces content:', e);
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Final extraction attempt failed:', e);
+            }
+          }
+        }
+        
+        // Ensure the parent component gets updated with the latest parsed data
+        if (parsedStreamData && setExternalParsedStreamData) {
+          console.log('Updating external state with parsed data:', Object.keys(parsedStreamData).join(', '));
+          setExternalParsedStreamData(parsedStreamData);
+        }
+        
         if (onSaveAnalysis) {
           console.log('Streaming completed, auto-saving analysis data...');
           onSaveAnalysis();
@@ -442,11 +544,11 @@ const SkyscraperDebugModal = forwardRef<{streamedText: string}, DebugModalProps>
             console.log('Analysis has been automatically saved');
           }
         }
-      }, 1000); // Small delay to ensure everything is processed
+      }, 5000); // Increased delay to ensure everything is processed
       
       return () => clearTimeout(timer);
     }
-  }, [isStreaming, parsedStreamData, onSaveAnalysis]);
+  }, [isStreaming, streamedText, parsedStreamData, onSaveAnalysis, setParsedStreamData, setExternalParsedStreamData]);
 
   // Also add a handler for the manual save button click
   const handleSaveClick = () => {

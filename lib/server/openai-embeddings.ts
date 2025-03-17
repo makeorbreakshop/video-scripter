@@ -54,18 +54,15 @@ export async function createEmbeddings(
       apiKey: apiKey
     });
 
-    // Process each text individually as the API expects
-    const embeddings: number[][] = [];
+    // Process all texts in a single API call instead of one at a time
+    const response = await openai.embeddings.create({
+      model: model,
+      input: nonEmptyTexts,
+      encoding_format: "float"
+    });
     
-    for (let i = 0; i < nonEmptyTexts.length; i++) {
-      const response = await openai.embeddings.create({
-        model: model,
-        input: nonEmptyTexts[i],
-        encoding_format: "float"
-      });
-      
-      embeddings.push(response.data[0].embedding);
-    }
+    // Extract embeddings from response
+    const embeddings = response.data.map(item => item.embedding);
     
     console.log(`✅ Successfully generated ${embeddings.length} embeddings`);
     
@@ -116,11 +113,9 @@ export async function batchCreateEmbeddings(
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Process each text in the batch
-      for (const text of batch) {
-        const batchEmbeddings = await createEmbeddings([text], apiKey, model);
-        allEmbeddings.push(...batchEmbeddings);
-      }
+      // Process each batch as a whole instead of one text at a time
+      const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
+      allEmbeddings.push(...batchEmbeddings);
       
       console.log(`✅ Batch ${i + 1}/${batches.length} completed`);
     } catch (error) {
@@ -132,12 +127,8 @@ export async function batchCreateEmbeddings(
       // Try once more
       try {
         console.log(`🔄 Retrying batch ${i + 1}/${batches.length}`);
-        
-        // Process each text in the batch
-        for (const text of batch) {
-          const batchEmbeddings = await createEmbeddings([text], apiKey, model);
-          allEmbeddings.push(...batchEmbeddings);
-        }
+        const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
+        allEmbeddings.push(...batchEmbeddings);
       } catch (retryError) {
         console.error(`❌ Failed to process batch ${i + 1} after retry:`, retryError);
         

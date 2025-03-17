@@ -18,6 +18,7 @@ interface ProcessingOptions {
   commentLimit?: number;
   userId: string;
   chunkingMethod?: 'standard' | 'enhanced';
+  processMode?: 'full' | 'metadata';
 }
 
 interface ProcessingResult {
@@ -200,7 +201,7 @@ export async function processYoutubeVideo(
       };
     }
     
-    const { userId, maxChunkSize = 512, commentLimit = 500 } = options;
+    const { userId, maxChunkSize = 512, commentLimit = 500, processMode = 'full' } = options;
     
     // Check if OpenAI API key is available
     const openAIApiKey = getOpenAIApiKey();
@@ -261,6 +262,17 @@ export async function processYoutubeVideo(
     if (!metadataStored) {
       console.error(`🚨 Failed to store metadata for video ${videoId}`);
       // Continue anyway - we'll still try to process chunks
+    }
+    
+    // If processMode is 'metadata', return early with just the metadata
+    if (processMode === 'metadata') {
+      return {
+        success: true,
+        videoId,
+        totalChunks: 0,
+        wordCount: 0,
+        commentCount: 0
+      };
     }
     
     // Step 3: Get transcript and process into chunks

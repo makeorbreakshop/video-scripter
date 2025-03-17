@@ -341,29 +341,90 @@ export async function clusterCommentsWithEmbeddings(
     
     // Generate embeddings for all comments
     console.log(`🧠 Generating embeddings for ${comments.length} comments`);
-    const commentTexts = comments.map(c => cleanHtmlContent(c.textDisplay));
     
-    // Use a smaller dimension for clustering to save on computation
-    // We're using these embeddings just for clustering, not for storage
-    const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: commentTexts,
-      dimensions: 256 // Smaller dimension is sufficient for clustering
-    });
+    // Clean and validate comments
+    const commentTexts = comments.map(c => {
+      const cleaned = cleanHtmlContent(c.textDisplay);
+      // Truncate very long comments to avoid token limits
+      return cleaned.length > 8000 ? cleaned.substring(0, 8000) + "..." : cleaned;
+    })
+    // Filter out empty comments
+    .filter(text => text.trim().length > 0);
     
-    const embeddings = embeddingResponse.data.map(item => item.embedding);
+    // Set a reasonable batch size to avoid token limits
+    const BATCH_SIZE = 100;
+    const totalBatches = Math.ceil(commentTexts.length / BATCH_SIZE);
+    console.log(`🔄 Processing ${commentTexts.length} texts in ${totalBatches} batches with OpenAI`);
+    
+    // Process embeddings in batches
+    let allEmbeddings: number[][] = [];
+    let validComments: YouTubeComment[] = [];
+    let validCommentIndices: number[] = [];
+    
+    for (let i = 0; i < commentTexts.length; i += BATCH_SIZE) {
+      const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+      console.log(`⏳ Processing batch ${batchIndex}/${totalBatches} with ${Math.min(BATCH_SIZE, commentTexts.length - i)} texts`);
+      
+      const batchTexts = commentTexts.slice(i, i + BATCH_SIZE);
+      const batchComments = comments.slice(i, i + BATCH_SIZE);
+      
+      try {
+        // Create a sub-batch to avoid token limits if needed
+        // OpenAI allows batching embeddings in a single call, so let's use that capability
+        const SUB_BATCH_SIZE = 20; // Process 20 comments at a time instead of 1
+        
+        for (let j = 0; j < batchTexts.length; j += SUB_BATCH_SIZE) {
+          const subBatchEndIndex = Math.min(j + SUB_BATCH_SIZE, batchTexts.length);
+          const subBatchTexts = batchTexts.slice(j, subBatchEndIndex).filter(text => text.trim().length > 0);
+          
+          if (subBatchTexts.length === 0) continue;
+          
+          console.log(`🧠 Generating embeddings for ${subBatchTexts.length} text chunks using OpenAI`);
+          
+          // Process multiple texts in a single API call
+          const embeddingResponse = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: subBatchTexts,
+            dimensions: 256 // Smaller dimension is sufficient for clustering
+          });
+          
+          if (embeddingResponse.data && embeddingResponse.data.length > 0) {
+            // Process each embedding in the response
+            for (let k = 0; k < embeddingResponse.data.length; k++) {
+              const validTextIndex = j + k;
+              if (validTextIndex < batchTexts.length && batchTexts[validTextIndex].trim().length > 0) {
+                allEmbeddings.push(embeddingResponse.data[k].embedding);
+                validComments.push(batchComments[validTextIndex]);
+                validCommentIndices.push(i + validTextIndex);
+              }
+            }
+            console.log(`✅ Successfully generated ${embeddingResponse.data.length} embeddings`);
+          }
+        }
+      } catch (batchError) {
+        console.error(`🚨 Error processing batch ${batchIndex}: ${batchError}`);
+        // Continue with the next batch
+      }
+      
+      console.log(`✅ Batch ${batchIndex}/${totalBatches} completed`);
+    }
+    
+    if (allEmbeddings.length < minCommentsPerCluster) {
+      console.warn(`⚠️ Not enough valid embeddings (${allEmbeddings.length}), falling back to keyword clustering`);
+      return clusterCommentsByKeywords(comments, options);
+    }
     
     // Perform k-means clustering on the embeddings
     const clusters = await performKMeansClustering(
-      embeddings, 
-      Math.min(maxClusters, Math.ceil(comments.length / minCommentsPerCluster))
+      allEmbeddings, 
+      Math.min(maxClusters, Math.ceil(validComments.length / minCommentsPerCluster))
     );
     
     // Group comments by cluster
     const commentClusters: YouTubeComment[][] = Array(clusters.k).fill(null).map(() => []);
     
-    clusters.assignments.forEach((clusterIndex, commentIndex) => {
-      commentClusters[clusterIndex].push(comments[commentIndex]);
+    clusters.assignments.forEach((clusterIndex, embeddingIndex) => {
+      commentClusters[clusterIndex].push(validComments[embeddingIndex]);
     });
     
     // Filter out clusters that are too small
@@ -371,7 +432,7 @@ export async function clusterCommentsWithEmbeddings(
       .filter(cluster => cluster.length >= minCommentsPerCluster)
       .map(cluster => formatCluster(cluster));
     
-    console.log(`✅ Created ${validClusters.length} semantic clusters from ${comments.length} comments`);
+    console.log(`✅ Created ${validClusters.length} semantic clusters from ${validComments.length} comments`);
     return validClusters;
   } catch (error) {
     console.error("Error in embedding-based clustering:", error);

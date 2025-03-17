@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     }
     
     // Parse request body
-    const { videoUrl, userId, maxChunkSize, commentLimit, chunkingMethod, reprocess } = await request.json();
+    const { videoUrl, userId, maxChunkSize, commentLimit, chunkingMethod, reprocess, processMode } = await request.json();
     
     // Validate required parameters
     if (!videoUrl) {
@@ -165,7 +165,8 @@ export async function POST(request: Request) {
       userId,
       maxChunkSize: maxChunkSize || 512,
       commentLimit: commentLimit || 500,
-      chunkingMethod: chunkingMethod || 'enhanced'
+      chunkingMethod: chunkingMethod || 'enhanced',
+      processMode: processMode || 'full'
     });
     
     if (!result.success) {

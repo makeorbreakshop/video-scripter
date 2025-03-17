@@ -513,114 +513,155 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
     return null;
   }
   
+  // Initialize allComments outside the try-catch block so it's available in the catch handler
+  let allComments: any[] = [];
+  
   try {
     console.log(`💬 Fetching ALL comments for video ID: ${videoId} with API key`);
     console.log(`🔑 API key available: ${apiKey ? 'YES (starts with ' + apiKey.substring(0, 3) + '...)' : 'NO'}`);
     
-    let allComments: any[] = [];
     let nextPageToken: string | null = null;
     let page = 1;
+    let retryCount = 0;
+    const maxRetries = 3;
     
     do {
-      console.log(`📃 Fetching comments page ${page} for ${videoId} with API key...`);
-      
-      // Construct URL with page token if available - include replies in the request
-      let apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=100&order=relevance&key=${apiKey}`;
-      if (nextPageToken) {
-        apiUrl += `&pageToken=${nextPageToken}`;
-      }
-      
-      console.log(`🔗 API URL: ${apiUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
-      
-      const response = await fetch(apiUrl);
-      
-      // Log the response status
-      console.log(`📥 Response status for page ${page}: ${response.status} ${response.statusText}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🚨 Comments API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
+      try {
+        console.log(`📃 Fetching comments page ${page} for ${videoId} with API key...`);
         
-        if (response.status === 403 || response.status === 401) {
-          console.error('🔑 Authentication error - likely an API key issue');
-          return null;
+        // Construct URL with page token if available - include replies in the request
+        let apiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=100&order=relevance&key=${apiKey}`;
+        if (nextPageToken) {
+          apiUrl += `&pageToken=${nextPageToken}`;
         }
         
-        // If we at least got some comments, return them instead of null
-        return allComments.length > 0 ? allComments : null;
-      }
-      
-      const data = await response.json();
-      
-      // Extract and transform comments
-      if (data.items && data.items.length > 0) {
-        let comments: Array<{
-          authorDisplayName: string;
-          authorProfileImageUrl: string;
-          textDisplay: string;
-          likeCount: number;
-          publishedAt: string;
-          isReply: boolean;
-          parentId: string | null;
-        }> = [];
+        console.log(`🔗 API URL: ${apiUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
         
-        // Process each comment thread (top-level comment + replies)
-        for (const item of data.items) {
-          // Add the top-level comment
-          const topLevelComment = item.snippet.topLevelComment.snippet;
-          comments.push({
-            authorDisplayName: topLevelComment.authorDisplayName,
-            authorProfileImageUrl: topLevelComment.authorProfileImageUrl,
-            textDisplay: topLevelComment.textDisplay,
-            likeCount: topLevelComment.likeCount,
-            publishedAt: topLevelComment.publishedAt,
-            isReply: false,
-            parentId: null
+        // Add retry with exponential backoff for rate limiting
+        const response = await fetch(apiUrl);
+        
+        // Log the response status
+        console.log(`📥 Response status for page ${page}: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('🚨 Comments API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
           });
           
-          // Add replies if they exist
-          if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
-            const parentId = item.id;
-            const replyComments = item.replies.comments.map((reply: any) => ({
-              authorDisplayName: reply.snippet.authorDisplayName,
-              authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
-              textDisplay: reply.snippet.textDisplay,
-              likeCount: reply.snippet.likeCount,
-              publishedAt: reply.snippet.publishedAt,
-              isReply: true,
-              parentId: parentId
-            }));
-            
-            comments = [...comments, ...replyComments];
-            console.log(`📝 Added ${replyComments.length} replies to comment ${parentId}`);
+          if (response.status === 403 || response.status === 401) {
+            console.error('🔑 Authentication error - likely an API key issue');
+            // If we at least got some comments, return them instead of null
+            return allComments.length > 0 ? allComments : null;
           }
+          
+          // For 429 (rate limit), retry with exponential backoff
+          if (response.status === 429 && retryCount < maxRetries) {
+            retryCount++;
+            const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s...
+            console.log(`⏳ Rate limit hit, retry ${retryCount}/${maxRetries} after ${delay}ms delay`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue; // Retry this page
+          }
+          
+          // For other errors, log and move on
+          console.warn(`⚠️ Error fetching page ${page}, skipping: ${response.status}`);
+          break;
         }
         
-        // Add comments to our collection
-        allComments = [...allComments, ...comments];
-        console.log(`✅ Got ${comments.length} comments including replies (total: ${allComments.length})`);
-      } else {
-        console.log(`⚠️ No comments found on page ${page}`);
-      }
-      
-      // Check if there are more pages
-      nextPageToken = data.nextPageToken || null;
-      if (nextPageToken) {
-        console.log(`📄 Next page token found: ${nextPageToken.substring(0, 10)}...`);
-      } else {
-        console.log(`📄 No more pages available`);
-      }
-      
-      page++;
-      
-      // Safety check to avoid infinite loops
-      if (page > 30) {
-        console.warn('⚠️ Reached maximum 30 pages of comments, stopping pagination');
-        break;
+        // Reset retry counter on success
+        retryCount = 0;
+        
+        const data = await response.json();
+        
+        // Extract and transform comments
+        if (data.items && data.items.length > 0) {
+          let comments: Array<{
+            authorDisplayName: string;
+            authorProfileImageUrl: string;
+            textDisplay: string;
+            likeCount: number;
+            publishedAt: string;
+            isReply: boolean;
+            parentId: string | null;
+          }> = [];
+          
+          // Process each comment thread (top-level comment + replies)
+          for (const item of data.items) {
+            // Add the top-level comment
+            const topLevelComment = item.snippet.topLevelComment.snippet;
+            comments.push({
+              authorDisplayName: topLevelComment.authorDisplayName,
+              authorProfileImageUrl: topLevelComment.authorProfileImageUrl,
+              textDisplay: topLevelComment.textDisplay,
+              likeCount: topLevelComment.likeCount,
+              publishedAt: topLevelComment.publishedAt,
+              isReply: false,
+              parentId: null
+            });
+            
+            // Add replies if they exist
+            if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
+              const parentId = item.id;
+              const replyComments = item.replies.comments.map((reply: any) => ({
+                authorDisplayName: reply.snippet.authorDisplayName,
+                authorProfileImageUrl: reply.snippet.authorProfileImageUrl,
+                textDisplay: reply.snippet.textDisplay,
+                likeCount: reply.snippet.likeCount,
+                publishedAt: reply.snippet.publishedAt,
+                isReply: true,
+                parentId: parentId
+              }));
+              
+              comments = [...comments, ...replyComments];
+              console.log(`📝 Added ${replyComments.length} replies to comment ${parentId}`);
+            }
+          }
+          
+          // Add comments to our collection
+          allComments = [...allComments, ...comments];
+          console.log(`✅ Got ${comments.length} comments including replies (total: ${allComments.length})`);
+        } else {
+          console.log(`⚠️ No comments found on page ${page}`);
+        }
+        
+        // Check if there are more pages
+        nextPageToken = data.nextPageToken || null;
+        if (nextPageToken) {
+          console.log(`📄 Next page token found: ${nextPageToken.substring(0, 10)}...`);
+          
+          // Add a small delay between pages to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.log(`📄 No more pages available`);
+        }
+        
+        page++;
+        
+        // Safety check to avoid infinite loops
+        if (page > 50) {  // Increased from 30 to 50 for more comments
+          console.warn('⚠️ Reached maximum 50 pages of comments, stopping pagination');
+          break;
+        }
+      } catch (pageError) {
+        console.error(`🚨 Error processing page ${page}:`, pageError);
+        
+        // Retry on transient errors
+        if (retryCount < maxRetries) {
+          retryCount++;
+          const delay = Math.pow(2, retryCount) * 1000;
+          console.log(`⏳ Error fetching page, retry ${retryCount}/${maxRetries} after ${delay}ms delay`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue; // Retry this page
+        } else {
+          console.error(`🚨 Maximum retries reached for page ${page}, continuing to next page`);
+          // Move to next page or stop if we have no token
+          if (!nextPageToken) break;
+          page++;
+          retryCount = 0;
+        }
       }
     } while (nextPageToken);
     
@@ -628,7 +669,8 @@ async function fetchAllCommentsWithApiKey(videoId: string): Promise<any[] | null
     return allComments;
   } catch (error) {
     console.error('🚨 Error fetching ALL comments with API key:', error);
-    return null;
+    // If we at least got some comments, return them instead of null
+    return allComments.length > 0 ? allComments : null;
   }
 }
 

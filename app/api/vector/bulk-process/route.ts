@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { processYoutubeVideo } from '@/lib/video-processor';
+import { supabase } from '@/lib/supabase';
+import { isPgvectorEnabled } from '@/lib/env-config';
 
 interface ProcessResult {
   videoId: string;
@@ -8,6 +11,7 @@ interface ProcessResult {
   channelTitle?: string;
   commentCount?: number;
   wordCount?: number;
+  totalChunks?: number;
 }
 
 interface ProcessError {
@@ -15,29 +19,107 @@ interface ProcessError {
   error: string;
 }
 
-// Temporary mock implementation for video processing
-async function mockProcessVideo(videoUrl: string, userId: string, chunkingMethod: string) {
-  // This is a temporary solution to prevent the URL error
-  // In a real implementation, you would import and use the same logic from the process-video endpoint
+// Real implementation for video processing
+async function processVideo(videoUrl: string, userId: string, chunkingMethod: string) {
   const videoId = videoUrl.split('v=')[1];
   
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Check if the video already exists in the database
+  const { data: existingVideo, error: videoError } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('id', videoId)
+    .single();
+
+  if (videoError && videoError.code !== 'PGRST116') { // PGRST116 is "not found"
+    console.error('Error checking existing video:', videoError);
+    throw new Error('Failed to check existing video');
+  }
+
+  if (existingVideo) {
+    console.log(`🔄 Video ${videoId} already exists in database, skipping processing`);
+    
+    // Get the total chunks for this video
+    const { data: chunks, error: chunksError } = await supabase
+      .from('chunks')
+      .select('*')
+      .eq('video_id', videoId);
+
+    if (chunksError) {
+      console.error('Error fetching chunks:', chunksError);
+      throw new Error('Failed to fetch chunks');
+    }
+    
+    // Get additional metadata for the response
+    const { data: videoMetadata, error: metadataError } = await supabase
+      .from('videos')
+      .select('title, channel_id, view_count, comment_count')
+      .eq('id', videoId)
+      .single();
+      
+    if (metadataError) {
+      console.warn('Warning: Could not fetch video metadata:', metadataError);
+    }
+    
+    return {
+      success: true,
+      videoId,
+      totalChunks: chunks?.length || 0,
+      alreadyExists: true,
+      title: existingVideo.title,
+      videoTitle: videoMetadata?.title || existingVideo.title,
+      channelTitle: videoMetadata?.channel_id || null,
+      viewCount: videoMetadata?.view_count || null,
+      commentCount: videoMetadata?.comment_count || null
+    };
+  }
   
-  // For testing, we'll return a mock result
+  // Process the video using the real implementation
+  console.log(`🎬 Processing video ${videoId} for user ${userId}`);
+  const result = await processYoutubeVideo(videoUrl, {
+    userId,
+    maxChunkSize: 512,
+    commentLimit: 500,
+    chunkingMethod: chunkingMethod as 'standard' | 'enhanced'
+  });
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to process video');
+  }
+  
+  // Get video metadata from the database to include in the response
+  const { data: videoMetadata, error: metadataError } = await supabase
+    .from('videos')
+    .select('title, channel_id, view_count')
+    .eq('id', videoId)
+    .single();
+    
+  if (metadataError) {
+    console.warn('Warning: Could not fetch video metadata:', metadataError);
+  }
+  
   return {
-    status: 'success',
+    success: true,
     videoId,
-    title: `Video ${videoId}`,
-    channelTitle: 'Mock Channel',
-    commentCount: 42,
-    wordCount: 1000,
+    totalChunks: result.totalChunks,
+    title: videoMetadata?.title || null,
+    channelTitle: videoMetadata?.channel_id || null,
+    viewCount: videoMetadata?.view_count || null,
+    commentCount: result.commentCount || 0,
+    wordCount: result.wordCount || 0,
     alreadyExists: false
   };
 }
 
 export async function POST(request: Request) {
   try {
+    // Check if pgvector is enabled
+    if (!isPgvectorEnabled()) {
+      return NextResponse.json(
+        { error: 'Vector database functionality is disabled' },
+        { status: 400 }
+      );
+    }
+    
     const { videoIds, userId = "00000000-0000-0000-0000-000000000000", chunkingMethod = "enhanced" } = await request.json();
     
     if (!videoIds || !Array.isArray(videoIds) || videoIds.length === 0) {
@@ -67,8 +149,8 @@ export async function POST(request: Request) {
             // Generate YouTube URL from ID
             const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
             
-            // Process the video directly instead of calling another API route
-            const result = await mockProcessVideo(videoUrl, userId, chunkingMethod);
+            // Process the video using the real implementation
+            const result = await processVideo(videoUrl, userId, chunkingMethod);
             
             if (result.alreadyExists) {
               return {
@@ -77,7 +159,8 @@ export async function POST(request: Request) {
                 message: 'Video already exists in database',
                 title: result.title,
                 channelTitle: result.channelTitle,
-                commentCount: result.commentCount || 0
+                commentCount: result.commentCount || 0,
+                totalChunks: result.totalChunks || 0
               };
             }
             
@@ -88,7 +171,8 @@ export async function POST(request: Request) {
               title: result.title,
               channelTitle: result.channelTitle,
               commentCount: result.commentCount || 0,
-              wordCount: result.wordCount || 0
+              wordCount: result.wordCount || 0,
+              totalChunks: result.totalChunks || 0
             };
           } catch (error: unknown) {
             console.error(`Error processing video ${videoId}:`, error);

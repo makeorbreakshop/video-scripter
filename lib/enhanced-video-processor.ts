@@ -25,6 +25,7 @@ export interface EnhancedProcessingOptions {
   minCommentsPerCluster?: number; // Minimum comments per cluster
   detectPauses?: boolean;       // Whether to detect pauses for chunking
   respectTransitions?: boolean; // Whether to respect transition phrases
+  processMode?: 'full' | 'metadata';
 }
 
 // Define enhanced processing result
@@ -36,6 +37,8 @@ export interface EnhancedProcessingResult {
   commentClusters?: number;
   descriptionChunks?: number;
   error?: string;
+  wordCount?: number;
+  commentCount?: number;
 }
 
 /**
@@ -224,7 +227,8 @@ export async function processYoutubeVideoEnhanced(
       maxCommentClusters = 10,
       minCommentsPerCluster = 3,
       detectPauses = true,
-      respectTransitions = true
+      respectTransitions = true,
+      processMode = 'full'
     } = options;
     
     // Check if OpenAI API key is available for vector storage
@@ -282,6 +286,17 @@ export async function processYoutubeVideoEnhanced(
     if (!metadataStored) {
       console.error(`🚨 Failed to store metadata for video ${videoId}`);
       // Continue anyway - we'll still try to process chunks
+    }
+    
+    // If processMode is 'metadata', return early with just the metadata
+    if (processMode === 'metadata') {
+      return {
+        success: true,
+        videoId,
+        totalChunks: 0,
+        wordCount: 0,
+        commentCount: 0
+      };
     }
     
     // Step 3: Get transcript and process with advanced chunking
@@ -398,7 +413,9 @@ export async function processYoutubeVideoEnhanced(
       totalChunks: allChunks.length,
       transcriptChunks: transcriptChunks.length,
       commentClusters: commentChunks.length,
-      descriptionChunks: descriptionChunks.length
+      descriptionChunks: descriptionChunks.length,
+      wordCount: allChunks.reduce((total, chunk) => total + chunk.content.length, 0),
+      commentCount: commentChunks.length
     };
   } catch (error) {
     console.error(`🚨 Error in enhanced video processing:`, error);
