@@ -64,12 +64,15 @@ export default function ImportResultsDialog({ isOpen, onClose, results, onViewDa
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                    {results.results.map((result: any, index: number) => (
-                      <tr key={index} className={
-                        result.status === 'success' ? 'bg-green-50 dark:bg-green-900/10' : 
-                        result.status === 'already_exists' ? 'bg-blue-50 dark:bg-blue-900/10' : 
-                        'bg-red-50 dark:bg-red-900/10'
-                      }>
+                    {results.results.map((result: any) => (
+                      <tr 
+                        key={`${result.videoId || result.title}-${result.status}`} 
+                        className={
+                          result.status === 'success' ? 'bg-green-50 dark:bg-green-900/10' : 
+                          result.status === 'already_exists' ? 'bg-blue-50 dark:bg-blue-900/10' : 
+                          'bg-red-50 dark:bg-red-900/10'
+                        }
+                      >
                         <td className="px-6 py-4 text-sm font-medium whitespace-normal break-words max-w-xs">
                           {result.title || result.videoId}
                         </td>
@@ -101,8 +104,11 @@ export default function ImportResultsDialog({ isOpen, onClose, results, onViewDa
             <div className="mt-6">
               <h3 className="text-lg font-medium mb-3 text-red-600 dark:text-red-400">Errors</h3>
               <div className="max-h-48 overflow-y-auto space-y-2">
-                {results.errors.map((error: any, index: number) => (
-                  <div key={index} className="p-3 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md">
+                {results.errors.map((error: any) => (
+                  <div 
+                    key={`error-${error.videoId}`} 
+                    className="p-3 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md"
+                  >
                     <p className="font-medium">{error.videoId}</p>
                     <p className="text-sm">{error.error}</p>
                   </div>

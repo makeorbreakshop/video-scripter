@@ -29,7 +29,9 @@ import {
   SortAsc,
   SortDesc,
   BarChart,
-  ArrowDownUp
+  ArrowDownUp,
+  LayoutList,
+  LayoutGrid
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -216,6 +218,12 @@ export default function DatabasePage() {
   // State for YouTube search results import dialog
   const [showYoutubeImportResults, setShowYoutubeImportResults] = useState(false);
   const [youtubeImportResults, setYoutubeImportResults] = useState<any | null>(null);
+  
+  // Add viewMode state near the top of the component with other state declarations
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  
+  // Add lastSelectedIndex state near other state declarations
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   
   // Fetch existing videos when the page loads
   useEffect(() => {
@@ -1910,6 +1918,37 @@ Focus on:
     });
   };
 
+  // Add handleRowClick function before the return statement
+  const handleRowClick = (videoId: string, index: number, event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.shiftKey && lastSelectedIndex !== null) {
+      // Calculate the range of indices to select
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      
+      // Get the video IDs in the range
+      const videosToSelect = filteredVideos.slice(start, end + 1).map(v => v.id);
+      
+      // Add them to the selected set
+      setSelectedVideos(prev => {
+        const newSelection = new Set(prev);
+        videosToSelect.forEach(id => newSelection.add(id));
+        return newSelection;
+      });
+    } else {
+      // Toggle single selection
+      setSelectedVideos(prev => {
+        const newSelection = new Set(prev);
+        if (newSelection.has(videoId)) {
+          newSelection.delete(videoId);
+        } else {
+          newSelection.add(videoId);
+        }
+        return newSelection;
+      });
+      setLastSelectedIndex(index);
+    }
+  };
+
   return (
     <div className="p-6 h-full overflow-auto">
       <div className="flex flex-col gap-2 mb-6">
@@ -2218,7 +2257,27 @@ Focus on:
               
               <div className="flex-grow"></div>
               
-              {/* Search input */}
+              {/* Add view toggle button in the filter controls section */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={`px-2 ${viewMode === 'list' ? 'bg-gray-800' : ''}`}
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={`px-2 ${viewMode === 'grid' ? 'bg-gray-800' : ''}`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Existing search input */}
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                 <Input
@@ -2409,161 +2468,255 @@ Focus on:
                     </div>
                   </div>
                 )}
-                <div className="divide-y divide-gray-800">
-                  {filteredVideos.map(video => (
-                    <div key={video.id} className="py-4 flex items-center hover:bg-gray-800/50">
-                      <div className="flex-shrink-0 pr-4">
-                        <Checkbox
-                          checked={selectedVideos.has(video.id)}
-                          onClick={() => toggleVideoSelection(video.id)}
-                        />
-                      </div>
-                      <div className="flex-grow">
-                        <div className="flex items-center">
-                          <h3 className="font-medium text-white mr-2">{video.title}</h3>
-                          
-                          {/* Add analysis badge - checking multiple possible properties */}
-                          {video.hasSkyscraperAnalysis === true && !video.displayAsBasic && (
-                            <span 
-                              className="inline-flex items-center rounded-full bg-purple-600/20 px-2.5 py-0.5 text-xs font-medium text-purple-300 border border-purple-500/30 mr-2"
-                              title="Skyscraper Analysis Complete"
-                            >
-                              <BarChart className="h-3 w-3 mr-1" />
-                              Analyzed
-                            </span>
-                          )}
-                          {video.processed === true && !video.hasSkyscraperAnalysis && !video.displayAsBasic && 
-                            !(video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-'))) && (
-                            <span 
-                              className="inline-flex items-center rounded-full bg-blue-600/20 px-2.5 py-0.5 text-xs font-medium text-blue-300 border border-blue-500/30 mr-2"
-                              title="Vectors & Transcript Available"
-                            >
-                              <Database className="h-3 w-3 mr-1" />
-                              Processed
-                            </span>
-                          )}
-                          {((!video.processed && !video.hasSkyscraperAnalysis) || 
-                            video.displayAsBasic || 
-                            (video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-')))) && (
-                            <span 
-                              className="inline-flex items-center rounded-full bg-gray-600/20 px-2.5 py-0.5 text-xs font-medium text-gray-300 border border-gray-500/30 mr-2"
-                              title="Basic Information Only"
-                            >
-                              <FileText className="h-3 w-3 mr-1" />
-                              Basic
-                            </span>
-                          )}
-
-                          <a 
-                            href={`https://www.youtube.com/watch?v=${video.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-400 flex-shrink-0"
-                            title="Watch on YouTube"
-                          >
-                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                          </a>
+                
+                {viewMode === 'list' ? (
+                  <div className="divide-y divide-gray-800">
+                    {filteredVideos.map((video, index) => (
+                      <div 
+                        key={video.id} 
+                        className={`py-4 flex items-center hover:bg-gray-800/50 cursor-pointer ${
+                          selectedVideos.has(video.id) ? 'bg-blue-900/20 border-blue-800' : ''
+                        }`}
+                        onClick={(e: React.MouseEvent<HTMLDivElement>) => handleRowClick(video.id, index, e)}
+                      >
+                        <div 
+                          className="flex-shrink-0 pr-4" 
+                          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                            e.stopPropagation();
+                            toggleVideoSelection(video.id);
+                          }}
+                        >
+                          <Checkbox
+                            checked={selectedVideos.has(video.id)}
+                            onCheckedChange={() => toggleVideoSelection(video.id)}
+                          />
                         </div>
-                        <div className="flex items-center text-sm text-gray-400 flex-wrap mt-1">
-                          <span className="text-gray-500">Channel: </span>
-                          <span className="text-gray-300 ml-1">{video.channelTitle}</span>
-                          <span className="mx-2">•</span>
-                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span>{video.commentCount?.toLocaleString() || 0} comments</span>
-                          </div>
-                          <span className="mx-2">•</span>
-                          <span>{video.wordCount ? `${video.wordCount.toLocaleString()} words` : (video.transcriptLength ? `${Math.round(video.transcriptLength / 5).toLocaleString()} words` : '0 words')}</span>
-                          <span className="mx-2">•</span>
-                          <span>{video.totalChunks || 0} chunks</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-300">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-gray-700" />
-                            <DropdownMenuItem 
-                              onClick={() => reprocessVideo(video.id)}
-                              disabled={isLoading}
-                              className="hover:bg-gray-700 cursor-pointer"
-                            >
-                              <RefreshCw className="h-4 w-4 mr-2 text-blue-400" />
-                              Reprocess Video
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => downloadTranscript(video.id, video.title)}
-                              className="hover:bg-gray-700 cursor-pointer"
-                            >
-                              <FileDown className="h-4 w-4 mr-2 text-green-400" />
-                              Download Transcript
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => analyzeVideo(video.id)}
-                              className="hover:bg-gray-700 cursor-pointer"
-                            >
-                              <Video className="h-4 w-4 mr-2 text-purple-400" />
-                              {video.analysisPhases === 5 ? 'Re-analyze' : (video.analysisPhases ? 'Continue Analysis' : 'Analyze')}
-                            </DropdownMenuItem>
-                            {/* Always show View Analysis option for processed videos */}
-                            {video.processed && (
-                              <>
-                                <DropdownMenuItem 
-                                  className="hover:bg-gray-700 cursor-pointer"
-                                  asChild
-                                >
-                                  <Link 
-                                    href={`/analysis/${video.id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center"
-                                  >
-                                    <svg 
-                                      xmlns="http://www.w3.org/2000/svg" 
-                                      className="h-4 w-4 mr-2 text-indigo-400" 
-                                      viewBox="0 0 20 20" 
-                                      fill="currentColor"
-                                    >
-                                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                    </svg>
-                                    View Analysis
-                                  </Link>
-                                </DropdownMenuItem>
-                                {/* Only show Download Analysis if analysis exists */}
-                                {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
-                                  <DropdownMenuItem 
-                                    onClick={() => downloadAnalysis(video.id, video.title)}
-                                    className="hover:bg-gray-700 cursor-pointer"
-                                  >
-                                    <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
-                                    Download Analysis
-                                  </DropdownMenuItem>
-                                )}
-                              </>
+                        <div className="flex-grow">
+                          <div className="flex items-center">
+                            <h3 className="font-medium text-white mr-2">{video.title}</h3>
+                            
+                            {/* Add analysis badge - checking multiple possible properties */}
+                            {video.hasSkyscraperAnalysis === true && !video.displayAsBasic && (
+                              <span 
+                                className="inline-flex items-center rounded-full bg-purple-600/20 px-2.5 py-0.5 text-xs font-medium text-purple-300 border border-purple-500/30 mr-2"
+                                title="Skyscraper Analysis Complete"
+                              >
+                                <BarChart className="h-3 w-3 mr-1" />
+                                Analyzed
+                              </span>
                             )}
-                            <DropdownMenuSeparator className="bg-gray-700" />
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteClick(video.id)}
-                              className="hover:bg-gray-700 cursor-pointer text-red-400"
+                            {video.processed === true && !video.hasSkyscraperAnalysis && !video.displayAsBasic && 
+                              !(video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-'))) && (
+                              <span 
+                                className="inline-flex items-center rounded-full bg-blue-600/20 px-2.5 py-0.5 text-xs font-medium text-blue-300 border border-blue-500/30 mr-2"
+                                title="Vectors & Transcript Available"
+                              >
+                                <Database className="h-3 w-3 mr-1" />
+                                Processed
+                              </span>
+                            )}
+                            {((!video.processed && !video.hasSkyscraperAnalysis) || 
+                              video.displayAsBasic || 
+                              (video.id && (video.id.startsWith('simulated-basic-') || video.id.startsWith('basic-view-')))) && (
+                              <span 
+                                className="inline-flex items-center rounded-full bg-gray-600/20 px-2.5 py-0.5 text-xs font-medium text-gray-300 border border-gray-500/30 mr-2"
+                                title="Basic Information Only"
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                Basic
+                              </span>
+                            )}
+
+                            <a 
+                              href={`https://www.youtube.com/watch?v=${video.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-400 flex-shrink-0"
+                              title="Watch on YouTube"
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Video
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                              </svg>
+                            </a>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-400 flex-wrap mt-1">
+                            <span className="text-gray-500">Channel: </span>
+                            <span className="text-gray-300 ml-1">{video.channelTitle}</span>
+                            <span className="mx-2">•</span>
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
+                              <span>{video.commentCount?.toLocaleString() || 0} comments</span>
+                            </div>
+                            <span className="mx-2">•</span>
+                            <span>{video.wordCount ? `${video.wordCount.toLocaleString()} words` : (video.transcriptLength ? `${Math.round(video.transcriptLength / 5).toLocaleString()} words` : '0 words')}</span>
+                            <span className="mx-2">•</span>
+                            <span>{video.totalChunks || 0} chunks</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-300">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator className="bg-gray-700" />
+                              <DropdownMenuItem 
+                                onClick={() => reprocessVideo(video.id)}
+                                disabled={isLoading}
+                                className="hover:bg-gray-700 cursor-pointer"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2 text-blue-400" />
+                                Reprocess Video
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => downloadTranscript(video.id, video.title)}
+                                className="hover:bg-gray-700 cursor-pointer"
+                              >
+                                <FileDown className="h-4 w-4 mr-2 text-green-400" />
+                                Download Transcript
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => analyzeVideo(video.id)}
+                                className="hover:bg-gray-700 cursor-pointer"
+                              >
+                                <Video className="h-4 w-4 mr-2 text-purple-400" />
+                                {video.analysisPhases === 5 ? 'Re-analyze' : (video.analysisPhases ? 'Continue Analysis' : 'Analyze')}
+                              </DropdownMenuItem>
+                              {/* Always show View Analysis option for processed videos */}
+                              {video.processed && (
+                                <>
+                                  <DropdownMenuItem 
+                                    className="hover:bg-gray-700 cursor-pointer"
+                                    asChild
+                                  >
+                                    <Link 
+                                      href={`/analysis/${video.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center"
+                                    >
+                                      <svg 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        className="h-4 w-4 mr-2 text-indigo-400" 
+                                        viewBox="0 0 20 20" 
+                                        fill="currentColor"
+                                      >
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                      </svg>
+                                      View Analysis
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  {/* Only show Download Analysis if analysis exists */}
+                                  {(video.analyzed === true || (video.analysisPhases && video.analysisPhases > 0) || video.hasSkyscraperAnalysis === true) && (
+                                    <DropdownMenuItem 
+                                      onClick={() => downloadAnalysis(video.id, video.title)}
+                                      className="hover:bg-gray-700 cursor-pointer"
+                                    >
+                                      <FileDown className="h-4 w-4 mr-2 text-indigo-400" />
+                                      Download Analysis
+                                    </DropdownMenuItem>
+                                  )}
+                                </>
+                              )}
+                              <DropdownMenuSeparator className="bg-gray-700" />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(video.id)}
+                                className="hover:bg-gray-700 cursor-pointer text-red-400"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Video
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredVideos.map(video => (
+                      <div key={video.id} className="group relative bg-gray-800/50 rounded-lg overflow-hidden">
+                        <div className="aspect-video relative">
+                          <img
+                            src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
+                            alt={video.title}
+                            className="object-cover w-full h-full"
+                            onError={(e) => {
+                              // Fallback to medium quality thumbnail if maxres is not available
+                              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`;
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white hover:text-white hover:bg-white/20"
+                              asChild
+                            >
+                              <a
+                                href={`https://www.youtube.com/watch?v=${video.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Youtube className="h-5 w-5" />
+                              </a>
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-white hover:text-white hover:bg-white/20"
+                                >
+                                  <MoreVertical className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
+                                <DropdownMenuItem 
+                                  onClick={() => reprocessVideo(video.id)}
+                                  className="hover:bg-gray-700 cursor-pointer"
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-2 text-blue-400" />
+                                  Reprocess
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => downloadTranscript(video.id, video.title)}
+                                  className="hover:bg-gray-700 cursor-pointer"
+                                >
+                                  <FileDown className="h-4 w-4 mr-2 text-green-400" />
+                                  Download Transcript
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <div className="flex items-start gap-2">
+                            <Checkbox
+                              checked={selectedVideos.has(video.id)}
+                              onClick={() => toggleVideoSelection(video.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-white text-sm truncate">{video.title}</h3>
+                              <p className="text-xs text-gray-400 truncate">{video.channelTitle}</p>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                <span>{video.commentCount?.toLocaleString() || 0} comments</span>
+                                <span>•</span>
+                                <span>{video.wordCount?.toLocaleString() || 0} words</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </Card>
