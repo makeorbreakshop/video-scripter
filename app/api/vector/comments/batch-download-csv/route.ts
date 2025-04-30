@@ -74,14 +74,14 @@ export async function POST(req: NextRequest) {
       const row = [
         videoId,
         escapeCsvField(videoTitle),
-        comment.id,
+        comment.comment_id,
         escapeCsvField(comment.author_name),
         formatDate(comment.published_at),
         formatDate(comment.updated_at),
-        comment.like_count,
+        comment.likes_count,
         comment.is_reply ? "Yes" : "No",
-        comment.parent_id || "",
-        escapeCsvField(comment.text)
+        comment.parent_comment_id || "",
+        escapeCsvField(comment.content)
       ].join(",");
       
       csvContent += row + "\n";
