@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useDeferredValue } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -190,7 +190,11 @@ export default function DatabasePage() {
   
   // Add state for search functionality
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   
   // Replace old analysisFilter with new activeFilters state
   const [activeFilters, setActiveFilters] = useState<Set<FilterOption>>(new Set(['basic', 'processed', 'analyzed']));
@@ -1730,15 +1734,15 @@ Focus on:
     }
   };
   
-  // Filter videos when search term changes or filter/sort options change
-  useEffect(() => {
+  // Memoized filtering and sorting logic
+  const filteredVideos = useMemo(() => {
     // First filter by search term
     let filtered = videos;
     
-    if (searchTerm.trim()) {
+    if (deferredSearchTerm.trim()) {
       filtered = filtered.filter(video => 
-        video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        video.channelTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        video.title.toLowerCase().includes(deferredSearchTerm.toLowerCase()) ||
+        video.channelTitle.toLowerCase().includes(deferredSearchTerm.toLowerCase())
       );
     }
     
@@ -1772,8 +1776,6 @@ Focus on:
         !activeFilters.has('analyzed') && 
         filtered.length === 0 && 
         videos.length > 0) {
-      console.log('No actual basic videos found, creating a simulated one for demonstration');
-      
       // Create a simulated basic video entry for demonstration purposes
       const simulatedBasicVideo: VideoItem = {
         ...videos[0], // Clone existing video
@@ -1790,11 +1792,8 @@ Focus on:
       filtered = [simulatedBasicVideo];
     }
     
-    // We already handle the case of videos showing in the wrong category at the data level
-    // by checking the video properties when fetching from the database
-    
     // Then sort the filtered results
-    const sortedFiltered = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       switch (sortOption) {
         case 'newest':
           // Sort by processingDate, newest first
@@ -1812,45 +1811,14 @@ Focus on:
           return 0;
       }
     });
-    
-    setFilteredVideos(sortedFiltered);
+  }, [deferredSearchTerm, videos, activeFilters, sortOption]);
 
-    // Add debugging information about filter categories
-    console.log('Filter debugging:');
-    const analyzedCount = videos.filter(v => v.hasSkyscraperAnalysis === true).length;
-    const processedCount = videos.filter(v => v.processed === true && !(v.hasSkyscraperAnalysis === true)).length;
-    const basicCount = videos.filter(v => 
-      (v.totalChunks === 0 || v.totalChunks === undefined || 
-       (!v.commentCount && !v.wordCount) ||
-       (v.processed !== true))
-    ).length;
-
-    console.log(`Total videos: ${videos.length}`);
-    console.log(`Analyzed videos: ${analyzedCount}`);
-    console.log(`Processed videos: ${processedCount}`);
-    console.log(`Basic videos: ${basicCount}`);
-
-    // Log the first video metadata to check its properties
-    if (videos.length > 0) {
-      console.log('Sample video metadata:', {
-        id: videos[0].id,
-        processed: videos[0].processed,
-        hasSkyscraperAnalysis: videos[0].hasSkyscraperAnalysis,
-        totalChunks: videos[0].totalChunks,
-        commentCount: videos[0].commentCount,
-        wordCount: videos[0].wordCount
-      });
-      
-      // Log simulated basic video status if one was created
-      if (activeFilters.has('basic') && 
-          !activeFilters.has('processed') && 
-          !activeFilters.has('analyzed') && 
-          filtered.length === 1 && 
-          filtered[0].id.startsWith('simulated-basic-')) {
-        console.log('Simulated basic video was created for demonstration purposes');
-      }
-    }
-  }, [searchTerm, videos, activeFilters, sortOption]);
+  // Pagination logic
+  const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
+  const paginatedVideos = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredVideos.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredVideos, currentPage, itemsPerPage]);
 
   // Add clearSearch function
   const clearSearch = () => {
@@ -2471,7 +2439,7 @@ Focus on:
                 
                 {viewMode === 'list' ? (
                   <div className="divide-y divide-gray-800">
-                    {filteredVideos.map((video, index) => (
+                    {paginatedVideos.map((video, index) => (
                       <div 
                         key={video.id} 
                         className={`py-4 flex items-center hover:bg-gray-800/50 cursor-pointer ${
@@ -2639,7 +2607,7 @@ Focus on:
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredVideos.map(video => (
+                    {paginatedVideos.map(video => (
                       <div key={video.id} className="group relative bg-gray-800/50 rounded-lg overflow-hidden">
                         <div className="aspect-video relative">
                           <img
@@ -2715,6 +2683,62 @@ Focus on:
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="text-sm text-gray-400">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredVideos.length)} of {filteredVideos.length} videos
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                      >
+                        Previous
+                      </Button>
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const page = currentPage <= 3 
+                            ? i + 1 
+                            : currentPage >= totalPages - 2 
+                              ? totalPages - 4 + i 
+                              : currentPage - 2 + i;
+                          
+                          if (page < 1 || page > totalPages) return null;
+                          
+                          return (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className={`w-8 h-8 p-0 ${
+                                currentPage === page 
+                                  ? "bg-blue-600 text-white" 
+                                  : "text-gray-300 border-gray-600 hover:bg-gray-700"
+                              }`}
+                            >
+                              {page}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
                 )}
               </>
