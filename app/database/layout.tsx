@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, FileText, Package, Edit2, Download, Settings, ChevronLeft, ChevronRight, Folder, Database } from "lucide-react";
+import { Search, FileText, Package, Edit2, Download, Settings, ChevronLeft, ChevronRight, Folder, Database, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import Link from "next/link";
@@ -171,6 +171,25 @@ export default function DatabaseLayout({
               {isMinimized && (
                 <TooltipContent side="right" className="ml-1">
                   Database
+                </TooltipContent>
+              )}
+            </Tooltip>
+
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link href="/dashboard/youtube" className="w-full">
+                  <button className={cn(
+                    "w-full flex items-center py-2 px-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800/50",
+                    !isMinimized && "justify-start"
+                  )}>
+                    <Youtube className="h-5 w-5" />
+                    {!isMinimized && <span className="ml-3">YouTube</span>}
+                  </button>
+                </Link>
+              </TooltipTrigger>
+              {isMinimized && (
+                <TooltipContent side="right" className="ml-1">
+                  YouTube Dashboard
                 </TooltipContent>
               )}
             </Tooltip>

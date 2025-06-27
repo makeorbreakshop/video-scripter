@@ -23,9 +23,12 @@ export default function OAuthCallbackPage() {
           setStatus('success');
           setMessage('Authentication successful! Redirecting...');
           
+          // Also store access token in the format expected by test code
+          localStorage.setItem('youtube_access_token', tokens.access_token);
+          
           // Redirect back to the video research tool
           setTimeout(() => {
-            router.push('/dashboard');
+            router.push('/dashboard/youtube');
           }, 1500);
         } else {
           setStatus('error');

@@ -15,6 +15,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Setup Skyscraper Schema**: `node setup-skyscraper-schema-simple.js` - Initialize Skyscraper analysis schema
 - **Check Supabase**: Open `check-supabase.html` in browser to test database connection
 
+### MCP Tools Available
+- **Supabase MCP**: Direct database access via MCP tools including:
+  - `mcp__supabase__execute_sql` - Execute raw SQL queries for data analysis
+  - `mcp__supabase__list_tables` - List all database tables
+  - `mcp__supabase__apply_migration` - Apply database migrations
+  - `mcp__supabase__get_advisors` - Check for security/performance issues
+  - All other Supabase management operations
+
 ## Application Architecture
 
 ### Tech Stack

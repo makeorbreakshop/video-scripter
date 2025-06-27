@@ -1,0 +1,12 @@
+[2025-06-26T14:22:14.605Z] START: 🚀 Starting YouTube Reporting API Historical Backfill
+[2025-06-26T14:22:14.609Z] CONFIG: 📋 Configuration: 7 days back, batch size 7
+[2025-06-26T14:22:14.609Z] INFO: 📅 Processing 7 dates from 2025-06-19 to 2025-06-25
+[2025-06-26T14:22:14.609Z] INFO: 🔍 DRY RUN MODE - No data will be imported
+[2025-06-26T14:22:14.609Z] AUTH: 🔑 Getting YouTube API access token...
+[2025-06-26T14:22:15.134Z] CRITICAL: 💥 Critical error during backfill: Failed to get access token: Token refresh failed: 401
+[2025-06-26T14:23:53.055Z] START: 🚀 Starting YouTube Reporting API Historical Backfill
+[2025-06-26T14:23:53.060Z] CONFIG: 📋 Configuration: 3 days back, batch size 7
+[2025-06-26T14:23:53.060Z] INFO: 📅 Processing 3 dates from 2025-06-23 to 2025-06-25
+[2025-06-26T14:23:53.060Z] INFO: 🔍 DRY RUN MODE - No data will be imported
+[2025-06-26T14:23:53.060Z] AUTH: 🔑 Getting YouTube API access token...
+[2025-06-26T14:23:53.218Z] CRITICAL: 💥 Critical error during backfill: Failed to get access token: Token refresh failed: 401
