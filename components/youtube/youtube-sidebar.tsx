@@ -9,7 +9,8 @@ import {
   Settings, 
   TrendingUp, 
   Youtube,
-  Wrench
+  Wrench,
+  Users
 } from 'lucide-react';
 
 const navigation = [
@@ -22,6 +23,11 @@ const navigation = [
     name: 'Packaging',
     href: '/dashboard/youtube/packaging',
     icon: Package,
+  },
+  {
+    name: 'Competitors',
+    href: '/dashboard/youtube/competitors',
+    icon: Users,
   },
   {
     name: 'Tools',

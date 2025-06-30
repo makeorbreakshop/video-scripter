@@ -1,4 +1,5 @@
 import { YouTubeSidebar } from '@/components/youtube/youtube-sidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 export default function YouTubeDashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function YouTubeDashboardLayout({
       <main className="flex-1 overflow-y-auto bg-background">
         {children}
       </main>
+      <Toaster />
     </div>
   );
 }
