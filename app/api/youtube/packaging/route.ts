@@ -15,37 +15,10 @@ export async function GET(request: NextRequest) {
     const performanceFilter = searchParams.get('performanceFilter');
     const dateFilter = searchParams.get('dateFilter');
 
-    // Get channel baseline from baseline_analytics table (more current data)
-    const { data: baselineData, error: baselineError } = await supabase
-      .from('videos')
-      .select(`
-        baseline_analytics!inner (
-          views
-        )
-      `)
-      .eq('channel_id', 'Make or Break Shop');
-
-    if (baselineError) {
-      console.error('Baseline calculation error:', baselineError);
-      return NextResponse.json({ error: 'Failed to calculate baseline' }, { status: 500 });
-    }
-
-    const channelBaseline = baselineData && baselineData.length > 0 
-      ? baselineData.reduce((sum, video) => sum + (video.baseline_analytics?.[0]?.views || 0), 0) / baselineData.length
-      : 0;
-
-    // Base query for videos with baseline analytics (current view counts)
+    // Use the optimized materialized view instead of complex joins
     let query = supabase
-      .from('videos')
-      .select(`
-        id,
-        title,
-        published_at,
-        baseline_analytics!inner (
-          views
-        )
-      `)
-      .eq('channel_id', 'Make or Break Shop');
+      .from('mv_makeorbreak_dashboard')
+      .select('*');
 
     // Apply search filter
     if (search) {
@@ -77,14 +50,21 @@ export async function GET(request: NextRequest) {
       query = query.gte('published_at', dateThreshold.toISOString());
     }
 
-    // Apply sorting (only for columns we can sort at DB level)
-    const validSortColumns = ['published_at', 'title'];
-    if (validSortColumns.includes(sortBy)) {
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-    } else {
-      // Default to published_at for now, we'll calculate performance_percent after
-      query = query.order('published_at', { ascending: false });
+    // Apply performance filter at database level (much faster)
+    if (performanceFilter) {
+      query = query.eq('performance_category', performanceFilter);
     }
+
+    // Apply sorting at database level (leveraging indexes)
+    const sortMapping = {
+      'performance_percent': 'performance_ratio',
+      'view_count': 'view_count',
+      'published_at': 'published_at',
+      'title': 'title'
+    };
+
+    const dbSortColumn = sortMapping[sortBy] || 'view_count';
+    query = query.order(dbSortColumn, { ascending: sortOrder === 'asc' });
 
     const { data: videos, error } = await query;
 
@@ -97,61 +77,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [] });
     }
 
-    // Process data to add calculated fields using channel baseline
-    const processedData = videos.map(video => {
-      const currentViews = video.baseline_analytics?.[0]?.views || 0;
-      const performanceMultiplier = channelBaseline > 0 
-        ? (currentViews - channelBaseline) / channelBaseline
-        : 0;
+    // Transform to match existing API interface (minimal processing needed)
+    const processedData = videos.map(video => ({
+      id: video.video_id,
+      title: video.title,
+      view_count: video.view_count,
+      published_at: video.published_at,
+      baseline_views: video.baseline_views,
+      performance_percent: Number((video.performance_ratio || 0).toFixed(2)),
+      thumbnail_url: video.thumbnail_url,
+      // Additional data available from materialized view
+      estimated_revenue: video.estimated_revenue,
+      likes: video.likes,
+      comments: video.comments,
+      recent_avg_views: video.recent_avg_views,
+      performance_category: video.performance_category
+    }));
 
-      return {
-        id: video.id,
-        title: video.title,
-        view_count: currentViews, // Use baseline_analytics views (more current)
-        published_at: video.published_at,
-        baseline_views: Math.round(channelBaseline), // Same baseline for all videos
-        performance_percent: Math.round(performanceMultiplier * 100) / 100, // Round to 2 decimals
-        thumbnail_url: `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`
-      };
-    });
-
-    // Apply performance filter
-    let filteredData = processedData;
-    if (performanceFilter) {
-      filteredData = processedData.filter(video => {
-        switch (performanceFilter) {
-          case 'excellent':
-            return video.performance_percent > 2.0; // 200% above baseline
-          case 'good':
-            return video.performance_percent >= 0 && video.performance_percent <= 2.0;
-          case 'average':
-            return video.performance_percent >= -0.5 && video.performance_percent < 0;
-          case 'poor':
-            return video.performance_percent < -0.5; // 50% below baseline
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Sort by calculated fields if requested
-    if (sortBy === 'performance_percent') {
-      filteredData.sort((a, b) => {
-        if (sortOrder === 'asc') {
-          return a.performance_percent - b.performance_percent;
-        }
-        return b.performance_percent - a.performance_percent;
-      });
-    } else if (sortBy === 'view_count') {
-      filteredData.sort((a, b) => {
-        if (sortOrder === 'asc') {
-          return a.view_count - b.view_count;
-        }
-        return b.view_count - a.view_count;
-      });
-    }
-
-    return NextResponse.json({ data: filteredData });
+    return NextResponse.json({ data: processedData });
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

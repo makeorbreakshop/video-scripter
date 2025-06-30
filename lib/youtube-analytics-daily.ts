@@ -133,22 +133,37 @@ export class YouTubeAnalyticsDailyService {
   };
 
   /**
-   * Get all video IDs that need daily analytics collection
+   * Get video IDs that need daily analytics collection, optionally filtered by publication date
+   * @param targetDate Optional YYYY-MM-DD date to filter videos published before this date
    */
-  async getVideoIdsForAnalytics(): Promise<string[]> {
-    const { data: videos, error } = await supabase
+  async getVideoIdsForAnalytics(targetDate?: string): Promise<string[]> {
+    let query = supabase
       .from('videos')
-      .select('id')
+      .select('id, published_at')
       .eq('channel_id', 'Make or Break Shop') // Filter to specific channel
-      .not('id', 'in', '(CHANNEL_TOTAL)') // Exclude invalid IDs
-      .order('created_at', { ascending: false });
+      .not('id', 'in', '(CHANNEL_TOTAL)'); // Exclude invalid IDs
+    
+    // Only include videos published before or on the target date to avoid wasting API calls
+    if (targetDate) {
+      query = query.lte('published_at', targetDate);
+    }
+    
+    const { data: videos, error } = await query.order('published_at', { ascending: false });
 
     if (error) {
       console.error('❌ Error fetching video IDs:', error);
       throw new Error(`Failed to fetch video IDs: ${error.message}`);
     }
 
-    return videos?.map(v => v.id) || [];
+    const videoIds = videos?.map(v => v.id) || [];
+    
+    if (targetDate) {
+      console.log(`📊 Date-filtered videos: ${videoIds.length} videos published before ${targetDate}`);
+    } else {
+      console.log(`📊 All channel videos: ${videoIds.length} videos`);
+    }
+
+    return videoIds;
   }
 
   /**
@@ -167,9 +182,9 @@ export class YouTubeAnalyticsDailyService {
       throw new Error('Access token is required');
     }
 
-    // Get all video IDs
-    const videoIds = await this.getVideoIdsForAnalytics();
-    console.log(`📊 Found ${videoIds.length} videos to process`);
+    // Get video IDs filtered by target date to avoid wasting API calls on unpublished videos
+    const videoIds = await this.getVideoIdsForAnalytics(targetDate);
+    console.log(`📊 Found ${videoIds.length} videos to process for ${targetDate}`);
 
     // Initialize current access token
     this.currentAccessToken = accessToken;
@@ -1056,7 +1071,8 @@ export class YouTubeAnalyticsDailyService {
     estimatedQuotaUsage: number;
     dailyQuotaPercentage: number;
   }> {
-    const videoIds = await this.getVideoIdsForAnalytics();
+    // Use start date for filtering to get accurate count for the earliest date in range
+    const videoIds = await this.getVideoIdsForAnalytics(startDate);
     const start = new Date(startDate);
     const end = new Date(endDate);
     const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;

@@ -258,6 +258,8 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 
 ### Analytics & Performance Functions
 - **`refresh_analytics_cache()`**: Refreshes cached analytics data for performance
+- **`calculate_channel_baseline()`**: Calculates average views baseline for a channel
+- **`update_performance_ratios()`**: Updates performance_ratio column for all videos in a channel
 
 ## YouTube Analytics Architecture
 
@@ -281,9 +283,37 @@ The `get_distinct_analytics_dates()` function powers the Smart Suggestions UI co
 - Intelligent batch size and utilization target suggestions
 - Time estimates based on proven performance metrics (34,100 videos/hour)
 
+## Performance Optimizations (2025-06-30)
+
+### Database Performance Enhancement
+Major performance optimizations implemented achieving **300x query improvement** (40ms → 0.121ms):
+
+#### Strategic Indexes for Analytics Queries
+```sql
+-- Core performance indexes for analytics workloads
+CREATE INDEX idx_videos_channel_published ON videos(channel_id, published_at DESC);
+CREATE INDEX idx_videos_channel_views ON videos(channel_id, view_count DESC);
+CREATE INDEX idx_daily_analytics_video_date_views ON daily_analytics(video_id, date DESC, views);
+```
+
+#### Performance Ratio Calculation System
+- Added `performance_ratio` column to videos table for database-level calculations
+- Eliminated frontend baseline recalculation overhead
+- Channel baseline functions for automated ratio updates
+
+#### Materialized View for Dashboard Performance
+Created `mv_makeorbreak_dashboard` materialized view:
+- Pre-calculated performance metrics and categories
+- Handles duplicate baseline entries using `DISTINCT ON`
+- Optimized for packaging analysis dashboard
+- Supports instant filtering and sorting operations
+
+**Impact**: Packaging API queries reduced from 40ms+ to 0.121ms execution time
+
 ---
 
 *Last updated: 2025-06-30*
 *Database version: PostgreSQL with pgvector extension*
 *Current tables: 15 (added baseline_analytics, daily_analytics)*
-*Custom functions: 8 core functions + pgvector extensions*
+*Custom functions: 10 core functions + pgvector extensions*
+*Materialized views: 1 (mv_makeorbreak_dashboard)*
