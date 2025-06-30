@@ -77,6 +77,7 @@ export function YouTubeToolsTab() {
   const [endDate, setEndDate] = useState('');
   const [existingDates, setExistingDates] = useState<string[]>([]);
   const [gapAnalysis, setGapAnalysis] = useState<any>(null);
+  const [dataCoverage, setDataCoverage] = useState<any>(null);
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [videoCount, setVideoCount] = useState<number | null>(null);
   const [isBackfillRunning, setIsBackfillRunning] = useState(false);
@@ -141,6 +142,7 @@ export function YouTubeToolsTab() {
         const data = await response.json();
         setExistingDates(data.dates);
         setGapAnalysis(data.gapAnalysis);
+        setDataCoverage(data.dataCoverage);
         
         // Auto-fill recommended range if available
         if (data.gapAnalysis?.recommendedRange && !startDate && !endDate) {
@@ -1001,7 +1003,7 @@ export function YouTubeToolsTab() {
                 </div>
 
                 {/* Smart Suggestions */}
-                {gapAnalysis && (
+                {(gapAnalysis || dataCoverage) && (
                   <div className="border rounded-lg overflow-hidden bg-blue-50/50">
                     <div className="bg-blue-100/50 px-4 py-3 border-b border-blue-200/50">
                       <div className="flex items-center gap-2">
@@ -1009,15 +1011,91 @@ export function YouTubeToolsTab() {
                         <h4 className="font-medium text-sm text-blue-900">Smart Suggestions</h4>
                       </div>
                     </div>
-                    <div className="p-4 space-y-3">
-                      <div className="text-sm text-blue-800 font-medium">
-                        {gapAnalysis.suggestions.primary}
-                      </div>
-                      <div className="text-xs text-blue-700">
-                        {gapAnalysis.suggestions.secondary}
-                      </div>
-                      {gapAnalysis.recommendedRange && (
-                        <div className="flex flex-col gap-2 pt-2">
+                    <div className="p-4 space-y-4">
+                      
+                      {/* Data Coverage Summary */}
+                      {dataCoverage && (
+                        <div className="space-y-2">
+                          <div className="text-sm text-blue-800 font-medium">
+                            📊 Data Coverage: {dataCoverage.oldestDate || 'No data'} to {dataCoverage.newestDate || 'No data'}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div className="space-y-1">
+                              <div className="text-blue-700">
+                                <span className="font-medium">{dataCoverage.totalDays}</span> days with data
+                              </div>
+                              <div className="text-blue-700">
+                                <span className="font-medium">{dataCoverage.coveragePercent}%</span> coverage
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-blue-700">
+                                <span className="font-medium">{dataCoverage.daysSinceOldest}</span> days since oldest
+                              </div>
+                              <div className="text-blue-700">
+                                <span className="font-medium">{dataCoverage.missingDays}</span> missing days in range
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Gap Analysis */}
+                      {gapAnalysis && (
+                        <div className="space-y-2">
+                          <div className="text-sm text-blue-800 font-medium">
+                            {gapAnalysis.suggestions.primary}
+                          </div>
+                          <div className="text-xs text-blue-700">
+                            {gapAnalysis.suggestions.secondary}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Backward Fill Recommendation */}
+                      {dataCoverage?.backwardFillRecommendation && (
+                        <div className="space-y-3 pt-2 border-t border-blue-200">
+                          <div className="text-sm text-blue-800 font-medium">
+                            🎯 Backward Fill Recommendation
+                          </div>
+                          <div className="space-y-2">
+                            <div className="text-xs text-blue-700">
+                              <span className="font-medium">Strategy:</span> {dataCoverage.backwardFillRecommendation.reasoning}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs text-blue-700">
+                              <div>
+                                <span className="font-medium">Duration:</span> {dataCoverage.backwardFillRecommendation.suggestedDaysBack} days
+                              </div>
+                              <div>
+                                <span className="font-medium">Videos:</span> {dataCoverage.backwardFillRecommendation.estimatedVideos?.toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Target Rate:</span> {dataCoverage.backwardFillRecommendation.utilizationTarget}%
+                              </div>
+                              <div>
+                                <span className="font-medium">Est. Time:</span> ~{dataCoverage.backwardFillRecommendation.estimatedTimeHours}h
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setStartDate(dataCoverage.backwardFillRecommendation.recommendedStartDate);
+                                setEndDate(dataCoverage.backwardFillRecommendation.recommendedEndDate);
+                              }}
+                              className="border-blue-300 text-blue-700 hover:bg-blue-50 w-fit"
+                            >
+                              <span className="mr-2">⬅️</span>
+                              Use Backward Fill: {dataCoverage.backwardFillRecommendation.recommendedStartDate} to {dataCoverage.backwardFillRecommendation.recommendedEndDate}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Regular Gap Fill */}
+                      {gapAnalysis?.recommendedRange && (
+                        <div className="space-y-2 pt-2 border-t border-blue-200">
+                          <div className="text-sm text-blue-800 font-medium">🔧 Fill Gaps</div>
                           <Button
                             variant="outline"
                             size="sm"
@@ -1028,7 +1106,7 @@ export function YouTubeToolsTab() {
                             className="border-blue-300 text-blue-700 hover:bg-blue-50 w-fit"
                           >
                             <span className="mr-2">📅</span>
-                            Use Recommended: {gapAnalysis.recommendedRange.startDate} to {gapAnalysis.recommendedRange.endDate}
+                            Fill Gap: {gapAnalysis.recommendedRange.startDate} to {gapAnalysis.recommendedRange.endDate}
                           </Button>
                           <div className="text-xs text-blue-600">
                             💭 {gapAnalysis.recommendedRange.reason}

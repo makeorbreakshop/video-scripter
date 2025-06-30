@@ -2,13 +2,13 @@
 
 ## Overview
 
-Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehensive video analysis and content creation. The database contains **16 tables** organized around video processing, AI analysis, user management, and workflow management.
+Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehensive video analysis and content creation. The database contains **15 tables** organized around video processing, AI analysis, user management, and workflow management.
 
-**Key Statistics:**
-- 328 videos currently stored
-- 5,337 transcript chunks processed  
-- 42 Skyscraper analyses completed
+**Key Features:**
+- YouTube Analytics data collection (daily and baseline)
 - Vector embeddings for semantic search
+- Comprehensive video analysis pipeline
+- User management with Row Level Security
 
 ## Core Tables
 
@@ -27,6 +27,31 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - **Vector**: `embedding` (vector) - OpenAI embeddings for semantic search
 - **JSONB**: `metadata` - Additional chunk processing data
 - **Purpose**: Enables semantic search across video content
+
+### Baseline Analytics (`baseline_analytics`)
+**Lifetime cumulative analytics for each video (one-time establishment)**
+- **Primary Key**: `id` (uuid)
+- **Key Columns**: `video_id`, `baseline_date`, `views`, `engaged_views`, `estimated_minutes_watched`
+- **Engagement Metrics**: `likes`, `comments`, `shares`, `subscribers_gained`, `subscribers_lost`
+- **Revenue Metrics**: `estimated_revenue`, `estimated_ad_revenue`, `cpm`, `monetized_playbacks`
+- **Device Breakdown**: `mobile_views`, `desktop_views`, `tablet_views`, `tv_views`
+- **Traffic Sources**: `search_views`, `suggested_views`, `external_views`, `direct_views`, `channel_views`, `playlist_views`
+- **Cards & Annotations**: Comprehensive click rates and impression data
+- **JSONB Fields**: `country_views`, `top_age_groups`, `gender_breakdown` for demographic analysis
+- **Purpose**: Establishes baseline performance for calculating daily deltas and performance ratios
+
+### Daily Analytics (`daily_analytics`)
+**Day-by-day YouTube Analytics API data for comprehensive performance tracking**
+- **Primary Key**: `id` (uuid)
+- **Key Columns**: `video_id`, `date`, `views`, `estimated_minutes_watched`, `average_view_duration`
+- **View Metrics**: `engaged_views`, `red_views`, `viewer_percentage`, `average_view_percentage`
+- **Engagement Metrics**: `likes`, `dislikes`, `comments`, `shares`, `subscribers_gained`, `subscribers_lost`
+- **Playlist Metrics**: `videos_added_to_playlists`, `videos_removed_from_playlists`
+- **Revenue Metrics**: `estimated_revenue`, `estimated_ad_revenue`, `estimated_red_partner_revenue`, `gross_revenue`
+- **Ad Performance**: `cpm`, `playback_based_cpm`, `ad_impressions`, `monetized_playbacks`
+- **Card & Annotation Metrics**: Complete click-through and impression data
+- **JSONB Fields**: `audience_watch_ratio`, `relative_retention_performance` for advanced analytics
+- **Purpose**: Enables trend analysis, performance tracking, and data-driven content optimization
 
 ### Skyscraper Analyses (`skyscraper_analyses`)
 **Comprehensive AI analysis using the Skyscraper framework**
@@ -211,7 +236,54 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - Indexes on frequently queried columns
 - JSONB for flexible, queryable document storage
 
+## Custom Database Functions
+
+### YouTube Analytics Functions
+- **`get_distinct_analytics_dates()`**: Returns all distinct dates from daily_analytics table
+  - **Purpose**: Efficiently retrieves existing analytics dates for Smart Suggestions UI
+  - **Security**: SECURITY DEFINER to bypass client row limits
+  - **Usage**: Supports backward fill recommendations and data coverage analysis
+
+### Video Search Functions
+- **`search_video_by_id()`**: Enhanced video search by ID
+- **`search_video_chunks()`**: Semantic search across video transcript chunks
+- **`search_video_chunks_no_auth()`**: Public video chunk search
+- **`search_analyses()`**: Search across AI analysis results
+
+### Workflow & Script Functions
+- **`create_default_script_data()`**: Initializes default script workflow data structure
+- **`update_updated_at_column()`**: Automatically updates timestamp columns
+- **`update_job_updated_at()`**: Updates job table timestamps
+- **`update_baseline_analytics_updated_at()`**: Updates baseline analytics timestamps
+
+### Analytics & Performance Functions
+- **`refresh_analytics_cache()`**: Refreshes cached analytics data for performance
+
+## YouTube Analytics Architecture
+
+### Data Collection Strategy
+The YouTube Analytics system operates on a two-tier approach:
+
+1. **Baseline Analytics**: One-time collection of lifetime cumulative metrics for each video
+   - Establishes historical performance baseline
+   - Comprehensive demographic and device breakdowns
+   - Used for performance ratio calculations
+
+2. **Daily Analytics**: Ongoing collection of day-by-day performance data
+   - Enables trend analysis and performance tracking
+   - Supports rate limiting optimization (80% API utilization target)
+   - Provides granular insights for content optimization
+
+### Smart Suggestions Integration
+The `get_distinct_analytics_dates()` function powers the Smart Suggestions UI component, providing:
+- Data coverage analysis with gap detection
+- Backward fill recommendations based on data age
+- Intelligent batch size and utilization target suggestions
+- Time estimates based on proven performance metrics (34,100 videos/hour)
+
 ---
 
-*Last updated: 2025-06-25*
+*Last updated: 2025-06-30*
 *Database version: PostgreSQL with pgvector extension*
+*Current tables: 15 (added baseline_analytics, daily_analytics)*
+*Custom functions: 8 core functions + pgvector extensions*

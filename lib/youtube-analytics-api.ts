@@ -147,9 +147,9 @@ export class YouTubeAnalyticsClient {
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults.flat());
       
-      // Add delay between batches to respect rate limits
+      // Reduced delay between batches for optimized processing
       if (i + batchSize < videoIds.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 
@@ -364,7 +364,7 @@ export class YouTubeAnalyticsClient {
     ];
 
     const allResults: ParsedAnalyticsData[] = [];
-    const batchSize = 5; // Conservative batch size to avoid rate limits
+    const batchSize = 15; // Optimized batch size for better throughput
     let quotaUsed = 0;
 
     // Process videos in small batches with delays
@@ -401,10 +401,9 @@ export class YouTubeAnalyticsClient {
       
       console.log(`✅ Batch complete: ${batchResults.flat().length} records`);
       
-      // Rate limiting between batches
+      // Optimized rate limiting between batches
       if (i + batchSize < videoIds.length) {
-        console.log(`⏱️ Rate limiting: waiting 2 seconds...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
 

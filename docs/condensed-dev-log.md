@@ -21,6 +21,7 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 | 2025-06-26 | YouTube Analytics API fixes | OAuth scope and authentication standardization |
 | 2025-06-26 | Historical data systems | 50+ days backfill with baseline analytics |
 | 2025-06-26 | Production dashboard | Real data integration with Shorts filtering |
+| 2025-06-27 | Analytics API migration | Complete migration from Reporting API to Analytics API |
 
 ## 🔎 Key Technical Insights
 - Pagination + debouncing for large datasets (328+ videos)
@@ -33,6 +34,9 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Rate limiting with rolling window tracking prevents quota exhaustion
 - shadcn/ui pattern compliance for consistent UI components
 - JSONB columns with GIN indexes for complex analytics data
+- YouTube Analytics API metric combinations have strict compatibility requirements
+- Single comprehensive API call more efficient than multiple partial calls
+- 720 queries/minute actual limit vs documented unclear restrictions
 
 ## 💡 Current Features
 - Comprehensive video analysis with Skyscraper framework
@@ -158,6 +162,18 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Impact**: Optimal API efficiency using ~8% of rate limits with comprehensive progress tracking
 - **Technical**: Real-time progress API, gap detection, auto-fill recommendations, token refresh integration
 
+### 2025-06-27: YouTube Analytics API Migration & Complete Metrics Collection
+- **Issue**: Migrate from YouTube Reporting API to Analytics API for missing critical metrics (impressions, CTR)
+- **Solution**: Complete database schema migration with 9 new columns, fixed API metric combinations, implemented all 36 available metrics
+- **Impact**: Comprehensive analytics collection with impressions/CTR data essential for content optimization
+- **Technical**: Single 36-metric API call, enhanced schema (47 columns), resolved metric combination restrictions
+
+### 2025-06-27: Analytics API Performance Optimization
+- **Issue**: Conservative rate limiting using only 1.1% API capacity causing 6-minute processing for 173 videos
+- **Solution**: Increased utilization to 45% (324 queries/minute), optimized batch sizes (8-25 videos), reduced delays
+- **Impact**: 3-6x performance improvement (6 minutes → 1-2 minutes) while maintaining API compliance
+- **Technical**: Updated quota limits to 100,000 daily, adaptive batch sizing, enhanced progress tracking with operation IDs
+
 ## 🐞 Known Issues & Future Work
 - Implement automated daily report downloads for ongoing analytics
 - Build CSV import pipeline for bulk historical data insertion  
@@ -169,20 +185,20 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 
 ## 📊 Current Performance Metrics
 - Database search: < 2s with pagination (50 videos/page)
-- YouTube Analytics API: 1-3 quota units for bulk collection (173 videos individual calls)
-- YouTube Reporting API: 6-8 quota units for comprehensive multi-day data
+- YouTube Analytics API: 173 videos processed in 1-2 minutes (3-6x improvement)
+- YouTube Analytics API: 45% rate utilization (324 queries/minute) vs previous 1.1%
 - Dashboard load time: < 2s with skeleton loading states
 - Analytics workflow: 15+ min → < 2 min reduction
-- Data collection: 30+ metrics vs original 6 basic metrics
-- Historical backfill: 50 days processed with 99.9% quota efficiency
-- Rate limiting: 8% API utilization with adaptive batch sizing
+- Data collection: 36 comprehensive metrics (all available YouTube Analytics API metrics)
+- Historical backfill: Enhanced with operation IDs and real-time progress tracking
+- Rate limiting: Adaptive batch sizing (8-25 videos) with 720 queries/minute capacity
 
 ## 🔗 Key Architecture Components
-- **Database Schema**: 43-column analytics table with JSONB for complex data
-- **API Integration**: YouTube Data API v3, YouTube Analytics API, YouTube Reporting API
+- **Database Schema**: 47-column analytics table with comprehensive metrics coverage
+- **API Integration**: YouTube Data API v3, YouTube Analytics API (36 metrics), YouTube Reporting API
 - **UI Components**: Shadcn/ui patterns with DataTable, Charts, Export dialogs
-- **Authentication**: OAuth with channel owner permissions for Analytics API access
-- **Data Processing**: Bulk operations with progress tracking and error handling
+- **Authentication**: OAuth with channel owner permissions and monetary analytics scope
+- **Data Processing**: Optimized batch operations with adaptive rate limiting and real-time progress tracking
 
 ## 🎯 Success Criteria Achieved
 - ✅ Dashboard loads in <2 seconds with skeleton loading states

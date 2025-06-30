@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { RefreshCw, TestTube, Download, Database, Key } from 'lucide-react';
+import { RefreshCw, TestTube, Download, Database, Key, RotateCcw } from 'lucide-react';
 import { BackfillProgress } from './types';
 import { isAuthenticated, initiateOAuthFlow } from '@/lib/youtube-oauth';
 
@@ -24,8 +24,10 @@ export function RefreshButton() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+  const [isRefreshingChannel, setIsRefreshingChannel] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [progress, setProgress] = useState<BackfillProgress>({
     total: 0,
     processed: 0,
@@ -33,6 +35,26 @@ export function RefreshButton() {
     errors: [],
     isRunning: false,
   });
+
+  // Handle authentication state on client side only
+  useEffect(() => {
+    setIsClient(true);
+    setIsUserAuthenticated(isAuthenticated());
+  }, []);
+
+  // Update authentication state after OAuth
+  useEffect(() => {
+    const updateAuthState = () => {
+      setIsUserAuthenticated(isAuthenticated());
+    };
+    
+    // Listen for storage changes (when OAuth completes in another tab)
+    window.addEventListener('storage', updateAuthState);
+    
+    return () => {
+      window.removeEventListener('storage', updateAuthState);
+    };
+  }, []);
 
   const handleRefresh = async () => {
     try {
@@ -374,7 +396,7 @@ export function RefreshButton() {
     }
   };
 
-  const handleImportDailyAnalytics = async () => {
+  const handleRefreshChannelAnalytics = async () => {
     try {
       // Check if user is authenticated first
       if (!isAuthenticated()) {
@@ -386,40 +408,40 @@ export function RefreshButton() {
         return;
       }
 
-      setIsImporting(true);
+      setIsRefreshingChannel(true);
 
-      // Get valid access token and refresh token
-      const { getValidAccessToken, getTokens } = await import('@/lib/youtube-oauth');
+      // Get valid access token
+      const { getValidAccessToken } = await import('@/lib/youtube-oauth');
       const accessToken = await getValidAccessToken();
-      const tokens = getTokens();
       
       if (!accessToken) {
         throw new Error('Unable to get valid access token');
       }
 
       toast({
-        title: 'Starting daily analytics import...',
-        description: 'Downloading and processing YouTube Reporting API data. This provides 99.9% quota savings!',
+        title: 'Starting channel analytics refresh...',
+        description: 'Importing new videos and updating baseline analytics for your channel.',
       });
 
-      // Call the new daily import endpoint
-      const response = await fetch('/api/youtube/reporting/daily-import', {
+      // Call the unified refresh endpoint
+      const response = await fetch('/api/youtube/refresh-channel-analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
-          accessToken,
-          refreshToken: tokens?.refresh_token
+          channelId: 'UCjWkNxpp3UHdEavpM_19--Q' // Actual YouTube channel ID
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
+        const { stats } = result;
         toast({
-          title: 'Daily Import Complete! 🎉',
-          description: `Successfully imported ${result.summary.recordsCreated + result.summary.recordsUpdated} records for ${result.summary.videosAffected} videos. ${result.summary.totalViews.toLocaleString()} views processed in ${result.processingTime}ms.`,
+          title: 'Channel Analytics Refresh Complete! 🎉',
+          description: `Imported ${stats.newVideos} new videos and updated ${stats.updatedBaselines} baseline analytics. Found ${stats.totalChannelVideos} total videos on your channel.`,
         });
 
         // Trigger page refresh to show new data
@@ -427,41 +449,41 @@ export function RefreshButton() {
           window.location.reload();
         }, 2000);
       } else {
-        // Partial success or failure
         toast({
-          title: result.success ? 'Import Complete' : 'Import completed with errors',
-          description: `${result.message}. Processed ${result.summary.recordsProcessed} records with ${result.errors.length} errors.`,
-          variant: result.success ? 'default' : 'destructive',
+          title: 'Channel refresh failed',
+          description: result.message || 'There was an error refreshing your channel analytics.',
+          variant: 'destructive',
         });
       }
 
     } catch (error) {
-      console.error('Import daily analytics error:', error);
+      console.error('Channel analytics refresh error:', error);
       toast({
-        title: 'Import failed',
-        description: error instanceof Error ? error.message : 'There was an error importing daily analytics. Please try again.',
+        title: 'Refresh failed',
+        description: error instanceof Error ? error.message : 'There was an error refreshing channel analytics. Please try again.',
         variant: 'destructive',
       });
     } finally {
-      setIsImporting(false);
+      setIsRefreshingChannel(false);
     }
   };
+
 
   return (
     <>
       <div className="flex gap-2">
         <Button 
           onClick={handleAuthenticate} 
-          disabled={isTesting || isRefreshing || isDownloading || isImporting}
-          variant={isAuthenticated() ? "outline" : "default"}
+          disabled={!isClient || isTesting || isRefreshing || isDownloading || isRefreshingChannel}
+          variant={isUserAuthenticated ? "outline" : "default"}
         >
           <Key className="h-4 w-4 mr-2" />
-          {isAuthenticated() ? 'Re-authenticate' : 'Authenticate'}
+          {isUserAuthenticated ? 'Re-authenticate' : 'Authenticate'}
         </Button>
 
         <Button 
           onClick={handleTestConnection} 
-          disabled={!isAuthenticated() || isTesting || isRefreshing || isDownloading || isImporting}
+          disabled={!isClient || !isUserAuthenticated || isTesting || isRefreshing || isDownloading || isRefreshingChannel}
           variant="outline"
         >
           <TestTube className={`h-4 w-4 mr-2 ${isTesting ? 'animate-pulse' : ''}`} />
@@ -469,17 +491,17 @@ export function RefreshButton() {
         </Button>
 
         <Button 
-          onClick={handleImportDailyAnalytics} 
-          disabled={isImporting || isRefreshing || isDownloading || isTesting}
+          onClick={handleRefreshChannelAnalytics} 
+          disabled={!isClient || !isUserAuthenticated || isRefreshingChannel || isRefreshing || isDownloading || isTesting}
           variant="default"
         >
-          <Database className={`h-4 w-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
-          {isImporting ? 'Importing...' : 'Import Daily Analytics'}
+          <Database className={`h-4 w-4 mr-2 ${isRefreshingChannel ? 'animate-pulse' : ''}`} />
+          {isRefreshingChannel ? 'Refreshing...' : 'Refresh Channel Analytics'}
         </Button>
         
         <Button 
           onClick={handleDownloadReport} 
-          disabled={isDownloading || isRefreshing || isTesting || isImporting}
+          disabled={!isClient || !isUserAuthenticated || isDownloading || isRefreshing || isTesting || isRefreshingChannel}
           variant="outline"
         >
           <Download className={`h-4 w-4 mr-2 ${isDownloading ? 'animate-bounce' : ''}`} />
@@ -488,7 +510,7 @@ export function RefreshButton() {
 
         <Button 
           onClick={handleDownloadAllReports} 
-          disabled={isDownloading || isRefreshing || isTesting || isImporting}
+          disabled={!isClient || !isUserAuthenticated || isDownloading || isRefreshing || isTesting || isRefreshingChannel}
           variant="outline"
         >
           <Download className={`h-4 w-4 mr-2 ${isDownloading ? 'animate-bounce' : ''}`} />
@@ -497,7 +519,7 @@ export function RefreshButton() {
         
         <Button 
           onClick={handleRefresh} 
-          disabled={isRefreshing || isTesting || isDownloading || isImporting}
+          disabled={!isClient || !isUserAuthenticated || isRefreshing || isTesting || isDownloading || isRefreshingChannel}
           variant="outline"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />

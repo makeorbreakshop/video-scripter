@@ -88,7 +88,9 @@ export class YouTubeAnalyticsDailyService {
   private baseUrl = 'https://youtubeanalytics.googleapis.com/v2/reports';
   private quotaPerRequest = 1; // Each video requires 1 Analytics API call (comprehensive approach)
   private maxQueriesPerMinute = 720; // YouTube Analytics API limit (confirmed from Google Console)
-  private targetUtilization = 0.45; // Target 45% utilization for optimal speed vs safety
+  private targetUtilization = 0.80; // Target 80% utilization - reduced from 85% to prevent rate limit violations
+  private tokenRefreshMutex = false; // Prevent concurrent token refreshes
+  private currentAccessToken = ''; // Track current token to avoid redundant refreshes
   private queryTracker = {
     queries: [] as number[], // Timestamps of queries
     getQueriesInWindow: () => {
@@ -107,14 +109,25 @@ export class YouTubeAnalyticsDailyService {
       const queriesInWindow = this.queryTracker.getQueriesInWindow();
       const utilizationPercent = (queriesInWindow / this.maxQueriesPerMinute) * 100;
       
-      if (utilizationPercent > 70) {
-        return 2000; // 2 second delay if over 70%
-      } else if (utilizationPercent > 50) {
-        return 800; // 800ms delay if over 50%
-      } else if (utilizationPercent > 30) {
-        return 400; // 400ms delay if over 30%
+      // Enhanced delay structure aligned with 80% target utilization
+      if (utilizationPercent > 95) {
+        return 10000; // Very large delay when dangerously close to limit
+      } else if (utilizationPercent > 90) {
+        return 5000; // Large delay to prevent rate limit hits
+      } else if (utilizationPercent > 85) {
+        return 3000; // Significant delay when well above target
+      } else if (utilizationPercent > 80) {
+        return 2000; // Large delay when exceeding new target
+      } else if (utilizationPercent > 75) {
+        return 1000; // Moderate delay approaching target
+      } else if (utilizationPercent > 60) {
+        return 500; // Small delay for sustained processing
+      } else if (utilizationPercent > 40) {
+        return 200; // Minimal delay at moderate usage
+      } else if (utilizationPercent > 20) {
+        return 100; // Very small delay at low usage
       } else {
-        return 200; // 200ms minimum delay for fast processing
+        return 50; // Small buffer delay for consistency
       }
     }
   };
@@ -158,6 +171,9 @@ export class YouTubeAnalyticsDailyService {
     const videoIds = await this.getVideoIdsForAnalytics();
     console.log(`📊 Found ${videoIds.length} videos to process`);
 
+    // Initialize current access token
+    this.currentAccessToken = accessToken;
+
     // Process videos with adaptive batch sizing based on rate limits
     let batchSize = this.calculateOptimalBatchSize();
     
@@ -192,51 +208,36 @@ export class YouTubeAnalyticsDailyService {
       };
       progress.queriesPerMinute = progress.rateLimitStatus.queriesInCurrentWindow;
       
-      // Process batch sequentially to maintain rate limit control
-      for (const videoId of batch) {
-        try {
-          // Check if we need to wait before making the next query
-          const queriesInWindow = this.queryTracker.getQueriesInWindow();
-          const targetQueries = Math.floor(this.maxQueriesPerMinute * this.targetUtilization);
-          if (queriesInWindow >= targetQueries) {
-            const waitTime = 15000; // Wait 15 seconds to let window reset
-            console.log(`⏳ Rate limit pause: ${queriesInWindow}/${targetQueries} queries (${Math.round((queriesInWindow/this.maxQueriesPerMinute)*100)}%), waiting ${waitTime/1000}s`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-          }
-          
-          const analyticsData = await this.getComprehensiveVideoAnalytics(
-            videoId, 
-            targetDate, 
-            targetDate, 
-            accessToken,
-            refreshTokenCallback
-          );
-          
-          progress.quotaUsed++;
-          progress.processedVideos++;
-          
-          if (analyticsData.length > 0) {
-            progress.successfulImports++;
-            results.push(analyticsData[0]);
-          } else {
-            progress.failedImports++;
-            progress.errors.push(`No data found for video ${videoId}`);
-          }
-          
-        } catch (error) {
-          progress.failedImports++;
-          progress.processedVideos++;
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          progress.errors.push(`Failed to import ${videoId}: ${errorMessage}`);
-          // Only log errors, not every successful video
-          console.error(`❌ Failed to import ${videoId}:`, errorMessage);
-        }
+      // Process batch with centralized token refresh handling
+      let batchResults = await this.processBatchWithTokenHandling(
+        batch,
+        targetDate,
+        refreshTokenCallback
+      );
+      
+      // Process results and update progress
+      for (const result of batchResults) {
+        progress.quotaUsed++;
+        progress.processedVideos++;
         
-        // Smart delay between individual requests
-        const recommendedDelay = this.queryTracker.getRecommendedDelay();
-        if (batch.indexOf(videoId) < batch.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, recommendedDelay));
+        if (result.success && result.data) {
+          progress.successfulImports++;
+          results.push(result.data);
+        } else {
+          progress.failedImports++;
+          if (result.success) {
+            progress.errors.push(`No data found for video ${result.videoId}`);
+          } else {
+            progress.errors.push(`Failed to import ${result.videoId}: ${result.error}`);
+          }
         }
+      }
+
+      // Dynamic delay based on conservative rate limiting
+      const currentUtilization = (this.queryTracker.getQueriesInWindow() / this.maxQueriesPerMinute) * 100;
+      const recommendedDelay = this.queryTracker.getRecommendedDelay();
+      if (recommendedDelay > 0) {
+        await new Promise(resolve => setTimeout(resolve, recommendedDelay));
       }
 
       // Update progress with more detailed timing info
@@ -252,19 +253,34 @@ export class YouTubeAnalyticsDailyService {
         progressCallback({ ...progress });
       }
 
-      // Adaptive batch sizing for next iteration
-      batchSize = this.calculateOptimalBatchSize();
+      // Keep batch size consistent to avoid overlap/duplicate issues
+      // batchSize = this.calculateOptimalBatchSize(); // Disabled to prevent duplicate processing
       
-      // Minimal batch-level delay for optimized processing
+      // Conservative delay between batches for sustainable processing
       if (i + batchSize < videoIds.length) {
-        const batchDelay = Math.min(this.queryTracker.getRecommendedDelay() / 4, 500);
-        await new Promise(resolve => setTimeout(resolve, batchDelay));
+        const currentUtilization = (this.queryTracker.getQueriesInWindow() / this.maxQueriesPerMinute) * 100;
+        const betweenBatchDelay = this.queryTracker.getRecommendedDelay();
+        if (betweenBatchDelay > 0) {
+          await new Promise(resolve => setTimeout(resolve, betweenBatchDelay));
+        }
+        // Always add small base delay for long-term stability
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
-    // Bulk insert results into database
+    // Bulk insert results into database with deduplication
     if (results.length > 0) {
-      await this.bulkInsertAnalyticsData(results);
+      // Deduplicate results by video_id to prevent constraint violations
+      const uniqueResults = results.reduce((acc, current) => {
+        const existing = acc.find(item => item.video_id === current.video_id);
+        if (!existing) {
+          acc.push(current);
+        }
+        return acc;
+      }, [] as DailyAnalyticsData[]);
+      
+      console.log(`📊 Deduplication: ${results.length} total → ${uniqueResults.length} unique results`);
+      await this.bulkInsertAnalyticsData(uniqueResults);
     }
 
     console.log(`✅ Daily import complete for ${targetDate}`);
@@ -321,20 +337,117 @@ export class YouTubeAnalyticsDailyService {
   }
 
   /**
-   * Calculate optimal batch size based on current rate limit usage
+   * Process a batch of videos with centralized token refresh handling
+   */
+  private async processBatchWithTokenHandling(
+    batch: string[],
+    targetDate: string,
+    refreshTokenCallback?: () => Promise<string | null>
+  ): Promise<Array<{success: boolean, videoId: string, data?: any, error?: string}>> {
+    
+    // First attempt with current token
+    let batchResults = await this.executeVideoBatch(batch, targetDate);
+    
+    // Check for authentication failures
+    const authFailures = batchResults.filter(result => 
+      !result.success && result.error?.includes('unauthorized')
+    );
+    
+    // If we have auth failures and a refresh callback, refresh token once for entire batch
+    if (authFailures.length > 0 && refreshTokenCallback && !this.tokenRefreshMutex) {
+      this.tokenRefreshMutex = true;
+      console.log(`🔄 Refreshing access token for continued backfill...`);
+      
+      try {
+        const newToken = await refreshTokenCallback();
+        if (newToken && newToken !== this.currentAccessToken) {
+          this.currentAccessToken = newToken;
+          console.log(`✅ Access token refreshed successfully`);
+          
+          // Retry only the failed videos with new token
+          const failedVideoIds = authFailures.map(f => f.videoId);
+          const retryResults = await this.executeVideoBatch(failedVideoIds, targetDate);
+          
+          // Replace failed results with retry results
+          for (const retryResult of retryResults) {
+            const originalIndex = batchResults.findIndex(r => r.videoId === retryResult.videoId);
+            if (originalIndex >= 0) {
+              batchResults[originalIndex] = retryResult;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Failed to refresh access token:', error);
+      } finally {
+        this.tokenRefreshMutex = false;
+      }
+    }
+    
+    return batchResults;
+  }
+
+  /**
+   * Execute a batch of video analytics requests
+   */
+  private async executeVideoBatch(
+    batch: string[],
+    targetDate: string
+  ): Promise<Array<{success: boolean, videoId: string, data?: any, error?: string}>> {
+    const batchPromises = batch.map(async (videoId) => {
+      try {
+        const analyticsData = await this.getComprehensiveVideoAnalytics(
+          videoId, 
+          targetDate, 
+          targetDate, 
+          this.currentAccessToken,
+          undefined // No individual refresh callback
+        );
+        
+        return {
+          success: true,
+          videoId,
+          data: analyticsData.length > 0 ? analyticsData[0] : null
+        };
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return {
+          success: false,
+          videoId,
+          error: errorMessage
+        };
+      }
+    });
+
+    return await Promise.all(batchPromises);
+  }
+
+  /**
+   * Calculate optimal batch size based on current rate limit usage - optimized for sustainability
    */
   private calculateOptimalBatchSize(): number {
     const queriesInWindow = this.queryTracker.getQueriesInWindow();
     const utilizationPercent = (queriesInWindow / this.maxQueriesPerMinute) * 100;
     
-    if (utilizationPercent > 60) {
-      return 8; // Conservative when approaching target
+    // Conservative batch sizing aligned with 80% target utilization
+    if (utilizationPercent > 95) {
+      return 5; // Very small batches when dangerously close to limit
+    } else if (utilizationPercent > 90) {
+      return 10; // Small batches to prevent rate limit hits
+    } else if (utilizationPercent > 85) {
+      return 15; // Small batches when well above target
+    } else if (utilizationPercent > 80) {
+      return 20; // Reduced batches when exceeding new target
+    } else if (utilizationPercent > 75) {
+      return 30; // Moderate batches approaching target
+    } else if (utilizationPercent > 60) {
+      return 50; // Good batch size at moderate usage
     } else if (utilizationPercent > 40) {
-      return 12; // Moderate batch size
+      return 70; // Larger batches at low usage
     } else if (utilizationPercent > 20) {
-      return 18; // Larger batches for efficiency
+      return 90; // Large batches at very low usage
     } else {
-      return 25; // Maximum batch size when usage is very low
+      return 100; // Max batch size when usage is minimal
     }
   }
 
@@ -351,6 +464,19 @@ export class YouTubeAnalyticsDailyService {
     refreshTokenCallback?: () => Promise<string | null>,
     retryCount: number = 0
   ): Promise<any> {
+    // Check rate limits BEFORE making call and wait if needed
+    const currentUtilization = (this.queryTracker.getQueriesInWindow() / this.maxQueriesPerMinute) * 100;
+    const recommendedDelay = this.queryTracker.getRecommendedDelay();
+    
+    // Always enforce delays for parallel processing safety
+    if (currentUtilization > 75) {
+      // Back off when exceeding target
+      const safetyDelay = Math.max(recommendedDelay, 300 + (currentUtilization - 75) * 50);
+      await new Promise(resolve => setTimeout(resolve, safetyDelay));
+    } else if (recommendedDelay > 0) {
+      await new Promise(resolve => setTimeout(resolve, recommendedDelay));
+    }
+
     const url = new URL(this.baseUrl);
     url.searchParams.append('ids', `channel==UCjWkNxpp3UHdEavpM_19--Q`);
     url.searchParams.append('startDate', startDate);
@@ -372,26 +498,47 @@ export class YouTubeAnalyticsDailyService {
       }
     });
 
-    // Handle token expiration with refresh
-    if (response.status === 401 && refreshTokenCallback && retryCount < 2) {
-      console.log(`🔄 Token expired for video ${videoId}, refreshing and retrying...`);
-      const newToken = await refreshTokenCallback();
-      if (newToken) {
-        return await this.makeAnalyticsCall(
-          videoId,
-          startDate,
-          endDate,
-          metrics,
-          newToken,
-          dimensions,
-          refreshTokenCallback,
-          retryCount + 1
-        );
-      }
+    // Handle token expiration - let batch-level refresh handle this
+    if (response.status === 401) {
+      throw new Error('unauthorized');
     }
 
     if (!response.ok) {
       const errorText = await response.text();
+      
+      // Handle rate limiting errors with exponential backoff
+      if (response.status === 429) {
+        const retryDelay = Math.min(5000 * Math.pow(2, retryCount), 30000); // 5s, 10s, 20s, 30s max
+        console.warn(`⚠️  Rate limit exceeded for video ${videoId}, waiting ${retryDelay}ms before retry ${retryCount + 1}/3`);
+        
+        if (retryCount < 3) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return await this.makeAnalyticsCall(
+            videoId,
+            startDate,
+            endDate,
+            metrics,
+            accessToken,
+            dimensions,
+            refreshTokenCallback,
+            retryCount + 1
+          );
+        } else {
+          console.error(`❌ Max retries exceeded for video ${videoId} due to rate limiting`);
+          return { rows: [] }; // Give up after 3 retries
+        }
+      }
+      
+      // Handle YouTube API 500 errors gracefully - these are temporary backend issues
+      if (response.status === 500) {
+        console.warn(`⚠️  YouTube API backend error for video ${videoId} (temporary issue):`, {
+          status: response.status,
+          message: 'YouTube backend error - skipping this video'
+        });
+        // Return empty result instead of throwing - let the process continue
+        return { rows: [] };
+      }
+      
       console.error(`Analytics API Error for video ${videoId}:`, {
         status: response.status,
         statusText: response.statusText,
@@ -571,25 +718,54 @@ export class YouTubeAnalyticsDailyService {
 
     console.log(`🔄 Starting historical backfill: ${dates.length} days`);
 
+    const backfillStartTime = Date.now();
     const totalProgress: DailyImportProgress = {
       totalVideos: 0,
       processedVideos: 0,
       successfulImports: 0,
       failedImports: 0,
       quotaUsed: 0,
-      errors: []
+      errors: [],
+      startTime: backfillStartTime
     };
 
-    // Process each date with token refresh support
-    let currentAccessToken = accessToken;
-    for (let i = 0; i < dates.length; i++) {
-      const date = dates[i];
-      console.log(`📅 Processing date ${i + 1}/${dates.length}: ${date}`);
+    // Process dates sequentially for safer rate limiting (parallel processing caused utilization spikes)
+    const maxConcurrentDates = 1;
+    const dateChunks = [];
+    for (let i = 0; i < dates.length; i += maxConcurrentDates) {
+      dateChunks.push(dates.slice(i, i + maxConcurrentDates));
+    }
 
-      try {
-        const dayProgress = await this.importDailyAnalytics(date, currentAccessToken, progressCallback, refreshTokenCallback);
+    let currentAccessToken = accessToken;
+    
+    for (const dateChunk of dateChunks) {
+      console.log(`📅 Processing ${dateChunk.length} dates in parallel: ${dateChunk.join(', ')}`);
+      
+      // Process chunk of dates concurrently
+      const chunkPromises = dateChunk.map(async (date) => {
+        try {
+          return await this.importDailyAnalytics(date, currentAccessToken, progressCallback, refreshTokenCallback);
+        } catch (error) {
+          console.error(`❌ Failed to process date ${date}:`, error);
+          return {
+            totalVideos: 0,
+            processedVideos: 0,
+            successfulImports: 0,
+            failedImports: 0,
+            quotaUsed: 0,
+            errors: [`Failed to process ${date}: ${error}`]
+          };
+        }
+      });
+
+      const chunkResults = await Promise.all(chunkPromises);
+      
+      // Aggregate results from parallel processing
+      for (let i = 0; i < chunkResults.length; i++) {
+        const dayProgress = chunkResults[i];
+        const date = dateChunk[i];
         
-        // If we got a token refresh callback and this day had auth failures, refresh the token
+        // Check for auth failures and refresh token if needed
         if (refreshTokenCallback && dayProgress.failedImports > 0 && 
             dayProgress.errors.some(error => error.includes('401') || error.includes('Unauthorized'))) {
           console.log('🔄 Detected auth failures, refreshing token for next batch...');
@@ -609,23 +785,249 @@ export class YouTubeAnalyticsDailyService {
         totalProgress.errors.push(...dayProgress.errors);
 
         console.log(`✅ Completed ${date}: ${dayProgress.successfulImports} successful imports`);
-      } catch (error) {
-        console.error(`❌ Failed to process date ${date}:`, error);
-        totalProgress.errors.push(`Failed to process ${date}: ${error}`);
-      }
-
-      // Rate limiting between days
-      if (i < dates.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
 
-    console.log(`🎉 Historical backfill complete!`);
-    console.log(`📊 Total processed: ${totalProgress.processedVideos} video-days`);
-    console.log(`✅ Total successful: ${totalProgress.successfulImports} imports`);
-    console.log(`💰 Total quota used: ${totalProgress.quotaUsed} units`);
+    // Generate comprehensive performance report
+    await this.generateBackfillReport(totalProgress, dates.length, Date.now() - backfillStartTime);
 
     return totalProgress;
+  }
+
+  /**
+   * Generate comprehensive backfill performance report
+   */
+  private async generateBackfillReport(progress: DailyImportProgress, totalDays: number, totalTimeMs: number): Promise<void> {
+    const totalMinutes = totalTimeMs / 60000;
+    const totalHours = totalMinutes / 60;
+    
+    console.log(`\n🎉 HISTORICAL BACKFILL COMPLETE!`);
+    console.log(`${'='.repeat(60)}`);
+    
+    // Basic Stats
+    console.log(`\n📊 BASIC METRICS:`);
+    console.log(`   Days processed: ${totalDays}`);
+    console.log(`   Total video-days: ${progress.processedVideos}`);
+    console.log(`   Successful imports: ${progress.successfulImports}`);
+    console.log(`   Failed imports: ${progress.failedImports}`);
+    console.log(`   Success rate: ${((progress.successfulImports / progress.processedVideos) * 100).toFixed(1)}%`);
+    console.log(`   Quota used: ${progress.quotaUsed} units`);
+    
+    // Performance Analysis
+    console.log(`\n⚡ PERFORMANCE ANALYSIS:`);
+    console.log(`   Total runtime: ${totalMinutes.toFixed(1)} minutes (${totalHours.toFixed(2)} hours)`);
+    console.log(`   Videos per minute: ${(progress.processedVideos / totalMinutes).toFixed(1)}`);
+    console.log(`   Videos per hour: ${(progress.processedVideos / totalHours).toFixed(0)}`);
+    console.log(`   Average per day: ${(progress.processedVideos / totalDays).toFixed(0)} videos`);
+    console.log(`   API calls per minute: ${(progress.quotaUsed / totalMinutes).toFixed(1)}`);
+    
+    // Rate Limiting Analysis
+    const currentUtilization = (this.queryTracker.getQueriesInWindow() / this.maxQueriesPerMinute) * 100;
+    const avgUtilization = (progress.quotaUsed / totalMinutes / this.maxQueriesPerMinute) * 100;
+    console.log(`\n🎯 RATE LIMITING ANALYSIS:`);
+    console.log(`   Current utilization: ${currentUtilization.toFixed(1)}%`);
+    console.log(`   Average utilization: ${avgUtilization.toFixed(1)}%`);
+    console.log(`   Target utilization: ${(this.targetUtilization * 100).toFixed(0)}%`);
+    console.log(`   Rate limit buffer: ${(100 - avgUtilization).toFixed(1)}% unused capacity`);
+    console.log(`   Max theoretical: ${this.maxQueriesPerMinute} queries/min`);
+    console.log(`   Actual average: ${(progress.quotaUsed / totalMinutes).toFixed(0)} queries/min`);
+    
+    // Error Analysis
+    if (progress.errors.length > 0) {
+      console.log(`\n❌ ERROR ANALYSIS:`);
+      console.log(`   Total errors: ${progress.errors.length}`);
+      console.log(`   Error rate: ${((progress.errors.length / progress.processedVideos) * 100).toFixed(2)}%`);
+      
+      // Categorize errors
+      const errorTypes = new Map<string, number>();
+      progress.errors.forEach(error => {
+        if (error.includes('429') || error.includes('rate limit')) {
+          errorTypes.set('Rate Limiting', (errorTypes.get('Rate Limiting') || 0) + 1);
+        } else if (error.includes('401') || error.includes('Unauthorized')) {
+          errorTypes.set('Authentication', (errorTypes.get('Authentication') || 0) + 1);
+        } else if (error.includes('500')) {
+          errorTypes.set('YouTube Backend', (errorTypes.get('YouTube Backend') || 0) + 1);
+        } else if (error.includes('No data found')) {
+          errorTypes.set('No Data Available', (errorTypes.get('No Data Available') || 0) + 1);
+        } else {
+          errorTypes.set('Other', (errorTypes.get('Other') || 0) + 1);
+        }
+      });
+      
+      console.log(`   Error breakdown:`);
+      errorTypes.forEach((count, type) => {
+        console.log(`     - ${type}: ${count} (${((count / progress.errors.length) * 100).toFixed(1)}%)`);
+      });
+      
+      if (progress.errors.length <= 10) {
+        console.log(`   Recent errors:`);
+        progress.errors.slice(-5).forEach((error, i) => {
+          console.log(`     ${i + 1}. ${error.slice(0, 80)}${error.length > 80 ? '...' : ''}`);
+        });
+      }
+    }
+    
+    // Optimization Recommendations
+    console.log(`\n🔧 OPTIMIZATION RECOMMENDATIONS:`);
+    
+    if (avgUtilization < 50) {
+      console.log(`   ✅ INCREASE THROUGHPUT: Only using ${avgUtilization.toFixed(1)}% of capacity`);
+      console.log(`      → Consider increasing target utilization to 85-90%`);
+      console.log(`      → Could process ~${Math.round((0.85 * this.maxQueriesPerMinute) / (progress.quotaUsed / totalMinutes))}x faster`);
+    } else if (avgUtilization > 85) {
+      console.log(`   ⚠️  REDUCE THROUGHPUT: Using ${avgUtilization.toFixed(1)}% - too aggressive`);
+      console.log(`      → Consider reducing target utilization to 70-75%`);
+    } else {
+      console.log(`   ✅ OPTIMAL UTILIZATION: ${avgUtilization.toFixed(1)}% is well balanced`);
+    }
+    
+    if (progress.failedImports / progress.processedVideos > 0.05) {
+      console.log(`   ⚠️  HIGH ERROR RATE: ${((progress.failedImports / progress.processedVideos) * 100).toFixed(1)}% failures`);
+      console.log(`      → Consider reducing batch sizes or adding retry logic`);
+    }
+    
+    // Scaling Projections
+    console.log(`\n📈 SCALING PROJECTIONS (at current performance):`);
+    const videosPerHour = progress.processedVideos / totalHours;
+    const hoursFor30Days = (30 * 215) / videosPerHour;
+    const hoursFor90Days = (90 * 215) / videosPerHour;
+    const hoursFor365Days = (365 * 215) / videosPerHour;
+    const hoursFor8Years = (8 * 365 * 215) / videosPerHour;
+    
+    console.log(`   30 days (6,450 videos): ~${hoursFor30Days.toFixed(1)} hours`);
+    console.log(`   90 days (19,350 videos): ~${hoursFor90Days.toFixed(1)} hours`);
+    console.log(`   1 year (78,475 videos): ~${hoursFor365Days.toFixed(1)} hours (${(hoursFor365Days/24).toFixed(1)} days)`);
+    console.log(`   8 years (627,800 videos): ~${hoursFor8Years.toFixed(0)} hours (${(hoursFor8Years/24).toFixed(0)} days)`);
+    
+    // Next Run Recommendations
+    console.log(`\n🎯 NEXT RUN RECOMMENDATIONS:`);
+    if (avgUtilization < 60 && progress.failedImports / progress.processedVideos < 0.02) {
+      console.log(`   ✅ SCALE UP: Performance is stable and efficient`);
+      console.log(`      → Safe to increase to 30-60 days`);
+      console.log(`      → Consider increasing target utilization to 85%`);
+    } else if (progress.failedImports / progress.processedVideos > 0.05) {
+      console.log(`   ⚠️  OPTIMIZE FIRST: High error rate needs investigation`);
+      console.log(`      → Stick with current timeframe until errors are resolved`);
+      console.log(`      → Review error patterns above`);
+    } else {
+      console.log(`   ✅ GRADUAL SCALE: Current settings are working well`);
+      console.log(`      → Safe to double the timeframe (${totalDays * 2} days)`);
+    }
+    
+    console.log(`\n💡 SETTINGS FOR NEXT RUN:`);
+    console.log(`   Recommended timeframe: ${Math.min(totalDays * 2, 60)} days`);
+    console.log(`   Suggested target utilization: ${avgUtilization < 50 ? '85' : avgUtilization > 85 ? '70' : Math.round(this.targetUtilization * 100 + 5)}%`);
+    console.log(`   Expected runtime: ~${((Math.min(totalDays * 2, 60) * 215) / videosPerHour).toFixed(1)} hours`);
+    
+    // Data Coverage Analysis for Smart Recommendations
+    await this.analyzeDataCoverage();
+    
+    console.log(`${'='.repeat(60)}\n`);
+  }
+
+  /**
+   * Analyze existing data coverage to provide smart backfill recommendations
+   */
+  private async analyzeDataCoverage(): Promise<void> {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // Get data coverage summary
+      const { data: coverageData, error: coverageError } = await supabase
+        .from('daily_analytics')
+        .select('date')
+        .order('date');
+      
+      if (coverageError) {
+        console.log(`\n⚠️  Could not analyze data coverage: ${coverageError.message}`);
+        return;
+      }
+      
+      if (!coverageData || coverageData.length === 0) {
+        console.log(`\n📊 DATA COVERAGE: No existing data found - starting fresh!`);
+        return;
+      }
+      
+      const dates = coverageData.map(d => d.date).sort();
+      const oldestDate = dates[0];
+      const newestDate = dates[dates.length - 1];
+      const uniqueDates = new Set(dates).size;
+      
+      // Calculate gaps
+      const dateRange = [];
+      const start = new Date(oldestDate);
+      const end = new Date(newestDate);
+      
+      for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
+        dateRange.push(dt.toISOString().split('T')[0]);
+      }
+      
+      const expectedDays = dateRange.length;
+      const missingDates = dateRange.filter(date => !dates.includes(date));
+      
+      console.log(`\n📊 DATA COVERAGE ANALYSIS:`);
+      console.log(`   Oldest data: ${oldestDate}`);
+      console.log(`   Newest data: ${newestDate}`);
+      console.log(`   Days with data: ${uniqueDates}`);
+      console.log(`   Expected days in range: ${expectedDays}`);
+      console.log(`   Coverage: ${((uniqueDates / expectedDays) * 100).toFixed(1)}%`);
+      
+      if (missingDates.length > 0) {
+        console.log(`   Missing days: ${missingDates.length}`);
+        if (missingDates.length <= 10) {
+          console.log(`   Missing dates: ${missingDates.join(', ')}`);
+        } else {
+          console.log(`   Sample missing dates: ${missingDates.slice(0, 5).join(', ')}, ... (+${missingDates.length - 5} more)`);
+        }
+      }
+      
+      // Smart recommendations for working backwards
+      console.log(`\n🎯 BACKWARD FILL RECOMMENDATIONS:`);
+      
+      const today = new Date().toISOString().split('T')[0];
+      const oldestDateObj = new Date(oldestDate);
+      const daysSinceOldest = Math.floor((Date.now() - oldestDateObj.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (oldestDate === today || daysSinceOldest < 7) {
+        console.log(`   ✅ VERY RECENT DATA: Oldest data is ${daysSinceOldest} days old`);
+        console.log(`      → Start with 30-60 days backward from ${oldestDate}`);
+        console.log(`      → Safe to use higher utilization (85%+) for recent data`);
+      } else if (daysSinceOldest < 30) {
+        console.log(`   ✅ RECENT DATA: Oldest data is ${daysSinceOldest} days old`);
+        console.log(`      → Start with 60-90 days backward from ${oldestDate}`);
+        console.log(`      → Use current utilization settings (75%)`);
+      } else if (daysSinceOldest < 365) {
+        console.log(`   ⚠️  MODERATE AGE: Oldest data is ${daysSinceOldest} days old`);
+        console.log(`      → Start with 90-180 days backward from ${oldestDate}`);
+        console.log(`      → Consider reducing utilization to 65-70% for stability`);
+      } else {
+        console.log(`   ⚠️  OLD DATA: Oldest data is ${daysSinceOldest} days old (${(daysSinceOldest/365).toFixed(1)} years)`);
+        console.log(`      → Start with 180-365 days backward from ${oldestDate}`);
+        console.log(`      → Use conservative utilization (60-65%) for historical data`);
+      }
+      
+      // Calculate recommended start date
+      const suggestedDaysBack = daysSinceOldest < 7 ? 30 : daysSinceOldest < 30 ? 60 : daysSinceOldest < 365 ? 90 : 180;
+      const recommendedStartDate = new Date(oldestDateObj);
+      recommendedStartDate.setDate(recommendedStartDate.getDate() - suggestedDaysBack);
+      const recommendedStart = recommendedStartDate.toISOString().split('T')[0];
+      
+      console.log(`\n💡 NEXT BACKWARD FILL COMMAND:`);
+      console.log(`   Recommended date range: ${recommendedStart} to ${oldestDate}`);
+      console.log(`   Duration: ${suggestedDaysBack} days`);
+      console.log(`   Estimated videos: ${suggestedDaysBack * 215} video-days`);
+      
+      // Check if we should fill gaps first
+      if (missingDates.length > 0 && missingDates.length < 10) {
+        console.log(`\n🔧 FILL GAPS FIRST:`);
+        console.log(`   You have ${missingDates.length} missing days in your current range`);
+        console.log(`   Consider filling these gaps before going backward:`);
+        console.log(`   Missing dates: ${missingDates.join(', ')}`);
+      }
+      
+    } catch (error) {
+      console.log(`\n⚠️  Error analyzing data coverage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**

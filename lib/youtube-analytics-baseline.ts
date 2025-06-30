@@ -302,42 +302,64 @@ export class YouTubeAnalyticsBaseline {
     };
 
     const startTime = Date.now();
+    const batchSize = 10; // Process 10 videos in parallel for speed
 
-    for (const video of videos) {
-      try {
-        progress.currentVideo = video.id;
-        progress.processedVideos++;
-        
-        // Calculate estimated time remaining
-        if (progress.processedVideos > 1) {
-          const elapsed = Date.now() - startTime;
-          const avgTimePerVideo = elapsed / (progress.processedVideos - 1);
-          const remaining = (progress.totalVideos - progress.processedVideos) * avgTimePerVideo;
-          progress.estimatedTimeRemaining = `${Math.round(remaining / 60000)} minutes`;
+    // Process videos in batches for better performance
+    for (let i = 0; i < videos.length; i += batchSize) {
+      const batch = videos.slice(i, i + batchSize);
+      console.log(`📦 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(videos.length/batchSize)}: ${batch.length} videos`);
+      
+      // Process batch in parallel
+      const batchPromises = batch.map(async (video) => {
+        try {
+          const publishedDate = new Date(video.published_at).toISOString().split('T')[0];
+          const baselineData = await this.getVideoBaselineAnalytics(
+            video.id,
+            publishedDate,
+            accessToken
+          );
+          return { success: true, data: baselineData, video };
+        } catch (error) {
+          console.error(`Failed to get baseline for video ${video.id}:`, error);
+          return { 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Unknown error',
+            video 
+          };
         }
+      });
 
-        onProgress?.(progress);
+      // Wait for batch to complete
+      const batchResults = await Promise.all(batchPromises);
+      
+      // Process results and update progress
+      for (const result of batchResults) {
+        progress.processedVideos++;
+        progress.currentVideo = result.video.id;
+        
+        if (result.success) {
+          results.push(result.data);
+          progress.successfulVideos++;
+          progress.quotaUsed += 5;
+        } else {
+          progress.failedVideos++;
+          progress.errors.push(`Video ${result.video.id}: ${result.error}`);
+        }
+      }
 
-        // Get baseline analytics for this video
-        const publishedDate = new Date(video.published_at).toISOString().split('T')[0];
-        const baselineData = await this.getVideoBaselineAnalytics(
-          video.id,
-          publishedDate,
-          accessToken
-        );
+      // Calculate estimated time remaining
+      if (progress.processedVideos > 0) {
+        const elapsed = Date.now() - startTime;
+        const avgTimePerVideo = elapsed / progress.processedVideos;
+        const remaining = (progress.totalVideos - progress.processedVideos) * avgTimePerVideo;
+        progress.estimatedTimeRemaining = `${Math.round(remaining / 60000)} minutes`;
+      }
 
-        results.push(baselineData);
-        progress.successfulVideos++;
-        progress.quotaUsed += 5; // Estimate ~5 quota units per video (multiple API calls)
+      onProgress?.(progress);
 
-        // Rate limiting: wait 100ms between requests to avoid hitting limits
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-      } catch (error) {
-        console.error(`Failed to get baseline for video ${video.id}:`, error);
-        progress.failedVideos++;
-        progress.errors.push(`Video ${video.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        onProgress?.(progress);
+      // Small delay between batches to respect rate limits
+      if (i + batchSize < videos.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 

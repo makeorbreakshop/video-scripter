@@ -26,9 +26,9 @@ export default function YouTubeDashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">YouTube Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <p className="text-muted-foreground">
-            Analytics for Make or Break Shop channel
+            Channel performance metrics and video analytics
           </p>
         </div>
         <div className="flex items-center space-x-2">
