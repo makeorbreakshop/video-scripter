@@ -4,6 +4,7 @@
  */
 
 import { Pinecone } from '@pinecone-database/pinecone';
+import { createClient } from '@supabase/supabase-js';
 
 interface VideoMetadata {
   title: string;
@@ -30,6 +31,7 @@ interface SearchResult {
   published_at: string;
   performance_ratio: number;
   similarity_score: number;
+  thumbnail_url: string;
 }
 
 export class PineconeService {
@@ -138,21 +140,65 @@ export class PineconeService {
         includeMetadata: true,
       });
 
-      // Transform results and filter by minimum score
-      const results: SearchResult[] = queryResponse.matches
+      // Get video IDs and scores from Pinecone
+      const pineconeMatches = queryResponse.matches
         ?.filter(match => (match.score || 0) >= minScore)
         .map(match => ({
-          video_id: match.id as string, // Use match.id instead of metadata.id
-          title: match.metadata?.title as string,
-          channel_id: match.metadata?.channel_id as string,
-          channel_name: match.metadata?.channel_name as string,
-          view_count: match.metadata?.view_count as number,
-          published_at: match.metadata?.published_at as string,
-          performance_ratio: match.metadata?.performance_ratio as number,
+          video_id: match.id as string,
           similarity_score: match.score || 0,
         })) || [];
 
-      console.log(`✅ Found ${results.length} similar videos`);
+      if (pineconeMatches.length === 0) {
+        console.log(`✅ Found 0 similar videos`);
+        return [];
+      }
+
+      // Enrich with full video data from Supabase
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const videoIds = pineconeMatches.map(match => match.video_id);
+      const { data: videos, error } = await supabase
+        .from('videos')
+        .select(`
+          id,
+          title,
+          channel_id,
+          view_count,
+          published_at,
+          performance_ratio,
+          thumbnail_url
+        `)
+        .in('id', videoIds);
+
+      if (error) {
+        console.error('❌ Failed to fetch video data from Supabase:', error);
+        throw error;
+      }
+
+      // Merge Pinecone similarity scores with Supabase video data
+      const results: SearchResult[] = pineconeMatches
+        .map(match => {
+          const video = videos?.find(v => v.id === match.video_id);
+          if (!video) return null;
+
+          return {
+            video_id: video.id,
+            title: video.title,
+            channel_id: video.channel_id,
+            channel_name: video.channel_id, // Use channel_id as channel_name
+            view_count: video.view_count,
+            published_at: video.published_at,
+            performance_ratio: video.performance_ratio,
+            similarity_score: match.similarity_score,
+            thumbnail_url: video.thumbnail_url,
+          };
+        })
+        .filter(Boolean) as SearchResult[];
+
+      console.log(`✅ Found ${results.length} similar videos with enriched data`);
       return results;
     } catch (error) {
       console.error('❌ Failed to search similar videos:', error);

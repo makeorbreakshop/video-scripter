@@ -22,7 +22,7 @@ export function SemanticSearch() {
     clearSearch,
   } = useSemanticSearch({
     debounceMs: 500,
-    minScore: 0.5,
+    minScore: 0.1,
     limit: 20,
   });
 

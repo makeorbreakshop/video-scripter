@@ -17,7 +17,7 @@ interface SearchResult {
 interface SearchResponse {
   results: SearchResult[];
   total_results: number;
-  query_time_ms: number;
+  processing_time_ms: number;
   query: string;
 }
 
@@ -28,7 +28,7 @@ interface UseSemanticSearchOptions {
 }
 
 export function useSemanticSearch(options: UseSemanticSearchOptions = {}) {
-  const { debounceMs = 500, minScore = 0.5, limit = 20 } = options;
+  const { debounceMs = 500, minScore = 0.1, limit = 20 } = options;
   
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -58,7 +58,17 @@ export function useSemanticSearch(options: UseSemanticSearchOptions = {}) {
           min_score: minScore.toString(),
         });
 
-        const response = await fetch(`/api/search/semantic?${params}`);
+        const response = await fetch('/api/semantic-search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: limit,
+            min_score: minScore,
+          }),
+        });
         
         if (!response.ok) {
           throw new Error(`Search failed: ${response.statusText}`);
@@ -68,7 +78,7 @@ export function useSemanticSearch(options: UseSemanticSearchOptions = {}) {
         
         setResults(data.results);
         setTotalResults(data.total_results);
-        setQueryTime(data.query_time_ms);
+        setQueryTime(data.processing_time_ms);
       } catch (err) {
         console.error('Search error:', err);
         setError(err instanceof Error ? err.message : 'Search failed');

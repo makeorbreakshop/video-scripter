@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body: SearchRequest = await request.json();
-    const { query, limit = 20, min_score = 0.5 } = body;
+    const { query, limit = 20, min_score = 0.1 } = body;
 
     if (!query || query.trim().length === 0) {
       return NextResponse.json(
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
       },
       search_config: {
         default_limit: 20,
-        default_min_score: 0.5,
+        default_min_score: 0.1,
         embedding_model: 'text-embedding-3-small',
         embedding_dimensions: 512,
       },
