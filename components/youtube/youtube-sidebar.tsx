@@ -11,6 +11,7 @@ import {
   Youtube,
   Wrench,
   Users,
+  Search,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -31,6 +32,11 @@ const navigation = [
     name: 'Competitors',
     href: '/dashboard/youtube/competitors',
     icon: Users,
+  },
+  {
+    name: 'Search',
+    href: '/dashboard/youtube/search',
+    icon: Search,
   },
   {
     name: 'Tools',
