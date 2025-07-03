@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,104 +37,66 @@ interface SearchResult {
   customUrl?: string;
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function CompetitorsPage() {
   const [channelInput, setChannelInput] = useState('');
-  const [timePeriod, setTimePeriod] = useState('90');
-  const [maxVideos, setMaxVideos] = useState('50');
+  const [timePeriod, setTimePeriod] = useState('all');
+  const [maxVideos, setMaxVideos] = useState('all');
+  const [excludeShorts, setExcludeShorts] = useState(true);
+  const [minViews, setMinViews] = useState('');
+  const [maxViews, setMaxViews] = useState('');
+  const [channelPreviewStats, setChannelPreviewStats] = useState<{videoCount: number; estimatedImport: number} | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [competitorChannels, setCompetitorChannels] = useState<CompetitorChannel[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [refreshingChannels, setRefreshingChannels] = useState<Set<string>>(new Set());
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<SearchResult | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
 
-  // Get current user
+  // Prevent hydration issues by only rendering after mount
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      console.log('Auth check - user:', user);
-      console.log('Auth check - error:', error);
-      setCurrentUser(user);
-    };
-    getUser();
+    setIsMounted(true);
   }, []);
 
-  // Load competitor channels
+  // Re-trigger render when mounted to format dates properly
   useEffect(() => {
-    loadCompetitorChannels();
-  }, [currentUser]);
+    if (isMounted && competitorChannels.length > 0) {
+      // Force a re-render to update date formatting
+      setCompetitorChannels([...competitorChannels]);
+    }
+  }, [isMounted]);
 
-  // Also load when component mounts
+  // Load competitor channels on mount (no auth required)
   useEffect(() => {
     loadCompetitorChannels();
   }, []);
 
   const loadCompetitorChannels = async () => {
     try {
-      const { data: videos, error } = await supabase
-        .from('videos')
-        .select(`
-          channel_id,
-          imported_by,
-          import_date,
-          metadata
-        `)
-        .eq('is_competitor', true)
-        .eq('imported_by', currentUser?.id || '00000000-0000-0000-0000-000000000000');
+      const response = await fetch('/api/youtube/competitor-channels');
+      if (!response.ok) {
+        throw new Error('Failed to fetch competitor channels');
+      }
+      
+      const { channels } = await response.json();
 
-      if (error) throw error;
+      console.log('🔍 Channels loaded from API:', channels?.length);
+      console.log('🔍 Raw channel data:', channels?.[0]);
+      
+      // Set channels directly without date formatting initially
+      const formattedChannels: CompetitorChannel[] = channels?.map(channel => ({
+        ...channel,
+        lastImport: channel.lastImport // Keep raw date for now
+      })) || [];
 
-      // Group by channel and get latest info
-      const channelMap = new Map();
-      videos?.forEach(video => {
-        const channelId = video.channel_id;
-        if (!channelMap.has(channelId) || new Date(video.import_date) > new Date(channelMap.get(channelId).import_date)) {
-          channelMap.set(channelId, video);
-        }
-      });
-
-      // Get video counts per channel
-      const channelIds = Array.from(channelMap.keys());
-      const channelCounts = await Promise.all(
-        channelIds.map(async (channelId) => {
-          const { count } = await supabase
-            .from('videos')
-            .select('*', { count: 'exact', head: true })
-            .eq('channel_id', channelId)
-            .eq('is_competitor', true);
-          return { channelId, count: count || 0 };
-        })
-      );
-
-      const channels: CompetitorChannel[] = Array.from(channelMap.values()).map(video => {
-        const countData = channelCounts.find(c => c.channelId === video.channel_id);
-        const channelStats = video.metadata?.channel_stats || {};
-        
-        return {
-          id: video.metadata?.youtube_channel_id || video.channel_id,
-          name: video.channel_id, // channel_id stores the channel name
-          handle: `@${video.channel_id.replace(/\s+/g, '').toLowerCase()}`,
-          subscriberCount: channelStats.subscriber_count || 0,
-          videoCount: countData?.count || 0,
-          lastImport: formatTimeAgo(video.import_date),
-          status: 'active' as const,
-          thumbnailUrl: channelStats.channel_thumbnail
-        };
-      });
-
-      setCompetitorChannels(channels);
+      console.log('🔍 Final channels array:', formattedChannels.map(c => ({ name: c.name, lastImport: c.lastImport })));
+      setCompetitorChannels(formattedChannels);
     } catch (error) {
       console.error('Error loading competitor channels:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
-      console.error('Current user:', currentUser);
       toast({
         title: 'Error',
         description: 'Failed to load competitor channels',
@@ -144,13 +106,16 @@ export default function CompetitorsPage() {
   };
 
   const formatTimeAgo = (dateString: string) => {
-    // Use a more stable date formatting to avoid hydration mismatch
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    if (!dateString) return 'No date';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      // Use ISO date format for consistency
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   const handleSearchChannels = async () => {
@@ -183,7 +148,34 @@ export default function CompetitorsPage() {
         throw new Error(result.error || 'Failed to search channels');
       }
 
-      setSearchResults(result.channels || []);
+      // Filter and sort results
+      let filteredChannels = result.channels || [];
+      
+      // Apply subscriber count filters if specified
+      if (minViews || maxViews) {
+        filteredChannels = filteredChannels.filter((channel) => {
+          const subscriberCount = parseInt(channel.subscriberCount || '0');
+          
+          if (minViews && subscriberCount < parseInt(minViews)) {
+            return false;
+          }
+          
+          if (maxViews && subscriberCount > parseInt(maxViews)) {
+            return false;
+          }
+          
+          return true;
+        });
+      }
+      
+      // Sort by subscriber count (highest first)
+      const sortedChannels = filteredChannels.sort((a, b) => {
+        const aCount = parseInt(a.subscriberCount || '0');
+        const bCount = parseInt(b.subscriberCount || '0');
+        return bCount - aCount;
+      });
+      
+      setSearchResults(sortedChannels);
       setShowSearchResults(true);
 
       if (!result.channels || result.channels.length === 0) {
@@ -198,7 +190,7 @@ export default function CompetitorsPage() {
       console.error('Search error:', error);
       toast({
         title: 'Search Failed',
-        description: error.message || 'Failed to search for channels',
+        description: (error as Error).message || 'Failed to search for channels',
         variant: 'destructive'
       });
     } finally {
@@ -209,6 +201,7 @@ export default function CompetitorsPage() {
   const handleSelectChannel = (channel: SearchResult) => {
     setSelectedChannel(channel);
     setShowSearchResults(false);
+    getChannelPreviewStats(channel.channelId);
     toast({
       title: 'Channel Selected',
       description: `Selected: ${channel.title}`,
@@ -216,10 +209,32 @@ export default function CompetitorsPage() {
     });
   };
 
+  const getChannelPreviewStats = async (channelId: string) => {
+    try {
+      const response = await fetch('/api/youtube/channel-preview-stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelId,
+          timePeriod,
+          excludeShorts
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setChannelPreviewStats(result);
+      }
+    } catch (error) {
+      console.error('Error getting channel preview stats:', error);
+    }
+  };
+
   const handleImportChannel = async () => {
     console.log('handleImportChannel called');
     console.log('selectedChannel:', selectedChannel);
-    console.log('currentUser:', currentUser);
     
     if (!selectedChannel) {
       toast({
@@ -230,14 +245,7 @@ export default function CompetitorsPage() {
       return;
     }
     
-    if (!currentUser) {
-      console.log('No current user - using temporary bypass');
-      toast({
-        title: 'Warning',
-        description: 'Testing mode - user authentication bypass',
-        variant: 'default'
-      });
-    }
+    // No authentication required for this dev tool
     
     setIsImporting(true);
     setImportProgress(0);
@@ -258,7 +266,8 @@ export default function CompetitorsPage() {
           channelName: selectedChannel.title,
           timePeriod,
           maxVideos,
-          userId: currentUser?.id || '00000000-0000-0000-0000-000000000000'
+          excludeShorts,
+          userId: '00000000-0000-0000-0000-000000000000'
         }),
       });
 
@@ -287,7 +296,7 @@ export default function CompetitorsPage() {
       console.error('Import error:', error);
       toast({
         title: 'Import Failed',
-        description: error.message || 'Failed to import competitor channel',
+        description: (error as Error).message || 'Failed to import competitor channel',
         variant: 'destructive'
       });
     } finally {
@@ -302,15 +311,70 @@ export default function CompetitorsPage() {
     return num.toString();
   };
 
+  const handleRefreshChannel = async (channel: CompetitorChannel) => {
+    const channelId = channel.id;
+    
+    // Add to refreshing set
+    setRefreshingChannels(prev => new Set(prev).add(channelId));
+    
+    try {
+      const response = await fetch('/api/youtube/refresh-competitor-channel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelName: channel.name,
+          youtubeChannelId: channel.id,
+          userId: '00000000-0000-0000-0000-000000000000'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to refresh channel');
+      }
+
+      toast({
+        title: 'Success!',
+        description: result.message || `Imported ${result.videos_imported} new videos from ${channel.name}`,
+      });
+
+      // Reload channels to show updated counts
+      await loadCompetitorChannels();
+
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast({
+        title: 'Refresh Failed',
+        description: (error as Error).message || `Failed to refresh ${channel.name}`,
+        variant: 'destructive'
+      });
+    } finally {
+      // Remove from refreshing set
+      setRefreshingChannels(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(channelId);
+        return newSet;
+      });
+    }
+  };
+
+  // Prevent hydration mismatch by waiting for client-side mount
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Competitor Analysis</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Competitor Analysis</h1>
-        <p className="text-muted-foreground">
-          Import and analyze competitor channels to identify content opportunities and trends
-        </p>
-      </div>
 
       <Tabs defaultValue="import" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -344,6 +408,7 @@ export default function CompetitorsPage() {
                       onChange={(e) => setChannelInput(e.target.value)}
                       disabled={isImporting || isSearching}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearchChannels()}
+                      className="flex-1"
                     />
                     <Button 
                       onClick={handleSearchChannels}
@@ -365,6 +430,31 @@ export default function CompetitorsPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Search for YouTube channels by name, handle (@username), or keywords
+                  </p>
+                </div>
+
+                {/* Subscriber Count Filter */}
+                <div className="space-y-2">
+                  <Label>Subscriber Count Range</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Min subscribers (e.g. 10000)"
+                      value={minViews}
+                      onChange={(e) => setMinViews(e.target.value)}
+                      type="number"
+                      className="flex-1"
+                    />
+                    <span className="text-muted-foreground">to</span>
+                    <Input
+                      placeholder="Max subscribers (e.g. 1000000)"
+                      value={maxViews}
+                      onChange={(e) => setMaxViews(e.target.value)}
+                      type="number"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Filter results by subscriber count range (leave empty for no limit)
                   </p>
                 </div>
 
@@ -446,36 +536,57 @@ export default function CompetitorsPage() {
                 )}
               </div>
 
-              {/* Import Settings */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="time-period">Time Period</Label>
-                  <Select value={timePeriod} onValueChange={setTimePeriod}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="30">Last 30 days</SelectItem>
-                      <SelectItem value="90">Last 90 days</SelectItem>
-                      <SelectItem value="180">Last 6 months</SelectItem>
-                      <SelectItem value="365">Last year</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Channel Preview Stats */}
+              {selectedChannel && channelPreviewStats && (
+                <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/50">
+                  <h4 className="font-medium mb-2">Import Preview</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Total videos on channel:</span>
+                      <p className="font-medium">{formatNumber(channelPreviewStats.videoCount)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Videos to import:</span>
+                      <p className="font-medium text-blue-600 dark:text-blue-400">
+                        ~{formatNumber(channelPreviewStats.estimatedImport)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Based on {timePeriod === 'all' ? 'entire channel history' : `last ${timePeriod} days`}
+                    {excludeShorts ? ' (excluding Shorts)' : ' (including Shorts)'}
+                  </p>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="max-videos">Max Videos</Label>
-                  <Select value={maxVideos} onValueChange={setMaxVideos}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="25">25 videos</SelectItem>
-                      <SelectItem value="50">50 videos</SelectItem>
-                      <SelectItem value="100">100 videos</SelectItem>
-                      <SelectItem value="200">200 videos</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Import Settings */}
+              <div className="space-y-4">
+                
+                {/* Shorts Filter */}
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="space-y-1">
+                    <Label htmlFor="exclude-shorts" className="font-medium">Filter Content Type</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Exclude YouTube Shorts (videos under 60 seconds) from import
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="exclude-shorts"
+                      type="checkbox"
+                      checked={excludeShorts}
+                      onChange={(e) => {
+                        setExcludeShorts(e.target.checked);
+                        if (selectedChannel) {
+                          getChannelPreviewStats(selectedChannel.channelId);
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <Label htmlFor="exclude-shorts" className="text-sm font-medium">
+                      Exclude Shorts
+                    </Label>
+                  </div>
                 </div>
               </div>
 
@@ -579,15 +690,20 @@ export default function CompetitorsPage() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            Imported: {channel.lastImport}
+                            Imported: {formatTimeAgo(channel.lastImport)}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Refresh
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleRefreshChannel(channel)}
+                        disabled={refreshingChannels.has(channel.id)}
+                      >
+                        <Download className={`h-4 w-4 mr-2 ${refreshingChannels.has(channel.id) ? 'animate-spin' : ''}`} />
+                        {refreshingChannels.has(channel.id) ? 'Refreshing...' : 'Refresh'}
                       </Button>
                       <Button variant="outline" size="sm">
                         <Search className="h-4 w-4 mr-2" />

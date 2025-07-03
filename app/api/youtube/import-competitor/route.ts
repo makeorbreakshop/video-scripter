@@ -70,7 +70,7 @@ interface YouTubeVideoResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    const { channelId, channelName, timePeriod, maxVideos, userId } = await request.json();
+    const { channelId, channelName, timePeriod, maxVideos, excludeShorts, userId } = await request.json();
 
     if (!channelId || !userId) {
       return NextResponse.json(
@@ -87,9 +87,10 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.YOUTUBE_API_KEY;
-    const maxResults = Math.min(parseInt(maxVideos) || 50, 200);
-    const daysAgo = parseInt(timePeriod) || 90;
-    const publishedAfter = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+    const maxResults = maxVideos === 'all' ? 999999 : Math.min(parseInt(maxVideos) || 50, 500);
+    const isAllTime = timePeriod === 'all';
+    const daysAgo = isAllTime ? 0 : parseInt(timePeriod) || 90;
+    const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
 
     // Step 1: Get channel details (channelId is already provided from search)
     let channelInfo: any;
@@ -120,12 +121,12 @@ export async function POST(request: NextRequest) {
         const playlistData = await playlistResponse.json();
 
         if (playlistData.items) {
-          // Filter videos by publish date
-          const recentVideos = playlistData.items.filter((item: any) => {
+          // Filter videos by publish date (if not all-time)
+          const recentVideos = publishedAfter ? playlistData.items.filter((item: any) => {
             const publishedAt = new Date(item.snippet.publishedAt);
             const cutoffDate = new Date(publishedAfter);
             return publishedAt >= cutoffDate;
-          });
+          }) : playlistData.items;
 
           // Get detailed video information
           if (recentVideos.length > 0) {
@@ -136,7 +137,26 @@ export async function POST(request: NextRequest) {
             const videoData: YouTubeVideoResponse = await videoResponse.json();
 
             if (videoData.items) {
-              videos.push(...videoData.items);
+              let filteredVideos = videoData.items;
+              
+              // Filter out shorts if requested
+              if (excludeShorts) {
+                filteredVideos = videoData.items.filter(video => {
+                  const duration = video.contentDetails.duration;
+                  // Parse ISO 8601 duration (PT1M30S = 1 minute 30 seconds)
+                  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                  if (!match) return true; // If we can't parse, assume it's not a short
+                  
+                  const hours = parseInt(match[1] || '0');
+                  const minutes = parseInt(match[2] || '0');
+                  const seconds = parseInt(match[3] || '0');
+                  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                  
+                  return totalSeconds >= 60; // Exclude videos under 60 seconds
+                });
+              }
+              
+              videos.push(...filteredVideos);
             }
           }
 
@@ -189,6 +209,7 @@ export async function POST(request: NextRequest) {
             import_settings: {
               time_period: timePeriod,
               max_videos: maxVideos,
+              exclude_shorts: excludeShorts,
               actual_imported: limitedVideos.length
             },
             channel_stats: {

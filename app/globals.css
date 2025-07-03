@@ -176,5 +176,19 @@
   .ProseMirror h3 {
     @apply text-lg font-light mt-4 mb-2;
   }
+
+  /* Shimmer animation for better loading states */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
 }
 

@@ -8,6 +8,7 @@ export type SortBy = 'performance_percent' | 'view_count' | 'published_at' | 'ti
 export type SortOrder = 'asc' | 'desc';
 export type PerformanceFilter = 'excellent' | 'good' | 'average' | 'poor' | null;
 export type DateFilter = '30days' | '3months' | '6months' | '1year' | null;
+export type CompetitorFilter = 'mine' | 'competitors' | 'all' | null;
 
 export function usePackagingFilters() {
   const router = useRouter();
@@ -23,6 +24,11 @@ export function usePackagingFilters() {
   const [dateFilter, setDateFilterState] = useState<DateFilter>(
     (searchParams.get('dateFilter') as DateFilter) || null
   );
+  const [competitorFilter, setCompetitorFilterState] = useState<CompetitorFilter>(
+    (searchParams.get('competitorFilter') as CompetitorFilter) || 'mine'
+  );
+  const [minViews, setMinViewsState] = useState(searchParams.get('minViews') || '');
+  const [maxViews, setMaxViewsState] = useState(searchParams.get('maxViews') || '');
 
   // Update URL when filters change
   const updateURL = useCallback((params: Record<string, string | null>) => {
@@ -70,19 +76,42 @@ export function usePackagingFilters() {
     updateURL({ dateFilter: value });
   }, [updateURL]);
 
+  const setCompetitorFilter = useCallback((value: CompetitorFilter) => {
+    setCompetitorFilterState(value);
+    updateURL({ competitorFilter: value });
+  }, [updateURL]);
+
+  const debouncedUpdateViews = useDebouncedCallback((min: string, max: string) => {
+    updateURL({ minViews: min || null, maxViews: max || null });
+  }, 500);
+
+  const setMinViews = useCallback((value: string) => {
+    setMinViewsState(value);
+    debouncedUpdateViews(value, maxViews);
+  }, [debouncedUpdateViews, maxViews]);
+
+  const setMaxViews = useCallback((value: string) => {
+    setMaxViewsState(value);
+    debouncedUpdateViews(minViews, value);
+  }, [debouncedUpdateViews, minViews]);
+
   const clearFilters = useCallback(() => {
     setSearchState('');
     setSortByState('performance_percent');
     setSortOrderState('desc');
     setPerformanceFilterState(null);
     setDateFilterState(null);
+    setCompetitorFilterState('mine');
+    setMinViewsState('');
+    setMaxViewsState('');
     router.push(window.location.pathname, { scroll: false });
   }, [router]);
 
   const hasActiveFilters = useMemo(() => {
-    return !!(search || performanceFilter || dateFilter || 
-             sortBy !== 'performance_percent' || sortOrder !== 'desc');
-  }, [search, performanceFilter, dateFilter, sortBy, sortOrder]);
+    return !!(search || performanceFilter || dateFilter || minViews || maxViews ||
+             sortBy !== 'performance_percent' || sortOrder !== 'desc' ||
+             competitorFilter !== 'mine');
+  }, [search, performanceFilter, dateFilter, minViews, maxViews, sortBy, sortOrder, competitorFilter]);
 
   return {
     search,
@@ -95,6 +124,12 @@ export function usePackagingFilters() {
     setPerformanceFilter,
     dateFilter,
     setDateFilter,
+    competitorFilter,
+    setCompetitorFilter,
+    minViews,
+    setMinViews,
+    maxViews,
+    setMaxViews,
     clearFilters,
     hasActiveFilters,
   };
