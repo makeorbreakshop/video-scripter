@@ -48,7 +48,6 @@ export async function createEmbeddings(
   }
 
   try {
-    console.log(`🧠 Generating embeddings for ${nonEmptyTexts.length} text chunks using OpenAI`);
     
     const openai = new OpenAI({
       apiKey: apiKey
@@ -64,7 +63,6 @@ export async function createEmbeddings(
     // Extract embeddings from response
     const embeddings = response.data.map(item => item.embedding);
     
-    console.log(`✅ Successfully generated ${embeddings.length} embeddings`);
     
     return embeddings;
   } catch (error) {
@@ -85,7 +83,7 @@ export async function createEmbeddings(
 export async function batchCreateEmbeddings(
   texts: string[],
   apiKey: string,
-  batchSize: number = 10,
+  batchSize: number = 100,
   model: string = "text-embedding-3-small"
 ): Promise<number[][]> {
   if (!texts || texts.length === 0) {
@@ -98,7 +96,6 @@ export async function batchCreateEmbeddings(
     batches.push(texts.slice(i, i + batchSize));
   }
 
-  console.log(`🔄 Processing ${texts.length} texts in ${batches.length} batches with OpenAI`);
 
   const allEmbeddings: number[][] = [];
   
@@ -106,31 +103,29 @@ export async function batchCreateEmbeddings(
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
     try {
-      console.log(`⏳ Processing batch ${i + 1}/${batches.length} with ${batch.length} texts`);
       
-      // Add a small delay between batches to avoid rate limits
+      // Minimal delay to avoid overwhelming the API
       if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // Process each batch as a whole instead of one text at a time
       const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
       allEmbeddings.push(...batchEmbeddings);
       
-      console.log(`✅ Batch ${i + 1}/${batches.length} completed`);
     } catch (error) {
       console.error(`🚨 Error processing batch ${i + 1}:`, error);
       
-      // If we encounter an error, wait longer before retrying
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Brief wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Try once more
       try {
-        console.log(`🔄 Retrying batch ${i + 1}/${batches.length}`);
+        console.log(`🔄 Retrying OpenAI batch ${i + 1}/${batches.length}`);
         const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
         allEmbeddings.push(...batchEmbeddings);
       } catch (retryError) {
-        console.error(`❌ Failed to process batch ${i + 1} after retry:`, retryError);
+        console.error(`❌ OpenAI batch ${i + 1}/${batches.length} failed after retry:`, retryError.message || retryError);
         
         // Add empty embeddings as placeholders for failed texts
         // OpenAI's text-embedding-3-small model returns 1536-dimension vectors

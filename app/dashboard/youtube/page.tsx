@@ -1,24 +1,19 @@
 /**
  * YouTube Dashboard Page
- * Analytics dashboard for Make or Break Shop channel
+ * Analytics dashboard with tabs for channel and database analytics
  */
 
-import { Suspense } from 'react';
-import { Metadata } from 'next';
+'use client';
+
+import { Suspense, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChannelOverviewCards } from '@/components/youtube/channel-overview-cards';
 import { AnalyticsDataTable } from '@/components/youtube/analytics-data-table';
-import { ExportDialog } from '@/components/youtube/export-dialog';
 import { RefreshButton } from '@/components/youtube/refresh-button';
-import { YouTubeToolsTab } from '@/components/youtube/tools-tab';
-
-export const metadata: Metadata = {
-  title: 'YouTube Dashboard | Video Scripter',
-  description: 'Analytics dashboard for Make or Break Shop YouTube channel',
-};
+import { DatabaseStatsCards } from '@/components/youtube/database-stats-cards';
 
 export default function YouTubeDashboardPage() {
   return (
@@ -28,24 +23,23 @@ export default function YouTubeDashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <p className="text-muted-foreground">
-            Channel performance metrics and video analytics
+            Channel performance and database metrics
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <ExportDialog />
           <RefreshButton />
         </div>
       </div>
 
-      {/* Tabbed Interface */}
-      <Tabs defaultValue="analytics" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="tools">Tools</TabsTrigger>
+      {/* Analytics Tabs */}
+      <Tabs defaultValue="channel" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsTrigger value="channel">My Channel</TabsTrigger>
+          <TabsTrigger value="database">Database Stats</TabsTrigger>
         </TabsList>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
+        {/* My Channel Tab */}
+        <TabsContent value="channel" className="space-y-6">
           {/* Channel Overview Cards */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Suspense fallback={<OverviewCardsSkeleton />}>
@@ -64,12 +58,42 @@ export default function YouTubeDashboardPage() {
               </Suspense>
             </CardContent>
           </Card>
-
         </TabsContent>
 
-        {/* Tools Tab */}
-        <TabsContent value="tools" className="space-y-6">
-          <YouTubeToolsTab />
+        {/* Database Stats Tab */}
+        <TabsContent value="database" className="space-y-6">
+          {/* Database Overview Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Suspense fallback={<OverviewCardsSkeleton />}>
+              <DatabaseStatsCards />
+            </Suspense>
+          </div>
+
+          {/* Database Metrics Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Database Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">11,076</div>
+                    <div className="text-sm text-muted-foreground">Total Videos</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">162</div>
+                    <div className="text-sm text-muted-foreground">Channels</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">85</div>
+                    <div className="text-sm text-muted-foreground">RSS Monitored</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
         </TabsContent>
       </Tabs>
     </div>

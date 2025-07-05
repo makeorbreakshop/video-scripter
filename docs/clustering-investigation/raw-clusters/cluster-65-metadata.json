@@ -1,0 +1,562 @@
+[
+  {
+    "id": "RVS11-othWQ",
+    "title": "Echo - NAR Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.112692433140863,
+    "view_count": 27970.0
+  },
+  {
+    "id": "uq4B_E7qJ2k",
+    "title": "Fairing Separation Tests - Fall 2018",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.476321946041441,
+    "view_count": 118222.0
+  },
+  {
+    "id": "h3f9YhxL6X4",
+    "title": "Fairing Separation Tests - Summer 2018",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.108014710049103,
+    "view_count": 26809.0
+  },
+  {
+    "id": "GlzU7DirQ_0",
+    "title": "Fineas - Test Flight 1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.27462917942236,
+    "view_count": 316360.0
+  },
+  {
+    "id": "TJC2sAHBm6E",
+    "title": "Launch Pad Overview",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.132124524847634,
+    "view_count": 32793.0
+  },
+  {
+    "id": "sIE0mcOGnms",
+    "title": "International Space Station Orbit Tracker",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.376000190548491,
+    "view_count": 821896.0
+  },
+  {
+    "id": "0iXDuSOWzW0",
+    "title": "Search & Rescue training with the Canadian Coast Guard",
+    "channel_id": "Andrew Szeto",
+    "performance_ratio": 0.0461290543976863,
+    "view_count": 1590.0
+  },
+  {
+    "id": "4Cx3hvELZOU",
+    "title": "Falcon Heavy Model Integration",
+    "channel_id": "BPS.space",
+    "performance_ratio": 2.91418925379408,
+    "view_count": 723295.0
+  },
+  {
+    "id": "g0VFwuKr4bQ",
+    "title": "Scout V 0.1 - Dynamic Test 1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.258946824381954,
+    "view_count": 64270.0
+  },
+  {
+    "id": "AQAO3cMy92M",
+    "title": "Falcon Heavy Launch Pad Conversion",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.199796391384421,
+    "view_count": 49589.0
+  },
+  {
+    "id": "2jAH-51feAA",
+    "title": "Supersonic Planes Are Coming BACK",
+    "channel_id": "Cleo Abram",
+    "performance_ratio": 1.1129841570068,
+    "view_count": 4052564.0
+  },
+  {
+    "id": "UKJ2pS2ah-s",
+    "title": "Falcon Heavy Model Tuning and Simulation",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.0,
+    "view_count": 0.0
+  },
+  {
+    "id": "8_hJ48LCXWs",
+    "title": "Echo - Landing Test #1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.632983364626217,
+    "view_count": 157105.0
+  },
+  {
+    "id": "Bxu2_aIEvpo",
+    "title": "Falcon Heavy Model Tuning and Simulation",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.194723821726775,
+    "view_count": 48330.0
+  },
+  {
+    "id": "LfuK8rHzFMY",
+    "title": "Scout V 0.2 - Dynamic Test 2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.132531458553291,
+    "view_count": 32894.0
+  },
+  {
+    "id": "sjNsnxvJIfE",
+    "title": "Falcon Heavy Upper Stage Flight Explanation",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0845938622175746,
+    "view_count": 20996.0
+  },
+  {
+    "id": "hsIDYcNZaSw",
+    "title": "Launch Pad Updates",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.01304735857011,
+    "view_count": 251436.0
+  },
+  {
+    "id": "DdNQEEugiBc",
+    "title": "Ejection Charge Testing",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0591866944168494,
+    "view_count": 14690.0
+  },
+  {
+    "id": "h3WGLvYlzb8",
+    "title": "Echo - Landing Test #3",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.504384255545414,
+    "view_count": 125187.0
+  },
+  {
+    "id": "Mq5alUV-AHI",
+    "title": "Aluminum TVC Mount | Scout Flights 2 and 3",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.76170334510474,
+    "view_count": 189053.0
+  },
+  {
+    "id": "S4HfGVRU_xY",
+    "title": "Echo - Landing Test #5",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.760083668375293,
+    "view_count": 188651.0
+  },
+  {
+    "id": "8tkMoZexLFg",
+    "title": "Echo - Drop Test #1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.135106019324725,
+    "view_count": 33533.0
+  },
+  {
+    "id": "fk6CHDXd5Kc",
+    "title": "Scout D1 Flight 1 and BPS.space Update",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.31829065161584,
+    "view_count": 78999.0
+  },
+  {
+    "id": "Ah12ufg1eX0",
+    "title": "Falcon Heavy Center Core Test Flight",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.138969875005172,
+    "view_count": 34492.0
+  },
+  {
+    "id": "yx5zLykjKy8",
+    "title": "Echo - Landing Test #4",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.982579708251514,
+    "view_count": 243874.0
+  },
+  {
+    "id": "pzYHxth56oo",
+    "title": "Scout V 0.9 Test Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0684655887151479,
+    "view_count": 16993.0
+  },
+  {
+    "id": "tVzgHvTuwdU",
+    "title": "The Time a Pickup Pulled the Space Shuttle",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.285331505258397,
+    "view_count": 623704.0
+  },
+  {
+    "id": "Hpaf5nbHV7U",
+    "title": "Scout V 0.7 Test Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0936995075124745,
+    "view_count": 23256.0
+  },
+  {
+    "id": "lXy-x6lkQvQ",
+    "title": "Echo - Landing Test #2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.693717212933881,
+    "view_count": 172179.0
+  },
+  {
+    "id": "QM6tvAVNLnk",
+    "title": "Scout E - Engineering Cut",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.94677890595642,
+    "view_count": 483186.0
+  },
+  {
+    "id": "-Wqir57hIQs",
+    "title": "Launch Pad Maintenance",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0692230494741926,
+    "view_count": 17181.0
+  },
+  {
+    "id": "gFeDrlu0OpY",
+    "title": "Falcon Heavy - Upper Stage Test Flight #1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.155907986872322,
+    "view_count": 38696.0
+  },
+  {
+    "id": "X4e2_L6gQkE",
+    "title": "Relay Flight 2 - Webcast Launch Coverage",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.105021128432239,
+    "view_count": 26066.0
+  },
+  {
+    "id": "4OmOwSB7xP8",
+    "title": "Scout F - Engineering Cut",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.11315305016174,
+    "view_count": 276282.0
+  },
+  {
+    "id": "BuB4MiboJU0",
+    "title": "How NASA Tests Spacecraft Reentry",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.0,
+    "view_count": 325855.0
+  },
+  {
+    "id": "V7yUAsvEvR0",
+    "title": "Scout C5 Launch - Oct 4 2017",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0554034196682162,
+    "view_count": 13751.0
+  },
+  {
+    "id": "BB8zeMNUlfI",
+    "title": "Echo B1 Launch - July 28 2017",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0738282497273212,
+    "view_count": 18324.0
+  },
+  {
+    "id": "CM0TskDKoew",
+    "title": "Echo - Drop Test #2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.295353289375192,
+    "view_count": 73306.0
+  },
+  {
+    "id": "agtoHvcpcP4",
+    "title": "Sprint - Test Flight 1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.530851062599483,
+    "view_count": 131756.0
+  },
+  {
+    "id": "7utfybWyzSs",
+    "title": "Live Launch Pad Maintenance",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.220691027003603,
+    "view_count": 54775.0
+  },
+  {
+    "id": "RQ1eHFKMoFo",
+    "title": "Scout D1 | Flight 2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.342618034930267,
+    "view_count": 85037.0
+  },
+  {
+    "id": "WKpqoOe8lws",
+    "title": "Echo - Landing Test #6",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.23971749071426,
+    "view_count": 307695.0
+  },
+  {
+    "id": "y4xR0Fi53qI",
+    "title": "Sprint - Test Flight 9 - Aerotech G11",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.461192876093499,
+    "view_count": 114467.0
+  },
+  {
+    "id": "YHrm6LkDm0w",
+    "title": "Live Scout D1 Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.196186365639186,
+    "view_count": 48693.0
+  },
+  {
+    "id": "ypHruMqfU3U",
+    "title": "Scout C1 Launch - July 31 2017",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0785784956577137,
+    "view_count": 19503.0
+  },
+  {
+    "id": "bnEhMEY8ABc",
+    "title": "Relay Flight 1 - Webcast Launch Coverage",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0557861790943293,
+    "view_count": 13846.0
+  },
+  {
+    "id": "AD8ZUQ-qoYI",
+    "title": "Falcon Heavy - Upper Stage Test Flight #2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.269744669244933,
+    "view_count": 66950.0
+  },
+  {
+    "id": "miMT44LFUjs",
+    "title": "Scout F - Flight 1 - Launch and Landing",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.856563218035326,
+    "view_count": 212597.0
+  },
+  {
+    "id": "mb9LuI5K7KU",
+    "title": "Scout V 0.3 - Dynamic Test 3",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.118155820317803,
+    "view_count": 29326.0
+  },
+  {
+    "id": "s9aTd29t2dg",
+    "title": "Live Scout D1 Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.369536095202491,
+    "view_count": 91718.0
+  },
+  {
+    "id": "bWpQ3_todlQ",
+    "title": "Landing Leg Giveaway & BPS.space Trivia",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.100210446802987,
+    "view_count": 24872.0
+  },
+  {
+    "id": "14CJdaABezU",
+    "title": "Scout C3 Launch - Sept 21 2017",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0566483950647313,
+    "view_count": 14060.0
+  },
+  {
+    "id": "9EMoea_ReUA",
+    "title": "Echo - Test Vehicle 2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0806695708382681,
+    "view_count": 20022.0
+  },
+  {
+    "id": "9KjjOTfcyu4",
+    "title": "Echo - Test Vehicle 1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0971604585338546,
+    "view_count": 24115.0
+  },
+  {
+    "id": "WTQ1Kb1Fvj8",
+    "title": "Sprint - Test Flight 8 and Data Review",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.514154693527773,
+    "view_count": 127612.0
+  },
+  {
+    "id": "Ge5snoNejq8",
+    "title": "Lumineer - 10km Launch Teaser",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.438158816734675,
+    "view_count": 108750.0
+  },
+  {
+    "id": "FerFv7BZAwo",
+    "title": "I Tested NASA's New Space Suit (Ft. Axiom Space)",
+    "channel_id": "Cleo Abram",
+    "performance_ratio": 0.934975417057099,
+    "view_count": 3404404.0
+  },
+  {
+    "id": "eh8ic1-5wFo",
+    "title": "Sprint - Test Flight 5 + Project Recap",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.8301205852608,
+    "view_count": 206034.0
+  },
+  {
+    "id": "-jB1Cqm2_nQ",
+    "title": "Falcon Heavy Model - Booster Test Flight",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.295925413991066,
+    "view_count": 73448.0
+  },
+  {
+    "id": "XDJpuwW1-4k",
+    "title": "Scout V 0.4 Test Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.135162425976994,
+    "view_count": 33547.0
+  },
+  {
+    "id": "KtrZYcQMMBc",
+    "title": "Scout E - Flight 2 Launch + Landing",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.65339854370111,
+    "view_count": 162172.0
+  },
+  {
+    "id": "ejALPYa6IeY",
+    "title": "Scout V 0.5 Test Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0854842815141112,
+    "view_count": 21217.0
+  },
+  {
+    "id": "GOWC5fzv70k",
+    "title": "Sprint - Test Flight 3",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.342976620076836,
+    "view_count": 85126.0
+  },
+  {
+    "id": "XwASPWXh0us",
+    "title": "Sprint - Test Flight 4",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.345885591715295,
+    "view_count": 85848.0
+  },
+  {
+    "id": "BoevqNVv4ck",
+    "title": "Sprint - Test Flights 6 and 7",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.363629512900578,
+    "view_count": 90252.0
+  },
+  {
+    "id": "J2ACQsmkPJs",
+    "title": "Sprint - Test Flight 2 + Q&A",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.453356380474658,
+    "view_count": 112522.0
+  },
+  {
+    "id": "1KJv9ZDm5ZA",
+    "title": "Live Building Scout D",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.59843156677423,
+    "view_count": 396727.0
+  },
+  {
+    "id": "BtdsrU057Ms",
+    "title": "LIVE LAUNCH Lumineer - 10km Test Flight",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.990802992343058,
+    "view_count": 245915.0
+  },
+  {
+    "id": "F9uLXyT-r8E",
+    "title": "Sprint - Test Flight 10 - Aerotech H13",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.682069239240273,
+    "view_count": 169288.0
+  },
+  {
+    "id": "tH2tKigOPBU",
+    "title": "Perseverance Mars Rover Landing- Inside Story",
+    "channel_id": "Mark Rober",
+    "performance_ratio": 0.42353836366842,
+    "view_count": 22955182.0
+  },
+  {
+    "id": "33NK2M6GXM4",
+    "title": "Sprint 1km Update",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.183724524534264,
+    "view_count": 45600.0
+  },
+  {
+    "id": "WP2eah5Knnk",
+    "title": "Falcon Heavy - Flight Computer Assembly",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0558184114670546,
+    "view_count": 13854.0
+  },
+  {
+    "id": "QQt-9SSJ51c",
+    "title": "Falcon Heavy Model - Flight 1",
+    "channel_id": "BPS.space",
+    "performance_ratio": 4.22550290242444,
+    "view_count": 1048760.0
+  },
+  {
+    "id": "SH3lR2GLgT0",
+    "title": "I Landed A Rocket Like SpaceX - Scout F",
+    "channel_id": "BPS.space",
+    "performance_ratio": 37.7089792041133,
+    "view_count": 9359281.0
+  },
+  {
+    "id": "0ykvmCi_UXs",
+    "title": "Build Signal Alpha - Part 4 - Tuning and Flight",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.118901193937076,
+    "view_count": 29511.0
+  },
+  {
+    "id": "14Juc3PAHHk",
+    "title": "Scout V 1.0 Test Launch",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.0886672283207355,
+    "view_count": 22007.0
+  },
+  {
+    "id": "YixmPK26upk",
+    "title": "Scout E - Flight 1 Launch + Landing",
+    "channel_id": "BPS.space",
+    "performance_ratio": 3.76574436691722,
+    "view_count": 934649.0
+  },
+  {
+    "id": "ff5245EBfis",
+    "title": "Falcon Heavy Model - Flight 2",
+    "channel_id": "BPS.space",
+    "performance_ratio": 4.49101304370258,
+    "view_count": 1114659.0
+  },
+  {
+    "id": "EPVZL1UOmw8",
+    "title": "Scout C6 Launch - Oct 6 2017",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.058783789757783,
+    "view_count": 14590.0
+  },
+  {
+    "id": "JbAzlw49QV4",
+    "title": "LIVE Sprint - Test Flight 10 - 1km",
+    "channel_id": "BPS.space",
+    "performance_ratio": 0.350877580441128,
+    "view_count": 87087.0
+  }
+]

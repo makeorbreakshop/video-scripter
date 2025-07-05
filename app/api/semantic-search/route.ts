@@ -11,12 +11,16 @@ interface SearchRequest {
   query: string;
   limit?: number;
   min_score?: number;
+  offset?: number;
 }
 
 interface SearchResponse {
   results: SearchResult[];
   query: string;
   total_results: number;
+  has_more: boolean;
+  total_available: number;
+  current_page: number;
   processing_time_ms: number;
 }
 
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body: SearchRequest = await request.json();
-    const { query, limit = 20, min_score = 0.1 } = body;
+    const { query, limit = 20, min_score = 0.1, offset = 0 } = body;
 
     if (!query || query.trim().length === 0) {
       return NextResponse.json(
@@ -53,28 +57,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🔍 Semantic search query: "${query}"`);
+    console.log(`🔍 Semantic search query: "${query}" (limit: ${limit}, offset: ${offset})`);
     
     // Generate embedding for the search query
     const queryEmbedding = await generateQueryEmbedding(query, apiKey);
     
-    // Search for similar videos in Pinecone
-    const results = await pineconeService.searchSimilar(
+    // Search for similar videos in Pinecone with pagination
+    const searchResult = await pineconeService.searchSimilar(
       queryEmbedding,
       limit,
-      min_score
+      min_score,
+      offset
     );
 
     const processingTime = Date.now() - startTime;
+    const currentPage = Math.floor(offset / limit) + 1;
     
     const response: SearchResponse = {
-      results,
+      results: searchResult.results,
       query,
-      total_results: results.length,
+      total_results: searchResult.results.length,
+      has_more: searchResult.hasMore,
+      total_available: searchResult.totalAvailable,
+      current_page: currentPage,
       processing_time_ms: processingTime,
     };
 
-    console.log(`✅ Search completed: ${results.length} results in ${processingTime}ms`);
+    console.log(`✅ Search completed: ${searchResult.results.length} results in ${processingTime}ms (page ${currentPage}, hasMore: ${searchResult.hasMore})`);
 
     return NextResponse.json(response);
   } catch (error) {

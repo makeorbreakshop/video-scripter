@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface PerformanceBadgeProps {
-  percentage: number;
+  percentage: number | null;
   className?: string;
 }
 
@@ -14,8 +14,10 @@ export function PerformanceBadge({ percentage, className }: PerformanceBadgeProp
     return 'poor'; // Below 0.5x performance
   };
 
-  const variant = getVariant(percentage);
-  const displayValue = `${percentage.toFixed(1)}x`;
+  // Handle null/undefined percentage values
+  const safePercentage = percentage ?? 0;
+  const variant = getVariant(safePercentage);
+  const displayValue = `${safePercentage.toFixed(1)}x`;
 
   return (
     <Badge

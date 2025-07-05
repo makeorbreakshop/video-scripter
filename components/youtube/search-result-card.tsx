@@ -46,7 +46,7 @@ function SearchResultCardComponent({ result }: SearchResultCardProps) {
   }, [result.similarity_score]);
 
   const performancePercentage = useMemo(() => {
-    return Math.round(result.performance_ratio * 100);
+    return result.performance_ratio;
   }, [result.performance_ratio]);
 
   const handleYouTubeLink = useCallback(() => {

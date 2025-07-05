@@ -1,0 +1,16 @@
+[
+  {
+    "id": "test-single-789",
+    "title": "",
+    "channel_id": "",
+    "performance_ratio": 1.0,
+    "view_count": 0
+  },
+  {
+    "id": "test-video-456",
+    "title": "Test Video Title",
+    "channel_id": "test-channel-123",
+    "performance_ratio": 1.5,
+    "view_count": 1000.0
+  }
+]

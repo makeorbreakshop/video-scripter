@@ -88,32 +88,9 @@ export class PineconeService {
     }
 
     try {
-      console.log(`📤 Upserting ${vectors.length} vectors to Pinecone`);
-      
       const index = this.pinecone.index(this.indexName);
+      await index.upsert(vectors);
       
-      // Log vector structure for debugging
-      console.log('🔍 First vector structure:', JSON.stringify(vectors[0], null, 2));
-      
-      // Try with minimal test vector first
-      const testVector = {
-        id: 'test-123',
-        values: new Array(512).fill(0.1),
-        metadata: { test: 'data' }
-      };
-      
-      console.log('🧪 Testing with minimal vector:', JSON.stringify(testVector, null, 2));
-      
-      try {
-        await index.upsert([testVector]);
-        console.log('✅ Test vector worked! Now trying actual vector...');
-        await index.upsert(vectors);
-      } catch (testError) {
-        console.log('❌ Even test vector failed:', testError);
-        throw testError;
-      }
-      
-      console.log(`✅ Successfully upserted ${vectors.length} vectors`);
     } catch (error) {
       console.error('❌ Failed to upsert vectors:', error);
       throw error;
@@ -126,31 +103,45 @@ export class PineconeService {
   async searchSimilar(
     queryEmbedding: number[],
     limit: number = 20,
-    minScore: number = 0.7
-  ): Promise<SearchResult[]> {
+    minScore: number = 0.7,
+    offset: number = 0
+  ): Promise<{ results: SearchResult[], hasMore: boolean, totalAvailable: number }> {
     await this.initializeIndex();
 
     try {
-      console.log(`🔍 Searching for similar videos (limit: ${limit}, minScore: ${minScore})`);
       
       const index = this.pinecone.index(this.indexName);
+      
+      // Request more results than needed to handle pagination efficiently
+      // We'll fetch up to 100 results initially and paginate client-side
+      const maxResults = Math.max(100, offset + limit + 20);
+      
       const queryResponse = await index.query({
         vector: queryEmbedding,
-        topK: limit,
+        topK: maxResults,
         includeMetadata: true,
       });
 
-      // Get video IDs and scores from Pinecone
-      const pineconeMatches = queryResponse.matches
+      // Get video IDs and scores from Pinecone, filter by score
+      const allMatches = queryResponse.matches
         ?.filter(match => (match.score || 0) >= minScore)
         .map(match => ({
           video_id: match.id as string,
           similarity_score: match.score || 0,
         })) || [];
 
-      if (pineconeMatches.length === 0) {
+      if (allMatches.length === 0) {
         console.log(`✅ Found 0 similar videos`);
-        return [];
+        return { results: [], hasMore: false, totalAvailable: 0 };
+      }
+
+      // Apply pagination to the filtered results
+      const paginatedMatches = allMatches.slice(offset, offset + limit);
+      const hasMore = offset + limit < allMatches.length;
+      
+      if (paginatedMatches.length === 0) {
+        console.log(`✅ No more results for offset ${offset}`);
+        return { results: [], hasMore: false, totalAvailable: allMatches.length };
       }
 
       // Enrich with full video data from Supabase
@@ -159,47 +150,97 @@ export class PineconeService {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const videoIds = pineconeMatches.map(match => match.video_id);
-      const { data: videos, error } = await supabase
+      const videoIds = paginatedMatches.map(match => match.video_id);
+      
+      // Use optimized approach: get basic video data, then calculate performance for only these videos
+      // Filter out shorts (videos <= 1 minute or with #shorts hashtag)
+      const { data: basicVideos, error: basicError } = await supabase
         .from('videos')
-        .select(`
-          id,
-          title,
-          channel_id,
-          view_count,
-          published_at,
-          performance_ratio,
-          thumbnail_url
-        `)
-        .in('id', videoIds);
+        .select('id, title, view_count, published_at, thumbnail_url, is_competitor, channel_id, duration')
+        .in('id', videoIds)
+        .not('title', 'ilike', '%#shorts%')
+        .not('description', 'ilike', '%#shorts%')
+        .not('duration', 'in', '("PT1M","PT59S","PT58S","PT57S","PT56S","PT55S","PT54S","PT53S","PT52S","PT51S","PT50S","PT49S","PT48S","PT47S","PT46S","PT45S","PT44S","PT43S","PT42S","PT41S","PT40S","PT39S","PT38S","PT37S","PT36S","PT35S","PT34S","PT33S","PT32S","PT31S","PT30S","PT29S","PT28S","PT27S","PT26S","PT25S","PT24S","PT23S","PT22S","PT21S","PT20S","PT19S","PT18S","PT17S","PT16S","PT15S","PT14S","PT13S","PT12S","PT11S","PT10S","PT9S","PT8S","PT7S","PT6S","PT5S","PT4S","PT3S","PT2S","PT1S")');
 
-      if (error) {
-        console.error('❌ Failed to fetch video data from Supabase:', error);
-        throw error;
+      if (basicError) {
+        console.error('❌ Failed to fetch basic video data:', basicError);
+        throw basicError;
       }
 
+      // Now calculate performance ratios for only the channels we need
+      const channelIds = [...new Set(basicVideos?.map(v => v.channel_id) || [])];
+      
+      const { data: channelBaselines, error: baselineError } = await supabase
+        .from('videos')
+        .select('channel_id, view_count')
+        .in('channel_id', channelIds)
+        .gte('published_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+        .not('view_count', 'is', null)
+        .gt('view_count', 0)
+        .not('title', 'ilike', '%#shorts%')
+        .not('description', 'ilike', '%#shorts%');
+
+      if (baselineError) {
+        console.error('❌ Failed to fetch channel baselines:', baselineError);
+        throw baselineError;
+      }
+
+      // Calculate channel averages
+      const channelViewCounts: { [key: string]: number[] } = {};
+      channelBaselines?.forEach(video => {
+        if (!channelViewCounts[video.channel_id]) {
+          channelViewCounts[video.channel_id] = [];
+        }
+        channelViewCounts[video.channel_id].push(video.view_count);
+      });
+
+      // Convert to actual averages
+      const channelAverages: { [key: string]: number } = {};
+      Object.keys(channelViewCounts).forEach(channelId => {
+        const views = channelViewCounts[channelId];
+        channelAverages[channelId] = views.reduce((sum, count) => sum + count, 0) / views.length;
+      });
+
+      // Merge with performance ratios
+      const videos = basicVideos?.map(video => ({
+        ...video,
+        performance_ratio: channelAverages[video.channel_id] 
+          ? video.view_count / channelAverages[video.channel_id]
+          : 1.0,
+        channel_avg_views: Math.round(channelAverages[video.channel_id] || 0)
+      })) || [];
+
+      // Videos are already filtered to our search results
+      const filteredVideos = videos;
+
       // Merge Pinecone similarity scores with Supabase video data
-      const results: SearchResult[] = pineconeMatches
+      const results: SearchResult[] = paginatedMatches
         .map(match => {
-          const video = videos?.find(v => v.id === match.video_id);
+          const video = filteredVideos.find(v => v.id === match.video_id);
           if (!video) return null;
 
-          return {
+          const result = {
             video_id: video.id,
             title: video.title,
             channel_id: video.channel_id,
-            channel_name: video.channel_id, // Use channel_id as channel_name
+            channel_name: video.channel_name,
             view_count: video.view_count,
             published_at: video.published_at,
             performance_ratio: video.performance_ratio,
             similarity_score: match.similarity_score,
             thumbnail_url: video.thumbnail_url,
           };
+          
+          return result;
         })
         .filter(Boolean) as SearchResult[];
 
-      console.log(`✅ Found ${results.length} similar videos with enriched data`);
-      return results;
+      console.log(`✅ Found ${results.length} similar videos with enriched data (page ${Math.floor(offset/limit) + 1}, hasMore: ${hasMore})`);
+      return { 
+        results, 
+        hasMore, 
+        totalAvailable: allMatches.length 
+      };
     } catch (error) {
       console.error('❌ Failed to search similar videos:', error);
       throw error;

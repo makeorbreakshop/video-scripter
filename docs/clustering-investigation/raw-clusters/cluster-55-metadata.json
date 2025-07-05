@@ -1,0 +1,1010 @@
+[
+  {
+    "id": "9v0r66N7mPw",
+    "title": "New high vacuum system",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.128048726579923,
+    "view_count": 40687.0
+  },
+  {
+    "id": "fxbzop17LT8",
+    "title": "How a breathalyzer works (alcohol sensor)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.451014007145171,
+    "view_count": 143308.0
+  },
+  {
+    "id": "mzeRvdnIP-I",
+    "title": "Ultra low-temperature cascade refrigeration system repair",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.636627539630503,
+    "view_count": 202286.0
+  },
+  {
+    "id": "uJ_NpWnCXzM",
+    "title": "Magnetic refrigeration: How does that work?!",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.684370041712677,
+    "view_count": 217456.0
+  },
+  {
+    "id": "DZGTh3hGzNc",
+    "title": "Progress on vacuum chamber build - helium leak detection, custom flanges",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.134934724902652,
+    "view_count": 42875.0
+  },
+  {
+    "id": "86zZuqqi5gU",
+    "title": "How to Detect Muons!",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.083621678205001,
+    "view_count": 182788.0
+  },
+  {
+    "id": "iwj78pR46zM",
+    "title": "Etching silicon wafers to make colorful Rugate optical filters (porous silicon)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.713585179934748,
+    "view_count": 226739.0
+  },
+  {
+    "id": "7na8kQ78vkQ",
+    "title": "Optical finish for acrylic -- vapor polishing and other techniques",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.45436816494492,
+    "view_count": 462120.0
+  },
+  {
+    "id": "tJodcGa0ef4",
+    "title": "Quartz crystal thickness monitor for vapor deposition in vacuum",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.12013989943869,
+    "view_count": 38174.0
+  },
+  {
+    "id": "M6XIgdS1rzs",
+    "title": "Iron nitride permanent magnets made with DIY ball mill and tested with DIY magnetometer",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 126226.0
+  },
+  {
+    "id": "qgS0hTKBLXM",
+    "title": "Low-cost DIY thermal imaging - liquid crystal paint testing",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.348797215772268,
+    "view_count": 110829.0
+  },
+  {
+    "id": "yLSu_UjrcUA",
+    "title": "Creating X-rays with a standard vacuum tube",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.32788043250031,
+    "view_count": 421929.0
+  },
+  {
+    "id": "a4gYv2BK-HQ",
+    "title": "Frying a potato chip in Fluorinert FC-40",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.455624604742428,
+    "view_count": 144773.0
+  },
+  {
+    "id": "glNDcDklhRw",
+    "title": "Visualizing EMI Filter Frequency Response with an Oscilloscope",
+    "channel_id": "Clough42",
+    "performance_ratio": 0.280789636450941,
+    "view_count": 21700.0
+  },
+  {
+    "id": "dXWbezxJb2g",
+    "title": "Wixey Digital Angle Gauge Review",
+    "channel_id": "Make Something",
+    "performance_ratio": 0.301983574133914,
+    "view_count": 61214.0
+  },
+  {
+    "id": "B0elgKCuoBg",
+    "title": "Large area detector for X-rays",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.118585199634564,
+    "view_count": 37680.0
+  },
+  {
+    "id": "w2pMDqQAAzI",
+    "title": "Supercritical CO2 does not help visualize ionizing alpha particles",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0754281178248829,
+    "view_count": 23967.0
+  },
+  {
+    "id": "tRrOdKW06sk",
+    "title": "Intro to DIY Raman Spectroscopy",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.488550251201473,
+    "view_count": 155235.0
+  },
+  {
+    "id": "ZIJ1jI1xDhY",
+    "title": "DIY Scanning Electron Microscope - Electron Gun Detail",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.201006319412419,
+    "view_count": 63869.0
+  },
+  {
+    "id": "oXJaMHBTSJ8",
+    "title": "SUNLU SP2 Filament Dryer \u2013 Detachable & Stackable Chamber, 70\u00b0C Max Temp, Built-in Hygrometer",
+    "channel_id": "Aurora Tech",
+    "performance_ratio": 1.0,
+    "view_count": 11355.0
+  },
+  {
+    "id": "9OEz_e9C4KM",
+    "title": "Intro to sputtering (process to create clear, conductive coatings)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 2.18382450097726,
+    "view_count": 693902.0
+  },
+  {
+    "id": "NjLJ77IuBdM",
+    "title": "How a liquid lens works (electrowetting)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.39489375024805,
+    "view_count": 125476.0
+  },
+  {
+    "id": "wcRB3TWIAXE",
+    "title": "Intro to Fourier Optics and the 4F correlator",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.471159014121308,
+    "view_count": 149709.0
+  },
+  {
+    "id": "2wkgBPk0DWg",
+    "title": "Custom supercritical CO2 chamber with easy-to-use lid clamp",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.577570977232876,
+    "view_count": 183521.0
+  },
+  {
+    "id": "hJJnBxhGnWY",
+    "title": "Making a Replacement Glass Chart for an Optical Comparator | Lufkin Ultrascope 1200A | MicroVu 400",
+    "channel_id": "Clough42",
+    "performance_ratio": 1.66433204650827,
+    "view_count": 128623.0
+  },
+  {
+    "id": "v8pko9IlFW4",
+    "title": "Silver nanoprisms grown into structural colors by high power LEDs",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 186006.0
+  },
+  {
+    "id": "7PWESWqhD8s",
+    "title": "Liquid Nitrogen Generator - Overview",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.39855633027615,
+    "view_count": 444386.0
+  },
+  {
+    "id": "iWc3BcCvEW0",
+    "title": "Resin Sphere Turning Experiment Failure",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.0914555492336377,
+    "view_count": 199912.0
+  },
+  {
+    "id": "ih_D6OLzqo4",
+    "title": "Atomic Layer Deposition of copper - If you like sputtering, you'll love this!",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.67955101046118,
+    "view_count": 533671.0
+  },
+  {
+    "id": "HoW14jmjoj4",
+    "title": "Trigger circuit for large xenon flash tubes",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.223845300138216,
+    "view_count": 71126.0
+  },
+  {
+    "id": "vwsHRrDYu5o",
+    "title": "Testing UV absorption eyewear and sunscreen with a deuterium light source",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.529941773112136,
+    "view_count": 168387.0
+  },
+  {
+    "id": "J7En8MgA3T0",
+    "title": "Experimenting with a Vacuum Press",
+    "channel_id": "3x3Custom - Tamar",
+    "performance_ratio": 1.0,
+    "view_count": 64193.0
+  },
+  {
+    "id": "ptkzzNaZb7U",
+    "title": "HEAT MAP Microwave- a NEW invention",
+    "channel_id": "Mark Rober",
+    "performance_ratio": 0.0699723741911334,
+    "view_count": 3792404.0
+  },
+  {
+    "id": "zvMv6WiWMHA",
+    "title": "Experimenting with a liquid lens and driver IC",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.208996972859132,
+    "view_count": 66408.0
+  },
+  {
+    "id": "xtModjpxfxM",
+    "title": "Explanation of how kilowatt-hour meters work (electromechanical)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.58123985159216,
+    "view_count": 502433.0
+  },
+  {
+    "id": "kDEbDRdLi8E",
+    "title": "A more accurate and faster way to measure!",
+    "channel_id": "Make Something",
+    "performance_ratio": 0.226307617208795,
+    "view_count": 45874.0
+  },
+  {
+    "id": "JO_EHceV9sk",
+    "title": "Identify chemicals with radio frequencies - Nuclear Quadrupole Resonance (MRI without magnets)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 686857.0
+  },
+  {
+    "id": "5hUxCYixoE4",
+    "title": "What should I build with six ultracapacitors?",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.946730354407363,
+    "view_count": 300820.0
+  },
+  {
+    "id": "TvmM6qa2a90",
+    "title": "Caffeine extraction from green coffee with supercritical CO2",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.12395354341537,
+    "view_count": 357132.0
+  },
+  {
+    "id": "y8gUvbpE2O0",
+    "title": "Fun with applied science",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.658544400836848,
+    "view_count": 209250.0
+  },
+  {
+    "id": "K297toCvHtY",
+    "title": "Timelapse macro video of crystal growth",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.228474780729045,
+    "view_count": 72597.0
+  },
+  {
+    "id": "hAxi5YXTjEk",
+    "title": "Cryogenic treatment of drill bits: tested 2X lifetime and microstructure analysis",
+    "channel_id": "Applied Science",
+    "performance_ratio": 3.71983958296356,
+    "view_count": 1181965.0
+  },
+  {
+    "id": "ampB1laCWF4",
+    "title": "How This Telescope Searches For Aliens",
+    "channel_id": "Cleo Abram",
+    "performance_ratio": 0.102851019954462,
+    "view_count": 374498.0
+  },
+  {
+    "id": "iejdy4f58iI",
+    "title": "How to Super-Size the Eclipse - Sun Funnel",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.0629047400169719,
+    "view_count": 137503.0
+  },
+  {
+    "id": "SrNVLCHrJtY",
+    "title": "Giant glass diffusion pump and cathode ray tube demo",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.703895057066521,
+    "view_count": 223660.0
+  },
+  {
+    "id": "50AxjMV8-b0",
+    "title": "Cleaning a high-vacuum Penning gauge (cold cathode vacuum gauge)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.121575006950191,
+    "view_count": 38630.0
+  },
+  {
+    "id": "FBIzCp24Ix0",
+    "title": "Electron microscope animation: Carbon nanotubes pulled into thread",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.783751236884127,
+    "view_count": 249034.0
+  },
+  {
+    "id": "WuYdsStS1MQ",
+    "title": "Ultrasonic soldering bonds glass, titanium, stainless steel, ceramics, tungsten, nichrome...",
+    "channel_id": "Applied Science",
+    "performance_ratio": 2.42094139843126,
+    "view_count": 769245.0
+  },
+  {
+    "id": "qf5LFl7Lqqg",
+    "title": "First test run of 1000W Osram Xenon short arc lamp XBO",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.192027455968751,
+    "view_count": 61016.0
+  },
+  {
+    "id": "tfUkDCVqw1I",
+    "title": "First test with 4.8KJ xenon flash lamp (Speedotron 4803 strobe light)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.390040820899947,
+    "view_count": 123934.0
+  },
+  {
+    "id": "hF3V-GHiJ78",
+    "title": "DIY X-ray CT scanner controlled by an Arduino",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.11874813152058,
+    "view_count": 355478.0
+  },
+  {
+    "id": "st5WYJx-Esc",
+    "title": "Magnesium burning inside dry ice",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.575679530710042,
+    "view_count": 182920.0
+  },
+  {
+    "id": "vDsjHQPjMVI",
+    "title": "UV laser creates disappearing ink in normal printer paper",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.508150798529606,
+    "view_count": 161463.0
+  },
+  {
+    "id": "X0oQepbGVZw",
+    "title": "Water circulator with temperature control",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.095629773781737,
+    "view_count": 30386.0
+  },
+  {
+    "id": "bwD9Bvf8CEw",
+    "title": "First test with eBay x-ray tube",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.318134381376314,
+    "view_count": 101086.0
+  },
+  {
+    "id": "Ds-jtwXbLAk",
+    "title": "Making patterned mirrors and ITO glass with a thermal evaporator",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.367352904122729,
+    "view_count": 116725.0
+  },
+  {
+    "id": "L6HxTk9tfQk",
+    "title": "DIY Scanning Electron Microscope - Sources, Costs and References",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.284047430812567,
+    "view_count": 90255.0
+  },
+  {
+    "id": "5X0EKbpLuRc",
+    "title": "More info about sputtering: process parameters, chamber construction",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.352841323562353,
+    "view_count": 112114.0
+  },
+  {
+    "id": "eoRVEw5gL8c",
+    "title": "Viewing an active electronic circuit with a scanning electron microscope",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.65266162761411,
+    "view_count": 525127.0
+  },
+  {
+    "id": "nh1SIfipQs4",
+    "title": "Temperature-sensing RFID tag in magnetic stir bar",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 149196.0
+  },
+  {
+    "id": "xxSXkJFi8Fc",
+    "title": "Timelapse video of crystal growth in novelty toy",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.159800480271884,
+    "view_count": 50776.0
+  },
+  {
+    "id": "321tptQ8PrU",
+    "title": "Design and build a spin coater",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.485875160445385,
+    "view_count": 154385.0
+  },
+  {
+    "id": "UxAjlmaUNzs",
+    "title": "Supercritical CO2 extraction of cinnamon, coffee, and vanilla with dry ice",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.778986428172696,
+    "view_count": 247520.0
+  },
+  {
+    "id": "BpAVxB1s2g0",
+    "title": "Remote electronic focus for telescope (DIY remote follow focus)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.108542594219651,
+    "view_count": 34489.0
+  },
+  {
+    "id": "3oBCtTv6yOw",
+    "title": "What Really Happened at the Arecibo Telescope?",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 4.18568706431979,
+    "view_count": 9149462.0
+  },
+  {
+    "id": "_vTq8oGpqwM",
+    "title": "Glowing plasma created by a high speed jet of water",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.505979254268782,
+    "view_count": 160773.0
+  },
+  {
+    "id": "EVzn1pl4nlo",
+    "title": "The High Voltage Ejector Bed",
+    "channel_id": "colinfurze",
+    "performance_ratio": 2.66577225040142,
+    "view_count": 12159414.0
+  },
+  {
+    "id": "OoYn7FH3Z3U",
+    "title": "Yeast cells under the microscope",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.398638877306572,
+    "view_count": 126666.0
+  },
+  {
+    "id": "TZ0PhMgw_B0",
+    "title": "I X-rayed my Flight Computer",
+    "channel_id": "BPS.space",
+    "performance_ratio": 1.0,
+    "view_count": 143536.0
+  },
+  {
+    "id": "SWVu-qPR-Ws",
+    "title": "Electron microscope image capture with an oscilloscope",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.82989497884384,
+    "view_count": 263696.0
+  },
+  {
+    "id": "E55h2JCuCWk",
+    "title": "Cathode ray tube disassembly and explanation",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.746145755184727,
+    "view_count": 237085.0
+  },
+  {
+    "id": "FZeaAnguXCs",
+    "title": "Supercritical drying chamber for aerogel production",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.135630248499234,
+    "view_count": 43096.0
+  },
+  {
+    "id": "Xr1AiExSAnU",
+    "title": "Details in the process of making \"blacker than vantablack\" coatings (part 1?)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.32572777123306,
+    "view_count": 421245.0
+  },
+  {
+    "id": "1AUzyECf8Go",
+    "title": "Thermocouple vacuum gauge teardown and explanation",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.111645699496713,
+    "view_count": 35475.0
+  },
+  {
+    "id": "KdfHVcU8U7U",
+    "title": "Demo and teardown of an X-ray fluorescence gun (measures chemical composition)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.08975958922138,
+    "view_count": 346267.0
+  },
+  {
+    "id": "MUdro-6u2Zg",
+    "title": "Laser diode self-mixing: Range-finding and sub-micron vibration measurement",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.44984568798433,
+    "view_count": 460683.0
+  },
+  {
+    "id": "hHaLneXkec4",
+    "title": "Frequency response test for thermal imaging sensor",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0509431694926932,
+    "view_count": 16187.0
+  },
+  {
+    "id": "ruuxn2u3yao",
+    "title": "Electron microscope image capture via microcontroller (with drill bit animation)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.650950290255155,
+    "view_count": 206837.0
+  },
+  {
+    "id": "L4Xm5t3Y7Mc",
+    "title": "I Metal Detected for 10 Hours and Found THIS",
+    "channel_id": "Addie Bowley",
+    "performance_ratio": 0.0417984914954688,
+    "view_count": 286897.0
+  },
+  {
+    "id": "4UFKl9fULkA",
+    "title": "Engineering magnetics -- practical introduction to BH curve",
+    "channel_id": "Applied Science",
+    "performance_ratio": 3.30107143450883,
+    "view_count": 1048903.0
+  },
+  {
+    "id": "atVSxvbiPg0",
+    "title": "Intro to plasma cleaning",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.08873046607168,
+    "view_count": 345940.0
+  },
+  {
+    "id": "gnF3-UF0xwU",
+    "title": "Reverse-engineering and testing an x-ray filament supply",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.130638843864935,
+    "view_count": 41510.0
+  },
+  {
+    "id": "h8JJ-5QiU2Q",
+    "title": "Extracting Honey with a Centrifuge",
+    "channel_id": "Anne of All Trades",
+    "performance_ratio": 0.20241108989747,
+    "view_count": 30337.0
+  },
+  {
+    "id": "9KJLWwbs_cQ",
+    "title": "Dramatically improve microscope resolution with an LED array and Fourier Ptychography",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 243605.0
+  },
+  {
+    "id": "9nb8mM3uEIc",
+    "title": "How Digital Light Processing (DLP) works",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.52004951092086,
+    "view_count": 482990.0
+  },
+  {
+    "id": "m3oonk1wnHY",
+    "title": "Shooting an electron beam through air",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.27875317755616,
+    "view_count": 406319.0
+  },
+  {
+    "id": "XhU-nNiAgtI",
+    "title": "Control light with magnets and olive oil?! (Faraday effect)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.08915848059266,
+    "view_count": 346076.0
+  },
+  {
+    "id": "GFeE3gf_O1A",
+    "title": "WTF is Happening With Superconductors",
+    "channel_id": "Cleo Abram",
+    "performance_ratio": 0.470439232732819,
+    "view_count": 1712949.0
+  },
+  {
+    "id": "mUcUy7SqdS0",
+    "title": "Glass engineering - designing and making photochromic glass",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.59931087644093,
+    "view_count": 508175.0
+  },
+  {
+    "id": "VdjYVF4a6iU",
+    "title": "DIY Scanning Electron Microscope - Overview",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.87575790234062,
+    "view_count": 596015.0
+  },
+  {
+    "id": "7sRPUjcd2SA",
+    "title": "Attempting to make X-rays by unrolling Scotch tape (negative result)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0824242669434507,
+    "view_count": 26190.0
+  },
+  {
+    "id": "TvBtRDScKhM",
+    "title": "Extracting caffeine with methylene chloride",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.42243459637337,
+    "view_count": 134227.0
+  },
+  {
+    "id": "Cxj399LuX1M",
+    "title": "Unusual usage (hours) counter with mercury capillary",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.241198771231236,
+    "view_count": 76640.0
+  },
+  {
+    "id": "vKu5INImoDk",
+    "title": "Xbox Series S Air Purifier / Fume Extractor for Soldering",
+    "channel_id": "Scott Yu-Jan",
+    "performance_ratio": 0.202757400549697,
+    "view_count": 165092.0
+  },
+  {
+    "id": "TR0baWuB6v4",
+    "title": "How to Measure Flow with Magnets - (Magnetic Flow Meters)",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.243597980113141,
+    "view_count": 532479.0
+  },
+  {
+    "id": "I_DD2_7QkRk",
+    "title": "Distilling pure anhydrous ammonia",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.979879449623681,
+    "view_count": 311353.0
+  },
+  {
+    "id": "pOakH-QsPRM",
+    "title": "Use an oscilloscope to collect optical spectral data",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.17486596197705,
+    "view_count": 55563.0
+  },
+  {
+    "id": "zksVZCJajCI",
+    "title": "DIY Scanning Electron Microscope - Operation procedure",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.44426648410864,
+    "view_count": 141164.0
+  },
+  {
+    "id": "Wun-nTJqqFM",
+    "title": "Patterning aluminum with the photoresist \"lift-off\" method",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.151866475805888,
+    "view_count": 48255.0
+  },
+  {
+    "id": "Y_N3-Lnfn_A",
+    "title": "Supercritical CO2 caffeine extraction (negative result -- more work needed)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.126223370534592,
+    "view_count": 40107.0
+  },
+  {
+    "id": "84aKURxohlg",
+    "title": "How do EMI Filter Chokes Work?",
+    "channel_id": "Clough42",
+    "performance_ratio": 1.0363207923373,
+    "view_count": 80089.0
+  },
+  {
+    "id": "887Q-LWBW48",
+    "title": "What the Scanning Electron Microscope Reveals About This Failed Drill",
+    "channel_id": "Clough42",
+    "performance_ratio": 2.0713476232163,
+    "view_count": 160078.0
+  },
+  {
+    "id": "ta7nlkI5K5g",
+    "title": "Measure the mass of an eyelash with a DIY microbalance",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.440244406477722,
+    "view_count": 139886.0
+  },
+  {
+    "id": "8gFqzbnUO-Y",
+    "title": "Catalytic cigarette lighter",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.591110083624274,
+    "view_count": 187823.0
+  },
+  {
+    "id": "DQEEtYjnBE0",
+    "title": "Product Review: CP06 low-cost AC/DC clamp-on current probe",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0831386735336058,
+    "view_count": 26417.0
+  },
+  {
+    "id": "VOsJHnG_KfU",
+    "title": "Technical Illustration of Desktop Watt Balance",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.0193417562029741,
+    "view_count": 42279.0
+  },
+  {
+    "id": "UTquUbvzJII",
+    "title": "Control light with heat and magnets (Magneto-optical Kerr effect)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.252981759220402,
+    "view_count": 80384.0
+  },
+  {
+    "id": "X4wjRwevNCs",
+    "title": "eBay Find: A Cartridge Style Electronic Gage Head",
+    "channel_id": "Clough42",
+    "performance_ratio": 0.52382147754871,
+    "view_count": 40482.0
+  },
+  {
+    "id": "2Pp2CefdXVw",
+    "title": "Color-changing Zinc Oxide -- and submit your questions for Ben",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.160942901383014,
+    "view_count": 51139.0
+  },
+  {
+    "id": "3OgsqhxwGmo",
+    "title": "Electron beam control in a scanning electron microscope",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.266300564020123,
+    "view_count": 84616.0
+  },
+  {
+    "id": "oWshuHqTv_M",
+    "title": "How To Make A Flux Capacitor",
+    "channel_id": "The Smugglers Room",
+    "performance_ratio": 1.0,
+    "view_count": 15105.0
+  },
+  {
+    "id": "ccE8e-cyouI",
+    "title": "Trying to visualize beta particles in supercritical CO2 (still no success)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0497346579040608,
+    "view_count": 15803.0
+  },
+  {
+    "id": "eGj4jfYhDxA",
+    "title": "Multi-layer reactive foil: no fuel, no oxygen, tons of heat",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.0,
+    "view_count": 229573.0
+  },
+  {
+    "id": "g2O8RSpAGEM",
+    "title": "Measuring the voltage, current, and light output of a strobe flash lamp (Speedotron 4803)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0608882127741482,
+    "view_count": 19347.0
+  },
+  {
+    "id": "nIKhUizkXxA",
+    "title": "DIY mass spectrometer measures potassium in dietary salt substitute",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.23865199353961,
+    "view_count": 393577.0
+  },
+  {
+    "id": "sG7G3LN_SN8",
+    "title": "DIY Scanning Electron Microscope - Tektronix contest entry",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.0846524601849918,
+    "view_count": 26898.0
+  },
+  {
+    "id": "r7NEI_C9Yh0",
+    "title": "How a Crookes radiometer works",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.823770594595197,
+    "view_count": 261750.0
+  },
+  {
+    "id": "vvzWaVvB908",
+    "title": "MEMs oscillator sensitivity to helium (helium kills iPhones)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.38476545063712,
+    "view_count": 440004.0
+  },
+  {
+    "id": "Y4CYzoxvq6I",
+    "title": "Detectron DG-2 geiger counter teardown and testing",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.078956090457323,
+    "view_count": 25088.0
+  },
+  {
+    "id": "I2k2g00onL0",
+    "title": "Measuring the voltage and current of a microwave oven magnetron",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.181670133994299,
+    "view_count": 57725.0
+  },
+  {
+    "id": "70znrkiHfpA",
+    "title": "Effect of long-term high pressure CO2 on acrylic",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.524377584339473,
+    "view_count": 166619.0
+  },
+  {
+    "id": "ZUkEmTvzl2E",
+    "title": "SUNLU Filament Dryer S4 vs S2 vs Food Dehydrator",
+    "channel_id": "Geek Detour",
+    "performance_ratio": 1.0,
+    "view_count": 151096.0
+  },
+  {
+    "id": "_q2TIU_PfYg",
+    "title": "Liquid level sensor and controller (auto top-off for aquarium)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.213768075901754,
+    "view_count": 67924.0
+  },
+  {
+    "id": "ewQkE8t0xgQ",
+    "title": "Redefining the Kilogram with the DIY Watt Balance",
+    "channel_id": "Practical Engineering",
+    "performance_ratio": 0.11002050603188,
+    "view_count": 240493.0
+  },
+  {
+    "id": "FYgIuc-VqHE",
+    "title": "Clear flexible printed circuits - first success",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.868101569171961,
+    "view_count": 275836.0
+  },
+  {
+    "id": "DskhvlhwW4c",
+    "title": "Apparently, I Can't Solder | Andonstar AD407 Microscope Review",
+    "channel_id": "Clough42",
+    "performance_ratio": 1.28826802788275,
+    "view_count": 99560.0
+  },
+  {
+    "id": "ZBHIp967TD8",
+    "title": "Alpha radiation makes sparks, detects smoke, and eliminates static cling",
+    "channel_id": "Applied Science",
+    "performance_ratio": 3.51538711722418,
+    "view_count": 1117001.0
+  },
+  {
+    "id": "sLFaa6RPJIU",
+    "title": "Making YBCO superconductor",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.98505581630316,
+    "view_count": 630744.0
+  },
+  {
+    "id": "JV4Fk3VNZqs",
+    "title": "Candle flame is repelled by magnets (and Zeeman follow-up)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.89028279228832,
+    "view_count": 282884.0
+  },
+  {
+    "id": "mT1FStxAVz4",
+    "title": "Decapping ICs (removing epoxy packaging from chips to expose the dies)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 3.61609956344249,
+    "view_count": 1149002.0
+  },
+  {
+    "id": "H7ldYhzKAp4",
+    "title": "DIY X-ray backscatter imaging system (airport body scanner)",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.43289577481247,
+    "view_count": 137551.0
+  },
+  {
+    "id": "OzkcB1lkgGU",
+    "title": "Zeeman Effect - Control light with magnetic fields",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.877272409716948,
+    "view_count": 278750.0
+  },
+  {
+    "id": "j-FHbHoiwNk",
+    "title": "X-ray timelapse of fluid movement in plants, stop-motion animation, sensor teardown/repair",
+    "channel_id": "Applied Science",
+    "performance_ratio": 1.43149456539757,
+    "view_count": 454852.0
+  },
+  {
+    "id": "GuCdsyCWmt8",
+    "title": "Electron microscope slow-motion video of vinyl LP",
+    "channel_id": "Applied Science",
+    "performance_ratio": 20.3159767471069,
+    "view_count": 6455325.0
+  },
+  {
+    "id": "-gCTKteN5Y4",
+    "title": "A close look at supercritical carbon dioxide CO2",
+    "channel_id": "Applied Science",
+    "performance_ratio": 3.7843564776692,
+    "view_count": 1202465.0
+  },
+  {
+    "id": "BfdwD1V3jNk",
+    "title": "How a Mass Flow Controller works",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.31509421941116,
+    "view_count": 100120.0
+  },
+  {
+    "id": "Eej6kG4NyFw",
+    "title": "Dissolving lithium in anhydrous ammonia",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.241648815911377,
+    "view_count": 76783.0
+  },
+  {
+    "id": "QLvzvwQFKfI",
+    "title": "Follow-up: Attempting to make X-rays by unrolling Scotch tape -- Success?",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.164470874015454,
+    "view_count": 52260.0
+  },
+  {
+    "id": "KAm7qAKAXwI",
+    "title": "How anti-theft tags work - magnetostriction",
+    "channel_id": "Applied Science",
+    "performance_ratio": 2.71713374127647,
+    "view_count": 863359.0
+  },
+  {
+    "id": "YLaJhSAAgrk",
+    "title": "Creating aerogel with supercritical methanol",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.203158980679671,
+    "view_count": 64553.0
+  },
+  {
+    "id": "szMuc8op7uk",
+    "title": "Extech IR250 infrared thermometer disassembly and plans for thermal imaging",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.206227467135183,
+    "view_count": 65528.0
+  },
+  {
+    "id": "jjveSNKIxyA",
+    "title": "Effect of acetone vapor on thermal printer paper",
+    "channel_id": "Applied Science",
+    "performance_ratio": 0.392693881496867,
+    "view_count": 124777.0
+  },
+  {
+    "id": "at-QdYCw1eY",
+    "title": "ComMarker B6 20w - Initial Testing",
+    "channel_id": "Vintauri",
+    "performance_ratio": 1.0,
+    "view_count": 1786.0
+  },
+  {
+    "id": "KN-8URF4DtA",
+    "title": "New Extreme Images of the Sun\u2019s South Pole",
+    "channel_id": "UC415bOPUcGSamy543abLmRA",
+    "performance_ratio": 1.0,
+    "view_count": 0.0
+  }
+]

@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
             categoryId: video.snippet.categoryId || '',
             competitor_import: true,
             youtube_channel_id: video.snippet.channelId, // Store actual YouTube channel ID here
+            channel_title: video.snippet.channelTitle, // Add channel_title for semantic search compatibility
             import_settings: {
               time_period: timePeriod,
               max_videos: maxVideos,
@@ -238,6 +239,27 @@ export async function POST(request: NextRequest) {
         throw insertError;
       }
 
+      // Trigger vectorization for newly imported videos
+      try {
+        const videoIds = insertedVideos?.map(v => v.id) || [];
+        if (videoIds.length > 0) {
+          await fetch(`${request.nextUrl.origin}/api/embeddings/titles/batch`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              video_ids: videoIds,
+              force_re_embed: false
+            })
+          });
+          console.log(`🔄 Triggered vectorization for ${videoIds.length} competitor videos`);
+        }
+      } catch (vectorizationError) {
+        console.warn('Vectorization failed for competitor import:', vectorizationError);
+        // Don't fail the whole import if vectorization fails
+      }
+
       return NextResponse.json({
         success: true,
         channel: {
@@ -255,8 +277,9 @@ export async function POST(request: NextRequest) {
 
     } catch (apiError) {
       console.error('YouTube API error:', apiError);
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
       return NextResponse.json(
-        { error: `Failed to fetch channel data: ${apiError.message}` },
+        { error: `Failed to fetch channel data: ${errorMessage}` },
         { status: 400 }
       );
     }

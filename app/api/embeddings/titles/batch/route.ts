@@ -34,21 +34,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🚀 Starting batch embedding process...');
+    console.log('🚀 EMBEDDING BATCH STARTED');
     
     let videosToProcess;
     
     if (video_ids && video_ids.length > 0) {
-      // Process specific videos
-      console.log(`📋 Processing specific videos: ${video_ids.length} videos`);
       videosToProcess = await supabasePineconeSync.getVideoMetadataForPinecone(video_ids);
+      console.log(`📋 Processing ${video_ids.length} specific videos`);
     } else {
-      // Process unsynced videos
-      console.log(`📋 Processing unsynced videos (limit: ${limit})`);
       videosToProcess = await supabasePineconeSync.getUnsyncedVideos(limit);
+      console.log(`📋 Processing next ${limit} unembedded videos`);
     }
 
     if (!videosToProcess || videosToProcess.length === 0) {
+      console.log('✅ No videos to process - all videos already embedded');
       return NextResponse.json({
         processed: 0,
         successful: 0,
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log(`🔄 Processing ${videosToProcess.length} videos`);
+    console.log(`⚡ PROCESSING ${videosToProcess.length} videos...`);
 
     // Convert to the format expected by batchSyncVideosToPinecone
     const videoData = videosToProcess.map(video => ({
@@ -71,8 +70,8 @@ export async function POST(request: NextRequest) {
       performance_ratio: video.performance_ratio || 1.0,
     }));
 
-    // Process embeddings
-    const results = await batchSyncVideosToPinecone(videoData, apiKey, 10);
+    // Process embeddings with larger batch size for speed
+    const results = await batchSyncVideosToPinecone(videoData, apiKey, 50);
 
     // Update Supabase with sync status
     const successfulVideos = results.filter(r => r.success).map(r => r.id);
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
       batch_id: `batch_${Date.now()}`,
     };
 
-    console.log(`✅ Batch embedding completed: ${response.successful}/${response.processed} successful`);
+    console.log(`🎯 EMBEDDING BATCH COMPLETE: ${response.successful}/${response.processed} videos successfully embedded`);
 
     return NextResponse.json(response);
   } catch (error) {

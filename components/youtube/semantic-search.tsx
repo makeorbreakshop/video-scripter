@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Target, Clock, AlertCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,15 +11,21 @@ import { SearchResultCard } from './search-result-card';
 
 export function SemanticSearch() {
   const [inputValue, setInputValue] = useState('');
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  
   const {
     query,
     setQuery,
     results,
     loading,
+    loadingMore,
     error,
     queryTime,
     totalResults,
+    hasMore,
+    totalAvailable,
     clearSearch,
+    loadMoreResults,
   } = useSemanticSearch({
     debounceMs: 500,
     minScore: 0.1,
@@ -35,6 +41,34 @@ export function SemanticSearch() {
     setInputValue('');
     clearSearch();
   };
+
+  // Intersection Observer for infinite scroll
+  const handleIntersection = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
+        console.log('🔄 Loading more results...');
+        loadMoreResults();
+      }
+    },
+    [hasMore, loadingMore, loading, loadMoreResults]
+  );
+
+  useEffect(() => {
+    const trigger = loadMoreTriggerRef.current;
+    if (!trigger) return;
+
+    const observer = new IntersectionObserver(handleIntersection, {
+      threshold: 0.1,
+      rootMargin: '100px',
+    });
+
+    observer.observe(trigger);
+
+    return () => {
+      observer.unobserve(trigger);
+    };
+  }, [handleIntersection]);
 
   return (
     <div className="space-y-6">
@@ -77,16 +111,21 @@ export function SemanticSearch() {
           {/* Search Stats */}
           {(query || results.length > 0) && (
             <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-              {totalResults > 0 && (
+              {results.length > 0 && (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Target className="h-3 w-3" />
-                  {totalResults} results
+                  {results.length}{totalAvailable > results.length && ` of ${totalAvailable}`} results
                 </Badge>
               )}
               {queryTime && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {queryTime}ms
+                </Badge>
+              )}
+              {hasMore && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  Scroll for more
                 </Badge>
               )}
               {query && (
@@ -135,6 +174,31 @@ export function SemanticSearch() {
               <SearchResultCard key={result.video_id} result={result} />
             ))}
           </div>
+          
+          {/* Infinite Scroll Trigger */}
+          {hasMore && (
+            <div ref={loadMoreTriggerRef} className="flex justify-center py-8">
+              {loadingMore ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading more results...</span>
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <div className="text-sm">Scroll down to load more results</div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* No More Results Indicator */}
+          {!hasMore && results.length > 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <div className="text-sm">
+                Showing all {totalAvailable} results
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -41,7 +41,10 @@ import {
   Pause,
   RefreshCw,
   FileText,
-  Key
+  Key,
+  Rss,
+  MonitorSpeaker,
+  Zap
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { isAuthenticated, initiateOAuthFlow, getValidAccessToken, getTokens } from '@/lib/youtube-oauth';
@@ -72,6 +75,37 @@ interface BaselineProgress {
   estimatedTimeRemaining: string;
 }
 
+interface DailyUpdateProgress {
+  phase: 'discovery' | 'backfill' | 'rss' | 'complete';
+  phaseNumber: number;
+  totalPhases: number;
+  overallProgress: number;
+  phaseProgress: number;
+  currentOperation: string;
+  startTime: number;
+  estimatedTimeRemaining?: string;
+  results: {
+    discovery: {
+      newVideos: number;
+      status: 'pending' | 'running' | 'complete' | 'error';
+      error?: string;
+    };
+    backfill: {
+      daysProcessed: number;
+      totalDays: number;
+      status: 'pending' | 'running' | 'complete' | 'error';
+      error?: string;
+    };
+    rss: {
+      channelsProcessed: number;
+      totalChannels: number;
+      newVideos: number;
+      status: 'pending' | 'running' | 'complete' | 'error';
+      error?: string;
+    };
+  };
+}
+
 export function YouTubeToolsTab() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -96,8 +130,26 @@ export function YouTubeToolsTab() {
     estimatedTimeRemaining: ''
   });
   const [validationResults, setValidationResults] = useState<any>(null);
+  
+  // Authentication state management to prevent hydration errors
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  const [dailyUpdateProgress, setDailyUpdateProgress] = useState<DailyUpdateProgress | null>(null);
+  const [dailyUpdateOperationId, setDailyUpdateOperationId] = useState<string | null>(null);
+  const [isDailyUpdateRunning, setIsDailyUpdateRunning] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isDownloadingCsv, setIsDownloadingCsv] = useState(false);
+  const [dailyMonitorProgress, setDailyMonitorProgress] = useState({
+    isRunning: false,
+    results: null as any,
+    error: null as string | null
+  });
+  const [videoDiscoveryProgress, setVideoDiscoveryProgress] = useState({
+    isRunning: false,
+    results: null as any,
+    error: null as string | null
+  });
   const [isBaselineRunning, setIsBaselineRunning] = useState(false);
   const [baselineProgress, setBaselineProgress] = useState<BaselineProgress>({
     isRunning: false,
@@ -116,6 +168,28 @@ export function YouTubeToolsTab() {
 
   // Use unified progress tracking
   const { progress: unifiedProgress, startPolling, stopPolling } = useAnalyticsProgress(currentOperationId, isBackfillRunning);
+
+  // Handle authentication state on client side only to prevent hydration errors
+  React.useEffect(() => {
+    setIsClient(true);
+    setIsUserAuthenticated(isAuthenticated());
+  }, []);
+
+  // Update authentication state after OAuth
+  React.useEffect(() => {
+    if (!isClient) return;
+    
+    const updateAuthState = () => {
+      setIsUserAuthenticated(isAuthenticated());
+    };
+    
+    // Listen for storage changes (when OAuth completes in another tab)
+    window.addEventListener('storage', updateAuthState);
+    
+    return () => {
+      window.removeEventListener('storage', updateAuthState);
+    };
+  }, [isClient]);
 
   /**
    * Fetch video count for quota calculations
@@ -161,7 +235,7 @@ export function YouTubeToolsTab() {
    */
   const handleStartBackfill = async () => {
     // Check if user is authenticated first
-    if (!isAuthenticated()) {
+    if (!isUserAuthenticated) {
       toast({
         title: 'Authentication required',
         description: 'Please authenticate with YouTube first using the "Authenticate" button.',
@@ -368,11 +442,126 @@ export function YouTubeToolsTab() {
   };
 
   /**
+   * Run daily channel monitor
+   */
+  const handleVideoDiscovery = async () => {
+    setVideoDiscoveryProgress({ isRunning: true, results: null, error: null });
+    
+    try {
+      // Get access token for authenticated requests
+      const accessToken = await getValidAccessToken();
+      if (!accessToken) {
+        throw new Error('Not authenticated with YouTube. Please re-authenticate.');
+      }
+
+      const response = await fetch('/api/youtube/discover-new-videos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: accessToken,
+          maxResults: 50
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          throw new Error('YouTube authentication expired. Please re-authenticate in YouTube Tools.');
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+      
+      setVideoDiscoveryProgress({
+        isRunning: false,
+        results: results,
+        error: null
+      });
+
+      if (results.imported > 0) {
+        toast({
+          title: "Video Discovery Complete",
+          description: `Successfully imported ${results.imported} new videos with automatic vectorization.`,
+        });
+      } else {
+        toast({
+          title: "No New Videos",
+          description: "No new videos found on your channel.",
+        });
+      }
+
+    } catch (error) {
+      console.error('Video discovery error:', error);
+      setVideoDiscoveryProgress({
+        isRunning: false,
+        results: null,
+        error: error instanceof Error ? error.message : 'Failed to discover videos'
+      });
+      
+      toast({
+        title: "Discovery Failed",
+        description: error instanceof Error ? error.message : 'Failed to discover videos',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDailyMonitor = async () => {
+    setDailyMonitorProgress({ isRunning: true, results: null, error: null });
+    
+    try {
+      const response = await fetch('/api/youtube/daily-monitor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: '00000000-0000-0000-0000-000000000000' // Default user ID for existing data
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+      
+      setDailyMonitorProgress({
+        isRunning: false,
+        results,
+        error: null
+      });
+
+      toast({
+        title: "Daily Monitor Complete",
+        description: `Found ${results.newVideosImported} new videos across ${results.channelsProcessed} channels`,
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setDailyMonitorProgress({
+        isRunning: false,
+        results: null,
+        error: errorMessage
+      });
+
+      toast({
+        title: "Daily Monitor Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  /**
    * Run data validation
    */
   const handleValidateData = async () => {
     // Check if user is authenticated first
-    if (!isAuthenticated()) {
+    if (!isUserAuthenticated) {
       toast({
         title: 'Authentication required',
         description: 'Please authenticate with YouTube first using the "Authenticate" button.',
@@ -429,7 +618,7 @@ export function YouTubeToolsTab() {
    */
   const handleStartBaseline = async (testMode = false) => {
     // Check if user is authenticated first
-    if (!isAuthenticated()) {
+    if (!isUserAuthenticated) {
       toast({
         title: 'Authentication required',
         description: 'Please authenticate with YouTube first using the "Authenticate" button.',
@@ -599,7 +788,7 @@ export function YouTubeToolsTab() {
    */
   const handleTestConnections = async () => {
     // Check if user is authenticated first
-    if (!isAuthenticated()) {
+    if (!isUserAuthenticated) {
       toast({
         title: 'Authentication required',
         description: 'Please authenticate with YouTube first using the "Authenticate" button.',
@@ -696,6 +885,116 @@ export function YouTubeToolsTab() {
     }
   }, [gapAnalysis, startDate, endDate]);
 
+  /**
+   * Run unified daily update all processes
+   */
+  const handleDailyUpdateAll = async () => {
+    setIsDailyUpdateRunning(true);
+    setDailyUpdateProgress(null);
+    setDailyUpdateOperationId(null);
+    
+    try {
+      // Get access token for authenticated requests
+      const accessToken = await getValidAccessToken();
+      if (!accessToken) {
+        throw new Error('Not authenticated with YouTube. Please re-authenticate.');
+      }
+
+      const response = await fetch('/api/youtube/daily-update-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: accessToken
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          throw new Error('YouTube authentication expired. Please re-authenticate in YouTube Tools.');
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const results = await response.json();
+      
+      if (results.success && results.operationId) {
+        setDailyUpdateOperationId(results.operationId);
+        startDailyUpdatePolling(results.operationId);
+        
+        toast({
+          title: "Daily Update Started",
+          description: `Processing all daily updates with operation ID: ${results.operationId.slice(0, 8)}...`,
+        });
+      } else {
+        throw new Error('Failed to get operation ID from daily update response');
+      }
+
+    } catch (error) {
+      console.error('Daily update error:', error);
+      setIsDailyUpdateRunning(false);
+      setDailyUpdateProgress(null);
+      
+      toast({
+        title: "Daily Update Failed",
+        description: error instanceof Error ? error.message : 'Failed to start daily update',
+        variant: "destructive",
+      });
+    }
+  };
+
+  /**
+   * Start polling for daily update progress
+   */
+  const startDailyUpdatePolling = (operationId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/youtube/daily-update-all?operationId=${operationId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch progress');
+        }
+
+        const progress = await response.json();
+        setDailyUpdateProgress(progress);
+
+        // Stop polling when complete or if there's an error
+        if (progress.phase === 'complete' || 
+            progress.results.discovery.status === 'error' ||
+            progress.results.backfill.status === 'error' ||
+            progress.results.rss.status === 'error') {
+          
+          clearInterval(pollInterval);
+          setIsDailyUpdateRunning(false);
+          
+          if (progress.phase === 'complete') {
+            toast({
+              title: "Daily Update Complete",
+              description: `Successfully processed all phases: ${progress.results.discovery.newVideos} videos discovered, ${progress.results.backfill.daysProcessed} days analyzed, ${progress.results.rss.newVideos} competitor videos imported.`,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Progress polling error:', error);
+        clearInterval(pollInterval);
+        setIsDailyUpdateRunning(false);
+        toast({
+          title: "Progress Update Failed",
+          description: "Lost connection to progress updates",
+          variant: "destructive",
+        });
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Clear interval after 30 minutes to prevent infinite polling
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      setIsDailyUpdateRunning(false);
+    }, 30 * 60 * 1000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Connection Test */}
@@ -719,16 +1018,16 @@ export function YouTubeToolsTab() {
             <div className="flex gap-2">
               <Button 
                 onClick={handleAuthenticate}
-                disabled={isTestingConnection}
-                variant={isAuthenticated() ? "outline" : "default"}
+                disabled={isTestingConnection || !isClient}
+                variant={isUserAuthenticated ? "outline" : "default"}
                 className="w-auto"
               >
                 <Key className="h-4 w-4 mr-2" />
-                {isAuthenticated() ? 'Re-authenticate' : 'Authenticate'}
+                {isUserAuthenticated ? 'Re-authenticate' : 'Authenticate'}
               </Button>
               <Button 
                 onClick={handleTestConnections}
-                disabled={!isAuthenticated() || isTestingConnection}
+                disabled={!isUserAuthenticated || isTestingConnection}
                 className="w-auto"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isTestingConnection ? 'animate-spin' : ''}`} />
@@ -1457,6 +1756,105 @@ export function YouTubeToolsTab() {
         </CardContent>
       </Card>
 
+      {/* Daily Channel Monitor */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Rss className="h-5 w-5" />
+            Daily Channel Monitor
+          </CardTitle>
+          <CardDescription>
+            Monitor all channels for new videos using RSS feeds. Saves 90%+ API quota compared to polling YouTube Data API.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!dailyMonitorProgress.isRunning ? (
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <MonitorSpeaker className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">RSS Feed Monitoring</span>
+                  </div>
+                  <Badge variant="secondary">Free • No API Quota</Badge>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  • Checks RSS feeds for all channels in your database<br/>
+                  • Automatically imports new videos found<br/>
+                  • Generates vector embeddings for semantic search<br/>
+                  • Processes channels in batches for optimal performance
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleDailyMonitor}
+                className="w-full"
+                disabled={dailyMonitorProgress.isRunning}
+              >
+                <Rss className="h-4 w-4 mr-2" />
+                Check for New Videos
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span className="text-sm font-medium">Monitoring channels...</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Checking RSS feeds and importing new videos. This may take a few minutes.
+              </div>
+            </div>
+          )}
+
+          {dailyMonitorProgress.results && (
+            <div className="space-y-3 p-4 bg-muted rounded-lg">
+              <h4 className="font-medium flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                Monitor Results
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Channels Checked:</span>
+                  <div className="font-medium">{dailyMonitorProgress.results.channelsProcessed}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">New Videos:</span>
+                  <div className="font-medium text-green-600">{dailyMonitorProgress.results.newVideosImported}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Success Rate:</span>
+                  <div className="font-medium">{dailyMonitorProgress.results.summary?.success_rate || 100}%</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Total Videos Found:</span>
+                  <div className="font-medium">{dailyMonitorProgress.results.totalVideosFound}</div>
+                </div>
+              </div>
+              
+              {dailyMonitorProgress.results.errors && dailyMonitorProgress.results.errors.length > 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {dailyMonitorProgress.results.errors.length} errors occurred. Latest: {dailyMonitorProgress.results.errors[0]}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          {dailyMonitorProgress.error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {dailyMonitorProgress.error}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -1518,6 +1916,273 @@ export function YouTubeToolsTab() {
               Quota Monitor
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* My Channel Video Discovery */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            My Channel Video Discovery
+          </CardTitle>
+          <CardDescription>
+            Discover and import new videos from your channel. Essential for ensuring your latest videos appear in packaging analysis.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!videoDiscoveryProgress.isRunning ? (
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Play className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Channel Video Import</span>
+                  </div>
+                  <Badge variant="secondary">Owner Videos Only</Badge>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  • Discovers new videos from your authenticated channel<br/>
+                  • Imports complete video metadata and statistics<br/>
+                  • Automatically generates vector embeddings for search<br/>
+                  • Required before analytics import for new videos
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleVideoDiscovery}
+                className="w-full"
+                disabled={videoDiscoveryProgress.isRunning}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Discover My New Videos
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span className="text-sm font-medium">Discovering new videos...</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Searching for new videos on your channel and importing them with metadata.
+              </div>
+            </div>
+          )}
+
+          {videoDiscoveryProgress.results && (
+            <div className="space-y-3 p-4 bg-muted rounded-lg">
+              <h4 className="font-medium flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                Discovery Results
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Videos Found:</span>
+                  <div className="font-medium">{videoDiscoveryProgress.results.newVideos}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Imported:</span>
+                  <div className="font-medium text-green-600">{videoDiscoveryProgress.results.imported}</div>
+                </div>
+              </div>
+              
+              {videoDiscoveryProgress.results.videos && videoDiscoveryProgress.results.videos.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-sm font-medium">New Videos:</span>
+                  {videoDiscoveryProgress.results.videos.map((video: any) => (
+                    <div key={video.id} className="text-xs p-2 bg-background rounded border">
+                      <div className="font-medium">{video.title}</div>
+                      <div className="text-muted-foreground">Published: {new Date(video.published_at).toLocaleDateString()}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {videoDiscoveryProgress.error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {videoDiscoveryProgress.error}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Daily Update All Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-blue-600" />
+            Daily Update All
+          </CardTitle>
+          <CardDescription>
+            Run all daily updates in one unified process: channel discovery, recent analytics backfill (last 7 days), and competitor RSS monitoring.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Unified Daily Process</div>
+              <div className="text-xs text-muted-foreground">
+                3 phases • Recent data only • Smart duplicate detection
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              Recent Only
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="space-y-1">
+              <div className="font-medium">Phase 1</div>
+              <div className="text-muted-foreground">Channel Discovery</div>
+            </div>
+            <div className="space-y-1">
+              <div className="font-medium">Phase 2</div>
+              <div className="text-muted-foreground">Recent Analytics</div>
+            </div>
+            <div className="space-y-1">
+              <div className="font-medium">Phase 3</div>
+              <div className="text-muted-foreground">RSS Monitoring</div>
+            </div>
+          </div>
+
+          <Button 
+            onClick={handleDailyUpdateAll}
+            disabled={isDailyUpdateRunning || !isUserAuthenticated}
+            className="w-full"
+          >
+            {isDailyUpdateRunning ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Running Daily Update...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Run Daily Update All
+              </>
+            )}
+          </Button>
+
+          {!isUserAuthenticated && (
+            <Alert>
+              <Key className="h-4 w-4" />
+              <AlertDescription>
+                YouTube authentication required. Please authenticate first.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {dailyUpdateProgress && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Overall Progress</span>
+                  <span>{dailyUpdateProgress.overallProgress}%</span>
+                </div>
+                <Progress value={dailyUpdateProgress.overallProgress} className="h-2" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Phase {dailyUpdateProgress.phaseNumber} of {dailyUpdateProgress.totalPhases}</span>
+                  <span>{dailyUpdateProgress.phaseProgress}%</span>
+                </div>
+                <Progress value={dailyUpdateProgress.phaseProgress} className="h-1" />
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                {dailyUpdateProgress.currentOperation}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="space-y-1">
+                  <div className="font-medium flex items-center gap-2">
+                    Discovery
+                    {dailyUpdateProgress.results.discovery.status === 'complete' && (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    )}
+                    {dailyUpdateProgress.results.discovery.status === 'running' && (
+                      <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                    )}
+                    {dailyUpdateProgress.results.discovery.status === 'error' && (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {dailyUpdateProgress.results.discovery.newVideos} new videos
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-medium flex items-center gap-2">
+                    Analytics
+                    {dailyUpdateProgress.results.backfill.status === 'complete' && (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    )}
+                    {dailyUpdateProgress.results.backfill.status === 'running' && (
+                      <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                    )}
+                    {dailyUpdateProgress.results.backfill.status === 'error' && (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {dailyUpdateProgress.results.backfill.daysProcessed} / {dailyUpdateProgress.results.backfill.totalDays} days
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-medium flex items-center gap-2">
+                    RSS
+                    {dailyUpdateProgress.results.rss.status === 'complete' && (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    )}
+                    {dailyUpdateProgress.results.rss.status === 'running' && (
+                      <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                    )}
+                    {dailyUpdateProgress.results.rss.status === 'error' && (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {dailyUpdateProgress.results.rss.newVideos} new videos
+                  </div>
+                </div>
+              </div>
+
+              {dailyUpdateProgress.phase === 'complete' && (
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-green-900 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Daily Update Complete
+                  </h4>
+                  <div className="mt-2 text-sm text-green-800">
+                    <div>✓ {dailyUpdateProgress.results.discovery.newVideos} new videos discovered</div>
+                    <div>✓ {dailyUpdateProgress.results.backfill.daysProcessed} days of analytics processed</div>
+                    <div>✓ {dailyUpdateProgress.results.rss.newVideos} competitor videos imported</div>
+                  </div>
+                </div>
+              )}
+
+              {(dailyUpdateProgress.results.discovery.error || 
+                dailyUpdateProgress.results.backfill.error || 
+                dailyUpdateProgress.results.rss.error) && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {dailyUpdateProgress.results.discovery.error || 
+                     dailyUpdateProgress.results.backfill.error || 
+                     dailyUpdateProgress.results.rss.error}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

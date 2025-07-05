@@ -66,7 +66,6 @@ export async function batchGenerateTitleEmbeddings(
   }
 
   try {
-    console.log(`🧠 Generating embeddings for ${titles.length} titles`);
     
     // Generate embeddings using existing batch function
     const embeddings = await batchCreateEmbeddings(
@@ -81,7 +80,6 @@ export async function batchGenerateTitleEmbeddings(
       embedding.slice(0, 512)
     );
     
-    console.log(`✅ Generated ${truncatedEmbeddings.length} title embeddings`);
     return truncatedEmbeddings;
   } catch (error) {
     console.error('❌ Failed to generate batch title embeddings:', error);
@@ -102,7 +100,6 @@ export async function syncVideoToPinecone(
       throw new Error('Video data missing required id field');
     }
     
-    console.log(`🔄 Syncing video ${videoData.id} to Pinecone`);
     
     // Generate embedding for the title
     const embedding = await generateTitleEmbedding(videoData.title, apiKey);
@@ -125,24 +122,10 @@ export async function syncVideoToPinecone(
       },
     };
     
-    console.log('🔍 Debug video data:', JSON.stringify({
-      videoDataId: videoData.id,
-      videoDataKeys: Object.keys(videoData),
-      hasId: 'id' in videoData,
-      videoData: videoData
-    }, null, 2));
-    
-    console.log('🔍 Debug vector structure:', {
-      id: vector.id,
-      valuesLength: vector.values.length,
-      metadataId: vector.metadata.id,
-      hasRequiredFields: !!(vector.id && vector.values && vector.metadata)
-    });
     
     // Upsert to Pinecone
     await pineconeService.upsertEmbeddings([vector]);
     
-    console.log(`✅ Successfully synced video ${videoData.id}`);
     return {
       id: videoData.id,
       success: true,
@@ -163,7 +146,7 @@ export async function syncVideoToPinecone(
 export async function batchSyncVideosToPinecone(
   videos: VideoData[],
   apiKey: string,
-  batchSize: number = 10
+  batchSize: number = 50
 ): Promise<EmbeddingResult[]> {
   if (!videos || videos.length === 0) {
     return [];
@@ -178,7 +161,9 @@ export async function batchSyncVideosToPinecone(
     const batch = videos.slice(i, i + batchSize);
     
     try {
-      console.log(`⏳ Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(videos.length / batchSize)}`);
+      const batchNum = Math.floor(i / batchSize) + 1;
+      const totalBatches = Math.ceil(videos.length / batchSize);
+      console.log(`📦 Batch ${batchNum}/${totalBatches}: Processing videos ${i + 1}-${Math.min(i + batchSize, videos.length)}`);
       
       // Generate embeddings for batch
       const titles = batch.map(video => video.title);
@@ -210,14 +195,14 @@ export async function batchSyncVideosToPinecone(
         });
       });
       
-      console.log(`✅ Successfully processed batch ${Math.floor(i / batchSize) + 1}`);
+      console.log(`✅ Batch ${batchNum}/${totalBatches}: Completed successfully`);
       
-      // Add delay between batches to avoid rate limits
+      // Brief delay between batches
       if (i + batchSize < videos.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     } catch (error) {
-      console.error(`❌ Failed to process batch ${Math.floor(i / batchSize) + 1}:`, error);
+      console.error(`❌ Batch ${Math.floor(i / batchSize) + 1}: Failed -`, error.message || error);
       
       // Mark all videos in this batch as failed
       batch.forEach(video => {
@@ -233,7 +218,7 @@ export async function batchSyncVideosToPinecone(
   const successCount = results.filter(r => r.success).length;
   const failureCount = results.filter(r => !r.success).length;
   
-  console.log(`🎯 Batch sync completed: ${successCount} successful, ${failureCount} failed`);
+  console.log(`🎯 BATCH COMPLETE: ${successCount}/${videos.length} videos successfully embedded${failureCount > 0 ? `, ${failureCount} failed` : ''}`);
   
   return results;
 }
@@ -250,11 +235,9 @@ export async function generateQueryEmbedding(
   }
 
   try {
-    console.log(`🔍 Generating embedding for search query: "${query}"`);
     
     const embedding = await generateTitleEmbedding(query, apiKey);
     
-    console.log(`✅ Generated query embedding`);
     return embedding;
   } catch (error) {
     console.error('❌ Failed to generate query embedding:', error);

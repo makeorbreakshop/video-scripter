@@ -35,6 +35,7 @@ interface SearchResult {
   subscriberCount?: string;
   videoCount?: string;
   customUrl?: string;
+  isAlreadyImported?: boolean;
 }
 
 export default function CompetitorsPage() {
@@ -54,6 +55,7 @@ export default function CompetitorsPage() {
   const [selectedChannel, setSelectedChannel] = useState<SearchResult | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [importedChannelIds, setImportedChannelIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Prevent hydration issues by only rendering after mount
@@ -94,6 +96,10 @@ export default function CompetitorsPage() {
 
       console.log('🔍 Final channels array:', formattedChannels.map(c => ({ name: c.name, lastImport: c.lastImport })));
       setCompetitorChannels(formattedChannels);
+      
+      // Update imported channel IDs for duplicate detection
+      const importedIds = new Set(formattedChannels.map(c => c.id));
+      setImportedChannelIds(importedIds);
     } catch (error) {
       console.error('Error loading competitor channels:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
@@ -174,8 +180,14 @@ export default function CompetitorsPage() {
         const bCount = parseInt(b.subscriberCount || '0');
         return bCount - aCount;
       });
+
+      // Mark already imported channels
+      const channelsWithImportStatus = sortedChannels.map(channel => ({
+        ...channel,
+        isAlreadyImported: importedChannelIds.has(channel.channelId)
+      }));
       
-      setSearchResults(sortedChannels);
+      setSearchResults(channelsWithImportStatus);
       setShowSearchResults(true);
 
       if (!result.channels || result.channels.length === 0) {
@@ -199,6 +211,15 @@ export default function CompetitorsPage() {
   };
 
   const handleSelectChannel = (channel: SearchResult) => {
+    if (channel.isAlreadyImported) {
+      toast({
+        title: 'Channel Already Imported',
+        description: `${channel.title} is already in your competitor list`,
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setSelectedChannel(channel);
     setShowSearchResults(false);
     getChannelPreviewStats(channel.channelId);
@@ -504,7 +525,11 @@ export default function CompetitorsPage() {
                       {searchResults.map((channel) => (
                         <div 
                           key={channel.channelId}
-                          className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                          className={`p-3 border rounded-lg transition-colors ${
+                            channel.isAlreadyImported 
+                              ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800' 
+                              : 'hover:bg-muted/50 cursor-pointer'
+                          }`}
                           onClick={() => handleSelectChannel(channel)}
                         >
                           <div className="flex items-center gap-3">
@@ -518,7 +543,14 @@ export default function CompetitorsPage() {
                               }}
                             />
                             <div className="flex-1 min-w-0">
-                              <h5 className="font-medium truncate">{channel.title}</h5>
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-medium truncate">{channel.title}</h5>
+                                {channel.isAlreadyImported && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Already imported
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-muted-foreground line-clamp-1">
                                 {channel.description}
                               </p>

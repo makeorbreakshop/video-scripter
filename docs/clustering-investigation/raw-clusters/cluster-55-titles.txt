@@ -1,0 +1,144 @@
+New high vacuum system
+How a breathalyzer works (alcohol sensor)
+Ultra low-temperature cascade refrigeration system repair
+Magnetic refrigeration: How does that work?!
+Progress on vacuum chamber build - helium leak detection, custom flanges
+How to Detect Muons!
+Etching silicon wafers to make colorful Rugate optical filters (porous silicon)
+Optical finish for acrylic -- vapor polishing and other techniques
+Quartz crystal thickness monitor for vapor deposition in vacuum
+Iron nitride permanent magnets made with DIY ball mill and tested with DIY magnetometer
+Low-cost DIY thermal imaging - liquid crystal paint testing
+Creating X-rays with a standard vacuum tube
+Frying a potato chip in Fluorinert FC-40
+Visualizing EMI Filter Frequency Response with an Oscilloscope
+Wixey Digital Angle Gauge Review
+Large area detector for X-rays
+Supercritical CO2 does not help visualize ionizing alpha particles
+Intro to DIY Raman Spectroscopy
+DIY Scanning Electron Microscope - Electron Gun Detail
+SUNLU SP2 Filament Dryer – Detachable & Stackable Chamber, 70°C Max Temp, Built-in Hygrometer
+Intro to sputtering (process to create clear, conductive coatings)
+How a liquid lens works (electrowetting)
+Intro to Fourier Optics and the 4F correlator
+Custom supercritical CO2 chamber with easy-to-use lid clamp
+Making a Replacement Glass Chart for an Optical Comparator | Lufkin Ultrascope 1200A | MicroVu 400
+Silver nanoprisms grown into structural colors by high power LEDs
+Liquid Nitrogen Generator - Overview
+Resin Sphere Turning Experiment Failure
+Atomic Layer Deposition of copper - If you like sputtering, you'll love this!
+Trigger circuit for large xenon flash tubes
+Testing UV absorption eyewear and sunscreen with a deuterium light source
+Experimenting with a Vacuum Press
+HEAT MAP Microwave- a NEW invention
+Experimenting with a liquid lens and driver IC
+Explanation of how kilowatt-hour meters work (electromechanical)
+A more accurate and faster way to measure!
+Identify chemicals with radio frequencies - Nuclear Quadrupole Resonance (MRI without magnets)
+What should I build with six ultracapacitors?
+Caffeine extraction from green coffee with supercritical CO2
+Fun with applied science
+Timelapse macro video of crystal growth
+Cryogenic treatment of drill bits: tested 2X lifetime and microstructure analysis
+How This Telescope Searches For Aliens
+How to Super-Size the Eclipse - Sun Funnel
+Giant glass diffusion pump and cathode ray tube demo
+Cleaning a high-vacuum Penning gauge (cold cathode vacuum gauge)
+Electron microscope animation: Carbon nanotubes pulled into thread
+Ultrasonic soldering bonds glass, titanium, stainless steel, ceramics, tungsten, nichrome...
+First test run of 1000W Osram Xenon short arc lamp XBO
+First test with 4.8KJ xenon flash lamp (Speedotron 4803 strobe light)
+DIY X-ray CT scanner controlled by an Arduino
+Magnesium burning inside dry ice
+UV laser creates disappearing ink in normal printer paper
+Water circulator with temperature control
+First test with eBay x-ray tube
+Making patterned mirrors and ITO glass with a thermal evaporator
+DIY Scanning Electron Microscope - Sources, Costs and References
+More info about sputtering: process parameters, chamber construction
+Viewing an active electronic circuit with a scanning electron microscope
+Temperature-sensing RFID tag in magnetic stir bar
+Timelapse video of crystal growth in novelty toy
+Design and build a spin coater
+Supercritical CO2 extraction of cinnamon, coffee, and vanilla with dry ice
+Remote electronic focus for telescope (DIY remote follow focus)
+What Really Happened at the Arecibo Telescope?
+Glowing plasma created by a high speed jet of water
+The High Voltage Ejector Bed
+Yeast cells under the microscope
+I X-rayed my Flight Computer
+Electron microscope image capture with an oscilloscope
+Cathode ray tube disassembly and explanation
+Supercritical drying chamber for aerogel production
+Details in the process of making "blacker than vantablack" coatings (part 1?)
+Thermocouple vacuum gauge teardown and explanation
+Demo and teardown of an X-ray fluorescence gun (measures chemical composition)
+Laser diode self-mixing: Range-finding and sub-micron vibration measurement
+Frequency response test for thermal imaging sensor
+Electron microscope image capture via microcontroller (with drill bit animation)
+I Metal Detected for 10 Hours and Found THIS
+Engineering magnetics -- practical introduction to BH curve
+Intro to plasma cleaning
+Reverse-engineering and testing an x-ray filament supply
+Extracting Honey with a Centrifuge
+Dramatically improve microscope resolution with an LED array and Fourier Ptychography
+How Digital Light Processing (DLP) works
+Shooting an electron beam through air
+Control light with magnets and olive oil?! (Faraday effect)
+WTF is Happening With Superconductors
+Glass engineering - designing and making photochromic glass
+DIY Scanning Electron Microscope - Overview
+Attempting to make X-rays by unrolling Scotch tape (negative result)
+Extracting caffeine with methylene chloride
+Unusual usage (hours) counter with mercury capillary
+Xbox Series S Air Purifier / Fume Extractor for Soldering
+How to Measure Flow with Magnets - (Magnetic Flow Meters)
+Distilling pure anhydrous ammonia
+Use an oscilloscope to collect optical spectral data
+DIY Scanning Electron Microscope - Operation procedure
+Patterning aluminum with the photoresist "lift-off" method
+Supercritical CO2 caffeine extraction (negative result -- more work needed)
+How do EMI Filter Chokes Work?
+What the Scanning Electron Microscope Reveals About This Failed Drill
+Measure the mass of an eyelash with a DIY microbalance
+Catalytic cigarette lighter
+Product Review: CP06 low-cost AC/DC clamp-on current probe
+Technical Illustration of Desktop Watt Balance
+Control light with heat and magnets (Magneto-optical Kerr effect)
+eBay Find: A Cartridge Style Electronic Gage Head
+Color-changing Zinc Oxide -- and submit your questions for Ben
+Electron beam control in a scanning electron microscope
+How To Make A Flux Capacitor
+Trying to visualize beta particles in supercritical CO2 (still no success)
+Multi-layer reactive foil: no fuel, no oxygen, tons of heat
+Measuring the voltage, current, and light output of a strobe flash lamp (Speedotron 4803)
+DIY mass spectrometer measures potassium in dietary salt substitute
+DIY Scanning Electron Microscope - Tektronix contest entry
+How a Crookes radiometer works
+MEMs oscillator sensitivity to helium (helium kills iPhones)
+Detectron DG-2 geiger counter teardown and testing
+Measuring the voltage and current of a microwave oven magnetron
+Effect of long-term high pressure CO2 on acrylic
+SUNLU Filament Dryer S4 vs S2 vs Food Dehydrator
+Liquid level sensor and controller (auto top-off for aquarium)
+Redefining the Kilogram with the DIY Watt Balance
+Clear flexible printed circuits - first success
+Apparently, I Can't Solder | Andonstar AD407 Microscope Review
+Alpha radiation makes sparks, detects smoke, and eliminates static cling
+Making YBCO superconductor
+Candle flame is repelled by magnets (and Zeeman follow-up)
+Decapping ICs (removing epoxy packaging from chips to expose the dies)
+DIY X-ray backscatter imaging system (airport body scanner)
+Zeeman Effect - Control light with magnetic fields
+X-ray timelapse of fluid movement in plants, stop-motion animation, sensor teardown/repair
+Electron microscope slow-motion video of vinyl LP
+A close look at supercritical carbon dioxide CO2
+How a Mass Flow Controller works
+Dissolving lithium in anhydrous ammonia
+Follow-up: Attempting to make X-rays by unrolling Scotch tape -- Success?
+How anti-theft tags work - magnetostriction
+Creating aerogel with supercritical methanol
+Extech IR250 infrared thermometer disassembly and plans for thermal imaging
+Effect of acetone vapor on thermal printer paper
+ComMarker B6 20w - Initial Testing
+New Extreme Images of the Sun’s South Pole
