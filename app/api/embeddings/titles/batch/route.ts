@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: BatchEmbeddingRequest = await request.json();
     const { video_ids, limit = 100, force_refresh = false } = body;
+    
+    // Special handling for "embed all" requests
+    const embedAll = limit >= 5000 || limit === -1;
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -41,6 +44,73 @@ export async function POST(request: NextRequest) {
     if (video_ids && video_ids.length > 0) {
       videosToProcess = await supabasePineconeSync.getVideoMetadataForPinecone(video_ids);
       console.log(`📋 Processing ${video_ids.length} specific videos`);
+    } else if (embedAll) {
+      // For "embed all" requests, process in batches of 1000 until all are done
+      console.log('🎯 EMBED ALL MODE: Processing all unembedded videos in batches');
+      
+      let totalProcessed = 0;
+      let totalSuccessful = 0;
+      let totalFailed = 0;
+      const allErrors: string[] = [];
+      
+      while (true) {
+        // Get next batch of 1000 unembedded videos
+        const batchVideos = await supabasePineconeSync.getUnsyncedVideos(1000);
+        
+        if (!batchVideos || batchVideos.length === 0) {
+          console.log('✅ No more videos to process - all videos embedded!');
+          break;
+        }
+        
+        console.log(`📦 Processing batch of ${batchVideos.length} videos (${totalProcessed} processed so far)`);
+        
+        // Convert to format expected by batchSyncVideosToPinecone
+        const videoData = batchVideos.map(video => ({
+          id: video.id,
+          title: video.title,
+          channel_id: video.channel_id,
+          view_count: video.view_count,
+          published_at: video.published_at,
+          performance_ratio: video.performance_ratio || 1.0,
+        }));
+        
+        // Process this batch
+        const batchResults = await batchSyncVideosToPinecone(videoData, apiKey, 50);
+        
+        // Update Supabase with sync status
+        const successfulVideos = batchResults.filter(r => r.success).map(r => r.id);
+        const failedVideos = batchResults.filter(r => !r.success);
+        
+        if (successfulVideos.length > 0) {
+          console.log(`📝 Updating embedding status for ${successfulVideos.length} videos`);
+          await supabasePineconeSync.updateVideoEmbeddingStatus(successfulVideos, true);
+        }
+        
+        // Track totals
+        totalProcessed += batchResults.length;
+        totalSuccessful += successfulVideos.length;
+        totalFailed += failedVideos.length;
+        
+        // Collect errors
+        failedVideos.forEach(video => {
+          allErrors.push(`${video.id}: ${video.error}`);
+        });
+        
+        console.log(`✅ Batch complete: ${successfulVideos.length}/${batchResults.length} successful`);
+        
+        // Small delay between batches to avoid overwhelming systems
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      console.log(`🎯 EMBED ALL COMPLETE: ${totalSuccessful}/${totalProcessed} videos successfully embedded`);
+      
+      return NextResponse.json({
+        processed: totalProcessed,
+        successful: totalSuccessful,
+        failed: totalFailed,
+        errors: allErrors,
+        batch_id: `embed_all_${Date.now()}`
+      });
     } else {
       videosToProcess = await supabasePineconeSync.getUnsyncedVideos(limit);
       console.log(`📋 Processing next ${limit} unembedded videos`);
