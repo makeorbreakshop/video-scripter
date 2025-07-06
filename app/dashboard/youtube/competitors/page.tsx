@@ -36,6 +36,7 @@ interface SearchResult {
   videoCount?: string;
   customUrl?: string;
   isAlreadyImported?: boolean;
+  importSource?: 'competitor' | 'discovery' | null;
 }
 
 export default function CompetitorsPage() {
@@ -181,11 +182,37 @@ export default function CompetitorsPage() {
         return bCount - aCount;
       });
 
-      // Mark already imported channels
-      const channelsWithImportStatus = sortedChannels.map(channel => ({
-        ...channel,
-        isAlreadyImported: importedChannelIds.has(channel.channelId)
-      }));
+      // Check which channels are already in the system
+      const checkResponse = await fetch('/api/youtube/check-existing-channels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelIds: sortedChannels.map(c => c.channelId)
+        }),
+      });
+
+      let channelsWithImportStatus = sortedChannels;
+      
+      if (checkResponse.ok) {
+        const checkResult = await checkResponse.json();
+        channelsWithImportStatus = sortedChannels.map(channel => {
+          const status = checkResult.channelStatus?.find(s => s.channelId === channel.channelId);
+          return {
+            ...channel,
+            isAlreadyImported: status?.isExisting || false,
+            importSource: status?.source || null
+          };
+        });
+      } else {
+        // Fallback to local check for competitor channels only
+        channelsWithImportStatus = sortedChannels.map(channel => ({
+          ...channel,
+          isAlreadyImported: importedChannelIds.has(channel.channelId),
+          importSource: importedChannelIds.has(channel.channelId) ? 'competitor' : null
+        }));
+      }
       
       setSearchResults(channelsWithImportStatus);
       setShowSearchResults(true);
@@ -212,9 +239,15 @@ export default function CompetitorsPage() {
 
   const handleSelectChannel = (channel: SearchResult) => {
     if (channel.isAlreadyImported) {
+      const sourceMessage = channel.importSource === 'competitor' 
+        ? 'is already imported as a competitor' 
+        : channel.importSource === 'discovery'
+        ? 'is already in your discovery system'
+        : 'is already in your system';
+      
       toast({
         title: 'Channel Already Imported',
-        description: `${channel.title} is already in your competitor list`,
+        description: `${channel.title} ${sourceMessage}`,
         variant: 'destructive'
       });
       return;
@@ -547,7 +580,9 @@ export default function CompetitorsPage() {
                                 <h5 className="font-medium truncate">{channel.title}</h5>
                                 {channel.isAlreadyImported && (
                                   <Badge variant="secondary" className="text-xs">
-                                    Already imported
+                                    {channel.importSource === 'competitor' ? 'Competitor imported' : 
+                                     channel.importSource === 'discovery' ? 'In discovery' : 
+                                     'Already imported'}
                                   </Badge>
                                 )}
                               </div>

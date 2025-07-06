@@ -30,6 +30,7 @@ import {
   Eye
 } from 'lucide-react';
 import { ReviewQueue } from '@/components/youtube/review-queue';
+import { ApprovedChannels } from '@/components/youtube/approved-channels';
 
 interface DiscoveryStats {
   method: string;
@@ -267,6 +268,7 @@ export default function DiscoveryDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="methods">Methods</TabsTrigger>
           <TabsTrigger value="review">Review Queue</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="run">Run Discovery</TabsTrigger>
         </TabsList>
 
@@ -366,6 +368,10 @@ export default function DiscoveryDashboard() {
 
         <TabsContent value="review" className="space-y-4">
           <ReviewQueue />
+        </TabsContent>
+
+        <TabsContent value="approved" className="space-y-4">
+          <ApprovedChannels />
         </TabsContent>
 
         <TabsContent value="run" className="space-y-4">

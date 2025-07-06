@@ -177,17 +177,24 @@ export async function POST(request: NextRequest) {
       })
       .eq('discovered_channel_id', channelId)
       .eq('validation_status', 'pending')
-      .select('id');
+      .select('id, discovered_channel_id, channel_metadata');
 
     if (error) {
       throw error;
+    }
+
+    // Log the approval action
+    if (action === 'approve' && data && data.length > 0) {
+      const channelTitle = data[0].channel_metadata?.title || 'Unknown Channel';
+      console.log(`✅ Approved channel for import: ${channelTitle} (${channelId})`);
     }
 
     return NextResponse.json({
       success: true,
       action,
       channelId,
-      updatedRecords: data?.length || 0
+      updatedRecords: data?.length || 0,
+      message: action === 'approve' ? 'Channel approved and ready for import' : 'Channel rejected'
     });
 
   } catch (error) {
