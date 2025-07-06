@@ -29,6 +29,7 @@ import {
   Clock,
   Eye
 } from 'lucide-react';
+import { ReviewQueue } from '@/components/youtube/review-queue';
 
 interface DiscoveryStats {
   method: string;
@@ -364,37 +365,7 @@ export default function DiscoveryDashboard() {
         </TabsContent>
 
         <TabsContent value="review" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Review Queue</CardTitle>
-              <CardDescription>Channels waiting for manual review</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {methodStats.flatMap(stat => 
-                  stat.recentDiscoveries
-                    .filter(d => d.validationStatus === 'pending')
-                    .slice(0, 10)
-                ).map((discovery, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h3 className="font-medium">{discovery.channelTitle}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {discovery.subscriberCount?.toLocaleString()} subscribers • {discovery.videoCount} videos
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Pending</Badge>
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <ReviewQueue />
         </TabsContent>
 
         <TabsContent value="run" className="space-y-4">
