@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { fetchChannelRSSFeed, convertRSSVideoToImportFormat, filterNewVideos } from '@/lib/rss-channel-monitor';
+import { fetchChannelRSSFeed, filterNewVideos } from '@/lib/rss-channel-monitor';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
           }
 
           // Get existing videos for this channel to determine what's new
+          // Use YouTube channel ID from metadata for accurate filtering
           const { data: existingVideos, error: fetchError } = await supabase
             .from('videos')
-            .select('id, published_at, channel_id')
-            .eq('channel_id', channelId)
+            .select('id, published_at, channel_id, metadata')
+            .or(`channel_id.eq.${channelId},metadata->>youtube_channel_id.eq.${channelId}`)
             .order('published_at', { ascending: false });
 
           if (fetchError) {
@@ -98,14 +99,14 @@ export async function POST(request: NextRequest) {
                 
                 if (videoData.items) {
                   // Map YouTube API data to our database format
-                  videosToInsert = videoData.items.map(video => {
+                  videosToInsert = videoData.items.map((video: any) => {
                     const viewCount = parseInt(video.statistics.viewCount) || 0;
                     
                     return {
                       id: video.id,
                       title: video.snippet.title,
                       description: video.snippet.description || '',
-                      channel_id: rssResult.channelTitle, // Use channel name for consistency
+                      channel_id: video.snippet.channelId, // Use YouTube channel ID for consistency
                       published_at: video.snippet.publishedAt,
                       duration: video.contentDetails.duration,
                       view_count: viewCount,
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
                   id: rssVideo.id,
                   title: rssVideo.title,
                   description: rssVideo.description,
-                  channel_id: rssResult.channelTitle,
+                  channel_id: rssVideo.channelId,
                   published_at: rssVideo.publishedAt,
                   duration: 'PT5M', // Default to 5 minutes for RSS-only imports
                   view_count: 1000, // Default placeholder view count
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
                 id: rssVideo.id,
                 title: rssVideo.title,
                 description: rssVideo.description,
-                channel_id: rssResult.channelTitle,
+                channel_id: rssVideo.channelId,
                 published_at: rssVideo.publishedAt,
                 duration: 'PT5M', // Default to 5 minutes
                 view_count: 1000, // Default placeholder view count
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
             .from('videos')
             .upsert(videosToInsert, { 
               onConflict: 'id',
-              ignoreDuplicates: false 
+              ignoreDuplicates: true 
             })
             .select('id, title');
 

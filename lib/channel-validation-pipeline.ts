@@ -81,7 +81,7 @@ export class ChannelValidationPipeline {
    */
   async validatePendingChannels(): Promise<ChannelValidationResult[]> {
     const { data: pendingChannels, error } = await supabase
-      .from('subscription_discovery')
+      .from('channel_discovery')
       .select('*')
       .eq('validation_status', 'pending')
       .order('discovery_date', { ascending: false });
@@ -180,7 +180,7 @@ export class ChannelValidationPipeline {
   private async calculateNetworkCentrality(channelId: string): Promise<number> {
     try {
       const { data: discoveries, error } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .select('source_channel_id')
         .eq('discovered_channel_id', channelId);
 
@@ -400,7 +400,7 @@ export class ChannelValidationPipeline {
   ): Promise<void> {
     try {
       const { error } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .update({
           validation_status: result.recommendation === 'approve' ? 'approved' : 
                            result.recommendation === 'reject' ? 'rejected' : 'pending',
@@ -436,7 +436,7 @@ export class ChannelValidationPipeline {
   }> {
     try {
       const { data: stats } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .select('validation_status, relevance_score');
 
       if (!stats) {
@@ -465,7 +465,7 @@ export class ChannelValidationPipeline {
    */
   async getChannelsForReview(limit: number = 50): Promise<ChannelValidationResult[]> {
     const { data: channels, error } = await supabase
-      .from('subscription_discovery')
+      .from('channel_discovery')
       .select('*')
       .eq('validation_status', 'pending')
       .not('relevance_score', 'is', null)

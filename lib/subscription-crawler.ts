@@ -224,7 +224,7 @@ export class SubscriptionCrawler {
 
       // Check against previously discovered channels
       const { data: existingDiscoveries } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .select('discovered_channel_id')
         .in('discovered_channel_id', channelIds);
 
@@ -291,26 +291,29 @@ export class SubscriptionCrawler {
         return {
           source_channel_id: sourceChannelId,
           discovered_channel_id: channel.channelId,
+          discovery_method: 'subscription',
           subscriber_count: channel.subscriberCount,
           video_count: channel.videoCount,
           validation_status: 'pending',
           import_status: 'pending',
+          discovery_context: {
+            subscriptionPublishedAt: subscription?.publishedAt
+          },
           channel_metadata: {
             title: channel.title,
             description: channel.description,
             thumbnailUrl: channel.thumbnailUrl,
             customUrl: channel.customUrl,
             publishedAt: channel.publishedAt,
-            viewCount: channel.viewCount,
-            subscriptionPublishedAt: subscription?.publishedAt
+            viewCount: channel.viewCount
           }
         };
       });
 
       const { error } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .upsert(discoveries, { 
-          onConflict: 'source_channel_id,discovered_channel_id',
+          onConflict: 'source_channel_id,discovered_channel_id,discovery_method',
           ignoreDuplicates: false 
         });
 
@@ -335,7 +338,7 @@ export class SubscriptionCrawler {
     try {
       // Get discovery counts for today
       const { data: discoveries } = await supabase
-        .from('subscription_discovery')
+        .from('channel_discovery')
         .select('validation_status, import_status')
         .gte('discovery_date', `${dateStr}T00:00:00Z`)
         .lt('discovery_date', `${dateStr}T23:59:59Z`);

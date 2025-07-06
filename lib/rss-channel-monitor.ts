@@ -136,15 +136,17 @@ export async function getAllChannelIds(): Promise<string[]> {
  */
 export function filterNewVideos(
   rssVideos: RSSVideo[],
-  existingVideos: { id: string; published_at: string; channel_id: string }[]
+  existingVideos: { id: string; published_at: string; channel_id: string; metadata?: any }[]
 ): RSSVideo[] {
   // Create a map of channel_id -> most recent video timestamp
   const channelLatestMap: { [channelId: string]: string } = {};
   
   existingVideos.forEach(video => {
-    const current = channelLatestMap[video.channel_id];
+    // Use YouTube channel ID from metadata if available, otherwise use channel_id
+    const videoChannelId = video.metadata?.youtube_channel_id || video.channel_id;
+    const current = channelLatestMap[videoChannelId];
     if (!current || new Date(video.published_at) > new Date(current)) {
-      channelLatestMap[video.channel_id] = video.published_at;
+      channelLatestMap[videoChannelId] = video.published_at;
     }
   });
 

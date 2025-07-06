@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Get discovery data
     const { data: discoveries, error: discoveryError } = await supabase
-      .from('subscription_discovery')
+      .from('channel_discovery')
       .select('*')
       .gte('discovery_date', startDate.toISOString())
       .order('discovery_date', { ascending: false });

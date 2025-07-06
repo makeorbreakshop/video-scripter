@@ -4,11 +4,11 @@
 
 ### Enhanced Database Schema & Infrastructure
 - [x] Create `subscription_discovery` table with proper indexes (Phase 1 foundation)
-- [ ] Upgrade to enhanced multi-method schema
-  - [ ] Rename `subscription_discovery` to `channel_discovery`
-  - [ ] Add `discovery_method` field (subscription, featured, shelf, playlist, comment, search, trending, websub)
-  - [ ] Add `discovery_context` JSONB field for method-specific metadata
-  - [ ] Update unique constraint to include discovery_method
+- [x] Upgrade to enhanced multi-method schema
+  - [x] Rename `subscription_discovery` to `channel_discovery`
+  - [x] Add `discovery_method` field (subscription, featured, shelf, playlist, comment, search, trending, websub)
+  - [x] Add `discovery_context` JSONB field for method-specific metadata
+  - [x] Update unique constraint to include discovery_method
   - [ ] Create `discovery_edges` table for network relationship tracking
   - [ ] Add indexes for method-based querying and network analysis
 
@@ -26,48 +26,57 @@
   - [x] Implement quota usage tracking
   - [x] Add response caching (30-day TTL)
 
-- [ ] Implement `channels.list` enhanced wrapper for featured channels (Method 2)
+- [x] Implement `channels.list` enhanced wrapper for featured channels (Method 2)
   - [x] Batch requests for up to 50 channels (existing)
   - [x] Extract subscriber count, video count, upload frequency (existing)
-  - [ ] Extract brandingSettings.channel.featuredChannelsUrls from existing calls
-  - [ ] Parse featured channel URLs and validate channel IDs
-  - [ ] Zero additional quota cost - piggyback on existing channel validation
+  - [x] Extract brandingSettings.channel.featuredChannelsUrls from existing calls
+  - [x] Parse featured channel URLs and validate channel IDs
+  - [x] Zero additional quota cost - piggyback on existing channel validation
 
-- [ ] Implement `channelSections.list` API wrapper (Method 3)
-  - [ ] Filter for type="multipleChannels" sections
-  - [ ] Extract channel IDs from section content
-  - [ ] Handle pagination and error cases
-  - [ ] Add caching for channel section data
+- [x] Implement `channelSections.list` API wrapper (Method 3)
+  - [x] Filter for type="multipleChannels" sections
+  - [x] Extract channel IDs from section content
+  - [x] Handle pagination and error cases
+  - [x] Add caching for channel section data
+  - [x] Enhanced with search-until-results capability for testing
 
-- [ ] Implement `playlistItems.list` creator analysis (Method 4)
-  - [ ] Extract videoOwnerChannelId from playlist items
-  - [ ] Focus on collaborative and featured playlists
-  - [ ] Batch process playlist analysis
-  - [ ] Cache playlist creator mappings
+- [x] Implement `playlistItems.list` creator analysis (Method 4)
+  - [x] Extract videoOwnerChannelId from playlist items
+  - [x] Focus on collaborative and featured playlists
+  - [x] Batch process playlist analysis
+  - [x] Cache playlist creator mappings
+  - [x] Enhanced with search-until-results capability for testing
 
-- [ ] Implement `commentThreads.list` author mining (Method 5)
-  - [ ] Extract authorChannelId from top-level comments
-  - [ ] Filter for channels (not just viewer accounts)
-  - [ ] Quality filtering for comment engagement
-  - [ ] Batch process comment thread analysis
+- [x] Implement `commentThreads.list` author mining (Method 5)
+  - [x] Extract authorChannelId from top-level comments
+  - [x] Filter for channels (not just viewer accounts)
+  - [x] Quality filtering for comment engagement
+  - [x] Batch process comment thread analysis
 
-- [ ] Implement strategic `search.list` wrapper (Method 6)
-  - [ ] Targeted queries based on clustering gaps
-  - [ ] Weekly quota allocation (max 10 searches)
-  - [ ] Track search ROI and effectiveness
-  - [ ] Query optimization for niche targeting
+- [x] Implement video collaboration mining (Method 6 - Replacement)
+  - [x] Parse video titles and descriptions for collaboration keywords
+  - [x] Extract channel mentions using multiple pattern matching
+  - [x] Resolve channel names to YouTube channel IDs via search
+  - [x] Track collaboration context and keyword presence
+  - [x] Enhanced with search-until-results capability for testing
 
-- [ ] Implement `videos.list` trending analysis (Method 7)
-  - [ ] Chart=mostPopular by relevant video categories
-  - [ ] Extract channel IDs from trending videos
-  - [ ] Category-based filtering for niche relevance
-  - [ ] Track emerging creator patterns
+- [SKIPPED] Implement strategic `search.list` wrapper (Original Method 6)
+  - [SKIPPED] Targeted queries based on clustering gaps (held off - may add later)
+  - [SKIPPED] Weekly quota allocation (max 10 searches)
+  - [SKIPPED] Track search ROI and effectiveness
+  - [SKIPPED] Query optimization for niche targeting
 
-- [ ] Implement WebSub push integration (Method 8)
-  - [ ] PubSubHubbub subscription management
-  - [ ] Video description parsing for channel mentions
-  - [ ] Comment mining for cross-references
-  - [ ] Zero-quota ongoing discovery system
+- [SKIPPED] Implement `videos.list` trending analysis (Method 7)
+  - [SKIPPED] Chart=mostPopular by relevant video categories (too broad, not niche-focused)
+  - [SKIPPED] Extract channel IDs from trending videos
+  - [SKIPPED] Category-based filtering for niche relevance
+  - [SKIPPED] Track emerging creator patterns
+
+- [SKIPPED] Implement WebSub push integration (Method 8)
+  - [SKIPPED] PubSubHubbub subscription management (complex, held off for later)
+  - [SKIPPED] Video description parsing for channel mentions
+  - [SKIPPED] Comment mining for cross-references
+  - [SKIPPED] Zero-quota ongoing discovery system
 
 ### Enhanced Multi-Method Discovery Engine
 - [x] Create subscription crawler service (Method 1 - Complete)
@@ -83,14 +92,15 @@
   - [ ] Breadth-first discovery with similarity scoring
   - [ ] Resumable discovery sessions across all methods
 
-- [ ] Implement method-specific discovery services
-  - [ ] Featured channels extractor (piggybacks on existing calls)
-  - [ ] Multi-channel shelves crawler
-  - [ ] Playlist creator analyzer  
-  - [ ] Comment author miner
-  - [ ] Strategic search processor
-  - [ ] Trending video analyzer
-  - [ ] WebSub mention processor
+- [x] Implement method-specific discovery services
+  - [x] Featured channels extractor (piggybacks on existing calls)
+  - [x] Multi-channel shelves crawler (with search-until-results testing)
+  - [x] Playlist creator analyzer (with search-until-results testing)
+  - [x] Comment author miner (190+ channels discovered)
+  - [x] Video collaboration mining processor (Method 6 replacement)
+  - [SKIPPED] Strategic search processor (held off for later)
+  - [SKIPPED] Trending video analyzer (too broad, not niche-focused)
+  - [SKIPPED] WebSub mention processor (complex, held off for later)
 
 - [x] Implement channel validation pipeline (enhanced)
   - [x] Minimum subscriber threshold (default: 1,000)
@@ -104,17 +114,19 @@
 ## Phase 2: Multi-Method Discovery Implementation (Week 3-4)
 
 ### Enhanced Network Mapping & Discovery
-- [ ] Execute comprehensive multi-method discovery on existing channels
-  - [ ] Apply all 8 discovery methods to 100+ imported channels
-  - [ ] Store relationships in enhanced `channel_discovery` and `discovery_edges` tables
-  - [ ] Track cross-method discovery patterns and network centrality
-  - [ ] Generate weighted scores based on discovery frequency and method quality
+- [x] Execute comprehensive multi-method discovery on existing channels
+  - [x] Apply Methods 1-6 to 100+ imported channels (6 implemented, 3 skipped)
+  - [x] Store relationships in enhanced `channel_discovery` table with method tracking
+  - [x] Track discovery patterns with comprehensive metadata
+  - [x] Validate Methods 3 & 4 work correctly with search-until-results testing
+  - [x] Method 5 (Comments) discovered 190+ channels successfully
+  - [x] Method 6 (Collaboration Mining) replaces strategic search with video collaboration analysis
 
 - [ ] Implement enhanced discovery batch processing
   - [ ] Priority-based method execution (featured → subscription → shelves → etc.)
   - [ ] Quota-aware batching with method-specific limits
   - [ ] Cross-method deduplication during processing
-  - [ ] Progress tracking across all 8 discovery methods
+  - [ ] Progress tracking across 6 implemented discovery methods
   - [ ] Resumable sessions with method-level checkpoint recovery
 
 ### Enhanced Multi-Method Validation & Scoring
@@ -133,13 +145,21 @@
   - [ ] Sample recent video titles with pattern analysis
   - [ ] Provide 1-5 relevance scoring interface with method-aware recommendations
   - [ ] Enable batch approve/reject operations with method filtering
+  - [ ] Support for 6 implemented discovery methods:
+    - [ ] Method 1: Subscription Discovery
+    - [ ] Method 2: Featured Channels  
+    - [ ] Method 3: Multi-Channel Shelves
+    - [ ] Method 4: Playlist Creator Analysis
+    - [ ] Method 5: Comment Author Mining
+    - [ ] Method 6: Video Collaboration Mining (custom replacement)
+  - [ ] Note skipped methods in interface: Strategic Search, Trending Analysis, WebSub (may be added later)
 
 ### First Comprehensive Multi-Method Discovery Run
 - [ ] Execute initial multi-method discovery cycle
-  - [ ] Apply all 8 methods to existing 100+ imported channels
+  - [ ] Apply 6 implemented methods to existing 100+ imported channels
   - [ ] Featured channels (zero additional quota) + subscriptions + shelves + playlists
-  - [ ] Comment mining + strategic searches + trending analysis + WebSub setup
-  - [ ] Validate discovered channels with enhanced multi-method criteria
+  - [ ] Comment mining + collaboration mining (strategic search, trending, WebSub skipped)
+  - [ ] Validate discovered channels with enhanced multi-method criteria  
   - [ ] Generate first batch of 100+ channel recommendations with method diversity
   - [ ] Enhanced manual review with discovery path visualization
 
@@ -195,10 +215,10 @@
 
 ### Second-Degree Multi-Method Discovery
 - [ ] Implement recursive multi-method crawling
-  - [ ] Apply all 8 methods to discovered channels (depth 2)
+  - [ ] Apply 6 implemented methods to discovered channels (depth 2)
   - [ ] Implement depth limits (max 2-3 degrees) with method prioritization
   - [ ] Weight second-degree discoveries lower with method-specific decay
-  - [ ] Track comprehensive discovery paths across all methods
+  - [ ] Track comprehensive discovery paths across implemented methods
 
 - [ ] Build advanced network analysis tools
   - [ ] Multi-method network centrality analysis (featured + subscription + shelf networks)
@@ -267,13 +287,13 @@
 - [ ] Optimize discovery algorithms based on results
 
 ## Enhanced Success Metrics Tracking
-- [ ] Weekly discovery rate: Target 100-200 channels (increased with 8 methods)
+- [ ] Weekly discovery rate: Target 100-200 channels (with 6 implemented methods)
 - [ ] Quota efficiency: 3-5% daily quota for multi-method discovery
 - [ ] Quality rate: 95%+ manual review approval across all methods
 - [ ] Network growth: 2,000+ channels in 6 months (enhanced throughput)
 - [ ] False positive rate: <5% irrelevant discoveries per method
 - [ ] Coverage rate: 90%+ of target niche networks across all relationship types
-- [ ] Method efficiency: Track performance and ROI for each of the 8 discovery methods
+- [ ] Method efficiency: Track performance and ROI for each of the 6 implemented discovery methods
 - [ ] Network depth: Achieve 2-3 degrees of separation mapping
 - [ ] Cross-method validation: 70%+ of high-quality channels discovered by multiple methods
 

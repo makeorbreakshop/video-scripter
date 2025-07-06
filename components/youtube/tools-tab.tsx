@@ -949,14 +949,53 @@ export function YouTubeToolsTab() {
    * Start polling for daily update progress
    */
   const startDailyUpdatePolling = (operationId: string) => {
+    let pollAttempts = 0;
+    const maxPollAttempts = 60; // Stop after 5 minutes of 404s (5 second intervals)
+    
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(`/api/youtube/daily-update-all?operationId=${operationId}`);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch progress');
+          pollAttempts++;
+          
+          // If operation not found, it may have completed - stop polling gracefully
+          if (response.status === 404) {
+            if (pollAttempts >= maxPollAttempts) {
+              clearInterval(pollInterval);
+              setIsDailyUpdateRunning(false);
+              
+              // Show completion message since operation likely finished
+              toast({
+                title: "Daily Update Completed",
+                description: "The daily update process has finished. Check the logs for results.",
+              });
+              
+              // Reset progress to show completion
+              setDailyUpdateProgress({
+                phase: 'complete',
+                phaseNumber: 3,
+                totalPhases: 3,
+                overallProgress: 100,
+                phaseProgress: 100,
+                currentOperation: 'Daily update completed',
+                startTime: Date.now(),
+                results: {
+                  discovery: { newVideos: 0, status: 'complete' },
+                  backfill: { daysProcessed: 0, totalDays: 0, status: 'complete' },
+                  rss: { channelsProcessed: 0, totalChannels: 0, newVideos: 0, status: 'complete' }
+                }
+              });
+            }
+            return;
+          }
+          
+          throw new Error(`Failed to fetch progress: ${response.status}`);
         }
 
+        // Reset poll attempts on successful response
+        pollAttempts = 0;
+        
         const progress = await response.json();
         setDailyUpdateProgress(progress);
 
