@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { ReviewQueue } from '@/components/youtube/review-queue';
 import { ApprovedChannels } from '@/components/youtube/approved-channels';
+import { SearchDiscovery } from '@/components/youtube/search-discovery';
 
 interface DiscoveryStats {
   method: string;
@@ -68,6 +69,7 @@ const DISCOVERY_METHODS = [
   { id: 'playlist', name: 'Playlist Creators', description: 'From playlist collaborations' },
   { id: 'comment', name: 'Comment Mining', description: 'From active commenters' },
   { id: 'collaboration', name: 'Collaboration Mining', description: 'From video mentions' },
+  { id: 'search', name: 'Search Discovery', description: 'From keyword searches' },
 ];
 
 const STATUS_COLORS = {
@@ -92,12 +94,15 @@ export default function DiscoveryDashboard() {
     try {
       // Load stats for each discovery method
       const methodPromises = DISCOVERY_METHODS.map(async (method) => {
-        const response = await fetch(`/api/youtube/discovery/${method.id === 'subscription' ? 'subscriptions' : 
+        const endpoint = method.id === 'subscription' ? 'subscriptions' : 
           method.id === 'featured' ? 'featured' :
           method.id === 'shelf' ? 'shelves' :
           method.id === 'playlist' ? 'playlists' :
           method.id === 'comment' ? 'comments' :
-          'collaborations'}`);
+          method.id === 'search' ? 'search' :
+          'collaborations';
+        
+        const response = await fetch(`/api/youtube/discovery/${endpoint}`);
         if (response.ok) {
           const data = await response.json();
           return {
@@ -147,6 +152,11 @@ export default function DiscoveryDashboard() {
   };
 
   const runDiscoveryMethod = async (methodId: string) => {
+    if (methodId === 'search') {
+      // For search discovery, we'll show a different UI
+      return;
+    }
+    
     setIsRunningDiscovery(true);
     try {
       const endpoint = methodId === 'subscription' ? 'subscriptions' : 
@@ -267,6 +277,7 @@ export default function DiscoveryDashboard() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="methods">Methods</TabsTrigger>
+          <TabsTrigger value="search">Search Discovery</TabsTrigger>
           <TabsTrigger value="review">Review Queue</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="run">Run Discovery</TabsTrigger>
@@ -366,6 +377,10 @@ export default function DiscoveryDashboard() {
           </div>
         </TabsContent>
 
+        <TabsContent value="search" className="space-y-4">
+          <SearchDiscovery />
+        </TabsContent>
+
         <TabsContent value="review" className="space-y-4">
           <ReviewQueue />
         </TabsContent>
@@ -389,14 +404,29 @@ export default function DiscoveryDashboard() {
                       <CardDescription className="text-sm">{method.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button 
-                        onClick={() => runDiscoveryMethod(method.id)}
-                        disabled={isRunningDiscovery}
-                        className="w-full"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        {isRunningDiscovery ? 'Running...' : 'Run Discovery'}
-                      </Button>
+                      {method.id === 'search' ? (
+                        <Button 
+                          onClick={() => {
+                            // Switch to search tab
+                            const searchTab = document.querySelector('[value="search"]') as HTMLElement;
+                            searchTab?.click();
+                          }}
+                          className="w-full"
+                          variant="outline"
+                        >
+                          <Search className="h-4 w-4 mr-2" />
+                          Open Search Discovery
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => runDiscoveryMethod(method.id)}
+                          disabled={isRunningDiscovery}
+                          className="w-full"
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          {isRunningDiscovery ? 'Running...' : 'Run Discovery'}
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

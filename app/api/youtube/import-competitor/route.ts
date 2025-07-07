@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.YOUTUBE_API_KEY;
     const maxResults = maxVideos === 'all' ? 999999 : Math.min(parseInt(maxVideos) || 50, 500);
     const isAllTime = timePeriod === 'all';
-    const daysAgo = isAllTime ? 0 : parseInt(timePeriod) || 90;
+    const daysAgo = isAllTime ? 0 : parseInt(timePeriod) || 3650; // Default to 10 years instead of 90 days
     const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
 
     // Step 1: Get channel details (channelId is already provided from search)
