@@ -3,7 +3,7 @@
 import { useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users, Target, TrendingUp } from 'lucide-react';
+import { Users, Target, TrendingUp, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PerformanceBadge } from './performance-badge';
 import { VideoModal } from './video-modal';
@@ -85,9 +85,11 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     if (onClick) {
       onClick();
     } else {
-      setIsModalOpen(true);
+      // Open YouTube video in new tab
+      const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+      window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
     }
-  }, [onClick]);
+  }, [onClick, video.id]);
 
   const handleImageLoad = useCallback(() => {
     setImageLoading(false);
@@ -196,8 +198,14 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
           {/* Context-specific overlay badge */}
           {renderOverlayBadge()}
           
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-t-lg" />
+          {/* Hover overlay with play button */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-t-lg flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="bg-red-600 hover:bg-red-700 rounded-full p-3 shadow-lg">
+                <Play className="h-6 w-6 text-white fill-white ml-0.5" />
+              </div>
+            </div>
+          </div>
         </div>
 
         <CardContent className="p-3 space-y-2">
