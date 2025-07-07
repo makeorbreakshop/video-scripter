@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSemanticSearch } from '@/hooks/use-semantic-search';
-import { SearchResultCard } from './search-result-card';
+import { UnifiedVideoCard } from './unified-video-card';
 
 export function SemanticSearch() {
   const [inputValue, setInputValue] = useState('');
@@ -169,9 +169,27 @@ export function SemanticSearch() {
       {/* Results Grid */}
       {results.length > 0 && (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((result) => (
-              <SearchResultCard key={result.video_id} result={result} />
+              <UnifiedVideoCard 
+                key={result.video_id}
+                video={{
+                  id: result.video_id,
+                  title: result.title,
+                  view_count: result.view_count,
+                  published_at: result.published_at,
+                  thumbnail_url: result.thumbnail_url,
+                  channel_id: result.channel_id,
+                  channel_name: result.channel_name,
+                  is_competitor: true // Search results are typically from competitor videos
+                }}
+                context={{
+                  type: 'search',
+                  similarity_score: result.similarity_score,
+                  search_query: query,
+                  performance_ratio: result.performance_ratio
+                }}
+              />
             ))}
           </div>
           

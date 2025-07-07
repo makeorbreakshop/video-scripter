@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { PackagingCard } from './packaging-card';
+import { UnifiedVideoCard } from './unified-video-card';
 import { usePackagingData } from '@/hooks/use-packaging-data';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
@@ -127,7 +127,24 @@ export function PackagingGrid() {
               ref={isLastItem ? lastElementRef : undefined}
               className={isNearEnd ? 'scroll-trigger' : undefined}
             >
-              <PackagingCard video={video} />
+              <UnifiedVideoCard 
+                video={{
+                  id: video.id,
+                  title: video.title,
+                  view_count: video.view_count,
+                  published_at: video.published_at,
+                  thumbnail_url: video.thumbnail_url,
+                  channel_id: video.channel_id,
+                  channel_name: video.channel_name,
+                  is_competitor: video.is_competitor
+                }}
+                context={{
+                  type: 'packaging',
+                  performance_ratio: video.performance_percent,
+                  baseline_views: video.baseline_views,
+                  channel_avg_views: video.channel_avg_views
+                }}
+              />
             </div>
           );
         })}

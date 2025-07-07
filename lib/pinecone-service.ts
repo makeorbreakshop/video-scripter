@@ -156,7 +156,7 @@ export class PineconeService {
       // Filter out shorts (videos <= 1 minute or with #shorts hashtag)
       const { data: basicVideos, error: basicError } = await supabase
         .from('videos')
-        .select('id, title, view_count, published_at, thumbnail_url, is_competitor, channel_id, duration')
+        .select('id, title, view_count, published_at, thumbnail_url, is_competitor, channel_id, channel_name, duration')
         .in('id', videoIds)
         .not('title', 'ilike', '%#shorts%')
         .not('description', 'ilike', '%#shorts%')

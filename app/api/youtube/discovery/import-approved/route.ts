@@ -172,20 +172,33 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
           if (videoData.items) {
             let filteredVideos = videoData.items;
             
-            // Filter out shorts if requested
+            // Filter out shorts if requested (using comprehensive detection)
             if (excludeShorts) {
               filteredVideos = videoData.items.filter(video => {
                 const duration = video.contentDetails.duration;
-                // Parse ISO 8601 duration (PT1M30S = 1 minute 30 seconds)
+                const title = video.snippet.title || '';
+                const description = video.snippet.description || '';
+                
+                // Duration check: <= 2 minutes 1 second (121 seconds)
                 const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-                if (!match) return true; // If we can't parse, assume it's not a short
+                if (match) {
+                  const hours = parseInt(match[1] || '0');
+                  const minutes = parseInt(match[2] || '0');
+                  const seconds = parseInt(match[3] || '0');
+                  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                  
+                  if (totalSeconds > 0 && totalSeconds <= 121) {
+                    return false; // Exclude shorts by duration
+                  }
+                }
                 
-                const hours = parseInt(match[1] || '0');
-                const minutes = parseInt(match[2] || '0');
-                const seconds = parseInt(match[3] || '0');
-                const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                // Hashtag check: Look for #shorts, #short, #youtubeshorts (case insensitive)
+                const combinedText = `${title} ${description}`.toLowerCase();
+                if (combinedText.includes('#shorts') || combinedText.includes('#short') || combinedText.includes('#youtubeshorts')) {
+                  return false; // Exclude shorts by hashtag
+                }
                 
-                return totalSeconds >= 60; // Exclude videos under 60 seconds
+                return true; // Keep long-form videos
               });
             }
             
