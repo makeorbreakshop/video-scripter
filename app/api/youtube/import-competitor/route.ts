@@ -185,7 +185,8 @@ export async function POST(request: NextRequest) {
           id: video.id,
           title: video.snippet.title,
           description: video.snippet.description,
-          channel_id: video.snippet.channelTitle, // Store channel name like existing videos
+          channel_id: video.snippet.channelId, // Store actual YouTube channel ID
+          channel_name: video.snippet.channelTitle, // Store channel name in new column
           published_at: video.snippet.publishedAt,
           duration: video.contentDetails.duration,
           view_count: viewCount,
@@ -205,8 +206,7 @@ export async function POST(request: NextRequest) {
             tags: video.snippet.tags || [],
             categoryId: video.snippet.categoryId || '',
             competitor_import: true,
-            youtube_channel_id: video.snippet.channelId, // Store actual YouTube channel ID here
-            channel_title: video.snippet.channelTitle, // Add channel_title for semantic search compatibility
+            channel_title: video.snippet.channelTitle, // Keep for backwards compatibility
             import_settings: {
               time_period: timePeriod,
               max_videos: maxVideos,

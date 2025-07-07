@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
                       title: video.snippet.title,
                       description: video.snippet.description || '',
                       channel_id: video.snippet.channelId, // Use YouTube channel ID for consistency
+                      channel_name: video.snippet.channelTitle, // Add channel name
                       published_at: video.snippet.publishedAt,
                       duration: video.contentDetails.duration,
                       view_count: viewCount,

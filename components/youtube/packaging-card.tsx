@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PerformanceBadge } from './performance-badge';
 import { formatViewCount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TrendingUp } from 'lucide-react';
 
 interface PackagingCardProps {
   video: {
@@ -19,6 +21,7 @@ interface PackagingCardProps {
     thumbnail_url: string;
     is_competitor?: boolean;
     channel_id?: string;
+    channel_avg_views?: number;
   };
 }
 
@@ -42,6 +45,15 @@ function PackagingCardComponent({ video }: PackagingCardProps) {
   const formattedBaseline = useMemo(() => {
     return formatViewCount(video.baseline_views);
   }, [video.baseline_views]);
+
+  const channelAverage = useMemo(() => {
+    return video.channel_avg_views || video.baseline_views;
+  }, [video.channel_avg_views, video.baseline_views]);
+
+  const formattedChannelAverage = useMemo(() => {
+    return formatViewCount(channelAverage);
+  }, [channelAverage]);
+
 
   const handleYouTubeLink = useCallback(() => {
     window.open(`https://youtube.com/watch?v=${video.id}`, '_blank');
@@ -100,7 +112,7 @@ function PackagingCardComponent({ video }: PackagingCardProps) {
           <PerformanceBadge percentage={video.performance_percent} />
         </div>
 
-        {/* Channel info with avatar */}
+        {/* Channel info with avatar and average */}
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
             {video.is_competitor ? (
@@ -109,8 +121,26 @@ function PackagingCardComponent({ video }: PackagingCardProps) {
               <div className="w-4 h-4 rounded-full bg-blue-500"></div>
             )}
           </div>
-          <div className="text-xs text-muted-foreground font-medium min-w-0">
-            {video.is_competitor ? video.channel_id : 'Make or Break Shop'}
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-muted-foreground font-medium truncate">
+              {video.channel_name || (video.is_competitor ? video.channel_id : 'Make or Break Shop')}
+            </div>
+            {channelAverage > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>{formattedChannelAverage} avg</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Channel Average: {formattedChannelAverage} views</p>
+                    <p className="text-xs text-muted-foreground">Based on previous year of videos</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
 
@@ -135,6 +165,7 @@ export const PackagingCard = memo(PackagingCardComponent, (prevProps, nextProps)
     prevProps.video.performance_percent === nextProps.video.performance_percent &&
     prevProps.video.thumbnail_url === nextProps.video.thumbnail_url &&
     prevProps.video.is_competitor === nextProps.video.is_competitor &&
-    prevProps.video.channel_id === nextProps.video.channel_id
+    prevProps.video.channel_id === nextProps.video.channel_id &&
+    prevProps.video.channel_avg_views === nextProps.video.channel_avg_views
   );
 });

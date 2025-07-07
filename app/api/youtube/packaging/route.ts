@@ -77,7 +77,9 @@ export async function GET(request: NextRequest) {
       performance_percent: Number((video.performance_ratio || 0).toFixed(2)),
       thumbnail_url: video.thumbnail_url || `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`,
       is_competitor: video.is_competitor,
-      channel_id: video.channel_id
+      channel_id: video.channel_id,
+      channel_name: video.channel_name || 'Unknown Channel',
+      channel_avg_views: video.channel_avg_views || 0
     }));
 
     console.log(`⚡ Database function completed in ${queryTime}ms, returning ${processedData.length}/${totalCount} videos`);
