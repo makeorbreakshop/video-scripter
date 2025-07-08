@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { searchTerm, filters = {}, maxResults = 50 } = await request.json();
+    const { searchTerm, filters = {}, maxResults = 50, searchType = 'channel' } = await request.json();
 
     if (!searchTerm || typeof searchTerm !== 'string') {
       return NextResponse.json(
@@ -91,7 +91,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Search for channels using YouTube Data API
+    if (searchType === 'video') {
+      // Video-first discovery approach
+      return await handleVideoSearch(searchTerm, filters, maxResults, apiKey);
+    }
+
+    // Original channel search for backward compatibility
     const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search');
     searchUrl.searchParams.set('part', 'snippet');
     searchUrl.searchParams.set('q', searchTerm);
@@ -320,4 +325,293 @@ function calculateRelevanceScore(channel: any, searchTerm: string): number {
   score += activityScore;
   
   return Math.min(score, 5.0); // Cap at 5.0 for database constraint
+}
+
+async function handleVideoSearch(searchTerm: string, filters: SearchFilters, maxResults: number, apiKey: string) {
+  try {
+    // Step 1: Search for videos (100 units)
+    const videoSearchUrl = new URL('https://www.googleapis.com/youtube/v3/search');
+    videoSearchUrl.searchParams.set('part', 'snippet');
+    videoSearchUrl.searchParams.set('q', searchTerm);
+    videoSearchUrl.searchParams.set('type', 'video');
+    videoSearchUrl.searchParams.set('maxResults', Math.min(maxResults, 50).toString());
+    videoSearchUrl.searchParams.set('key', apiKey);
+
+    const videoSearchResponse = await fetch(videoSearchUrl.toString());
+    if (!videoSearchResponse.ok) {
+      throw new Error(`YouTube API video search failed: ${videoSearchResponse.statusText}`);
+    }
+
+    const videoSearchData = await videoSearchResponse.json();
+    if (!videoSearchData.items || videoSearchData.items.length === 0) {
+      return NextResponse.json({
+        success: true,
+        searchTerm,
+        stats: {
+          rawFromYoutube: 0,
+          afterFilters: 0,
+          alreadyExists: 0,
+          newChannelsAdded: 0,
+          filterBreakdown: {
+            bySubscribers: 0,
+            byVideoCount: 0,
+            byAge: 0,
+            totalFiltered: 0
+          }
+        },
+        channelsDiscovered: 0,
+        channelsAdded: 0,
+        channels: [],
+        message: 'No videos found for search term'
+      });
+    }
+
+    // Step 2: Extract unique channel IDs from videos
+    const uniqueChannelIds = [...new Set(videoSearchData.items.map((item: any) => item.snippet.channelId))];
+    
+    // Step 3: Get channel details (1 unit for up to 50 channels)
+    const channelUrl = new URL('https://www.googleapis.com/youtube/v3/channels');
+    channelUrl.searchParams.set('part', 'snippet,statistics,brandingSettings');
+    channelUrl.searchParams.set('id', uniqueChannelIds.join(','));
+    channelUrl.searchParams.set('key', apiKey);
+
+    const channelResponse = await fetch(channelUrl.toString());
+    if (!channelResponse.ok) {
+      throw new Error(`YouTube API channel details failed: ${channelResponse.statusText}`);
+    }
+
+    const channelData = await channelResponse.json();
+
+    // Step 4: Get RSS feeds for performance baselines (free!)
+    const channelsWithBaselines = await Promise.all(
+      channelData.items.map(async (channel: any) => {
+        try {
+          const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+          const rssResponse = await fetch(rssUrl);
+          let baseline = null;
+          
+          if (rssResponse.ok) {
+            const rssText = await rssResponse.text();
+            baseline = parseRSSBaseline(rssText);
+          }
+
+          return {
+            ...channel,
+            rssBaseline: baseline
+          };
+        } catch (error) {
+          console.error(`Failed to get RSS for channel ${channel.id}:`, error);
+          return {
+            ...channel,
+            rssBaseline: null
+          };
+        }
+      })
+    );
+
+    // Apply filters and process channels (same logic as original)
+    let filteredBySubscribers = 0;
+    let filteredByVideos = 0;
+    let filteredByAge = 0;
+
+    const filteredChannels = channelsWithBaselines
+      .filter((channel: any) => {
+        const stats = channel.statistics;
+        const subscriberCount = parseInt(stats.subscriberCount) || 0;
+        const videoCount = parseInt(stats.videoCount) || 0;
+        const publishedAt = new Date(channel.snippet.publishedAt);
+
+        if (filters.minSubscribers && subscriberCount < filters.minSubscribers) {
+          filteredBySubscribers++;
+          return false;
+        }
+        if (filters.maxSubscribers && subscriberCount > filters.maxSubscribers) {
+          filteredBySubscribers++;
+          return false;
+        }
+        if (filters.minVideos && videoCount < filters.minVideos) {
+          filteredByVideos++;
+          return false;
+        }
+        if (filters.maxVideos && videoCount > filters.maxVideos) {
+          filteredByVideos++;
+          return false;
+        }
+        if (filters.publishedAfter && publishedAt < new Date(filters.publishedAfter)) {
+          filteredByAge++;
+          return false;
+        }
+
+        return true;
+      })
+      .map((channel: any) => ({
+        channelId: channel.id,
+        title: channel.snippet.title,
+        description: channel.snippet.description,
+        subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
+        videoCount: parseInt(channel.statistics.videoCount) || 0,
+        viewCount: parseInt(channel.statistics.viewCount) || 0,
+        publishedAt: channel.snippet.publishedAt,
+        thumbnailUrl: channel.snippet.thumbnails.high?.url || channel.snippet.thumbnails.default?.url,
+        customUrl: channel.snippet.customUrl,
+        rssBaseline: channel.rssBaseline
+      }));
+
+    // Check for existing channels (same logic as original)
+    const existingChannelIds = filteredChannels.length > 0 ? 
+      await Promise.all([
+        supabase
+          .from('channel_discovery')
+          .select('discovered_channel_id')
+          .in('discovered_channel_id', filteredChannels.map(c => c.channelId)),
+        supabase
+          .from('videos')
+          .select('metadata')
+          .in('metadata->>youtube_channel_id', filteredChannels.map(c => c.channelId)),
+        supabase
+          .from('videos')
+          .select('channel_name')
+          .in('channel_name', filteredChannels.map(c => c.title))
+      ]).then(([discoveryResult, videosByIdResult, videosByNameResult]) => {
+        const discoveryIds = discoveryResult.data?.map(d => d.discovered_channel_id) || [];
+        const videoChannelIds = videosByIdResult.data?.map(d => d.metadata?.youtube_channel_id).filter(Boolean) || [];
+        const videoChannelNames = videosByNameResult.data?.map(d => d.channel_name) || [];
+        
+        const excludeIds = new Set(discoveryIds);
+        
+        filteredChannels.forEach(channel => {
+          if (videoChannelIds.includes(channel.channelId) || videoChannelNames.includes(channel.title)) {
+            excludeIds.add(channel.channelId);
+          }
+        });
+        
+        return excludeIds;
+      })
+      : new Set();
+
+    const newChannels = filteredChannels.filter(channel => !existingChannelIds.has(channel.channelId));
+
+    // Add channels to discovery system with baseline data
+    const discoveryRecords = newChannels.map(channel => ({
+      discovered_channel_id: channel.channelId,
+      source_channel_id: 'video_search_discovery',
+      discovery_method: 'search',
+      discovery_context: {
+        search_term: searchTerm,
+        search_filters: filters,
+        search_date: new Date().toISOString(),
+        video_search: true,
+        rss_baseline: channel.rssBaseline
+      },
+      channel_metadata: {
+        title: channel.title,
+        description: channel.description,
+        subscriber_count: channel.subscriberCount,
+        video_count: channel.videoCount,
+        view_count: channel.viewCount,
+        published_at: channel.publishedAt,
+        thumbnail_url: channel.thumbnailUrl,
+        custom_url: channel.customUrl,
+        rss_baseline: channel.rssBaseline
+      },
+      subscriber_count: channel.subscriberCount,
+      video_count: channel.videoCount,
+      relevance_score: calculateRelevanceScore(channel, searchTerm),
+      validation_status: 'pending',
+      created_at: new Date().toISOString()
+    }));
+
+    let channelsAdded = 0;
+    if (discoveryRecords.length > 0) {
+      const { error: insertError } = await supabase
+        .from('channel_discovery')
+        .insert(discoveryRecords);
+
+      if (insertError) {
+        console.error('Error inserting discovery records:', insertError);
+        throw insertError;
+      }
+
+      channelsAdded = discoveryRecords.length;
+    }
+
+    // For video search, return the videos that were found
+    const videosWithChannelData = videoSearchData.items.map((video: any) => {
+      const channel = channelsWithBaselines.find((ch: any) => ch.id === video.snippet.channelId);
+      return {
+        videoId: video.id.videoId,
+        title: video.snippet.title,
+        description: video.snippet.description,
+        channelId: video.snippet.channelId,
+        channelTitle: video.snippet.channelTitle,
+        publishedAt: video.snippet.publishedAt,
+        thumbnailUrl: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url,
+        channelData: channel ? {
+          subscriberCount: parseInt(channel.statistics.subscriberCount) || 0,
+          videoCount: parseInt(channel.statistics.videoCount) || 0,
+          rssBaseline: channel.rssBaseline
+        } : null
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      searchTerm,
+      searchType: 'video',
+      stats: {
+        videosFound: videoSearchData.items?.length || 0,
+        uniqueChannels: uniqueChannelIds.length,
+        channelsAfterFilters: filteredChannels.length,
+        channelsAlreadyExists: filteredChannels.length - newChannels.length,
+        newChannelsAdded: channelsAdded,
+        filterBreakdown: {
+          bySubscribers: filteredBySubscribers,
+          byVideoCount: filteredByVideos,
+          byAge: filteredByAge,
+          totalFiltered: filteredBySubscribers + filteredByVideos + filteredByAge
+        }
+      },
+      videos: videosWithChannelData,
+      // Also include channel summary for discovery queue context
+      channelsDiscovered: filteredChannels.length,
+      channelsAdded,
+      channelsFiltered: filteredBySubscribers + filteredByVideos + filteredByAge,
+      channelsExisting: filteredChannels.length - newChannels.length,
+      channels: newChannels.map(channel => ({
+        ...channel,
+        relevanceScore: calculateRelevanceScore(channel, searchTerm),
+        status: 'pending',
+        baseline: channel.rssBaseline || 'N/A'
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error in video search discovery:', error);
+    return NextResponse.json(
+      { error: 'Failed to perform video search discovery' },
+      { status: 500 }
+    );
+  }
+}
+
+function parseRSSBaseline(rssXml: string): number | null {
+  try {
+    // Extract view counts from RSS XML using regex
+    const statisticsRegex = /<media:statistics views="(\d+)"/g;
+    const viewCounts: number[] = [];
+    let match;
+    
+    while ((match = statisticsRegex.exec(rssXml)) !== null) {
+      viewCounts.push(parseInt(match[1]));
+    }
+    
+    if (viewCounts.length === 0) return null;
+    
+    // Calculate average view count from recent videos
+    const average = viewCounts.reduce((sum, views) => sum + views, 0) / viewCounts.length;
+    return Math.round(average);
+  } catch (error) {
+    console.error('Error parsing RSS baseline:', error);
+    return null;
+  }
 }

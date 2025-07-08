@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, Plus, Search, Download, Calendar, Users, Eye, ThumbsUp, MessageCircle, Clock, Trash2 } from 'lucide-react';
+import { AlertCircle, Plus, Search, Download, Calendar, Users, Eye, ThumbsUp, MessageCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,13 +50,14 @@ export default function CompetitorsPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [competitorChannels, setCompetitorChannels] = useState<CompetitorChannel[]>([]);
-  const [refreshingChannels, setRefreshingChannels] = useState<Set<string>>(new Set());
+  // Removed refreshingChannels state as it's no longer needed
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<SearchResult | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [importedChannelIds, setImportedChannelIds] = useState<Set<string>>(new Set());
+  const [channelSearchTerm, setChannelSearchTerm] = useState('');
   const { toast } = useToast();
 
   // Prevent hydration issues by only rendering after mount
@@ -365,62 +366,28 @@ export default function CompetitorsPage() {
     return num.toString();
   };
 
-  const handleRefreshChannel = async (channel: CompetitorChannel) => {
-    const channelId = channel.id;
-    
-    // Add to refreshing set
-    setRefreshingChannels(prev => new Set(prev).add(channelId));
-    
-    try {
-      const response = await fetch('/api/youtube/refresh-competitor-channel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          channelName: channel.name,
-          youtubeChannelId: channel.id,
-          userId: '00000000-0000-0000-0000-000000000000'
-        }),
-      });
+  const filteredChannels = competitorChannels.filter(channel => {
+    if (!channelSearchTerm) return true;
+    const searchLower = channelSearchTerm.toLowerCase();
+    return (
+      (channel.name && channel.name.toLowerCase().includes(searchLower)) ||
+      (channel.handle && channel.handle.toLowerCase().includes(searchLower)) ||
+      (channel.id && channel.id.toLowerCase().includes(searchLower))
+    );
+  });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to refresh channel');
-      }
-
-      toast({
-        title: 'Success!',
-        description: result.message || `Imported ${result.videos_imported} new videos from ${channel.name}`,
-      });
-
-      // Reload channels to show updated counts
-      await loadCompetitorChannels();
-
-    } catch (error) {
-      console.error('Refresh error:', error);
-      toast({
-        title: 'Refresh Failed',
-        description: (error as Error).message || `Failed to refresh ${channel.name}`,
-        variant: 'destructive'
-      });
-    } finally {
-      // Remove from refreshing set
-      setRefreshingChannels(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(channelId);
-        return newSet;
-      });
-    }
+  const handleChannelClick = (channelId: string) => {
+    window.open(`/dashboard/youtube/channels/${channelId}`, '_blank');
   };
+
+  // Removed handleRefreshChannel function as refresh buttons are no longer needed
 
   // Prevent hydration mismatch by waiting for client-side mount
   if (!isMounted) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Competitor Analysis</h1>
+      <div className="container mx-auto max-w-7xl space-y-6 p-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Competitor Analysis</h1>
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -428,7 +395,14 @@ export default function CompetitorsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto max-w-7xl space-y-6 p-6">
+      {/* Page Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Competitor Analysis</h1>
+        <p className="text-muted-foreground">
+          Import and analyze competitor channels to identify content opportunities and performance benchmarks
+        </p>
+      </div>
 
       <Tabs defaultValue="import" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -716,69 +690,64 @@ export default function CompetitorsPage() {
               Refresh
             </Button>
           </div>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search channels by name, handle, or ID..."
+              value={channelSearchTerm}
+              onChange={(e) => setChannelSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           <div className="grid gap-4">
-            {competitorChannels.map((channel) => (
-              <Card key={channel.id}>
+            {filteredChannels.map((channel) => (
+              <Card 
+                key={channel.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleChannelClick(channel.id)}
+              >
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {channel.thumbnailUrl ? (
-                        <img 
-                          src={channel.thumbnailUrl} 
-                          alt={channel.name}
-                          className="h-12 w-12 rounded-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            console.log('Thumbnail failed to load for:', channel.name, 'URL:', channel.thumbnailUrl);
-                            target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" fill="%23ef4444" rx="24"/><text x="24" y="30" text-anchor="middle" fill="white" font-family="system-ui" font-size="16" font-weight="600">${channel.name.charAt(0).toUpperCase()}</text></svg>`;
-                          }}
-                        />
-                      ) : (
-                        <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center">
-                          <Users className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{channel.name}</h3>
-                          <Badge variant={channel.status === 'active' ? 'default' : 'secondary'}>
-                            {channel.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{channel.handle}</p>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {formatNumber(channel.subscriberCount)} subscribers
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {channel.videoCount} videos imported
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Imported: {formatTimeAgo(channel.lastImport)}
-                          </span>
-                        </div>
+                  <div className="flex items-center gap-4">
+                    {channel.thumbnailUrl ? (
+                      <img 
+                        src={channel.thumbnailUrl} 
+                        alt={channel.name}
+                        className="h-12 w-12 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          console.log('Thumbnail failed to load for:', channel.name, 'URL:', channel.thumbnailUrl);
+                          target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" fill="%23ef4444" rx="24"/><text x="24" y="30" text-anchor="middle" fill="white" font-family="system-ui" font-size="16" font-weight="600">${channel.name.charAt(0).toUpperCase()}</text></svg>`;
+                        }}
+                      />
+                    ) : (
+                      <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-muted-foreground" />
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleRefreshChannel(channel)}
-                        disabled={refreshingChannels.has(channel.id)}
-                      >
-                        <Download className={`h-4 w-4 mr-2 ${refreshingChannels.has(channel.id) ? 'animate-spin' : ''}`} />
-                        {refreshingChannels.has(channel.id) ? 'Refreshing...' : 'Refresh'}
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Search className="h-4 w-4 mr-2" />
-                        Analyze
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{channel.name}</h3>
+                        <Badge variant={channel.status === 'active' ? 'default' : 'secondary'}>
+                          {channel.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{channel.handle}</p>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {formatNumber(channel.subscriberCount)} subscribers
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {channel.videoCount} videos imported
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Imported: {formatTimeAgo(channel.lastImport)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -797,6 +766,18 @@ export default function CompetitorsPage() {
                     <Plus className="mr-2 h-4 w-4" />
                     Import Channel
                   </Button>
+                </CardContent>
+              </Card>
+            )}
+            
+            {competitorChannels.length > 0 && filteredChannels.length === 0 && (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No channels found</h3>
+                  <p className="text-muted-foreground">
+                    No channels match your search term "{channelSearchTerm}"
+                  </p>
                 </CardContent>
               </Card>
             )}

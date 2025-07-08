@@ -15,76 +15,105 @@ const supabaseAdmin = createClient(
 
 export async function GET() {
   try {
-    // Get video data with counts per channel
-    const { data: videos, error: videosError } = await supabaseAdmin
-      .from('videos')
-      .select(`
-        channel_id,
-        imported_by,
-        import_date,
-        metadata
-      `)
-      .eq('is_competitor', true)
-      .limit(5000);
+    // Use a raw SQL query with the Supabase SQL editor endpoint
+    const query = `
+      WITH channel_aggregates AS (
+        SELECT 
+          v.channel_id,
+          COUNT(*) as video_count,
+          MAX(v.import_date) as last_import,
+          (ARRAY_AGG(
+            v.metadata ORDER BY 
+            CASE 
+              WHEN v.metadata->'channel_stats' IS NOT NULL THEN 0
+              ELSE 1
+            END,
+            v.import_date DESC
+          ))[1] as best_metadata
+        FROM videos v
+        WHERE v.is_competitor = true
+        GROUP BY v.channel_id
+      )
+      SELECT
+        ca.channel_id,
+        COALESCE(ca.best_metadata->>'youtube_channel_id', ca.channel_id) as youtube_channel_id,
+        COALESCE(ca.best_metadata->>'channel_name', ca.best_metadata->>'channel_title', ca.channel_id) as channel_name,
+        ca.best_metadata->>'channel_title' as channel_title,
+        ca.best_metadata->>'channel_handle' as channel_handle,
+        (ca.best_metadata->'channel_stats'->'subscriber_count')::text::integer as subscriber_count,
+        ca.video_count::integer as video_count,
+        ca.last_import,
+        ca.best_metadata->'channel_stats'->>'channel_thumbnail' as channel_thumbnail
+      FROM channel_aggregates ca
+      ORDER BY ca.video_count DESC;
+    `;
 
-    if (videosError) throw videosError;
+    // Execute raw SQL using Supabase's SQL REST API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/sql`, {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    });
 
-    // Get channel tracking data for proper timestamps
-    const { data: channelStatus, error: statusError } = await supabaseAdmin
-      .from('channel_import_status')
-      .select(`
-        channel_name,
-        first_import_date,
-        last_refresh_date,
-        total_videos_found
-      `);
+    if (!response.ok) {
+      // Fallback: Create a materialized view approach
+      const { data: channelData, error } = await supabaseAdmin
+        .from('competitor_channel_summary')
+        .select('*')
+        .order('video_count', { ascending: false });
 
-    if (statusError) {
-      console.warn('Could not load channel status:', statusError);
+      if (error || !channelData) {
+        // Last resort: Use the function but with explicit casting
+        const { data: funcData, error: funcError } = await supabaseAdmin.rpc('get_competitor_channel_stats');
+        
+        if (funcError || !funcData) {
+          throw new Error('All methods failed to get channel data');
+        }
+
+        const channels = funcData.map((stat: any) => ({
+          id: stat.youtube_channel_id || stat.channel_id,
+          name: stat.channel_name || stat.channel_title || stat.channel_id,
+          handle: stat.channel_handle || `@${stat.channel_id.replace(/\s+/g, '').toLowerCase()}`,
+          subscriberCount: Number(stat.subscriber_count) || 0,
+          videoCount: Number(stat.video_count) || 0,
+          lastImport: stat.last_import,
+          status: 'active',
+          thumbnailUrl: stat.channel_thumbnail
+        }));
+
+        return NextResponse.json({ channels });
+      }
+
+      const channels = channelData.map((channel: any) => ({
+        id: channel.youtube_channel_id || channel.channel_id,
+        name: channel.channel_name || channel.channel_id,
+        handle: channel.channel_handle || `@${channel.channel_id.replace(/\s+/g, '').toLowerCase()}`,
+        subscriberCount: channel.subscriber_count || 0,
+        videoCount: channel.video_count || 0,
+        lastImport: channel.last_import,
+        status: 'active',
+        thumbnailUrl: channel.channel_thumbnail
+      }));
+
+      return NextResponse.json({ channels });
     }
 
-    // Group videos by channel and count them
-    const channelMap = new Map();
-    const channelCounts = new Map();
+    const result = await response.json();
     
-    videos?.forEach(video => {
-      const channelId = video.channel_id;
-      
-      // Count videos per channel
-      channelCounts.set(channelId, (channelCounts.get(channelId) || 0) + 1);
-      
-      // Keep latest video data per channel
-      if (!channelMap.has(channelId) || new Date(video.import_date) > new Date(channelMap.get(channelId).import_date)) {
-        channelMap.set(channelId, video);
-      }
-    });
-
-    // Create channel status map for easy lookup
-    const statusMap = new Map();
-    channelStatus?.forEach(status => {
-      statusMap.set(status.channel_name, status);
-    });
-
-    // Format response with proper data
-    const channels = Array.from(channelMap.values()).map(video => {
-      const channelStats = video.metadata?.channel_stats || {};
-      const statusData = statusMap.get(video.channel_id);
-      const videoCount = channelCounts.get(video.channel_id) || 0;
-      
-      // Use tracking data if available, fallback to video import_date
-      const lastImportDate = statusData?.last_refresh_date || statusData?.first_import_date || video.import_date;
-      
-      return {
-        id: video.metadata?.youtube_channel_id || video.channel_id,
-        name: video.channel_id,
-        handle: `@${video.channel_id.replace(/\s+/g, '').toLowerCase()}`,
-        subscriberCount: channelStats.subscriber_count || 0,
-        videoCount: videoCount,
-        lastImport: lastImportDate,
-        status: 'active',
-        thumbnailUrl: channelStats.channel_thumbnail
-      };
-    });
+    const channels = result.map((row: any) => ({
+      id: row.youtube_channel_id || row.channel_id,
+      name: row.channel_name || row.channel_id,
+      handle: row.channel_handle || `@${row.channel_id.replace(/\s+/g, '').toLowerCase()}`,
+      subscriberCount: Number(row.subscriber_count) || 0,
+      videoCount: Number(row.video_count) || 0,
+      lastImport: row.last_import,
+      status: 'active',
+      thumbnailUrl: row.channel_thumbnail
+    }));
 
     return NextResponse.json({ channels });
   } catch (error) {

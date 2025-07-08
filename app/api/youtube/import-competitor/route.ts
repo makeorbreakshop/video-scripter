@@ -239,6 +239,41 @@ export async function POST(request: NextRequest) {
         throw insertError;
       }
 
+      // Update channel_import_status table
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+
+        const { error: statusError } = await supabaseAdmin
+          .from('channel_import_status')
+          .upsert({
+            channel_name: channelInfo.snippet.title,
+            channel_id: channelId,
+            first_import_date: new Date().toISOString(),
+            last_refresh_date: new Date().toISOString(),
+            total_videos_found: limitedVideos.length,
+            is_fully_imported: timePeriod === 'all' && maxVideos === 'all'
+          }, {
+            onConflict: 'channel_id'
+          });
+
+        if (statusError) {
+          console.error('Error updating channel import status:', statusError);
+          // Don't fail the whole import if status update fails
+        }
+      } catch (statusError) {
+        console.error('Error updating channel import status:', statusError);
+        // Don't fail the whole import if status update fails
+      }
+
       // Trigger vectorization for newly imported videos
       try {
         const videoIds = insertedVideos?.map(v => v.id) || [];

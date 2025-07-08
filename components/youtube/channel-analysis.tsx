@@ -120,7 +120,8 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
     return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   };
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | null | undefined) => {
+    if (num == null || isNaN(num)) return '0';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toLocaleString();
@@ -128,6 +129,24 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatDuration = (duration: string) => {
+    if (!duration) return '';
+    
+    // Parse ISO 8601 duration format (PT1H2M3S)
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return duration;
+    
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
   };
 
   const getPerformanceBadgeVariant = (ratio: number | null) => {
@@ -351,7 +370,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     </TableCell>
                     <TableCell>{formatDate(video.published_at)}</TableCell>
                     <TableCell>{formatNumber(video.channel_avg_views)}</TableCell>
-                    <TableCell>{video.duration}</TableCell>
+                    <TableCell>{formatDuration(video.duration)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
