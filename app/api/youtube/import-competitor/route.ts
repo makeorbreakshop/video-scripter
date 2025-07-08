@@ -241,6 +241,8 @@ export async function POST(request: NextRequest) {
 
       // Update channel_import_status table
       try {
+        console.log('🔄 Updating channel_import_status for:', channelInfo.snippet.title);
+        
         const supabaseAdmin = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -252,26 +254,78 @@ export async function POST(request: NextRequest) {
           }
         );
 
-        const { error: statusError } = await supabaseAdmin
+        // First check if the channel already exists
+        const { data: existingStatus } = await supabaseAdmin
           .from('channel_import_status')
-          .upsert({
+          .select('id')
+          .eq('channel_id', channelId)
+          .single();
+
+        const now = new Date().toISOString();
+        
+        if (existingStatus) {
+          // Update existing record
+          const { data: statusResult, error: statusError } = await supabaseAdmin
+            .from('channel_import_status')
+            .update({
+              channel_name: channelInfo.snippet.title,
+              last_refresh_date: now,
+              total_videos_found: limitedVideos.length,
+              is_fully_imported: timePeriod === 'all' && maxVideos === 'all'
+            })
+            .eq('channel_id', channelId)
+            .select();
+
+          if (statusError) {
+            console.error('❌ Error updating channel import status:', statusError);
+            console.error('Full error details:', JSON.stringify(statusError, null, 2));
+          } else {
+            console.log('✅ Successfully updated channel_import_status:', statusResult);
+          }
+        } else {
+          // Insert new record with generated UUID
+          const statusData = {
+            id: crypto.randomUUID(),
             channel_name: channelInfo.snippet.title,
             channel_id: channelId,
-            first_import_date: new Date().toISOString(),
-            last_refresh_date: new Date().toISOString(),
+            first_import_date: now,
+            last_refresh_date: now,
             total_videos_found: limitedVideos.length,
             is_fully_imported: timePeriod === 'all' && maxVideos === 'all'
-          }, {
-            onConflict: 'channel_id'
-          });
+          };
+          
+          console.log('📝 Status data to insert:', statusData);
 
-        if (statusError) {
-          console.error('Error updating channel import status:', statusError);
-          // Don't fail the whole import if status update fails
+          const { data: statusResult, error: statusError } = await supabaseAdmin
+            .from('channel_import_status')
+            .insert(statusData)
+            .select();
+
+          if (statusError) {
+            console.error('❌ Error inserting channel import status:', statusError);
+            console.error('Full error details:', JSON.stringify(statusError, null, 2));
+          } else {
+            console.log('✅ Successfully inserted channel_import_status:', statusResult);
+          }
         }
       } catch (statusError) {
-        console.error('Error updating channel import status:', statusError);
+        console.error('❌ Exception updating channel import status:', statusError);
         // Don't fail the whole import if status update fails
+      }
+
+      // Refresh materialized view after import
+      try {
+        console.log('🔄 Refreshing competitor channel summary view...');
+        await fetch(`${request.nextUrl.origin}/api/youtube/refresh-competitor-view`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        console.log('✅ Competitor channel summary refreshed');
+      } catch (refreshError) {
+        console.warn('⚠️ Failed to refresh competitor view:', refreshError);
+        // Don't fail the import if view refresh fails
       }
 
       // Trigger vectorization for newly imported videos

@@ -41,16 +41,9 @@ interface SearchResult {
 
 export default function CompetitorsPage() {
   const [channelInput, setChannelInput] = useState('');
-  const [timePeriod, setTimePeriod] = useState('all');
-  const [maxVideos, setMaxVideos] = useState('all');
-  const [excludeShorts, setExcludeShorts] = useState(true);
-  const [minViews, setMinViews] = useState('');
-  const [maxViews, setMaxViews] = useState('');
-  const [channelPreviewStats, setChannelPreviewStats] = useState<{videoCount: number; estimatedImport: number} | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [competitorChannels, setCompetitorChannels] = useState<CompetitorChannel[]>([]);
-  // Removed refreshingChannels state as it's no longer needed
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<SearchResult | null>(null);
@@ -156,28 +149,8 @@ export default function CompetitorsPage() {
         throw new Error(result.error || 'Failed to search channels');
       }
 
-      // Filter and sort results
-      let filteredChannels = result.channels || [];
-      
-      // Apply subscriber count filters if specified
-      if (minViews || maxViews) {
-        filteredChannels = filteredChannels.filter((channel) => {
-          const subscriberCount = parseInt(channel.subscriberCount || '0');
-          
-          if (minViews && subscriberCount < parseInt(minViews)) {
-            return false;
-          }
-          
-          if (maxViews && subscriberCount > parseInt(maxViews)) {
-            return false;
-          }
-          
-          return true;
-        });
-      }
-      
-      // Sort by subscriber count (highest first)
-      const sortedChannels = filteredChannels.sort((a, b) => {
+      // Sort results by subscriber count (highest first)
+      const sortedChannels = (result.channels || []).sort((a, b) => {
         const aCount = parseInt(a.subscriberCount || '0');
         const bCount = parseInt(b.subscriberCount || '0');
         return bCount - aCount;
@@ -273,14 +246,14 @@ export default function CompetitorsPage() {
         },
         body: JSON.stringify({
           channelId,
-          timePeriod,
-          excludeShorts
+          timePeriod: 'all',
+          excludeShorts: true
         }),
       });
 
       const result = await response.json();
       if (response.ok) {
-        setChannelPreviewStats(result);
+        console.log('Channel preview stats:', result);
       }
     } catch (error) {
       console.error('Error getting channel preview stats:', error);
@@ -319,9 +292,9 @@ export default function CompetitorsPage() {
         body: JSON.stringify({
           channelId: selectedChannel.channelId,
           channelName: selectedChannel.title,
-          timePeriod,
-          maxVideos,
-          excludeShorts,
+          timePeriod: 'all',
+          maxVideos: 'all',
+          excludeShorts: true,
           userId: '00000000-0000-0000-0000-000000000000'
         }),
       });
@@ -461,31 +434,6 @@ export default function CompetitorsPage() {
                   </p>
                 </div>
 
-                {/* Subscriber Count Filter */}
-                <div className="space-y-2">
-                  <Label>Subscriber Count Range</Label>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      placeholder="Min subscribers (e.g. 10000)"
-                      value={minViews}
-                      onChange={(e) => setMinViews(e.target.value)}
-                      type="number"
-                      className="flex-1"
-                    />
-                    <span className="text-muted-foreground">to</span>
-                    <Input
-                      placeholder="Max subscribers (e.g. 1000000)"
-                      value={maxViews}
-                      onChange={(e) => setMaxViews(e.target.value)}
-                      type="number"
-                      className="flex-1"
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Filter results by subscriber count range (leave empty for no limit)
-                  </p>
-                </div>
-
                 {/* Selected Channel Display */}
                 {selectedChannel && (
                   <div className="p-4 border rounded-lg bg-muted/50">
@@ -577,68 +525,16 @@ export default function CompetitorsPage() {
                 )}
               </div>
 
-              {/* Channel Preview Stats */}
-              {selectedChannel && channelPreviewStats && (
-                <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/50">
-                  <h4 className="font-medium mb-2">Import Preview</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Total videos on channel:</span>
-                      <p className="font-medium">{formatNumber(channelPreviewStats.videoCount)}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Videos to import:</span>
-                      <p className="font-medium text-blue-600 dark:text-blue-400">
-                        ~{formatNumber(channelPreviewStats.estimatedImport)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Based on {timePeriod === 'all' ? 'entire channel history' : `last ${timePeriod} days`}
-                    {excludeShorts ? ' (excluding Shorts)' : ' (including Shorts)'}
-                  </p>
-                </div>
+
+              {/* Import Info */}
+              {selectedChannel && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Will import all videos (excluding Shorts) from <strong>{selectedChannel.title}</strong> using public YouTube data only.
+                  </AlertDescription>
+                </Alert>
               )}
-
-              {/* Import Settings */}
-              <div className="space-y-4">
-                
-                {/* Shorts Filter */}
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="space-y-1">
-                    <Label htmlFor="exclude-shorts" className="font-medium">Filter Content Type</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Exclude YouTube Shorts (videos under 60 seconds) from import
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="exclude-shorts"
-                      type="checkbox"
-                      checked={excludeShorts}
-                      onChange={(e) => {
-                        setExcludeShorts(e.target.checked);
-                        if (selectedChannel) {
-                          getChannelPreviewStats(selectedChannel.channelId);
-                        }
-                      }}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <Label htmlFor="exclude-shorts" className="text-sm font-medium">
-                      Exclude Shorts
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Import Warning */}
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Note:</strong> Competitor analysis uses public YouTube data only. 
-                  Private analytics (revenue, detailed demographics) are not available for competitor channels.
-                </AlertDescription>
-              </Alert>
 
               {/* Import Progress */}
               {isImporting && (
