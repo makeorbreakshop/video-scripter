@@ -176,67 +176,133 @@ export async function POST(request: NextRequest) {
         ? channelViewCounts.reduce((a, b) => a + b, 0) / channelViewCounts.length 
         : 0;
 
-      // Step 4: Store videos in database
-      const videosToInsert = limitedVideos.map(video => {
-        const viewCount = parseInt(video.statistics.viewCount) || 0;
-        const performanceRatio = channelAvgViews > 0 ? viewCount / channelAvgViews : 1;
-
-        return {
-          id: video.id,
-          title: video.snippet.title,
-          description: video.snippet.description,
-          channel_id: video.snippet.channelId, // Store actual YouTube channel ID
-          channel_name: video.snippet.channelTitle, // Store channel name in new column
-          published_at: video.snippet.publishedAt,
-          duration: video.contentDetails.duration,
-          view_count: viewCount,
-          like_count: parseInt(video.statistics.likeCount) || 0,
-          comment_count: parseInt(video.statistics.commentCount) || 0,
-          thumbnail_url: video.snippet.thumbnails.maxres?.url || 
-                        video.snippet.thumbnails.high?.url || 
-                        video.snippet.thumbnails.medium?.url,
-          performance_ratio: performanceRatio,
-          channel_avg_views: Math.round(channelAvgViews),
-          data_source: 'competitor',
-          is_competitor: true,
-          imported_by: userId,
-          import_date: new Date().toISOString(),
-          user_id: userId,
-          metadata: {
-            tags: video.snippet.tags || [],
-            categoryId: video.snippet.categoryId || '',
-            competitor_import: true,
-            channel_title: video.snippet.channelTitle, // Keep for backwards compatibility
-            import_settings: {
-              time_period: timePeriod,
-              max_videos: maxVideos,
-              exclude_shorts: excludeShorts,
-              actual_imported: limitedVideos.length
-            },
-            channel_stats: {
-              subscriber_count: parseInt(channelInfo.statistics.subscriberCount) || 0,
-              total_videos: parseInt(channelInfo.statistics.videoCount) || 0,
-              total_views: parseInt(channelInfo.statistics.viewCount) || 0,
-              channel_thumbnail: channelInfo.snippet.thumbnails.high?.url || 
-                               channelInfo.snippet.thumbnails.medium?.url || 
-                               channelInfo.snippet.thumbnails.default?.url
+      // Step 4: Use unified video import service for processing
+      const videoIds = limitedVideos.map(video => video.id);
+      
+      console.log(`🎯 Using unified video import for ${videoIds.length} competitor videos`);
+      
+      try {
+        // Call unified video import endpoint
+        const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            source: 'competitor',
+            videoIds: videoIds,
+            options: {
+              batchSize: 50,
+              // Enable all processing for competitor imports
+              skipEmbeddings: false,
+              skipExports: false
             }
-          }
+          })
+        });
+
+        if (!unifiedResponse.ok) {
+          throw new Error(`Unified import failed: ${unifiedResponse.status}`);
+        }
+
+        const unifiedResults = await unifiedResponse.json();
+        
+        if (!unifiedResults.success) {
+          throw new Error(`Unified import failed: ${unifiedResults.message}`);
+        }
+
+        console.log(`✅ Unified import completed: ${unifiedResults.videosProcessed} videos processed`);
+        console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
+        
+        // For backward compatibility, simulate the old insertedVideos format
+        const insertedVideos = unifiedResults.processedVideoIds.map((id: string) => {
+          const video = limitedVideos.find(v => v.id === id);
+          return {
+            id,
+            title: video?.snippet.title || '',
+            view_count: parseInt(video?.statistics.viewCount || '0'),
+            performance_ratio: channelAvgViews > 0 ? parseInt(video?.statistics.viewCount || '0') / channelAvgViews : 1
+          };
+        });
+
+        // Store processing results for later use
+        var processingResults = {
+          unifiedResults,
+          insertedVideos,
+          totalProcessed: unifiedResults.videosProcessed
         };
-      });
 
-      // Insert videos (upsert to handle duplicates)
-      const { data: insertedVideos, error: insertError } = await supabase
-        .from('videos')
-        .upsert(videosToInsert, { 
-          onConflict: 'id',
-          ignoreDuplicates: false 
-        })
-        .select('id, title, view_count, performance_ratio');
+      } catch (unifiedError) {
+        console.error('❌ Unified import failed, falling back to direct database insertion:', unifiedError);
+        
+        // Fallback to original database insertion method
+        const videosToInsert = limitedVideos.map(video => {
+          const viewCount = parseInt(video.statistics.viewCount) || 0;
+          const performanceRatio = channelAvgViews > 0 ? viewCount / channelAvgViews : 1;
 
-      if (insertError) {
-        console.error('Error inserting videos:', insertError);
-        throw insertError;
+          return {
+            id: video.id,
+            title: video.snippet.title,
+            description: video.snippet.description,
+            channel_id: video.snippet.channelId,
+            channel_name: video.snippet.channelTitle,
+            published_at: video.snippet.publishedAt,
+            duration: video.contentDetails.duration,
+            view_count: viewCount,
+            like_count: parseInt(video.statistics.likeCount) || 0,
+            comment_count: parseInt(video.statistics.commentCount) || 0,
+            thumbnail_url: video.snippet.thumbnails.maxres?.url || 
+                          video.snippet.thumbnails.high?.url || 
+                          video.snippet.thumbnails.medium?.url,
+            performance_ratio: performanceRatio,
+            channel_avg_views: Math.round(channelAvgViews),
+            data_source: 'competitor',
+            is_competitor: true,
+            imported_by: userId,
+            import_date: new Date().toISOString(),
+            user_id: userId,
+            metadata: {
+              tags: video.snippet.tags || [],
+              categoryId: video.snippet.categoryId || '',
+              competitor_import: true,
+              channel_title: video.snippet.channelTitle,
+              import_settings: {
+                time_period: timePeriod,
+                max_videos: maxVideos,
+                exclude_shorts: excludeShorts,
+                actual_imported: limitedVideos.length
+              },
+              channel_stats: {
+                subscriber_count: parseInt(channelInfo.statistics.subscriberCount) || 0,
+                total_videos: parseInt(channelInfo.statistics.videoCount) || 0,
+                total_views: parseInt(channelInfo.statistics.viewCount) || 0,
+                channel_thumbnail: channelInfo.snippet.thumbnails.high?.url || 
+                                 channelInfo.snippet.thumbnails.medium?.url || 
+                                 channelInfo.snippet.thumbnails.default?.url
+              }
+            }
+          };
+        });
+
+        // Insert videos (upsert to handle duplicates)
+        const { data: insertedVideos, error: insertError } = await supabase
+          .from('videos')
+          .upsert(videosToInsert, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          })
+          .select('id, title, view_count, performance_ratio');
+
+        if (insertError) {
+          console.error('Error inserting videos:', insertError);
+          throw insertError;
+        }
+
+        // Store fallback results
+        var processingResults = {
+          unifiedResults: null,
+          insertedVideos,
+          totalProcessed: insertedVideos?.length || 0
+        };
       }
 
       // Update channel_import_status table
@@ -328,25 +394,30 @@ export async function POST(request: NextRequest) {
         // Don't fail the import if view refresh fails
       }
 
-      // Trigger vectorization for newly imported videos
-      try {
-        const videoIds = insertedVideos?.map(v => v.id) || [];
-        if (videoIds.length > 0) {
-          await fetch(`${request.nextUrl.origin}/api/embeddings/titles/batch`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              video_ids: videoIds,
-              force_re_embed: false
-            })
-          });
-          console.log(`🔄 Triggered vectorization for ${videoIds.length} competitor videos`);
+      // Vectorization is now handled by unified endpoint (if used)
+      // Only trigger manual vectorization if unified import was not used
+      if (!processingResults.unifiedResults) {
+        try {
+          const videoIds = processingResults.insertedVideos?.map(v => v.id) || [];
+          if (videoIds.length > 0) {
+            await fetch(`${request.nextUrl.origin}/api/embeddings/titles/batch`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                video_ids: videoIds,
+                force_re_embed: false
+              })
+            });
+            console.log(`🔄 Triggered vectorization for ${videoIds.length} competitor videos (fallback)`);
+          }
+        } catch (vectorizationError) {
+          console.warn('Vectorization failed for competitor import:', vectorizationError);
+          // Don't fail the whole import if vectorization fails
         }
-      } catch (vectorizationError) {
-        console.warn('Vectorization failed for competitor import:', vectorizationError);
-        // Don't fail the whole import if vectorization fails
+      } else {
+        console.log(`✅ Vectorization handled by unified endpoint: ${processingResults.unifiedResults.embeddingsGenerated.titles} titles, ${processingResults.unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
       }
 
       return NextResponse.json({
@@ -360,8 +431,17 @@ export async function POST(request: NextRequest) {
           imported_videos: limitedVideos.length,
           channel_avg_views: Math.round(channelAvgViews)
         },
-        imported_videos: insertedVideos?.length || 0,
-        message: `Successfully imported ${limitedVideos.length} videos from ${channelInfo.snippet.title}`
+        imported_videos: processingResults.insertedVideos?.length || 0,
+        message: `Successfully imported ${processingResults.totalProcessed} videos from ${channelInfo.snippet.title}`,
+        // Add unified processing info if available
+        ...(processingResults.unifiedResults && {
+          unified: {
+            embeddingsGenerated: processingResults.unifiedResults.embeddingsGenerated,
+            exportFiles: processingResults.unifiedResults.exportFiles,
+            processingTime: processingResults.unifiedResults.processingTime,
+            method: 'unified-endpoint'
+          }
+        })
       });
 
     } catch (apiError) {

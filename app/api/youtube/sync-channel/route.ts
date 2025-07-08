@@ -54,25 +54,69 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 4: Import missing videos in batches
-    const batchSize = 10;
-    const importResults = [];
+    // Step 4: Use unified video import system for processing
+    const videoIds = missingVideos.map(video => video.id);
     
-    for (let i = 0; i < missingVideos.length; i += batchSize) {
-      const batch = missingVideos.slice(i, i + batchSize);
-      console.log(`📥 Importing batch ${Math.floor(i/batchSize) + 1}: ${batch.length} videos`);
-      
-      const batchResult = await importVideosBatch(batch, channelId);
-      importResults.push(...batchResult);
-      
-      // Small delay between batches to avoid overwhelming the system
-      if (i + batchSize < missingVideos.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
+    console.log(`🎯 Using unified video import for ${videoIds.length} sync videos`);
+    
+    let successful = 0;
+    let failed = 0;
+    
+    try {
+      // Call unified video import endpoint
+      const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: 'sync',
+          videoIds: videoIds,
+          options: {
+            batchSize: 50,
+            skipEmbeddings: false,
+            skipExports: false
+          }
+        })
+      });
 
-    const successful = importResults.filter(r => r.success).length;
-    const failed = importResults.filter(r => !r.success).length;
+      if (unifiedResponse.ok) {
+        const unifiedResult = await unifiedResponse.json();
+        
+        if (unifiedResult.success) {
+          console.log('✅ Unified video import successful for channel sync');
+          successful = unifiedResult.videosProcessed;
+          failed = videoIds.length - successful;
+        } else {
+          console.log('⚠️ Unified system failed, falling back to original method');
+          throw new Error('Unified system failed');
+        }
+      } else {
+        throw new Error('Unified system request failed');
+      }
+    } catch (error) {
+      console.error('❌ Unified system error, falling back to original method:', error);
+      
+      // Fallback: Import missing videos in batches
+      const batchSize = 10;
+      const importResults = [];
+      
+      for (let i = 0; i < missingVideos.length; i += batchSize) {
+        const batch = missingVideos.slice(i, i + batchSize);
+        console.log(`📥 Importing batch ${Math.floor(i/batchSize) + 1}: ${batch.length} videos`);
+        
+        const batchResult = await importVideosBatch(batch, channelId);
+        importResults.push(...batchResult);
+        
+        // Small delay between batches to avoid overwhelming the system
+        if (i + batchSize < missingVideos.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      successful = importResults.filter(r => r.success).length;
+      failed = importResults.filter(r => !r.success).length;
+    }
 
     console.log(`✅ Import complete: ${successful} successful, ${failed} failed`);
 

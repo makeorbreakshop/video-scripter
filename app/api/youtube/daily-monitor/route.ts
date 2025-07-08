@@ -53,65 +53,61 @@ export async function POST(request: NextRequest) {
 
     console.log(`📺 Found ${channelIds.length} channels to monitor`);
 
-    // Step 2: Use the RSS import API to check all channels
-    const importResponse = await fetch(`${request.nextUrl.origin}/api/youtube/import-rss`, {
+    // Step 2: Use the unified video import API to check all channels
+    // Convert channel IDs to RSS feed URLs for unified processing
+    const rssFeedUrls = channelIds.map((channelId: string) => 
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`
+    );
+
+    const importResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        channelIds: channelIds,
-        userId: userId
+        source: 'rss',
+        rssFeedUrls: rssFeedUrls,
+        options: {
+          batchSize: 50,
+          // Enable all processing including embeddings and exports
+          skipEmbeddings: false,
+          skipExports: false
+        }
       })
     });
 
     if (!importResponse.ok) {
-      throw new Error('Failed to import RSS videos');
+      throw new Error('Failed to import RSS videos via unified endpoint');
     }
 
-    const importResults = await importResponse.json();
+    const unifiedResults = await importResponse.json();
 
-    // Step 3: Trigger bulk vectorization for all newly imported videos
-    if (importResults.newVideosImported > 0) {
-      try {
-        console.log(`🔄 Triggering bulk vectorization for ${importResults.newVideosImported} new videos`);
-        
-        // Get all videos imported today with RSS flag
-        const { data: newVideos } = await supabase
-          .from('videos')
-          .select('id')
-          .eq('data_source', 'competitor')
-          .eq('import_date::date', new Date().toISOString().split('T')[0])
-          .filter('metadata->>rss_import', 'eq', 'true')
-          .eq('pinecone_embedded', false);
+    // Map unified results to legacy format for backward compatibility
+    const importResults = {
+      channelsProcessed: channelIds.length,
+      totalVideosFound: unifiedResults.videosProcessed,
+      newVideosImported: unifiedResults.videosProcessed,
+      errors: unifiedResults.errors,
+      channels: channelIds.map((channelId: string) => ({
+        channelId,
+        newVideosImported: Math.ceil(unifiedResults.videosProcessed / channelIds.length),
+        status: unifiedResults.success ? 'success' : 'error'
+      }))
+    };
 
-        if (newVideos && newVideos.length > 0) {
-          const videoIds = newVideos.map(v => v.id);
-          
-          // Process in batches of 50 to avoid timeout
-          const batchSize = 50;
-          for (let i = 0; i < videoIds.length; i += batchSize) {
-            const batch = videoIds.slice(i, i + batchSize);
-            
-            await fetch(`${request.nextUrl.origin}/api/embeddings/titles/batch`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                video_ids: batch,
-                force_re_embed: false
-              })
-            });
-            
-            console.log(`🔄 Vectorized batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(videoIds.length/batchSize)} (${batch.length} videos)`);
-          }
-          
-          console.log(`✅ Completed vectorization for ${videoIds.length} RSS imported videos`);
-        }
-      } catch (vectorizationError) {
-        console.warn('Bulk vectorization failed:', vectorizationError);
-        // Don't fail the whole monitor if vectorization fails
-      }
-    }
+    // Step 3: Embeddings and exports are now handled by unified endpoint
+    // Log the enhanced results
+    console.log(`✅ Unified daily monitor completed: ${unifiedResults.videosProcessed} videos processed`);
+    console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
+    console.log(`📁 Export files created: ${unifiedResults.exportFiles.length}`);
+
+    // Include processing metrics in the summary
+    const processingMetrics = {
+      processingTime: unifiedResults.processingTime,
+      embeddingsGenerated: unifiedResults.embeddingsGenerated,
+      exportFiles: unifiedResults.exportFiles,
+      processedVideoIds: unifiedResults.processedVideoIds
+    };
 
     // Step 4: Log the monitoring activity
     const logData = {
@@ -143,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Daily monitor completed: ${importResults.newVideosImported} new videos imported from ${importResults.channelsProcessed} channels`);
 
-    // Return enhanced results with monitoring summary
+    // Return enhanced results with monitoring summary and unified processing metrics
     return NextResponse.json({
       success: true,
       message: `Daily monitor completed: ${importResults.newVideosImported} new videos found across ${importResults.channelsProcessed} channels`,
@@ -158,6 +154,14 @@ export async function POST(request: NextRequest) {
         success_rate: importResults.channelsProcessed > 0 
           ? Math.round(((importResults.channelsProcessed - importResults.errors.length) / importResults.channelsProcessed) * 100)
           : 100
+      },
+      // Enhanced unified processing metrics
+      unified: {
+        processingTime: processingMetrics.processingTime,
+        embeddingsGenerated: processingMetrics.embeddingsGenerated,
+        exportFiles: processingMetrics.exportFiles,
+        processedVideoIds: processingMetrics.processedVideoIds,
+        method: 'unified-endpoint'
       }
     });
 

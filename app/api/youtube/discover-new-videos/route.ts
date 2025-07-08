@@ -162,7 +162,55 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Prepare videos for database insertion
+    // Use unified video import system for processing
+    const videoIds = videoData.items.map(video => video.id);
+    
+    console.log(`🎯 Using unified video import for ${videoIds.length} discovered videos`);
+    
+    try {
+      // Call unified video import endpoint
+      const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: 'owner',
+          videoIds: videoIds,
+          options: {
+            batchSize: 50,
+            skipEmbeddings: false,
+            skipExports: false
+          }
+        })
+      });
+
+      if (unifiedResponse.ok) {
+        const unifiedResult = await unifiedResponse.json();
+        
+        if (unifiedResult.success) {
+          console.log('✅ Unified video import successful for video discovery');
+          
+          return NextResponse.json({
+            success: true,
+            message: `Successfully imported ${unifiedResult.videosProcessed} new videos using unified system`,
+            videosProcessed: unifiedResult.videosProcessed,
+            totalVideos: videoData.items.length,
+            newVideos: unifiedResult.videosProcessed,
+            imported: unifiedResult.videosProcessed,
+            embeddingsGenerated: unifiedResult.embeddingsGenerated,
+            exportFiles: unifiedResult.exportFiles,
+            unifiedSystemUsed: true
+          });
+        }
+      }
+      
+      console.log('⚠️ Unified system failed, falling back to original method');
+    } catch (error) {
+      console.error('❌ Unified system error, falling back to original method:', error);
+    }
+
+    // Fallback: Prepare videos for database insertion
     const videosToInsert = videoData.items.map(video => {
       const viewCount = parseInt(video.statistics.viewCount) || 0;
       

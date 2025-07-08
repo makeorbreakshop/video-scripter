@@ -1,0 +1,47 @@
+[
+  {
+    "type": "association_rule",
+    "pattern": [
+      "ends_with_punctuation"
+    ],
+    "confidence": 1.0,
+    "lift": 1.0,
+    "description": "Videos with ends_with_punctuation have 100.0% chance of high performance (lift: 1.00x)"
+  },
+  {
+    "type": "association_rule",
+    "pattern": [
+      "has_dash"
+    ],
+    "confidence": 1.0,
+    "lift": 1.0,
+    "description": "Videos with has_dash have 100.0% chance of high performance (lift: 1.00x)"
+  },
+  {
+    "type": "association_rule",
+    "pattern": [
+      "has_how_to"
+    ],
+    "confidence": 1.0,
+    "lift": 1.0,
+    "description": "Videos with has_how_to have 100.0% chance of high performance (lift: 1.00x)"
+  },
+  {
+    "type": "association_rule",
+    "pattern": [
+      "has_numbers"
+    ],
+    "confidence": 1.0,
+    "lift": 1.0,
+    "description": "Videos with has_numbers have 100.0% chance of high performance (lift: 1.00x)"
+  },
+  {
+    "type": "association_rule",
+    "pattern": [
+      "has_parentheses"
+    ],
+    "confidence": 1.0,
+    "lift": 1.0,
+    "description": "Videos with has_parentheses have 100.0% chance of high performance (lift: 1.00x)"
+  }
+]

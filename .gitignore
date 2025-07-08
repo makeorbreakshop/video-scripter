@@ -25,3 +25,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# exports directory (contains large embedding files)
+/exports/
+
+# cache directory (contains large embedding cache files)
+/.cache/
+
+# analysis results (large CSV/JSON files)
+cluster_results_*.csv
+cluster_statistics_*.json
+performance_features_*.csv
+association_rules_*.csv
+feature_importance_*.csv
+topic_similarity_*.json
+*.html
+
+# embedding analysis files
+title-embeddings-*.csv
+title-embeddings-*.json
+thumbnail-embeddings-*.csv
+thumbnail-embeddings-*.json

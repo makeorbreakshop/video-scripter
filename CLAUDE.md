@@ -52,9 +52,10 @@ The application uses Supabase with multiple database schemas:
 
 #### `/app` - Next.js App Router
 - **API Routes**: `/app/api/` contains all backend endpoints
+  - `/video-import/unified/` - **NEW**: Unified video import endpoint (consolidates all import mechanisms)
   - `/vector/` - Video processing and vector operations
   - `/skyscraper/` - Skyscraper analysis endpoints
-  - `/youtube/` - YouTube Data API integration
+  - `/youtube/` - YouTube Data API integration (legacy endpoints updated to use unified system)
 - **Pages**: Dashboard, database management, analysis views
 - **Components**: Shared UI components specific to app routes
 
@@ -67,6 +68,7 @@ The application uses Supabase with multiple database schemas:
 - **API Clients**: `anthropic-api.ts`, `openai-api.ts`, `youtube-api.ts`
 - **Database Services**: `supabase-*.ts`, `vector-db-service.ts`, `skyscraper-db-service.ts`
 - **Processing**: `video-processor.ts`, `transcript-chunker.ts`, `enhanced-video-processor.ts`
+- **Unified Import**: `unified-video-import.ts` - **NEW**: Consolidated video import service
 
 #### `/types` - TypeScript Definitions
 - `database.ts` - Supabase database types
@@ -77,9 +79,14 @@ The application uses Supabase with multiple database schemas:
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 YOUTUBE_API_KEY=
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
+REPLICATE_API_TOKEN=
+PINECONE_API_KEY=
+PINECONE_INDEX_NAME=
+PINECONE_THUMBNAIL_INDEX_NAME=
 ```
 
 ### Key Features
@@ -102,6 +109,14 @@ ANTHROPIC_API_KEY=
 - Batch processing capabilities for multiple videos
 - Comment analysis and engagement metrics
 
+#### Unified Video Import System
+- **Single Endpoint**: `/api/video-import/unified` consolidates all import mechanisms
+- **Multiple Sources**: Supports competitor, discovery, RSS, owner, and sync imports
+- **Complete Pipeline**: Handles metadata extraction, embeddings, storage, and exports
+- **Dual Embeddings**: Title embeddings (OpenAI 512D) and thumbnail embeddings (Replicate CLIP 768D)
+- **Local Exports**: Automatic generation of JSON/CSV exports in `/exports/` directory
+- **Backward Compatibility**: Legacy endpoints updated to use unified system with fallback support
+
 ## Development Notes
 
 ### Database Schema Management
@@ -117,11 +132,37 @@ ANTHROPIC_API_KEY=
 ### Video Processing Pipeline
 1. Video metadata extraction via YouTube API
 2. Transcript downloading and chunking
-3. Vector embedding generation
+3. Vector embedding generation (titles and thumbnails)
 4. AI analysis using multiple models
 5. Results storage in structured format
+6. **NEW**: Unified processing via `/api/video-import/unified` endpoint
+
+### Unified Video Import Usage
+```javascript
+// Example: Import competitor videos with full processing
+const response = await fetch('/api/video-import/unified', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    source: 'competitor',
+    channelIds: ['UC6107grRI4m0o2-emgoDnAA'],
+    options: {
+      batchSize: 50,
+      skipEmbeddings: false,
+      skipExports: false
+    }
+  })
+});
+```
 
 ### Authentication Flow
 - Supabase Auth with OAuth providers
 - User profiles automatically created on first login
 - Row-level security policies implemented for data isolation
+
+## Important Instruction Reminders
+
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

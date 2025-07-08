@@ -119,7 +119,64 @@ export async function POST(request: NextRequest) {
       channelBatches.push(channelIds.slice(i, i + BATCH_SIZE));
     }
 
-    // Process each batch of channels in parallel
+    // Try using unified video import system first
+    console.log('🎯 Using unified video import for approved discovery channels');
+    
+    try {
+      // Call unified video import endpoint
+      const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: 'discovery',
+          channelIds: channelIds,
+          options: {
+            batchSize: 50,
+            skipEmbeddings: false,
+            skipExports: false
+          }
+        })
+      });
+
+      if (unifiedResponse.ok) {
+        const unifiedResult = await unifiedResponse.json();
+        
+        if (unifiedResult.success) {
+          console.log('✅ Unified video import successful for discovery channels');
+          
+          // Update channel statuses to 'imported'
+          for (const channelId of channelIds) {
+            await supabase
+              .from('channel_discovery')
+              .update({
+                status: 'imported',
+                imported_at: new Date().toISOString()
+              })
+              .eq('channel_id', channelId);
+          }
+          
+          return NextResponse.json({
+            success: true,
+            message: `Successfully imported ${unifiedResult.videosProcessed} videos from ${channelIds.length} channels using unified system`,
+            channelsProcessed: channelIds.length,
+            totalVideosImported: unifiedResult.videosProcessed,
+            channelsImported: channelIds.map(id => ({ channelId: id, videosImported: Math.floor(unifiedResult.videosProcessed / channelIds.length) })),
+            errors: unifiedResult.errors || [],
+            vectorizationTriggered: unifiedResult.embeddingsGenerated.titles > 0,
+            rssChannelsAdded: channelIds,
+            unifiedSystemUsed: true
+          });
+        }
+      }
+      
+      console.log('⚠️ Unified system failed, falling back to original method');
+    } catch (error) {
+      console.error('❌ Unified system error, falling back to original method:', error);
+    }
+
+    // Fallback: Process each batch of channels in parallel using original method
     for (const batch of channelBatches) {
       const batchPromises = batch.map(channelId => processChannel(channelId, apiKey, maxResults, publishedAfter, excludeShorts, userId, results));
       await Promise.allSettled(batchPromises);
@@ -228,72 +285,119 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
       ? channelViewCounts.reduce((a, b) => a + b, 0) / channelViewCounts.length 
       : 0;
 
-    // Step 4: Store videos in database (using same format as competitor import)
-    const videosToInsert = limitedVideos.map(video => {
-      const viewCount = parseInt(video.statistics.viewCount) || 0;
-      const performanceRatio = channelAvgViews > 0 ? viewCount / channelAvgViews : 1;
-
-      return {
-        id: video.id,
-        title: video.snippet.title,
-        description: video.snippet.description,
-        channel_id: video.snippet.channelId, // Store YouTube channel ID in channel_id
-        channel_name: video.snippet.channelTitle, // Store channel name in channel_name
-        published_at: video.snippet.publishedAt,
-        duration: video.contentDetails.duration,
-        view_count: viewCount,
-        like_count: parseInt(video.statistics.likeCount) || 0,
-        comment_count: parseInt(video.statistics.commentCount) || 0,
-        thumbnail_url: video.snippet.thumbnails.maxres?.url || 
-                      video.snippet.thumbnails.high?.url || 
-                      video.snippet.thumbnails.medium?.url,
-        performance_ratio: performanceRatio,
-        channel_avg_views: Math.round(channelAvgViews),
-        data_source: 'competitor',
-        is_competitor: true,
-        imported_by: userId === 'discovery-system' ? null : userId,
-        import_date: new Date().toISOString(),
-        user_id: userId === 'discovery-system' ? '4d154389-9f5f-4a97-83ab-528e3adf6c0e' : userId,
-        pinecone_embedded: false,
-        metadata: {
-          tags: video.snippet.tags || [],
-          categoryId: video.snippet.categoryId || '',
-          import_source: 'discovery_system',
-          youtube_channel_id: video.snippet.channelId,
-          channel_name: video.snippet.channelTitle,
-          import_settings: {
-            time_period: 'all',
-            max_videos: 'all',
-            exclude_shorts: excludeShorts,
-            actual_imported: limitedVideos.length
-          },
-          channel_stats: {
-            subscriber_count: parseInt(channelInfo.statistics.subscriberCount) || 0,
-            total_videos: parseInt(channelInfo.statistics.videoCount) || 0,
-            total_views: parseInt(channelInfo.statistics.viewCount) || 0,
-            channel_thumbnail: channelInfo.snippet.thumbnails.high?.url || 
-                             channelInfo.snippet.thumbnails.medium?.url || 
-                             channelInfo.snippet.thumbnails.default?.url
+    // Step 4: Use unified video import service for processing
+    const videoIds = limitedVideos.map(video => video.id);
+    
+    console.log(`🎯 Using unified video import for ${videoIds.length} discovery videos`);
+    
+    let importedCount = 0;
+    
+    try {
+      // Call unified video import endpoint  
+      const unifiedResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/video-import/unified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: 'discovery',
+          videoIds: videoIds,
+          options: {
+            batchSize: 50,
+            // Enable all processing for discovery imports
+            skipEmbeddings: false,
+            skipExports: false
           }
-        }
-      };
-    });
+        })
+      });
 
-    // Insert videos using batch upsert for better performance
-    const { data: insertedVideos, error: insertError } = await supabase
-      .from('videos')
-      .upsert(videosToInsert, { 
-        onConflict: 'id',
-        ignoreDuplicates: false 
-      })
-      .select('id, title, view_count, performance_ratio');
+      if (!unifiedResponse.ok) {
+        throw new Error(`Unified import failed: ${unifiedResponse.status}`);
+      }
 
-    if (insertError) {
-      console.error('Error inserting videos:', insertError);
-      throw insertError;
+      const unifiedResults = await unifiedResponse.json();
+      
+      if (!unifiedResults.success) {
+        throw new Error(`Unified import failed: ${unifiedResults.message}`);
+      }
+
+      importedCount = unifiedResults.videosProcessed;
+      console.log(`✅ Unified import completed: ${importedCount} videos processed`);
+      console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
+      
+      // Mark that vectorization was handled by unified system
+      results.vectorizationTriggered = true;
+      
+    } catch (unifiedError) {
+      console.error('❌ Unified import failed, falling back to direct database insertion:', unifiedError);
+      
+      // Fallback to original database insertion method
+      const videosToInsert = limitedVideos.map(video => {
+        const viewCount = parseInt(video.statistics.viewCount) || 0;
+        const performanceRatio = channelAvgViews > 0 ? viewCount / channelAvgViews : 1;
+
+        return {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          channel_id: video.snippet.channelId, // Store YouTube channel ID in channel_id
+          channel_name: video.snippet.channelTitle, // Store channel name in channel_name
+          published_at: video.snippet.publishedAt,
+          duration: video.contentDetails.duration,
+          view_count: viewCount,
+          like_count: parseInt(video.statistics.likeCount) || 0,
+          comment_count: parseInt(video.statistics.commentCount) || 0,
+          thumbnail_url: video.snippet.thumbnails.maxres?.url || 
+                        video.snippet.thumbnails.high?.url || 
+                        video.snippet.thumbnails.medium?.url,
+          performance_ratio: performanceRatio,
+          channel_avg_views: Math.round(channelAvgViews),
+          data_source: 'competitor',
+          is_competitor: true,
+          imported_by: userId === 'discovery-system' ? null : userId,
+          import_date: new Date().toISOString(),
+          user_id: userId === 'discovery-system' ? '4d154389-9f5f-4a97-83ab-528e3adf6c0e' : userId,
+          pinecone_embedded: false,
+          metadata: {
+            tags: video.snippet.tags || [],
+            categoryId: video.snippet.categoryId || '',
+            import_source: 'discovery_system',
+            youtube_channel_id: video.snippet.channelId,
+            channel_name: video.snippet.channelTitle,
+            import_settings: {
+              time_period: 'all',
+              max_videos: 'all',
+              exclude_shorts: excludeShorts,
+              actual_imported: limitedVideos.length
+            },
+            channel_stats: {
+              subscriber_count: parseInt(channelInfo.statistics.subscriberCount) || 0,
+              total_videos: parseInt(channelInfo.statistics.videoCount) || 0,
+              total_views: parseInt(channelInfo.statistics.viewCount) || 0,
+              channel_thumbnail: channelInfo.snippet.thumbnails.high?.url || 
+                               channelInfo.snippet.thumbnails.medium?.url || 
+                               channelInfo.snippet.thumbnails.default?.url
+            }
+          }
+        };
+      });
+
+      // Insert videos using batch upsert for better performance
+      const { data: insertedVideos, error: insertError } = await supabase
+        .from('videos')
+        .upsert(videosToInsert, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        })
+        .select('id, title, view_count, performance_ratio');
+
+      if (insertError) {
+        console.error('Error inserting videos:', insertError);
+        throw insertError;
+      }
+
+      importedCount = insertedVideos?.length || 0;
     }
-
-    const importedCount = insertedVideos?.length || 0;
     console.log(`✅ Imported ${importedCount} videos from ${channelInfo.snippet.title}`);
 
     // Step 5: Mark discovery entries as imported
@@ -331,7 +435,8 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
 }
 
     // Step 6: Trigger vectorization for all imported videos (in background)
-    if (results.totalVideosImported > 0) {
+    // Only trigger if unified system didn't handle it
+    if (results.totalVideosImported > 0 && !results.vectorizationTriggered) {
       try {
         // Get all video IDs that need vectorization
         const { data: allImportedVideos } = await supabase
@@ -357,7 +462,7 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
 
           if (vectorizeResponse.ok) {
             results.vectorizationTriggered = true;
-            console.log(`🔄 Triggered vectorization for ${videoIds.length} discovery imported videos`);
+            console.log(`🔄 Triggered vectorization for ${videoIds.length} discovery imported videos (fallback)`);
           } else {
             console.warn('Vectorization request failed:', await vectorizeResponse.text());
           }
@@ -366,6 +471,8 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
         console.warn('Vectorization failed for discovery import:', vectorizationError);
         results.errors.push('Vectorization failed but import succeeded');
       }
+    } else if (results.vectorizationTriggered) {
+      console.log(`✅ Vectorization handled by unified endpoint for ${results.totalVideosImported} videos`);
     }
 
     // Step 7: Add channels to RSS monitoring (they now have videos in the database)

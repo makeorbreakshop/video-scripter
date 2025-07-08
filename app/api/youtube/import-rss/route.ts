@@ -83,6 +83,54 @@ export async function POST(request: NextRequest) {
             };
           }
 
+          // Use unified video import system for processing
+          const videoIds = newVideos.map(video => video.id);
+          
+          console.log(`🎯 Using unified video import for ${videoIds.length} RSS videos from ${channelId}`);
+          
+          try {
+            // Call unified video import endpoint
+            const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                source: 'rss',
+                videoIds: videoIds,
+                options: {
+                  batchSize: 50,
+                  skipEmbeddings: false,
+                  skipExports: false
+                }
+              })
+            });
+
+            if (unifiedResponse.ok) {
+              const unifiedResult = await unifiedResponse.json();
+              
+              if (unifiedResult.success) {
+                console.log(`✅ Unified video import successful for RSS channel ${channelId}`);
+                
+                return {
+                  channelId,
+                  channelTitle: rssResult.channelTitle,
+                  videosFound: rssResult.videos.length,
+                  newVideosImported: unifiedResult.videosProcessed,
+                  success: true,
+                  message: `Successfully imported ${unifiedResult.videosProcessed} videos using unified system`,
+                  embeddingsGenerated: unifiedResult.embeddingsGenerated,
+                  exportFiles: unifiedResult.exportFiles,
+                  unifiedSystemUsed: true
+                };
+              }
+            }
+            
+            console.log(`⚠️ Unified system failed for channel ${channelId}, falling back to original method`);
+          } catch (error) {
+            console.error(`❌ Unified system error for channel ${channelId}, falling back to original method:`, error);
+          }
+
           // Get detailed video information from YouTube API for proper integration
           let videosToInsert = [];
           

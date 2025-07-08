@@ -282,7 +282,56 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 8: Prepare videos for database insertion (no static performance ratios - calculated dynamically)
+    // Step 8: Use unified video import system for processing
+    const videoIds = newVideos.map(video => video.id);
+    
+    console.log(`🎯 Using unified video import for ${videoIds.length} research channel videos`);
+    
+    try {
+      // Call unified video import endpoint
+      const unifiedResponse = await fetch(`${request.nextUrl.origin}/api/video-import/unified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: 'owner', // Research channels are owner channels
+          videoIds: videoIds,
+          options: {
+            batchSize: 50,
+            skipEmbeddings: false,
+            skipExports: false
+          }
+        })
+      });
+
+      if (unifiedResponse.ok) {
+        const unifiedResult = await unifiedResponse.json();
+        
+        if (unifiedResult.success) {
+          console.log('✅ Unified video import successful for research channel expansion');
+          
+          return NextResponse.json({
+            success: true,
+            message: `Successfully imported ${unifiedResult.videosProcessed} videos from ${channelName} using unified system`,
+            videosProcessed: unifiedResult.videosProcessed,
+            channelId: channelId,
+            channelName: channelName,
+            embeddingsGenerated: unifiedResult.embeddingsGenerated,
+            exportFiles: unifiedResult.exportFiles,
+            unifiedSystemUsed: true,
+            api_calls_used: totalApiCalls,
+            search_method: usedChannelSearch ? 'channel_search' : (usedManualId ? 'manual_id' : 'existing_data')
+          });
+        }
+      }
+      
+      console.log('⚠️ Unified system failed, falling back to original method');
+    } catch (error) {
+      console.error('❌ Unified system error, falling back to original method:', error);
+    }
+
+    // Fallback: Prepare videos for database insertion (no static performance ratios - calculated dynamically)
     const videosToInsert = newVideos.map(video => {
       const viewCount = parseInt(video.statistics.viewCount) || 0;
 
