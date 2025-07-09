@@ -146,28 +146,57 @@ export async function POST(request: NextRequest) {
         if (unifiedResult.success) {
           console.log('✅ Unified video import successful for discovery channels');
           
-          // Update channel statuses to 'imported'
-          for (const channelId of channelIds) {
-            await supabase
-              .from('channel_discovery')
-              .update({
-                status: 'imported',
-                imported_at: new Date().toISOString()
-              })
-              .eq('channel_id', channelId);
-          }
+          // Check if this is a job response (async) or a processing response (sync)
+          const isJobResponse = unifiedResult.jobId && unifiedResult.status === 'queued';
           
-          return NextResponse.json({
-            success: true,
-            message: `Successfully imported ${unifiedResult.videosProcessed} videos from ${channelIds.length} channels using unified system`,
-            channelsProcessed: channelIds.length,
-            totalVideosImported: unifiedResult.videosProcessed,
-            channelsImported: channelIds.map(id => ({ channelId: id, videosImported: Math.floor(unifiedResult.videosProcessed / channelIds.length) })),
-            errors: unifiedResult.errors || [],
-            vectorizationTriggered: unifiedResult.embeddingsGenerated.titles > 0,
-            rssChannelsAdded: channelIds,
-            unifiedSystemUsed: true
-          });
+          if (isJobResponse) {
+            // Async job response - update channel statuses and return job info
+            for (const channelId of channelIds) {
+              await supabase
+                .from('channel_discovery')
+                .update({
+                  status: 'imported',
+                  imported_at: new Date().toISOString()
+                })
+                .eq('channel_id', channelId);
+            }
+            
+            return NextResponse.json({
+              success: true,
+              message: `Import job created for ${channelIds.length} channels. Processing in background.`,
+              channelsProcessed: channelIds.length,
+              totalVideosImported: 0, // Will be determined when job completes
+              channelsImported: channelIds.map(id => ({ channelId: id, videosImported: 0 })),
+              errors: [],
+              vectorizationTriggered: true, // Will happen in background
+              rssChannelsAdded: channelIds,
+              unifiedSystemUsed: true,
+              jobId: unifiedResult.jobId,
+              statusUrl: unifiedResult.statusUrl
+            });
+          } else {
+            // Sync processing response - has full results
+            for (const channelId of channelIds) {
+              await supabase
+                .from('channel_discovery')
+                .update({
+                  status: 'imported',
+                  imported_at: new Date().toISOString()
+                })
+                .eq('channel_id', channelId);
+            }
+            
+            return NextResponse.json({
+              success: true,
+              message: `Successfully imported ${unifiedResult.videosProcessed} videos from ${channelIds.length} channels using unified system`,
+              channelsProcessed: channelIds.length,
+              totalVideosImported: unifiedResult.videosProcessed,
+              channelsImported: channelIds.map(id => ({ channelId: id, videosImported: Math.floor(unifiedResult.videosProcessed / channelIds.length) })),
+              errors: unifiedResult.errors || [],
+              vectorizationTriggered: unifiedResult.embeddingsGenerated.titles > 0,
+              rssChannelsAdded: channelIds,
+              unifiedSystemUsed: true
+            });
         }
       }
       
@@ -321,9 +350,20 @@ async function processChannel(channelId: string, apiKey: string, maxResults: num
         throw new Error(`Unified import failed: ${unifiedResults.message}`);
       }
 
-      importedCount = unifiedResults.videosProcessed;
-      console.log(`✅ Unified import completed: ${importedCount} videos processed`);
-      console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
+      // Check if this is a job response (async) or a processing response (sync)
+      const isJobResponse = unifiedResults.jobId && unifiedResults.status === 'queued';
+      
+      if (isJobResponse) {
+        // Async job response - we don't know the exact count yet
+        importedCount = videoIds.length; // Assume all will be processed
+        console.log(`✅ Unified import job created: ${unifiedResults.jobId}`);
+        console.log(`📊 ${importedCount} videos queued for processing`);
+      } else {
+        // Sync processing response - has full results
+        importedCount = unifiedResults.videosProcessed;
+        console.log(`✅ Unified import completed: ${importedCount} videos processed`);
+        console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
+      }
       
       // Mark that vectorization was handled by unified system
       results.vectorizationTriggered = true;

@@ -8,7 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "worker": "dotenv -e .env -- node worker.ts"
+    "worker": "dotenv -e .env -- node worker.ts",
+    "worker:title": "dotenv -e .env -- node title-vectorization-worker.ts",
+    "worker:thumbnail": "dotenv -e .env -- node thumbnail-vectorization-worker.ts",
+    "workers": "concurrently -n \"IMPORT,TITLE,THUMB\" -c \"blue,green,magenta\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\"",
+    "workers:vectorization": "concurrently -n \"TITLE,THUMB\" -c \"green,magenta\" \"npm run worker:title\" \"npm run worker:thumbnail\""
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
@@ -96,6 +100,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.0",
     "eslint": "^9.29.0",
     "eslint-config-next": "^15.3.4",
     "postcss": "^8",

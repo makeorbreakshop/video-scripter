@@ -57,14 +57,72 @@ export async function POST(request: NextRequest) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
+      // Generate descriptive job name
+      let jobDisplayName = 'unified_import';
+      const jobMetadata: Record<string, unknown> = { ...importRequest };
+      
+      if (importRequest.source === 'competitor' && importRequest.channelIds?.length > 0) {
+        // For competitor imports, try to get channel name
+        try {
+          const channelResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${importRequest.channelIds[0]}&key=${process.env.YOUTUBE_API_KEY}`
+          );
+          if (channelResponse.ok) {
+            const channelData = await channelResponse.json();
+            if (channelData.items?.[0]?.snippet?.title) {
+              const channelName = channelData.items[0].snippet.title;
+              const videoCount = channelData.items[0]?.statistics?.videoCount;
+              jobDisplayName = videoCount 
+                ? `Channel: ${channelName} (${parseInt(videoCount).toLocaleString()} videos)`
+                : `Channel: ${channelName}`;
+              jobMetadata.channel_name = channelName;
+              jobMetadata.total_videos = videoCount ? parseInt(videoCount) : null;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching channel name:', error);
+          jobDisplayName = `Channel: ${importRequest.channelIds[0].substring(0, 8)}...`;
+        }
+      } else if (importRequest.source === 'discovery') {
+        jobDisplayName = `Discovery Import`;
+      } else if (importRequest.source === 'sync') {
+        jobDisplayName = `Channel Sync`;
+      } else if (importRequest.source === 'rss') {
+        jobDisplayName = `RSS Import`;
+      } else if (importRequest.videoIds?.length === 1) {
+        // For single video, try to get video title
+        try {
+          const videoResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${importRequest.videoIds[0]}&key=${process.env.YOUTUBE_API_KEY}`
+          );
+          if (videoResponse.ok) {
+            const videoData = await videoResponse.json();
+            if (videoData.items?.[0]?.snippet?.title) {
+              const videoTitle = videoData.items[0].snippet.title;
+              jobDisplayName = videoTitle.length > 40 
+                ? `Video: ${videoTitle.substring(0, 40)}...`
+                : `Video: ${videoTitle}`;
+              jobMetadata.video_title = videoTitle;
+            } else {
+              jobDisplayName = `Video: ${importRequest.videoIds[0]}`;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching video title:', error);
+          jobDisplayName = `Video: ${importRequest.videoIds[0]}`;
+        }
+      } else if (importRequest.videoIds?.length > 1) {
+        jobDisplayName = `Batch: ${importRequest.videoIds.length} videos`;
+      }
+
       // Create job in queue using existing schema
       const { data: job, error: jobError } = await supabase
         .from('video_processing_jobs')
         .insert({
-          video_id: importRequest.videoIds?.[0] || 'unified_import',
+          video_id: jobDisplayName,
           source: importRequest.source,
           status: 'pending',
-          metadata: importRequest,
+          metadata: jobMetadata,
           priority: importRequest.source === 'owner' ? 1 : 2, // Owner videos get higher priority
           created_at: new Date().toISOString()
         })

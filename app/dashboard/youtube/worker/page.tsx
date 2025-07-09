@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap } from "lucide-react"
+import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap, Database, Image, Play, Square } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface QueueStats {
@@ -29,7 +28,25 @@ interface Job {
   worker_id?: string
   error_message?: string
   processing_time?: number
-  metadata?: any
+  metadata?: Record<string, unknown>
+}
+
+interface VectorizationWorkerStatus {
+  type: 'title' | 'thumbnail'
+  isRunning: boolean
+  startedAt: Date | null
+  processedCount: number
+  totalCount: number
+  remainingCount: number
+  errors: number
+  uptime: number
+}
+
+interface VectorizationProgress {
+  total: number
+  completed: number
+  remaining: number
+  percentage: number
 }
 
 export default function WorkerDashboard() {
@@ -44,6 +61,20 @@ export default function WorkerDashboard() {
   const [recentJobs, setRecentJobs] = useState<Job[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  
+  // Vectorization worker states
+  const [vectorizationProgress, setVectorizationProgress] = useState<{
+    title: VectorizationProgress
+    thumbnail: VectorizationProgress
+  } | null>(null)
+  const [workerControls, setWorkerControls] = useState<{
+    title_vectorization: { isEnabled: boolean, lastEnabledAt?: string, lastDisabledAt?: string }
+    thumbnail_vectorization: { isEnabled: boolean, lastEnabledAt?: string, lastDisabledAt?: string }
+  } | null>(null)
+  const [controlsLoading, setControlsLoading] = useState<{
+    title: boolean
+    thumbnail: boolean
+  }>({ title: false, thumbnail: false })
 
   const fetchQueueStats = async () => {
     try {
@@ -61,9 +92,66 @@ export default function WorkerDashboard() {
     }
   }
 
+  const fetchVectorizationProgress = async () => {
+    try {
+      const response = await fetch('/api/workers/vectorization/progress')
+      
+      if (response.ok) {
+        const data = await response.json()
+        setVectorizationProgress(data.progress)
+      }
+    } catch (error) {
+      console.error('Failed to fetch vectorization progress:', error)
+    }
+  }
+  
+  const fetchWorkerControls = async () => {
+    try {
+      const response = await fetch('/api/workers/vectorization/control')
+      
+      if (response.ok) {
+        const data = await response.json()
+        setWorkerControls(data.controls)
+      }
+    } catch (error) {
+      console.error('Failed to fetch worker controls:', error)
+    }
+  }
+  
+  const toggleWorker = async (type: 'title' | 'thumbnail', enable: boolean) => {
+    const workerType = type === 'title' ? 'title_vectorization' : 'thumbnail_vectorization';
+    setControlsLoading(prev => ({ ...prev, [type]: true }));
+    
+    try {
+      const response = await fetch('/api/workers/vectorization/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerType, enabled: enable })
+      });
+      
+      if (response.ok) {
+        await fetchWorkerControls();
+      } else {
+        const error = await response.json();
+        console.error(`Failed to ${enable ? 'enable' : 'disable'} ${type} worker:`, error);
+      }
+    } catch (error) {
+      console.error(`Error toggling ${type} worker:`, error);
+    } finally {
+      setControlsLoading(prev => ({ ...prev, [type]: false }));
+    }
+  }
+  
+
   useEffect(() => {
     fetchQueueStats()
-    const interval = setInterval(fetchQueueStats, 5000) // Refresh every 5 seconds
+    fetchVectorizationProgress()
+    fetchWorkerControls()
+    const interval = setInterval(() => {
+      fetchQueueStats()
+      fetchVectorizationProgress()
+      fetchWorkerControls()
+    }, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
   }, [])
 
@@ -117,6 +205,14 @@ export default function WorkerDashboard() {
     if (diffHours < 24) return `${diffHours}h ago`
     return `${Math.floor(diffHours / 24)}d ago`
   }
+  
+  const formatUptime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+    const hours = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
+    return `${hours}h ${mins}m`
+  }
 
   const totalJobs = queueStats.total_jobs || 1
   const completionRate = ((queueStats.completed_jobs / totalJobs) * 100) || 0
@@ -132,7 +228,7 @@ export default function WorkerDashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground" suppressHydrationWarning>
             Last updated: {lastRefresh.toLocaleTimeString()}
           </span>
           <Button variant="outline" size="sm" onClick={fetchQueueStats} disabled={isLoading}>
@@ -238,6 +334,165 @@ export default function WorkerDashboard() {
         </CardContent>
       </Card>
 
+      {/* Vectorization Workers */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Title Vectorization Worker */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Title Vectorization Worker
+            </CardTitle>
+            <CardDescription>
+              Generates embeddings for video titles
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    {workerControls?.title_vectorization?.isEnabled ? (
+                      <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span className="font-medium">
+                      {workerControls?.title_vectorization?.isEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                  {workerControls?.title_vectorization?.lastEnabledAt && (
+                    <p className="text-xs text-muted-foreground">
+                      Last enabled: {formatTimeAgo(workerControls.title_vectorization.lastEnabledAt)}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant={workerControls?.title_vectorization?.isEnabled ? "destructive" : "default"}
+                  onClick={() => toggleWorker('title', !workerControls?.title_vectorization?.isEnabled)}
+                  disabled={controlsLoading.title}
+                >
+                  {controlsLoading.title ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : workerControls?.title_vectorization?.isEnabled ? (
+                    <>
+                      <Square className="w-4 h-4 mr-2" />
+                      Disable
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Enable
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {vectorizationProgress?.title && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>{vectorizationProgress.title.percentage}%</span>
+                  </div>
+                  <Progress value={vectorizationProgress.title.percentage} className="h-2" />
+                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <div>Total: {vectorizationProgress.title.total.toLocaleString()}</div>
+                    <div>Done: {vectorizationProgress.title.completed.toLocaleString()}</div>
+                    <div>Left: {vectorizationProgress.title.remaining.toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
+              
+              {!workerControls?.title_vectorization?.isEnabled && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1">Worker must be running:</p>
+                  <code className="text-xs bg-background px-2 py-1 rounded">npm run worker:title</code>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Thumbnail Vectorization Worker */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="w-5 h-5" />
+              Thumbnail Vectorization Worker
+            </CardTitle>
+            <CardDescription>
+              Generates embeddings for video thumbnails
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    {workerControls?.thumbnail_vectorization?.isEnabled ? (
+                      <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span className="font-medium">
+                      {workerControls?.thumbnail_vectorization?.isEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                  {workerControls?.thumbnail_vectorization?.lastEnabledAt && (
+                    <p className="text-xs text-muted-foreground">
+                      Last enabled: {formatTimeAgo(workerControls.thumbnail_vectorization.lastEnabledAt)}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant={workerControls?.thumbnail_vectorization?.isEnabled ? "destructive" : "default"}
+                  onClick={() => toggleWorker('thumbnail', !workerControls?.thumbnail_vectorization?.isEnabled)}
+                  disabled={controlsLoading.thumbnail}
+                >
+                  {controlsLoading.thumbnail ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : workerControls?.thumbnail_vectorization?.isEnabled ? (
+                    <>
+                      <Square className="w-4 h-4 mr-2" />
+                      Disable
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Enable
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {vectorizationProgress?.thumbnail && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>{vectorizationProgress.thumbnail.percentage}%</span>
+                  </div>
+                  <Progress value={vectorizationProgress.thumbnail.percentage} className="h-2" />
+                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <div>Total: {vectorizationProgress.thumbnail.total.toLocaleString()}</div>
+                    <div>Done: {vectorizationProgress.thumbnail.completed.toLocaleString()}</div>
+                    <div>Left: {vectorizationProgress.thumbnail.remaining.toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
+              
+              {!workerControls?.thumbnail_vectorization?.isEnabled && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1">Worker must be running:</p>
+                  <code className="text-xs bg-background px-2 py-1 rounded">npm run worker:thumbnail</code>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Recent Jobs */}
       <Card>
         <CardHeader>
@@ -262,7 +517,11 @@ export default function WorkerDashboard() {
                     {getStatusIcon(job.status)}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">{job.video_id}</span>
+                        <span className="font-medium text-sm">
+                          {job.video_id.length > 50 
+                            ? job.video_id.substring(0, 50) + '...' 
+                            : job.video_id}
+                        </span>
                         {getStatusBadge(job.status)}
                         <Badge variant="outline" className="text-xs">
                           {job.source}
@@ -275,6 +534,9 @@ export default function WorkerDashboard() {
                         )}
                         {job.worker_id && (
                           <span>Worker: {job.worker_id.split('-')[0]}</span>
+                        )}
+                        {job.metadata?.channel_name && (
+                          <span className="text-blue-400">{job.metadata.channel_name}</span>
                         )}
                       </div>
                     </div>

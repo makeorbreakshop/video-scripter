@@ -112,12 +112,15 @@ export function ApprovedChannels() {
             {importResults.success ? (
               <div className="space-y-2">
                 <p className="text-green-700">{importResults.message}</p>
+                {importResults.jobId && (
+                  <p className="text-sm text-green-600 font-medium">Job ID: {importResults.jobId}</p>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <span className="font-medium">Channels Processed:</span> {importResults.channelsProcessed}
                   </div>
                   <div>
-                    <span className="font-medium">Videos Imported:</span> {importResults.totalVideosImported}
+                    <span className="font-medium">Videos {importResults.jobId ? 'Queued' : 'Imported'}:</span> {importResults.totalVideosImported || 'Processing...'}
                   </div>
                   <div>
                     <span className="font-medium">Vectorization:</span> {importResults.vectorizationTriggered ? '✅ Triggered' : '❌ Failed'}
