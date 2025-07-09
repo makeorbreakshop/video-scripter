@@ -4,8 +4,8 @@
  */
 
 import Replicate from 'replicate';
-import { embeddingCache } from './embedding-cache';
-import { AdaptiveRateLimiter } from './adaptive-rate-limiter';
+import { embeddingCache } from './embedding-cache.ts';
+import { AdaptiveRateLimiter } from './adaptive-rate-limiter.ts';
 import fs from 'fs';
 
 interface VideoThumbnailData {

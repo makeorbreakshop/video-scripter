@@ -111,18 +111,38 @@ class VideoWorker {
     const startTime = Date.now();
     this.activeJobs.add(job.job_id);
     
-    console.log(`🎬 Processing job ${job.job_id.slice(0, 8)}... (${job.source}: ${job.video_id})`);
-    
     try {
-      // Process the job using existing unified import service
-      const result = await this.videoImportService.processVideos({
-        source: job.source,
-        videoIds: [job.video_id],
-        options: job.metadata?.options || {}
-      });
+      let result;
+      
+      if (job.metadata && (job.metadata.videoIds || job.metadata.channelIds || job.metadata.rssFeedUrls)) {
+        // Process unified import job
+        const importRequest = job.metadata;
+        console.log(`🎬 Processing unified import job ${job.job_id.slice(0, 8)}... (${importRequest.source})`);
+        
+        // Store job results for tracking
+        await this.updateJobProgress(job.job_id, { started_at: new Date().toISOString() });
+        
+        result = await this.videoImportService.processVideos(importRequest);
+        
+        // Store results in job metadata
+        await this.updateJobProgress(job.job_id, { 
+          status: 'storing_results',
+          metadata: { ...job.metadata, result }
+        });
+        
+      } else {
+        // Process legacy individual video job
+        console.log(`🎬 Processing video job ${job.job_id.slice(0, 8)}... (${job.source}: ${job.video_id})`);
+        
+        result = await this.videoImportService.processVideos({
+          source: job.source,
+          videoIds: [job.video_id],
+          options: job.metadata?.options || {}
+        });
+      }
 
       // Mark job as completed
-      await this.completeJob(job.job_id);
+      await this.completeJob(job.job_id, result);
       
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
       console.log(`✅ Job ${job.job_id.slice(0, 8)} completed in ${duration}s`);
@@ -138,14 +158,31 @@ class VideoWorker {
     }
   }
 
-  async completeJob(jobId) {
+  async updateJobProgress(jobId, updates) {
     try {
       const { error } = await supabase
         .from('video_processing_jobs')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
+        .update(updates)
+        .eq('id', jobId);
+      
+      if (error) {
+        console.error('❌ Error updating job progress:', error);
+      }
+    } catch (error) {
+      console.error('❌ Error updating job progress:', error);
+    }
+  }
+
+  async completeJob(jobId, result = null) {
+    try {
+      const updateData = {
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('video_processing_jobs')
+        .update(updateData)
         .eq('id', jobId);
       
       if (error) {

@@ -6,10 +6,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { videoImportService, VideoImportRequest } from '../../../../lib/unified-video-import';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Check if this should use the queue system
+    const useQueue = body.useQueue !== false; // Default to using queue
     
     // Validate request body
     const validationResult = validateRequest(body);
@@ -22,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const importRequest: VideoImportRequest = body;
     
-    console.log(`🎯 Unified video import request: ${importRequest.source}`);
+    console.log(`🎯 Unified video import request: ${importRequest.source} (${useQueue ? 'async' : 'sync'})`);
     console.log(`📊 Parameters:`, {
       videoIds: importRequest.videoIds?.length || 0,
       channelIds: importRequest.channelIds?.length || 0,
@@ -42,27 +46,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process the import request
-    const startTime = Date.now();
-    const result = await videoImportService.processVideos(importRequest);
-    const processingTime = Date.now() - startTime;
+    if (useQueue) {
+      // Use asynchronous queue system
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
 
-    // Log results
-    console.log(`✅ Unified import completed in ${processingTime}ms`);
-    console.log(`📊 Results:`, {
-      success: result.success,
-      videosProcessed: result.videosProcessed,
-      embeddingsGenerated: result.embeddingsGenerated,
-      exportFiles: result.exportFiles.length,
-      errors: result.errors.length
-    });
+      // Create job in queue using existing schema
+      const { data: job, error: jobError } = await supabase
+        .from('video_processing_jobs')
+        .insert({
+          video_id: importRequest.videoIds?.[0] || 'unified_import',
+          source: importRequest.source,
+          status: 'pending',
+          metadata: importRequest,
+          priority: importRequest.source === 'owner' ? 1 : 2, // Owner videos get higher priority
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-    // Return response with processing metrics
-    return NextResponse.json({
-      ...result,
-      processingTime,
-      timestamp: new Date().toISOString()
-    });
+      if (jobError) {
+        console.error('❌ Failed to create job:', jobError);
+        return NextResponse.json(
+          { error: 'Failed to create processing job' },
+          { status: 500 }
+        );
+      }
+
+      console.log(`✅ Created job ${job.id} for ${importRequest.source} import`);
+
+      // Return immediate response with job ID
+      return NextResponse.json({
+        success: true,
+        message: `Job ${job.id} created for ${importRequest.source} import`,
+        jobId: job.id,
+        status: 'queued',
+        estimatedItems: totalItems,
+        timestamp: new Date().toISOString(),
+        statusUrl: `/api/video-import/job-status/${job.id}`
+      });
+
+    } else {
+      // Use synchronous processing (legacy mode)
+      const startTime = Date.now();
+      const result = await videoImportService.processVideos(importRequest);
+      const processingTime = Date.now() - startTime;
+
+      // Log results
+      console.log(`✅ Unified import completed in ${processingTime}ms`);
+      console.log(`📊 Results:`, {
+        success: result.success,
+        videosProcessed: result.videosProcessed,
+        embeddingsGenerated: result.embeddingsGenerated,
+        exportFiles: result.exportFiles.length,
+        errors: result.errors.length
+      });
+
+      // Return response with processing metrics
+      return NextResponse.json({
+        ...result,
+        processingTime,
+        timestamp: new Date().toISOString()
+      });
+    }
 
   } catch (error) {
     console.error('❌ Unified video import error:', error);

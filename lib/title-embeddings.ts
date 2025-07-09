@@ -3,8 +3,8 @@
  * Handles OpenAI embedding generation specifically for video titles
  */
 
-import { createEmbeddings, batchCreateEmbeddings } from './server/openai-embeddings';
-import { pineconeService } from './pinecone-service';
+import { createEmbeddings, batchCreateEmbeddings } from './server/openai-embeddings.ts';
+import { pineconeService } from './pinecone-service.ts';
 
 interface VideoData {
   id: string;

@@ -13,7 +13,8 @@ import {
   Users,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -42,6 +43,11 @@ const navigation = [
     name: 'Tools',
     href: '/dashboard/youtube/tools',
     icon: Wrench,
+  },
+  {
+    name: 'Worker',
+    href: '/dashboard/youtube/worker',
+    icon: Activity,
   },
 ];
 

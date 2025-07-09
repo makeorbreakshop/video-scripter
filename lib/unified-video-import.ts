@@ -5,10 +5,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { generateTitleEmbedding, batchGenerateTitleEmbeddings } from './title-embeddings';
-import { generateThumbnailEmbedding, batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings';
-import { pineconeService } from './pinecone-service';
-import { pineconeThumbnailService } from './pinecone-thumbnail-service';
+import { generateTitleEmbedding, batchGenerateTitleEmbeddings } from './title-embeddings.ts';
+import { generateThumbnailEmbedding, batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
+import { pineconeService } from './pinecone-service.ts';
+import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 

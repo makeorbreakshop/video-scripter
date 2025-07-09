@@ -9,11 +9,12 @@
  * 3. Updates the topic_cluster column in the videos table
  */
 
-const fs = require('fs');
-const path = require('path');
-const csv = require('csv-parser');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+import fs from 'fs';
+import path from 'path';
+import csv from 'csv-parser';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Initialize Supabase client with service role for database updates
 const supabase = createClient(
@@ -21,12 +22,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const BATCH_SIZE = 100; // Process updates in batches
+const BATCH_SIZE = 500; // Process updates in larger batches
 
 async function readBertopicResults() {
   return new Promise((resolve, reject) => {
     const results = [];
-    const csvPath = path.join(__dirname, '..', 'cluster_results_20250708_143617.csv');
+    const csvPath = path.join(process.cwd(), 'bertopic_results_20250708_212427.csv');
     
     console.log(`📊 Reading BERTopic results from: ${csvPath}`);
     
@@ -133,29 +134,45 @@ async function updateVideosClusters(matches) {
   let updated = 0;
   let errors = 0;
   
-  // Process in batches
+  // Process in batches using bulk operations
   for (let i = 0; i < needsUpdate.length; i += BATCH_SIZE) {
     const batch = needsUpdate.slice(i, i + BATCH_SIZE);
     
-    console.log(`   Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsUpdate.length / BATCH_SIZE)}`);
+    console.log(`   Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsUpdate.length / BATCH_SIZE)} (${batch.length} videos)`);
     
-    // Update each video in the batch
-    for (const match of batch) {
-      const { error } = await supabase
-        .from('videos')
-        .update({ topic_cluster: match.topic_cluster })
-        .eq('id', match.db_id);
+    try {
+      // Use Promise.all for concurrent updates within the batch
+      const updatePromises = batch.map(match => 
+        supabase
+          .from('videos')
+          .update({ topic_cluster: match.topic_cluster })
+          .eq('id', match.db_id)
+      );
       
-      if (error) {
-        console.error(`   Error updating video ${match.db_id}: ${error.message}`);
-        errors++;
-      } else {
-        updated++;
+      const results = await Promise.all(updatePromises);
+      
+      // Count successes and errors
+      results.forEach((result, index) => {
+        if (result.error) {
+          console.error(`   Error updating video ${batch[index].db_id}: ${result.error.message}`);
+          errors++;
+        } else {
+          updated++;
+        }
+      });
+      
+      // Progress update
+      if (i % (BATCH_SIZE * 5) === 0) {
+        console.log(`   Progress: ${updated} updated, ${errors} errors`);
       }
+      
+    } catch (error) {
+      console.error(`   Batch error: ${error.message}`);
+      errors += batch.length;
     }
     
-    // Small delay between batches
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Small delay between batches to avoid overwhelming the database
+    await new Promise(resolve => setTimeout(resolve, 50));
   }
   
   console.log(`   Updated: ${updated} videos`);
@@ -197,7 +214,7 @@ async function generateSummaryReport(matches, unmatched) {
     }))
   };
   
-  const reportPath = path.join(__dirname, '..', `cluster_assignment_report_${new Date().toISOString().split('T')[0]}.json`);
+  const reportPath = path.join(process.cwd(), `cluster_assignment_report_${new Date().toISOString().split('T')[0]}.json`);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\n💾 Detailed report saved to: ${reportPath}`);
 }
@@ -205,7 +222,7 @@ async function generateSummaryReport(matches, unmatched) {
 async function main() {
   try {
     console.log('🚀 Starting Topic Cluster Assignment');
-    console.log('=' * 60);
+    console.log('='.repeat(60));
     
     // Step 1: Read BERTopic results
     const bertopicResults = await readBertopicResults();
@@ -235,6 +252,4 @@ async function main() {
 }
 
 // Run the script
-if (require.main === module) {
-  main();
-}
+main();
