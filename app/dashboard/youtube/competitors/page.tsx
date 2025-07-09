@@ -119,11 +119,181 @@ export default function CompetitorsPage() {
     }
   };
 
+  const parseYouTubeChannelUrl = (input: string): { channelId?: string, username?: string, handle?: string } | null => {
+    try {
+      // Handle different YouTube channel URL formats
+      const patterns = [
+        // https://www.youtube.com/channel/CHANNEL_ID
+        /youtube\.com\/channel\/([a-zA-Z0-9_-]+)/,
+        // https://www.youtube.com/c/USERNAME
+        /youtube\.com\/c\/([a-zA-Z0-9_-]+)/,
+        // https://www.youtube.com/@HANDLE
+        /youtube\.com\/@([a-zA-Z0-9_-]+)/,
+        // https://www.youtube.com/user/USERNAME
+        /youtube\.com\/user\/([a-zA-Z0-9_-]+)/,
+        // Direct channel ID (UC...)
+        /^(UC[a-zA-Z0-9_-]{22})$/
+      ];
+
+      for (const [index, pattern] of patterns.entries()) {
+        const match = input.match(pattern);
+        if (match) {
+          const value = match[1];
+          
+          // Pattern 0 and 4 are channel IDs
+          if (index === 0 || index === 4) {
+            return { channelId: value };
+          }
+          // Pattern 1 is custom URL (c/username)
+          else if (index === 1) {
+            return { username: value };
+          }
+          // Pattern 2 is @handle
+          else if (index === 2) {
+            return { handle: value };
+          }
+          // Pattern 3 is user/username
+          else if (index === 3) {
+            return { username: value };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing YouTube URL:', error);
+    }
+    
+    return null;
+  };
+
+  const handleDirectUrlImport = async () => {
+    if (!channelInput.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a YouTube channel URL',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check if it's a YouTube URL
+    if (!channelInput.includes('youtube.com/')) {
+      // Fall back to search functionality
+      await handleSearchChannels();
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress(10);
+
+    try {
+      // Step 1: Extract channel ID from URL
+      const scrapeResponse = await fetch('/api/youtube/scrape-channel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: channelInput.trim()
+        }),
+      });
+
+      const scrapeResult = await scrapeResponse.json();
+      console.log('Scrape result:', scrapeResult);
+
+      if (!scrapeResponse.ok || !scrapeResult.channelId) {
+        throw new Error(scrapeResult.error || 'Failed to extract channel information');
+      }
+
+      setImportProgress(30);
+
+      // Check if channel is already imported (returned by scrape endpoint)
+      if (scrapeResult.isAlreadyImported) {
+        const sourceMessage = scrapeResult.importSource === 'competitor' 
+          ? 'This channel is already imported as a competitor'
+          : scrapeResult.importSource === 'discovery'
+          ? 'This channel is already in your discovery system'
+          : 'This channel is already in your system';
+        
+        toast({
+          title: 'Channel Already Imported',
+          description: sourceMessage,
+          variant: 'destructive'
+        });
+        setIsImporting(false);
+        setImportProgress(0);
+        return;
+      }
+
+      setImportProgress(50);
+
+      // Step 3: Import using the competitor import endpoint (supports all videos, not just 50)
+      const importResponse = await fetch('/api/youtube/import-competitor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelId: scrapeResult.channelId,
+          channelName: '', // Will be fetched by the endpoint
+          timePeriod: 'all',
+          maxVideos: 'all',
+          excludeShorts: true,
+          userId: '00000000-0000-0000-0000-000000000000'
+        }),
+      });
+
+      setImportProgress(90);
+
+      const importResult = await importResponse.json();
+
+      if (!importResponse.ok) {
+        throw new Error(importResult.error || 'Failed to import channel');
+      }
+
+      // Check if it's a queued job response
+      if (importResult.jobId || importResult.status === 'queued') {
+        toast({
+          title: 'Import Started',
+          description: `Processing channel in background. You can start another import!`,
+        });
+        setImportProgress(100);
+        // Reset UI immediately so user can start another import
+        setTimeout(() => {
+          setChannelInput('');
+          setImportProgress(0);
+        }, 1000);
+      } else {
+        // Legacy sync response
+        setImportProgress(100);
+        toast({
+          title: 'Success!',
+          description: importResult.message || `Imported ${importResult.imported_videos || 0} videos from the channel`,
+        });
+      }
+
+      // Reset form and reload channels
+      setChannelInput('');
+      await loadCompetitorChannels();
+
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: 'Import Failed',
+        description: (error as Error).message || 'Failed to import channel',
+        variant: 'destructive'
+      });
+    } finally {
+      // Only reset if not handled by async response
+      setIsImporting(false);
+      setImportProgress(0);
+    }
+  };
+
   const handleSearchChannels = async () => {
     if (!channelInput.trim()) {
       toast({
         title: 'Error',
-        description: 'Please enter a search term',
+        description: 'Please enter a search term or YouTube channel URL',
         variant: 'destructive'
       });
       return;
@@ -132,6 +302,11 @@ export default function CompetitorsPage() {
     setIsSearching(true);
     setSearchResults([]);
 
+    // Regular search
+    await performChannelSearch(channelInput.trim());
+  };
+
+  const performChannelSearch = async (query: string) => {
     try {
       const response = await fetch('/api/youtube/search-channels', {
         method: 'POST',
@@ -139,7 +314,7 @@ export default function CompetitorsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: channelInput.trim()
+          query: query
         }),
       });
 
@@ -300,24 +475,41 @@ export default function CompetitorsPage() {
       });
 
       clearInterval(progressInterval);
-      setImportProgress(100);
-
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to import channel');
       }
 
-      toast({
-        title: 'Success!',
-        description: result.message || `Imported ${result.imported_videos} videos`,
-      });
-
-      // Reset form and reload channels
-      setChannelInput('');
-      setSelectedChannel(null);
-      setShowSearchResults(false);
-      setSearchResults([]);
+      // Check if it's a queued job response
+      if (result.jobId || result.status === 'queued') {
+        toast({
+          title: 'Import Started',
+          description: `Processing ${selectedChannel.title} in background. You can start another import!`,
+        });
+        setImportProgress(100);
+        // Reset UI immediately so user can start another import
+        setTimeout(() => {
+          setSelectedChannel(null);
+          setChannelInput('');
+          setSearchResults([]);
+          setShowSearchResults(false);
+          setImportProgress(0);
+          setIsImporting(false);
+        }, 1000);
+      } else {
+        // Legacy sync response
+        setImportProgress(100);
+        toast({
+          title: 'Success!',
+          description: result.message || `Imported ${result.imported_videos} videos`,
+        });
+        // Reset form normally after sync import
+        setChannelInput('');
+        setSelectedChannel(null);
+        setShowSearchResults(false);
+        setSearchResults([]);
+      }
       await loadCompetitorChannels();
 
     } catch (error) {
@@ -328,6 +520,7 @@ export default function CompetitorsPage() {
         variant: 'destructive'
       });
     } finally {
+      // Only reset if not handled by async response
       setIsImporting(false);
       setImportProgress(0);
     }
@@ -404,34 +597,71 @@ export default function CompetitorsPage() {
                   <div className="flex gap-2">
                     <Input
                       id="channel-input"
-                      placeholder="Search by channel name, @handle, or keyword..."
+                      placeholder="Enter YouTube channel URL or search term..."
                       value={channelInput}
                       onChange={(e) => setChannelInput(e.target.value)}
                       disabled={isImporting || isSearching}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearchChannels()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          if (channelInput.includes('youtube.com/')) {
+                            handleDirectUrlImport();
+                          } else {
+                            handleSearchChannels();
+                          }
+                        }
+                      }}
                       className="flex-1"
                     />
-                    <Button 
-                      onClick={handleSearchChannels}
-                      disabled={!channelInput.trim() || isSearching || isImporting}
-                      variant="outline"
-                    >
-                      {isSearching ? (
-                        <>
-                          <Search className="mr-2 h-4 w-4 animate-spin" />
-                          Searching...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="mr-2 h-4 w-4" />
-                          Search
-                        </>
-                      )}
-                    </Button>
+                    {channelInput.includes('youtube.com/') ? (
+                      <Button 
+                        onClick={handleDirectUrlImport}
+                        disabled={!channelInput.trim() || isImporting}
+                        className="min-w-[140px]"
+                      >
+                        {isImporting ? (
+                          <>
+                            <Download className="mr-2 h-4 w-4 animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="mr-2 h-4 w-4" />
+                            Import URL
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={handleSearchChannels}
+                        disabled={!channelInput.trim() || isSearching || isImporting}
+                        variant="outline"
+                        className="min-w-[140px]"
+                      >
+                        {isSearching ? (
+                          <>
+                            <Search className="mr-2 h-4 w-4 animate-spin" />
+                            Searching...
+                          </>
+                        ) : (
+                          <>
+                            <Search className="mr-2 h-4 w-4" />
+                            Search
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Search for YouTube channels by name, handle (@username), or keywords
+                    Paste a YouTube channel URL for direct import, or search by keywords
                   </p>
+                  {channelInput.includes('youtube.com/') && (
+                    <Alert className="mt-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Direct URL import will use the unified import process to fetch all videos from this channel
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
 
                 {/* Selected Channel Display */}
@@ -540,12 +770,18 @@ export default function CompetitorsPage() {
               {isImporting && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Importing videos...</span>
+                    <span className="text-sm font-medium">
+                      {importProgress < 30 ? 'Extracting channel information...' :
+                       importProgress < 50 ? 'Checking existing imports...' :
+                       importProgress < 90 ? 'Importing videos with unified process...' :
+                       'Finalizing import...'}
+                    </span>
                     <span className="text-sm text-muted-foreground">{importProgress}%</span>
                   </div>
                   <Progress value={importProgress} className="w-full" />
                   <p className="text-sm text-muted-foreground">
-                    Processing video metadata and calculating performance metrics
+                    {importProgress < 50 ? 'Extracting channel ID from URL without using API quota' :
+                     'Using unified import to fetch videos, generate embeddings, and export data'}
                   </p>
                 </div>
               )}

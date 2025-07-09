@@ -26,13 +26,17 @@ export async function POST(request: NextRequest) {
 
     const importRequest: VideoImportRequest = body;
     
-    console.log(`🎯 Unified video import request: ${importRequest.source} (${useQueue ? 'async' : 'sync'})`);
-    console.log(`📊 Parameters:`, {
-      videoIds: importRequest.videoIds?.length || 0,
-      channelIds: importRequest.channelIds?.length || 0,
-      rssFeedUrls: importRequest.rssFeedUrls?.length || 0,
-      options: importRequest.options || {}
-    });
+    if (useQueue) {
+      console.log(`🔄 Creating background job for ${importRequest.source} import`);
+      console.log(`📊 Input: ${importRequest.channelIds?.length || 0} channels, ${importRequest.videoIds?.length || 0} videos`);
+      console.log(`⏳ Processing will continue in worker...`);
+    } else {
+      console.log(`⚡ Processing ${importRequest.source} import immediately (synchronous mode)`);
+      console.log(`📊 Input: ${importRequest.channelIds?.length || 0} channels, ${importRequest.videoIds?.length || 0} videos`);
+      if (importRequest.options?.excludeShorts) {
+        console.log(`🎬 Will exclude YouTube Shorts`);
+      }
+    }
 
     // Apply rate limiting based on request size
     const totalItems = (importRequest.videoIds?.length || 0) + 

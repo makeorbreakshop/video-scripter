@@ -31,6 +31,11 @@ export interface VideoImportRequest {
     skipTitleEmbeddings?: boolean;
     batchSize?: number;
     forceReEmbed?: boolean;
+    maxVideosPerChannel?: number;
+    // Competitor-specific options
+    timePeriod?: string; // 'all' or number of days
+    excludeShorts?: boolean;
+    userId?: string;
   };
 }
 
@@ -151,7 +156,13 @@ export class VideoImportService {
       result.success = true;
       result.message = `Successfully processed ${videoMetadata.length} videos`;
       
-      console.log(`✅ Unified video import completed: ${result.message}`);
+      console.log(`\n✅ IMPORT COMPLETE: ${result.videosProcessed} videos processed successfully`);
+      if (result.embeddingsGenerated.titles > 0) {
+        console.log(`📊 Generated ${result.embeddingsGenerated.titles} title embeddings, ${result.embeddingsGenerated.thumbnails} thumbnail embeddings`);
+      }
+      if (result.exportFiles.length > 0) {
+        console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);
+      }
       return result;
 
     } catch (error) {
@@ -178,7 +189,14 @@ export class VideoImportService {
     
     if (request.channelIds) {
       // For channel IDs, we need to fetch recent videos
-      const channelVideoIds = await this.fetchVideosFromChannels(request.channelIds);
+      const channelVideoIds = await this.fetchVideosFromChannels(
+        request.channelIds, 
+        {
+          maxVideosPerChannel: request.options?.maxVideosPerChannel,
+          timePeriod: request.options?.timePeriod,
+          excludeShorts: request.options?.excludeShorts
+        }
+      );
       videoIds.push(...channelVideoIds);
     }
     
@@ -203,7 +221,7 @@ export class VideoImportService {
       const batch = uniqueVideoIds.slice(i, i + batchSize);
       
       try {
-        const batchResults = await this.fetchVideoDetailsBatch(batch, request.source);
+        const batchResults = await this.fetchVideoDetailsBatch(batch, request.source, request.options?.userId);
         videoMetadata.push(...batchResults);
       } catch (error) {
         console.error(`❌ Failed to fetch batch ${i / batchSize + 1}:`, error);
@@ -224,6 +242,7 @@ export class VideoImportService {
       
       return true;
     });
+
 
     console.log(`📊 Processed ${validVideos.length}/${uniqueVideoIds.length} valid videos`);
     return validVideos;
@@ -306,7 +325,8 @@ export class VideoImportService {
    * Store video data in Supabase
    */
   async storeVideoData(videos: VideoMetadata[]): Promise<void> {
-    console.log(`💾 Storing ${videos.length} videos in Supabase`);
+    console.log(`
+💾 Storing ${videos.length} videos in database...`);
     
     const { error } = await supabase
       .from('videos')
@@ -320,7 +340,7 @@ export class VideoImportService {
       throw new Error(`Failed to store video data: ${error.message}`);
     }
     
-    console.log(`✅ Successfully stored ${videos.length} videos`);
+    console.log(`✅ Database storage complete`);
   }
 
   /**
@@ -456,7 +476,14 @@ export class VideoImportService {
   /**
    * Helper: Fetch videos from channel IDs
    */
-  private async fetchVideosFromChannels(channelIds: string[]): Promise<string[]> {
+  private async fetchVideosFromChannels(
+    channelIds: string[], 
+    options?: {
+      maxVideosPerChannel?: number;
+      timePeriod?: string;
+      excludeShorts?: boolean;
+    }
+  ): Promise<string[]> {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error('YouTube API key not configured');
@@ -464,9 +491,14 @@ export class VideoImportService {
 
     const allVideoIds: string[] = [];
     
+    // Calculate date filter if time period specified
+    const isAllTime = !options?.timePeriod || options.timePeriod === 'all';
+    const daysAgo = isAllTime ? 0 : parseInt(options.timePeriod) || 3650;
+    const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    
     for (const channelId of channelIds) {
       try {
-        console.log(`🔍 Fetching videos from channel: ${channelId}`);
+        console.log(`\n🔍 Fetching ALL videos from channel: ${channelId}`);
         
         // Step 1: Get channel details to get uploads playlist
         const channelResponse = await fetch(
@@ -481,20 +513,89 @@ export class VideoImportService {
 
         const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
 
-        // Step 2: Get videos from uploads playlist (last 50 videos)
-        const playlistResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&key=${apiKey}`
-        );
-        const playlistData = await playlistResponse.json();
+        // Step 2: Get videos from uploads playlist with pagination
+        let nextPageToken: string | undefined;
+        let totalFetched = 0;
+        const channelVideoIds: string[] = [];
+        const pageSize = 50; // YouTube API max results per page
 
-        if (playlistData.items) {
-          const videoIds = playlistData.items
-            .map((item: any) => item.snippet.resourceId.videoId)
-            .filter((id: string) => id); // Filter out any undefined values
+        do {
+          const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${pageSize}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}&key=${apiKey}`;
+          
+          const playlistResponse = await fetch(playlistUrl);
+          const playlistData = await playlistResponse.json();
 
-          allVideoIds.push(...videoIds);
-          console.log(`✅ Found ${videoIds.length} videos from channel ${channelId}`);
-        }
+          if (playlistData.items) {
+            // Log page fetch
+            if (!nextPageToken) {
+              console.log(`📄 Fetching videos page 1...`);
+            } else {
+              console.log(`📄 Fetching more videos (${totalFetched} so far)...`);
+            }
+            
+            // Filter by publish date if time period specified
+            let filteredItems = playlistData.items;
+            if (publishedAfter) {
+              filteredItems = playlistData.items.filter((item: any) => {
+                const publishedAt = new Date(item.snippet.publishedAt);
+                return publishedAt >= publishedAfter;
+              });
+            }
+            
+            const videoIds = filteredItems
+              .map((item: any) => item.snippet.resourceId.videoId)
+              .filter((id: string) => id); // Filter out any undefined values
+
+            // If we need to filter shorts, we'll need to fetch video details
+            if (options?.excludeShorts && videoIds.length > 0) {
+              const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds.join(',')}&key=${apiKey}`;
+              const videoDetailsResponse = await fetch(videoDetailsUrl);
+              const videoDetailsData = await videoDetailsResponse.json();
+              
+              if (videoDetailsData.items) {
+                const nonShortIds = videoDetailsData.items
+                  .filter((video: any) => {
+                    const duration = video.contentDetails.duration;
+                    // Parse ISO 8601 duration
+                    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    if (!match) return true;
+                    
+                    const hours = parseInt(match[1] || '0');
+                    const minutes = parseInt(match[2] || '0');
+                    const seconds = parseInt(match[3] || '0');
+                    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                    
+                    return totalSeconds >= 60; // Exclude videos under 60 seconds
+                  })
+                  .map((video: any) => video.id);
+                
+                channelVideoIds.push(...nonShortIds);
+                totalFetched += nonShortIds.length;
+              }
+            } else {
+              channelVideoIds.push(...videoIds);
+              totalFetched += videoIds.length;
+            }
+
+            // Check if we've reached the max videos limit
+            if (options?.maxVideosPerChannel && totalFetched >= options.maxVideosPerChannel) {
+              // Trim to exact limit
+              const excessVideos = totalFetched - options.maxVideosPerChannel;
+              if (excessVideos > 0) {
+                channelVideoIds.splice(channelVideoIds.length - excessVideos, excessVideos);
+              }
+              console.log(`📊 Reached max videos limit (${options.maxVideosPerChannel}) for channel ${channelId}`);
+              break;
+            }
+
+            nextPageToken = playlistData.nextPageToken;
+          } else {
+            break;
+          }
+        } while (nextPageToken);
+
+        allVideoIds.push(...channelVideoIds);
+        console.log(`✅ Retrieved ${channelVideoIds.length} videos (after filtering) from channel`);
 
       } catch (error) {
         console.error(`❌ Error fetching videos from channel ${channelId}:`, error);
@@ -502,7 +603,8 @@ export class VideoImportService {
       }
     }
 
-    console.log(`📊 Total videos found from ${channelIds.length} channels: ${allVideoIds.length}`);
+    console.log(`
+📊 Total: ${allVideoIds.length} videos from ${channelIds.length} channel(s) ready for processing`);
     return allVideoIds;
   }
 
@@ -570,7 +672,7 @@ export class VideoImportService {
   /**
    * Helper: Fetch video details in batches
    */
-  private async fetchVideoDetailsBatch(videoIds: string[], source: string): Promise<VideoMetadata[]> {
+  private async fetchVideoDetailsBatch(videoIds: string[], source: string, userId?: string): Promise<VideoMetadata[]> {
     const videos: VideoMetadata[] = [];
     
     for (const videoId of videoIds) {
@@ -584,13 +686,13 @@ export class VideoImportService {
             channel_name: details.channel_name || '',
             view_count: details.view_count || 0,
             published_at: details.published_at || new Date().toISOString(),
-            performance_ratio: details.performance_ratio || 1,
+            performance_ratio: 1, // Database calculates this via rolling_baseline_views
             thumbnail_url: details.thumbnail_url || '',
             description: details.description || '',
             data_source: source === 'owner' ? 'owner' : 'competitor',
             is_competitor: source !== 'owner',
             import_date: new Date().toISOString(),
-            user_id: '00000000-0000-0000-0000-000000000000', // Default user ID
+            user_id: userId || '00000000-0000-0000-0000-000000000000', // Use provided user ID or default
             metadata: details.metadata || {}
           });
         }
@@ -627,7 +729,7 @@ export class VideoImportService {
       
       // Calculate performance ratio (views / subscriber count, defaulting to 1.0)
       const viewCount = parseInt(statistics.viewCount || '0');
-      const performance_ratio = viewCount > 0 ? Math.min(viewCount / 1000000, 2.0) : 1.0;
+      const performance_ratio = 1; // Database calculates this via rolling_baseline_views
       
       return {
         id: videoId,

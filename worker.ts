@@ -31,6 +31,9 @@ class VideoWorker {
     console.log(`📊 Processing up to ${CONCURRENT_JOBS} jobs concurrently`);
     console.log(`⏱️  Polling every ${POLL_INTERVAL / 1000} seconds`);
     
+    // Clean up any stuck jobs from previous runs
+    await this.cleanupStuckJobs();
+    
     // Main worker loop
     while (!this.isShuttingDown) {
       try {
@@ -43,6 +46,54 @@ class VideoWorker {
     }
   }
 
+  async cleanupStuckJobs() {
+    try {
+      console.log('🔍 Checking for stuck jobs from previous runs...');
+      
+      // Find jobs that have been processing for more than 30 minutes
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      
+      const { data: stuckJobs, error: fetchError } = await supabase
+        .from('video_processing_jobs')
+        .select('*')
+        .eq('status', 'processing')
+        .lt('started_at', thirtyMinutesAgo);
+      
+      if (fetchError) {
+        console.error('❌ Error fetching stuck jobs:', fetchError);
+        return;
+      }
+      
+      if (!stuckJobs || stuckJobs.length === 0) {
+        console.log('✅ No stuck jobs found');
+        return;
+      }
+      
+      console.log(`🔧 Found ${stuckJobs.length} stuck job(s), resetting to pending...`);
+      
+      // Reset each stuck job
+      for (const job of stuckJobs) {
+        const { error } = await supabase
+          .from('video_processing_jobs')
+          .update({
+            status: 'pending',
+            worker_id: null,
+            started_at: null,
+            error_message: 'Job was stuck, automatically reset'
+          })
+          .eq('id', job.id);
+        
+        if (error) {
+          console.error(`❌ Error resetting job ${job.id}:`, error);
+        } else {
+          console.log(`✅ Reset stuck job ${job.id} (video: ${job.video_id})`);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error during stuck job cleanup:', error);
+    }
+  }
+
   async processJobs() {
     // Don't claim new jobs if we're at capacity
     const availableSlots = CONCURRENT_JOBS - this.activeJobs.size;
@@ -51,6 +102,11 @@ class VideoWorker {
     }
 
     try {
+      // Periodically check for stuck jobs (every 10 polls)
+      if (Math.random() < 0.1) {
+        await this.cleanupStuckJobs();
+      }
+      
       // Claim jobs up to our available capacity
       for (let i = 0; i < availableSlots; i++) {
         const job = await this.claimNextJob();
@@ -117,7 +173,7 @@ class VideoWorker {
       if (job.metadata && (job.metadata.videoIds || job.metadata.channelIds || job.metadata.rssFeedUrls)) {
         // Process unified import job
         const importRequest = job.metadata;
-        console.log(`🎬 Processing unified import job ${job.job_id.slice(0, 8)}... (${importRequest.source})`);
+        console.log(`\n🎬 WORKER: Processing ${importRequest.source} import (Job: ${job.job_id.slice(0, 8)})`);
         
         // Store job results for tracking
         await this.updateJobProgress(job.job_id, { started_at: new Date().toISOString() });
