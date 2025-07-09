@@ -175,6 +175,18 @@ class VideoWorker {
         const importRequest = job.metadata;
         console.log(`\n🎬 WORKER: Processing ${importRequest.source} import (Job: ${job.job_id.slice(0, 8)})`);
         
+        // Check if vectorization workers are enabled to avoid API contention
+        const vectorizationStatus = await this.checkVectorizationWorkers();
+        if (vectorizationStatus.titleEnabled || vectorizationStatus.thumbnailEnabled) {
+          console.log(`🔄 Vectorization workers detected (Title: ${vectorizationStatus.titleEnabled ? 'ON' : 'OFF'}, Thumbnail: ${vectorizationStatus.thumbnailEnabled ? 'ON' : 'OFF'})`);
+          console.log('⚡ Skipping embeddings during import to avoid API contention - dedicated workers will handle this');
+          
+          // Skip embeddings to avoid API rate limit contention
+          if (!importRequest.options) importRequest.options = {};
+          importRequest.options.skipTitleEmbeddings = vectorizationStatus.titleEnabled;
+          importRequest.options.skipThumbnailEmbeddings = vectorizationStatus.thumbnailEnabled;
+        }
+        
         // Store job results for tracking
         await this.updateJobProgress(job.job_id, { started_at: new Date().toISOString() });
         
@@ -190,10 +202,20 @@ class VideoWorker {
         // Process legacy individual video job
         console.log(`🎬 Processing video job ${job.job_id.slice(0, 8)}... (${job.source}: ${job.video_id})`);
         
+        // Check vectorization workers for legacy jobs too
+        const vectorizationStatus = await this.checkVectorizationWorkers();
+        const options = job.metadata?.options || {};
+        
+        if (vectorizationStatus.titleEnabled || vectorizationStatus.thumbnailEnabled) {
+          console.log(`🔄 Vectorization workers active - skipping embeddings during individual video import`);
+          options.skipTitleEmbeddings = vectorizationStatus.titleEnabled;
+          options.skipThumbnailEmbeddings = vectorizationStatus.thumbnailEnabled;
+        }
+        
         result = await this.videoImportService.processVideos({
           source: job.source,
           videoIds: [job.video_id],
-          options: job.metadata?.options || {}
+          options
         });
       }
 
@@ -292,6 +314,31 @@ class VideoWorker {
       }
     } catch (error) {
       console.error('❌ Error failing job:', error);
+    }
+  }
+
+  async checkVectorizationWorkers() {
+    try {
+      const { data, error } = await supabase
+        .from('worker_control')
+        .select('worker_type, is_enabled')
+        .in('worker_type', ['title_vectorization', 'thumbnail_vectorization']);
+      
+      if (error) {
+        console.error('❌ Error checking vectorization workers:', error);
+        return { titleEnabled: false, thumbnailEnabled: false };
+      }
+      
+      const titleWorker = data?.find(w => w.worker_type === 'title_vectorization');
+      const thumbnailWorker = data?.find(w => w.worker_type === 'thumbnail_vectorization');
+      
+      return {
+        titleEnabled: titleWorker?.is_enabled || false,
+        thumbnailEnabled: thumbnailWorker?.is_enabled || false
+      };
+    } catch (error) {
+      console.error('❌ Error checking vectorization workers:', error);
+      return { titleEnabled: false, thumbnailEnabled: false };
     }
   }
 
