@@ -190,7 +190,17 @@ class VideoWorker {
         // Store job results for tracking
         await this.updateJobProgress(job.job_id, { started_at: new Date().toISOString() });
         
-        result = await this.videoImportService.processVideos(importRequest);
+        // Check if this is a large job that needs chunking
+        const totalItems = (importRequest.videoIds?.length || 0) + 
+                          (importRequest.channelIds?.length || 0) + 
+                          (importRequest.rssFeedUrls?.length || 0);
+        
+        if (totalItems > 500) {
+          console.log(`📦 Large job detected (${totalItems} items) - using chunked processing`);
+          result = await this.processLargeJobInChunks(importRequest, job.job_id);
+        } else {
+          result = await this.videoImportService.processVideos(importRequest);
+        }
         
         // Store results in job metadata
         await this.updateJobProgress(job.job_id, { 

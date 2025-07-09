@@ -130,11 +130,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+    const videoIdsString = searchData.items.map((item: any) => item.id.videoId).join(',');
     
     // Get detailed video information including statistics (OAuth only)
     const videoResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}`,
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIdsString}`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,

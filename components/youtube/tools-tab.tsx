@@ -920,21 +920,32 @@ export function YouTubeToolsTab() {
 
       const results = await response.json();
       
-      if (results.success && results.operationId) {
-        setDailyUpdateOperationId(results.operationId);
-        startDailyUpdatePolling(results.operationId);
-        
-        toast({
-          title: "Daily Update Started",
-          description: `Processing all daily updates with operation ID: ${results.operationId.slice(0, 8)}...`,
-        });
+      if (results.success) {
+        // Handle synchronous completion (no operation ID needed)
+        if (results.results) {
+          setDailyUpdateProgress({
+            discovery: results.results.discovery,
+            backfill: results.results.backfill,
+            rss: results.results.rss,
+            status: 'completed'
+          });
+          
+          const totalNewVideos = (results.results.discovery?.newVideos || 0) + 
+                                (results.results.rss?.newVideos || 0);
+          
+          toast({
+            title: "Daily Update Completed",
+            description: `Found ${totalNewVideos} new videos. Discovery: ${results.results.discovery?.newVideos || 0}, RSS: ${results.results.rss?.newVideos || 0}`,
+          });
+        } else {
+          throw new Error('Daily update succeeded but no results data returned');
+        }
       } else {
-        throw new Error('Failed to get operation ID from daily update response');
+        throw new Error('Daily update failed: ' + (results.error || 'Unknown error'));
       }
 
     } catch (error) {
       console.error('Daily update error:', error);
-      setIsDailyUpdateRunning(false);
       setDailyUpdateProgress(null);
       
       toast({
@@ -942,6 +953,8 @@ export function YouTubeToolsTab() {
         description: error instanceof Error ? error.message : 'Failed to start daily update',
         variant: "destructive",
       });
+    } finally {
+      setIsDailyUpdateRunning(false);
     }
   };
 

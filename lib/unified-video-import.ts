@@ -12,10 +12,10 @@ import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Initialize Supabase client
+// Initialize Supabase client with service role for full database access
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 // Types
@@ -609,19 +609,19 @@ export class VideoImportService {
   }
 
   /**
-   * Helper: Fetch videos from RSS feeds
+   * Helper: Fetch videos from RSS feeds (OPTIMIZED)
+   * Processes all RSS feeds in parallel and deduplicates before YouTube API calls
    */
   private async fetchVideosFromRSS(rssFeedUrls: string[]): Promise<string[]> {
-    const allVideoIds: string[] = [];
+    console.log(`🚀 Starting optimized RSS processing for ${rssFeedUrls.length} feeds`);
+    const startTime = Date.now();
     
-    for (const feedUrl of rssFeedUrls) {
+    // Parallel RSS feed processing
+    const rssPromises = rssFeedUrls.map(async (feedUrl, index) => {
       try {
-        console.log(`🔍 Fetching videos from RSS feed: ${feedUrl}`);
-        
         // Support both direct RSS URLs and channel IDs
         let actualFeedUrl = feedUrl;
         if (feedUrl.startsWith('UC') && feedUrl.length === 24) {
-          // This looks like a channel ID, convert to RSS URL
           actualFeedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feedUrl}`;
         }
         
@@ -632,41 +632,98 @@ export class VideoImportService {
         });
 
         if (!response.ok) {
-          console.error(`❌ Failed to fetch RSS feed ${actualFeedUrl}: ${response.status}`);
-          continue;
+          console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} failed: ${response.status}`);
+          return [];
         }
 
         const xmlText = await response.text();
         
-        // Simple XML parsing to extract video IDs
-        // Look for patterns like <yt:videoId>VIDEO_ID</yt:videoId> or entry IDs
-        const videoIdMatches = xmlText.match(/<yt:videoId>([\w-]+)<\/yt:videoId>/g);
-        if (videoIdMatches) {
-          const videoIds = videoIdMatches.map(match => 
-            match.replace('<yt:videoId>', '').replace('</yt:videoId>', '')
-          );
-          allVideoIds.push(...videoIds);
-          console.log(`✅ Found ${videoIds.length} videos from RSS feed`);
-        } else {
-          // Fallback: look for entry IDs with format yt:video:VIDEO_ID
-          const entryIdMatches = xmlText.match(/<id>yt:video:([\w-]+)<\/id>/g);
-          if (entryIdMatches) {
-            const videoIds = entryIdMatches.map(match => 
-              match.replace('<id>yt:video:', '').replace('</id>', '')
-            );
-            allVideoIds.push(...videoIds);
-            console.log(`✅ Found ${videoIds.length} videos from RSS feed (fallback method)`);
+        // Parse entries with both video IDs and published dates
+        const entryPattern = /<entry>(.*?)<\/entry>/gs;
+        const entries = xmlText.match(entryPattern) || [];
+        
+        const recentVideoIds: string[] = [];
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - 7); // Only videos from last 7 days
+        
+        for (const entry of entries) {
+          // Extract video ID
+          const videoIdMatch = entry.match(/<yt:videoId>([\w-]+)<\/yt:videoId>/);
+          if (!videoIdMatch) continue;
+          
+          const videoId = videoIdMatch[1];
+          
+          // Extract published date
+          const publishedMatch = entry.match(/<published>([^<]+)<\/published>/);
+          if (!publishedMatch) continue;
+          
+          const publishedDate = new Date(publishedMatch[1]);
+          
+          // Only include videos from last 7 days
+          if (publishedDate >= cutoffDate) {
+            recentVideoIds.push(videoId);
           }
         }
-
+        
+        console.log(`✅ Feed ${index + 1}/${rssFeedUrls.length}: ${recentVideoIds.length} recent videos (last 7 days)`);
+        return recentVideoIds;
       } catch (error) {
-        console.error(`❌ Error fetching RSS feed ${feedUrl}:`, error);
-        // Continue with other feeds even if one fails
+        console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} error:`, error.message);
+        return [];
       }
-    }
+    });
 
-    console.log(`📊 Total videos found from ${rssFeedUrls.length} RSS feeds: ${allVideoIds.length}`);
-    return allVideoIds;
+    // Wait for all RSS feeds to complete
+    const allResults = await Promise.all(rssPromises);
+    const allVideoIds = allResults.flat();
+    
+    // Deduplicate video IDs
+    const uniqueVideoIds = Array.from(new Set(allVideoIds));
+    const rssTime = Date.now() - startTime;
+    
+    console.log(`📊 RSS Discovery Complete:`);
+    console.log(`   • Feeds processed: ${rssFeedUrls.length}`);
+    console.log(`   • Total videos found: ${allVideoIds.length}`);
+    console.log(`   • Unique videos: ${uniqueVideoIds.length}`);
+    console.log(`   • Duplicates removed: ${allVideoIds.length - uniqueVideoIds.length}`);
+    console.log(`   • Processing time: ${rssTime}ms`);
+    
+    // Filter out videos that already exist in database
+    if (uniqueVideoIds.length > 0) {
+      console.log(`🔍 Checking for existing videos in database...`);
+      
+      // Process in batches to avoid PostgreSQL query size limits
+      const batchSize = 1000;
+      const existingIds = new Set<string>();
+      
+      for (let i = 0; i < uniqueVideoIds.length; i += batchSize) {
+        const batch = uniqueVideoIds.slice(i, i + batchSize);
+        const { data: existingVideos, error } = await supabase
+          .from('videos')
+          .select('id')
+          .in('id', batch);
+        
+        if (error) {
+          console.error(`❌ Database filter error for batch ${i / batchSize + 1}:`, error);
+          console.error(`   Query: SELECT id FROM videos WHERE id IN (${batch.slice(0, 3).join(', ')}...)`);
+          continue;
+        }
+        
+        existingVideos?.forEach(v => existingIds.add(v.id));
+        console.log(`✅ Batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uniqueVideoIds.length / batchSize)}: ${existingVideos?.length || 0} existing found`);
+      }
+      
+      const newVideoIds = uniqueVideoIds.filter(id => !existingIds.has(id));
+      
+      console.log(`📊 Database Filter Results:`);
+      console.log(`   • Videos already in DB: ${existingIds.size}`);
+      console.log(`   • New videos to process: ${newVideoIds.length}`);
+      console.log(`   • Filter efficiency: ${((existingIds.size / uniqueVideoIds.length) * 100).toFixed(1)}% already existed`);
+      
+      return newVideoIds;
+    }
+    
+    return uniqueVideoIds;
   }
 
   /**

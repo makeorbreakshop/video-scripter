@@ -82,32 +82,69 @@ export async function POST(request: NextRequest) {
 
     const unifiedResults = await importResponse.json();
 
-    // Map unified results to legacy format for backward compatibility
-    const importResults = {
-      channelsProcessed: channelIds.length,
-      totalVideosFound: unifiedResults.videosProcessed,
-      newVideosImported: unifiedResults.videosProcessed,
-      errors: unifiedResults.errors,
-      channels: channelIds.map((channelId: string) => ({
-        channelId,
-        newVideosImported: Math.ceil(unifiedResults.videosProcessed / channelIds.length),
-        status: unifiedResults.success ? 'success' : 'error'
-      }))
-    };
+    // Check if this is a job response (async) or processing response (sync)
+    const isJobResponse = unifiedResults.jobId && unifiedResults.status === 'queued';
 
-    // Step 3: Embeddings and exports are now handled by unified endpoint
-    // Log the enhanced results
-    console.log(`✅ Unified daily monitor completed: ${unifiedResults.videosProcessed} videos processed`);
-    console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles} titles, ${unifiedResults.embeddingsGenerated.thumbnails} thumbnails`);
-    console.log(`📁 Export files created: ${unifiedResults.exportFiles.length}`);
+    let importResults;
+    let processingMetrics;
 
-    // Include processing metrics in the summary
-    const processingMetrics = {
-      processingTime: unifiedResults.processingTime,
-      embeddingsGenerated: unifiedResults.embeddingsGenerated,
-      exportFiles: unifiedResults.exportFiles,
-      processedVideoIds: unifiedResults.processedVideoIds
-    };
+    if (isJobResponse) {
+      // Async job created - processing will happen in worker
+      console.log(`✅ Unified daily monitor job created: ${unifiedResults.jobId}`);
+      console.log(`⏳ RSS monitoring will be processed by worker queue`);
+
+      // Map job results to legacy format for backward compatibility
+      importResults = {
+        channelsProcessed: channelIds.length,
+        totalVideosFound: 0, // Will be determined by worker
+        newVideosImported: 0, // Will be determined by worker
+        errors: [],
+        jobId: unifiedResults.jobId,
+        status: 'queued',
+        channels: channelIds.map((channelId: string) => ({
+          channelId,
+          newVideosImported: 0,
+          status: 'queued'
+        }))
+      };
+
+      // No processing metrics available for async jobs
+      processingMetrics = {
+        jobId: unifiedResults.jobId,
+        status: 'queued',
+        processingMode: 'async'
+      };
+    } else {
+      // Sync processing completed
+      console.log(`✅ Unified daily monitor completed: ${unifiedResults.videosProcessed} videos processed`);
+      if (unifiedResults.embeddingsGenerated) {
+        console.log(`📊 Embeddings generated: ${unifiedResults.embeddingsGenerated.titles || 0} titles, ${unifiedResults.embeddingsGenerated.thumbnails || 0} thumbnails`);
+      }
+      if (unifiedResults.exportFiles) {
+        console.log(`📁 Export files created: ${unifiedResults.exportFiles.length}`);
+      }
+
+      // Map unified results to legacy format for backward compatibility
+      importResults = {
+        channelsProcessed: channelIds.length,
+        totalVideosFound: unifiedResults.videosProcessed,
+        newVideosImported: unifiedResults.videosProcessed,
+        errors: unifiedResults.errors,
+        channels: channelIds.map((channelId: string) => ({
+          channelId,
+          newVideosImported: Math.ceil(unifiedResults.videosProcessed / channelIds.length),
+          status: unifiedResults.success ? 'success' : 'error'
+        }))
+      };
+
+      // Include processing metrics in the summary
+      processingMetrics = {
+        processingTime: unifiedResults.processingTime,
+        embeddingsGenerated: unifiedResults.embeddingsGenerated || { titles: 0, thumbnails: 0 },
+        exportFiles: unifiedResults.exportFiles || [],
+        processedVideoIds: unifiedResults.processedVideoIds || []
+      };
+    }
 
     // Step 4: Log the monitoring activity
     const logData = {
