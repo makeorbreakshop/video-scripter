@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { batchSyncVideosToPinecone } from './lib/title-embeddings.ts';
+import { SupabasePineconeSync } from './lib/supabase-pinecone-sync.ts';
 import os from 'os';
 
 // Initialize Supabase client with service role for bypassing RLS
@@ -32,6 +33,7 @@ class TitleVectorizationWorker {
     this.isShuttingDown = false;
     this.isProcessing = false;
     this.hasShownInitialState = false;
+    this.syncService = new SupabasePineconeSync();
     this.stats = {
       processedCount: 0,
       errorCount: 0,
@@ -196,15 +198,30 @@ class TitleVectorizationWorker {
           // Count successes and errors
           let successCount = 0;
           let errorCount = 0;
+          const successfulVideoIds = [];
+          const failedVideoIds = [];
           
           for (const result of results) {
             if (result.success) {
               successCount++;
               this.stats.processedCount++;
+              successfulVideoIds.push(result.id);
             } else {
               errorCount++;
               this.stats.errorCount++;
+              failedVideoIds.push(result.id);
               console.error(`❌ Failed to embed video ${result.id}: ${result.error}`);
+            }
+          }
+          
+          // Update database to mark videos as embedded
+          if (successfulVideoIds.length > 0) {
+            try {
+              await this.syncService.updateVideoEmbeddingStatus(successfulVideoIds, true, 'v1');
+              console.log(`✅ Updated database: ${successfulVideoIds.length} videos marked as embedded`);
+            } catch (error) {
+              console.error('❌ Failed to update database embedding status:', error);
+              // Don't fail the whole batch if database update fails
             }
           }
           

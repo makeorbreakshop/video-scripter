@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, FileText, Edit2, Download, Settings, ChevronLeft, ChevronRight, Package, Folder, Database, Youtube, Wrench } from "lucide-react"
+import { Search, FileText, Edit2, Download, Settings, ChevronLeft, ChevronRight, Package, Folder, Database, Youtube, Wrench, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WorkflowPhase } from "@/types/workflow"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
@@ -136,6 +136,23 @@ export function Sidebar({
             {isMinimized && (
               <TooltipContent side="right" className="ml-1">
                 YouTube Dashboard
+              </TooltipContent>
+            )}
+          </Tooltip>
+
+          {/* Planning Button */}
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Link href="/planning">
+                <button className={cn("sidebar-button w-full", !isMinimized && "justify-start px-3")}>
+                  <Target className="sidebar-icon" />
+                  {!isMinimized && <span className="ml-3">Planning</span>}
+                </button>
+              </Link>
+            </TooltipTrigger>
+            {isMinimized && (
+              <TooltipContent side="right" className="ml-1">
+                Video Planning
               </TooltipContent>
             )}
           </Tooltip>
