@@ -236,6 +236,71 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - Indexes on frequently queried columns
 - JSONB for flexible, queryable document storage
 
+## Materialized Views for Dashboard Performance
+
+### analytics_stats
+**Purpose**: Provides aggregated statistics across the video database
+- **Content**: Total videos, competitor videos, embedded videos, recent videos, average views
+- **Channel Stats**: Total channels, competitor channels, RSS monitored channels
+- **Refresh Schedule**: Hourly via `refresh_analytics_stats()` function
+
+### channel_network_centrality
+**Purpose**: Analyzes channel discovery patterns and relationships
+- **Key Metrics**: Discovery frequency, method diversity, average relevance score
+- **Discovery Methods**: Tracks how channels are discovered and connected
+- **Usage**: Helps identify influential channels in the network
+
+### competitor_channel_summary
+**Purpose**: Aggregates competitor channel data for quick access
+- **Content**: Channel metadata, subscriber counts, video counts, last import dates
+- **Optimization**: Uses best available metadata from videos
+- **Refresh Schedule**: Daily at 3 AM via `refresh_competitor_channel_summary()` function
+
+### mv_makeorbreak_dashboard
+**Purpose**: Pre-calculated metrics for the Make or Break Shop channel dashboard
+- **Performance Metrics**: View counts, performance ratios, revenue data
+- **Categories**: Classifies videos as excellent/good/average/poor based on performance
+- **Optimization**: Handles duplicate baseline entries, pre-calculates recent averages
+- **Impact**: Reduced query time from 40ms+ to 0.121ms
+
+### packaging_performance
+**Purpose**: Optimized view for packaging analysis page
+- **Content**: Video performance metrics excluding YouTube Shorts
+- **Features**: Performance ratios, channel baselines, video metadata
+- **Refresh Schedule**: Daily at 2 AM
+- **Usage**: Powers the packaging analysis dashboard
+
+### unprocessed_thumbnails & videos_2024_unprocessed
+**Purpose**: Track videos pending thumbnail embedding processing
+- **Content**: Videos with thumbnail URLs but no embeddings
+- **Filtering**: `videos_2024_unprocessed` focuses on 2024 content only
+- **Usage**: Feeds thumbnail processing pipelines
+
+## Scheduled Jobs (Cron)
+
+### Daily Jobs
+
+#### daily-packaging-refresh (2:00 AM)
+- **Command**: `REFRESH MATERIALIZED VIEW packaging_performance;`
+- **Purpose**: Updates packaging dashboard data for optimal performance
+
+#### refresh-competitor-channels (3:00 AM)
+- **Command**: `SELECT refresh_competitor_channel_summary();`
+- **Purpose**: Updates competitor channel summary with latest data
+
+### Hourly Jobs
+
+#### refresh-analytics-stats (Every hour)
+- **Command**: `SELECT refresh_analytics_stats();`
+- **Purpose**: Updates analytics statistics materialized view
+
+### High-Frequency Jobs
+
+#### baseline-processing (Every 30 seconds)
+- **Command**: `SELECT process_baseline_batch(1000);`
+- **Purpose**: Processes baseline analytics in batches for new videos
+- **Active**: Currently running to handle analytics backlog
+
 ## Custom Database Functions
 
 ### YouTube Analytics Functions
@@ -260,6 +325,23 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - **`refresh_analytics_cache()`**: Refreshes cached analytics data for performance
 - **`calculate_channel_baseline()`**: Calculates average views baseline for a channel
 - **`update_performance_ratios()`**: Updates performance_ratio column for all videos in a channel
+
+### Materialized View Refresh Functions
+- **`refresh_analytics_stats()`**: Updates the analytics_stats materialized view
+  - **Schedule**: Runs hourly via cron job
+  - **Purpose**: Keeps video and channel statistics current
+- **`refresh_competitor_channel_summary()`**: Updates competitor channel aggregations
+  - **Schedule**: Runs daily at 3 AM
+  - **Security**: SECURITY DEFINER for proper permissions
+- **`refresh_dashboard_data()`**: General dashboard refresh function
+- **`refresh_network_centrality()`**: Updates channel network analysis view
+
+### Dashboard Support Functions
+- **`get_packaging_performance()`**: Retrieves filtered packaging performance data
+  - **Parameters**: search_term, competitor_filter, date_filter, performance_filter, sort options, pagination
+  - **Usage**: Powers the packaging analysis page with sorting and filtering
+- **`get_competitor_channel_stats()`**: Returns competitor channel statistics
+- **`get_youtube_channel_ids()`**: Retrieves all YouTube channel IDs in the system
 
 ## YouTube Analytics Architecture
 
@@ -312,8 +394,9 @@ Created `mv_makeorbreak_dashboard` materialized view:
 
 ---
 
-*Last updated: 2025-06-30*
+*Last updated: 2025-07-10*
 *Database version: PostgreSQL with pgvector extension*
 *Current tables: 15 (added baseline_analytics, daily_analytics)*
-*Custom functions: 10 core functions + pgvector extensions*
-*Materialized views: 1 (mv_makeorbreak_dashboard)*
+*Custom functions: 18+ functions including refresh and dashboard support*
+*Materialized views: 7 (analytics_stats, channel_network_centrality, competitor_channel_summary, mv_makeorbreak_dashboard, packaging_performance, unprocessed_thumbnails, videos_2024_unprocessed)*
+*Scheduled cron jobs: 4 (baseline-processing, daily-packaging-refresh, refresh-analytics-stats, refresh-competitor-channels)*
