@@ -8,12 +8,17 @@
  * 4. Export all vectors to JSON file for Python analysis
  */
 
-const { Pinecone } = require('@pinecone-database/pinecone');
-const fs = require('fs');
-const path = require('path');
+import { Pinecone } from '@pinecone-database/pinecone';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
-require('dotenv').config();
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 class PineconeExporter {
   constructor() {
@@ -276,9 +281,7 @@ class PineconeExporter {
 }
 
 // Run the exporter
-if (require.main === module) {
-  const exporter = new PineconeExporter();
-  exporter.run();
-}
+const exporter = new PineconeExporter();
+exporter.run();
 
-module.exports = PineconeExporter;
+export default PineconeExporter;

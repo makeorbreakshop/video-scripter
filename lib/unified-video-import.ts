@@ -5,8 +5,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { generateTitleEmbedding, batchGenerateTitleEmbeddings } from './title-embeddings.ts';
-import { generateThumbnailEmbedding, batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
+import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
+import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import * as fs from 'fs';
@@ -89,6 +89,8 @@ export interface EmbeddingResults {
 export class VideoImportService {
   private openaiApiKey: string;
   private youtubeApiKey: string;
+  // Channel stats cache to avoid redundant API calls
+  private channelStatsCache = new Map<string, any>();
 
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
@@ -100,6 +102,14 @@ export class VideoImportService {
     if (!this.youtubeApiKey) {
       throw new Error('YOUTUBE_API_KEY environment variable is required');
     }
+  }
+
+  /**
+   * Clear the channel stats cache
+   */
+  private clearChannelStatsCache(): void {
+    this.channelStatsCache.clear();
+    console.log('🧹 Cleared channel stats cache');
   }
 
   /**
@@ -142,15 +152,28 @@ export class VideoImportService {
         result.embeddingsGenerated.thumbnails = embeddingResults.thumbnailEmbeddings.filter(e => e.success).length;
       }
 
-      // Step 4: Export embeddings locally (if not skipped)
+      // Step 4 & 5: Export and Upload in parallel
+      const postProcessingPromises: Promise<void>[] = [];
+      
+      // Export embeddings locally (if not skipped)
       if (!request.options?.skipExports && embeddingResults) {
-        const exportFiles = await this.exportEmbeddings(videoMetadata, embeddingResults);
-        result.exportFiles = exportFiles;
+        const exportPromise = (async () => {
+          const exportFiles = await this.exportEmbeddings(videoMetadata, embeddingResults);
+          result.exportFiles = exportFiles;
+        })();
+        postProcessingPromises.push(exportPromise);
       }
 
-      // Step 5: Upload to Pinecone (if embeddings were generated)
+      // Upload to Pinecone (if embeddings were generated)
       if (embeddingResults && !request.options?.skipEmbeddings) {
-        await this.uploadToPinecone(embeddingResults);
+        const uploadPromise = this.uploadToPinecone(embeddingResults);
+        postProcessingPromises.push(uploadPromise);
+      }
+      
+      // Run export and upload in parallel
+      if (postProcessingPromises.length > 0) {
+        console.log(`⚡ Running post-processing in parallel (${postProcessingPromises.length} operations)...`);
+        await Promise.all(postProcessingPromises);
       }
 
       result.success = true;
@@ -163,6 +186,10 @@ export class VideoImportService {
       if (result.exportFiles.length > 0) {
         console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);
       }
+      
+      // Clear cache after successful processing
+      this.clearChannelStatsCache();
+      
       return result;
 
     } catch (error) {
@@ -170,6 +197,10 @@ export class VideoImportService {
       result.errors.push(errorMessage);
       result.message = `Import failed: ${errorMessage}`;
       console.error('❌ Unified video import failed:', error);
+      
+      // Clear cache even on error to prevent stale data
+      this.clearChannelStatsCache();
+      
       return result;
     }
   }
@@ -262,60 +293,75 @@ export class VideoImportService {
       thumbnailEmbeddings: []
     };
 
+    // Prepare embedding generation promises
+    const embeddingPromises: Promise<void>[] = [];
+
     // Generate title embeddings (OpenAI 512D)
     if (!options?.skipTitleEmbeddings) {
-      try {
-        const titles = videos.map(v => v.title);
-        const titleEmbeddings = await batchGenerateTitleEmbeddings(titles, this.openaiApiKey);
-        
-        results.titleEmbeddings = videos.map((video, index) => ({
-          videoId: video.id,
-          embedding: titleEmbeddings[index] || [],
-          success: titleEmbeddings[index] ? true : false,
-          error: titleEmbeddings[index] ? undefined : 'Failed to generate title embedding'
-        }));
-        
-        console.log(`✅ Generated ${results.titleEmbeddings.filter(e => e.success).length} title embeddings`);
-      } catch (error) {
-        console.error('❌ Title embedding generation failed:', error);
-        // Mark all as failed
-        results.titleEmbeddings = videos.map(video => ({
-          videoId: video.id,
-          embedding: [],
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }));
-      }
+      const titlePromise = (async () => {
+        try {
+          const titles = videos.map(v => v.title);
+          const titleEmbeddings = await batchGenerateTitleEmbeddings(titles, this.openaiApiKey);
+          
+          results.titleEmbeddings = videos.map((video, index) => ({
+            videoId: video.id,
+            embedding: titleEmbeddings[index] || [],
+            success: titleEmbeddings[index] ? true : false,
+            error: titleEmbeddings[index] ? undefined : 'Failed to generate title embedding'
+          }));
+          
+          console.log(`✅ Generated ${results.titleEmbeddings.filter(e => e.success).length} title embeddings`);
+        } catch (error) {
+          console.error('❌ Title embedding generation failed:', error);
+          // Mark all as failed
+          results.titleEmbeddings = videos.map(video => ({
+            videoId: video.id,
+            embedding: [],
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }));
+        }
+      })();
+      embeddingPromises.push(titlePromise);
     }
 
     // Generate thumbnail embeddings (Replicate CLIP 768D)
     if (!options?.skipThumbnailEmbeddings) {
-      try {
-        const thumbnailData = videos.map(v => ({
-          id: v.id,
-          thumbnailUrl: v.thumbnail_url
-        }));
-        
-        const thumbnailResults = await batchGenerateThumbnailEmbeddings(thumbnailData);
-        
-        results.thumbnailEmbeddings = thumbnailResults.map(result => ({
-          videoId: result.id,
-          embedding: result.embedding || [],
-          success: result.success,
-          error: result.error
-        }));
-        
-        console.log(`✅ Generated ${results.thumbnailEmbeddings.filter(e => e.success).length} thumbnail embeddings`);
-      } catch (error) {
-        console.error('❌ Thumbnail embedding generation failed:', error);
-        // Mark all as failed
-        results.thumbnailEmbeddings = videos.map(video => ({
-          videoId: video.id,
-          embedding: [],
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }));
-      }
+      const thumbnailPromise = (async () => {
+        try {
+          const thumbnailData = videos.map(v => ({
+            id: v.id,
+            thumbnailUrl: v.thumbnail_url
+          }));
+          
+          const thumbnailResults = await batchGenerateThumbnailEmbeddings(thumbnailData);
+          
+          results.thumbnailEmbeddings = thumbnailResults.map(result => ({
+            videoId: result.id,
+            embedding: result.embedding || [],
+            success: result.success,
+            error: result.error
+          }));
+          
+          console.log(`✅ Generated ${results.thumbnailEmbeddings.filter(e => e.success).length} thumbnail embeddings`);
+        } catch (error) {
+          console.error('❌ Thumbnail embedding generation failed:', error);
+          // Mark all as failed
+          results.thumbnailEmbeddings = videos.map(video => ({
+            videoId: video.id,
+            embedding: [],
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }));
+        }
+      })();
+      embeddingPromises.push(thumbnailPromise);
+    }
+
+    // Run both embedding generations in parallel
+    if (embeddingPromises.length > 0) {
+      console.log(`⚡ Generating embeddings in parallel (${embeddingPromises.length} operations)...`);
+      await Promise.all(embeddingPromises);
     }
 
     return results;
@@ -474,7 +520,8 @@ export class VideoImportService {
   }
 
   /**
-   * Helper: Fetch videos from channel IDs
+   * OPTIMIZED: Fetch videos from channels using search API
+   * More efficient than playlist API for large channels
    */
   private async fetchVideosFromChannels(
     channelIds: string[], 
@@ -484,128 +531,162 @@ export class VideoImportService {
       excludeShorts?: boolean;
     }
   ): Promise<string[]> {
-    const apiKey = process.env.YOUTUBE_API_KEY;
-    if (!apiKey) {
-      throw new Error('YouTube API key not configured');
-    }
-
+    console.log(`🚀 Starting optimized channel video fetch for ${channelIds.length} channels`);
+    
     const allVideoIds: string[] = [];
     
-    // Calculate date filter if time period specified
+    // Calculate date filter
     const isAllTime = !options?.timePeriod || options.timePeriod === 'all';
     const daysAgo = isAllTime ? 0 : parseInt(options.timePeriod) || 3650;
     const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
     
-    for (const channelId of channelIds) {
-      try {
-        console.log(`\n🔍 Fetching ALL videos from channel: ${channelId}`);
-        
-        // Step 1: Get channel details to get uploads playlist
-        const channelResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
-        );
-        const channelData = await channelResponse.json();
-
-        if (!channelData.items || channelData.items.length === 0) {
-          console.log(`⚠️ Channel ${channelId} not found`);
-          continue;
-        }
-
-        const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
-
-        // Step 2: Get videos from uploads playlist with pagination
-        let nextPageToken: string | undefined;
-        let totalFetched = 0;
-        const channelVideoIds: string[] = [];
-        const pageSize = 50; // YouTube API max results per page
-
-        do {
-          const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${pageSize}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}&key=${apiKey}`;
-          
-          const playlistResponse = await fetch(playlistUrl);
-          const playlistData = await playlistResponse.json();
-
-          if (playlistData.items) {
-            // Log page fetch
-            if (!nextPageToken) {
-              console.log(`📄 Fetching videos page 1...`);
-            } else {
-              console.log(`📄 Fetching more videos (${totalFetched} so far)...`);
-            }
-            
-            // Filter by publish date if time period specified
-            let filteredItems = playlistData.items;
-            if (publishedAfter) {
-              filteredItems = playlistData.items.filter((item: any) => {
-                const publishedAt = new Date(item.snippet.publishedAt);
-                return publishedAt >= publishedAfter;
-              });
-            }
-            
-            const videoIds = filteredItems
-              .map((item: any) => item.snippet.resourceId.videoId)
-              .filter((id: string) => id); // Filter out any undefined values
-
-            // If we need to filter shorts, we'll need to fetch video details
-            if (options?.excludeShorts && videoIds.length > 0) {
-              const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds.join(',')}&key=${apiKey}`;
-              const videoDetailsResponse = await fetch(videoDetailsUrl);
-              const videoDetailsData = await videoDetailsResponse.json();
-              
-              if (videoDetailsData.items) {
-                const nonShortIds = videoDetailsData.items
-                  .filter((video: any) => {
-                    const duration = video.contentDetails.duration;
-                    // Parse ISO 8601 duration
-                    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-                    if (!match) return true;
-                    
-                    const hours = parseInt(match[1] || '0');
-                    const minutes = parseInt(match[2] || '0');
-                    const seconds = parseInt(match[3] || '0');
-                    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-                    
-                    return totalSeconds >= 60; // Exclude videos under 60 seconds
-                  })
-                  .map((video: any) => video.id);
-                
-                channelVideoIds.push(...nonShortIds);
-                totalFetched += nonShortIds.length;
-              }
-            } else {
-              channelVideoIds.push(...videoIds);
-              totalFetched += videoIds.length;
-            }
-
-            // Check if we've reached the max videos limit
-            if (options?.maxVideosPerChannel && totalFetched >= options.maxVideosPerChannel) {
-              // Trim to exact limit
-              const excessVideos = totalFetched - options.maxVideosPerChannel;
-              if (excessVideos > 0) {
-                channelVideoIds.splice(channelVideoIds.length - excessVideos, excessVideos);
-              }
-              console.log(`📊 Reached max videos limit (${options.maxVideosPerChannel}) for channel ${channelId}`);
-              break;
-            }
-
-            nextPageToken = playlistData.nextPageToken;
-          } else {
-            break;
-          }
-        } while (nextPageToken);
-
+    // Process channels in parallel (but limit concurrency to avoid rate limits)
+    const concurrencyLimit = 3;
+    const channelPromises = [];
+    
+    for (let i = 0; i < channelIds.length; i += concurrencyLimit) {
+      const channelBatch = channelIds.slice(i, i + concurrencyLimit);
+      
+      const batchPromise = Promise.all(
+        channelBatch.map(channelId => 
+          this.fetchChannelVideosOptimized(channelId, options, publishedAfter)
+        )
+      );
+      
+      channelPromises.push(batchPromise);
+    }
+    
+    // Wait for all batches
+    const results = await Promise.all(channelPromises);
+    
+    // Flatten results
+    for (const batchResults of results) {
+      for (const channelVideoIds of batchResults) {
         allVideoIds.push(...channelVideoIds);
-        console.log(`✅ Retrieved ${channelVideoIds.length} videos (after filtering) from channel`);
-
-      } catch (error) {
-        console.error(`❌ Error fetching videos from channel ${channelId}:`, error);
-        // Continue with other channels even if one fails
       }
     }
-
-    console.log(`
-📊 Total: ${allVideoIds.length} videos from ${channelIds.length} channel(s) ready for processing`);
+    
+    console.log(`✅ Retrieved ${allVideoIds.length} total videos from ${channelIds.length} channels`);
     return allVideoIds;
+  }
+
+  /**
+   * OPTIMIZED: Fetch videos from a single channel
+   * Uses search API for better performance with large channels
+   */
+  private async fetchChannelVideosOptimized(
+    channelId: string,
+    options?: {
+      maxVideosPerChannel?: number;
+      timePeriod?: string;
+      excludeShorts?: boolean;
+    },
+    publishedAfter?: Date | null
+  ): Promise<string[]> {
+    const videoIds: string[] = [];
+    let nextPageToken: string | undefined;
+    const pageSize = 50;
+    const maxResults = options?.maxVideosPerChannel || 500; // Default limit
+    
+    console.log(`📺 Fetching videos from channel ${channelId}`);
+    
+    try {
+      // Use search API instead of playlist API for better performance
+      do {
+        let searchUrl = `https://www.googleapis.com/youtube/v3/search?` +
+          `part=id&` +
+          `channelId=${channelId}&` +
+          `type=video&` +
+          `order=date&` +
+          `maxResults=${pageSize}`;
+        
+        if (publishedAfter) {
+          searchUrl += `&publishedAfter=${publishedAfter.toISOString()}`;
+        }
+        
+        if (nextPageToken) {
+          searchUrl += `&pageToken=${nextPageToken}`;
+        }
+        
+        searchUrl += `&key=${this.youtubeApiKey}`;
+        
+        const response = await fetch(searchUrl);
+        
+        if (!response.ok) {
+          console.error(`❌ Search API error for channel ${channelId}: ${response.status}`);
+          break;
+        }
+        
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+          const batchVideoIds = data.items.map((item: any) => item.id.videoId);
+          
+          // If excluding shorts, batch check durations
+          if (options?.excludeShorts) {
+            const nonShortIds = await this.filterOutShorts(batchVideoIds);
+            videoIds.push(...nonShortIds);
+          } else {
+            videoIds.push(...batchVideoIds);
+          }
+          
+          if (videoIds.length >= maxResults) {
+            // Trim to exact limit
+            videoIds.splice(maxResults);
+            break;
+          }
+          
+          nextPageToken = data.nextPageToken;
+        } else {
+          break;
+        }
+      } while (nextPageToken && videoIds.length < maxResults);
+      
+    } catch (error) {
+      console.error(`❌ Error fetching videos from channel ${channelId}:`, error);
+    }
+    
+    console.log(`✅ Retrieved ${videoIds.length} videos from channel ${channelId}`);
+    return videoIds;
+  }
+
+  /**
+   * Helper: Filter out YouTube Shorts from video IDs
+   */
+  private async filterOutShorts(videoIds: string[]): Promise<string[]> {
+    if (videoIds.length === 0) return [];
+    
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=contentDetails&` +
+        `id=${videoIds.join(',')}&` +
+        `key=${this.youtubeApiKey}`
+      );
+      
+      if (!response.ok) return videoIds; // Return all if API fails
+      
+      const data = await response.json();
+      
+      return data.items
+        ?.filter((video: any) => {
+          const duration = video.contentDetails?.duration || '';
+          const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+          if (!match) return true;
+          
+          const hours = parseInt(match[1] || '0');
+          const minutes = parseInt(match[2] || '0');
+          const seconds = parseInt(match[3] || '0');
+          const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+          
+          return totalSeconds >= 60; // Keep videos 60 seconds or longer
+        })
+        .map((video: any) => video.id) || [];
+        
+    } catch (error) {
+      console.error('Error filtering shorts:', error);
+      return videoIds; // Return all on error
+    }
   }
 
   /**
@@ -727,47 +808,182 @@ export class VideoImportService {
   }
 
   /**
-   * Helper: Fetch video details in batches
+   * OPTIMIZED: Fetch video details with batched channel statistics
+   * Reduces API calls from O(n*2) to O(n/50 + m/50) where n=videos, m=unique channels
    */
   private async fetchVideoDetailsBatch(videoIds: string[], source: string, userId?: string): Promise<VideoMetadata[]> {
-    const videos: VideoMetadata[] = [];
+    console.log(`🚀 Starting optimized video metadata fetch for ${videoIds.length} videos`);
     
-    for (const videoId of videoIds) {
+    // Step 1: Fetch all video details in batches
+    const videoDetailsMap = new Map<string, any>();
+    const channelIds = new Set<string>();
+    
+    const videoBatchSize = 50; // YouTube API limit
+    for (let i = 0; i < videoIds.length; i += videoBatchSize) {
+      const batch = videoIds.slice(i, i + videoBatchSize);
+      const videoIdsParam = batch.join(',');
+      
       try {
-        const details = await this.fetchVideoDetails(videoId);
-        if (details && details.id && details.title && details.channel_id) {
-          videos.push({
-            id: details.id,
-            title: details.title,
-            channel_id: details.channel_id,
-            channel_name: details.channel_name || '',
-            view_count: details.view_count || 0,
-            published_at: details.published_at || new Date().toISOString(),
-            performance_ratio: 1, // Database calculates this via rolling_baseline_views
-            thumbnail_url: details.thumbnail_url || '',
-            description: details.description || '',
-            data_source: source === 'owner' ? 'owner' : 'competitor',
-            is_competitor: source !== 'owner',
-            import_date: new Date().toISOString(),
-            user_id: userId || '00000000-0000-0000-0000-000000000000', // Use provided user ID or default
-            metadata: details.metadata || {}
-          });
+        console.log(`📹 Fetching video batch ${Math.floor(i/videoBatchSize) + 1}/${Math.ceil(videoIds.length/videoBatchSize)}`);
+        
+        const response = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?` +
+          `part=snippet,statistics,contentDetails&` +
+          `id=${videoIdsParam}&` +
+          `key=${this.youtubeApiKey}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          for (const video of data.items || []) {
+            videoDetailsMap.set(video.id, video);
+            channelIds.add(video.snippet.channelId);
+          }
         }
       } catch (error) {
-        console.error(`❌ Failed to fetch details for video ${videoId}:`, error);
+        console.error(`❌ Failed to fetch video batch:`, error);
       }
     }
     
+    console.log(`✅ Fetched ${videoDetailsMap.size} videos from ${channelIds.size} unique channels`);
+    
+    // Step 2: Fetch all unique channel statistics in batches
+    const channelStatsMap = await this.fetchChannelStatsBatch(Array.from(channelIds));
+    
+    // Step 3: Combine video and channel data
+    const videos: VideoMetadata[] = [];
+    
+    for (const [videoId, video] of videoDetailsMap) {
+      const snippet = video.snippet;
+      const statistics = video.statistics;
+      const channelData = channelStatsMap.get(snippet.channelId);
+      
+      const metadata: Record<string, any> = {
+        channel_name: snippet.channelTitle,
+        channel_title: channelData?.title || snippet.channelTitle,
+        youtube_channel_id: snippet.channelId,
+        channel_handle: channelData?.handle || null,
+        duration: video.contentDetails?.duration || null,
+        tags: snippet.tags || [],
+        category_id: snippet.categoryId || null,
+        live_broadcast_content: snippet.liveBroadcastContent || null,
+        default_language: snippet.defaultLanguage || null,
+        default_audio_language: snippet.defaultAudioLanguage || null,
+        // Add channel statistics
+        channel_stats: channelData?.stats || null
+      };
+      
+      videos.push({
+        id: videoId,
+        title: snippet.title,
+        channel_id: snippet.channelId,
+        channel_name: snippet.channelTitle,
+        view_count: parseInt(statistics.viewCount || '0'),
+        published_at: snippet.publishedAt,
+        performance_ratio: 1, // Database calculates this
+        thumbnail_url: snippet.thumbnails?.maxresdefault?.url || 
+                      snippet.thumbnails?.high?.url || 
+                      snippet.thumbnails?.medium?.url || 
+                      snippet.thumbnails?.default?.url || '',
+        description: snippet.description || '',
+        data_source: source === 'owner' ? 'owner' : 'competitor',
+        is_competitor: source !== 'owner',
+        import_date: new Date().toISOString(),
+        user_id: userId || '00000000-0000-0000-0000-000000000000',
+        metadata: metadata
+      });
+    }
+    
+    console.log(`📊 Processed ${videos.length} videos with complete metadata`);
     return videos;
   }
 
   /**
-   * Helper: Fetch individual video details
+   * OPTIMIZED: Batch fetch channel statistics
+   * Fetches up to 50 channels per API call
+   */
+  private async fetchChannelStatsBatch(channelIds: string[]): Promise<Map<string, any>> {
+    console.log(`📺 Fetching statistics for ${channelIds.length} unique channels`);
+    const channelStatsMap = new Map();
+    
+    // Remove duplicates
+    const uniqueChannelIds = Array.from(new Set(channelIds));
+    
+    // Check cache first and separate cached vs uncached channels
+    const uncachedChannelIds: string[] = [];
+    for (const channelId of uniqueChannelIds) {
+      if (this.channelStatsCache.has(channelId)) {
+        const cachedData = this.channelStatsCache.get(channelId);
+        channelStatsMap.set(channelId, cachedData);
+      } else {
+        uncachedChannelIds.push(channelId);
+      }
+    }
+    
+    if (uncachedChannelIds.length === 0) {
+      console.log(`✅ All ${uniqueChannelIds.length} channels found in cache`);
+      return channelStatsMap;
+    }
+    
+    console.log(`📊 ${channelStatsMap.size} channels from cache, fetching ${uncachedChannelIds.length} from API`);
+    
+    // YouTube API allows up to 50 channel IDs per request
+    const batchSize = 50;
+    
+    for (let i = 0; i < uncachedChannelIds.length; i += batchSize) {
+      const batch = uncachedChannelIds.slice(i, i + batchSize);
+      const channelIdsParam = batch.join(',');
+      
+      try {
+        console.log(`📊 Fetching channel batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(uniqueChannelIds.length/batchSize)}`);
+        
+        const response = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?` +
+          `part=snippet,statistics&` +
+          `id=${channelIdsParam}&` +
+          `key=${this.youtubeApiKey}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          for (const channel of data.items || []) {
+            const channelStats = {
+              subscriber_count: channel.statistics?.subscriberCount || '0',
+              view_count: channel.statistics?.viewCount || '0',
+              video_count: channel.statistics?.videoCount || '0',
+              channel_thumbnail: channel.snippet?.thumbnails?.high?.url || 
+                               channel.snippet?.thumbnails?.default?.url || null,
+            };
+            
+            const channelData = {
+              stats: channelStats,
+              handle: channel.snippet?.customUrl || null,
+              title: channel.snippet?.title || null
+            };
+            
+            channelStatsMap.set(channel.id, channelData);
+            // Add to cache for future requests
+            this.channelStatsCache.set(channel.id, channelData);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Failed to fetch channel stats for batch:`, error);
+      }
+    }
+    
+    console.log(`✅ Retrieved stats for ${channelStatsMap.size} channels`);
+    return channelStatsMap;
+  }
+
+  /**
+   * Helper: Fetch individual video details with channel statistics
    */
   private async fetchVideoDetails(videoId: string): Promise<Partial<VideoMetadata> | null> {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${this.youtubeApiKey}`
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${this.youtubeApiKey}`
       );
       
       if (!response.ok) {
@@ -784,9 +1000,50 @@ export class VideoImportService {
       const snippet = video.snippet;
       const statistics = video.statistics;
       
+      // Now fetch channel statistics
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${snippet.channelId}&key=${this.youtubeApiKey}`
+      );
+      
+      let channelStats = null;
+      let channelHandle = null;
+      let channelThumbnail = null;
+      
+      if (channelResponse.ok) {
+        const channelData = await channelResponse.json();
+        if (channelData.items && channelData.items.length > 0) {
+          const channel = channelData.items[0];
+          channelStats = {
+            subscriber_count: channel.statistics?.subscriberCount || '0',
+            view_count: channel.statistics?.viewCount || '0',
+            video_count: channel.statistics?.videoCount || '0',
+            channel_thumbnail: channel.snippet?.thumbnails?.high?.url || 
+                             channel.snippet?.thumbnails?.default?.url || null,
+          };
+          channelHandle = channel.snippet?.customUrl || null;
+          channelThumbnail = channelStats.channel_thumbnail;
+        }
+      }
+      
       // Calculate performance ratio (views / subscriber count, defaulting to 1.0)
       const viewCount = parseInt(statistics.viewCount || '0');
       const performance_ratio = 1; // Database calculates this via rolling_baseline_views
+      
+      // Build metadata object with channel stats
+      const metadata: Record<string, any> = {
+        channel_name: snippet.channelTitle,
+        channel_title: snippet.channelTitle,
+        youtube_channel_id: snippet.channelId,
+        channel_handle: channelHandle,
+        duration: video.contentDetails?.duration || null,
+        tags: snippet.tags || [],
+        category_id: snippet.categoryId || null,
+        live_broadcast_content: snippet.liveBroadcastContent || null,
+        default_language: snippet.defaultLanguage || null,
+        default_audio_language: snippet.defaultAudioLanguage || null,
+        // Add channel statistics
+        channel_stats: channelStats
+      };
       
       return {
         id: videoId,
@@ -800,7 +1057,8 @@ export class VideoImportService {
                       snippet.thumbnails?.high?.url || 
                       snippet.thumbnails?.medium?.url || 
                       snippet.thumbnails?.default?.url || '',
-        description: snippet.description || ''
+        description: snippet.description || '',
+        metadata: metadata
       };
     } catch (error) {
       console.error(`❌ Failed to fetch video details for ${videoId}:`, error);
