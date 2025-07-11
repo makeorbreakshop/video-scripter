@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { VideoImportService } from './lib/unified-video-import.ts';
+import { quotaTracker } from './lib/youtube-quota-tracker.ts';
 import os from 'os';
 
 // Initialize Supabase client with service role for bypassing RLS
@@ -174,6 +175,33 @@ class VideoWorker {
         // Process unified import job
         const importRequest = job.metadata;
         console.log(`\n🎬 WORKER: Processing ${importRequest.source} import (Job: ${job.job_id.slice(0, 8)})`);
+        
+        // Set job ID for quota tracking
+        this.videoImportService.setJobId(job.job_id);
+        
+        // Check current quota status
+        const quotaStatus = await quotaTracker.getQuotaStatus();
+        console.log(`📊 Current quota usage: ${quotaStatus?.quota_used || 0}/${quotaStatus?.quota_limit || 10000} (${quotaStatus?.percentage_used || 0}%)`);
+        
+        // Estimate quota needed for this job
+        let estimatedQuota = 0;
+        if (importRequest.channelIds?.length > 0) {
+          // Rough estimate: 10-50 units per channel depending on video count
+          estimatedQuota = importRequest.channelIds.length * 25; // Conservative estimate
+        } else if (importRequest.videoIds?.length > 0) {
+          // Video details: ~1 unit per 50 videos
+          estimatedQuota = Math.ceil(importRequest.videoIds.length / 50);
+        }
+        
+        console.log(`📋 Estimated quota needed: ${estimatedQuota} units`);
+        
+        // Check if we have enough quota
+        if (estimatedQuota > 0) {
+          const quotaAvailable = await quotaTracker.checkQuotaAvailable(estimatedQuota);
+          if (!quotaAvailable) {
+            throw new Error(`Insufficient YouTube quota. Need ${estimatedQuota} units, but would exceed daily limit.`);
+          }
+        }
         
         // Check if vectorization workers are enabled to avoid API contention
         const vectorizationStatus = await this.checkVectorizationWorkers();

@@ -9,6 +9,7 @@ import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
+import { quotaTracker } from './youtube-quota-tracker.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -91,6 +92,8 @@ export class VideoImportService {
   private youtubeApiKey: string;
   // Channel stats cache to avoid redundant API calls
   private channelStatsCache = new Map<string, any>();
+  // Job ID for quota tracking
+  private jobId?: string;
 
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
@@ -102,6 +105,13 @@ export class VideoImportService {
     if (!this.youtubeApiKey) {
       throw new Error('YOUTUBE_API_KEY environment variable is required');
     }
+  }
+
+  /**
+   * Set job ID for quota tracking
+   */
+  setJobId(jobId: string): void {
+    this.jobId = jobId;
   }
 
   /**
@@ -572,7 +582,7 @@ export class VideoImportService {
 
   /**
    * OPTIMIZED: Fetch videos from a single channel
-   * Uses search API for better performance with large channels
+   * Uses playlist API for lower quota cost (1 unit vs 100 units per call)
    */
   private async fetchChannelVideosOptimized(
     channelId: string,
@@ -591,39 +601,75 @@ export class VideoImportService {
     console.log(`📺 Fetching videos from channel ${channelId}`);
     
     try {
-      // Use search API instead of playlist API for better performance
+      // First, get the channel's uploads playlist ID
+      const channelUrl = `https://www.googleapis.com/youtube/v3/channels?` +
+        `part=contentDetails&` +
+        `id=${channelId}&` +
+        `key=${this.youtubeApiKey}`;
+      
+      const channelResponse = await fetch(channelUrl);
+      
+      // Track quota usage
+      await quotaTracker.trackAPICall('channels.list', {
+        description: `Get uploads playlist for channel ${channelId}`,
+        jobId: this.jobId,
+        count: 1
+      });
+      
+      if (!channelResponse.ok) {
+        console.error(`❌ Channel API error for ${channelId}: ${channelResponse.status}`);
+        return videoIds;
+      }
+      
+      const channelData = await channelResponse.json();
+      const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+      
+      if (!uploadsPlaylistId) {
+        console.error(`❌ No uploads playlist found for channel ${channelId}`);
+        return videoIds;
+      }
+      
+      // Use playlistItems API to fetch videos (1 unit per call instead of 100)
       do {
-        let searchUrl = `https://www.googleapis.com/youtube/v3/search?` +
-          `part=id&` +
-          `channelId=${channelId}&` +
-          `type=video&` +
-          `order=date&` +
+        let playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?` +
+          `part=snippet&` +
+          `playlistId=${uploadsPlaylistId}&` +
           `maxResults=${pageSize}`;
         
-        if (publishedAfter) {
-          searchUrl += `&publishedAfter=${publishedAfter.toISOString()}`;
-        }
-        
         if (nextPageToken) {
-          searchUrl += `&pageToken=${nextPageToken}`;
+          playlistUrl += `&pageToken=${nextPageToken}`;
         }
         
-        searchUrl += `&key=${this.youtubeApiKey}`;
+        playlistUrl += `&key=${this.youtubeApiKey}`;
         
-        const response = await fetch(searchUrl);
+        const response = await fetch(playlistUrl);
+        
+        // Track quota usage
+        await quotaTracker.trackAPICall('playlistItems.list', {
+          description: `Fetch videos from channel ${channelId}`,
+          jobId: this.jobId,
+          count: 1
+        });
         
         if (!response.ok) {
-          console.error(`❌ Search API error for channel ${channelId}: ${response.status}`);
+          console.error(`❌ Playlist API error for channel ${channelId}: ${response.status}`);
           break;
         }
         
         const data = await response.json();
         
         if (data.items && data.items.length > 0) {
-          const batchVideoIds = data.items.map((item: any) => item.id.videoId);
+          // Filter by publishedAfter if specified
+          const filteredItems = publishedAfter 
+            ? data.items.filter((item: any) => 
+                new Date(item.snippet.publishedAt) > publishedAfter
+              )
+            : data.items;
+          
+          const batchVideoIds = filteredItems.map((item: any) => item.snippet.resourceId.videoId);
           
           // If excluding shorts, batch check durations
-          if (options?.excludeShorts) {
+          if (options?.excludeShorts && batchVideoIds.length > 0) {
             const nonShortIds = await this.filterOutShorts(batchVideoIds);
             videoIds.push(...nonShortIds);
           } else {
@@ -633,6 +679,11 @@ export class VideoImportService {
           if (videoIds.length >= maxResults) {
             // Trim to exact limit
             videoIds.splice(maxResults);
+            break;
+          }
+          
+          // If we filtered by date and got fewer items than page size, we're done
+          if (publishedAfter && filteredItems.length < data.items.length) {
             break;
           }
           
@@ -663,6 +714,13 @@ export class VideoImportService {
         `id=${videoIds.join(',')}&` +
         `key=${this.youtubeApiKey}`
       );
+      
+      // Track quota usage
+      await quotaTracker.trackAPICall('videos.list', {
+        description: `Filter shorts from ${videoIds.length} videos`,
+        jobId: this.jobId,
+        count: 1
+      });
       
       if (!response.ok) return videoIds; // Return all if API fails
       
@@ -833,6 +891,13 @@ export class VideoImportService {
           `key=${this.youtubeApiKey}`
         );
         
+        // Track quota usage
+        await quotaTracker.trackAPICall('videos.list', {
+          description: `Fetch video details for ${batch.length} videos`,
+          jobId: this.jobId,
+          count: 1
+        });
+        
         if (response.ok) {
           const data = await response.json();
           
@@ -945,6 +1010,13 @@ export class VideoImportService {
           `key=${this.youtubeApiKey}`
         );
         
+        // Track quota usage
+        await quotaTracker.trackAPICall('channels.list', {
+          description: `Fetch channel stats for ${batch.length} channels`,
+          jobId: this.jobId,
+          count: 1
+        });
+        
         if (response.ok) {
           const data = await response.json();
           
@@ -986,6 +1058,13 @@ export class VideoImportService {
         `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${this.youtubeApiKey}`
       );
       
+      // Track quota usage
+      await quotaTracker.trackAPICall('videos.list', {
+        description: `Fetch individual video details for ${videoId}`,
+        jobId: this.jobId,
+        count: 1
+      });
+      
       if (!response.ok) {
         throw new Error(`YouTube API error: ${response.status}`);
       }
@@ -1004,6 +1083,13 @@ export class VideoImportService {
       const channelResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${snippet.channelId}&key=${this.youtubeApiKey}`
       );
+      
+      // Track quota usage
+      await quotaTracker.trackAPICall('channels.list', {
+        description: `Fetch channel stats for video ${videoId}`,
+        jobId: this.jobId,
+        count: 1
+      });
       
       let channelStats = null;
       let channelHandle = null;

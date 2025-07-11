@@ -369,3 +369,18 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **UI Improvements**: Fixed Daily Update synchronous response handling, enhanced competitor import with direct URL support, improved toast notifications
 - **Performance Gains**: Title vectorization 1000-3000 videos/min (vs 50/min), thumbnail processing 200-400/min, RSS jobs complete in 71s (vs hours)
 - **Database Enhancements**: Created discovery schema with relationship tracking, fixed service role permissions, implemented batched queries for 4K+ video filtering
+
+### 2025-07-10: Multi-Level Content Categorization & Format Pattern Discovery
+- **Issue**: Need systematic content categorization beyond 492 topics, discover video format patterns (HOW content is presented), implement YouTube API optimization
+- **Solution**: Implemented 3-level BERTopic hierarchy (777 clusters), discovered 9 format categories with 85-90% coverage, optimized YouTube API usage by 98.9%
+- **Impact**: Complete dual-dimensional categorization system (Topics × Formats), 60,497+ videos categorized across hierarchical levels, 48x daily import capacity increase
+- **Technical**: Minimal title cleaning preserving format patterns, keyword-based format detection over regex, channel statistics caching, batched API operations
+
+**Key Achievements:**
+- **Multi-Level Topics**: 3-tier hierarchy with 39 broad domains → 181 niches → 557 micro-topics, imported 30,994 topic assignments covering 60,497+ videos
+- **Format Discovery**: Identified 9 format categories (Making/Building 35%, Personal/Vlog 18%, Superlative/Extreme 25%) with comprehensive regex patterns
+- **API Optimization**: Reduced YouTube API calls from 2,020 → 41 per 1,000 videos (98.9% reduction) through proper batching and channel stats caching
+- **Performance Gains**: Processing time reduced 33% (12 min → 8 min), daily capacity increased 48x (5 → 240 channels), maintained $0.22/1000 videos cost
+- **Database Infrastructure**: Fixed missing cron job for competitor channel refresh, documented 7 materialized views and 4 cron jobs, backfilled missing channel statistics
+- **Technical Excellence**: Preserved format patterns with minimal cleaning (21.9% vs 85.2% aggressive), established Topics (WHAT) vs Formats (HOW) naming convention
+- **Production Ready**: Keyword-based format detection selected over regex for maintainability, confidence scoring system for uncertain classifications
