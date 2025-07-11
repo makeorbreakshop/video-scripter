@@ -128,9 +128,9 @@ Based on PRD: `/docs/PRD_Video_Analysis_Search_System.md`
 
 #### Stage 4: Implementation & Validation
 - [ ] Implement hybrid detection system:
-  - [ ] Primary: Regex patterns (fast, 90% coverage)
-  - [ ] Secondary: Keyword matching (medium, 8% coverage)
-  - [ ] Tertiary: LLM classification for ambiguous cases (2% coverage)
+  - [ ] Primary: Keyword-based scoring with weighted terms
+  - [ ] Secondary: Regex patterns for specific format signals
+  - [ ] Tertiary: LLM classification for ambiguous cases (optional)
 - [ ] Test detection accuracy on full dataset
 - [ ] Handle multi-format videos (e.g., "Tutorial + Review")
 - [ ] Create confidence scoring system
@@ -152,9 +152,14 @@ Based on PRD: `/docs/PRD_Video_Analysis_Search_System.md`
 
 ### Classification Pipeline
 - [x] Build topic assignment service using BERTopic results
-- [ ] Implement format detection service using regex patterns
-- [ ] Create classification confidence scoring
-- [ ] Add classification to video import pipeline
+- [ ] **NEW: Implement real-time topic detection service using embedding similarity**
+  - [ ] Create topic centroid calculation from existing BERTopic clusters
+  - [ ] Build k-nearest-neighbor topic assignment based on title embeddings
+  - [ ] Implement confidence scoring based on similarity distances
+  - [ ] Add fallback for ambiguous cases (low confidence)
+- [ ] Implement format detection service using keyword-based scoring
+- [ ] Create classification confidence scoring for both topics and formats
+- [ ] Add both topic and format classification to video import pipeline
 - [x] Build batch classification script for existing videos
 
 ### Data Backfill
@@ -293,6 +298,29 @@ Based on PRD: `/docs/PRD_Video_Analysis_Search_System.md`
 - [ ] Cross-niche recommendations show >2x performance
 - [ ] UI loads and renders smoothly with 1000+ results
 - [ ] Weekly pattern updates run automatically
+
+## Real-Time Classification Requirements
+
+### Topic Detection (Embedding-Based)
+- **Method**: K-nearest neighbor search using title embeddings
+- **Implementation**: 
+  1. Calculate cluster centroids for each of the 777 BERTopic clusters
+  2. For new videos, find 10-20 nearest videos by embedding similarity
+  3. Assign most common topic cluster from neighbors
+  4. Calculate confidence based on distance and neighbor agreement
+- **Integration Point**: After title embedding generation in unified import
+- **Fallback**: Mark as "Uncategorized" if confidence < 0.3
+
+### Format Detection (Keyword-Based)
+- **Method**: Weighted keyword scoring system
+- **Categories**: 9 discovered formats (Making/Building, Question, Review, etc.)
+- **Implementation**:
+  1. Define keyword lists with weights for each format
+  2. Score titles against all format keyword lists
+  3. Assign primary format based on highest score
+  4. Handle multi-format videos with secondary format field
+- **Integration Point**: After video metadata extraction in unified import
+- **Confidence**: Based on score strength and keyword matches
 
 ## Progress Notes (2025-07-10)
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehensive video analysis and content creation. The database contains **15 tables** organized around video processing, AI analysis, user management, and workflow management.
+Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehensive video analysis and content creation. The database contains **17 tables** organized around video processing, AI analysis, user management, workflow management, and API quota tracking.
 
 **Key Features:**
 - YouTube Analytics data collection (daily and baseline)
@@ -145,6 +145,32 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - **Key Columns**: `ink_mode`, `quality` (enum: draft/standard/high), `image_type`
 - **JSONB Fields**: `dimensions`, `channel_ml` - Technical printing data
 - **Purpose**: Supports specialized printing/ink analysis features
+
+## API Quota Management
+
+### YouTube Quota Usage (`youtube_quota_usage`)
+**Tracks daily YouTube API quota consumption**
+- **Primary Key**: `date` (date) - Pacific Time date
+- **Key Columns**: 
+  - `quota_used` (integer) - Units consumed today
+  - `quota_limit` (integer) - Daily limit (default: 10,000)
+  - `last_reset` (timestamptz) - Last reset timestamp
+- **Timestamps**: `created_at`, `updated_at`
+- **Purpose**: Prevents exceeding YouTube's 10,000 daily unit limit
+- **Reset**: Automatic at midnight Pacific Time via pg_cron
+
+### YouTube Quota Calls (`youtube_quota_calls`)
+**Detailed log of individual YouTube API calls**
+- **Primary Key**: `id` (serial)
+- **Key Columns**:
+  - `date` (date) - Pacific Time date
+  - `method` (text) - API method called (e.g., 'videos.list', 'search.list')
+  - `cost` (integer) - Quota units consumed
+  - `description` (text) - Human-readable description
+  - `job_id` (text) - Associated processing job ID
+- **Timestamp**: `created_at`
+- **Indexes**: On date, method, and job_id for performance
+- **Purpose**: Detailed tracking and analysis of API usage patterns
 
 ## Key JSONB Structures
 
@@ -301,6 +327,16 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - **Purpose**: Processes baseline analytics in batches for new videos
 - **Active**: Currently running to handle analytics backlog
 
+#### youtube-quota-reset-check (Every hour)
+- **Command**: `SELECT reset_youtube_quota_if_needed();`
+- **Purpose**: Ensures quota tracking aligns with YouTube's Pacific Time reset
+- **Features**: Creates daily records, cleans up old data
+
+#### youtube-quota-midnight-reset (Every 5 minutes from 11 PM - 12 AM PT)
+- **Command**: Pacific Time aware quota reset check
+- **Purpose**: Aggressive checking around midnight PT to catch reset
+- **Schedule**: Runs every 5 minutes during hours 23 and 0
+
 ## Custom Database Functions
 
 ### YouTube Analytics Functions
@@ -343,6 +379,25 @@ Video Scripter uses Supabase (PostgreSQL) with pgvector extension for comprehens
 - **`get_competitor_channel_stats()`**: Returns competitor channel statistics
 - **`get_youtube_channel_ids()`**: Retrieves all YouTube channel IDs in the system
 
+### YouTube Quota Management Functions
+- **`increment_quota_usage(cost)`**: Increments daily quota usage by cost amount
+  - **Returns**: Current total usage for the day
+  - **Uses**: Pacific Time for date calculations
+- **`log_youtube_api_call(method, cost, description, job_id)`**: Logs individual API calls
+  - **Purpose**: Detailed tracking with method, cost, and context
+  - **Auto-increments**: Daily quota usage
+- **`get_quota_status()`**: Returns current quota status as JSON
+  - **Fields**: date, quota_used, quota_limit, quota_remaining, percentage_used
+  - **Pacific Time**: Includes hours_until_reset calculation
+- **`check_quota_available(estimated_cost)`**: Pre-flight quota check
+  - **Returns**: Boolean indicating if quota is available
+  - **Purpose**: Prevents operations that would exceed daily limit
+- **`reset_youtube_quota_if_needed()`**: Maintains quota tracking system
+  - **Features**: Creates daily records, cleans up old data (30+ days)
+  - **Pacific Time**: All date calculations use America/Los_Angeles
+- **`check_quota_cron_status()`**: Monitor quota cron job health
+  - **Returns**: Job status, schedule, last/next run times
+
 ## YouTube Analytics Architecture
 
 ### Data Collection Strategy
@@ -364,6 +419,27 @@ The `get_distinct_analytics_dates()` function powers the Smart Suggestions UI co
 - Backward fill recommendations based on data age
 - Intelligent batch size and utilization target suggestions
 - Time estimates based on proven performance metrics (34,100 videos/hour)
+
+## YouTube API Quota Optimization (2025-07-11)
+
+Implemented comprehensive quota tracking system with 96% reduction in API usage:
+
+### Quota Tracking Infrastructure
+- Added `youtube_quota_usage` and `youtube_quota_calls` tables
+- Pacific Time aware tracking aligned with YouTube's reset schedule
+- Pre-flight quota checks prevent exceeding 10,000 daily unit limit
+- Automatic cleanup of records older than 30 days
+
+### API Usage Optimization
+**Before**: Using `search.list` (100 units per call)
+**After**: Using `playlistItems.list` (1 unit per call)
+**Impact**: 309 units → 11 units for ~100 video channel import
+
+### Quota Management Benefits
+- Can now import ~900 channels/day vs ~32 previously
+- Real-time monitoring via worker dashboard integration
+- Detailed API call logging with job tracking
+- Automatic reset handling via pg_cron jobs
 
 ## Performance Optimizations (2025-06-30)
 
@@ -394,9 +470,9 @@ Created `mv_makeorbreak_dashboard` materialized view:
 
 ---
 
-*Last updated: 2025-07-10*
+*Last updated: 2025-07-11*
 *Database version: PostgreSQL with pgvector extension*
-*Current tables: 15 (added baseline_analytics, daily_analytics)*
-*Custom functions: 18+ functions including refresh and dashboard support*
+*Current tables: 17 (added youtube_quota_usage, youtube_quota_calls)*
+*Custom functions: 24+ functions including quota management*
 *Materialized views: 7 (analytics_stats, channel_network_centrality, competitor_channel_summary, mv_makeorbreak_dashboard, packaging_performance, unprocessed_thumbnails, videos_2024_unprocessed)*
-*Scheduled cron jobs: 4 (baseline-processing, daily-packaging-refresh, refresh-analytics-stats, refresh-competitor-channels)*
+*Scheduled cron jobs: 6 (added youtube-quota-reset-check, youtube-quota-midnight-reset)*

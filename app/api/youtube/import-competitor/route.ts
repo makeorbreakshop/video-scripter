@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
             batchSize: 50,
             // Enable all processing for competitor imports
             skipEmbeddings: false,
-            skipExports: false,
+            skipExports: true, // Skip exports to prevent duplicates
             // Pass competitor-specific options
             maxVideosPerChannel: maxVideos === 'all' ? undefined : parseInt(maxVideos),
             timePeriod: timePeriod,

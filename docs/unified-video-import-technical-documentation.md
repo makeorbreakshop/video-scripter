@@ -124,6 +124,7 @@ const response = await fetch('/api/video-import/unified', {
 - Validates and filters videos (excludes shorts, invalid data)
 - Calculates performance ratios based on view counts
 - Extracts thumbnail URLs (prioritizes maxres > high > medium > default)
+- **Quota Tracking**: All YouTube API calls are tracked for quota management
 
 ### 2. Embedding Generation
 
@@ -139,6 +140,22 @@ const response = await fetch('/api/video-import/unified', {
 - **Purpose**: Visual similarity search
 - **Storage**: Pinecone thumbnail index (`video-thumbnails`)
 - **Caching**: Local cache to reduce API costs
+
+### 2.5. Content Classification (Coming Soon)
+
+#### Topic Classification
+- **Method**: K-nearest neighbor using title embeddings
+- **Reference**: 777 BERTopic clusters with centroids
+- **Hierarchy**: 3-level assignment (domain → niche → micro-topic)
+- **Confidence**: Based on embedding similarity distance
+- **Timing**: Immediately after title embedding generation
+
+#### Format Classification
+- **Method**: Keyword-based scoring system
+- **Categories**: 9 format types (Making/Building, Question, Review, etc.)
+- **Scoring**: Weighted keyword matching with confidence scores
+- **Multi-format**: Support for primary and secondary format detection
+- **Timing**: During metadata extraction phase
 
 ### 3. Data Storage
 
@@ -158,7 +175,14 @@ CREATE TABLE videos (
   data_source text DEFAULT 'competitor',
   is_competitor boolean DEFAULT true,
   import_date timestamptz DEFAULT now(),
-  metadata jsonb
+  metadata jsonb,
+  -- Classification fields (to be added)
+  topic_level_1 text,
+  topic_level_2 text,
+  topic_level_3 text,
+  format_primary text,
+  format_secondary text,
+  classification_confidence jsonb
 );
 ```
 
@@ -166,6 +190,12 @@ CREATE TABLE videos (
 - **Pinecone Main Index**: Title embeddings (512D)
 - **Pinecone Thumbnail Index**: Thumbnail embeddings (768D)
 - **Local Cache**: Thumbnail embeddings with 24-hour TTL
+
+#### Baseline Analytics Processing
+- **Automatic Trigger**: Baseline processing automatically triggered after successful import
+- **Batch Size**: Processes up to 1,000 videos per trigger
+- **Scheduling**: Hourly cron job as safety net, immediate processing on import
+- **Function**: `trigger_baseline_processing()` called with imported video count
 
 ### 4. Export System
 
@@ -211,7 +241,10 @@ PINECONE_THUMBNAIL_INDEX_NAME=video-thumbnails
 
 ### Rate Limits
 
-- **YouTube API**: 10,000 requests/day (shared across all operations)
+- **YouTube API**: 10,000 units/day (optimized from 100 to 1 unit per channel)
+  - channels.list: 1 unit
+  - playlistItems.list: 1 unit per 50 videos
+  - videos.list: 1 unit per 50 videos
 - **OpenAI API**: 3,000 requests/minute (org-level)
 - **Replicate API**: 10 requests/second (adaptive)
 - **Unified Endpoint**: 1,000 items per request maximum
@@ -283,18 +316,22 @@ The system maintains backward compatibility by:
 - Performance metrics (processing time, throughput)
 - Error tracking with stack traces
 - API usage monitoring
+- **Baseline Processing**: Logs automatic trigger after imports
 
 ### Metrics
 - Videos processed per hour
 - Embedding generation success rates
 - Export file generation statistics
 - Error rates by component
+- **YouTube Quota Usage**: Real-time tracking in worker dashboard
+- **Baseline Processing**: Videos pending baseline analytics
 
 ### Alerting
 - API quota exhaustion warnings
 - Processing failure alerts
 - Performance degradation notifications
 - Storage capacity monitoring
+- **Quota Alerts**: Pre-flight checks prevent exceeding limits
 
 ## Security Considerations
 
@@ -380,6 +417,11 @@ chmod 755 exports
 - Advanced filtering options
 - Bulk operation APIs
 - Enhanced error recovery
+- **Topic and Format Classification**: Automatic categorization during import
+  - Embedding-based topic detection using 777 BERTopic clusters
+  - Keyword-based format classification for 9 format types
+  - Confidence scoring for both classification systems
+  - Integration with video import pipeline
 
 ### Scalability Improvements
 - Distributed processing

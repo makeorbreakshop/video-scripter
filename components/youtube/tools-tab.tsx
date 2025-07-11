@@ -44,7 +44,8 @@ import {
   Key,
   Rss,
   MonitorSpeaker,
-  Zap
+  Zap,
+  Tags
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { isAuthenticated, initiateOAuthFlow, getValidAccessToken, getTokens } from '@/lib/youtube-oauth';

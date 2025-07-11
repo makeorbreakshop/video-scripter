@@ -10,6 +10,7 @@ import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './t
 import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
+// import { videoClassificationService } from './video-classification-service.ts'; // Temporarily disabled - breaking workers
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -30,6 +31,7 @@ export interface VideoImportRequest {
     skipExports?: boolean;
     skipThumbnailEmbeddings?: boolean;
     skipTitleEmbeddings?: boolean;
+    skipClassification?: boolean;
     batchSize?: number;
     forceReEmbed?: boolean;
     maxVideosPerChannel?: number;
@@ -48,6 +50,7 @@ export interface VideoImportResult {
     titles: number;
     thumbnails: number;
   };
+  classificationsGenerated: number;
   exportFiles: string[];
   errors: string[];
   processedVideoIds: string[];
@@ -133,6 +136,7 @@ export class VideoImportService {
       message: '',
       videosProcessed: 0,
       embeddingsGenerated: { titles: 0, thumbnails: 0 },
+      classificationsGenerated: 0,
       exportFiles: [],
       errors: [],
       processedVideoIds: []
@@ -162,7 +166,18 @@ export class VideoImportService {
         result.embeddingsGenerated.thumbnails = embeddingResults.thumbnailEmbeddings.filter(e => e.success).length;
       }
 
-      // Step 4 & 5: Export and Upload in parallel
+      // Step 4: Classify videos (if embeddings were generated and not skipped)
+      console.log(`🔍 Classification check: skipClassification=${request.options?.skipClassification}, embeddingResults=${!!embeddingResults}, titleEmbeddings=${embeddingResults?.titleEmbeddings?.length || 0}`);
+      if (!request.options?.skipClassification && embeddingResults && embeddingResults.titleEmbeddings.length > 0) {
+        console.log(`🏷️ Starting classification for ${videoMetadata.length} videos...`);
+        const classificationCount = await this.classifyVideos(videoMetadata, embeddingResults);
+        console.log(`✅ Classification complete: ${classificationCount} videos classified`);
+        result.classificationsGenerated = classificationCount;
+      } else {
+        console.log(`⚠️ Skipping classification: conditions not met`);
+      }
+
+      // Step 5 & 6: Export and Upload in parallel
       const postProcessingPromises: Promise<void>[] = [];
       
       // Export embeddings locally (if not skipped)
@@ -195,6 +210,26 @@ export class VideoImportService {
       }
       if (result.exportFiles.length > 0) {
         console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);
+      }
+      
+      // Trigger baseline processing for newly imported videos
+      if (result.videosProcessed > 0) {
+        try {
+          console.log(`🔄 Triggering baseline processing for ${result.videosProcessed} new videos...`);
+          const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
+            batch_size: Math.min(1000, result.videosProcessed) 
+          });
+          
+          if (error) {
+            console.error('⚠️ Failed to trigger baseline processing:', error);
+            result.errors.push(`Baseline processing trigger failed: ${error.message}`);
+          } else {
+            console.log(`✅ Baseline processing triggered, processed ${data || 0} videos`);
+          }
+        } catch (error) {
+          console.error('⚠️ Error triggering baseline processing:', error);
+          // Don't fail the import if baseline trigger fails
+        }
       }
       
       // Clear cache after successful processing
@@ -1047,6 +1082,91 @@ export class VideoImportService {
     
     console.log(`✅ Retrieved stats for ${channelStatsMap.size} channels`);
     return channelStatsMap;
+  }
+
+  /**
+   * Classify videos based on their embeddings
+   */
+  private async classifyVideos(
+    videos: VideoMetadata[],
+    embeddingResults: EmbeddingResults
+  ): Promise<number> {
+    // TEMPORARILY DISABLED - Classification service breaking workers due to import issues
+    console.log(`🏷️ [classifyVideos] Video classification temporarily disabled`);
+    return 0;
+    
+    /* Commented out until import issues are resolved
+    console.log(`🏷️ [classifyVideos] Starting video classification for ${videos.length} videos`);
+    console.log(`🏷️ [classifyVideos] Embedding results: ${embeddingResults.titleEmbeddings.length} title embeddings`);
+    
+    try {
+      // Load BERTopic clusters if not already loaded
+      console.log(`🏷️ [classifyVideos] Loading BERTopic clusters...`);
+      await videoClassificationService.topicService.loadClusters();
+      
+      // Prepare data for classification
+      const videosWithEmbeddings = videos
+        .map(video => {
+          const embedding = embeddingResults.titleEmbeddings.find(e => e.videoId === video.id);
+          if (!embedding || !embedding.success || !embedding.embedding.length) {
+            return null;
+          }
+          
+          return {
+            id: video.id,
+            title: video.title,
+            titleEmbedding: embedding.embedding,
+            channel: video.channel_name,
+            description: video.description
+          };
+        })
+        .filter(v => v !== null) as Array<{
+          id: string;
+          title: string;
+          titleEmbedding: number[];
+          channel?: string;
+          description?: string;
+        }>;
+      
+      if (videosWithEmbeddings.length === 0) {
+        console.log('⚠️ No videos with valid embeddings to classify');
+        return 0;
+      }
+      
+      // Classify in batches
+      const batchSize = 50;
+      const classifications = await videoClassificationService.classifyBatch(
+        videosWithEmbeddings,
+        { batchSize, logLowConfidence: true }
+      );
+      
+      // Store classifications in database
+      await videoClassificationService.storeClassifications(classifications);
+      
+      // Log statistics
+      const stats = videoClassificationService.getStatistics();
+      console.log(`✅ Classified ${classifications.length} videos`);
+      console.log(`   • LLM calls: ${stats.llmCallCount}`);
+      console.log(`   • Low confidence cases: ${stats.lowConfidenceCount}`);
+      console.log(`   • Average confidence - Topic: ${stats.averageConfidence.topic.toFixed(2)}, Format: ${stats.averageConfidence.format.toFixed(2)}`);
+      
+      // Export low confidence cases for analysis
+      if (stats.lowConfidenceCount > 0) {
+        const lowConfidenceCases = videoClassificationService.exportLowConfidenceCases();
+        const exportPath = path.join(process.cwd(), 'exports', `low-confidence-classifications-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+        fs.writeFileSync(exportPath, JSON.stringify(lowConfidenceCases, null, 2));
+        console.log(`📊 Exported ${stats.lowConfidenceCount} low confidence cases to ${exportPath}`);
+      }
+      
+      // Reset statistics for next run
+      videoClassificationService.resetStatistics();
+      
+      return classifications.length;
+    } catch (error) {
+      console.error('❌ Classification failed:', error);
+      return 0;
+    }
+    */
   }
 
   /**

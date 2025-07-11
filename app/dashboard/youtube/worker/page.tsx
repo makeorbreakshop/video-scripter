@@ -295,6 +295,8 @@ export default function WorkerDashboard() {
                 fetchWorkerControls()
               } else if (activeTab === 'quota') {
                 fetchQuotaStatus()
+              } else if (activeTab === 'jobs') {
+                fetchQueueStats() // This also fetches recent jobs
               }
             }} 
             disabled={isLoading || quotaLoading}
@@ -309,6 +311,7 @@ export default function WorkerDashboard() {
         <TabsList>
           <TabsTrigger value="queue">Queue & Workers</TabsTrigger>
           <TabsTrigger value="quota">YouTube Quota</TabsTrigger>
+          <TabsTrigger value="jobs">Jobs History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-6">
@@ -537,7 +540,12 @@ export default function WorkerDashboard() {
               {/* Daily Quota Usage Section */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Daily Quota Usage</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Daily Quota Usage</h3>
+                    <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                      Resets daily at midnight Pacific Time
+                    </span>
+                  </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Used</span>
@@ -576,7 +584,12 @@ export default function WorkerDashboard() {
 
               {/* Recent API Calls */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Recent API Calls</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Recent API Calls</h3>
+                  <span className="text-xs text-muted-foreground">
+                    Times shown in your local timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                  </span>
+                </div>
                 <div className="space-y-0.5">
                   {/* Table Header */}
                   <div className="grid grid-cols-12 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground">
@@ -602,8 +615,8 @@ export default function WorkerDashboard() {
                           key={index} 
                           className="grid grid-cols-12 gap-4 px-4 py-2 border-t border-border/50 hover:bg-muted/30 transition-colors items-center"
                         >
-                          <div className="col-span-2 text-sm whitespace-nowrap">
-                            {new Date(call.created_at).toLocaleTimeString('en-US', { 
+                          <div className="col-span-2 text-sm whitespace-nowrap" title={new Date(call.created_at).toLocaleString()}>
+                            {new Date(call.created_at).toLocaleTimeString(undefined, { 
                               hour: 'numeric', 
                               minute: '2-digit',
                               hour12: true 
@@ -695,6 +708,122 @@ export default function WorkerDashboard() {
                     You can now import ~900 channels per day vs ~32 previously.
                   </AlertDescription>
                 </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="jobs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Activity className="w-5 h-5" />
+                <span>Recent Jobs History</span>
+              </CardTitle>
+              <CardDescription>
+                Recently processed video import jobs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Jobs Table */}
+              <div className="rounded-lg border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Video ID</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Source</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Started</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Duration</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Worker</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentJobs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                          No recent jobs found
+                        </td>
+                      </tr>
+                    ) : (
+                      recentJobs.map((job) => (
+                        <tr key={job.id} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center space-x-2">
+                              {getStatusIcon(job.status)}
+                              {getStatusBadge(job.status)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <code className="text-xs font-mono">{job.video_id}</code>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline">{job.source}</Badge>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {job.started_at ? formatTimeAgo(job.started_at) : 'Not started'}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {job.processing_time ? formatDuration(job.processing_time) : '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            {job.worker_id ? (
+                              <code className="text-xs font-mono text-muted-foreground">
+                                {job.worker_id.slice(0, 8)}
+                              </code>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Error Details */}
+              {recentJobs.some(job => job.status === 'failed') && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold mb-3">Recent Failures</h4>
+                  <div className="space-y-2">
+                    {recentJobs
+                      .filter(job => job.status === 'failed' && job.error_message)
+                      .slice(0, 5)
+                      .map((job) => (
+                        <Alert key={job.id} variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Job {job.id.slice(0, 8)} Failed</AlertTitle>
+                          <AlertDescription className="text-xs mt-1">
+                            {job.error_message}
+                          </AlertDescription>
+                        </Alert>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
+
+              {/* Summary Stats */}
+              <div className="mt-6 grid grid-cols-3 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-500">
+                    {recentJobs.filter(j => j.status === 'completed').length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-500">
+                    {recentJobs.filter(j => j.status === 'processing' || j.status === 'storing_results').length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Processing</div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-red-500">
+                    {recentJobs.filter(j => j.status === 'failed').length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
               </div>
             </CardContent>
           </Card>

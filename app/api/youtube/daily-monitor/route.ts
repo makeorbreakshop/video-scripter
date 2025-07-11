@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           batchSize: 50,
           // Enable all processing including embeddings and exports
           skipEmbeddings: false,
-          skipExports: false
+          skipExports: true // Skip exports to prevent duplicates
         }
       })
     });

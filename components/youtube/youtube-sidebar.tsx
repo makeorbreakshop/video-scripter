@@ -14,7 +14,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Activity
+  Activity,
+  Tags
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

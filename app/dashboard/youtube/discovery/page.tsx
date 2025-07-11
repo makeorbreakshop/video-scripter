@@ -32,6 +32,7 @@ import {
 import { ReviewQueue } from '@/components/youtube/review-queue';
 import { ApprovedChannels } from '@/components/youtube/approved-channels';
 import { SearchDiscovery } from '@/components/youtube/search-discovery';
+import { EducationalSpider } from '@/components/discovery/educational-spider';
 
 interface DiscoveryStats {
   method: string;
@@ -278,6 +279,7 @@ export default function DiscoveryDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="methods">Methods</TabsTrigger>
           <TabsTrigger value="search">Search Discovery</TabsTrigger>
+          <TabsTrigger value="educational">Educational Spider</TabsTrigger>
           <TabsTrigger value="review">Review Queue</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="run">Run Discovery</TabsTrigger>
@@ -379,6 +381,10 @@ export default function DiscoveryDashboard() {
 
         <TabsContent value="search" className="space-y-4">
           <SearchDiscovery />
+        </TabsContent>
+
+        <TabsContent value="educational" className="space-y-4">
+          <EducationalSpider />
         </TabsContent>
 
         <TabsContent value="review" className="space-y-4">

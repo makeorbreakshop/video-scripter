@@ -57,6 +57,51 @@ export async function POST(request: NextRequest) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
+      // Check if this is a channel import and if the channel already exists
+      if (importRequest.source === 'competitor' && importRequest.channelIds?.length > 0) {
+        // Check each channel to see if it's already imported
+        const channelsToCheck = importRequest.channelIds;
+        const channelsToImport: string[] = [];
+        const existingChannels: string[] = [];
+        
+        for (const channelId of channelsToCheck) {
+          // Check if channel already exists and is fully imported
+          const { data: existingStatus } = await supabase
+            .from('channel_import_status')
+            .select('id, is_fully_imported, channel_name')
+            .eq('channel_id', channelId)
+            .single();
+          
+          if (existingStatus?.is_fully_imported && importRequest.options?.timePeriod === 'all') {
+            // Channel is already fully imported, skip it
+            existingChannels.push(channelId);
+            console.log(`⏭️  Skipping channel ${channelId} (${existingStatus.channel_name}) - already fully imported`);
+          } else {
+            // Channel needs to be imported
+            channelsToImport.push(channelId);
+          }
+        }
+        
+        // If all channels are already imported, return success without creating a job
+        if (channelsToImport.length === 0) {
+          console.log(`✅ All ${existingChannels.length} channels are already fully imported`);
+          return NextResponse.json({
+            success: true,
+            message: `All channels are already fully imported`,
+            jobId: null,
+            status: 'skipped',
+            skippedChannels: existingChannels,
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        // Update the request to only include channels that need importing
+        if (channelsToImport.length < channelsToCheck.length) {
+          console.log(`📊 Will import ${channelsToImport.length} new channels, skipping ${existingChannels.length} existing`);
+          importRequest.channelIds = channelsToImport;
+        }
+      }
+
       // Generate descriptive job name
       let jobDisplayName = 'unified_import';
       const jobMetadata: Record<string, unknown> = { ...importRequest };

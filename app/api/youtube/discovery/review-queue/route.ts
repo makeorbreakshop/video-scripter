@@ -39,18 +39,20 @@ export async function GET(request: NextRequest) {
 
       // Fallback to direct query if RPC doesn't exist
       const { data: fallbackData, error: fallbackError } = await supabase
-        .from('channel_discovery')
+        .from('discovered_channels')
         .select(`
-          discovered_channel_id,
+          channel_id,
+          channel_title,
+          channel_handle,
           subscriber_count,
           video_count,
-          discovery_date,
+          discovered_at,
           discovery_method,
-          channel_metadata
+          is_processed
         `)
-        .eq('validation_status', 'pending')
+        .eq('is_processed', false)
         .gte('subscriber_count', minSubscribers)
-        .gte('video_count', minVideos)
+        .or(`video_count.gte.${minVideos},video_count.is.null`)
         .order(sortBy, { ascending: sortOrder === 'asc' })
         .limit(limit * 2); // Get more to account for filtering
 
@@ -60,8 +62,8 @@ export async function GET(request: NextRequest) {
 
       // Group by channel and calculate frequency, filtering out existing channels
       const channelGroups = fallbackData.reduce((acc, discovery) => {
-        const channelId = discovery.discovered_channel_id;
-        const channelTitle = discovery.channel_metadata?.title || 'Unknown Channel';
+        const channelId = discovery.channel_id;
+        const channelTitle = discovery.channel_title || 'Unknown Channel';
         
         // Skip if this channel already exists in our videos table (by name)
         if (existingChannelNames.has(channelTitle.toLowerCase())) {
@@ -72,11 +74,12 @@ export async function GET(request: NextRequest) {
           acc[channelId] = {
             discovered_channel_id: channelId,
             channel_title: channelTitle,
+            channel_handle: discovery.channel_handle,
             subscriber_count: discovery.subscriber_count,
-            video_count: discovery.video_count,
+            video_count: discovery.video_count || 0,
             discovery_count: 0,
             discovery_methods: new Set(),
-            first_discovery: discovery.discovery_date,
+            first_discovery: discovery.discovered_at,
             relevance_score: 0
           };
         }
@@ -170,14 +173,14 @@ export async function POST(request: NextRequest) {
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     
     const { data, error } = await supabase
-      .from('channel_discovery')
+      .from('discovered_channels')
       .update({ 
-        validation_status: newStatus,
+        is_processed: action === 'approve',
         updated_at: new Date().toISOString()
       })
-      .eq('discovered_channel_id', channelId)
-      .eq('validation_status', 'pending')
-      .select('id, discovered_channel_id, channel_metadata');
+      .eq('channel_id', channelId)
+      .eq('is_processed', false)
+      .select('id, channel_id, channel_title');
 
     if (error) {
       throw error;
@@ -185,7 +188,7 @@ export async function POST(request: NextRequest) {
 
     // Log the approval action
     if (action === 'approve' && data && data.length > 0) {
-      const channelTitle = data[0].channel_metadata?.title || 'Unknown Channel';
+      const channelTitle = data[0].channel_title || 'Unknown Channel';
       console.log(`✅ Approved channel for import: ${channelTitle} (${channelId})`);
     }
 

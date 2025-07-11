@@ -3,17 +3,20 @@
  * Advanced tools for YouTube analytics and channel management
  */
 
-import { Suspense } from 'react';
+"use client"
+
+import { useState } from 'react';
 import { Metadata } from 'next';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YouTubeToolsTab } from '@/components/youtube/tools-tab';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const metadata: Metadata = {
-  title: 'YouTube Tools | Video Scripter',
-  description: 'Advanced tools for YouTube analytics and channel management',
-};
+// Import categorization content from the standalone page
+import CategorizationDashboard from '@/app/dashboard/youtube/categorization/page';
 
 export default function YouTubeToolsPage() {
+  const [activeTab, setActiveTab] = useState("analytics-tools");
+
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Page Header */}
@@ -26,12 +29,28 @@ export default function YouTubeToolsPage() {
         </div>
       </div>
 
-      {/* Tools Content */}
-      <div className="space-y-6">
-        <Suspense fallback={<ToolsSkeleton />}>
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="analytics-tools">Analytics Tools</TabsTrigger>
+          <TabsTrigger value="categorization">Categorization</TabsTrigger>
+          <TabsTrigger value="data-tools">Data Tools</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analytics-tools" className="space-y-6">
           <YouTubeToolsTab />
-        </Suspense>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="categorization" className="space-y-6">
+          <CategorizationDashboard />
+        </TabsContent>
+
+        <TabsContent value="data-tools" className="space-y-6">
+          <div className="text-center py-8 text-muted-foreground">
+            Data tools coming soon...
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

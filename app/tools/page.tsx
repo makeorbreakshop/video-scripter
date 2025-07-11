@@ -20,7 +20,8 @@ import {
   Settings, 
   Rss,
   BarChart3,
-  Key
+  Key,
+  Tags
 } from 'lucide-react';
 
 // Import the existing YouTube tools component
@@ -95,10 +96,14 @@ export default function ToolsPage() {
 
       {/* Main Tools Interface */}
       <Tabs defaultValue="youtube" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="youtube" className="flex items-center gap-2">
             <Youtube className="h-4 w-4" />
             YouTube Tools
+          </TabsTrigger>
+          <TabsTrigger value="categorization" className="flex items-center gap-2">
+            <Tags className="h-4 w-4" />
+            Categorization
           </TabsTrigger>
           <TabsTrigger value="monitor" className="flex items-center gap-2">
             <Rss className="h-4 w-4" />
@@ -116,6 +121,156 @@ export default function ToolsPage() {
 
         <TabsContent value="youtube" className="space-y-4">
           <YouTubeToolsTab />
+        </TabsContent>
+
+        <TabsContent value="categorization" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Classification Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Tags className="h-5 w-5" />
+                  Classification Status
+                </CardTitle>
+                <CardDescription>
+                  Overview of video categorization progress
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Videos:</span>
+                    <span className="font-medium">45,805+</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Classified (Topic):</span>
+                    <span className="font-medium text-orange-600">60,497+ (historical)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Classified (Format):</span>
+                    <span className="font-medium text-red-600">0 (needs setup)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">LLM Reviews:</span>
+                    <span className="font-medium">0</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">BERTopic Clusters:</span>
+                    <Badge variant="outline">777 loaded</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Setup */}
+            <Card>
+              <CardHeader>
+                <CardTitle>System Setup</CardTitle>
+                <CardDescription>
+                  Core setup tasks for categorization system
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium">Load BERTopic Data</div>
+                      <div className="text-sm text-muted-foreground">Import 777 topic clusters</div>
+                    </div>
+                    <Badge variant="destructive">Required</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium">Test Classification</div>
+                      <div className="text-sm text-muted-foreground">Verify system on sample videos</div>
+                    </div>
+                    <Badge variant="secondary">Ready</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium">Database Columns</div>
+                      <div className="text-sm text-muted-foreground">9 classification columns added</div>
+                    </div>
+                    <Badge variant="default">Complete</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Core Tools */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Core Tools</CardTitle>
+                <CardDescription>
+                  Essential categorization functions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="text-left">
+                    <div className="font-medium">Load BERTopic Clusters</div>
+                    <div className="text-sm text-muted-foreground">Import topic detection data</div>
+                  </div>
+                  <Badge variant="destructive">Critical</Badge>
+                </button>
+                
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors opacity-50 cursor-not-allowed">
+                  <div className="text-left">
+                    <div className="font-medium">Classify Unclassified Videos</div>
+                    <div className="text-sm text-muted-foreground">Batch process missing classifications</div>
+                  </div>
+                  <Badge variant="outline">Needs Data</Badge>
+                </button>
+                
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="text-left">
+                    <div className="font-medium">Test on Sample Videos</div>
+                    <div className="text-sm text-muted-foreground">Run classification test script</div>
+                  </div>
+                  <Badge variant="default">Ready</Badge>
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* Quality Control */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quality Control</CardTitle>
+                <CardDescription>
+                  Monitor and improve classification accuracy
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors opacity-50 cursor-not-allowed">
+                  <div className="text-left">
+                    <div className="font-medium">Manual Override</div>
+                    <div className="text-sm text-muted-foreground">Fix incorrect classifications</div>
+                  </div>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </button>
+                
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors opacity-50 cursor-not-allowed">
+                  <div className="text-left">
+                    <div className="font-medium">LLM Usage Monitor</div>
+                    <div className="text-sm text-muted-foreground">Track cost (target: &lt;10%)</div>
+                  </div>
+                  <Badge variant="outline">After Setup</Badge>
+                </button>
+                
+                <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="text-left">
+                    <div className="font-medium">Run Calibration Tool</div>
+                    <div className="text-sm text-muted-foreground">Interactive accuracy improvement</div>
+                  </div>
+                  <Badge variant="secondary">Available</Badge>
+                </button>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="monitor" className="space-y-4">
