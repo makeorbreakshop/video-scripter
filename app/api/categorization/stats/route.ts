@@ -32,11 +32,11 @@ export async function GET(request: NextRequest) {
       console.error('Error getting topic classified:', topicError);
     }
 
-    // Get format classified count (check both old and new columns)
+    // Get format classified count
     const { count: formatClassified, error: formatError } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true })
-      .or('format_primary.not.is.null,format_type.not.is.null');
+      .not('format_type', 'is', null);
 
     if (formatError) {
       console.error('Error getting format classified:', formatError);

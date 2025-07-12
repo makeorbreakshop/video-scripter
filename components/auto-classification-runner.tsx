@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Play, Square, RefreshCw } from 'lucide-react';
+import { Loader2, Play, Square, RefreshCw, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ClassificationProgress {
@@ -16,13 +16,38 @@ interface ClassificationProgress {
   totalChunks: number;
 }
 
+interface DatabaseStatus {
+  isLikelyRunning: boolean;
+  totalVideos: number;
+  classifiedVideos: number;
+  unclassifiedVideos: number;
+  progressPercentage: number;
+  estimatedTimeRemaining: string | null;
+  recentActivityCount: number;
+  lastClassifiedAt: string | null;
+}
+
 export default function AutoClassificationRunner() {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState<ClassificationProgress | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
+  const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
 
-  // Poll for progress updates
+  // Check for existing run on mount and periodically
+  useEffect(() => {
+    checkStatus();
+    checkDatabaseStatus();
+    // Check every 5 seconds for status
+    const statusInterval = setInterval(() => {
+      checkStatus();
+      checkDatabaseStatus();
+    }, 5000);
+    return () => clearInterval(statusInterval);
+  }, []);
+
+  // Poll for progress updates more frequently when running
   useEffect(() => {
     if (!isRunning) return;
 
@@ -96,8 +121,23 @@ export default function AutoClassificationRunner() {
       setIsRunning(data.isRunning);
       setProgress(data.progress);
       setEstimatedTime(data.estimatedTimeRemaining);
+      
+      // Check if there's saved progress to resume
+      if (!data.isRunning && data.progress && data.progress.total > 0 && data.progress.processed < data.progress.total) {
+        setHasSavedProgress(true);
+      }
     } catch (error) {
       console.error('Error checking status:', error);
+    }
+  };
+
+  const checkDatabaseStatus = async () => {
+    try {
+      const response = await fetch('/api/classification/status');
+      const data = await response.json();
+      setDbStatus(data);
+    } catch (error) {
+      console.error('Error checking database status:', error);
     }
   };
 
@@ -116,7 +156,44 @@ export default function AutoClassificationRunner() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!isRunning && !progress && (
+        {/* Show database status if we detect recent activity */}
+        {dbStatus?.isLikelyRunning && !isRunning && (
+          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg space-y-2 mb-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <h3 className="font-medium text-yellow-900 dark:text-yellow-100">Classification In Progress</h3>
+            </div>
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              Classification appears to be running in another session or was recently active.
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-yellow-700 dark:text-yellow-300">Progress:</span>{' '}
+                <span className="font-medium">{dbStatus.classifiedVideos.toLocaleString()} / {dbStatus.totalVideos.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-yellow-700 dark:text-yellow-300">Completion:</span>{' '}
+                <span className="font-medium">{dbStatus.progressPercentage.toFixed(1)}%</span>
+              </div>
+              {dbStatus.estimatedTimeRemaining && (
+                <div className="col-span-2">
+                  <span className="text-yellow-700 dark:text-yellow-300">Est. Time Remaining:</span>{' '}
+                  <span className="font-medium">{dbStatus.estimatedTimeRemaining}</span>
+                </div>
+              )}
+              {dbStatus.lastClassifiedAt && (
+                <div className="col-span-2">
+                  <span className="text-yellow-700 dark:text-yellow-300">Last Activity:</span>{' '}
+                  <span className="font-medium">
+                    {formatDistanceToNow(new Date(dbStatus.lastClassifiedAt), { addSuffix: true })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isRunning && !progress && !hasSavedProgress && (
           <div className="grid grid-cols-2 gap-4">
             <Button 
               onClick={() => startClassification(1000)}
@@ -146,7 +223,64 @@ export default function AutoClassificationRunner() {
           </div>
         )}
 
-        {(isRunning || progress) && (
+        {hasSavedProgress && !isRunning && (
+          <div className="space-y-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm font-medium mb-2">Previous Run Detected</p>
+              <p className="text-sm text-muted-foreground">
+                Processed {progress?.processed.toLocaleString()} of {progress?.total.toLocaleString()} videos
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Stopped at chunk {progress?.currentChunk} of {progress?.totalChunks}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                onClick={async () => {
+                  setIsStarting(true);
+                  try {
+                    const response = await fetch('/api/classification/auto-run', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'resume' }),
+                    });
+                    
+                    if (response.ok) {
+                      setIsRunning(true);
+                      setHasSavedProgress(false);
+                      console.log('Classification resumed');
+                    } else {
+                      const data = await response.json();
+                      alert(data.error || 'Failed to resume classification');
+                    }
+                  } catch (error) {
+                    console.error('Error resuming classification:', error);
+                    alert('Failed to resume classification');
+                  } finally {
+                    setIsStarting(false);
+                  }
+                }}
+                disabled={isStarting}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isStarting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Play className="mr-2 h-4 w-4" />
+                Resume Classification
+              </Button>
+              <Button 
+                onClick={() => startClassification()}
+                disabled={isStarting}
+                variant="outline"
+              >
+                {isStarting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Start Fresh (All Videos)
+              </Button>
+            </div>
+          </div>
+        )}
+
+
+        {(isRunning || (progress && !hasSavedProgress)) && (
           <>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">

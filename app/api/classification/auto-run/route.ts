@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { llmFormatClassificationService } from '@/lib/llm-format-classification-service';
+import fs from 'fs/promises';
+import path from 'path';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +18,9 @@ const CONFIG = {
   PROGRESS_LOG_INTERVAL: 1000,  // Log progress every N videos
 };
 
+// Progress file path - use temp directory for better reliability
+const PROGRESS_FILE = path.join('/tmp', 'classification-progress.json');
+
 // Global state for the running process
 let isRunning = false;
 let shouldStop = false;
@@ -28,13 +33,90 @@ let currentProgress = {
   totalChunks: 0,
 };
 
+// Save progress to file
+async function saveProgress() {
+  try {
+    const data = {
+      isRunning,
+      shouldStop,
+      currentProgress,
+      lastUpdated: Date.now()
+    };
+    await fs.writeFile(PROGRESS_FILE, JSON.stringify(data, null, 2));
+    console.log(`💾 Progress saved: ${currentProgress.processed}/${currentProgress.total} videos`);
+  } catch (error) {
+    console.error('❌ Error saving progress:', error);
+  }
+}
+
+// Load progress from file
+async function loadProgress() {
+  try {
+    const data = await fs.readFile(PROGRESS_FILE, 'utf-8');
+    const saved = JSON.parse(data);
+    
+    // Check if the saved progress is still valid (not older than 5 minutes)
+    if (saved.lastUpdated && Date.now() - saved.lastUpdated < 5 * 60 * 1000) {
+      isRunning = saved.isRunning;
+      shouldStop = saved.shouldStop;
+      currentProgress = saved.currentProgress;
+      return true;
+    }
+  } catch (error) {
+    // File doesn't exist or is invalid, that's ok
+  }
+  return false;
+}
+
+// Initialize by loading any saved progress
+loadProgress();
+
 export async function POST(request: Request) {
   try {
     const { action, totalLimit } = await request.json();
     
     if (action === 'stop') {
       shouldStop = true;
+      await saveProgress();
       return NextResponse.json({ message: 'Stop signal sent' });
+    }
+    
+    if (action === 'resume') {
+      // Try to resume from saved progress
+      const hasProgress = await loadProgress();
+      if (!hasProgress || !currentProgress.total) {
+        return NextResponse.json({ 
+          error: 'No saved progress to resume from',
+        }, { status: 400 });
+      }
+      
+      if (isRunning) {
+        return NextResponse.json({ 
+          error: 'Classification already running',
+          progress: currentProgress 
+        }, { status: 400 });
+      }
+      
+      // Resume the classification
+      isRunning = true;
+      shouldStop = false;
+      console.log(`\n🔄 [Auto Classification] Resuming classification from chunk ${currentProgress.currentChunk}...`);
+      
+      processAllVideos(currentProgress.total).catch(error => {
+        console.error('❌ Auto classification error:', error);
+      }).finally(() => {
+        isRunning = false;
+        saveProgress();
+      });
+      
+      return NextResponse.json({
+        message: 'Classification resumed',
+        resumedFrom: {
+          chunk: currentProgress.currentChunk,
+          processed: currentProgress.processed,
+          total: currentProgress.total
+        }
+      });
     }
     
     if (isRunning) {
@@ -54,9 +136,8 @@ export async function POST(request: Request) {
     const { count } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true })
-      .is('classified_at', null)
-      .not('channel_id', 'is', null)
-      .eq('is_competitor', true);
+      .is('format_type', null)
+      .not('channel_id', 'is', null);
       
     const totalVideos = Math.min(count || 0, totalLimit || count || 0);
     const totalChunks = Math.ceil(totalVideos / CONFIG.CHUNK_SIZE);
@@ -74,11 +155,15 @@ export async function POST(request: Request) {
       totalChunks,
     };
     
+    // Save initial progress
+    await saveProgress();
+    
     // Process in background
     processAllVideos(totalVideos).catch(error => {
       console.error('❌ Auto classification error:', error);
     }).finally(() => {
       isRunning = false;
+      saveProgress();
     });
     
     return NextResponse.json({
@@ -99,6 +184,11 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  // Try to load saved progress if we don't have it in memory
+  if (!isRunning && !currentProgress.total) {
+    await loadProgress();
+  }
+  
   return NextResponse.json({
     isRunning,
     progress: currentProgress,
@@ -107,9 +197,15 @@ export async function GET() {
 }
 
 async function processAllVideos(totalVideos: number) {
-  let processedTotal = 0;
+  let processedTotal = currentProgress.processed || 0;
+  let startChunk = currentProgress.currentChunk || 0;
   
-  for (let chunkIndex = 0; chunkIndex < currentProgress.totalChunks; chunkIndex++) {
+  // If resuming, adjust the start point
+  if (processedTotal > 0) {
+    console.log(`📌 Resuming from chunk ${startChunk + 1}, ${processedTotal} videos already processed`);
+  }
+  
+  for (let chunkIndex = startChunk; chunkIndex < currentProgress.totalChunks; chunkIndex++) {
     if (shouldStop) {
       console.log('⏹️  Classification stopped by user');
       break;
@@ -124,9 +220,8 @@ async function processAllVideos(totalVideos: number) {
     const { data: videos, error } = await supabase
       .from('videos')
       .select('id, title, channel_name, description')
-      .is('classified_at', null)
+      .is('format_type', null)
       .not('channel_id', 'is', null)
-      .eq('is_competitor', true)
       .limit(CONFIG.CHUNK_SIZE)
       .order('created_at', { ascending: true }); // Process oldest first
       
@@ -158,6 +253,9 @@ async function processAllVideos(totalVideos: number) {
         
         console.log(`✅ Chunk ${chunkIndex + 1} complete: ${result.classifications.length} videos classified`);
         console.log(`💰 Cost so far: $${(processedTotal * 0.000042).toFixed(2)}`);
+        
+        // Save progress after each chunk
+        await saveProgress();
         
         // Log progress at intervals
         if (processedTotal % CONFIG.PROGRESS_LOG_INTERVAL === 0 || processedTotal === totalVideos) {

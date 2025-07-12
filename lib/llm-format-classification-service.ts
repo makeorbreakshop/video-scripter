@@ -283,14 +283,66 @@ ${JSON.stringify(videoList, null, 2)}`;
     formatDistribution: Record<VideoFormat, number>;
     averageConfidence: number;
   }> {
-    const { data, error } = await supabase
+    // Get total count
+    const { count: totalCount, error: countError } = await supabase
       .from('videos')
-      .select('format_type, format_confidence')
+      .select('*', { count: 'exact', head: true })
       .not('format_type', 'is', null);
 
-    if (error) throw error;
+    if (countError) throw countError;
 
-    const distribution: Record<VideoFormat, number> = {
+    // Get format distribution and average confidence using raw SQL for efficiency
+    const { data, error } = await supabase.rpc('get_format_statistics');
+
+    if (error) {
+      // Fallback to regular query if RPC doesn't exist
+      console.log('RPC not available, using regular query with pagination');
+      
+      const distribution: Record<VideoFormat, number> = {
+        [VideoFormat.TUTORIAL]: 0,
+        [VideoFormat.LISTICLE]: 0,
+        [VideoFormat.EXPLAINER]: 0,
+        [VideoFormat.CASE_STUDY]: 0,
+        [VideoFormat.NEWS_ANALYSIS]: 0,
+        [VideoFormat.PERSONAL_STORY]: 0,
+        [VideoFormat.PRODUCT_FOCUS]: 0
+      };
+
+      // Fetch in batches to handle large datasets
+      let offset = 0;
+      const batchSize = 1000;
+      let totalConfidence = 0;
+      let totalRows = 0;
+
+      while (offset < (totalCount || 0)) {
+        const { data: batch, error: batchError } = await supabase
+          .from('videos')
+          .select('format_type, format_confidence')
+          .not('format_type', 'is', null)
+          .range(offset, offset + batchSize - 1);
+
+        if (batchError) throw batchError;
+
+        batch?.forEach(video => {
+          if (video.format_type) {
+            distribution[video.format_type as VideoFormat]++;
+            totalConfidence += video.format_confidence || 0;
+            totalRows++;
+          }
+        });
+
+        offset += batchSize;
+      }
+
+      return {
+        totalClassified: totalCount || 0,
+        formatDistribution: distribution,
+        averageConfidence: totalRows > 0 ? totalConfidence / totalRows : 0
+      };
+    }
+
+    // Use RPC results if available
+    const formatDist: Record<VideoFormat, number> = {
       [VideoFormat.TUTORIAL]: 0,
       [VideoFormat.LISTICLE]: 0,
       [VideoFormat.EXPLAINER]: 0,
@@ -300,19 +352,18 @@ ${JSON.stringify(videoList, null, 2)}`;
       [VideoFormat.PRODUCT_FOCUS]: 0
     };
 
-    let totalConfidence = 0;
-
-    data?.forEach(video => {
-      if (video.format_type) {
-        distribution[video.format_type as VideoFormat]++;
-        totalConfidence += video.format_confidence || 0;
+    data?.forEach((row: any) => {
+      if (row.format_type && formatDist.hasOwnProperty(row.format_type)) {
+        formatDist[row.format_type as VideoFormat] = row.count;
       }
     });
 
+    const avgConfidence = data?.find((row: any) => row.avg_confidence)?.avg_confidence || 0;
+
     return {
-      totalClassified: data?.length || 0,
-      formatDistribution: distribution,
-      averageConfidence: data?.length ? totalConfidence / data.length : 0
+      totalClassified: totalCount || 0,
+      formatDistribution: formatDist,
+      averageConfidence: avgConfidence
     };
   }
 }

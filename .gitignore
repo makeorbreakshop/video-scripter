@@ -46,3 +46,6 @@ title-embeddings-*.csv
 title-embeddings-*.json
 thumbnail-embeddings-*.csv
 thumbnail-embeddings-*.json
+
+# classification progress files
+.classification-progress.json

@@ -17,9 +17,8 @@ export async function POST(request: Request) {
     const { data: videos, error } = await supabase
       .from('videos')
       .select('id, title, channel_name, description')
-      .is('classified_at', null)
+      .is('format_type', null)
       .not('channel_id', 'is', null)
-      .eq('is_competitor', true)
       .limit(batchSize);
       
     if (error) throw error;
