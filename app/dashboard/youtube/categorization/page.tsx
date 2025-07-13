@@ -11,6 +11,7 @@ import { RefreshCw, Tags, Database, TestTube, Settings, CheckCircle, XCircle, Al
 import { cn } from "@/lib/utils"
 import { LLMClassificationDashboard } from "@/components/llm-classification-dashboard"
 import AutoClassificationRunner from "@/components/auto-classification-runner"
+import ReclassificationRunner from "@/components/reclassification-runner"
 
 interface ClassificationStats {
   totalVideos: number
@@ -291,7 +292,7 @@ export default function CategorizationDashboard() {
                     <p>• Batch processing (10 videos/call)</p>
                   </div>
                   <div className="text-xs bg-green-50 p-2 rounded">
-                    7 formats: Tutorial, Review, Showcase, Explanation, Vlog, Comparison, News
+                    12 formats: Tutorial, Listicle, Explainer, Case Study, News Analysis, Personal Story, Product Focus, Live Stream, Shorts, Vlog, Compilation, Update
                   </div>
                 </div>
 
@@ -318,6 +319,9 @@ export default function CategorizationDashboard() {
         <TabsContent value="classification" className="space-y-6">
           {/* Auto Classification Runner */}
           <AutoClassificationRunner />
+          
+          {/* Reclassification Runner */}
+          <ReclassificationRunner />
           
           {/* LLM-Powered Batch Classification */}
           <LLMClassificationDashboard />
@@ -377,7 +381,7 @@ export default function CategorizationDashboard() {
                   <div className="text-xs text-muted-foreground">Topic Clusters</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">7</div>
+                  <div className="text-2xl font-bold text-green-600">12</div>
                   <div className="text-xs text-muted-foreground">Format Categories</div>
                 </div>
                 <div className="text-center">

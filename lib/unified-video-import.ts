@@ -10,7 +10,8 @@ import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './t
 import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
-// import { videoClassificationService } from './video-classification-service.ts'; // Temporarily disabled - breaking workers
+import { llmFormatClassificationService } from './llm-format-classification-service.ts';
+import { topicDetectionService } from './topic-detection-service.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1091,11 +1092,98 @@ export class VideoImportService {
     videos: VideoMetadata[],
     embeddingResults: EmbeddingResults
   ): Promise<number> {
-    // TEMPORARILY DISABLED - Classification service breaking workers due to import issues
-    console.log(`🏷️ [classifyVideos] Video classification temporarily disabled`);
-    return 0;
+    console.log(`🏷️ Starting classification for ${videos.length} videos...`);
     
-    /* Commented out until import issues are resolved
+    try {
+      let classifiedCount = 0;
+      
+      // Step 1: Format Classification using LLM service
+      console.log(`📝 Classifying video formats...`);
+      const videosForFormatClassification = videos.map(v => ({
+        id: v.id,
+        title: v.title,
+        channel: v.channel_name,
+        description: v.description
+      }));
+      
+      const formatResult = await llmFormatClassificationService.classifyBatch(videosForFormatClassification);
+      if (formatResult.classifications.length > 0) {
+        await llmFormatClassificationService.storeClassifications(formatResult.classifications);
+        console.log(`✅ Format classification complete: ${formatResult.classifications.length} videos, ${formatResult.totalTokens.toLocaleString()} tokens used`);
+        classifiedCount = formatResult.classifications.length;
+      }
+      
+      // Step 2: Topic Classification using BERTopic clusters
+      console.log(`🎯 Classifying video topics...`);
+      
+      // Load BERTopic clusters if not already loaded
+      await topicDetectionService.loadClusters();
+      
+      // Process videos that have successful embeddings
+      const videosWithEmbeddings = videos
+        .map(video => {
+          const embedding = embeddingResults.titleEmbeddings.find(e => e.videoId === video.id);
+          if (!embedding || !embedding.success || !embedding.embedding.length) {
+            return null;
+          }
+          return {
+            id: video.id,
+            embedding: embedding.embedding
+          };
+        })
+        .filter(v => v !== null) as Array<{ id: string; embedding: number[] }>;
+      
+      if (videosWithEmbeddings.length > 0) {
+        // Process in batches to avoid memory issues
+        const topicBatchSize = 100;
+        let topicUpdateCount = 0;
+        
+        for (let i = 0; i < videosWithEmbeddings.length; i += topicBatchSize) {
+          const batch = videosWithEmbeddings.slice(i, i + topicBatchSize);
+          
+          // Assign topics for batch
+          const topicAssignments = await Promise.all(
+            batch.map(async ({ id, embedding }) => {
+              const assignment = await topicDetectionService.assignTopic(embedding);
+              return { id, assignment };
+            })
+          );
+          
+          // Store topic assignments in database
+          for (const { id, assignment } of topicAssignments) {
+            const { error } = await supabase
+              .from('videos')
+              .update({
+                topic_domain: assignment.domain,
+                topic_niche: assignment.niche,
+                topic_micro: assignment.microTopic,
+                topic_cluster_id: assignment.clusterId,
+                topic_confidence: assignment.confidence,
+                classified_at: new Date().toISOString()
+              })
+              .eq('id', id);
+            
+            if (!error) {
+              topicUpdateCount++;
+            } else {
+              console.error(`❌ Failed to update topic for video ${id}:`, error.message);
+            }
+          }
+          
+          console.log(`   📊 Topic batch ${Math.floor(i / topicBatchSize) + 1}/${Math.ceil(videosWithEmbeddings.length / topicBatchSize)}: ${topicUpdateCount} videos updated`);
+        }
+        
+        console.log(`✅ Topic classification complete: ${topicUpdateCount} videos classified`);
+      }
+      
+      return classifiedCount;
+    } catch (error) {
+      console.error('❌ Classification failed:', error);
+      // Don't fail the entire import if classification fails
+      return 0;
+    }
+    
+    /* Original commented code kept for reference
     console.log(`🏷️ [classifyVideos] Starting video classification for ${videos.length} videos`);
     console.log(`🏷️ [classifyVideos] Embedding results: ${embeddingResults.titleEmbeddings.length} title embeddings`);
     

@@ -4,8 +4,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { youtubeAnalyticsClient, AnalyticsDataRow } from './youtube-analytics-api';
-import { enhancedYouTubeAnalyticsClient, ComprehensiveAnalyticsData } from './enhanced-youtube-analytics-api';
+import type { AnalyticsDataRow } from './youtube-analytics-api.ts';
+import { youtubeAnalyticsClient } from './youtube-analytics-api.ts';
+import type { ComprehensiveAnalyticsData } from './enhanced-youtube-analytics-api.ts';
+import { enhancedYouTubeAnalyticsClient } from './enhanced-youtube-analytics-api.ts';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

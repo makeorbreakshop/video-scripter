@@ -3,12 +3,12 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Browser, Page } from 'puppeteer';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import type { EducationalNiche } from './educational-niches.ts';
 import { 
-  EducationalNiche, 
   getNicheSeeds, 
   detectNicheFromChannel,
   getEducationalSignals 
-} from './educational-niches';
+} from './educational-niches.ts';
 
 puppeteer.use(StealthPlugin());
 

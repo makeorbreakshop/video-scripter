@@ -1,8 +1,9 @@
 // Multi-Channel Shelves Discovery Service (Method 3)
 // Discovers channels through channelSections with type="multipleChannels"
 
-import { supabase } from './supabase-client';
-import { youtubeDiscoveryAPI, ChannelValidationResult } from './youtube-discovery-api';
+import { supabase } from './supabase-client.ts';
+import type { ChannelValidationResult } from './youtube-discovery-api.ts';
+import { youtubeDiscoveryAPI } from './youtube-discovery-api.ts';
 
 export interface MultiChannelShelvesResult {
   sourceChannelId: string;

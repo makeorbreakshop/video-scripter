@@ -3,7 +3,7 @@
  * Functions for interacting with the Skyscraper Analysis tables in Supabase
  */
 
-import { supabase } from './supabase';
+import { supabase } from './supabase.ts';
 import {
   ContentAnalysis,
   AudienceAnalysis,

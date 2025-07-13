@@ -1,6 +1,6 @@
 import { openai } from './openai-client.ts';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/database';
+import type { Database } from '../types/database.ts';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +14,12 @@ export const VideoFormat = {
   CASE_STUDY: 'case_study',
   NEWS_ANALYSIS: 'news_analysis',
   PERSONAL_STORY: 'personal_story',
-  PRODUCT_FOCUS: 'product_focus'
+  PRODUCT_FOCUS: 'product_focus',
+  LIVE_STREAM: 'live_stream',
+  SHORTS: 'shorts',
+  VLOG: 'vlog',
+  COMPILATION: 'compilation',
+  UPDATE: 'update'
 } as const;
 
 export type VideoFormat = typeof VideoFormat[keyof typeof VideoFormat];
@@ -142,6 +147,11 @@ Available formats:
 - news_analysis: Current events, updates, reactions
 - personal_story: Personal journeys, life experiences
 - product_focus: Reviews, comparisons, unboxings
+- live_stream: Live broadcasts, streaming content, real-time interactions
+- shorts: YouTube Shorts, TikTok-style content, videos under 60 seconds
+- vlog: Video logs, day-in-life content, behind-the-scenes
+- compilation: Best-of videos, highlights, multi-clip content, mashups
+- update: Channel updates, project progress, announcements, community posts
 
 Analyze the videos and return a JSON array with format classifications.`
           },
@@ -163,12 +173,31 @@ Analyze the videos and return a JSON array with format classifications.`
       const tokens = response.usage?.total_tokens || 0;
 
       // Map the results back to our format
-      const classifications: FormatClassification[] = result.videos.map((v: any) => ({
-        videoId: v.id,
-        format: v.format as VideoFormat,
-        confidence: v.confidence,
-        reasoning: v.reasoning
-      }));
+      const classifications: FormatClassification[] = result.videos.map((v: any) => {
+        // Normalize format value
+        let format = v.format.trim().toLowerCase();
+        
+        // Map common variations to correct values
+        if (format === 'live stream' || format === 'livestream') format = 'live_stream';
+        if (format === 'case study' || format === 'casestudy') format = 'case_study';
+        if (format === 'news analysis' || format === 'newsanalysis') format = 'news_analysis';
+        if (format === 'personal story' || format === 'personalstory') format = 'personal_story';
+        if (format === 'product focus' || format === 'productfocus') format = 'product_focus';
+        
+        // Validate format is in allowed list
+        const validFormats = Object.values(VideoFormat);
+        if (!validFormats.includes(format)) {
+          console.error(`   ⚠️ Invalid format '${v.format}' for video ${v.id}, defaulting to 'explainer'`);
+          format = VideoFormat.EXPLAINER;
+        }
+        
+        return {
+          videoId: v.id,
+          format: format as VideoFormat,
+          confidence: v.confidence,
+          reasoning: v.reasoning
+        };
+      });
 
       return { classifications, tokens };
     } catch (error) {
@@ -266,6 +295,8 @@ ${JSON.stringify(videoList, null, 2)}`;
           
         if (error) {
           console.error('   ❌ Error storing classification for video', update.id, ':', error.message);
+          console.error('      Attempted format_type:', update.format_type);
+          console.error('      Attempted format_primary:', update.format_primary);
           // Continue with other videos even if one fails
         } else {
           successCount++;
@@ -305,7 +336,12 @@ ${JSON.stringify(videoList, null, 2)}`;
         [VideoFormat.CASE_STUDY]: 0,
         [VideoFormat.NEWS_ANALYSIS]: 0,
         [VideoFormat.PERSONAL_STORY]: 0,
-        [VideoFormat.PRODUCT_FOCUS]: 0
+        [VideoFormat.PRODUCT_FOCUS]: 0,
+        [VideoFormat.LIVE_STREAM]: 0,
+        [VideoFormat.SHORTS]: 0,
+        [VideoFormat.VLOG]: 0,
+        [VideoFormat.COMPILATION]: 0,
+        [VideoFormat.UPDATE]: 0
       };
 
       // Fetch in batches to handle large datasets
@@ -349,7 +385,12 @@ ${JSON.stringify(videoList, null, 2)}`;
       [VideoFormat.CASE_STUDY]: 0,
       [VideoFormat.NEWS_ANALYSIS]: 0,
       [VideoFormat.PERSONAL_STORY]: 0,
-      [VideoFormat.PRODUCT_FOCUS]: 0
+      [VideoFormat.PRODUCT_FOCUS]: 0,
+      [VideoFormat.LIVE_STREAM]: 0,
+      [VideoFormat.SHORTS]: 0,
+      [VideoFormat.VLOG]: 0,
+      [VideoFormat.COMPILATION]: 0,
+      [VideoFormat.UPDATE]: 0
     };
 
     data?.forEach((row: any) => {

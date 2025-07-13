@@ -384,3 +384,34 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Database Infrastructure**: Fixed missing cron job for competitor channel refresh, documented 7 materialized views and 4 cron jobs, backfilled missing channel statistics
 - **Technical Excellence**: Preserved format patterns with minimal cleaning (21.9% vs 85.2% aggressive), established Topics (WHAT) vs Formats (HOW) naming convention
 - **Production Ready**: Keyword-based format detection selected over regex for maintainability, confidence scoring system for uncertain classifications
+
+### 2025-07-11: LLM-Based Format Classification & Auto-Classification System
+- **Issue**: Keyword approach limited to 87% accuracy, need scalable classification for 78k+ videos, integer overflow crashes on high view counts
+- **Solution**: Pivoted to GPT-4o-mini LLM classification with batch processing, fixed BIGINT migration, built auto-classification runner with persistent progress tracking
+- **Impact**: Achieved 98.4% classification coverage (78,465/79,733 videos), 100x cost reduction vs GPT-4 ($4-6 total), discovered need for 5 new format categories
+- **Technical**: 15-video batches with 20 parallel API calls, database-based progress persistence, Supabase pagination fixes, educational channel discovery system
+
+**Key Achievements:**
+- **Format Detection Evolution**: Transitioned from keyword (87% accuracy) to LLM approach achieving higher accuracy with nuanced understanding
+- **Critical Bug Fix**: Migrated view_count from INTEGER to BIGINT preventing crashes on videos with 2B+ views
+- **Auto-Classification System**: Built production runner processing ~8.6 videos/second with automatic rate limiting and error recovery
+- **Cost Optimization**: GPT-4o-mini at $0.06/1000 videos vs GPT-4 at $6/1000 videos while maintaining quality
+- **Educational Discovery**: Built spider system for 10 niches × 200+ channels with 4 discovery methods and educational scoring
+- **UI Integration**: Full categorization dashboard with real-time stats, confidence metrics, and batch processing controls
+- **Database Optimizations**: Fixed Supabase 1000-row limit with pagination, implemented persistent progress tracking
+- **New Category Discovery**: Analysis revealed need for: live_stream, shorts, vlog, compilation, update categories based on low-confidence patterns
+
+### 2025-07-12: Enhanced Format Classification & Topic Classification System
+- **Issue**: Complete format reclassification with new categories, fix topic classification module conflicts, optimize YouTube quota usage
+- **Solution**: Implemented 5 new format categories achieving 98.4% coverage, fixed topic classification script with CommonJS rewrite, optimized daily update to save 100 quota units
+- **Impact**: Classified 78,465 videos with improved confidence, topic classification achieved 71.1% coverage (58,762 videos), discovered local embedding gaps requiring Pinecone fetch
+- **Technical**: Database constraint updates for 12 format types, BERTopic integration with 3-level hierarchy, parallel batch processing at 360-400 videos/second
+
+**Key Achievements:**
+- **Format Categories Expansion**: Added 5 new categories (live_stream, shorts, vlog, compilation, update) improving classification accuracy for 16,917 low-confidence videos
+- **Topic Classification Fix**: Resolved TypeScript/CommonJS conflicts, parsed BERTopic labels to integers (e.g., "domain_0" → 0), achieved 360+ videos/second processing
+- **YouTube Quota Optimization**: Fixed timezone mismatch (UTC vs Pacific), removed expensive search.list from daily updates saving 100 units/day
+- **Embedding Management**: Aggregated 50,283 local embeddings from 74 files, identified 32,322 embeddings only in Pinecone requiring fetch
+- **Database Infrastructure**: Fixed missing quota tracking, implemented persistent classification progress, resolved Supabase 1000-row pagination limits
+- **Performance Metrics**: Format classification at 8.6 videos/second sustained, topic classification at 360-400 videos/second, total API cost ~$3.30 for 78k videos
+- **Critical Fixes**: YouTube quota timezone functions, null channel_id filtering, JSON truncation with reduced batch sizes, integer type mismatches

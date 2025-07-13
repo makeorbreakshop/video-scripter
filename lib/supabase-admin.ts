@@ -9,7 +9,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseUrl, getSupabaseServiceKey } from './env-config';
+import { getSupabaseUrl, getSupabaseServiceKey } from './env-config.ts';
 
 const supabaseUrl = getSupabaseUrl();
 const supabaseServiceKey = getSupabaseServiceKey();

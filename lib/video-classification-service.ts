@@ -1,8 +1,10 @@
-import { topicDetectionService, TopicDetectionService } from './topic-detection-service.ts';
-import { formatDetectionService, FormatDetectionService, VideoFormat, FormatDetectionResult } from './format-detection-service.ts';
+import type { TopicDetectionService } from './topic-detection-service.ts';
+import { topicDetectionService } from './topic-detection-service.ts';
+import type { FormatDetectionService, VideoFormat, FormatDetectionResult } from './format-detection-service.ts';
+import { formatDetectionService } from './format-detection-service.ts';
 import { openai } from './openai-client.ts'; // Updated import
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/database';
+import type { Database } from '../types/database.ts';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

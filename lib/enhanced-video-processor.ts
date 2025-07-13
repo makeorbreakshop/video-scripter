@@ -4,14 +4,17 @@
  * using timestamp-based transcript chunking and keyword-based comment clustering
  */
 
-import { getYoutubeTranscript } from "./youtube-transcript";
-import { fetchYoutubeComments } from "./youtube-api";
-import { getYoutubeVideoMetadata } from "./youtube-utils";
-import { extractYouTubeId } from './utils';
-import { processTranscriptAdvanced, AdvancedChunk, AdvancedChunkingOptions } from "./transcript-chunker-advanced";
-import { processComments, YouTubeComment, CommentCluster } from "./comment-chunker";
-import { storeVideoMetadata, storeVideoChunks, VideoChunk, VideoMetadata } from "./vector-db-service";
-import { isPgvectorEnabled, getYouTubeApiKey, getOpenAIApiKey } from "./env-config";
+import { getYoutubeTranscript } from "./youtube-transcript.ts";
+import { fetchYoutubeComments } from "./youtube-api.ts";
+import { getYoutubeVideoMetadata } from "./youtube-utils.ts";
+import { extractYouTubeId } from './utils.ts';
+import type { AdvancedChunk, AdvancedChunkingOptions } from "./transcript-chunker-advanced.ts";
+import { processTranscriptAdvanced } from "./transcript-chunker-advanced.ts";
+import type { YouTubeComment, CommentCluster } from "./comment-chunker.ts";
+import { processComments } from "./comment-chunker.ts";
+import type { VideoChunk, VideoMetadata } from "./vector-db-service.ts";
+import { storeVideoMetadata, storeVideoChunks } from "./vector-db-service.ts";
+import { isPgvectorEnabled, getYouTubeApiKey, getOpenAIApiKey } from "./env-config.ts";
 
 // Define enhanced processing options
 export interface EnhancedProcessingOptions {

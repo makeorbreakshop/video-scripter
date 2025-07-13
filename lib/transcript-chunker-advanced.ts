@@ -4,7 +4,7 @@
  * and timestamp-based segmentation with overlap
  */
 
-import { estimateTokenCount } from './transcript-chunker';
+import { estimateTokenCount } from './transcript-chunker.ts';
 
 // Types for advanced chunking
 export interface AdvancedChunkingOptions {

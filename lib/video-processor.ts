@@ -4,13 +4,14 @@
  * and storing in Supabase pgvector
  */
 
-import { getYoutubeTranscript } from "./youtube-transcript";
-import { fetchYoutubeComments, fetchAllYoutubeComments } from "./youtube-api";
-import { getYoutubeVideoMetadata } from "./youtube-utils";
-import { extractYouTubeId } from './utils';
-import { processTranscript } from "./transcript-chunker";
-import { storeVideoMetadata, storeVideoChunks, VideoChunk, VideoMetadata } from "./vector-db-service";
-import { isPgvectorEnabled, getYouTubeApiKey, getOpenAIApiKey } from "./env-config";
+import { getYoutubeTranscript } from "./youtube-transcript.ts";
+import { fetchYoutubeComments, fetchAllYoutubeComments } from "./youtube-api.ts";
+import { getYoutubeVideoMetadata } from "./youtube-utils.ts";
+import { extractYouTubeId } from './utils.ts';
+import { processTranscript } from "./transcript-chunker.ts";
+import type { VideoChunk, VideoMetadata } from "./vector-db-service.ts";
+import { storeVideoMetadata, storeVideoChunks } from "./vector-db-service.ts";
+import { isPgvectorEnabled, getYouTubeApiKey, getOpenAIApiKey } from "./env-config.ts";
 
 // Types needed for processing
 interface ProcessingOptions {

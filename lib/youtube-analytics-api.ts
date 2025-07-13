@@ -3,7 +3,7 @@
  * Requires OAuth with yt-analytics.readonly scope
  */
 
-import { getValidAccessToken, isAuthenticated } from './youtube-oauth';
+import { getValidAccessToken, isAuthenticated } from './youtube-oauth.ts';
 
 // Types for YouTube Analytics API responses
 export interface AnalyticsDataRow {

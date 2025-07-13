@@ -1,7 +1,7 @@
 // Channel Validation Pipeline
 // Scores and validates discovered channels for import eligibility
 
-import { supabase } from './supabase-client';
+import { supabase } from './supabase-client.ts';
 
 export interface ValidationScore {
   networkCentrality: number;    // 0-1: How many sources discovered this channel

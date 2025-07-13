@@ -1,7 +1,7 @@
 // YouTube Channel Discovery API Service
 // Handles subscription network crawling and channel validation using YouTube Data API v3
 
-import { getValidAccessToken } from './youtube-oauth';
+import { getValidAccessToken } from './youtube-oauth.ts';
 
 export interface SubscriptionResult {
   channelId: string;

@@ -13,7 +13,7 @@ const supabase = createClient(
 );
 
 // Import progress update function
-import { updateProgress } from './progress/route';
+import { updateProgress } from './progress/route.ts';
 
 // Global state for tracking refresh progress
 let refreshProgress = {

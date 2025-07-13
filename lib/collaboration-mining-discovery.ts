@@ -1,8 +1,9 @@
 // Video Collaboration Mining Discovery Service (Method 6)
 // Discovers channels through collaboration mentions in video titles and descriptions
 
-import { supabase } from './supabase-client';
-import { youtubeDiscoveryAPI, ChannelValidationResult } from './youtube-discovery-api';
+import { supabase } from './supabase-client.ts';
+import type { ChannelValidationResult } from './youtube-discovery-api.ts';
+import { youtubeDiscoveryAPI } from './youtube-discovery-api.ts';
 
 export interface CollaborationMiningResult {
   sourceChannelId: string;

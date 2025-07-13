@@ -3,7 +3,7 @@
  * Designed for immediate results with future expansion capability
  */
 
-import { getValidAccessToken, isAuthenticated } from './youtube-oauth';
+import { getValidAccessToken, isAuthenticated } from './youtube-oauth.ts';
 
 // Basic analytics data structure (expandable)
 export interface BasicAnalyticsData {

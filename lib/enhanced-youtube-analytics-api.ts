@@ -3,7 +3,7 @@
  * Captures all available YouTube Analytics metrics to maximize API quota usage
  */
 
-import { getValidAccessToken, isAuthenticated } from './youtube-oauth';
+import { getValidAccessToken, isAuthenticated } from './youtube-oauth.ts';
 
 // Comprehensive types for enhanced analytics data
 export interface ComprehensiveAnalyticsData {

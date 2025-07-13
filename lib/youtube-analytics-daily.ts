@@ -4,8 +4,8 @@
  * Replaces the YouTube Reporting API CSV-based approach
  */
 
-import { youtubeAnalyticsClient } from './youtube-analytics-api';
-import { supabase } from './supabase';
+import { youtubeAnalyticsClient } from './youtube-analytics-api.ts';
+import { supabase } from './supabase.ts';
 
 export interface DailyAnalyticsData {
   video_id: string;

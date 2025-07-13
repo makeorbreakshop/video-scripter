@@ -16,14 +16,18 @@ export async function POST(request: NextRequest) {
 
     // Run all operations synchronously and return final results
     try {
-      // Phase 1: Channel Discovery
-      const discoveryResponse = await fetch(`${baseUrl}/api/youtube/discover-new-videos`, {
+      // Phase 1: RSS Monitoring for ALL channels (including your own)
+      const rssResponse = await fetch(`${baseUrl}/api/youtube/daily-monitor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken })
+        body: JSON.stringify({ userId: '00000000-0000-0000-0000-000000000000' })
       });
 
-      const discoveryData = discoveryResponse.ok ? await discoveryResponse.json() : { newVideos: 0 };
+      const rssData = rssResponse.ok ? await rssResponse.json() : { 
+        channelsProcessed: 0, 
+        totalChannels: 0, 
+        newVideos: 0 
+      };
 
       // Phase 2: Recent Analytics Backfill (7 days max)
       const maxDaysBack = 7;
@@ -64,37 +68,20 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Phase 3: RSS Monitoring
-      const rssResponse = await fetch(`${baseUrl}/api/youtube/daily-monitor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: '00000000-0000-0000-0000-000000000000' })
-      });
-
-      const rssData = rssResponse.ok ? await rssResponse.json() : { 
-        channelsProcessed: 0, 
-        totalChannels: 0, 
-        newVideos: 0 
-      };
-
       // Return final results immediately
       return NextResponse.json({
         success: true,
         message: 'Daily update completed successfully',
         results: {
-          discovery: {
-            newVideos: discoveryData.newVideos || 0,
-            status: 'complete'
-          },
-          backfill: {
-            daysProcessed: backfillData.daysProcessed || 0,
-            totalDays: backfillData.daysProcessed || 0,
-            status: 'complete'
-          },
           rss: {
             channelsProcessed: rssData.channelsProcessed || 0,
             totalChannels: rssData.totalChannels || 0,
             newVideos: rssData.newVideos || 0,
+            status: 'complete'
+          },
+          analytics_backfill: {
+            daysProcessed: backfillData.daysProcessed || 0,
+            totalDays: backfillData.daysProcessed || 0,
             status: 'complete'
           }
         }

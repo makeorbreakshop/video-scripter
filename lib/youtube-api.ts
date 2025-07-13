@@ -1,5 +1,5 @@
-import { extractYouTubeId } from './utils';
-import { getValidAccessToken, isAuthenticated } from './youtube-oauth';
+import { extractYouTubeId } from './utils.ts';
+import { getValidAccessToken, isAuthenticated } from './youtube-oauth.ts';
 
 // Helper function to get the API key from localStorage
 const getYouTubeApiKey = (): string | null => {

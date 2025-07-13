@@ -1,392 +1,154 @@
 # Video Analysis & Search System - Implementation TODO
 
-Based on PRD: `/docs/PRD_Video_Analysis_Search_System.md`
+## Current Status (2025-07-12)
 
-## Phase 0: Topic & Format Discovery (Day 1-2)
+### ✅ COMPLETED
 
-### Data Preparation
-- [x] Aggregate all title embeddings from `/exports/title-embeddings-*.json` into single file
-- [x] Create script to merge embeddings with current video metadata from database
-- [x] Ensure all 56k+ videos have embeddings included
+#### BERTopic Topic Discovery
+- [x] Generated 3-level hierarchy: 6 domains → 114 niches → 492 micro-topics
+- [x] All 1,107 clusters have human-readable names
+- [x] Cluster centroids calculated and stored in database
+- [x] 57,069 videos assigned topics (July 10)
 
-### BERTopic Analysis
-- [x] Run BERTopic with multiple granularity levels:
-  - [x] ~8-12 clusters (broad domains) - **Achieved: 6 domains**
-  - [x] ~50-100 clusters (specific niches) - **Achieved: 114 niches**
-  - [x] ~200-500 clusters (micro-topics - similar to previous 492) - **Achieved: 492 micro-topics**
-- [x] Export cluster assignments and representative videos
-- [x] Generate cluster relationship mapping (which micro-topics group into niches, which group into domains)
+#### Format Classification System
+- [x] Built LLM-based classification with GPT-4o-mini
+- [x] 12 format types (added 5 new: live_stream, shorts, vlog, compilation, update)
+- [x] Classified 78,465/79,733 videos (98.4% coverage)
+- [x] Database constraint updated to allow all 12 format types
+- [ ] Reclassifying 16,911 low-confidence videos (IN PROGRESS - Started 12:00 PM)
 
-### Topic Hierarchy Design
-- [ ] Create flexible hierarchy system with 2 core levels:
-  - [ ] Level 1: Domain (8-12 broad categories like Technology, Lifestyle, Education)
-  - [ ] Level 2: Niche (50-100 specific topics like 3D Printing, Woodworking, Cooking)
-- [ ] Add optional Level 3+ (micro-topics) based on automatic depth detection:
-  - [ ] Video volume threshold (>500 videos suggests split needed)
-  - [ ] Performance variance (high variance indicates distinct sub-topics)
-  - [ ] Embedding distance spread (>0.4 indicates natural sub-clusters)
-  - [ ] Keyword diversity (<30% overlap suggests multiple topics)
-- [ ] Implement automatic depth detection algorithm:
-  ```
-  Criteria for deeper levels:
-  - Video count > 1000 → definitely split
-  - Performance std deviation > 2.0 → likely different sub-topics
-  - Intra-cluster embedding spread > 0.4 → natural sub-clusters exist
-  - Top 10 keyword overlap < 30% → distinct topics merged
-  ```
+#### Infrastructure Built
+- [x] Database schema: topic_level_1/2/3, format_type columns
+- [x] TopicDetectionService: K-nearest neighbor topic assignment
+- [x] LLMFormatClassificationService: Batch format classification
+- [x] Unified video import pipeline with embeddings
+- [ ] Classification hooks in import pipeline (not yet integrated)
 
-### Topic Naming & Validation with Claude Code
+### 🚨 IMMEDIATE NEXT STEPS
 
-#### Stage 1: Cluster Analysis Preparation
-- [x] Export BERTopic cluster results with:
-  - [x] Cluster IDs and sizes
-  - [x] Top 10-20 representative videos per cluster
-  - [x] Cluster keywords/terms from BERTopic
-  - [x] Performance statistics per cluster
-  - [x] Inter-cluster distances for hierarchy mapping
+#### 1. Topic Assignment for New Videos (PRIORITY)
+- [ ] Create `classify-topics-for-new-videos.js` script
+- [ ] Run topic classification on 40,498 videos missing topics
+- [ ] Verify all videos have topic assignments
+- [ ] Update import pipeline to auto-assign topics
 
-#### Stage 2: Claude Code Topic Naming Analysis
-- [x] Domain Level Naming (6 clusters):
-  - [x] Analyze representative videos to identify broad themes
-  - [x] Generate clear, creator-friendly domain names
-  - [x] Ensure mutual exclusivity and complete coverage
-  - [x] Generated: "Technology & Engineering", "Practical Skills & Tutorials", "Adventure & Exploration", "Lifestyle & Culture", "Science & Space", "Arts & Design"
-- [x] Niche Level Naming (114 clusters):
-  - [x] Create specific but not overly narrow names
-  - [x] Maintain consistency with parent domain naming
-  - [x] Include popular search terms creators would recognize
-  - [x] Examples: "3D Printing Projects", "Drone Technology", "Space Exploration", "Cooking & Recipes"
-- [x] Micro-Topic Naming (492 clusters):
-  - [x] Generate highly specific names for granular clusters
-  - [x] Include key differentiators in names
-  - [x] Balance specificity with discoverability
-  - [x] Examples: "Arduino Projects", "FPV Drone Racing", "Mars Exploration", "Japanese Cuisine"
+**Implementation Notes**:
+- Use existing TopicDetectionService with k-nearest neighbor
+- Process videos with title embeddings but no topic assignments
+- Estimated time: ~1-2 hours for 40k videos
 
-#### Stage 3: Hierarchy Validation & Refinement
-- [x] Map parent-child relationships based on:
-  - [x] Semantic similarity from embeddings
-  - [x] Shared keywords and topics
-  - [x] Natural conceptual groupings
-- [x] Validate naming consistency across levels
-- [x] Test names with edge case videos
-- [ ] Create naming guidelines for future clusters
-
-#### Stage 4: Documentation & Approval
-- [ ] Generate comprehensive naming document with:
-  - [ ] Full hierarchy visualization
-  - [ ] 5-10 example videos per topic
-  - [ ] Rationale for each name choice
-  - [ ] Alternative naming options considered
-- [ ] Review and approve names together
-- [ ] Create naming convention guide for consistency
-
-### Format Discovery & Deep Analysis with Claude Code
-
-#### Stage 1: Data Preparation for Analysis
-- [ ] Export stratified sample for Claude Code analysis:
-  - [ ] Top 20% performers across all topics (1000-2000 videos)
-  - [ ] Bottom 20% performers for anti-pattern analysis
-  - [ ] Time-based samples (quarterly) for trend detection
-  - [ ] Include: title, description, performance metrics, topic clusters
-- [ ] Create export scripts:
-  - [ ] `export-for-claude.js --top-performers --by-cluster`
-  - [ ] `export-for-claude.js --quarterly --last-2-years`
-  - [ ] `export-for-claude.js --uncategorized --sample-1000`
-
-#### Stage 2: Claude Code Comprehensive Analysis
-- [ ] Broad Pattern Mining:
-  - [ ] Analyze 1000+ top performers for universal success patterns
-  - [ ] Extract linguistic patterns and psychological triggers
-  - [ ] Identify 20-30 distinct format types (more nuanced than basic 8-10)
-- [ ] Niche-Specific Deep Dive:
-  - [ ] Analyze 100-200 videos per major topic cluster
-  - [ ] Find niche-specific format variations
-  - [ ] Create cross-pollination opportunity matrix
-- [ ] Failure Analysis:
-  - [ ] Analyze bottom 20% performers
-  - [ ] Identify toxic patterns and oversaturated formats
-  - [ ] Document "formats to avoid" by niche
-- [ ] Emerging Trends Analysis:
-  - [ ] Compare patterns across time periods
-  - [ ] Identify rising/declining formats
-  - [ ] Predict next format innovations
-
-#### Stage 3: Pattern Extraction & Rules Generation
-- [ ] Create format taxonomy document with:
-  - [ ] Format names and descriptions
-  - [ ] Performance metrics by format
-  - [ ] Niche-specific variations
-  - [ ] Best/worst performing combinations
-- [ ] Generate detection rules:
-  - [ ] Regex patterns with confidence scores
-  - [ ] Keyword-based detection fallbacks
-  - [ ] Negative signals to improve accuracy
-- [ ] Build format performance matrix:
-  - [ ] Format success rates by niche
-  - [ ] Cross-niche transferability scores
-  - [ ] Saturation indicators
-
-#### Stage 4: Implementation & Validation
-- [ ] Implement hybrid detection system:
-  - [ ] Primary: Keyword-based scoring with weighted terms
-  - [ ] Secondary: Regex patterns for specific format signals
-  - [ ] Tertiary: LLM classification for ambiguous cases (optional)
-- [ ] Test detection accuracy on full dataset
-- [ ] Handle multi-format videos (e.g., "Tutorial + Review")
-- [ ] Create confidence scoring system
-
-## Phase 1: Foundation Infrastructure (Week 1)
-
-### Database Schema
-- [x] Create migration to add columns to videos table:
-  - [x] `topic_level_1` (domain)
-  - [x] `topic_level_2` (niche)  
-  - [x] `topic_level_3` (micro-topic)
-  - [ ] `topic_depth` (integer indicating hierarchy depth for this video)
-  - [ ] `format_primary`
-  - [ ] `classification_confidence`
-- [x] Create `topic_categories` table with hierarchy relationships
-- [ ] Create `topic_depth_criteria` table to track why topics have certain depths
-- [ ] Create `format_patterns` table
-- [ ] Create indexes for performance
-
-### Classification Pipeline
-- [x] Build topic assignment service using BERTopic results
-- [ ] **NEW: Implement real-time topic detection service using embedding similarity**
-  - [ ] Create topic centroid calculation from existing BERTopic clusters
-  - [ ] Build k-nearest-neighbor topic assignment based on title embeddings
-  - [ ] Implement confidence scoring based on similarity distances
-  - [ ] Add fallback for ambiguous cases (low confidence)
-- [ ] Implement format detection service using keyword-based scoring
-- [ ] Create classification confidence scoring for both topics and formats
-- [ ] Add both topic and format classification to video import pipeline
-- [x] Build batch classification script for existing videos
-
-### Data Backfill
-- [x] Run classification on all 57k existing videos (57,069 videos updated)
-- [x] Verify classification coverage and accuracy
-- [x] Handle edge cases and unclassified videos (marked as -1)
+#### 2. Complete Format Classification
+- [ ] Wait for current reclassification to finish (~30 mins remaining)
+- [ ] Classify remaining 1,268 unclassified videos
+- [ ] Validate confidence score improvements
 - [ ] Generate classification quality report
 
-## Phase 2: API Development (Week 1-2)
+#### 3. Deep Format Analysis
+- [ ] Export top 20% performers by topic/format combination
+- [ ] Export bottom 20% for anti-pattern analysis
+- [ ] Generate cross-topic format performance matrix
+- [ ] Analyze format success rates by niche
 
-### Core Search API
+## Phase 1: Search & Discovery UI (Next Week)
+
+### API Development
 - [ ] Create `/api/youtube/advanced-search` endpoint
-- [ ] Implement multi-dimensional filtering:
-  - [ ] Topic hierarchy filtering
-  - [ ] Format filtering
-  - [ ] Performance range filtering
-  - [ ] Time period filtering
-- [ ] Add pagination and sorting
-- [ ] Implement search relevance scoring
-
-### Pattern Analysis API
+  - [ ] Multi-dimensional filtering (topic + format + performance)
+  - [ ] Pagination and sorting
+  - [ ] Performance optimization (<500ms response time)
 - [ ] Create `/api/youtube/patterns/:topicId` endpoint
-- [ ] Calculate format performance by topic
-- [ ] Identify emerging format trends
-- [ ] Generate cross-niche opportunities
-- [ ] Detect saturation indicators
+  - [ ] Calculate format performance by topic
+  - [ ] Identify cross-niche opportunities
+  - [ ] Build saturation indicators
+- [ ] Create `/api/youtube/stats/overview` endpoint
+  - [ ] Topic/format distribution metrics
+  - [ ] Performance benchmarks by category
 
-### Statistics API
-- [ ] Create endpoints for aggregate statistics
-- [ ] Topic/format distribution metrics
-- [ ] Performance benchmarks by category
-- [ ] Trend analysis over time
-
-## Phase 3: User Interface (Week 2-3)
-
-### Discovery Tab Setup
-- [ ] Add new "Discovery" tab to YouTube Dashboard navigation
-- [ ] Create base page component and routing
-- [ ] Set up state management for filters and results
-
-### Search Interface
-- [ ] Build search input with autocomplete
-- [ ] Create hierarchical topic selector component
-- [ ] Implement format filter checkboxes
-- [ ] Add performance range slider
-- [ ] Create time period selector
-
-### Results Display
-- [ ] Design result layout with sections:
+### UI Components
+- [ ] Add "Discovery" tab to YouTube dashboard navigation
+- [ ] Build search interface
+  - [ ] Search input with autocomplete
+  - [ ] Hierarchical topic selector
+  - [ ] Format filter checkboxes
+  - [ ] Performance range slider
+  - [ ] Time period selector
+- [ ] Create results display
   - [ ] "In Your Niche" section
   - [ ] "Cross-Niche Opportunities" section
-  - [ ] "Format Performance" charts
-  - [ ] "Emerging Patterns" alerts
-- [ ] Implement video cards with key metrics
-- [ ] Add performance comparison indicators
-- [ ] Create "Why this worked" tooltips
+  - [ ] Format performance charts
+  - [ ] Video cards with metrics
+- [ ] Build insights panel
+  - [ ] Dynamic insight generation
+  - [ ] Actionable recommendations
+  - [ ] Emerging pattern alerts
 
-### Insights Panel
-- [ ] Build dynamic insights generation
-- [ ] Create insight card components
-- [ ] Implement insight prioritization
-- [ ] Add actionable recommendations
+## Phase 2: Real-Time Classification (Following Week)
 
-## Phase 4: Intelligence Layer (Week 3-4)
+### Import Pipeline Integration
+- [ ] Integrate TopicDetectionService into unified import
+  - [ ] Add topic assignment after embedding generation
+  - [ ] Set confidence threshold: 0.3
+  - [ ] Handle low-confidence fallbacks
+- [ ] Integrate Format Detection
+  - [ ] Add LLM classification to import flow
+  - [ ] Batch new videos for efficiency
+  - [ ] Track classification costs
+- [ ] Update import monitoring
+  - [ ] Add classification success metrics
+  - [ ] Create cost tracking dashboard
 
-### Level 2 Pattern Extraction
+## Phase 3: Intelligence Layer (Week 3+)
+
+### Pattern Extraction
 - [ ] Set up weekly outlier detection job
 - [ ] Create LLM batch analysis pipeline
-- [ ] Build pattern storage and versioning
-- [ ] Implement pattern confidence scoring
-
-### Cross-Niche Discovery
-- [ ] Build format similarity matrix
-- [ ] Create opportunity scoring algorithm
-- [ ] Implement transferability predictions
-- [ ] Generate opportunity alerts
-
-### Trend Detection
-- [ ] Implement format adoption tracking
-- [ ] Create saturation detection algorithm
-- [ ] Build early trend indicators
-- [ ] Generate trend alerts and warnings
-
-## Phase 5: Testing & Optimization (Week 4)
-
-### Quality Assurance
-- [ ] Manual validation of classifications (sample 100 per category)
-- [ ] Test search relevance and ranking
-- [ ] Verify cross-niche recommendations
-- [ ] Validate performance calculations
-
-### Performance Optimization
-- [ ] Optimize database queries with proper indexes
-- [ ] Implement caching for common searches
-- [ ] Add query result caching
-- [ ] Optimize frontend rendering for large result sets
-
-### User Testing
-- [ ] Internal team testing and feedback
-- [ ] Fix identified issues
-- [ ] Refine UI based on feedback
-- [ ] Create user documentation
-
-## Phase 6: Level 3 Integration (Future)
-
-### Deep Analysis Features
-- [ ] Design Level 3 analysis triggers
-- [ ] Create deep analysis UI
-- [ ] Implement analysis caching
-- [ ] Build analysis history
+- [ ] Build pattern storage system
+- [ ] Implement trend detection algorithms
 
 ### Advanced Features
-- [ ] Thumbnail pattern analysis using CLIP embeddings
-- [ ] Predictive performance modeling
-- [ ] Personalized recommendations
-- [ ] Export and reporting tools
+- [ ] Thumbnail pattern analysis
+  - [ ] Use existing CLIP embeddings
+  - [ ] Find visual success patterns
+  - [ ] Cross-reference with performance
+- [ ] Predictive modeling
+  - [ ] Build performance prediction model
+  - [ ] Create "success probability" scores
+- [ ] Personalization
+  - [ ] User preference tracking
+  - [ ] Customized recommendations
 
-## Ongoing Tasks
+## Key Metrics to Track
+- [ ] Topic coverage: Target 100% (currently 50%)
+- [ ] Format coverage: Target 100% (currently 98.4%)
+- [ ] Classification confidence: Target >80% average
+- [ ] Search response time: Target <500ms
+- [ ] UI load time: Target <3s for 1000 results
 
-### Monitoring & Maintenance
-- [ ] Set up classification quality monitoring
-- [ ] Create pattern drift detection
-- [ ] Build topic evolution tracking
-- [ ] Implement feedback collection
+## Technical Debt & Optimization
+- [ ] Create database indexes for performance queries
+- [ ] Implement Redis caching for common searches
+- [ ] Add classification quality monitoring
+- [ ] Build feedback loop for improvements
+- [ ] Optimize embedding similarity calculations
+- [ ] Add batch processing for large result sets
 
-### Documentation
-- [ ] Create user guide for Discovery tab
-- [ ] Document classification methodology
-- [ ] Build pattern interpretation guide
-- [ ] Create best practices documentation
+## Scripts & Tools Needed
+- [ ] `classify-topics-for-new-videos.js` - Assign topics to 40k videos
+- [ ] `export-for-pattern-analysis.js` - Export top/bottom performers
+- [ ] `generate-cross-niche-matrix.js` - Build opportunity matrix
+- [ ] `monitor-classification-quality.js` - Track accuracy over time
+- [ ] `backfill-missing-embeddings.js` - Ensure all videos have embeddings
+- [ ] `calculate-topic-performance.js` - Generate performance benchmarks
 
-## Success Criteria
+## Critical Path
+1. **Complete all classifications** (topics + formats) - Week 1
+2. **Build search API & UI** - Week 2
+3. **Add real-time classification** - Week 3
+4. **Deploy intelligence features** - Week 4+
 
-- [ ] All 57k videos classified with >90% confidence
-- [ ] Search returns relevant results in <500ms
-- [ ] Cross-niche recommendations show >2x performance
-- [ ] UI loads and renders smoothly with 1000+ results
-- [ ] Weekly pattern updates run automatically
-
-## Real-Time Classification Requirements
-
-### Topic Detection (Embedding-Based)
-- **Method**: K-nearest neighbor search using title embeddings
-- **Implementation**: 
-  1. Calculate cluster centroids for each of the 777 BERTopic clusters
-  2. For new videos, find 10-20 nearest videos by embedding similarity
-  3. Assign most common topic cluster from neighbors
-  4. Calculate confidence based on distance and neighbor agreement
-- **Integration Point**: After title embedding generation in unified import
-- **Fallback**: Mark as "Uncategorized" if confidence < 0.3
-
-### Format Detection (Keyword-Based)
-- **Method**: Weighted keyword scoring system
-- **Categories**: 9 discovered formats (Making/Building, Question, Review, etc.)
-- **Implementation**:
-  1. Define keyword lists with weights for each format
-  2. Score titles against all format keyword lists
-  3. Assign primary format based on highest score
-  4. Handle multi-format videos with secondary format field
-- **Integration Point**: After video metadata extraction in unified import
-- **Confidence**: Based on score strength and keyword matches
-
-## Progress Notes (2025-07-10)
-
-### Completed Today:
-1. **BERTopic Analysis Improvements**
-   - Fixed initial analysis issues where "Maker Show Episodes" was incorrectly categorized
-   - Reran analysis with improved title cleaning to remove format indicators
-   - Successfully generated 6 Level 1 domains (vs previous 39 - much cleaner)
-   - Generated complete 3-level hierarchy: 6 domains → 114 niches → 492 micro-topics
-
-2. **Topic Naming with Claude Code**
-   - Analyzed all cluster representatives and generated human-readable names
-   - Created content-focused names that avoid format confusion
-   - Applied all topic names to database `topic_categories` table
-
-3. **Database Updates**
-   - Successfully updated all 57,069 videos with topic assignments
-   - Overcame Supabase connection challenges (MCP read-only, needed direct psql)
-   - Split bulk updates into 58 batch files to avoid timeouts
-
-### Key Learnings:
-- Aggressive HDBSCAN parameters (min_cluster_size=500) work better for Level 1
-- Title cleaning is critical - remove format indicators before clustering
-- Supabase SQL editor has 1.54 MB file size limit
-- MCP connection is read-only; write operations need direct database password
-
-## Original Notes
-
-- BERTopic analysis is foundational - nothing else can start until Phase 0 completes
-- Claude Code format analysis can run in parallel with BERTopic for maximum efficiency
-- UI development can happen in parallel with API development
-- Level 2 pattern extraction can be built while Level 1 is being deployed
-- Focus on shipping Level 1 quickly, then iterate with Level 2 insights
-
-## Expected Deliverables from Claude Code Analysis
-
-### 1. Topic Hierarchy Naming Document ✅
-- [x] Complete hierarchy with human-readable names for all clusters
-- [x] Domain level: 6 broad categories with clear boundaries
-- [x] Niche level: 114 specific topics that creators identify with
-- [x] Micro level: 492 granular topics with searchable names
-- [x] Parent-child relationship mapping with rationale
-- [x] Example videos (5-10) for each topic level
-- [ ] Alternative naming options for review
-
-### 2. Format Taxonomy Document
-- 20-30 distinct formats with clear definitions
-- Performance metrics for each format
-- Niche-specific variations and success rates
-- Examples from top performers
-
-### 3. Pattern Recognition Rules
-- Regex patterns with confidence scores
-- Negative signals for improved accuracy
-- Multi-format detection logic
-- Fallback classification strategies
-
-### 4. Strategic Insights
-- Cross-niche opportunity matrix (which formats transfer well)
-- Saturation indicators by format/niche
-- Emerging format predictions
-- Toxic pattern warnings
-
-### 5. Implementation Guidelines
-- Optimal detection pipeline (regex → keyword → LLM)
-- Confidence scoring methodology
-- Edge case handling strategies
-- Performance optimization tips
-- Naming convention guide for future topics
+## Notes
+- Topic classification MUST be completed before building search UI
+- Format reclassification will improve data quality significantly
+- Focus on getting all videos classified before deep analysis
+- Real-time classification can be added after search UI ships
+- Keep UI simple initially, add advanced features iteratively

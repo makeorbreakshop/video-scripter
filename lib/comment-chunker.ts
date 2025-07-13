@@ -298,7 +298,7 @@ export function processComments(
 }
 
 // New imports for OpenAI-based clustering
-import { getOpenAIApiKey } from "./env-config";
+import { getOpenAIApiKey } from "./env-config.ts";
 import OpenAI from 'openai';
 
 /**

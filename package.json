@@ -11,8 +11,13 @@
     "worker": "dotenv -e .env -- node worker.ts",
     "worker:title": "dotenv -e .env -- node title-vectorization-worker.ts",
     "worker:thumbnail": "dotenv -e .env -- node thumbnail-vectorization-worker.ts",
+    "worker:format": "dotenv -e .env -- node format-classification-worker.ts",
+    "worker:topic": "dotenv -e .env -- node topic-classification-worker.ts",
+    "worker:classify": "dotenv -e .env -- node video-classification-worker.ts",
     "workers": "concurrently -n \"IMPORT,TITLE,THUMB\" -c \"blue,green,magenta\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\"",
-    "workers:vectorization": "concurrently -n \"TITLE,THUMB\" -c \"green,magenta\" \"npm run worker:title\" \"npm run worker:thumbnail\""
+    "workers:vectorization": "concurrently -n \"TITLE,THUMB\" -c \"green,magenta\" \"npm run worker:title\" \"npm run worker:thumbnail\"",
+    "workers:classification": "concurrently -n \"FORMAT,TOPIC,VIDEO\" -c \"yellow,cyan,purple\" \"npm run worker:format\" \"npm run worker:topic\" \"npm run worker:classify\"",
+    "workers:all": "concurrently -n \"IMPORT,TITLE,THUMB,FORMAT,TOPIC,VIDEO\" -c \"blue,green,magenta,yellow,cyan,purple\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\" \"npm run worker:format\" \"npm run worker:topic\" \"npm run worker:classify\""
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",

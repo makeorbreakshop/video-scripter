@@ -5,8 +5,8 @@
  * and connections across different videos
  */
 
-import { SearchResult } from './vector-db-service';
-import { estimateTokenCount } from './token-counter';
+import type { SearchResult } from './vector-db-service.ts';
+import { estimateTokenCount } from './token-counter.ts';
 
 /**
  * Interface for a detected relationship between content

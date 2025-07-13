@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/database';
+import type { Database } from '../types/database.ts';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

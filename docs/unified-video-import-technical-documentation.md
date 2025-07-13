@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Unified Video Import System consolidates all video import mechanisms into a single, standardized service that handles metadata extraction, embedding generation, storage, and exports consistently across all import sources.
+The Unified Video Import System consolidates all video import mechanisms into a single, standardized service that handles metadata extraction, embedding generation, content classification, storage, and exports consistently across all import sources.
 
 ## Architecture
 
@@ -44,6 +44,7 @@ POST /api/video-import/unified
     skipExports?: boolean,
     skipThumbnailEmbeddings?: boolean,
     skipTitleEmbeddings?: boolean,
+    skipClassification?: boolean,
     batchSize?: number,
     forceReEmbed?: boolean
   }
@@ -60,6 +61,10 @@ POST /api/video-import/unified
   embeddingsGenerated: {
     titles: number,
     thumbnails: number
+  },
+  classificationsGenerated: {
+    topics: number,
+    formats: number
   },
   exportFiles: string[],
   errors: string[],
@@ -141,7 +146,7 @@ const response = await fetch('/api/video-import/unified', {
 - **Storage**: Pinecone thumbnail index (`video-thumbnails`)
 - **Caching**: Local cache to reduce API costs
 
-### 2.5. Content Classification (Coming Soon)
+### 3. Content Classification
 
 #### Topic Classification
 - **Method**: K-nearest neighbor using title embeddings
@@ -149,15 +154,29 @@ const response = await fetch('/api/video-import/unified', {
 - **Hierarchy**: 3-level assignment (domain → niche → micro-topic)
 - **Confidence**: Based on embedding similarity distance
 - **Timing**: Immediately after title embedding generation
+- **Processing**: ~500+ videos/minute (local computation)
 
 #### Format Classification
-- **Method**: Keyword-based scoring system
-- **Categories**: 9 format types (Making/Building, Question, Review, etc.)
-- **Scoring**: Weighted keyword matching with confidence scores
-- **Multi-format**: Support for primary and secondary format detection
-- **Timing**: During metadata extraction phase
+- **Method**: LLM-based classification using GPT-4o-mini
+- **Categories**: 12 format types:
+  - `tutorial` - Step-by-step instructional content
+  - `listicle` - Numbered or listed content
+  - `explainer` - Concept explanations
+  - `case_study` - Real-world examples
+  - `news_analysis` - Current events coverage
+  - `personal_story` - Personal experiences
+  - `product_focus` - Product-centered content
+  - `live_stream` - Live broadcasts
+  - `shorts` - Short-form content
+  - `vlog` - Video logs
+  - `compilation` - Multi-clip content
+  - `update` - Channel/project updates
+- **Batch Processing**: 15 videos per API call
+- **Confidence Scoring**: 0-1 scale with reasoning
+- **Cost**: ~$0.06 per 1,000 videos
+- **Processing**: ~50-100 videos/minute
 
-### 3. Data Storage
+### 4. Data Storage
 
 #### Supabase Database
 ```sql
@@ -176,13 +195,14 @@ CREATE TABLE videos (
   is_competitor boolean DEFAULT true,
   import_date timestamptz DEFAULT now(),
   metadata jsonb,
-  -- Classification fields (to be added)
-  topic_level_1 text,
-  topic_level_2 text,
-  topic_level_3 text,
-  format_primary text,
-  format_secondary text,
-  classification_confidence jsonb
+  -- Classification fields
+  topic_level_1 integer,
+  topic_level_2 integer,
+  topic_level_3 integer,
+  topic_confidence numeric(3,2),
+  format_type text,
+  format_confidence numeric(3,2),
+  format_reasoning text
 );
 ```
 
@@ -197,7 +217,7 @@ CREATE TABLE videos (
 - **Scheduling**: Hourly cron job as safety net, immediate processing on import
 - **Function**: `trigger_baseline_processing()` called with imported video count
 
-### 4. Export System
+### 5. Export System
 
 #### Export Formats
 - **JSON**: Full embeddings with metadata
@@ -209,7 +229,7 @@ CREATE TABLE videos (
 - **Naming**: `{type}-embeddings-{timestamp}.{format}`
 - **Retention**: Files are kept indefinitely for backup/analysis
 
-### 5. Error Handling
+### 6. Error Handling
 
 #### Retry Logic
 - YouTube API failures: 3 retries with exponential backoff
@@ -246,6 +266,8 @@ PINECONE_THUMBNAIL_INDEX_NAME=video-thumbnails
   - playlistItems.list: 1 unit per 50 videos
   - videos.list: 1 unit per 50 videos
 - **OpenAI API**: 3,000 requests/minute (org-level)
+  - Embeddings: text-embedding-3-small
+  - Classification: GPT-4o-mini (20 parallel calls max)
 - **Replicate API**: 10 requests/second (adaptive)
 - **Unified Endpoint**: 1,000 items per request maximum
 
@@ -321,9 +343,11 @@ The system maintains backward compatibility by:
 ### Metrics
 - Videos processed per hour
 - Embedding generation success rates
+- Classification success rates (topics and formats)
 - Export file generation statistics
 - Error rates by component
 - **YouTube Quota Usage**: Real-time tracking in worker dashboard
+- **OpenAI Token Usage**: Format classification cost tracking
 - **Baseline Processing**: Videos pending baseline analytics
 
 ### Alerting
@@ -417,11 +441,11 @@ chmod 755 exports
 - Advanced filtering options
 - Bulk operation APIs
 - Enhanced error recovery
-- **Topic and Format Classification**: Automatic categorization during import
-  - Embedding-based topic detection using 777 BERTopic clusters
-  - Keyword-based format classification for 9 format types
-  - Confidence scoring for both classification systems
-  - Integration with video import pipeline
+- **Enhanced Classification**: 
+  - Multi-format detection (primary and secondary)
+  - Custom classification models per channel
+  - Historical performance correlation
+  - Automated reclassification for low-confidence videos
 
 ### Scalability Improvements
 - Distributed processing

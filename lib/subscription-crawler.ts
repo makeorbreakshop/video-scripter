@@ -1,8 +1,9 @@
 // Subscription Network Crawler Service
 // Discovers new channels through subscription network mapping
 
-import { supabase } from './supabase-client';
-import { youtubeDiscoveryAPI, SubscriptionResult, ChannelValidationResult } from './youtube-discovery-api';
+import { supabase } from './supabase-client.ts';
+import type { SubscriptionResult, ChannelValidationResult } from './youtube-discovery-api.ts';
+import { youtubeDiscoveryAPI } from './youtube-discovery-api.ts';
 
 export interface CrawlResult {
   sourceChannelId: string;

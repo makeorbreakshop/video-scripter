@@ -4,8 +4,8 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
-import { batchCreateEmbeddings } from "./server/openai-embeddings";
+import { supabase } from "./supabase.ts";
+import { batchCreateEmbeddings } from "./server/openai-embeddings.ts";
 
 // Define the Chunk interface since we can't import from transcript-chunker yet
 interface Chunk {

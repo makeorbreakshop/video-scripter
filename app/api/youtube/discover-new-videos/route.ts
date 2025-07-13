@@ -1,10 +1,13 @@
 /**
  * YouTube Video Discovery API Route
- * Discovers and imports new videos from the authenticated user's channel
+ * DEPRECATED: This uses the expensive search.list API (100 quota units)
+ * Should use RSS feeds instead for discovering new videos from your own channel
+ * Only use this if RSS feed is not available or for one-time imports
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { quotaTracker } from '@/lib/youtube-quota-tracker';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,6 +82,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔍 Discovering videos published after: ${afterDate || 'all time'}`);
 
+    // Track the search API call (costs 100 quota units!)
+    await quotaTracker.trackAPICall('search.list', {
+      description: `Discover new videos from owner channel (mine=true)`,
+      count: 1
+    });
+
     // Search for videos on the user's channel (OAuth only, no API key)
     console.log(`🔍 Making YouTube API call with search params: ${searchParams}`);
     const searchResponse = await fetch(
@@ -131,6 +140,12 @@ export async function POST(request: NextRequest) {
     }
 
     const videoIdsString = searchData.items.map((item: any) => item.id.videoId).join(',');
+    
+    // Track the videos.list API call
+    await quotaTracker.trackAPICall('videos.list', {
+      description: `Fetch video details for ${searchData.items.length} discovered videos`,
+      count: 1
+    });
     
     // Get detailed video information including statistics (OAuth only)
     const videoResponse = await fetch(

@@ -1,5 +1,5 @@
-import { extractYouTubeId } from './utils';
-import { getAppUrl } from './env-config';
+import { extractYouTubeId } from './utils.ts';
+import { getAppUrl } from './env-config.ts';
 
 /**
  * Fetches transcript for a YouTube video using our backend API route

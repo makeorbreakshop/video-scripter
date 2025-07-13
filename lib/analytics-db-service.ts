@@ -6,8 +6,8 @@
  */
 
 import { supabase as supabaseClient } from '@/lib/supabase-client';
-import type { ParsedDailyAnalytics } from './youtube-csv-parser';
-import type { ParsedAnalyticsData } from './youtube-analytics-api';
+import type { ParsedDailyAnalytics } from './youtube-csv-parser.ts';
+import type { ParsedAnalyticsData } from './youtube-analytics-api.ts';
 
 export interface UpsertResult {
   success: boolean;
