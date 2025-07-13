@@ -410,7 +410,53 @@ export class VideoImportService {
       await Promise.all(embeddingPromises);
     }
 
+    // Update database to track which videos have embeddings
+    await this.updateEmbeddingVersions(videos, results);
+
     return results;
+  }
+
+  /**
+   * Update embedding version fields in database
+   */
+  private async updateEmbeddingVersions(
+    videos: VideoMetadata[], 
+    embeddings: EmbeddingResults
+  ): Promise<void> {
+    console.log(`🔄 Updating embedding version tracking...`);
+    
+    // Update title embedding versions
+    const titleEmbeddingUpdates = embeddings.titleEmbeddings
+      .filter(e => e.success)
+      .map(async (e) => {
+        const { error } = await supabase
+          .from('videos')
+          .update({ pinecone_embedding_version: 'v1' })
+          .eq('id', e.videoId);
+        
+        if (error) {
+          console.error(`Failed to update title embedding version for ${e.videoId}:`, error);
+        }
+      });
+
+    // Update thumbnail embedding versions
+    const thumbnailEmbeddingUpdates = embeddings.thumbnailEmbeddings
+      .filter(e => e.success)
+      .map(async (e) => {
+        const { error } = await supabase
+          .from('videos')
+          .update({ thumbnail_embedding_version: 'v1' })
+          .eq('id', e.videoId);
+        
+        if (error) {
+          console.error(`Failed to update thumbnail embedding version for ${e.videoId}:`, error);
+        }
+      });
+
+    // Execute all updates in parallel
+    await Promise.all([...titleEmbeddingUpdates, ...thumbnailEmbeddingUpdates]);
+    
+    console.log(`✅ Updated ${titleEmbeddingUpdates.length} title versions, ${thumbnailEmbeddingUpdates.length} thumbnail versions`);
   }
 
   /**
@@ -1151,9 +1197,17 @@ export class VideoImportService {
           
           // Store topic assignments in database
           for (const { id, assignment } of topicAssignments) {
+            // Extract cluster IDs from the topic names (e.g., "topic_44" -> 44, "niche_1" -> 1, "domain_0" -> 0)
+            const topicLevel3 = assignment.microTopic.match(/topic_(-?\d+)/)?.[1];
+            const topicLevel2 = assignment.niche.match(/niche_(-?\d+)/)?.[1];
+            const topicLevel1 = assignment.domain.match(/domain_(-?\d+)/)?.[1];
+            
             const { error } = await supabase
               .from('videos')
               .update({
+                topic_level_1: topicLevel1 ? parseInt(topicLevel1) : null,
+                topic_level_2: topicLevel2 ? parseInt(topicLevel2) : null,
+                topic_level_3: topicLevel3 ? parseInt(topicLevel3) : null,
                 topic_domain: assignment.domain,
                 topic_niche: assignment.niche,
                 topic_micro: assignment.microTopic,

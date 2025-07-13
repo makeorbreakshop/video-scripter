@@ -138,6 +138,7 @@ const response = await fetch('/api/video-import/unified', {
 - **Dimensions**: 512 (truncated from full embedding)
 - **Purpose**: Semantic search and content similarity
 - **Storage**: Pinecone main index (`youtube-titles-prod`)
+- **Database Tracking**: `pinecone_embedding_version` field set to 'v1'
 
 #### Thumbnail Embeddings
 - **Model**: Replicate CLIP `krthr/clip-embeddings`
@@ -145,6 +146,8 @@ const response = await fetch('/api/video-import/unified', {
 - **Purpose**: Visual similarity search
 - **Storage**: Pinecone thumbnail index (`video-thumbnails`)
 - **Caching**: Local cache to reduce API costs
+- **Database Tracking**: `thumbnail_embedding_version` field set to 'v1'
+- **Cost**: ~$0.00098 per image
 
 ### 3. Content Classification
 
@@ -228,6 +231,11 @@ CREATE TABLE videos (
 - **Directory**: `/exports/`
 - **Naming**: `{type}-embeddings-{timestamp}.{format}`
 - **Retention**: Files are kept indefinitely for backup/analysis
+
+#### Export Behavior
+- **Note**: RSS monitor and competitor imports typically set `skipExports: true` to prevent duplicate files
+- **Manual Exports**: Can be triggered separately when needed
+- **Automatic Exports**: Only generated when `skipExports` is false or undefined
 
 ### 6. Error Handling
 
@@ -433,6 +441,22 @@ chmod 755 exports
 - Database migration scripts
 - Monitoring setup
 - Rollback procedures
+
+## Known Issues & Recent Fixes
+
+### Fixed Issues
+1. **Topic Level IDs** (Fixed 2025-07-13)
+   - Issue: Topic classifications weren't mapping to `topic_level_1/2/3` integer fields
+   - Solution: Added regex extraction to parse IDs from BERTopic names (e.g., "topic_314" → 314)
+
+2. **Thumbnail Embedding Tracking** (Fixed 2025-07-13)
+   - Issue: Thumbnail embeddings generated but `thumbnail_embedding_version` not updated
+   - Solution: Added `updateEmbeddingVersions()` method to track both title and thumbnail embeddings
+
+### Current Limitations
+- Export files are typically skipped for RSS/competitor imports to prevent duplicates
+- Baseline analytics integration requires additional configuration
+- No real-time progress tracking for long-running imports
 
 ## Future Enhancements
 
