@@ -139,7 +139,7 @@ export class LLMFormatClassificationService {
             role: 'system',
             content: `You are an expert at classifying YouTube educational videos into specific formats.
 
-Available formats:
+You MUST use ONLY these exact format values (no variations or other formats):
 - tutorial: Step-by-step how-to guides
 - listicle: Top N lists, tips, tricks, rankings
 - explainer: Conceptual explanations, "what is" content
@@ -152,6 +152,8 @@ Available formats:
 - vlog: Video logs, day-in-life content, behind-the-scenes
 - compilation: Best-of videos, highlights, multi-clip content, mashups
 - update: Channel updates, project progress, announcements, community posts
+
+IMPORTANT: Only use the exact format strings listed above. Do not create new formats like "podcast", "gameplay", "trailer", "event_coverage", etc. If a video doesn't fit well, choose the closest match from the 12 formats above.
 
 Analyze the videos and return a JSON array with format classifications.`
           },

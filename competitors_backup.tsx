@@ -162,7 +162,7 @@ export default function CompetitorsPage() {
   );
 
   // Group channels by category
-  const channelsByCategory = availableChannels.reduce((acc: Record<string, typeof availableChannels>, channel) => {
+  const channelsByCategory = availableChannels.reduce((acc, channel) => {
     if (!acc[channel.category]) {
       acc[channel.category] = [];
     }
@@ -201,7 +201,7 @@ export default function CompetitorsPage() {
       console.log('🔍 Raw channel data:', channels?.[0]);
       
       // Set channels directly without date formatting initially
-      const formattedChannels: CompetitorChannel[] = channels?.map((channel: any) => ({
+      const formattedChannels: CompetitorChannel[] = channels?.map(channel => ({
         ...channel,
         lastImport: channel.lastImport // Keep raw date for now
       })) || [];
@@ -442,7 +442,7 @@ export default function CompetitorsPage() {
       }
 
       // Sort results by subscriber count (highest first)
-      const sortedChannels = (result.channels || []).sort((a: any, b: any) => {
+      const sortedChannels = (result.channels || []).sort((a, b) => {
         const aCount = parseInt(a.subscriberCount || '0');
         const bCount = parseInt(b.subscriberCount || '0');
         return bCount - aCount;
@@ -455,7 +455,7 @@ export default function CompetitorsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          channelIds: sortedChannels.map((c: any) => c.channelId)
+          channelIds: sortedChannels.map(c => c.channelId)
         }),
       });
 
@@ -463,8 +463,8 @@ export default function CompetitorsPage() {
       
       if (checkResponse.ok) {
         const checkResult = await checkResponse.json();
-        channelsWithImportStatus = sortedChannels.map((channel: any) => {
-          const status = checkResult.channelStatus?.find((s: any) => s.channelId === channel.channelId);
+        channelsWithImportStatus = sortedChannels.map(channel => {
+          const status = checkResult.channelStatus?.find(s => s.channelId === channel.channelId);
           return {
             ...channel,
             isAlreadyImported: status?.isExisting || false,
@@ -473,7 +473,7 @@ export default function CompetitorsPage() {
         });
       } else {
         // Fallback to local check for competitor channels only
-        channelsWithImportStatus = sortedChannels.map((channel: any) => ({
+        channelsWithImportStatus = sortedChannels.map(channel => ({
           ...channel,
           isAlreadyImported: importedChannelIds.has(channel.channelId),
           importSource: importedChannelIds.has(channel.channelId) ? 'competitor' : null
@@ -676,408 +676,3 @@ export default function CompetitorsPage() {
       </div>
     );
   }
-
-  return (
-    <div className="container mx-auto max-w-7xl space-y-6 p-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Competitor Analysis</h1>
-        <p className="text-muted-foreground">
-          Import and analyze competitor YouTube channels to understand their content strategies
-        </p>
-      </div>
-
-      <Tabs defaultValue="import" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="import">Import Channel</TabsTrigger>
-          <TabsTrigger value="imported">Imported Channels ({competitorChannels.length})</TabsTrigger>
-          <TabsTrigger value="search">Search Channels</TabsTrigger>
-          <TabsTrigger value="suggested">Suggested Channels</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="import" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Import New Competitor Channel</CardTitle>
-              <CardDescription>
-                Add a YouTube channel to analyze their videos and performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="channel-url">Channel URL or Search Term</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="channel-url"
-                    placeholder="https://www.youtube.com/@channelname or search term"
-                    value={channelInput}
-                    onChange={(e) => setChannelInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !isImporting) {
-                        if (channelInput.includes('youtube.com/')) {
-                          handleDirectUrlImport();
-                        } else {
-                          handleSearchChannels();
-                        }
-                      }
-                    }}
-                    disabled={isImporting}
-                  />
-                  {channelInput.includes('youtube.com/') ? (
-                    <Button 
-                      onClick={handleDirectUrlImport} 
-                      disabled={isImporting || !channelInput.trim()}
-                    >
-                      {isImporting ? (
-                        <>
-                          <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Import Channel
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={handleSearchChannels} 
-                      disabled={isSearching || !channelInput.trim()}
-                    >
-                      {isSearching ? (
-                        <>
-                          <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
-                          Searching...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="mr-2 h-4 w-4" />
-                          Search
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Examples: https://www.youtube.com/@mkbhd or "tech reviews"
-                </p>
-              </div>
-
-              {importProgress > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Import Progress</span>
-                    <span>{importProgress}%</span>
-                  </div>
-                  <Progress value={importProgress} />
-                </div>
-              )}
-
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Search Results</Label>
-                  <div className="rounded-md border p-2 space-y-2 max-h-64 overflow-y-auto">
-                    {searchResults.map((channel) => (
-                      <div
-                        key={channel.channelId}
-                        className={`flex items-center justify-between p-2 rounded-md hover:bg-muted cursor-pointer ${
-                          channel.isAlreadyImported ? 'opacity-60' : ''
-                        }`}
-                        onClick={() => handleSelectChannel(channel)}
-                      >
-                        <div className="flex items-center gap-3">
-                          {channel.thumbnailUrl ? (
-                            <img
-                              src={channel.thumbnailUrl}
-                              alt={channel.title}
-                              className="h-10 w-10 rounded-full"
-                            />
-                          ) : (
-                            <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-                          )}
-                          <div>
-                            <p className="font-medium">{channel.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {channel.subscriberCount || 'N/A'} subscribers
-                            </p>
-                          </div>
-                        </div>
-                        {channel.isAlreadyImported && (
-                          <Badge variant="secondary">
-                            {channel.importSource === 'competitor' ? 'Competitor' : 
-                             channel.importSource === 'discovery' ? 'Discovery' : 'Imported'}
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedChannel && (
-                <Card className="border-primary">
-                  <CardHeader>
-                    <CardTitle>Selected Channel</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      {selectedChannel.thumbnailUrl ? (
-                        <img
-                          src={selectedChannel.thumbnailUrl}
-                          alt={selectedChannel.title}
-                          className="h-16 w-16 rounded-full"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-                      )}
-                      <div>
-                        <h3 className="font-semibold text-lg">{selectedChannel.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedChannel.subscriberCount || 'N/A'} subscribers • {selectedChannel.videoCount || 'N/A'} videos
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm">{selectedChannel.description}</p>
-                      {selectedChannel.customUrl && (
-                        <p className="text-sm text-muted-foreground">@{selectedChannel.customUrl}</p>
-                      )}
-                    </div>
-                    <Button 
-                      onClick={handleImportChannel} 
-                      disabled={isImporting}
-                      className="w-full"
-                    >
-                      {isImporting ? (
-                        <>
-                          <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Import This Channel
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="imported" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Imported Competitor Channels</CardTitle>
-              <CardDescription>
-                Channels you've imported for competitive analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {competitorChannels.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No competitor channels imported yet</p>
-                  <p className="text-sm mt-2">Import channels from the Import tab to get started</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="mb-4">
-                    <Input
-                      placeholder="Search imported channels..."
-                      value={channelSearchTerm}
-                      onChange={(e) => setChannelSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                  </div>
-                  {filteredChannels.map((channel) => (
-                    <div
-                      key={channel.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => handleChannelClick(channel.id)}
-                    >
-                      <div className="flex items-center gap-4">
-                        {channel.thumbnailUrl ? (
-                          <img
-                            src={channel.thumbnailUrl}
-                            alt={channel.name}
-                            className="h-12 w-12 rounded-full"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {channel.name?.charAt(0).toUpperCase() || '?'}
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="font-medium">{channel.name || 'Unknown Channel'}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {channel.handle ? `@${channel.handle}` : channel.id}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="font-medium">{formatNumber(channel.subscriberCount || 0)}</p>
-                          <p className="text-sm text-muted-foreground">subscribers</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">{formatNumber(channel.videoCount || 0)}</p>
-                          <p className="text-sm text-muted-foreground">videos</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">
-                            Last import: {formatTimeAgo(channel.lastImport)}
-                          </p>
-                          <Badge variant={channel.status === 'active' ? 'default' : 'secondary'}>
-                            {channel.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="search" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Discover YouTube Channels</CardTitle>
-              <CardDescription>
-                Search for YouTube channels to analyze and import
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search for channels (e.g., 'tech reviews', 'cooking tutorials')"
-                    value={channelInput}
-                    onChange={(e) => setChannelInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !isSearching) {
-                        handleSearchChannels();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleSearchChannels} disabled={isSearching}>
-                    {isSearching ? (
-                      <>
-                        <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
-                        Searching...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="mr-2 h-4 w-4" />
-                        Search
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {searchResults.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="font-medium">Search Results ({searchResults.length})</h3>
-                    <div className="grid gap-2">
-                      {searchResults.map((channel) => (
-                        <Card 
-                          key={channel.channelId} 
-                          className={`cursor-pointer hover:shadow-md transition-shadow ${
-                            channel.isAlreadyImported ? 'opacity-60' : ''
-                          }`}
-                          onClick={() => !channel.isAlreadyImported && handleSelectChannel(channel)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {channel.thumbnailUrl ? (
-                                  <img
-                                    src={channel.thumbnailUrl}
-                                    alt={channel.title}
-                                    className="h-12 w-12 rounded-full"
-                                  />
-                                ) : (
-                                  <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-                                )}
-                                <div>
-                                  <h4 className="font-medium">{channel.title}</h4>
-                                  <p className="text-sm text-muted-foreground line-clamp-1">
-                                    {channel.description}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {channel.subscriberCount || 'N/A'} subscribers • {channel.videoCount || 'N/A'} videos
-                                  </p>
-                                </div>
-                              </div>
-                              {channel.isAlreadyImported ? (
-                                <Badge variant="secondary">
-                                  {channel.importSource === 'competitor' ? 'Competitor' : 
-                                   channel.importSource === 'discovery' ? 'Discovery' : 'Imported'}
-                                </Badge>
-                              ) : (
-                                <Button size="sm" variant="outline">
-                                  Select
-                                </Button>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="suggested" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Suggested Educational Channels</CardTitle>
-              <CardDescription>
-                Curated list of teaching-style channels similar to Ed Lawrence's approach
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {Object.entries(channelsByCategory).map(([category, channels]) => (
-                <div key={category} className="space-y-3">
-                  <h3 className="font-semibold text-lg">{category}</h3>
-                  <div className="grid gap-2">
-                    {channels.map((channel) => (
-                      <div key={channel.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {channel.name.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{channel.name}</h4>
-                            <p className="text-sm text-muted-foreground">{channel.description}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setChannelInput(`https://www.youtube.com/channel/${channel.id}`);
-                            const importTab = document.querySelector('[value="import"]') as HTMLElement;
-                            importTab?.click();
-                          }}
-                        >
-                          Import
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}

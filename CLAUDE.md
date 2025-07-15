@@ -10,6 +10,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Start**: `npm start` - Start production server
 - **Lint**: `npm run lint` - Run Next.js linting
 
+### Worker Commands (Background Processing)
+- **All Workers**: `npm run workers:all` - Run all 6 workers concurrently
+- **Vectorization Workers**: `npm run workers:vectorization` - Title & thumbnail embeddings
+- **Classification Workers**: `npm run workers:classification` - Format & topic classification
+- **Individual Workers**:
+  - `npm run worker` - Video import worker
+  - `npm run worker:title` - Title vectorization worker
+  - `npm run worker:thumbnail` - Thumbnail vectorization worker
+  - `npm run worker:format` - Format classification worker
+  - `npm run worker:topic` - Topic classification worker
+  - `npm run worker:classify` - Video classification worker
+
 ### Database Scripts
 - **Database Info**: `node scripts/db-info.js` - Check database table structure
 - **Setup Skyscraper Schema**: `node setup-skyscraper-schema-simple.js` - Initialize Skyscraper analysis schema
@@ -29,18 +41,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework**: Next.js 15 with App Router
 - **Database**: Supabase (PostgreSQL with pgvector for embeddings)
 - **Authentication**: Supabase Auth with OAuth
-- **AI Integration**: OpenAI API and Anthropic Claude API
+- **AI Integration**: OpenAI API, Anthropic Claude API, Replicate (CLIP embeddings)
+- **Vector Database**: Pinecone for distributed embeddings storage
 - **Styling**: Tailwind CSS with Radix UI components
 - **Editor**: TipTap rich text editor
+- **Background Processing**: 6 concurrent workers for import, vectorization, and classification
 
 ### Core Structure
 
 #### Database Architecture
-The application uses Supabase with multiple database schemas:
-- **Core Tables**: `videos`, `chunks`, `analyses`, `patterns`, `scripts`
-- **Skyscraper Framework**: `skyscraper_analyses` table stores comprehensive video analysis data
-- **User Data**: `profiles`, `projects`, `documents`, `script_data`
-- **Vector Database**: Integrated pgvector for semantic search and similarity matching
+The application uses Supabase with 17 core tables and 7 materialized views:
+- **Content Tables**: `videos`, `chunks`, `comments`, `patterns`, `scripts`
+- **Analytics Tables**: `baseline_analytics`, `daily_analytics` - YouTube performance metrics
+- **AI Analysis**: `skyscraper_analyses`, `analyses` - Comprehensive video analysis data
+- **User Management**: `profiles`, `projects`, `documents`, `script_data`
+- **System Tables**: `jobs`, `youtube_quota_usage`, `youtube_quota_calls` - Worker and quota tracking
+- **Vector Storage**: Integrated pgvector + external Pinecone for embeddings
+- **Materialized Views**: Performance-optimized views with pg_cron refresh (300x speedup)
 
 #### Application Flow
 1. **YouTube Video Processing**: Videos are analyzed using YouTube Data API and transcripts are chunked for processing
@@ -88,6 +105,26 @@ PINECONE_API_KEY=
 PINECONE_INDEX_NAME=
 PINECONE_THUMBNAIL_INDEX_NAME=
 ```
+
+### Recent Updates (2025)
+
+#### Video Classification System
+- **Format Classification**: 12 content formats using GPT-4o-mini ($0.06/1K videos)
+- **Topic Classification**: 777 BERTopic clusters with 3-level hierarchy (local processing)
+- **Confidence Tracking**: Low-confidence reclassification support
+- **Auto-Runner Component**: `<ReclassificationRunner />` for continuous processing
+
+#### YouTube Quota Management
+- **Pacific Time Tracking**: Quota resets at midnight PT (UTC-8)
+- **Pre-flight Checks**: Prevents quota overruns before API calls
+- **Detailed Logging**: `youtube_quota_calls` table tracks every API request
+- **Worker Integration**: Real-time quota display in worker dashboard
+
+#### Performance Optimizations
+- **Materialized Views**: 300x query performance improvement
+- **Batch Processing**: 500+ videos/minute for topic classification
+- **Adaptive Rate Limiting**: Intelligent throttling for external APIs
+- **Worker Concurrency**: 6 parallel workers for different processing stages
 
 ### Key Features
 
@@ -159,6 +196,20 @@ const response = await fetch('/api/video-import/unified', {
 - Supabase Auth with OAuth providers
 - User profiles automatically created on first login
 - Row-level security policies implemented for data isolation
+
+### Testing & Validation
+When making changes to the codebase:
+1. **Run TypeScript checks**: The project uses TypeScript - ensure no type errors
+2. **Test API endpoints**: Use the app's UI or direct API calls to verify functionality
+3. **Check worker logs**: Monitor worker output when testing background processing
+4. **Verify database changes**: Use MCP tools to confirm data integrity
+5. **Check quota usage**: Monitor `youtube_quota_usage` table for API consumption
+
+### Common Debugging Endpoints
+- `/api/classification/count-low-confidence` - Check videos needing reclassification
+- `/api/youtube/quota/check` - Current YouTube API quota status
+- `/app/dashboard/youtube/categorization` - Visual classification overview
+- Worker dashboards at `/app/dashboard/workers/*`
 
 ## Important Instruction Reminders
 

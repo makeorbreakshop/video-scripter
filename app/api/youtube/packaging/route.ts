@@ -83,9 +83,24 @@ export async function GET(request: NextRequest) {
       query = query.lte('view_count', parseInt(maxViews));
     }
 
-    // Search filter
+    // Search filter - implement proper keyword search
+    let searchWords: string[] = [];
     if (search) {
-      query = query.ilike('title', `%${search}%`);
+      searchWords = search.trim().toLowerCase().split(/\s+/).filter(word => word.length > 2);
+      
+      if (searchWords.length > 1) {
+        // For multiple words, find videos containing ALL significant words (AND logic)
+        // This gives more relevant results than OR logic
+        searchWords.forEach(word => {
+          query = query.ilike('title', `%${word}%`);
+        });
+      } else if (searchWords.length === 1) {
+        // Single word search
+        query = query.ilike('title', `%${searchWords[0]}%`);
+      } else {
+        // If no valid search words after filtering, use original search
+        query = query.ilike('title', `%${search}%`);
+      }
     }
 
     // Sorting
@@ -127,7 +142,7 @@ export async function GET(request: NextRequest) {
     const totalCount = count || 0;
 
     // Transform results to match existing API interface
-    const processedData = (results || []).map((video: any) => ({
+    let processedData = (results || []).map((video: any) => ({
       id: video.id,
       title: video.title,
       view_count: video.view_count,
@@ -140,6 +155,60 @@ export async function GET(request: NextRequest) {
       channel_name: video.channel_name || 'Unknown Channel',
       channel_avg_views: video.channel_avg_views || 0
     }));
+
+    // Add relevance scoring for multi-word searches
+    if (search && searchWords.length > 1) {
+      processedData = processedData.map(video => {
+        const titleLower = video.title.toLowerCase();
+        let relevanceScore = 0;
+        
+        // Score based on word presence and position
+        searchWords.forEach((word, index) => {
+          if (titleLower.includes(word)) {
+            // Base score for containing the word
+            relevanceScore += 10;
+            
+            // Bonus for exact word match (not part of another word)
+            const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+            if (wordRegex.test(video.title)) {
+              relevanceScore += 5;
+            }
+            
+            // Bonus for word position (earlier = better)
+            const position = titleLower.indexOf(word);
+            if (position !== -1) {
+              relevanceScore += Math.max(0, 10 - (position / titleLower.length) * 10);
+            }
+            
+            // Bonus for word order matching search query
+            if (index === 0 && position < 10) {
+              relevanceScore += 5;
+            }
+          }
+        });
+        
+        // Bonus for exact phrase match
+        if (titleLower.includes(search.toLowerCase())) {
+          relevanceScore += 20;
+        }
+        
+        return { ...video, relevanceScore };
+      });
+      
+      // Sort by relevance score first, then by original sort column
+      processedData.sort((a, b) => {
+        const scoreDiff = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        
+        // Fall back to original sort
+        if (sortBy === 'performance_ratio') {
+          return (b.performance_percent || 0) - (a.performance_percent || 0);
+        } else if (sortBy === 'view_count') {
+          return (b.view_count || 0) - (a.view_count || 0);
+        }
+        return 0;
+      });
+    }
 
     console.log(`⚡ Materialized view query completed in ${queryTime}ms, returning ${processedData.length}/${totalCount} videos`);
 

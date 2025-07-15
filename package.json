@@ -14,10 +14,19 @@
     "worker:format": "dotenv -e .env -- node format-classification-worker.ts",
     "worker:topic": "dotenv -e .env -- node topic-classification-worker.ts",
     "worker:classify": "dotenv -e .env -- node video-classification-worker.ts",
+    "worker:pattern": "dotenv -e .env -- node workers/pattern-discovery-worker.js",
     "workers": "concurrently -n \"IMPORT,TITLE,THUMB\" -c \"blue,green,magenta\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\"",
     "workers:vectorization": "concurrently -n \"TITLE,THUMB\" -c \"green,magenta\" \"npm run worker:title\" \"npm run worker:thumbnail\"",
     "workers:classification": "concurrently -n \"FORMAT,TOPIC,VIDEO\" -c \"yellow,cyan,purple\" \"npm run worker:format\" \"npm run worker:topic\" \"npm run worker:classify\"",
-    "workers:all": "concurrently -n \"IMPORT,TITLE,THUMB,FORMAT,TOPIC,VIDEO\" -c \"blue,green,magenta,yellow,cyan,purple\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\" \"npm run worker:format\" \"npm run worker:topic\" \"npm run worker:classify\""
+    "workers:all": "concurrently -n \"IMPORT,TITLE,THUMB,FORMAT,TOPIC,VIDEO,PATTERN\" -c \"blue,green,magenta,yellow,cyan,purple,orange\" \"npm run worker\" \"npm run worker:title\" \"npm run worker:thumbnail\" \"npm run worker:format\" \"npm run worker:topic\" \"npm run worker:classify\" \"npm run worker:pattern\"",
+    "test:search": "dotenv -e .env.local -- node scripts/test-multi-stage-search.js",
+    "test:patterns": "dotenv -e .env -- node scripts/test-pattern-discovery.js",
+    "test:patterns:full": "dotenv -e .env -- node --loader tsx tests/pattern-discovery-test-suite.js",
+    "test:patterns:unit": "dotenv -e .env -- node --loader tsx tests/unit-tests/pattern-analyzer-tests.js",
+    "test:patterns:api": "dotenv -e .env -- node --loader tsx tests/integration-tests/api-integration-tests.js",
+    "test:patterns:fix": "dotenv -e .env -- node --loader tsx test-and-fix-patterns.js",
+    "test:patterns:all": "npm run test:patterns:unit && npm run test:patterns:api && npm run test:patterns:full",
+    "test:patterns:quick": "dotenv -e .env -- node --loader tsx quick-pattern-test.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
@@ -73,6 +82,7 @@
     "@types/react-dom": "latest",
     "ai": "^4.1.54",
     "autoprefixer": "^10.4.20",
+    "canvas": "^3.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -112,7 +122,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",
-    "@types/node": "^22",
+    "@types/node": "^22.16.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.178.1",

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Metadata } from 'next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YouTubeToolsTab } from '@/components/youtube/tools-tab';
+import { PatternDiscoveryTab } from '@/components/youtube/pattern-discovery-tab';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Import categorization content from the standalone page
@@ -34,6 +35,7 @@ export default function YouTubeToolsPage() {
         <TabsList>
           <TabsTrigger value="analytics-tools">Analytics Tools</TabsTrigger>
           <TabsTrigger value="categorization">Categorization</TabsTrigger>
+          <TabsTrigger value="pattern-discovery">Pattern Discovery</TabsTrigger>
           <TabsTrigger value="data-tools">Data Tools</TabsTrigger>
         </TabsList>
 
@@ -43,6 +45,10 @@ export default function YouTubeToolsPage() {
 
         <TabsContent value="categorization" className="space-y-6">
           <CategorizationDashboard />
+        </TabsContent>
+
+        <TabsContent value="pattern-discovery" className="space-y-6">
+          <PatternDiscoveryTab />
         </TabsContent>
 
         <TabsContent value="data-tools" className="space-y-6">
