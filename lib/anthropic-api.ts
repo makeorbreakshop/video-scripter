@@ -1,6 +1,6 @@
 /**
- * Anthropic API client for Claude embeddings
- * Handles interactions with Anthropic's API for generating embeddings
+ * Anthropic API client for Claude
+ * Handles interactions with Anthropic's API for text generation and embeddings
  */
 
 // Define the Anthropic API response types
@@ -17,6 +17,96 @@ interface AnthropicError {
   status?: number;
   message: string;
   type: string;
+}
+
+interface AnthropicTextResponse {
+  id: string;
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+  model: string;
+  role: string;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+  };
+}
+
+/**
+ * Anthropic API client for text generation
+ */
+export class AnthropicAPI {
+  private apiKey: string;
+
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.ANTHROPIC_API_KEY || '';
+    if (!this.apiKey) {
+      throw new Error('Anthropic API key is required');
+    }
+  }
+
+  async generateText(options: {
+    prompt: string;
+    model?: string;
+    maxTokens?: number;
+    temperature?: number;
+    systemPrompt?: string;
+  }): Promise<{ text: string; usage: { input_tokens: number; output_tokens: number } }> {
+    const {
+      prompt,
+      model = 'claude-3-5-sonnet-20241022',
+      maxTokens = 4000,
+      temperature = 0.3,
+      systemPrompt
+    } = options;
+
+    try {
+      const messages = [];
+      
+      if (systemPrompt) {
+        messages.push({
+          role: 'system',
+          content: systemPrompt
+        });
+      }
+      
+      messages.push({
+        role: 'user',
+        content: prompt
+      });
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: maxTokens,
+          temperature
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Anthropic API error: ${errorData.error?.message || response.statusText}`);
+      }
+
+      const data = await response.json() as AnthropicTextResponse;
+      
+      return {
+        text: data.content[0]?.text || '',
+        usage: data.usage
+      };
+    } catch (error) {
+      console.error('Error generating text with Anthropic:', error);
+      throw error;
+    }
+  }
 }
 
 /**

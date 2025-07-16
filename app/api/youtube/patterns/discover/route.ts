@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     // Set up analysis context
     const context = {
-      topic_cluster,
+      topic_cluster_id: topic_cluster,
       min_performance,
       min_confidence,
       min_videos

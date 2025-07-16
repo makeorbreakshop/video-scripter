@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Activity,
   Tags,
-  Lightbulb
+  Lightbulb,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +26,11 @@ const navigation = [
     name: 'Analytics',
     href: '/dashboard/youtube',
     icon: BarChart3,
+  },
+  {
+    name: 'Patterns',
+    href: '/dashboard/youtube/patterns',
+    icon: Sparkles,
   },
   {
     name: 'Pattern Analysis',

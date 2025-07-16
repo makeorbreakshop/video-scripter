@@ -7,8 +7,8 @@ import os from 'os';
 
 // Initialize Supabase client with service role for bypassing RLS
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 // Worker configuration
@@ -16,7 +16,20 @@ const WORKER_ID = `${os.hostname()}-${process.pid}`;
 const POLL_INTERVAL = 30000; // 30 seconds
 const CONCURRENT_JOBS = 3; // Process up to 3 jobs concurrently
 
+// Type definitions for jobs
+interface Job {
+  job_id: string;
+  video_id: string;
+  source: string;
+  metadata: any;
+  priority: number;
+}
+
 class VideoWorker {
+  private videoImportService: VideoImportService;
+  private isShuttingDown: boolean;
+  private activeJobs: Set<string>;
+
   constructor() {
     this.videoImportService = new VideoImportService();
     this.isShuttingDown = false;
@@ -164,7 +177,7 @@ class VideoWorker {
     }
   }
 
-  async processJob(job) {
+  async processJob(job: Job) {
     const startTime = Date.now();
     this.activeJobs.add(job.job_id);
     
@@ -265,16 +278,17 @@ class VideoWorker {
       
     } catch (error) {
       // Mark job as failed
-      await this.failJob(job.job_id, error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      await this.failJob(job.job_id, errorMessage);
       
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`❌ Job ${job.job_id.slice(0, 8)} failed after ${duration}s: ${error.message}`);
+      console.log(`❌ Job ${job.job_id.slice(0, 8)} failed after ${duration}s: ${errorMessage}`);
     } finally {
       this.activeJobs.delete(job.job_id);
     }
   }
 
-  async updateJobProgress(jobId, updates) {
+  async updateJobProgress(jobId: string, updates: any) {
     try {
       const { error } = await supabase
         .from('video_processing_jobs')
@@ -289,7 +303,7 @@ class VideoWorker {
     }
   }
 
-  async completeJob(jobId, result = null) {
+  async completeJob(jobId: string, _result: any = null) {
     try {
       const updateData = {
         status: 'completed',
@@ -309,7 +323,7 @@ class VideoWorker {
     }
   }
 
-  async failJob(jobId, errorMessage) {
+  async failJob(jobId: string, errorMessage: string) {
     try {
       // Get current retry count
       const { data: jobs, error: selectError } = await supabase
@@ -380,7 +394,134 @@ class VideoWorker {
     }
   }
 
+  async processLargeJobInChunks(importRequest: any, jobId: string): Promise<any> {
+    const CHUNK_SIZE = 100; // Process 100 items at a time
+    const results: any = {
+      success: true,
+      message: '',
+      videosProcessed: 0,
+      embeddingsGenerated: { titles: 0, thumbnails: 0 },
+      classificationsGenerated: 0,
+      exportFiles: [] as string[],
+      errors: [] as string[],
+      processedVideoIds: [] as string[]
+    };
+
+    try {
+      // Process videoIds in chunks
+      if (importRequest.videoIds && importRequest.videoIds.length > 0) {
+        const chunks = [];
+        for (let i = 0; i < importRequest.videoIds.length; i += CHUNK_SIZE) {
+          chunks.push(importRequest.videoIds.slice(i, i + CHUNK_SIZE));
+        }
+
+        console.log(`📦 Processing ${chunks.length} chunks for ${importRequest.videoIds.length} videos`);
+        
+        for (let i = 0; i < chunks.length; i++) {
+          console.log(`🔄 Processing chunk ${i + 1}/${chunks.length} (${chunks[i].length} videos)`);
+          
+          const chunkResult = await this.videoImportService.processVideos({
+            ...importRequest,
+            videoIds: chunks[i],
+            options: {
+              ...importRequest.options,
+              skipExports: true // Skip exports for individual chunks
+            }
+          });
+
+          // Aggregate results
+          results.videosProcessed += chunkResult.videosProcessed;
+          results.embeddingsGenerated.titles += chunkResult.embeddingsGenerated.titles;
+          results.embeddingsGenerated.thumbnails += chunkResult.embeddingsGenerated.thumbnails;
+          results.classificationsGenerated += chunkResult.classificationsGenerated;
+          results.errors.push(...chunkResult.errors);
+          results.processedVideoIds.push(...chunkResult.processedVideoIds);
+
+          // Update job progress
+          await this.updateJobProgress(jobId, {
+            metadata: {
+              ...importRequest,
+              progress: {
+                chunksProcessed: i + 1,
+                totalChunks: chunks.length,
+                videosProcessed: results.videosProcessed
+              }
+            }
+          });
+        }
+      }
+
+      // Process RSS feeds (typically don't need chunking but included for completeness)
+      if (importRequest.rssFeedUrls && importRequest.rssFeedUrls.length > 0) {
+        console.log(`📦 Processing ${importRequest.rssFeedUrls.length} RSS feeds`);
+        
+        const rssResult = await this.videoImportService.processVideos({
+          ...importRequest,
+          options: {
+            ...importRequest.options,
+            skipExports: true
+          }
+        });
+
+        // Aggregate results
+        results.videosProcessed += rssResult.videosProcessed;
+        results.embeddingsGenerated.titles += rssResult.embeddingsGenerated.titles;
+        results.embeddingsGenerated.thumbnails += rssResult.embeddingsGenerated.thumbnails;
+        results.classificationsGenerated += rssResult.classificationsGenerated;
+        results.errors.push(...rssResult.errors);
+        results.processedVideoIds.push(...rssResult.processedVideoIds);
+      }
+
+      // Process channels (these are handled internally by the service)
+      if (importRequest.channelIds && importRequest.channelIds.length > 0) {
+        console.log(`📦 Processing ${importRequest.channelIds.length} channels`);
+        
+        const channelResult = await this.videoImportService.processVideos({
+          ...importRequest,
+          options: {
+            ...importRequest.options,
+            skipExports: true
+          }
+        });
+
+        // Aggregate results
+        results.videosProcessed += channelResult.videosProcessed;
+        results.embeddingsGenerated.titles += channelResult.embeddingsGenerated.titles;
+        results.embeddingsGenerated.thumbnails += channelResult.embeddingsGenerated.thumbnails;
+        results.classificationsGenerated += channelResult.classificationsGenerated;
+        results.errors.push(...channelResult.errors);
+        results.processedVideoIds.push(...channelResult.processedVideoIds);
+      }
+
+      // For large jobs, we skip exports to avoid memory issues
+      if (!importRequest.options?.skipExports && results.processedVideoIds.length > 0) {
+        console.log('📋 Skipping exports for large job (processed via chunks)');
+        // Exports can be generated later if needed via a separate endpoint
+      }
+
+      results.success = true;
+      results.message = `Successfully processed large job with ${results.videosProcessed} videos`;
+      
+      return results;
+      
+    } catch (error) {
+      console.error('❌ Error processing large job:', error);
+      results.success = false;
+      results.message = error instanceof Error ? error.message : String(error);
+      results.errors.push(error instanceof Error ? error.message : String(error));
+      return results;
+    }
+  }
+
   async getQueueStats() {
+    const defaultStats = {
+      pending_jobs: 0,
+      processing_jobs: 0,
+      completed_jobs: 0,
+      failed_jobs: 0,
+      total_jobs: 0
+    };
+
     try {
       const { data, error } = await supabase
         .from('video_processing_jobs')
@@ -388,13 +529,8 @@ class VideoWorker {
       
       if (error) throw error;
       
-      const stats = {
-        pending_jobs: 0,
-        processing_jobs: 0,
-        completed_jobs: 0,
-        failed_jobs: 0,
-        total_jobs: data?.length || 0
-      };
+      const stats = { ...defaultStats };
+      stats.total_jobs = data?.length || 0;
       
       data?.forEach(job => {
         switch (job.status) {
@@ -408,7 +544,7 @@ class VideoWorker {
       return stats;
     } catch (error) {
       console.error('❌ Error getting queue stats:', error);
-      return {};
+      return defaultStats;
     }
   }
 
@@ -428,7 +564,7 @@ class VideoWorker {
     process.exit(0);
   }
 
-  sleep(ms) {
+  sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

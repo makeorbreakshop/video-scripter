@@ -629,7 +629,7 @@ export class VideoImportService {
     
     // Calculate date filter
     const isAllTime = !options?.timePeriod || options.timePeriod === 'all';
-    const daysAgo = isAllTime ? 0 : parseInt(options.timePeriod) || 3650;
+    const daysAgo = isAllTime ? 0 : parseInt(options.timePeriod || '3650') || 3650;
     const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
     
     // Process channels in parallel (but limit concurrency to avoid rate limits)
@@ -889,7 +889,7 @@ export class VideoImportService {
         console.log(`✅ Feed ${index + 1}/${rssFeedUrls.length}: ${recentVideoIds.length} recent videos (last 7 days)`);
         return recentVideoIds;
       } catch (error) {
-        console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} error:`, error.message);
+        console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} error:`, error instanceof Error ? error.message : String(error));
         return [];
       }
     });
@@ -951,7 +951,7 @@ export class VideoImportService {
    * OPTIMIZED: Fetch video details with batched channel statistics
    * Reduces API calls from O(n*2) to O(n/50 + m/50) where n=videos, m=unique channels
    */
-  private async fetchVideoDetailsBatch(videoIds: string[], source: string, userId?: string): Promise<VideoMetadata[]> {
+  private async fetchVideoDetailsBatch(videoIds: string[], source: string, _userId?: string): Promise<VideoMetadata[]> {
     console.log(`🚀 Starting optimized video metadata fetch for ${videoIds.length} videos`);
     
     // Step 1: Fetch all video details in batches
@@ -1001,7 +1001,7 @@ export class VideoImportService {
     // Step 3: Combine video and channel data
     const videos: VideoMetadata[] = [];
     
-    for (const [videoId, video] of videoDetailsMap) {
+    for (const [videoId, video] of Array.from(videoDetailsMap.entries())) {
       const snippet = video.snippet;
       const statistics = video.statistics;
       const channelData = channelStatsMap.get(snippet.channelId);
@@ -1037,8 +1037,8 @@ export class VideoImportService {
         data_source: source === 'owner' ? 'owner' : 'competitor',
         is_competitor: source !== 'owner',
         import_date: new Date().toISOString(),
-        user_id: userId || '00000000-0000-0000-0000-000000000000',
-        metadata: metadata
+        metadata: metadata,
+        user_id: _userId || '00000000-0000-0000-0000-000000000000',
       });
     }
     
@@ -1314,7 +1314,7 @@ export class VideoImportService {
   /**
    * Helper: Fetch individual video details with channel statistics
    */
-  private async fetchVideoDetails(videoId: string): Promise<Partial<VideoMetadata> | null> {
+  private async _fetchVideoDetails(videoId: string): Promise<Partial<VideoMetadata> | null> {
     try {
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${this.youtubeApiKey}`
@@ -1355,7 +1355,7 @@ export class VideoImportService {
       
       let channelStats = null;
       let channelHandle = null;
-      let channelThumbnail = null;
+      let _channelThumbnail = null;
       
       if (channelResponse.ok) {
         const channelData = await channelResponse.json();
@@ -1369,7 +1369,7 @@ export class VideoImportService {
                              channel.snippet?.thumbnails?.default?.url || null,
           };
           channelHandle = channel.snippet?.customUrl || null;
-          channelThumbnail = channelStats.channel_thumbnail;
+          _channelThumbnail = channelStats.channel_thumbnail;
         }
       }
       

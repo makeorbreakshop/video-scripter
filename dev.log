@@ -1,0 +1,59 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.1.0
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.4.142:3000
+   - Environments: .env
+   - Experiments (use with caution):
+     · webpackBuildWorker
+     · parallelServerCompiles
+     · parallelServerBuildTraces
+
+ ✓ Starting...
+ ✓ Ready in 1569ms
+ ○ Compiling /api/youtube/patterns/generate-titles ...
+ ✓ Compiled /api/youtube/patterns/generate-titles in 729ms (839 modules)
+🎯 Generating titles for concept: beginner woodworking mistakes
+(node:53320) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+🔌 Connecting to Pinecone index: youtube-titles-prod
+✅ Connected to Pinecone index with undefined vectors
+✅ Found 14 similar videos with enriched data (page 1, hasMore: false)
+Found 14 similar videos for pattern discovery
+Analyzing 10 videos with Claude...
+✅ Claude discovered 4 patterns
+  - Numbered Mistake Lists: [NUMBER] Common [WOODWORKING_TYPE] Mistakes (196.4x)
+  - Direct Skill Level Prefix: Beginner [WOODWORKING_TYPE] Mistakes (22.5x)
+  - Warning Format: Don't Make These [PROJECT_TYPE] Mistakes! | Tips for [SKILL_LEVEL] Woodworkers (10.3x)
+  - Tool-Specific Focus: [TOOL_NAME] Mistakes (3.7x)
+🎯 Processing 4 patterns for concept: beginner woodworking mistakes
+📊 Pattern: Numbered Mistake Lists - Performance: 196.4x
+🎭 Generated title: 3 Common [WOODWORKING_TYPE] Mistakes from pattern Numbered Mistake Lists
+📊 Pattern: Direct Skill Level Prefix - Performance: 22.5x
+🎭 Generated title: Beginner [WOODWORKING_TYPE] Mistakes from pattern Direct Skill Level Prefix
+📊 Pattern: Warning Format - Performance: 10.3x
+🎭 Generated title: Don't Make These [PROJECT_TYPE] Mistakes! | Tips for beginner woodworking Woodworkers from pattern Warning Format
+📊 Pattern: Tool-Specific Focus - Performance: 3.7x
+🎭 Generated title: [TOOL_NAME] Mistakes from pattern Tool-Specific Focus
+✅ Generated 4 suggestions
+ POST /api/youtube/patterns/generate-titles 200 in 16414ms
+ ✓ Compiled in 235ms (591 modules)
+🎯 Generating titles for concept: beginner guitar practice tips
+🔌 Connecting to Pinecone index: youtube-titles-prod
+✅ Connected to Pinecone index with undefined vectors
+✅ Found 0 similar videos with enriched data (page 1, hasMore: false)
+ POST /api/youtube/patterns/generate-titles 200 in 1858ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 2.1s (1260 modules)
+ GET /api/vector/pinecone-stats 404 in 2267ms
+ ✓ Compiled in 291ms (361 modules)
+🎯 Generating titles for concept: how to make money online
+🔌 Connecting to Pinecone index: youtube-titles-prod
+✅ Connected to Pinecone index with undefined vectors
+✅ Found 0 similar videos
+ POST /api/youtube/patterns/generate-titles 200 in 1966ms
+ ✓ Compiled in 392ms (358 modules)
+ ✓ Compiled in 112ms (358 modules)
+ ✓ Compiled in 191ms (358 modules)

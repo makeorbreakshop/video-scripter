@@ -6,6 +6,8 @@
 import { supabase } from './supabase.ts';
 import { openai } from './openai-client.ts';
 import { Pinecone } from '@pinecone-database/pinecone';
+import { LLMPatternInterpreter, PatternCandidate, InterpretedPattern } from './llm-pattern-interpreter';
+import { SemanticPatternDiscovery } from './semantic-pattern-discovery';
 
 // Initialize Pinecone
 const pinecone = new Pinecone({
@@ -42,6 +44,10 @@ export class PatternDiscoveryService {
 
   private initializeAnalyzers() {
     this.analyzers = [
+      new TitleTemplateAnalyzer(),
+      new EmotionalHookAnalyzer(), 
+      new StructureAnalyzer(),
+      new NGramPatternAnalyzer(),
       new TitlePatternAnalyzer(),
       new TitleStructureAnalyzer(),
       new FormatOutlierAnalyzer(),
@@ -57,6 +63,16 @@ export class PatternDiscoveryService {
    */
   async discoverPatternsInCluster(context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
     console.log('🔍 Starting pattern discovery for context:', context);
+
+    // Try semantic pattern discovery first
+    const semanticPatterns = await this.discoverSemanticPatterns(context);
+    if (semanticPatterns.length > 0) {
+      console.log(`🎯 Found ${semanticPatterns.length} semantic patterns!`);
+      return semanticPatterns;
+    }
+
+    // Fallback to statistical pattern discovery
+    console.log('📊 Falling back to statistical pattern discovery...');
 
     // 1. Get high-performing videos with confidence
     const highPerformers = await this.getHighPerformingVideos(context);
@@ -82,10 +98,56 @@ export class PatternDiscoveryService {
     }
 
     // 3. Validate patterns
+    console.log(`🔍 Patterns before validation:`, allPatterns.map(p => ({
+      type: p.pattern_type,
+      name: p.pattern_data.name,
+      performance: p.performance_stats.avg || p.performance_stats.overall?.avg
+    })));
+    
     const validPatterns = await this.validatePatterns(allPatterns);
     console.log(`✅ ${validPatterns.length} patterns passed validation`);
 
     return validPatterns;
+  }
+
+  /**
+   * Discover patterns using semantic neighborhoods
+   */
+  private async discoverSemanticPatterns(context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
+    try {
+      console.log('🔍 Starting semantic pattern discovery with context:', context);
+      const semanticDiscovery = new SemanticPatternDiscovery();
+      await semanticDiscovery.initialize();
+
+      const semanticPatterns = await semanticDiscovery.discoverPatterns({
+        topic_cluster_id: context.topic_cluster_id,
+        min_neighborhood_size: 10, // Lowered from 20
+        min_performance: context.min_performance,
+        similarity_threshold: 0.8 // Lowered from 0.85
+      });
+
+      // Convert semantic patterns to DiscoveredPattern format
+      return semanticPatterns.map(sp => ({
+        pattern_type: sp.pattern_type as any,
+        pattern_data: {
+          ...sp.pattern_data,
+          centroid_embedding: sp.centroid_embedding,
+          semantic_radius: sp.semantic_radius
+        },
+        performance_stats: {
+          avg: sp.performance_stats.within_neighborhood.avg,
+          count: sp.performance_stats.within_neighborhood.count,
+          lift: sp.performance_stats.lift_ratio
+        },
+        videos_analyzed: [], // Would need to track these
+        confidence: sp.pattern_data.confidence,
+        evidence_count: sp.pattern_data.evidence_count
+      }));
+    } catch (error) {
+      console.error('❌ Semantic pattern discovery failed:', error);
+      console.error('Full error stack:', error instanceof Error ? error.stack : error);
+      return [];
+    }
   }
 
   /**
@@ -109,10 +171,10 @@ export class PatternDiscoveryService {
       .not('duration', 'is', null)
       .not('rolling_baseline_views', 'is', null);
 
-    // Apply context filters
-    if (context.topic_cluster_id) {
-      query = query.eq('topic_cluster_id', context.topic_cluster_id);
-    }
+    // Apply context filters - REMOVED BERT filter to analyze ALL videos
+    // if (context.topic_cluster_id) {
+    //   query = query.eq('topic_cluster_id', context.topic_cluster_id);
+    // }
 
     const { data: videos, error } = await query;
 
@@ -146,18 +208,71 @@ export class PatternDiscoveryService {
   }
 
   /**
-   * Validate discovered patterns
+   * Validate discovered patterns using Claude 3.5 Sonnet
    */
   private async validatePatterns(patterns: DiscoveredPattern[]): Promise<DiscoveredPattern[]> {
-    const validPatterns: DiscoveredPattern[] = [];
-
+    // First pass: Basic statistical validation
+    const statisticallyValid: DiscoveredPattern[] = [];
     for (const pattern of patterns) {
       if (await this.validatePattern(pattern)) {
-        validPatterns.push(pattern);
+        statisticallyValid.push(pattern);
       }
     }
 
-    return validPatterns;
+    console.log(`📊 ${statisticallyValid.length} patterns passed statistical validation`);
+
+    // Second pass: LLM semantic validation
+    if (statisticallyValid.length === 0) {
+      return [];
+    }
+
+    const interpreter = new LLMPatternInterpreter();
+    
+    // Convert to format expected by interpreter
+    const patternCandidates: PatternCandidate[] = statisticallyValid.map(p => ({
+      pattern_type: p.pattern_type,
+      pattern_data: {
+        ...p.pattern_data,
+        examples: p.pattern_data.examples || []
+      },
+      performance_stats: {
+        avg: p.performance_stats.avg || p.performance_stats.overall?.avg || 1,
+        median: p.performance_stats.median,
+        count: p.evidence_count
+      }
+    }));
+
+    // Get topic context if available
+    const videoContext = {
+      topic: patterns[0]?.pattern_data?.context || 'general',
+      videoCount: patterns.reduce((acc, p) => acc + p.evidence_count, 0),
+      avgPerformance: 1.0
+    };
+
+    console.log('🤖 Running Claude 3.5 Sonnet semantic validation...');
+    const interpretedPatterns = await interpreter.analyzePatterns(patternCandidates, {
+      batchSize: 10,
+      videoContext
+    });
+
+    console.log(`✨ ${interpretedPatterns.length} patterns passed semantic validation`);
+
+    // Convert back to DiscoveredPattern format, enriched with LLM insights
+    const enrichedPatterns: DiscoveredPattern[] = interpretedPatterns.map(ip => {
+      const original = statisticallyValid.find(p => 
+        p.pattern_data.name === ip.pattern_data.name
+      );
+      
+      return {
+        ...original!,
+        pattern_data: {
+          ...original!.pattern_data,
+          llm_analysis: ip.llm_analysis
+        }
+      };
+    });
+
+    return enrichedPatterns;
   }
 
   /**
@@ -165,12 +280,14 @@ export class PatternDiscoveryService {
    */
   public async validatePattern(pattern: DiscoveredPattern): Promise<boolean> {
     // Minimum sample size
-    if (pattern.evidence_count < 30) {
+    if (pattern.evidence_count < 10) {
+      console.log(`❌ Pattern rejected: evidence_count ${pattern.evidence_count} < 10`);
       return false;
     }
 
     // Confidence threshold
-    if (pattern.confidence < 0.8) {
+    if (pattern.confidence < 0.5) {
+      console.log(`❌ Pattern rejected: confidence ${pattern.confidence} < 0.5`);
       return false;
     }
 
@@ -702,5 +819,434 @@ class TopicClusterAnalyzer extends PatternAnalyzer {
         avg_performance: stats.totalPerformance / stats.count
       }))
       .sort((a, b) => b.avg_performance - a.avg_performance);
+  }
+}
+
+/**
+ * Title Template Analyzer - extracts reusable title patterns
+ */
+class TitleTemplateAnalyzer extends PatternAnalyzer {
+  private titleTemplates = [
+    // Number-based patterns
+    { pattern: /^(\d+)\s+([^0-9]+)\s+(for|to|that|you|I|we)\s+(.+)/i, template: '[NUMBER] [ACTION] [CONNECTOR] [CONTEXT]' },
+    { pattern: /^(\d+)\s+(ways|tips|tricks|mistakes|secrets)\s+(.+)/i, template: '[NUMBER] [TYPE] [CONTEXT]' },
+    { pattern: /^(\d+)\s+(things|reasons|facts)\s+(.+)/i, template: '[NUMBER] [THINGS] [CONTEXT]' },
+    
+    // Question patterns
+    { pattern: /^(why|what|how|when|where|which)\s+(.+)\?$/i, template: '[QUESTION] [CONTEXT]?' },
+    { pattern: /^(is|are|do|does|can|will|should)\s+(.+)\?$/i, template: '[QUESTION] [CONTEXT]?' },
+    
+    // Emotional hook patterns
+    { pattern: /^(.+)\s+(mistakes|secrets|truth|warning|nobody tells you|shocking|surprising)/i, template: '[CONTEXT] [EMOTIONAL_HOOK]' },
+    { pattern: /^(the truth about|the secret to|what nobody tells you about)\s+(.+)/i, template: '[HOOK] [CONTEXT]' },
+    
+    // How-to patterns
+    { pattern: /^how to\s+(.+)\s+without\s+(.+)/i, template: 'How to [ACTION] without [NEGATIVE]' },
+    { pattern: /^how to\s+(.+)\s+in\s+(\d+)\s+(.+)/i, template: 'How to [ACTION] in [TIME] [UNIT]' },
+    
+    // Comparison patterns
+    { pattern: /^(.+)\s+vs\s+(.+)/i, template: '[THING1] vs [THING2]' },
+    { pattern: /^(.+)\s+or\s+(.+)\?$/i, template: '[OPTION1] or [OPTION2]?' },
+    
+    // Experience patterns
+    { pattern: /^(I|we)\s+(tried|tested|used|made)\s+(.+)/i, template: '[PERSON] [ACTION] [CONTEXT]' },
+    { pattern: /^(my|our)\s+(experience|review|opinion)\s+(.+)/i, template: '[PERSON] [TYPE] [CONTEXT]' }
+  ];
+
+  async discover(videos: any[], context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    for (const template of this.titleTemplates) {
+      const matchingVideos = videos.filter(v => template.pattern.test(v.title));
+      
+      if (matchingVideos.length >= 15) {
+        const performanceStats = this.calculatePerformanceStats(matchingVideos);
+        
+        if (performanceStats.avg > 1.8) {
+          patterns.push({
+            pattern_type: 'title',
+            pattern_data: {
+              name: `${template.template} pattern`,
+              template: template.template,
+              regex: template.pattern.toString(),
+              examples: matchingVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'title_template_analysis',
+              evidence_count: matchingVideos.length,
+              confidence: Math.min(performanceStats.avg / 2.0, 1.0)
+            },
+            performance_stats: performanceStats,
+            videos_analyzed: matchingVideos.map(v => v.id),
+            confidence: Math.min(performanceStats.avg / 2.0, 1.0),
+            evidence_count: matchingVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+}
+
+/**
+ * Emotional Hook Analyzer - finds power words and emotional triggers
+ */
+class EmotionalHookAnalyzer extends PatternAnalyzer {
+  private emotionalHooks = [
+    // Power words
+    { hook: 'mistakes', category: 'negative_learning' },
+    { hook: 'secrets', category: 'insider_knowledge' },
+    { hook: 'truth', category: 'revelation' },
+    { hook: 'warning', category: 'caution' },
+    { hook: 'shocking', category: 'surprise' },
+    { hook: 'surprising', category: 'surprise' },
+    { hook: 'nobody tells you', category: 'insider_knowledge' },
+    { hook: 'hidden', category: 'secret' },
+    { hook: 'exposed', category: 'revelation' },
+    { hook: 'revealed', category: 'revelation' },
+    { hook: 'ultimate', category: 'authority' },
+    { hook: 'complete', category: 'comprehensive' },
+    { hook: 'definitive', category: 'authority' },
+    { hook: 'dangerous', category: 'caution' },
+    { hook: 'forbidden', category: 'taboo' },
+    { hook: 'insider', category: 'exclusive' },
+    { hook: 'exclusive', category: 'exclusive' },
+    { hook: 'viral', category: 'trending' },
+    { hook: 'trending', category: 'trending' },
+    { hook: 'breakthrough', category: 'innovation' },
+    { hook: 'game-changing', category: 'innovation' },
+    { hook: 'revolutionary', category: 'innovation' }
+  ];
+
+  async discover(videos: any[], context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    for (const hook of this.emotionalHooks) {
+      const regex = new RegExp(`\\b${hook.hook}\\b`, 'i');
+      const withHook = videos.filter(v => regex.test(v.title));
+      const withoutHook = videos.filter(v => !regex.test(v.title));
+      
+      if (withHook.length >= 20 && withoutHook.length >= 20) {
+        const hookStats = this.calculatePerformanceStats(withHook);
+        const nonHookStats = this.calculatePerformanceStats(withoutHook);
+        const lift = hookStats.avg / nonHookStats.avg;
+        
+        if (lift > 1.4) {
+          patterns.push({
+            pattern_type: 'title',
+            pattern_data: {
+              name: `"${hook.hook}" emotional hook`,
+              hook: hook.hook,
+              category: hook.category,
+              performance_lift: lift,
+              examples: withHook.slice(0, 5).map(v => v.title),
+              discovery_method: 'emotional_hook_analysis',
+              evidence_count: withHook.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: hookStats,
+            videos_analyzed: withHook.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: withHook.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+}
+
+/**
+ * Structure Analyzer - analyzes title formatting and structure patterns
+ */
+class StructureAnalyzer extends PatternAnalyzer {
+  async discover(videos: any[], context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    // Question structure analysis
+    const questionPatterns = await this.analyzeQuestionStructure(videos);
+    patterns.push(...questionPatterns);
+    
+    // Number structure analysis
+    const numberPatterns = await this.analyzeNumberStructure(videos);
+    patterns.push(...numberPatterns);
+    
+    // Capitalization patterns
+    const capsPatterns = await this.analyzeCapitalization(videos);
+    patterns.push(...capsPatterns);
+    
+    // Bracket/parentheses patterns
+    const bracketPatterns = await this.analyzeBrackets(videos);
+    patterns.push(...bracketPatterns);
+    
+    return patterns;
+  }
+  
+  private async analyzeQuestionStructure(videos: any[]): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    const questionTypes = [
+      { name: 'How questions', regex: /^how\s+/i },
+      { name: 'What questions', regex: /^what\s+/i },
+      { name: 'Why questions', regex: /^why\s+/i },
+      { name: 'When questions', regex: /^when\s+/i },
+      { name: 'Where questions', regex: /^where\s+/i },
+      { name: 'Which questions', regex: /^which\s+/i },
+      { name: 'Questions ending with ?', regex: /\?$/ }
+    ];
+    
+    for (const qType of questionTypes) {
+      const questionVideos = videos.filter(v => qType.regex.test(v.title));
+      const nonQuestionVideos = videos.filter(v => !qType.regex.test(v.title));
+      
+      if (questionVideos.length >= 15 && nonQuestionVideos.length >= 15) {
+        const questionStats = this.calculatePerformanceStats(questionVideos);
+        const nonQuestionStats = this.calculatePerformanceStats(nonQuestionVideos);
+        const lift = questionStats.avg / nonQuestionStats.avg;
+        
+        if (lift > 1.3) {
+          patterns.push({
+            pattern_type: 'title_structure',
+            pattern_data: {
+              name: `${qType.name} structure`,
+              structure_type: 'question',
+              pattern: qType.regex.toString(),
+              performance_lift: lift,
+              examples: questionVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'question_structure_analysis',
+              evidence_count: questionVideos.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: questionStats,
+            videos_analyzed: questionVideos.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: questionVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+  
+  private async analyzeNumberStructure(videos: any[]): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    const numberPatterns = [
+      { name: 'Starts with number', regex: /^\d+\s+/i },
+      { name: 'Contains specific numbers', regex: /\b(5|10|15|20|30|50|100)\b/i },
+      { name: 'Year references', regex: /\b(2024|2025|2026)\b/i },
+      { name: 'Time references', regex: /\b(\d+)\s+(minute|hour|day|week|month|year)/i }
+    ];
+    
+    for (const nPattern of numberPatterns) {
+      const numberVideos = videos.filter(v => nPattern.regex.test(v.title));
+      const nonNumberVideos = videos.filter(v => !nPattern.regex.test(v.title));
+      
+      if (numberVideos.length >= 15 && nonNumberVideos.length >= 15) {
+        const numberStats = this.calculatePerformanceStats(numberVideos);
+        const nonNumberStats = this.calculatePerformanceStats(nonNumberVideos);
+        const lift = numberStats.avg / nonNumberStats.avg;
+        
+        if (lift > 1.3) {
+          patterns.push({
+            pattern_type: 'title_structure',
+            pattern_data: {
+              name: `${nPattern.name} structure`,
+              structure_type: 'number',
+              pattern: nPattern.regex.toString(),
+              performance_lift: lift,
+              examples: numberVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'number_structure_analysis',
+              evidence_count: numberVideos.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: numberStats,
+            videos_analyzed: numberVideos.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: numberVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+  
+  private async analyzeCapitalization(videos: any[]): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    const capsPatterns = [
+      { name: 'ALL CAPS words', regex: /\b[A-Z]{3,}\b/ },
+      { name: 'Title Case', regex: /^[A-Z][a-z]+(\s[A-Z][a-z]+)+/ },
+      { name: 'Mixed case emphasis', regex: /[A-Z]{2,}/ }
+    ];
+    
+    for (const cPattern of capsPatterns) {
+      const capsVideos = videos.filter(v => cPattern.regex.test(v.title));
+      const nonCapsVideos = videos.filter(v => !cPattern.regex.test(v.title));
+      
+      if (capsVideos.length >= 15 && nonCapsVideos.length >= 15) {
+        const capsStats = this.calculatePerformanceStats(capsVideos);
+        const nonCapsStats = this.calculatePerformanceStats(nonCapsVideos);
+        const lift = capsStats.avg / nonCapsStats.avg;
+        
+        if (lift > 1.3) {
+          patterns.push({
+            pattern_type: 'title_structure',
+            pattern_data: {
+              name: `${cPattern.name} structure`,
+              structure_type: 'capitalization',
+              pattern: cPattern.regex.toString(),
+              performance_lift: lift,
+              examples: capsVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'capitalization_analysis',
+              evidence_count: capsVideos.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: capsStats,
+            videos_analyzed: capsVideos.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: capsVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+  
+  private async analyzeBrackets(videos: any[]): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    const bracketPatterns = [
+      { name: 'Parentheses', regex: /\([^)]+\)/ },
+      { name: 'Square brackets', regex: /\[[^\]]+\]/ },
+      { name: 'Curly braces', regex: /\{[^}]+\}/ },
+      { name: 'Angle brackets', regex: /<[^>]+>/ }
+    ];
+    
+    for (const bPattern of bracketPatterns) {
+      const bracketVideos = videos.filter(v => bPattern.regex.test(v.title));
+      const nonBracketVideos = videos.filter(v => !bPattern.regex.test(v.title));
+      
+      if (bracketVideos.length >= 10 && nonBracketVideos.length >= 10) {
+        const bracketStats = this.calculatePerformanceStats(bracketVideos);
+        const nonBracketStats = this.calculatePerformanceStats(nonBracketVideos);
+        const lift = bracketStats.avg / nonBracketStats.avg;
+        
+        if (lift > 1.3) {
+          patterns.push({
+            pattern_type: 'title_structure',
+            pattern_data: {
+              name: `${bPattern.name} structure`,
+              structure_type: 'brackets',
+              pattern: bPattern.regex.toString(),
+              performance_lift: lift,
+              examples: bracketVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'bracket_analysis',
+              evidence_count: bracketVideos.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: bracketStats,
+            videos_analyzed: bracketVideos.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: bracketVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+}
+
+/**
+ * Enhanced N-Gram Pattern Analyzer - better phrase detection
+ */
+class NGramPatternAnalyzer extends PatternAnalyzer {
+  private commonPhrases = [
+    'mistakes I made',
+    'you need to know',
+    'nobody tells you',
+    'truth about',
+    'secret to',
+    'complete guide',
+    'ultimate guide',
+    'step by step',
+    'before you',
+    'after you',
+    'what happens when',
+    'why you should',
+    'how to get',
+    'best way to',
+    'worst way to',
+    'never do this',
+    'always do this',
+    'things you',
+    'ways to',
+    'tips for',
+    'tricks for',
+    'hacks for',
+    'everything you',
+    'all you need',
+    'only thing you',
+    'first time',
+    'last time',
+    'every time',
+    'next time',
+    'this time',
+    'right now',
+    'today',
+    'tomorrow',
+    'yesterday',
+    'last week',
+    'next week',
+    'this week',
+    'right way',
+    'wrong way',
+    'easy way',
+    'hard way',
+    'fast way',
+    'slow way',
+    'cheap way',
+    'expensive way'
+  ];
+
+  async discover(videos: any[], context: PatternAnalysisContext): Promise<DiscoveredPattern[]> {
+    const patterns: DiscoveredPattern[] = [];
+    
+    for (const phrase of this.commonPhrases) {
+      const regex = new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`, 'i');
+      const phraseVideos = videos.filter(v => regex.test(v.title));
+      const nonPhraseVideos = videos.filter(v => !regex.test(v.title));
+      
+      if (phraseVideos.length >= 15 && nonPhraseVideos.length >= 15) {
+        const phraseStats = this.calculatePerformanceStats(phraseVideos);
+        const nonPhraseStats = this.calculatePerformanceStats(nonPhraseVideos);
+        const lift = phraseStats.avg / nonPhraseStats.avg;
+        
+        if (lift > 1.4) {
+          patterns.push({
+            pattern_type: 'title',
+            pattern_data: {
+              name: `"${phrase}" phrase pattern`,
+              phrase: phrase,
+              performance_lift: lift,
+              examples: phraseVideos.slice(0, 5).map(v => v.title),
+              discovery_method: 'enhanced_ngram_analysis',
+              evidence_count: phraseVideos.length,
+              confidence: Math.min(lift / 2.0, 1.0)
+            },
+            performance_stats: phraseStats,
+            videos_analyzed: phraseVideos.map(v => v.id),
+            confidence: Math.min(lift / 2.0, 1.0),
+            evidence_count: phraseVideos.length
+          });
+        }
+      }
+    }
+    
+    return patterns;
   }
 }

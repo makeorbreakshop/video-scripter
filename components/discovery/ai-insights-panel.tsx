@@ -91,7 +91,7 @@ export function AIInsightsPanel({ videos, selectedVideo, onGenerateIdea }: AIIns
             <TrendingUp className="w-3 h-3 mr-1" />
             Predictions
           </TabsTrigger>
-        </Tabs>
+        </TabsList>
         
         <AnimatePresence mode="wait">
           {insights && (
