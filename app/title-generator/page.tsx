@@ -27,6 +27,7 @@ interface TitleSuggestion {
     template?: string;
     performance_lift: number;
     examples: string[];
+    video_ids?: string[];
   };
   evidence: {
     sample_size: number;
@@ -45,12 +46,23 @@ interface TitleGenerationResponse {
   processing_time_ms: number;
 }
 
+interface Video {
+  id: string;
+  title: string;
+  channel_name: string;
+  view_count: number;
+  published_at: string;
+  thumbnail_url: string;
+}
+
 export default function TitleGeneratorPage() {
   const [concept, setConcept] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<TitleGenerationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [loadingVideos, setLoadingVideos] = useState<Record<number, boolean>>({});
+  const [patternVideos, setPatternVideos] = useState<Record<number, Video[]>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +107,31 @@ export default function TitleGeneratorPage() {
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (err) {
       console.error('Failed to copy text:', err);
+    }
+  };
+
+  const fetchPatternVideos = async (index: number, videoIds: string[]) => {
+    if (!videoIds || videoIds.length === 0) return;
+    
+    setLoadingVideos(prev => ({ ...prev, [index]: true }));
+    
+    try {
+      const response = await fetch('/api/youtube/videos/by-ids', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoIds }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPatternVideos(prev => ({ ...prev, [index]: data.videos }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch videos:', err);
+    } finally {
+      setLoadingVideos(prev => ({ ...prev, [index]: false }));
     }
   };
 
@@ -328,6 +365,60 @@ export default function TitleGeneratorPage() {
                               ))}
                             </ul>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Show actual videos button */}
+                      {suggestion.pattern.video_ids && suggestion.pattern.video_ids.length > 0 && (
+                        <div>
+                          {!patternVideos[index] ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fetchPatternVideos(index, suggestion.pattern.video_ids!)}
+                              disabled={loadingVideos[index]}
+                              className="w-full"
+                            >
+                              {loadingVideos[index] ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Loading videos...
+                                </>
+                              ) : (
+                                <>
+                                  <Users className="mr-2 h-4 w-4" />
+                                  View {suggestion.pattern.video_ids.length} Videos Using This Pattern
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2 text-gray-700">Videos Using This Pattern</h4>
+                              <div className="space-y-3">
+                                {patternVideos[index].map((video) => (
+                                  <div key={video.id} className="bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                      {video.thumbnail_url && (
+                                        <img 
+                                          src={video.thumbnail_url} 
+                                          alt={video.title}
+                                          className="w-24 h-14 object-cover rounded"
+                                        />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <h5 className="font-medium text-sm text-gray-900 truncate">
+                                          {video.title}
+                                        </h5>
+                                        <p className="text-xs text-gray-600">
+                                          {video.channel_name} • {video.view_count.toLocaleString()} views
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

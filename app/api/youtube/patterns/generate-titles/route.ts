@@ -18,6 +18,7 @@ interface DiscoveredPattern {
   explanation: string;
   template: string;
   examples: string[];
+  video_ids: string[]; // IDs of videos that demonstrate this pattern
   confidence: number;
   performance_multiplier: number;
 }
@@ -30,6 +31,7 @@ export interface TitleSuggestion {
     template?: string;
     performance_lift: number;
     examples: string[];
+    video_ids: string[]; // IDs of videos that demonstrate this pattern
   };
   evidence: {
     sample_size: number;
@@ -184,34 +186,38 @@ async function discoverPatternsWithClaude(
   const prompt = `Analyze these high-performing YouTube video titles about "${concept}" and identify actionable title patterns.
 
 Videos (sorted by performance):
-${topVideos.slice(0, 20).map((v, i) => `${i + 1}. "${v.title}" - ${v.performance_ratio.toFixed(1)}x channel average (${v.view_count.toLocaleString()} views, similarity: ${(v.similarity_score * 100).toFixed(0)}%)`).join('\n')}
+${topVideos.slice(0, 20).map((v, i) => `${i + 1}. [ID: ${v.id}] "${v.title}" - ${v.performance_ratio.toFixed(1)}x channel average (${v.view_count.toLocaleString()} views, similarity: ${(v.similarity_score * 100).toFixed(0)}%)`).join('\n')}
 
 Your task:
 1. Identify 3-5 specific, actionable title patterns that are common among these high performers
-2. Focus on patterns that can be applied to new videos about "${concept}"
-3. Each pattern should have a template with variables
+2. For each pattern, identify which video IDs from the list demonstrate that pattern
+3. Create a template that can be applied to new videos about "${concept}"
 
-Return a JSON array of patterns with this structure:
+Return a JSON array with this structure:
 [
   {
     "pattern": "Short descriptive name",
     "explanation": "Why this pattern works",
-    "template": "Template with [VARIABLES]",
-    "examples": ["Example 1", "Example 2", "Example 3"],
+    "template": "Template with [VARIABLES] that can be filled in",
+    "examples": ["Exact title from list", "Another exact title", "Third example"],
+    "video_ids": ["video_id_1", "video_id_2", "video_id_3"],
     "confidence": 0.8,
     "performance_multiplier": 3.5
   }
 ]
 
+IMPORTANT: 
+- In the video_ids array, use the exact IDs shown in brackets above
+- Only include video IDs from the provided list that actually demonstrate the pattern
+- Examples should be exact titles from the videos you reference
+
 Focus on:
 - Specific words/phrases that appear frequently
-- Title structures and formats  
+- Title structures and formats
 - Emotional hooks or curiosity gaps
 - Numbers, lists, or quantifiable elements
 - Question formats
-- Skill level indicators
-
-Be specific and actionable. Templates should use variables like [NUMBER], [SKILL_LEVEL], [OUTCOME], [TIMEFRAME], etc.`;
+- Skill level indicators`;
 
   try {
     const response = await anthropic.generateText({
@@ -267,10 +273,11 @@ async function generateTitlesFromPatterns(
         name: pattern.pattern,
         template: pattern.template,
         performance_lift: pattern.performance_multiplier,
-        examples: pattern.examples
+        examples: pattern.examples,
+        video_ids: pattern.video_ids || []
       },
       evidence: {
-        sample_size: 20, // We analyzed top 20 videos
+        sample_size: pattern.video_ids?.length || pattern.examples.length,
         avg_performance: pattern.performance_multiplier,
         confidence_score: pattern.confidence
       },
@@ -333,6 +340,13 @@ function applyClaudePattern(pattern: DiscoveredPattern, concept: string): string
   // Smart replacements based on context
   let result = pattern.template;
   
+  // Action phrases
+  const actionPhrases = ['You Need to Know', 'That Changed Everything', 'Every Beginner Should Have', 'That Save Time', 'Worth Buying'];
+  const constraints = ['Under $100', 'You Can Make', 'That Actually Work', 'For Small Shops', 'On a Budget'];
+  const toolAspects = ['Features', 'Settings', 'Techniques', 'Skills', 'Tools'];
+  const comparisons = ['Good', 'Better', 'Best', 'Right', 'Wrong'];
+  const actions = ['Build', 'Make', 'Create', 'Design', 'Craft'];
+  
   // Replace based on what's in the template
   result = result
     .replace(/\[CONCEPT\]/g, concept)
@@ -352,7 +366,12 @@ function applyClaudePattern(pattern: DiscoveredPattern, concept: string): string
     .replace(/\[TRICKS\]/g, 'Tricks')
     .replace(/\[WOODWORKING_TYPE\]/g, woodworkingTypes[Math.floor(Math.random() * woodworkingTypes.length)])
     .replace(/\[TOOL_NAME\]/g, woodworkingTools[Math.floor(Math.random() * woodworkingTools.length)])
-    .replace(/\[PROJECT_TYPE\]/g, projectTypes[Math.floor(Math.random() * projectTypes.length)]);
+    .replace(/\[PROJECT_TYPE\]/g, projectTypes[Math.floor(Math.random() * projectTypes.length)])
+    .replace(/\[ACTION_PHRASE\]/g, actionPhrases[Math.floor(Math.random() * actionPhrases.length)])
+    .replace(/\[CONSTRAINT\]/g, constraints[Math.floor(Math.random() * constraints.length)])
+    .replace(/\[TOOL_ASPECT\]/g, toolAspects[Math.floor(Math.random() * toolAspects.length)])
+    .replace(/\[COMPARISON\]/g, comparisons[Math.floor(Math.random() * comparisons.length)])
+    .replace(/\[ACTION\]/g, actions[Math.floor(Math.random() * actions.length)]);
     
   // Clean up any weird capitalization issues
   result = result.replace(/\s+/g, ' ').trim();
