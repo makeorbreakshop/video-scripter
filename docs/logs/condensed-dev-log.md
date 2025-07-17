@@ -462,3 +462,19 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Search Quality**: Fixed packaging API bugs (1→12 results), relevance filtering (0.5 threshold), proper multi-word tokenization with scoring
 - **Educational Channels**: Curated 16 teaching-style channels across 5 categories with one-click import functionality
 - **Pattern Discovery Testing**: Quick test mode (30 seconds), UI tools integration, meaningful pattern examples demonstrating semantic understanding needs
+
+### 2025-07-16: Semantic Title Generation System & Real-Time Pattern Discovery
+- **Issue**: Pivoted from broad pattern mining to focused semantic title generation, implemented real-time pattern discovery with Claude, fixed RSS import bugs, resolved unified import system issues
+- **Solution**: Built complete semantic title generation MVP with Claude-powered pattern discovery, fixed RSS regex multiline bug, restored unified import system to original working state
+- **Impact**: Operational title generation system discovering patterns in real-time (~$0.005/request), RSS imports processing correctly, unified import handling 500+ item batches
+- **Technical**: Real-time Claude 3.5 Sonnet integration, video ID tracking with patterns, OpenAI embeddings (512D), Pinecone semantic search, comprehensive UI with evidence display
+
+**Key Achievements:**
+- **Strategic Pivot**: Transitioned from analyzing 150 BERT cluster videos to semantic neighborhoods across 100K+ database, removed topic_cluster_id limitations
+- **Real-Time Pattern Discovery**: Claude analyzes high-performing similar videos dynamically, discovers 3-5 actionable patterns per query with video ID tracking
+- **Business Dashboard**: Built comprehensive financial modeling dashboard with industry benchmarks, solo founder cost adjustments, LTV:CAC calculations
+- **RSS Processing Fix**: Fixed critical regex bug (`/gs` flag) causing 0 entries found, restored daily imports for 558 RSS feeds
+- **Unified Import Restoration**: Reverted breaking changes to user_id handling, preserved original UUID fallback design (`'00000000-0000-0000-0000-000000000000'`)
+- **Worker TypeScript Fixes**: Added `processLargeJobInChunks` method handling 100-item batches, fixed all type errors for production deployment
+- **UI Enhancements**: Three polished title generator designs (Minimal, Dashboard, Interactive Cards) with full functionality and dark mode support
+- **GitHub Integration**: Pushed all changes with detailed commit messages documenting enhancements

@@ -48,6 +48,39 @@ export interface TitleGenerationResponse {
   total_patterns_searched: number;
   semantic_neighborhoods_found: number;
   processing_time_ms: number;
+  debug?: {
+    embeddingLength: number;
+    searchThreshold: number;
+    totalVideosFound: number;
+    scoreDistribution: Record<string, number>;
+    topVideos: Array<{
+      id: string;
+      title: string;
+      score: number;
+      channel: string;
+    }>;
+    claudePrompt?: string;
+    claudePatterns?: any[];
+    processingSteps: Array<{
+      step: string;
+      duration_ms: number;
+      details?: any;
+    }>;
+    costs?: {
+      embedding: {
+        tokens: number;
+        cost: number;
+      };
+      claude: {
+        inputTokens: number;
+        outputTokens: number;
+        inputCost: number;
+        outputCost: number;
+        totalCost: number;
+      };
+      totalCost: number;
+    };
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -55,39 +88,219 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     const body: TitleGenerationRequest = await req.json();
     
+    const processingSteps: Array<{ step: string; duration_ms: number; details?: any }> = [];
+    let stepStart = Date.now();
+    
     if (!body.concept) {
       return NextResponse.json({ error: 'Concept is required' }, { status: 400 });
     }
 
     console.log('🎯 Generating titles for concept:', body.concept);
-
-    // 1. Embed the user's concept
-    const conceptEmbedding = await embedConcept(body.concept);
     
-    // 2. Find semantically similar videos using real Pinecone search
-    const { results: similarVideos } = await pineconeService.searchSimilar(
-      conceptEmbedding,
-      100, // Get more videos for better pattern discovery
-      0.7  // Minimum similarity threshold
+    // Check if Pinecone is configured
+    if (!process.env.PINECONE_API_KEY || !process.env.PINECONE_INDEX_NAME) {
+      console.error('Pinecone not configured');
+      return NextResponse.json({
+        error: 'Pinecone configuration missing. Please set PINECONE_API_KEY and PINECONE_INDEX_NAME environment variables.'
+      }, { status: 500 });
+    }
+
+    // 1. Expand queries for broader search
+    stepStart = Date.now();
+    const expandedQueries = await expandConceptQueries(body.concept);
+    const allQueries = [body.concept, ...expandedQueries];
+    processingSteps.push({
+      step: 'Query Expansion',
+      duration_ms: Date.now() - stepStart,
+      details: {
+        originalQuery: body.concept,
+        expandedQueries: expandedQueries.length,
+        totalQueries: allQueries.length
+      }
+    });
+
+    // 2. Embed all queries
+    stepStart = Date.now();
+    const embeddings = await Promise.all(
+      allQueries.map(query => embedConcept(query))
+    );
+    const totalEmbeddingTokens = embeddings.reduce((sum, e) => sum + e.tokens, 0);
+    const totalEmbeddingCost = embeddings.reduce((sum, e) => sum + e.cost, 0);
+    processingSteps.push({
+      step: 'Multi-Query Embedding',
+      duration_ms: Date.now() - stepStart,
+      details: {
+        embeddingModel: 'text-embedding-3-small',
+        queriesEmbedded: embeddings.length,
+        totalTokens: totalEmbeddingTokens,
+        totalCost: totalEmbeddingCost
+      }
+    });
+    
+    // 3. Search for videos using all embeddings
+    stepStart = Date.now();
+    console.log(`Searching Pinecone with ${embeddings.length} query embeddings`);
+    const searchThreshold = 0.25; // Lower threshold for expanded search
+    const searchPromises = embeddings.map((embedding, index) => 
+      pineconeService.searchSimilar(
+        embedding.embedding,
+        200, // More results per query
+        searchThreshold
+      ).then(result => ({
+        query: allQueries[index],
+        results: result.results
+      }))
     );
     
-    if (similarVideos.length === 0) {
-      return NextResponse.json({
-        suggestions: [],
-        concept: body.concept,
-        total_patterns_searched: 0,
-        semantic_neighborhoods_found: 0,
-        processing_time_ms: Date.now() - startTime
+    const searchResults = await Promise.all(searchPromises);
+    
+    // Deduplicate and merge results
+    const videoScoreMap = new Map<string, { video_id: string; similarity_score: number; queries: string[] }>();
+    
+    searchResults.forEach(({ query, results }) => {
+      results.forEach(result => {
+        const existing = videoScoreMap.get(result.video_id);
+        if (!existing || result.similarity_score > existing.similarity_score) {
+          videoScoreMap.set(result.video_id, {
+            video_id: result.video_id,
+            similarity_score: existing ? Math.max(existing.similarity_score, result.similarity_score) : result.similarity_score,
+            queries: existing ? [...existing.queries, query] : [query]
+          });
+        }
       });
+    });
+    
+    const similarVideos = Array.from(videoScoreMap.values())
+      .sort((a, b) => b.similarity_score - a.similarity_score)
+      .slice(0, 500); // Take top 500 unique videos
+    
+    // Calculate score distribution
+    const scoreDistribution: Record<string, number> = {};
+    similarVideos.forEach(v => {
+      const bucket = (Math.floor(v.similarity_score * 10) / 10).toFixed(1);
+      scoreDistribution[bucket] = (scoreDistribution[bucket] || 0) + 1;
+    });
+    
+    processingSteps.push({
+      step: 'Multi-Query Pinecone Search',
+      duration_ms: Date.now() - stepStart,
+      details: {
+        threshold: searchThreshold,
+        totalQueriesSearched: allQueries.length,
+        totalResultsFound: Array.from(videoScoreMap.values()).length,
+        uniqueVideosFound: similarVideos.length,
+        scoreDistribution
+      }
+    });
+    
+    console.log(`Pinecone search returned ${similarVideos.length} results`);
+    
+    if (similarVideos.length === 0) {
+      console.log('No similar videos found - trying with lower threshold');
+      // Try again with even lower threshold
+      stepStart = Date.now();
+      const { results: fallbackVideos } = await pineconeService.searchSimilar(
+        conceptEmbedding,
+        100,
+        0.3  // Very low threshold
+      );
+      processingSteps.push({
+        step: 'Fallback Search',
+        duration_ms: Date.now() - stepStart,
+        details: { resultsFound: fallbackVideos.length }
+      });
+      
+      console.log(`Fallback search returned ${fallbackVideos.length} results`);
+      
+      if (fallbackVideos.length === 0) {
+        return NextResponse.json({
+          suggestions: [],
+          concept: body.concept,
+          total_patterns_searched: 0,
+          semantic_neighborhoods_found: 0,
+          processing_time_ms: Date.now() - startTime,
+          debug: {
+            embeddingLength: conceptEmbedding.length,
+            searchThreshold,
+            totalVideosFound: 0,
+            scoreDistribution,
+            topVideos: [],
+            processingSteps,
+            costs: {
+              embedding: {
+                tokens: totalEmbeddingTokens,
+                cost: totalEmbeddingCost
+              },
+              claude: {
+                inputTokens: 0,
+                outputTokens: 0,
+                inputCost: 0,
+                outputCost: 0,
+                totalCost: 0
+              },
+              totalCost: totalEmbeddingCost
+            }
+          }
+        });
+      }
+      similarVideos.push(...fallbackVideos);
     }
     
     console.log(`Found ${similarVideos.length} similar videos for pattern discovery`);
     
+    // Get video details for debug info
+    stepStart = Date.now();
+    const videoIds = similarVideos.slice(0, 10).map(v => v.video_id);
+    const { data: topVideoDetails } = await supabase
+      .from('videos')
+      .select('id, title, channel_name')
+      .in('id', videoIds);
+    
+    const topVideos = similarVideos.slice(0, 10).map(v => {
+      const details = topVideoDetails?.find(d => d.id === v.video_id);
+      return {
+        id: v.video_id,
+        title: details?.title || 'Unknown',
+        score: v.similarity_score,
+        channel: details?.channel_name || 'Unknown'
+      };
+    });
+    
+    processingSteps.push({
+      step: 'Fetch Video Details',
+      duration_ms: Date.now() - stepStart,
+      details: { videosFetched: topVideoDetails?.length || 0 }
+    });
+    
     // 3. Use Claude to discover patterns from these similar videos
-    const patterns = await discoverPatternsWithClaude(similarVideos, body.concept);
+    stepStart = Date.now();
+    const { patterns, prompt: claudePrompt, usage: claudeUsage } = await discoverPatternsWithClaude(similarVideos, body.concept);
+    
+    // Calculate Claude costs (Claude 3.5 Sonnet pricing as of Oct 2024)
+    const claudeInputCost = claudeUsage ? (claudeUsage.input_tokens / 1_000_000) * 3.00 : 0;
+    const claudeOutputCost = claudeUsage ? (claudeUsage.output_tokens / 1_000_000) * 15.00 : 0;
+    const claudeTotalCost = claudeInputCost + claudeOutputCost;
+    
+    processingSteps.push({
+      step: 'Claude Pattern Discovery',
+      duration_ms: Date.now() - stepStart,
+      details: {
+        patternsFound: patterns.length,
+        videosAnalyzed: similarVideos.length,
+        inputTokens: claudeUsage?.input_tokens,
+        outputTokens: claudeUsage?.output_tokens,
+        cost: claudeTotalCost
+      }
+    });
     
     // 4. Generate titles using the discovered patterns
+    stepStart = Date.now();
     const suggestions = await generateTitlesFromPatterns(patterns, body.concept, body.options);
+    processingSteps.push({
+      step: 'Title Generation',
+      duration_ms: Date.now() - stepStart,
+      details: { titlesGenerated: suggestions.length }
+    });
     
     const processingTime = Date.now() - startTime;
     
@@ -96,7 +309,31 @@ export async function POST(req: NextRequest) {
       concept: body.concept,
       total_patterns_searched: patterns.length,
       semantic_neighborhoods_found: 1, // We're using direct similarity now
-      processing_time_ms: processingTime
+      processing_time_ms: processingTime,
+      debug: {
+        embeddingLength: conceptEmbedding.length,
+        searchThreshold,
+        totalVideosFound: similarVideos.length,
+        scoreDistribution,
+        topVideos,
+        claudePrompt,
+        claudePatterns: patterns,
+        processingSteps,
+        costs: {
+          embedding: {
+            tokens: totalEmbeddingTokens,
+            cost: totalEmbeddingCost
+          },
+          claude: {
+            inputTokens: claudeUsage?.input_tokens || 0,
+            outputTokens: claudeUsage?.output_tokens || 0,
+            inputCost: claudeInputCost,
+            outputCost: claudeOutputCost,
+            totalCost: claudeTotalCost
+          },
+          totalCost: totalEmbeddingCost + claudeTotalCost
+        }
+      }
     };
 
     return NextResponse.json(response);
@@ -110,74 +347,124 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function embedConcept(concept: string): Promise<number[]> {
+async function embedConcept(concept: string): Promise<{ embedding: number[]; tokens: number; cost: number }> {
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: concept,
     dimensions: 512
   });
   
-  return response.data[0].embedding;
+  // OpenAI text-embedding-3-small costs $0.02 per 1M tokens
+  const tokens = response.usage?.total_tokens || concept.split(' ').length * 1.3; // Estimate if not provided
+  const cost = (tokens / 1_000_000) * 0.02;
+  
+  return {
+    embedding: response.data[0].embedding,
+    tokens,
+    cost
+  };
+}
+
+async function expandConceptQueries(concept: string): Promise<string[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{
+        role: "system",
+        content: "Generate 6-8 related search queries for YouTube video titles. Return only a JSON array of strings, no explanation."
+      }, {
+        role: "user",
+        content: `Original concept: "${concept}"
+
+Generate semantically related but diverse search queries that would find similar high-performing content from different angles. Include:
+- Broader category terms
+- More specific niche variations
+- Related problems/solutions
+- Different skill levels
+- Alternative phrasings
+
+Return format: ["query1", "query2", "query3", ...]`
+      }],
+      temperature: 0.7,
+      max_tokens: 200
+    });
+
+    const content = response.choices[0].message.content || '[]';
+    const queries = JSON.parse(content);
+    console.log(`Expanded "${concept}" to: ${queries.join(', ')}`);
+    return queries;
+  } catch (error) {
+    console.error('Error expanding queries:', error);
+    return []; // Return empty array on error
+  }
 }
 
 async function discoverPatternsWithClaude(
   similarVideos: any[],
   concept: string
-): Promise<DiscoveredPattern[]> {
-  // Get full video data with performance metrics
+): Promise<{ patterns: DiscoveredPattern[]; prompt: string; usage?: { input_tokens: number; output_tokens: number } }> {
+  // Get full video data with performance metrics - USE EXISTING PERFORMANCE DATA!
   const videoIds = similarVideos.map(v => v.video_id);
   const { data: videos, error } = await supabase
     .from('videos')
-    .select('id, title, view_count, channel_name, published_at')
-    .in('id', videoIds);
+    .select(`
+      id, 
+      title, 
+      view_count, 
+      channel_name, 
+      published_at,
+      performance_ratio,
+      outlier_factor,
+      view_velocity_7d,
+      view_velocity_30d,
+      first_week_views,
+      like_count,
+      comment_count,
+      channel_avg_views
+    `)
+    .in('id', videoIds)
+    .not('performance_ratio', 'is', null);
 
   if (error || !videos) {
     console.error('Failed to fetch video data:', error);
-    return [];
+    return { patterns: [], prompt: '', usage: undefined };
   }
 
-  // Calculate performance ratios for each channel
-  const channelNames = [...new Set(videos.map(v => v.channel_name))];
-  const channelBaselines: Record<string, number> = {};
-  
-  for (const channelName of channelNames) {
-    const { data: channelVideos } = await supabase
-      .from('videos')
-      .select('view_count')
-      .eq('channel_name', channelName)
-      .gte('published_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString())
-      .not('view_count', 'is', null);
-
-    if (channelVideos && channelVideos.length > 0) {
-      const avgViews = channelVideos.reduce((sum, v) => sum + v.view_count, 0) / channelVideos.length;
-      channelBaselines[channelName] = avgViews;
-    }
-  }
-
-  // Enrich videos with performance ratios
+  // Enrich with similarity scores and engagement rates
   const enrichedVideos = videos.map(video => ({
     ...video,
-    performance_ratio: channelBaselines[video.channel_name] 
-      ? video.view_count / channelBaselines[video.channel_name]
-      : 1.0,
-    similarity_score: similarVideos.find(sv => sv.video_id === video.id)?.similarity_score || 0
+    similarity_score: similarVideos.find(sv => sv.video_id === video.id)?.similarity_score || 0,
+    engagement_rate: (video.like_count + video.comment_count) / Math.max(video.view_count, 1)
   }));
 
-  // Sort by performance and take top performers
-  const topVideos = enrichedVideos
-    .filter(v => v.performance_ratio >= 1.5) // At least 1.5x channel average
-    .sort((a, b) => b.performance_ratio - a.performance_ratio)
-    .slice(0, 30); // Analyze top 30
+  // Multi-tier filtering based on performance
+  const performanceTiers = {
+    superstar: enrichedVideos.filter(v => v.performance_ratio >= 10), // 10x+ channel average
+    strong: enrichedVideos.filter(v => v.performance_ratio >= 3 && v.performance_ratio < 10), // 3-10x
+    above_avg: enrichedVideos.filter(v => v.performance_ratio >= 1.5 && v.performance_ratio < 3), // 1.5-3x
+    normal: enrichedVideos.filter(v => v.performance_ratio < 1.5)
+  };
 
-  if (topVideos.length < 5) {
-    console.log('Not enough high-performing videos for pattern analysis');
-    // Fallback to top videos by similarity
-    topVideos.push(
-      ...enrichedVideos
-        .sort((a, b) => b.similarity_score - a.similarity_score)
-        .slice(0, 20)
-    );
+  console.log(`Performance distribution: Superstar: ${performanceTiers.superstar.length}, Strong: ${performanceTiers.strong.length}, Above Avg: ${performanceTiers.above_avg.length}`);
+
+  // Stratified sampling to get diverse but high-performing videos
+  const selectedVideos = [
+    ...performanceTiers.superstar.slice(0, 10).sort((a, b) => b.similarity_score - a.similarity_score),
+    ...performanceTiers.strong.slice(0, 15).sort((a, b) => b.similarity_score - a.similarity_score),
+    ...performanceTiers.above_avg.slice(0, 10).sort((a, b) => b.similarity_score - a.similarity_score)
+  ];
+
+  // If we don't have enough high performers, add some based on pure similarity
+  if (selectedVideos.length < 20) {
+    const additionalVideos = enrichedVideos
+      .filter(v => !selectedVideos.includes(v))
+      .sort((a, b) => b.similarity_score - a.similarity_score)
+      .slice(0, 20 - selectedVideos.length);
+    selectedVideos.push(...additionalVideos);
   }
+
+  // Final sort by performance for Claude
+  const topVideos = selectedVideos.sort((a, b) => b.performance_ratio - a.performance_ratio);
 
   console.log(`Analyzing ${topVideos.length} videos with Claude...`);
 
@@ -185,13 +472,24 @@ async function discoverPatternsWithClaude(
   const anthropic = new AnthropicAPI();
   const prompt = `Analyze these high-performing YouTube video titles about "${concept}" and identify actionable title patterns.
 
+Performance Tiers:
+- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average
+- 💪 STRONG (3-10x): Proven high performers
+- ✅ ABOVE AVG (1.5-3x): Solid performers
+
 Videos (sorted by performance):
-${topVideos.slice(0, 20).map((v, i) => `${i + 1}. [ID: ${v.id}] "${v.title}" - ${v.performance_ratio.toFixed(1)}x channel average (${v.view_count.toLocaleString()} views, similarity: ${(v.similarity_score * 100).toFixed(0)}%)`).join('\n')}
+${topVideos.slice(0, 30).map((v, i) => {
+  const tier = v.performance_ratio >= 10 ? '🌟' : v.performance_ratio >= 3 ? '💪' : '✅';
+  const velocity = v.view_velocity_7d ? ` | 7d velocity: ${v.view_velocity_7d.toFixed(1)}` : '';
+  const engagement = ` | Engagement: ${(v.engagement_rate * 100).toFixed(2)}%`;
+  return `${i + 1}. ${tier} [ID: ${v.id}] "${v.title}" - ${v.performance_ratio.toFixed(1)}x avg (${v.view_count.toLocaleString()} views${velocity}${engagement})`;
+}).join('\n')}
 
 Your task:
 1. Identify 3-5 specific, actionable title patterns that are common among these high performers
-2. For each pattern, identify which video IDs from the list demonstrate that pattern
-3. Create a template that can be applied to new videos about "${concept}"
+2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes
+3. For each pattern, identify which video IDs from the list demonstrate that pattern
+4. Create a template that can be applied to new videos about "${concept}"
 
 Return a JSON array with this structure:
 [
@@ -207,17 +505,19 @@ Return a JSON array with this structure:
 ]
 
 IMPORTANT: 
+- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier
 - In the video_ids array, use the exact IDs shown in brackets above
 - Only include video IDs from the provided list that actually demonstrate the pattern
 - Examples should be exact titles from the videos you reference
+- The performance_multiplier should reflect the average performance of videos using this pattern
 
 Focus on:
-- Specific words/phrases that appear frequently
-- Title structures and formats
-- Emotional hooks or curiosity gaps
+- Specific words/phrases that appear frequently in top performers
+- Title structures that correlate with 10x+ performance
+- Emotional hooks or curiosity gaps that drive clicks
 - Numbers, lists, or quantifiable elements
-- Question formats
-- Skill level indicators`;
+- Question formats that create urgency
+- Skill level indicators when relevant`;
 
   try {
     const response = await anthropic.generateText({
@@ -230,7 +530,7 @@ Focus on:
     const jsonMatch = response.text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.error('Failed to parse Claude response as JSON');
-      return [];
+      return { patterns: [], prompt, usage: response.usage };
     }
 
     const patterns = JSON.parse(jsonMatch[0]) as DiscoveredPattern[];
@@ -240,10 +540,10 @@ Focus on:
       console.log(`  - ${p.pattern}: ${p.template} (${p.performance_multiplier}x)`);
     });
 
-    return patterns;
+    return { patterns, prompt, usage: response.usage };
   } catch (error) {
     console.error('Error analyzing with Claude:', error);
-    return [];
+    return { patterns: [], prompt, usage: undefined };
   }
 }
 

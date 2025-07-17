@@ -107,6 +107,7 @@ export class PineconeService {
     offset: number = 0
   ): Promise<{ results: SearchResult[], hasMore: boolean, totalAvailable: number }> {
     await this.initializeIndex();
+    console.log(`[PineconeService] Starting search with embedding length: ${queryEmbedding.length}, minScore: ${minScore}, limit: ${limit}`);
 
     try {
       
@@ -116,19 +117,27 @@ export class PineconeService {
       // We'll fetch up to 100 results initially and paginate client-side
       const maxResults = Math.max(100, offset + limit + 20);
       
+      console.log(`[PineconeService] Querying Pinecone index: ${this.indexName} for top ${maxResults} results`);
+      
       const queryResponse = await index.query({
         vector: queryEmbedding,
         topK: maxResults,
         includeMetadata: true,
       });
+      
+      console.log(`[PineconeService] Raw Pinecone response - matches: ${queryResponse.matches?.length || 0}`);
 
       // Get video IDs and scores from Pinecone, filter by score
+      console.log(`[PineconeService] First 5 raw scores: ${queryResponse.matches?.slice(0, 5).map(m => m.score).join(', ')}`);
+      
       const allMatches = queryResponse.matches
         ?.filter(match => (match.score || 0) >= minScore)
         .map(match => ({
           video_id: match.id as string,
           similarity_score: match.score || 0,
         })) || [];
+
+      console.log(`[PineconeService] After filtering by minScore ${minScore}: ${allMatches.length} matches`);
 
       if (allMatches.length === 0) {
         console.log(`✅ Found 0 similar videos`);
