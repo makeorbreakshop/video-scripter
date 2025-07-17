@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { DebugPanel } from '@/components/debug-panel';
+import { SearchProgress } from '@/components/search-progress';
+import { SearchStats } from '@/components/search-stats';
+import { ResultsShimmer } from '@/components/results-shimmer';
 
 interface TitleSuggestion {
   title: string;
@@ -36,6 +39,15 @@ interface TitleSuggestion {
     performance_lift: number;
     examples: string[];
     video_ids?: string[];
+    source_thread?: string;
+    thread_purpose?: string;
+    verification?: {
+      matchCount: number;
+      medianPerformance: number;
+      avgPerformance: number;
+      topPerformers: number;
+      verificationScore: number;
+    };
   };
   evidence: {
     sample_size: number;
@@ -91,6 +103,14 @@ export default function TitleGeneratorPage() {
   const [loadingVideos, setLoadingVideos] = useState<Record<number, boolean>>({});
   const [patternVideos, setPatternVideos] = useState<Record<number, Video[]>>({});
   const [expandedPattern, setExpandedPattern] = useState<number | null>(null);
+  
+  // Stats for real-time display
+  const [searchStats, setSearchStats] = useState({
+    videosFound: 0,
+    patternsFound: 0,
+    topPerformance: 1,
+    channelsRepresented: 0
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +119,20 @@ export default function TitleGeneratorPage() {
     setIsLoading(true);
     setError(null);
     setResults(null);
+    
+    // Clear all cached state
+    setCopiedIndex(null);
+    setLoadingVideos({});
+    setPatternVideos({});
+    setExpandedPattern(null);
+    
+    // Reset stats for new search
+    setSearchStats({
+      videosFound: 0,
+      patternsFound: 0,
+      topPerformance: 1,
+      channelsRepresented: 0
+    });
 
     try {
       const response = await fetch('/api/youtube/patterns/generate-titles', {
@@ -106,11 +140,13 @@ export default function TitleGeneratorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        cache: 'no-store', // Disable caching
         body: JSON.stringify({
           concept: concept.trim(),
           options: {
             maxSuggestions: 8,
-            includeExamples: true
+            includeExamples: true,
+            timestamp: Date.now() // Cache buster
           }
         }),
       });
@@ -120,7 +156,31 @@ export default function TitleGeneratorPage() {
       }
 
       const data: TitleGenerationResponse = await response.json();
-      setResults(data);
+      
+      // Check if the response contains an error
+      if ('error' in data && data.error) {
+        setError(data.error as string);
+      } else {
+        setResults(data);
+        
+        // Update search stats from the response
+        if (data.debug) {
+          const uniqueChannels = new Set(
+            data.debug.allVideosWithDetails?.map((v: any) => v.channelName) || []
+          ).size;
+          
+          const topPerf = Math.max(
+            ...(data.debug.allVideosWithDetails?.map((v: any) => v.performanceRatio || 1) || [1])
+          );
+          
+          setSearchStats({
+            videosFound: data.debug.totalVideosFound || 0,
+            patternsFound: data.suggestions.length || 0,
+            topPerformance: topPerf,
+            channelsRepresented: uniqueChannels
+          });
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -184,10 +244,9 @@ export default function TitleGeneratorPage() {
   ];
 
   const getPerformanceLevel = (lift: number) => {
-    if (lift >= 100) return { label: 'Exceptional', color: 'bg-purple-500 text-white' };
-    if (lift >= 50) return { label: 'Excellent', color: 'bg-green-500 text-white' };
-    if (lift >= 20) return { label: 'Very Good', color: 'bg-blue-500 text-white' };
-    if (lift >= 10) return { label: 'Good', color: 'bg-sky-500 text-white' };
+    if (lift >= 20) return { label: 'Exceptional', color: 'bg-green-600 text-white' };
+    if (lift >= 10) return { label: 'Strong', color: 'bg-blue-600 text-white' };
+    if (lift >= 5) return { label: 'Good', color: 'bg-gray-600 text-white' };
     return { label: 'Moderate', color: 'bg-gray-500 text-white' };
   };
 
@@ -199,38 +258,40 @@ export default function TitleGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Hero Section */}
+      {/* Hero Section - Compact */}
       <div className="bg-gray-900 border-b border-gray-800">
-        <div className="container mx-auto px-4 py-12 max-w-5xl">
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
-              <Sparkles className="h-8 w-8 text-white" />
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-100">
+                AI-Powered Title Generator
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold text-gray-100 mb-3">
-              AI-Powered Title Generator
-            </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="text-sm text-gray-400 max-w-2xl mx-auto mb-6">
               Generate high-performing YouTube titles based on patterns from 100K+ successful videos
             </p>
             
-            {/* Version Links */}
-            <div className="mt-8 flex flex-wrap gap-3 justify-center">
+            {/* Version Links - Smaller */}
+            <div className="flex flex-wrap gap-2 justify-center">
               <Link href="/title-generator/version1-minimal">
-                <Button variant="outline" className="gap-2 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-gray-100">
-                  <Palette className="h-4 w-4" />
-                  Minimal Design
+                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
+                  <Palette className="h-3 w-3 mr-1" />
+                  Minimal
                 </Button>
               </Link>
               <Link href="/title-generator/version2-dashboard">
-                <Button variant="outline" className="gap-2 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-gray-100">
-                  <Layout className="h-4 w-4" />
-                  Dashboard Style
+                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
+                  <Layout className="h-3 w-3 mr-1" />
+                  Dashboard
                 </Button>
               </Link>
               <Link href="/title-generator/version3-cards">
-                <Button variant="outline" className="gap-2 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-gray-100">
-                  <Layers className="h-4 w-4" />
-                  Interactive Cards
+                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
+                  <Layers className="h-3 w-3 mr-1" />
+                  Cards
                 </Button>
               </Link>
             </div>
@@ -240,12 +301,12 @@ export default function TitleGeneratorPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Input Section */}
-        <Card className="mb-8 border-0 shadow-lg bg-gray-800 border-gray-700">
-          <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Input Section - Simplified */}
+        <Card className="mb-6 border border-gray-700 bg-gray-800/50">
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="concept" className="text-base font-medium mb-2 block text-gray-100">
+                <Label htmlFor="concept" className="text-sm font-medium mb-2 block text-gray-300">
                   What's your video about?
                 </Label>
                 <div className="relative">
@@ -254,21 +315,21 @@ export default function TitleGeneratorPage() {
                     value={concept}
                     onChange={(e) => setConcept(e.target.value)}
                     placeholder="e.g., beginner woodworking mistakes"
-                    className="h-14 text-lg pr-32 rounded-xl bg-gray-700 border-gray-600 text-gray-100 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-12 text-base pr-28 bg-gray-700 border-gray-600 text-gray-100 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                   <Button 
                     type="submit" 
                     disabled={!concept.trim() || isLoading}
-                    className="absolute right-2 top-2 h-10 px-6 rounded-lg"
+                    className="absolute right-1.5 top-1.5 h-9 px-4 text-sm"
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Generate
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-4 w-4" />
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                         Generate
                       </>
                     )}
@@ -276,19 +337,19 @@ export default function TitleGeneratorPage() {
                 </div>
               </div>
               
-              <div>
-                <p className="text-sm text-gray-400 mb-3">Try these popular concepts:</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-500">Try these:</span>
+                <div className="flex flex-wrap gap-1.5">
                   {exampleConcepts.map((example) => (
                     <Button
                       key={example.text}
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       type="button"
                       onClick={() => setConcept(example.text)}
-                      className="rounded-full hover:bg-gray-700 transition-colors border-gray-600 text-gray-300"
+                      className="h-7 px-3 text-xs rounded-full hover:bg-gray-700 text-gray-400 hover:text-gray-200"
                     >
-                      <span className="mr-1">{example.icon}</span>
+                      <span className="mr-1 text-[10px]">{example.icon}</span>
                       {example.text}
                     </Button>
                   ))}
@@ -297,6 +358,30 @@ export default function TitleGeneratorPage() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Progress Indicator */}
+        <SearchProgress 
+          isActive={isLoading}
+          concept={concept}
+        />
+
+        {/* Search Stats - Show during loading and after results */}
+        {(isLoading || results) && (
+          <SearchStats 
+            isActive={isLoading || !!results}
+            videosFound={searchStats.videosFound}
+            patternsFound={searchStats.patternsFound}
+            topPerformance={searchStats.topPerformance}
+            channelsRepresented={searchStats.channelsRepresented}
+          />
+        )}
+
+        {/* Results Shimmer */}
+        {isLoading && (
+          <div className="max-w-4xl mx-auto">
+            <ResultsShimmer />
+          </div>
+        )}
 
         {/* Error State */}
         {error && (
@@ -308,165 +393,179 @@ export default function TitleGeneratorPage() {
         {/* Results */}
         {results && (
           <div className="space-y-6">
-            {/* Results Summary */}
-            <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-100 mb-1">
-                    Results for "{results.concept}"
-                  </h2>
-                  <p className="text-gray-400">
-                    Found {results.suggestions.length} title patterns from analyzing similar high-performing videos
-                  </p>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <div className="text-center">
-                    <div className="font-bold text-gray-100">{results.total_patterns_searched}</div>
-                    <div className="text-gray-400">Patterns</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-gray-100">{results.processing_time_ms}ms</div>
-                    <div className="text-gray-400">Processing</div>
-                  </div>
-                </div>
+            {/* Results Summary - Simplified */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-100">
+                  Results for "{results.concept}"
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  {results.suggestions.length} patterns • {results.total_patterns_searched} analyzed • {results.processing_time_ms}ms
+                </p>
               </div>
             </div>
 
-            {/* Title Suggestions */}
-            <div className="space-y-4">
+            {/* Title Suggestions - Compact Design */}
+            <div className="space-y-2">
               {results.suggestions.map((suggestion, index) => {
                 const performanceLevel = getPerformanceLevel(suggestion.pattern.performance_lift);
                 const isExpanded = expandedPattern === index;
                 
                 return (
-                  <Card key={index} className="border-0 shadow-md hover:shadow-lg transition-shadow bg-gray-800 border-gray-700">
-                    <CardContent className="p-6">
-                      {/* Title and Copy Button */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 mr-4">
-                          <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                            {suggestion.title}
-                          </h3>
-                          <p className="text-gray-400">
-                            {suggestion.explanation}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => copyToClipboard(suggestion.title, index)}
-                          className="flex-shrink-0"
-                        >
-                          {copiedIndex === index ? (
-                            <Check className="h-5 w-5 text-green-600" />
-                          ) : (
-                            <Copy className="h-5 w-5" />
-                          )}
-                        </Button>
-                      </div>
-
-                      {/* Metrics */}
-                      <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div className="bg-gray-700 rounded-lg p-3 text-center">
-                          <TrendingUp className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-                          <div className="font-bold text-lg text-gray-100">{suggestion.pattern.performance_lift.toFixed(1)}x</div>
-                          <div className="text-xs text-gray-400">Performance</div>
-                        </div>
-                        <div className="bg-gray-700 rounded-lg p-3 text-center">
-                          <Users className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-                          <div className="font-bold text-lg text-gray-100">{suggestion.evidence.sample_size}</div>
-                          <div className="text-xs text-gray-400">Videos</div>
-                        </div>
-                        <div className="bg-gray-700 rounded-lg p-3 text-center">
-                          <BarChart3 className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-                          <div className="font-bold text-lg text-gray-100">
-                            {getConfidenceIcon(suggestion.evidence.confidence_score)} {Math.round(suggestion.evidence.confidence_score * 100)}%
-                          </div>
-                          <div className="text-xs text-gray-400">Confidence</div>
-                        </div>
-                      </div>
-
-                      {/* Pattern Info */}
+                  <Card 
+                    key={index} 
+                    className="border border-gray-700 bg-gray-800/50 hover:bg-gray-800 transition-all cursor-pointer"
+                    onClick={() => togglePatternExpansion(index)}
+                  >
+                    <CardContent className="p-4">
+                      {/* Compact Single Row Layout */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge className={performanceLevel.color}>
-                            {performanceLevel.label}
-                          </Badge>
-                          <Badge variant="outline">
-                            {suggestion.pattern.name}
-                          </Badge>
-                          {suggestion.pattern.template && (
-                            <Badge variant="outline" className="font-mono text-xs">
-                              {suggestion.pattern.template}
+                        {/* Left: Title and Pattern */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3">
+                            {/* Performance Badge */}
+                            <Badge className={`${performanceLevel.color} text-xs font-bold min-w-[60px] justify-center`}>
+                              {suggestion.pattern.performance_lift.toFixed(1)}x
                             </Badge>
-                          )}
+                            
+                            {/* Title Template */}
+                            <h3 className="font-mono text-sm text-gray-100 truncate flex-1">
+                              {suggestion.title}
+                            </h3>
+                          </div>
+                          
+                          {/* Pattern Name and Explanation - Single Line */}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">{suggestion.pattern.name}</span>
+                            {suggestion.pattern.source_thread && (
+                              <>
+                                <span className="text-xs text-gray-600">•</span>
+                                <span className="text-xs text-blue-400">{suggestion.pattern.source_thread}</span>
+                              </>
+                            )}
+                            <span className="text-xs text-gray-600">•</span>
+                            <span className="text-xs text-gray-400 truncate">{suggestion.explanation}</span>
+                          </div>
                         </div>
-                        
-                        {suggestion.pattern.video_ids && suggestion.pattern.video_ids.length > 0 && (
+
+                        {/* Right: Compact Metrics and Actions */}
+                        <div className="flex items-center gap-4 ml-4">
+                          {/* Inline Metrics */}
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              <span>{suggestion.evidence.sample_size}</span>
+                            </div>
+                            {suggestion.pattern.verification && (
+                              <div className="flex items-center gap-1 text-green-400">
+                                <Check className="h-3 w-3" />
+                                <span>{suggestion.pattern.verification.medianPerformance.toFixed(1)}x</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              {getConfidenceIcon(suggestion.evidence.confidence_score)}
+                              <span>{Math.round(suggestion.evidence.confidence_score * 100)}%</span>
+                            </div>
+                          </div>
+                          
+                          {/* Copy Button */}
                           <Button
                             variant="ghost"
-                            size="sm"
-                            onClick={() => togglePatternExpansion(index)}
-                            className="text-gray-400 hover:text-gray-200"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(suggestion.title, index);
+                            }}
+                            className="h-8 w-8"
                           >
-                            View Evidence
-                            {isExpanded ? (
-                              <ChevronUp className="ml-1 h-4 w-4" />
+                            {copiedIndex === index ? (
+                              <Check className="h-4 w-4 text-green-500" />
                             ) : (
-                              <ChevronDown className="ml-1 h-4 w-4" />
+                              <Copy className="h-4 w-4 text-gray-400" />
                             )}
                           </Button>
-                        )}
+                          
+                          {/* Expand Indicator */}
+                          {suggestion.pattern.video_ids && suggestion.pattern.video_ids.length > 0 && (
+                            <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          )}
+                        </div>
                       </div>
 
                       {/* Expanded Content */}
                       {isExpanded && (
-                        <div className="mt-4 pt-4 border-t">
+                        <div className="mt-4 pt-4 border-t border-gray-700">
+                          {/* Verification Stats */}
+                          {suggestion.pattern.verification && (
+                            <div className="mb-3 p-3 bg-gray-700/50 rounded">
+                              <h4 className="text-xs font-medium text-gray-300 mb-2">✅ Pattern Verified</h4>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-gray-400">Similar titles found:</span>
+                                  <span className="ml-2 text-gray-200 font-medium">{suggestion.pattern.verification.matchCount}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Median performance:</span>
+                                  <span className="ml-2 text-green-400 font-medium">{suggestion.pattern.verification.medianPerformance.toFixed(1)}x</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Top performers (10x+):</span>
+                                  <span className="ml-2 text-purple-400 font-medium">{suggestion.pattern.verification.topPerformers}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Verification score:</span>
+                                  <span className="ml-2 text-gray-200 font-medium">{Math.round(suggestion.pattern.verification.verificationScore * 100)}%</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Thread Attribution */}
+                          {suggestion.pattern.thread_purpose && (
+                            <div className="mb-3 text-xs">
+                              <span className="text-gray-400">Pattern Source: </span>
+                              <span className="text-blue-400">{suggestion.pattern.thread_purpose}</span>
+                            </div>
+                          )}
+                          
                           {/* Examples */}
                           {suggestion.pattern.examples.length > 0 && (
-                            <div className="mb-4">
-                              <h4 className="font-medium text-sm text-gray-300 mb-2">Example Titles</h4>
-                              <div className="bg-gray-700 rounded-lg p-3">
-                                <ul className="space-y-1">
-                                  {suggestion.pattern.examples.map((example, i) => (
-                                    <li key={i} className="text-sm text-gray-300 flex items-start">
-                                      <span className="text-blue-500 mr-2">•</span>
-                                      {example}
-                                    </li>
-                                  ))}
-                                </ul>
+                            <div className="mb-3">
+                              <h4 className="text-xs font-medium text-gray-400 mb-2">Example Titles:</h4>
+                              <div className="space-y-1">
+                                {suggestion.pattern.examples.map((example, i) => (
+                                  <div key={i} className="text-xs text-gray-300 flex items-start">
+                                    <span className="text-blue-400 mr-2">•</span>
+                                    <span className="font-mono">{example}</span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           )}
 
                           {/* Videos */}
                           {loadingVideos[index] ? (
-                            <div className="flex items-center justify-center py-8">
-                              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                             </div>
                           ) : patternVideos[index] ? (
                             <div>
-                              <h4 className="font-medium text-sm text-gray-300 mb-3">Videos Using This Pattern</h4>
-                              <div className="grid gap-3">
-                                {patternVideos[index].map((video) => (
-                                  <div key={video.id} className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                              <h4 className="text-xs font-medium text-gray-400 mb-2">Videos Using This Pattern:</h4>
+                              <div className="space-y-2">
+                                {patternVideos[index].slice(0, 3).map((video) => (
+                                  <div key={video.id} className="flex items-center gap-3 p-2 bg-gray-750 rounded hover:bg-gray-700 transition-colors">
                                     {video.thumbnail_url && (
-                                      <div className="relative flex-shrink-0">
-                                        <img 
-                                          src={video.thumbnail_url} 
-                                          alt={video.title}
-                                          className="w-32 h-20 object-cover rounded-lg"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity rounded-lg">
-                                          <Play className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
-                                        </div>
-                                      </div>
+                                      <img 
+                                        src={video.thumbnail_url} 
+                                        alt={video.title}
+                                        className="w-24 h-14 object-cover rounded flex-shrink-0"
+                                      />
                                     )}
                                     <div className="flex-1 min-w-0">
-                                      <h5 className="font-medium text-sm text-gray-100 truncate mb-1">
+                                      <h5 className="text-xs text-gray-200 truncate">
                                         {video.title}
                                       </h5>
-                                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
                                         <span>{video.channel_name}</span>
                                         <span>•</span>
                                         <span>{video.view_count.toLocaleString()} views</span>
@@ -477,8 +576,9 @@ export default function TitleGeneratorPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="flex-shrink-0"
+                                      onClick={(e) => e.stopPropagation()}
                                     >
-                                      <ExternalLink className="h-4 w-4 text-gray-500 hover:text-gray-300" />
+                                      <ExternalLink className="h-3 w-3 text-gray-500 hover:text-gray-300" />
                                     </a>
                                   </div>
                                 ))}
@@ -495,12 +595,12 @@ export default function TitleGeneratorPage() {
 
             {/* Empty State */}
             {results.suggestions.length === 0 && (
-              <Card className="border-0 shadow-md bg-gray-800 border-gray-700">
-                <CardContent className="pt-12 pb-12 text-center">
-                  <Target className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-100 mb-2">No patterns found</h3>
-                  <p className="text-gray-400 max-w-md mx-auto">
-                    We couldn't find title patterns for this concept. Try a different topic or check that your video database has been populated.
+              <Card className="border border-gray-700 bg-gray-800/50">
+                <CardContent className="py-8 text-center">
+                  <Target className="h-8 w-8 text-gray-600 mx-auto mb-3" />
+                  <h3 className="text-base font-medium text-gray-300 mb-1">No patterns found</h3>
+                  <p className="text-sm text-gray-500 max-w-md mx-auto">
+                    Try a different topic or check your database.
                   </p>
                 </CardContent>
               </Card>
