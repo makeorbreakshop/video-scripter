@@ -110,36 +110,32 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // 1. Multi-threaded query expansion
+    // 1. LLM-driven thread expansion (15 threads)
     stepStart = Date.now();
-    const threadExpansions = await expandConceptMultiThreaded(body.concept);
+    const threads = await expandThreadsWithLLM(body.concept);
     
-    // Create query-to-thread mapping for attribution
+    // Create query-to-thread mapping for provenance tracking
     const queryToThread = new Map<string, { thread: string; purpose: string }>();
-    const allQueries: string[] = [body.concept];
-    queryToThread.set(body.concept, { thread: 'original', purpose: 'Original search query' });
+    const allQueries: string[] = [];
     
     // Process each thread's queries
-    threadExpansions.forEach(thread => {
-      thread.queries.forEach(query => {
-        allQueries.push(query);
-        queryToThread.set(query, { 
-          thread: thread.threadName,
-          purpose: thread.purpose
-        });
+    threads.forEach(thread => {
+      allQueries.push(thread.query);
+      queryToThread.set(thread.query, { 
+        thread: thread.angle,
+        purpose: thread.intent
       });
     });
     
     processingSteps.push({
-      step: 'Multi-Threaded Query Expansion',
+      step: 'LLM Thread Expansion',
       duration_ms: Date.now() - stepStart,
       details: {
         originalQuery: body.concept,
-        threads: threadExpansions.map(t => ({
-          name: t.threadName,
-          purpose: t.purpose,
-          queryCount: t.queries.length,
-          queries: t.queries
+        threads: threads.map(t => ({
+          query: t.query,
+          angle: t.angle,
+          intent: t.intent
         })),
         totalQueries: allQueries.length
       }
@@ -166,8 +162,8 @@ export async function POST(req: NextRequest) {
     // 3. Search for videos using all embeddings
     stepStart = Date.now();
     console.log(`Searching Pinecone with ${embeddings.length} query embeddings`);
-    const searchThreshold = 0.40; // Raised threshold to avoid semantic drift
-    const videosPerQuery = 300; // Increased from 200 to find more high performers
+    const searchThreshold = 0.35; // Lowered threshold to get more videos
+    const videosPerQuery = 500; // Increased to get more videos per thread
     const searchPromises = embeddings.map((embedding, index) => 
       pineconeService.searchSimilar(
         embedding.embedding,
@@ -203,7 +199,7 @@ export async function POST(req: NextRequest) {
     
     const similarVideos = Array.from(videoScoreMap.values())
       .sort((a, b) => b.similarity_score - a.similarity_score)
-      .slice(0, 1500); // Take top 1,500 unique videos for wider coverage
+      .slice(0, 3000); // Take top 3,000 unique videos for wider coverage
     
     // Calculate score distribution
     const scoreDistribution: Record<string, number> = {};
@@ -324,56 +320,78 @@ export async function POST(req: NextRequest) {
       }
     });
     
-    // 3. Multi-threaded pattern discovery
+    // 3. Pool-and-cluster pattern discovery
     stepStart = Date.now();
     
-    // Group videos by thread for separate analysis
-    const videosByThread = new Map<string, VideoWithAttribution[]>();
-    similarVideos.forEach(video => {
-      const thread = video.thread;
-      if (!videosByThread.has(thread)) {
-        videosByThread.set(thread, []);
-      }
-      videosByThread.get(thread)!.push(video);
-    });
+    // Step 3a: Create pooled videos with full provenance tracking
+    const pooledVideos = await createPooledVideosWithProvenance(similarVideos, allVideoDetails);
+    console.log(`🏊 Created pool of ${pooledVideos.length} videos with provenance`);
     
-    // Run pattern analysis for each thread in parallel
-    const threadAnalysisPromises = Array.from(videosByThread.entries()).map(async ([threadName, threadVideos]) => {
-      console.log(`🧵 Analyzing ${threadVideos.length} videos from thread: ${threadName}`);
+    // Step 3b: Cluster videos by content similarity
+    const clusters = await clusterVideosByContent(pooledVideos);
+    console.log(`🔮 Discovered ${clusters.length} content clusters`);
+    
+    // Step 3c: Analyze each cluster for patterns
+    const threadAnalysisPromises = clusters.map(async (cluster) => {
+      const threadSources = Array.from(cluster.thread_sources).join(', ');
+      const isWide = cluster.thread_sources.size >= 3;
       
-      // Get thread purpose for context
-      const threadPurpose = threadVideos[0]?.threadPurpose || threadName;
+      console.log(`🧵 Analyzing cluster with ${cluster.videos.length} videos from ${cluster.thread_sources.size} threads: ${threadSources}`);
       
-      // Run pattern analysis with thread context
+      // Run pattern analysis with cluster context
+      // Convert pooled videos to the format expected by pattern analysis
+      const clusterVideosForAnalysis = cluster.videos.slice(0, 100).map(v => ({
+        video_id: v.video_id,
+        similarity_score: v.similarity_score
+      }));
+      
       const result = await discoverPatternsWithClaude(
-        threadVideos.slice(0, 100), // Take top 100 from each thread for better pattern detection
+        clusterVideosForAnalysis,
         body.concept,
-        `Thread: ${threadName} - Purpose: ${threadPurpose}`
+        `${isWide ? 'WIDE' : 'DEEP'} cluster from threads: ${threadSources}`
       );
       
       return {
-        thread: threadName,
-        purpose: threadPurpose,
+        cluster_id: clusters.indexOf(cluster),
+        thread_sources: Array.from(cluster.thread_sources),
+        is_wide: isWide,
+        avg_performance: cluster.avg_performance,
+        video_count: cluster.videos.length,
         ...result
       };
     });
     
-    const threadAnalysisResults = await Promise.all(threadAnalysisPromises);
+    const clusterAnalysisResults = await Promise.all(threadAnalysisPromises);
     
-    // Combine patterns from all threads with attribution
+    // Combine patterns from all clusters with attribution
     const allPatterns: DiscoveredPattern[] = [];
     let totalClaudeInputTokens = 0;
     let totalClaudeOutputTokens = 0;
     const claudePrompts: Record<string, string> = {};
     
-    threadAnalysisResults.forEach(result => {
-      // Add thread attribution to each pattern
+    clusterAnalysisResults.forEach(result => {
+      // Add cluster attribution to each pattern
       result.patterns.forEach(pattern => {
         allPatterns.push({
           ...pattern,
-          source_thread: result.thread,
-          thread_purpose: result.purpose
-        } as DiscoveredPattern & { source_thread: string; thread_purpose: string });
+          source_thread: result.thread_sources.join(', '),
+          thread_purpose: result.is_wide ? 'WIDE cross-thread pattern' : 'DEEP specialized pattern',
+          cluster_info: {
+            is_wide: result.is_wide,
+            thread_sources: result.thread_sources,
+            avg_performance: result.avg_performance,
+            video_count: result.video_count
+          }
+        } as DiscoveredPattern & { 
+          source_thread: string; 
+          thread_purpose: string;
+          cluster_info: {
+            is_wide: boolean;
+            thread_sources: string[];
+            avg_performance: number;
+            video_count: number;
+          };
+        });
       });
       
       // Aggregate token usage
@@ -383,27 +401,27 @@ export async function POST(req: NextRequest) {
       }
       
       // Store prompts for debugging
-      claudePrompts[result.thread] = result.prompt;
+      claudePrompts[`cluster_${result.cluster_id}`] = result.prompt;
     });
     
     // Sort patterns by performance multiplier
     allPatterns.sort((a, b) => b.performance_multiplier - a.performance_multiplier);
     
     // Calculate total OpenAI costs (using GPT-4o-mini pricing)
-    const claudeInputCost = (totalClaudeInputTokens / 1_000_000) * 0.15;  // $0.15/1M tokens
-    const claudeOutputCost = (totalClaudeOutputTokens / 1_000_000) * 0.60; // $0.60/1M tokens
-    const claudeTotalCost = claudeInputCost + claudeOutputCost;
+    const openaiInputCost = (totalClaudeInputTokens / 1_000_000) * 0.15;  // $0.15/1M tokens
+    const openaiOutputCost = (totalClaudeOutputTokens / 1_000_000) * 0.60; // $0.60/1M tokens
+    const openaiTotalCost = openaiInputCost + openaiOutputCost;
     
-    // Use the first thread's stats for backward compatibility
-    const stats = threadAnalysisResults[0]?.stats;
+    // Use the first cluster's stats for backward compatibility
+    const stats = clusterAnalysisResults[0]?.stats;
     
     processingSteps.push({
       step: 'Multi-Threaded Pattern Discovery',
       duration_ms: Date.now() - stepStart,
       details: {
-        threadsAnalyzed: threadAnalysisResults.length,
-        threadBreakdown: threadAnalysisResults.map(t => ({
-          thread: t.thread,
+        threadsAnalyzed: clusterAnalysisResults.length,
+        threadBreakdown: clusterAnalysisResults.map(t => ({
+          thread: t.thread_sources.join(', '),
           videosAnalyzed: t.stats?.analyzedCount || 0,
           patternsFound: t.patterns.length
         })),
@@ -412,7 +430,7 @@ export async function POST(req: NextRequest) {
         totalPatternsFound: allPatterns.length,
         inputTokens: totalClaudeInputTokens,
         outputTokens: totalClaudeOutputTokens,
-        cost: claudeTotalCost
+        cost: openaiTotalCost
       }
     });
     
@@ -532,13 +550,13 @@ export async function POST(req: NextRequest) {
         timestamp: new Date().toISOString(),
         concept: body.concept,
         expandedQueries: allQueries.slice(1), // Remove original concept
-        expandedQueriesByThread: threadExpansions,
+        expandedQueriesByThread: threads.map(t => ({ threadName: t.angle, queries: [t.query] })),
         searchResults: allVideosWithDetails,
         performanceDistribution: stats?.performanceDistribution || {},
         claudePrompts: claudePrompts,
         discoveredPatterns: finalPatterns,
-        threadAnalysis: threadAnalysisResults.map(t => ({
-          thread: t.thread,
+        threadAnalysis: clusterAnalysisResults.map(t => ({
+          thread: t.thread_sources.join(', '),
           videosAnalyzed: t.stats?.analyzedCount || 0,
           patternsFound: t.patterns.length
         })),
@@ -551,11 +569,11 @@ export async function POST(req: NextRequest) {
           claude: {
             inputTokens: totalClaudeInputTokens,
             outputTokens: totalClaudeOutputTokens,
-            inputCost: claudeInputCost,
-            outputCost: claudeOutputCost,
-            totalCost: claudeTotalCost
+            inputCost: openaiInputCost,
+            outputCost: openaiOutputCost,
+            totalCost: openaiTotalCost
           },
-          totalCost: totalEmbeddingCost + claudeTotalCost
+          totalCost: totalEmbeddingCost + openaiTotalCost
         },
         totalProcessingTime: processingTime
       });
@@ -567,7 +585,7 @@ export async function POST(req: NextRequest) {
       suggestions: suggestions.slice(0, body.options?.maxSuggestions || 8),
       concept: body.concept,
       total_patterns_searched: finalPatterns.length,
-      semantic_neighborhoods_found: threadExpansions?.length || 0,
+      semantic_neighborhoods_found: threads.length,
       processing_time_ms: processingTime,
       debug: {
         embeddingLength: embeddings[0]?.embedding.length || 512,
@@ -577,12 +595,12 @@ export async function POST(req: NextRequest) {
         topVideos,
         allVideosWithDetails: allVideosWithDetails,
         // Multi-threaded debug info
-        threads: threadExpansions?.map(t => ({
-          name: t.threadName,
-          purpose: t.purpose,
-          queries: t.queries,
-          videosFound: videosByThread?.get(t.threadName)?.length || 0
-        })) || [],
+        threads: threads.map(t => ({
+          name: t.angle,
+          purpose: t.intent,
+          queries: [t.query],
+          videosFound: 0 // Will be populated by clustering
+        })),
         claudePrompts: claudePrompts,
         claudeResponse: finalPatterns,
         claudePatterns: finalPatterns,
@@ -595,11 +613,11 @@ export async function POST(req: NextRequest) {
           claude: {
             inputTokens: totalClaudeInputTokens,
             outputTokens: totalClaudeOutputTokens,
-            inputCost: claudeInputCost,
-            outputCost: claudeOutputCost,
-            totalCost: claudeTotalCost
+            inputCost: openaiInputCost,
+            outputCost: openaiOutputCost,
+            totalCost: openaiTotalCost
           },
-          totalCost: totalEmbeddingCost + claudeTotalCost
+          totalCost: totalEmbeddingCost + openaiTotalCost
         }
       }
     };
@@ -699,16 +717,36 @@ async function detectDomain(concept: string) {
         content: `Analyze this search concept and identify its domain context.
 Concept: "${concept}"
 
-Return a JSON object with:
-{
-  "primary_domain": "one of: cooking|technology|fitness|education|entertainment|diy|business|health|travel|other",
-  "domain_keywords": ["5-8 keywords that are specific to this domain"],
-  "avoid_domains": ["list domains that might have overlapping terms but should be avoided"],
-  "disambiguation_terms": ["terms to add to queries to keep them in the right domain"]
-}`
+Return a JSON object with the domain analysis.`
       }],
       temperature: 0.3,
-      response_format: { type: "json_object" }
+      response_format: { 
+        type: "json_object",
+        schema: {
+          type: "object",
+          properties: {
+            primary_domain: { 
+              type: "string",
+              enum: ["cooking", "technology", "fitness", "education", "entertainment", "diy", "business", "health", "travel", "other"]
+            },
+            domain_keywords: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 5,
+              maxItems: 8
+            },
+            avoid_domains: {
+              type: "array",
+              items: { type: "string" }
+            },
+            disambiguation_terms: {
+              type: "array",
+              items: { type: "string" }
+            }
+          },
+          required: ["primary_domain", "domain_keywords", "avoid_domains", "disambiguation_terms"]
+        }
+      }
     });
 
     return JSON.parse(response.choices[0].message.content || '{}');
@@ -724,203 +762,15 @@ Return a JSON object with:
   }
 }
 
-async function expandConceptMultiThreaded(concept: string): Promise<ThreadExpansion[]> {
-  // First detect the domain
-  const domainContext = await detectDomain(concept);
-  console.log(`🎯 Domain detection for "${concept}":`, domainContext);
-  
-  const queryType = await classifyQueryType(concept);
-  console.log(`🎯 Query classification:`, queryType);
-  
-  // Determine which threads to run based on query type
-  const threads: Promise<ThreadExpansion>[] = [];
-  
-  // Thread 1: Direct variations (always run)
-  threads.push(expandDirectVariations(concept, domainContext));
-  
-  // Thread 2: Format exploration (always run for pattern diversity)
-  threads.push(expandFormatVariations(concept, domainContext));
-  
-  // Thread 3: Domain hierarchy (always run for universal patterns)
-  threads.push(expandDomainHierarchy(concept, domainContext));
-  
-  // Execute all threads in parallel
-  const results = await Promise.all(threads);
-  console.log(`✅ Completed ${results.length} expansion threads`);
-  
-  return results;
-}
+// Legacy function - removed in favor of LLM-driven expansion
 
-async function expandDirectVariations(concept: string, domainContext: any): Promise<ThreadExpansion> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{
-        role: "system",
-        content: "Generate 5-6 direct variations of the given concept with domain awareness. Return only a JSON array of strings."
-      }, {
-        role: "user",
-        content: `Original concept: "${concept}"
+// Legacy function - removed in favor of LLM-driven expansion
 
-Domain Context:
-- Primary domain: ${domainContext.primary_domain}
-- Use these domain-specific terms: ${domainContext.domain_keywords.join(', ')}
-- Avoid content from: ${domainContext.avoid_domains.join(', ')}
+// Legacy function - removed in favor of LLM-driven expansion
 
-Generate direct variations that:
-- Stay very close to the original concept
-- Use exact terminology from the search
-- Add domain-specific qualifiers to ambiguous terms (e.g., "tools" → "${domainContext.domain_keywords[0]} tools")
-- Include at least one ${domainContext.primary_domain} keyword per query
-- Would find videos from ${domainContext.primary_domain} channels
+// Legacy function - removed in favor of LLM-driven expansion
 
-Examples of variations to generate:
-- Common problems/issues with this topic IN ${domainContext.primary_domain}
-- Success/results related to this topic IN ${domainContext.primary_domain}
-- Time-based variations specific to ${domainContext.primary_domain}
-- Direct comparisons within ${domainContext.primary_domain} domain
-
-Return format: ["query1", "query2", "query3", ...]`
-      }],
-      temperature: 0.7,
-      max_tokens: 200
-    });
-
-    const content = response.choices[0].message.content || '[]';
-    const queries = JSON.parse(content);
-    
-    return {
-      threadId: 'thread_1_direct',
-      threadName: 'Direct Variations',
-      purpose: 'Find patterns specific to this exact topic',
-      queries
-    };
-  } catch (error) {
-    console.error('Error in direct expansion:', error);
-    return {
-      threadId: 'thread_1_direct',
-      threadName: 'Direct Variations',
-      purpose: 'Find patterns specific to this exact topic',
-      queries: []
-    };
-  }
-}
-
-async function expandFormatVariations(concept: string, domainContext: any): Promise<ThreadExpansion> {
-  try {
-    // Extract the core topic without format words
-    const coreTopicMatch = concept.match(/^(.+?)\s*(review|tutorial|guide|comparison|tips|vs|versus|unboxing|test|setup)*$/i);
-    const coreTopic = coreTopicMatch ? coreTopicMatch[1].trim() : concept;
-    
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{
-        role: "system",
-        content: "Generate 5-6 queries that find the same topic in different content formats. Return only a JSON array of strings."
-      }, {
-        role: "user",
-        content: `Core topic: "${coreTopic}"
-Original query: "${concept}"
-
-Domain Context:
-- Primary domain: ${domainContext.primary_domain}
-- Use these domain-specific terms: ${domainContext.domain_keywords.join(', ')}
-- Avoid content from: ${domainContext.avoid_domains.join(', ')}
-
-Generate queries that find this topic in DIFFERENT content formats while staying within ${domainContext.primary_domain}:
-- Explore different formats: tutorial, guide, review, comparison, tips
-- Keep all queries within the ${domainContext.primary_domain} domain
-- Include at least one ${domainContext.primary_domain} keyword per query
-- Make queries that would find videos from ${domainContext.primary_domain} channels
-- Avoid ambiguous terms that could match ${domainContext.avoid_domains.join(' or ')} content
-
-Available formats to explore: tutorial, explainer, listicle, case_study, product_focus, comparison, news_update
-
-Return format: ["query1", "query2", "query3", ...]`
-      }],
-      temperature: 0.7,
-      max_tokens: 200
-    });
-
-    const content = response.choices[0].message.content || '[]';
-    const queries = JSON.parse(content);
-    
-    return {
-      threadId: 'thread_2_format',
-      threadName: 'Format Exploration',
-      purpose: 'Discover patterns that work across different content formats',
-      queries
-    };
-  } catch (error) {
-    console.error('Error in format expansion:', error);
-    return {
-      threadId: 'thread_2_format',
-      threadName: 'Format Exploration',
-      purpose: 'Discover patterns that work across different content formats',
-      queries: []
-    };
-  }
-}
-
-async function expandDomainHierarchy(concept: string, domainContext: any): Promise<ThreadExpansion> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{
-        role: "system",
-        content: "Generate 5-6 queries that expand from specific to general categories. Return only a JSON array of strings."
-      }, {
-        role: "user",
-        content: `Original concept: "${concept}"
-
-Domain Context:
-- Primary domain: ${domainContext.primary_domain}
-- Use these domain-specific terms: ${domainContext.domain_keywords.join(', ')}
-- Avoid content from: ${domainContext.avoid_domains.join(', ')}
-
-Generate queries that explore the broader category hierarchy WITHIN ${domainContext.primary_domain}:
-- Broaden to related concepts within ${domainContext.primary_domain}
-- Do NOT cross into ${domainContext.avoid_domains.join(' or ')}
-- Use broader ${domainContext.primary_domain} terminology
-- Include at least one ${domainContext.primary_domain} keyword per query
-
-Examples of hierarchy expansion:
-- If it's a specific technique in ${domainContext.primary_domain}, expand to general ${domainContext.primary_domain} skills
-- If it's a specific tool, expand to ${domainContext.primary_domain} tool categories
-- Always stay within the ${domainContext.primary_domain} domain boundaries
-
-Return format: ["query1", "query2", "query3", ...]`
-      }],
-      temperature: 0.7,
-      max_tokens: 200
-    });
-
-    const content = response.choices[0].message.content || '[]';
-    const queries = JSON.parse(content);
-    
-    return {
-      threadId: 'thread_3_domain',
-      threadName: 'Domain Hierarchy',
-      purpose: 'Find universal patterns that work across the entire category',
-      queries
-    };
-  } catch (error) {
-    console.error('Error in domain expansion:', error);
-    return {
-      threadId: 'thread_3_domain',
-      threadName: 'Domain Hierarchy',
-      purpose: 'Find universal patterns that work across the entire category',
-      queries: []
-    };
-  }
-}
-
-// Legacy function for backward compatibility
-async function expandConceptQueries(concept: string): Promise<string[]> {
-  // Use the new multi-threaded system but flatten results for compatibility
-  const threadResults = await expandConceptMultiThreaded(concept);
-  return threadResults.flatMap(thread => thread.queries);
-}
+// Legacy function - removed in favor of LLM-driven expansion
 
 async function discoverPatternsWithClaude(
   similarVideos: any[],
@@ -1070,13 +920,13 @@ Focus on:
 - Skill level indicators when relevant`;
 
   try {
-    // Use OpenAI with JSON mode for reliable structured output
+    // Use OpenAI with structured output for reliable JSON
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are an expert at analyzing YouTube video titles to discover high-performing patterns. Always return valid JSON array."
+          content: "You are an expert at analyzing YouTube video titles to discover high-performing patterns. Always return valid JSON."
         },
         {
           role: "user",
@@ -1085,7 +935,41 @@ Focus on:
       ],
       temperature: 0.3,
       max_tokens: 2000,
-      response_format: { type: "json_object" }
+      response_format: { 
+        type: "json_object",
+        schema: {
+          type: "object",
+          properties: {
+            patterns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  pattern: { type: "string" },
+                  explanation: { type: "string" },
+                  template: { type: "string" },
+                  examples: {
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 5,
+                    maxItems: 15
+                  },
+                  video_ids: {
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 5,
+                    maxItems: 20
+                  },
+                  confidence: { type: "number", minimum: 0, maximum: 1 },
+                  performance_multiplier: { type: "number", minimum: 1 }
+                },
+                required: ["pattern", "explanation", "template", "examples", "video_ids", "confidence", "performance_multiplier"]
+              }
+            }
+          },
+          required: ["patterns"]
+        }
+      }
     });
 
     const responseText = completion.choices[0].message.content || '{"patterns": []}';
@@ -1493,3 +1377,224 @@ function calculateVerificationScore(
 }
 
 // Removed old pattern application functions - now using Claude's discovered patterns directly
+
+// New LLM-driven thread expansion function
+interface ThreadExpansion {
+  query: string;
+  angle: string;
+  intent: string;
+}
+
+async function expandThreadsWithLLM(concept: string): Promise<ThreadExpansion[]> {
+  try {
+    console.log(`🎯 Expanding threads for: "${concept}"`);
+    
+    const prompt = `Generate 15 diverse thread categories for: "${concept}"
+
+For each thread, create 6 specific search query variations. Each thread should explore a different angle:
+- Direct variations (2-3 threads)
+- Audience/skill levels (2-3 threads)  
+- Content formats (tutorials, reviews, comparisons, mistakes) (3-4 threads)
+- Problems/outcomes/benefits (2-3 threads)
+- Adjacent/creative angles (2-3 threads)
+
+Return a JSON object with a "threads" array. Each thread should have:
+{
+  "angle": "brief angle description",
+  "intent": "what videos this will find", 
+  "queries": ["query1", "query2", "query3", "query4", "query5", "query6"]
+}
+
+Example structure:
+{
+  "threads": [
+    {
+      "angle": "Direct variations",
+      "intent": "Find videos about the exact topic",
+      "queries": ["variation1", "variation2", "variation3", "variation4", "variation5", "variation6"]
+    }
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{
+        role: "user",
+        content: prompt
+      }],
+      response_format: { 
+        type: "json_object",
+        schema: {
+          type: "object",
+          properties: {
+            threads: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  angle: { type: "string" },
+                  intent: { type: "string" },
+                  queries: {
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 5,
+                    maxItems: 6
+                  }
+                },
+                required: ["angle", "intent", "queries"]
+              }
+            }
+          },
+          required: ["threads"]
+        }
+      },
+      temperature: 0.8,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content);
+    const threadData = result.threads || [];
+    
+    // Convert to flat array of individual queries with thread info
+    const allQueries: ThreadExpansion[] = [];
+    threadData.forEach((thread: any, threadIndex: number) => {
+      const queries = thread.queries || [];
+      queries.forEach((query: string, queryIndex: number) => {
+        allQueries.push({
+          query,
+          angle: thread.angle,
+          intent: thread.intent
+        });
+      });
+    });
+    
+    console.log(`✅ Generated ${threadData.length} threads with ${allQueries.length} total queries`);
+    return allQueries;
+    
+  } catch (error) {
+    console.error('Error in thread expansion:', error);
+    // Fallback to original concept if LLM fails
+    return [{
+      query: concept,
+      angle: 'direct',
+      intent: 'baseline search'
+    }];
+  }
+}
+
+// Pool-and-cluster implementation
+interface PooledVideo {
+  video_id: string;
+  title: string;
+  channel_name: string;
+  performance_ratio: number;
+  similarity_score: number;
+  found_by_threads: Set<string>;
+  thread_purposes: Set<string>;
+  view_count: number;
+}
+
+interface VideoCluster {
+  videos: PooledVideo[];
+  thread_sources: Set<string>;
+  avg_performance: number;
+  is_wide: boolean;
+  centroid_similarity: number;
+}
+
+async function createPooledVideosWithProvenance(
+  similarVideos: VideoWithAttribution[], 
+  allVideoDetails: any[]
+): Promise<PooledVideo[]> {
+  // Create map to track which threads found each video
+  const videoMap = new Map<string, PooledVideo>();
+  
+  similarVideos.forEach(video => {
+    const details = allVideoDetails?.find(d => d.id === video.video_id);
+    
+    if (!videoMap.has(video.video_id)) {
+      videoMap.set(video.video_id, {
+        video_id: video.video_id,
+        title: details?.title || 'Unknown',
+        channel_name: details?.channel_name || 'Unknown',
+        performance_ratio: details?.performance_ratio || 1.0,
+        similarity_score: video.similarity_score,
+        found_by_threads: new Set(),
+        thread_purposes: new Set(),
+        view_count: details?.view_count || 0
+      });
+    }
+    
+    const pooledVideo = videoMap.get(video.video_id)!;
+    pooledVideo.found_by_threads.add(video.thread);
+    pooledVideo.thread_purposes.add(video.threadPurpose);
+    
+    // Keep highest similarity score
+    if (video.similarity_score > pooledVideo.similarity_score) {
+      pooledVideo.similarity_score = video.similarity_score;
+    }
+  });
+  
+  // Filter for performance and return
+  return Array.from(videoMap.values())
+    .filter(v => v.performance_ratio >= 1.0) // Lowered performance filter to include more videos
+    .sort((a, b) => b.performance_ratio - a.performance_ratio);
+}
+
+async function clusterVideosByContent(pooledVideos: PooledVideo[]): Promise<VideoCluster[]> {
+  // Simple clustering based on title similarity and thread overlap
+  const clusters: VideoCluster[] = [];
+  const processed = new Set<string>();
+  
+  for (const video of pooledVideos) {
+    if (processed.has(video.video_id)) continue;
+    
+    // Create new cluster
+    const cluster: VideoCluster = {
+      videos: [video],
+      thread_sources: new Set(video.found_by_threads),
+      avg_performance: video.performance_ratio,
+      is_wide: false,
+      centroid_similarity: video.similarity_score
+    };
+    
+    processed.add(video.video_id);
+    
+    // Find similar videos for this cluster
+    const titleWords = video.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    
+    for (const otherVideo of pooledVideos) {
+      if (processed.has(otherVideo.video_id)) continue;
+      
+      // Check for title similarity
+      const otherTitleWords = otherVideo.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+      const commonWords = titleWords.filter(w => otherTitleWords.includes(w));
+      
+      // Check for thread overlap
+      const threadOverlap = Array.from(video.found_by_threads).some(t => 
+        otherVideo.found_by_threads.has(t)
+      );
+      
+      // Cluster if similar content or shared threads
+      if (commonWords.length >= 2 || threadOverlap) {
+        cluster.videos.push(otherVideo);
+        otherVideo.found_by_threads.forEach(t => cluster.thread_sources.add(t));
+        processed.add(otherVideo.video_id);
+      }
+    }
+    
+    // Calculate cluster metrics
+    if (cluster.videos.length >= 3) {
+      cluster.avg_performance = cluster.videos.reduce((sum, v) => sum + v.performance_ratio, 0) / cluster.videos.length;
+      cluster.is_wide = cluster.thread_sources.size >= 3;
+      cluster.centroid_similarity = cluster.videos.reduce((sum, v) => sum + v.similarity_score, 0) / cluster.videos.length;
+      
+      clusters.push(cluster);
+    }
+  }
+  
+  // Sort clusters by wide patterns first, then by performance
+  return clusters.sort((a, b) => {
+    if (a.is_wide !== b.is_wide) return b.is_wide ? 1 : -1;
+    return b.avg_performance - a.avg_performance;
+  });
+}

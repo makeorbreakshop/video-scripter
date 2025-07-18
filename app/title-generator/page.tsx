@@ -41,6 +41,15 @@ interface TitleSuggestion {
     video_ids?: string[];
     source_thread?: string;
     thread_purpose?: string;
+    // Pool-and-cluster additions
+    found_by_threads?: string[];
+    thread_count?: number;
+    pattern_type?: 'WIDE' | 'DEEP';
+    cluster_info?: {
+      cluster_id: string;
+      cluster_size: number;
+      thread_overlap: number;
+    };
     verification?: {
       matchCount: number;
       medianPerformance: number;
@@ -256,6 +265,29 @@ export default function TitleGeneratorPage() {
     return '🔴';
   };
 
+  const getPatternTypeInfo = (pattern: TitleSuggestion['pattern']) => {
+    const threadCount = pattern.thread_count || pattern.found_by_threads?.length || 1;
+    const patternType = pattern.pattern_type || (threadCount >= 3 ? 'WIDE' : 'DEEP');
+    
+    if (patternType === 'WIDE') {
+      return {
+        label: 'WIDE',
+        icon: '🌐',
+        description: `Found by ${threadCount} threads`,
+        color: 'bg-purple-600 text-white',
+        strength: 'Cross-thread validated'
+      };
+    } else {
+      return {
+        label: 'DEEP',
+        icon: '🎯',
+        description: `Found by ${threadCount} thread${threadCount > 1 ? 's' : ''}`,
+        color: 'bg-blue-600 text-white',
+        strength: 'Thread-specific'
+      };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Hero Section - Compact */}
@@ -378,6 +410,7 @@ export default function TitleGeneratorPage() {
             <div className="space-y-2">
               {results.suggestions.map((suggestion, index) => {
                 const performanceLevel = getPerformanceLevel(suggestion.pattern.performance_lift);
+                const patternTypeInfo = getPatternTypeInfo(suggestion.pattern);
                 const isExpanded = expandedPattern === index;
                 
                 return (
@@ -397,6 +430,11 @@ export default function TitleGeneratorPage() {
                               {suggestion.pattern.performance_lift.toFixed(1)}x
                             </Badge>
                             
+                            {/* Pattern Type Badge */}
+                            <Badge className={`${patternTypeInfo.color} text-xs font-bold min-w-[50px] justify-center`} title={patternTypeInfo.strength}>
+                              {patternTypeInfo.icon} {patternTypeInfo.label}
+                            </Badge>
+                            
                             {/* Title Template */}
                             <h3 className="font-mono text-sm text-gray-100 truncate flex-1">
                               {suggestion.title}
@@ -414,6 +452,12 @@ export default function TitleGeneratorPage() {
                             )}
                             <span className="text-xs text-gray-600">•</span>
                             <span className="text-xs text-gray-400 truncate">{suggestion.explanation}</span>
+                            {patternTypeInfo.description && (
+                              <>
+                                <span className="text-xs text-gray-600">•</span>
+                                <span className="text-xs text-purple-400">{patternTypeInfo.description}</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -489,11 +533,39 @@ export default function TitleGeneratorPage() {
                             </div>
                           )}
                           
-                          {/* Thread Attribution */}
+                          {/* Thread Attribution and Pool-Cluster Info */}
                           {suggestion.pattern.thread_purpose && (
                             <div className="mb-3 text-xs">
                               <span className="text-gray-400">Pattern Source: </span>
                               <span className="text-blue-400">{suggestion.pattern.thread_purpose}</span>
+                            </div>
+                          )}
+                          
+                          {/* Pool-and-Cluster Information */}
+                          {suggestion.pattern.found_by_threads && suggestion.pattern.found_by_threads.length > 0 && (
+                            <div className="mb-3 p-3 bg-gray-700/50 rounded">
+                              <h4 className="text-xs font-medium text-gray-300 mb-2">
+                                🔍 Thread Provenance ({patternTypeInfo.label} Pattern)
+                              </h4>
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-400">
+                                  Found by {suggestion.pattern.found_by_threads.length} thread{suggestion.pattern.found_by_threads.length > 1 ? 's' : ''}:
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {suggestion.pattern.found_by_threads.map((thread, i) => (
+                                    <Badge key={i} variant="outline" className="text-xs bg-blue-900/30 text-blue-300">
+                                      {thread}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                {suggestion.pattern.cluster_info && (
+                                  <div className="text-xs text-purple-400 mt-1">
+                                    Cluster #{suggestion.pattern.cluster_info.cluster_id} 
+                                    ({suggestion.pattern.cluster_info.cluster_size} videos, 
+                                    {suggestion.pattern.cluster_info.thread_overlap} thread overlap)
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                           

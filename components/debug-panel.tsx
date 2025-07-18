@@ -26,6 +26,30 @@ interface DebugInfo {
     duration_ms: number;
     details?: any;
   }>;
+  // Pool-and-cluster additions
+  pooledVideos?: Array<{
+    video_id: string;
+    title: string;
+    performance_ratio: number;
+    found_by_threads: string[];
+    thread_purposes: string[];
+  }>;
+  clusters?: Array<{
+    cluster_id: string;
+    videos: Array<{
+      video_id: string;
+      title: string;
+      performance_ratio: number;
+      found_by_threads: string[];
+    }>;
+    thread_overlap: number;
+    avg_performance: number;
+  }>;
+  threadExpansions?: Array<{
+    angle: string;
+    intent: string;
+    queries: string[];
+  }>;
   costs?: {
     embedding: {
       tokens: number;
@@ -70,12 +94,13 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
 
   // Tab configuration
   const tabs = [
-    { id: 'expansion', label: 'Query Expansion', icon: Search, step: 1, description: 'Expand concept into multiple search queries' },
+    { id: 'expansion', label: 'Thread Expansion', icon: Search, step: 1, description: 'Generate 15 diverse search threads' },
     { id: 'embeddings', label: 'Embeddings', icon: Zap, step: 2, description: 'Convert queries to semantic vectors' },
     { id: 'search', label: 'Search Results', icon: Database, step: 3, description: 'Find similar videos in database' },
-    { id: 'performance', label: 'Performance', icon: TrendingUp, step: 4, description: 'Analyze video performance metrics' },
-    { id: 'patterns', label: 'Pattern Discovery', icon: Brain, step: 5, description: 'Discover title patterns with AI' },
-    { id: 'costs', label: 'Costs & Timeline', icon: DollarSign, step: 6, description: 'View costs and processing time' }
+    { id: 'clustering', label: 'Pool & Cluster', icon: Target, step: 4, description: 'Pool videos and cluster by content similarity' },
+    { id: 'performance', label: 'Performance', icon: TrendingUp, step: 5, description: 'Analyze video performance metrics' },
+    { id: 'patterns', label: 'Pattern Discovery', icon: Brain, step: 6, description: 'Discover cross-thread patterns with AI' },
+    { id: 'costs', label: 'Costs & Timeline', icon: DollarSign, step: 7, description: 'View costs and processing time' }
   ];
 
   const hasData = (tabId: string) => {
@@ -83,6 +108,7 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
       case 'expansion': return expandStep !== undefined;
       case 'embeddings': return multiEmbedStep !== undefined;
       case 'search': return searchStep !== undefined;
+      case 'clustering': return debug.pooledVideos !== undefined || debug.clusters !== undefined;
       case 'performance': return perfDist !== undefined;
       case 'patterns': return debug.claudePatterns && debug.claudePatterns.length > 0;
       case 'costs': return debug.costs !== undefined;
@@ -151,7 +177,7 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
         <div className="max-h-[60vh] overflow-y-auto border-t border-gray-800">
           <div className="p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
+              <TabsList className="grid w-full grid-cols-7 bg-gray-800 border-gray-700">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -446,14 +472,102 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
                 </div>
               </TabsContent>
 
-              {/* Tab 4: Performance Analysis */}
+              {/* Tab 4: Pool & Cluster */}
+              <TabsContent value="clustering" className="mt-4">
+                <div className="space-y-4">
+                  <Card className="bg-gray-800 border-gray-700">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        <div>
+                          <div>Pool & Cluster Analysis (Step 4)</div>
+                          <div className="text-xs font-normal text-gray-400 mt-0.5">Pool videos from all threads and cluster by content similarity</div>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {/* Pool Summary */}
+                        {debug.pooledVideos && (
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-400">Total Pooled Videos:</span>
+                              <span className="ml-2 text-gray-100 font-medium">{debug.pooledVideos.length}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">Performance Filtered:</span>
+                              <span className="ml-2 text-gray-100 font-medium">≥1.0x baseline</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Cluster Summary */}
+                        {debug.clusters && (
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-400">Clusters Found:</span>
+                              <span className="ml-2 text-gray-100 font-medium">{debug.clusters.length}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">Avg Cluster Size:</span>
+                              <span className="ml-2 text-gray-100 font-medium">
+                                {debug.clusters.length > 0 ? Math.round(debug.clusters.reduce((sum, c) => sum + c.videos.length, 0) / debug.clusters.length) : 0}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Cluster Details */}
+                        {debug.clusters && debug.clusters.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-2">Cluster Breakdown:</h4>
+                            <div className="space-y-2 max-h-96 overflow-y-auto">
+                              {debug.clusters.map((cluster, i) => (
+                                <div key={i} className="border border-gray-700 rounded p-3 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-sm font-medium text-gray-200">Cluster #{cluster.cluster_id}</h5>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        {cluster.videos.length} videos
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs text-purple-400">
+                                        {cluster.thread_overlap} threads
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs text-green-400">
+                                        {cluster.avg_performance.toFixed(1)}x avg
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Sample Videos: {cluster.videos.slice(0, 3).map(v => v.title).join(' • ')}
+                                    {cluster.videos.length > 3 && ` ... and ${cluster.videos.length - 3} more`}
+                                  </div>
+                                  <div className="text-xs text-blue-400">
+                                    Found by threads: {[...new Set(cluster.videos.flatMap(v => v.found_by_threads))].join(', ')}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="text-xs text-gray-500 bg-gray-700/50 p-2 rounded">
+                          💡 Videos are pooled across all threads, deduplicated, and clustered by title similarity and thread overlap
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Tab 5: Performance Analysis */}
               <TabsContent value="performance" className="mt-4">
                 <Card className="bg-gray-800 border-gray-700">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
                       <div>
-                        <div>Performance Analysis (Step 4)</div>
+                        <div>Performance Analysis (Step 5)</div>
                         <div className="text-xs font-normal text-gray-400 mt-0.5">Categorize videos by their performance multiplier</div>
                       </div>
                     </CardTitle>
@@ -538,7 +652,7 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
                           <Brain className="h-4 w-4" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span>Pattern Discovery (Step 5)</span>
+                              <span>Pattern Discovery (Step 6)</span>
                               {claudeStep?.details?.threadsAnalyzed && (
                                 <Badge variant="outline" className="text-xs">
                                   {claudeStep.details.threadsAnalyzed} threads
