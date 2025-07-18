@@ -1,9 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai-client';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
 import { pineconeService } from '@/lib/pinecone-service';
 import { supabase } from '@/lib/supabase';
 // import { AnthropicAPI } from '@/lib/anthropic-api'; // No longer needed - using OpenAI
 import { searchLogger } from '@/lib/search-logger';
+
+// Zod schemas for structured outputs
+const ThreadSchema = z.object({
+  angle: z.string(),
+  intent: z.string(),
+  queries: z.array(z.string()).min(5).max(6)
+});
+
+const ThreadExpansionSchema = z.object({
+  threads: z.array(ThreadSchema)
+});
+
+const PatternSchema = z.object({
+  pattern: z.string(),
+  explanation: z.string(),
+  template: z.string(),
+  examples: z.array(z.string()).min(5).max(15),
+  video_ids: z.array(z.string()).min(5).max(20),
+  confidence: z.number().min(0).max(1),
+  performance_multiplier: z.number().min(1)
+});
+
+const PatternDiscoverySchema = z.object({
+  patterns: z.array(PatternSchema)
+});
+
+const DomainAnalysisSchema = z.object({
+  primary_domain: z.enum(["cooking", "technology", "fitness", "education", "entertainment", "diy", "business", "health", "travel", "other"]),
+  domain_keywords: z.array(z.string()).min(5).max(8),
+  avoid_domains: z.array(z.string()),
+  disambiguation_terms: z.array(z.string())
+});
 
 export interface TitleGenerationRequest {
   concept: string;
@@ -710,7 +744,7 @@ async function classifyQueryType(concept: string): Promise<{
 // Domain detection for better query expansion
 async function detectDomain(concept: string) {
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",
       messages: [{
         role: "user",
@@ -720,36 +754,10 @@ Concept: "${concept}"
 Return a JSON object with the domain analysis.`
       }],
       temperature: 0.3,
-      response_format: { 
-        type: "json_object",
-        schema: {
-          type: "object",
-          properties: {
-            primary_domain: { 
-              type: "string",
-              enum: ["cooking", "technology", "fitness", "education", "entertainment", "diy", "business", "health", "travel", "other"]
-            },
-            domain_keywords: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 5,
-              maxItems: 8
-            },
-            avoid_domains: {
-              type: "array",
-              items: { type: "string" }
-            },
-            disambiguation_terms: {
-              type: "array",
-              items: { type: "string" }
-            }
-          },
-          required: ["primary_domain", "domain_keywords", "avoid_domains", "disambiguation_terms"]
-        }
-      }
+      response_format: zodResponseFormat(DomainAnalysisSchema, "domain_analysis")
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    return response.choices[0].message.parsed || {};
   } catch (error) {
     console.error('Error detecting domain:', error);
     // Fallback to generic domain
@@ -921,7 +929,7 @@ Focus on:
 
   try {
     // Use OpenAI with structured output for reliable JSON
-    const completion = await openai.chat.completions.create({
+    const completion = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -935,50 +943,13 @@ Focus on:
       ],
       temperature: 0.3,
       max_tokens: 2000,
-      response_format: { 
-        type: "json_object",
-        schema: {
-          type: "object",
-          properties: {
-            patterns: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  pattern: { type: "string" },
-                  explanation: { type: "string" },
-                  template: { type: "string" },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                    minItems: 5,
-                    maxItems: 15
-                  },
-                  video_ids: {
-                    type: "array",
-                    items: { type: "string" },
-                    minItems: 5,
-                    maxItems: 20
-                  },
-                  confidence: { type: "number", minimum: 0, maximum: 1 },
-                  performance_multiplier: { type: "number", minimum: 1 }
-                },
-                required: ["pattern", "explanation", "template", "examples", "video_ids", "confidence", "performance_multiplier"]
-              }
-            }
-          },
-          required: ["patterns"]
-        }
-      }
+      response_format: zodResponseFormat(PatternDiscoverySchema, "pattern_discovery")
     });
 
-    const responseText = completion.choices[0].message.content || '{"patterns": []}';
-    let parsedResponse;
+    const parsedResponse = completion.choices[0].message.parsed;
     
-    try {
-      parsedResponse = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse OpenAI response as JSON:', e);
+    if (!parsedResponse) {
+      console.error('Failed to parse OpenAI response');
       return { patterns: [], prompt, usage: { 
         input_tokens: completion.usage?.prompt_tokens || 0,
         output_tokens: completion.usage?.completion_tokens || 0
@@ -1416,43 +1387,18 @@ Example structure:
   ]
 }`;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",
       messages: [{
         role: "user",
         content: prompt
       }],
-      response_format: { 
-        type: "json_object",
-        schema: {
-          type: "object",
-          properties: {
-            threads: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  angle: { type: "string" },
-                  intent: { type: "string" },
-                  queries: {
-                    type: "array",
-                    items: { type: "string" },
-                    minItems: 5,
-                    maxItems: 6
-                  }
-                },
-                required: ["angle", "intent", "queries"]
-              }
-            }
-          },
-          required: ["threads"]
-        }
-      },
+      response_format: zodResponseFormat(ThreadExpansionSchema, "thread_expansion"),
       temperature: 0.8,
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
-    const threadData = result.threads || [];
+    const result = response.choices[0].message.parsed;
+    const threadData = result?.threads || [];
     
     // Convert to flat array of individual queries with thread info
     const allQueries: ThreadExpansion[] = [];
