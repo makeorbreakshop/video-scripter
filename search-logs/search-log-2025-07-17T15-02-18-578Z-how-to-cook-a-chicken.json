@@ -1,0 +1,4958 @@
+{
+  "timestamp": "2025-07-17T15:02:18.578Z",
+  "concept": "how to cook a chicken",
+  "expandedQueries": [
+    "best recipe for cooking a chicken",
+    "essential cooking techniques for preparing chicken",
+    "meal preparation tips for cooking chicken",
+    "common mistakes in cooking chicken recipes",
+    "how to ensure food safety when cooking chicken",
+    "advanced culinary skills for cooking chicken",
+    "chicken cooking tutorial video",
+    "ultimate guide to chicken recipes",
+    "top tips for cooking chicken perfectly",
+    "comparison of different chicken cooking techniques",
+    "list of best chicken meal preparation methods",
+    "explainer on food safety when cooking chicken",
+    "what are different cooking techniques for poultry",
+    "how to choose the best chicken recipe for dinner",
+    "what are essential culinary skills for beginners",
+    "what are the best meal preparation tips for busy cooks",
+    "how to ensure food safety when cooking chicken",
+    "what are the various types of recipes in modern cooking"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadId": "thread_1_direct",
+      "threadName": "Direct Variations",
+      "purpose": "Find patterns specific to this exact topic",
+      "queries": [
+        "best recipe for cooking a chicken",
+        "essential cooking techniques for preparing chicken",
+        "meal preparation tips for cooking chicken",
+        "common mistakes in cooking chicken recipes",
+        "how to ensure food safety when cooking chicken",
+        "advanced culinary skills for cooking chicken"
+      ]
+    },
+    {
+      "threadId": "thread_2_format",
+      "threadName": "Format Exploration",
+      "purpose": "Discover patterns that work across different content formats",
+      "queries": [
+        "chicken cooking tutorial video",
+        "ultimate guide to chicken recipes",
+        "top tips for cooking chicken perfectly",
+        "comparison of different chicken cooking techniques",
+        "list of best chicken meal preparation methods",
+        "explainer on food safety when cooking chicken"
+      ]
+    },
+    {
+      "threadId": "thread_3_domain",
+      "threadName": "Domain Hierarchy",
+      "purpose": "Find universal patterns that work across the entire category",
+      "queries": [
+        "what are different cooking techniques for poultry",
+        "how to choose the best chicken recipe for dinner",
+        "what are essential culinary skills for beginners",
+        "what are the best meal preparation tips for busy cooks",
+        "how to ensure food safety when cooking chicken",
+        "what are the various types of recipes in modern cooking"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "BIFZqkk_25k",
+      "title": "Dinner tips for busy nights!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.673591197,
+      "performanceRatio": 0.369356480288938,
+      "viewCount": 1465,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8A_i-PFRieQ",
+      "title": "The 5 Skills Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.671705127,
+      "performanceRatio": 0.774342838486559,
+      "viewCount": 695204,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8VY0RnxaZJc",
+      "title": "Cooking Chicken In 3 Levels Of Difficulty",
+      "channelName": "Fallow",
+      "similarityScore": 0.656183779,
+      "performanceRatio": 0.947969731238847,
+      "viewCount": 851086,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "ajVOw1hnccA",
+      "title": "One Pan Chicken Recipe!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.642989397,
+      "performanceRatio": 0.401130575664727,
+      "viewCount": 17577,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "EaCnovM9JSM",
+      "title": "Every Way to Screw Up Chicken Breast (& How to Fix It) | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.629349887,
+      "performanceRatio": 0.723886583511847,
+      "viewCount": 645548,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OlzAbXI_z4k",
+      "title": "We Found the Perfect Fried Chicken Technique",
+      "channelName": "Fallow",
+      "similarityScore": 0.616817832,
+      "performanceRatio": 0.382297275450641,
+      "viewCount": 343226,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "jHDrv64NK2M",
+      "title": "8 Recipes Using Every Part of a Rotisserie Chicken | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.616401792,
+      "performanceRatio": 0.87019611567722,
+      "viewCount": 776024,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Ap0zNHgZxfA",
+      "title": "The 3 Salmon Techniques Every Chef Should Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.614254355,
+      "performanceRatio": 1.48234229792355,
+      "viewCount": 1330845,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "BPl_G3NRUnk",
+      "title": "POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.613959,
+      "performanceRatio": 0.33118448191765,
+      "viewCount": 297337,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "vdbRZCI85oE",
+      "title": "CHICKEN CUTS - How to cut up a whole chicken & what to do with the rest of the chicken",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.609134614,
+      "performanceRatio": 0.123511796495537,
+      "viewCount": 258,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "meal preparation tips for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qal3bbhiG88",
+      "title": "The 4 Purees Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.608260751,
+      "performanceRatio": 0.381158935652635,
+      "viewCount": 342204,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "JeeG7cx2V9M",
+      "title": "Every Way To Cook Chicken Breast (30 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.596427381,
+      "performanceRatio": 0,
+      "viewCount": 2564342,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential cooking techniques for preparing chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cFrduFR70pw",
+      "title": "The Ultimate Chef Guide to Perfectly Cooked Turkey!",
+      "channelName": "Fallow",
+      "similarityScore": 0.596216,
+      "performanceRatio": 0.177877288710402,
+      "viewCount": 159698,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "KIEvBvs-htI",
+      "title": "How a head chef would learn to cook If he could start over",
+      "channelName": "Fallow",
+      "similarityScore": 0.594903588,
+      "performanceRatio": 0.235530523822546,
+      "viewCount": 211459,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "0mqKloV-NTA",
+      "title": "Quick tip! Get organized for dinner time!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.594573438,
+      "performanceRatio": 0.448522306098307,
+      "viewCount": 1779,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "rxWYxuhm49U",
+      "title": "The 3 Breakfast Techniques Every Chef Should Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.593232393,
+      "performanceRatio": 0.751924673012512,
+      "viewCount": 675077,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "A5lgWamvbT0",
+      "title": "Fried Chicken #recipe #chicken #cooking #homestead #fyp #howto #share #viral #like #food #delicious",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.588945,
+      "performanceRatio": 11.4966911970775,
+      "viewCount": 54663,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "gfX1FYUc9-4",
+      "title": "The Best Barbecue Chicken (Without a Recipe) | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.587926626,
+      "performanceRatio": 0.536699283131964,
+      "viewCount": 478618,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "jhePLqQ8dSc",
+      "title": "How to Prep & Cook a Pigeon",
+      "channelName": "Fallow",
+      "similarityScore": 0.583602726,
+      "performanceRatio": 0.251409361552859,
+      "viewCount": 225715,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "1xfA9nStBHc",
+      "title": "Tips to get organized for dinner time!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.581185818,
+      "performanceRatio": 0.54054627559009,
+      "viewCount": 2144,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "p0yh4cvD8E8",
+      "title": "POV: Cooking Restaurant Quality Chicken Wings & Sauce (How to Make Them at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.579720676,
+      "performanceRatio": 0.502726274765958,
+      "viewCount": 451347,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "DBZW2Pd1Evs",
+      "title": "MEAL PREP SECRETS ft. Mealsdotkom",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.57687968,
+      "performanceRatio": 1.61695190850498,
+      "viewCount": 23018,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "_uVcEns2hKg",
+      "title": "5 Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.575572968,
+      "performanceRatio": 2.24648240397397,
+      "viewCount": 2016889,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "xniS7kMpW4I",
+      "title": "The 5 Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.574207962,
+      "performanceRatio": 5.0616279118356,
+      "viewCount": 4544323,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "89jQLjCoWig",
+      "title": "Every Way to Cook Fried Chicken (32 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.572804,
+      "performanceRatio": 0,
+      "viewCount": 4771153,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Xo0v7ZuA9C0",
+      "title": "Beer Can Chicken | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.571976244,
+      "performanceRatio": 0.775940867768329,
+      "viewCount": 691969,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "srKF3qtTlaE",
+      "title": "The 6 Stocks & Broths Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.570775628,
+      "performanceRatio": 1.11970421761461,
+      "viewCount": 1005269,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "HiJz4oplV2g",
+      "title": "Getting things done {meal planning}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.569469452,
+      "performanceRatio": 0.636856292976011,
+      "viewCount": 2526,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "SYWeuAFL00Q",
+      "title": "Pressure Canning chicken for years of meat storage- HOMESTEAD SKILLS",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.564548194,
+      "performanceRatio": 0.0684580887552784,
+      "viewCount": 143,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential cooking techniques for preparing chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YikSIxDCiyM",
+      "title": "Farm To Table Cooking Basics: Pasta on a Time Crunch",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.562437,
+      "performanceRatio": 0.162465307677206,
+      "viewCount": 24350,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YTzUMwbb4KI",
+      "title": "Dry-age for (actually) crisp roast chicken",
+      "channelName": "Chris Young",
+      "similarityScore": 0.555930912,
+      "performanceRatio": 0.112711819627009,
+      "viewCount": 53258,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "XpOQ5ZDyw9E",
+      "title": "Cook Your Chicken With a Brick!",
+      "channelName": "Fallow",
+      "similarityScore": 0.551308751,
+      "performanceRatio": 0.366615586589455,
+      "viewCount": 329147,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "inphbadzM_8",
+      "title": "POV: How to Cook Duck Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.550540447,
+      "performanceRatio": 0.286627723659674,
+      "viewCount": 257334,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "P6W8kwmwcno",
+      "title": "Learn How To Cook in Under 25 Minutes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.549102962,
+      "performanceRatio": 0,
+      "viewCount": 2000217,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "HSs-H_dNM6s",
+      "title": "The Ultimate Chef Guide to Perfect Roast Potatoes",
+      "channelName": "Fallow",
+      "similarityScore": 0.548373,
+      "performanceRatio": 0.708052923537094,
+      "viewCount": 635689,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "mXtKxjyfRFU",
+      "title": "How to Make the Best Wings at Home | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.548114657,
+      "performanceRatio": 1.84366539257822,
+      "viewCount": 1644145,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Wf5FXUUXkvE",
+      "title": "Easy Chicken Wing Recipe for Picky Eaters!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.545651197,
+      "performanceRatio": 0.56667652752636,
+      "viewCount": 24831,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "9msDfJR-ct4",
+      "title": "50 Food Mistakes You Need To Avoid",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.542512834,
+      "performanceRatio": 0,
+      "viewCount": 3186791,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "nHvfNe3jzEs",
+      "title": "Ultimate Chef Guide to Cooking Roast Dinner",
+      "channelName": "Fallow",
+      "similarityScore": 0.542507172,
+      "performanceRatio": 0.903674724304287,
+      "viewCount": 811318,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "8o8GXceXF60",
+      "title": "why do some ingredients come with a recipe? #historyfacts",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.542148173,
+      "performanceRatio": 1,
+      "viewCount": 516528,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "G8xELw231qs",
+      "title": "How To Cook The Perfect Steak",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.538441539,
+      "performanceRatio": 0.532818405651894,
+      "viewCount": 8717547,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "TULreIfJHSY",
+      "title": "What Everyone Gets Wrong About Chefs",
+      "channelName": "Fallow",
+      "similarityScore": 0.535818,
+      "performanceRatio": 0.10545793745132,
+      "viewCount": 94680,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "HyLJNWZB0cs",
+      "title": "COOK AND CLEAN WITH ME SPRING 2020 / EASY DINNER IDEA / NIGHTLY CLEANING ROUTINE",
+      "channelName": "Catherine Elaine",
+      "similarityScore": 0.531560421,
+      "performanceRatio": 0.142372732237743,
+      "viewCount": 10141,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "J60DCvBCAIo",
+      "title": "Every Knife a Chef Needs to Own",
+      "channelName": "Fallow",
+      "similarityScore": 0.529671788,
+      "performanceRatio": 1.95338218269569,
+      "viewCount": 1753744,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "O3F9iKLTWMs",
+      "title": "Cooking Rotisserie Chicken in London",
+      "channelName": "Fallow",
+      "similarityScore": 0.527792275,
+      "performanceRatio": 0.0697940411769873,
+      "viewCount": 62661,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "c3dJnF-WT74",
+      "title": "How To Fry Anything Like A Chef",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.52710104,
+      "performanceRatio": 0,
+      "viewCount": 1759105,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Ag7Nsda0pYE",
+      "title": "Babish Cook-Along: Pasta Aglio e Olio (Basic vs. Advanced)",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.526453435,
+      "performanceRatio": 0.492528103899568,
+      "viewCount": 439227,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "NZgFAIHZ4vc",
+      "title": "How I Make My Homemade Natural Seasoning | GREAT FOR CHICKEN, FISH, AND VEGETABLES!",
+      "channelName": "Mooregirl",
+      "similarityScore": 0.525346518,
+      "performanceRatio": 0.212892434133193,
+      "viewCount": 999,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VhDNC_u4dG4",
+      "title": "GET IT ALL DONE WITH ME - SPEED CLEANING MOTIVATION + EASY CROCKPOT DINNER IDEA!",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.525114298,
+      "performanceRatio": 0.254294795155864,
+      "viewCount": 25092,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "QWJIGono9kk",
+      "title": "How Chefs Save Money on Meat (3 MEATS 9 RECIPES)",
+      "channelName": "Fallow",
+      "similarityScore": 0.52500236,
+      "performanceRatio": 0.811940353047916,
+      "viewCount": 728959,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DHWXl944wTs",
+      "title": "The SECRET hack for making CRISPY Chicken Wings! 🍗",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.524605155,
+      "performanceRatio": 1.47674565743237,
+      "viewCount": 64709,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "zhI7bQyTmHw",
+      "title": "Learn To Cook In Less Than 1 Hour",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.523813725,
+      "performanceRatio": 0.757248131540496,
+      "viewCount": 12389486,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "q2OKZMDOuV8",
+      "title": "How to Butcher a Chicken 🇫🇷 vs 🇯🇵",
+      "channelName": "Fallow",
+      "similarityScore": 0.517742574,
+      "performanceRatio": 2.07380784050475,
+      "viewCount": 1861862,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "4CF9LqcnJGI",
+      "title": "PLAYING DRONE CHICKEN",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.515047789,
+      "performanceRatio": 0.643492044508486,
+      "viewCount": 2146981,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "q_sN1n1_ZJo",
+      "title": "Reverse Sear vs Sous Vide? | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.514924049,
+      "performanceRatio": 0.455877809043418,
+      "viewCount": 215409,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qnXdDlVqwL0",
+      "title": "We Found the Best Scrambled Egg Method",
+      "channelName": "Fallow",
+      "similarityScore": 0.514453471,
+      "performanceRatio": 1.42128740944241,
+      "viewCount": 1276030,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "bwapUJcTVeU",
+      "title": "The 5 Meals Anyone Can Make",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.51419282,
+      "performanceRatio": 0,
+      "viewCount": 1646163,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "q8cgxircSUw",
+      "title": "50 Ways To Cook An Egg",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.512346923,
+      "performanceRatio": 0.45641678383445,
+      "viewCount": 7467525,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "bOD6yTzvlEY",
+      "title": "Crock Pot Cooking {chicken lime cilantro tacos}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.511654854,
+      "performanceRatio": 0.407426670407456,
+      "viewCount": 1616,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "stKZqJUs0L0",
+      "title": "CHICKEN PARM DELICIOUSNESS 🤤",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.511213541,
+      "performanceRatio": 0.644976522127582,
+      "viewCount": 28262,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "cNn9ia4DcXA",
+      "title": "Garden Cooking Made EASY: Thai Curry",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.510066688,
+      "performanceRatio": 0.112004317042187,
+      "viewCount": 16787,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "3ohA0c-ypZs",
+      "title": "why online recipes are so annoying #recipe",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.50912118,
+      "performanceRatio": 1,
+      "viewCount": 51943,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "CHpT7U1u9_w",
+      "title": "3 Ways to Cook Octopus Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.508432269,
+      "performanceRatio": 0.295966119810834,
+      "viewCount": 265718,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "VgHMxzcFFF4",
+      "title": "Crock Pot Cooking! {Lemon Chicken}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.508228,
+      "performanceRatio": 1.84375695587236,
+      "viewCount": 7313,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "oUuFr2y2gpc",
+      "title": "Cilantro Lime Chicken 🍗 Recipe!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.50819546,
+      "performanceRatio": 1.35624901753309,
+      "viewCount": 59429,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8uzPTMNLXyE",
+      "title": "Meal planning made easy!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.507892311,
+      "performanceRatio": 0.559959551345891,
+      "viewCount": 2221,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "R2FqGmD1E08",
+      "title": "How to Cook Scallops Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.505783617,
+      "performanceRatio": 0.197685737798217,
+      "viewCount": 177482,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "7YHqVvMmWLc",
+      "title": "Every Way To Cook An Egg (100 Methods)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.505408466,
+      "performanceRatio": 0,
+      "viewCount": 3003756,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "hTX7B61GDo8",
+      "title": "We Found the Perfect Poached Egg Technique (How to Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.505355,
+      "performanceRatio": 2.85729972312127,
+      "viewCount": 2565280,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "NTNPy0a39AY",
+      "title": "The Secret Technique Behind Fast Food Chicken Burgers",
+      "channelName": "Fallow",
+      "similarityScore": 0.504009724,
+      "performanceRatio": 0.251127561191904,
+      "viewCount": 225462,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "8aKpqlenQF4",
+      "title": "I Cooked Viral Vintage Recipes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.503739,
+      "performanceRatio": 0,
+      "viewCount": 2018219,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oablvEyS1mo",
+      "title": "Ranking Frozen Chicken Nuggets | Best with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.50295037,
+      "performanceRatio": 1.14593658871031,
+      "viewCount": 1021924,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "x02w26_ord0",
+      "title": "Cooking Challenge vs My Cameraman",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.502847433,
+      "performanceRatio": 0.997576143906493,
+      "viewCount": 16321540,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "_8n4rDTkx_w",
+      "title": "Every Way to Screw Up a French Omelette | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.501267552,
+      "performanceRatio": 1.11919346328792,
+      "viewCount": 998075,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Tg4ZYJaBNQY",
+      "title": "WEEKEND OF COOKING, CLEANING, & CRAFTING || EXTREMELY EASY CROCKPOT MEAL || MOM OF 2",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.500903606,
+      "performanceRatio": 0.116273082449515,
+      "viewCount": 11473,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "3px1ZHVUNKc",
+      "title": "Every Way to Fry an Egg",
+      "channelName": "Fallow",
+      "similarityScore": 0.500452518,
+      "performanceRatio": 4.7949545497036,
+      "viewCount": 4304904,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YTAa4h_822Y",
+      "title": "Every Way to Fry an Egg",
+      "channelName": "Fallow",
+      "similarityScore": 0.500309,
+      "performanceRatio": 1.84937780046589,
+      "viewCount": 1660369,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DvyEekmOkGw",
+      "title": "The 5 Steak Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.500080645,
+      "performanceRatio": 0.721264125439398,
+      "viewCount": 647550,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Ubj0rdvdpqs",
+      "title": "3 Easy Fish Recipes Ready in Under 20 min | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.499934703,
+      "performanceRatio": 0.507684298423826,
+      "viewCount": 452743,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bkhjcRI8LWI",
+      "title": "POV: Cooking The Best CHICKEN BURGER You'll Ever Have (Restaurant Quality)",
+      "channelName": "Fallow",
+      "similarityScore": 0.499695659,
+      "performanceRatio": 0.350948377588713,
+      "viewCount": 315081,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "864HPoYMKXQ",
+      "title": "Crock Pot Cooking {BBQ chicken sandwiches}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.499694616,
+      "performanceRatio": 0.35069956592622,
+      "viewCount": 1391,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "_rnMXU5hM7k",
+      "title": "ROASTED CHICKEN CAULIFLOWER SOUP",
+      "channelName": "Mooregirl",
+      "similarityScore": 0.499415725,
+      "performanceRatio": 0.16281263231007,
+      "viewCount": 764,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YxvbFu1VM4Y",
+      "title": "Quick tip to save time in the morning! #momlife",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.499191791,
+      "performanceRatio": 0.39633336997557,
+      "viewCount": 1572,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "77toHiiDmzY",
+      "title": "Espresso for Beginners: Tools and Processes",
+      "channelName": "Clough42",
+      "similarityScore": 0.498508155,
+      "performanceRatio": 0.23638087920211,
+      "viewCount": 18268,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Ss2o4vF0i-c",
+      "title": "COOK AND CLEAN WITH ME 2019 | NIGHT TIME CLEANING | EASY RECIPE | Amy Darley",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.498441845,
+      "performanceRatio": 0.176147689885385,
+      "viewCount": 17381,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "5YVb2nb391Q",
+      "title": "Homemade Chicken Tenders Recipe for Picky Eaters!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.49822855,
+      "performanceRatio": 0.805273567326935,
+      "viewCount": 35286,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YJG38AL2rMc",
+      "title": "I Made The Best Fried Chicken Bucket Meal Ever",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.497687399,
+      "performanceRatio": 0,
+      "viewCount": 1723033,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "yzQFsmurEfM",
+      "title": "Preztel Chicken with Mushroom Gravy",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.496378332,
+      "performanceRatio": 0.256541804310844,
+      "viewCount": 228779,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "meal preparation tips for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "tjQWzOFFxKU",
+      "title": "Every Way to Screw Up Steak | Botched By Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.496351331,
+      "performanceRatio": 3.03402882879198,
+      "viewCount": 2705688,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "gCJ5gxkQ4ZQ",
+      "title": "How Do YOU Decide What To Make?",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.495688319,
+      "performanceRatio": 0.17813683875284,
+      "viewCount": 100867,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "lndTllGn39E",
+      "title": "How I manage my household {meal planning}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.495512128,
+      "performanceRatio": 1.018818796483,
+      "viewCount": 4041,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "BAxICJRICNU",
+      "title": "My Top 5 Easy, Sexy Dishes | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.494760603,
+      "performanceRatio": 0.779618902544859,
+      "viewCount": 695249,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "plj7VaTcgAc",
+      "title": "Common Mistakes in Turkey Breeding",
+      "channelName": "Ryan Mercer",
+      "similarityScore": 0.494417638,
+      "performanceRatio": 3.21776618707322,
+      "viewCount": 24835,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Wv0TlUkYAMU",
+      "title": "Every Way to Screw Up Mac & Cheese | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.494253337,
+      "performanceRatio": 1.3455462272775,
+      "viewCount": 1199932,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "SeV43q7wKUY",
+      "title": "22 Ways to Cook an Egg (Ranked) | Best with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.493982345,
+      "performanceRatio": 1.00248762566534,
+      "viewCount": 893999,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "DmuwqqHjgT4",
+      "title": "Why You Should Temper Steaks | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.493910134,
+      "performanceRatio": 1.76320201081953,
+      "viewCount": 833139,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "jWvPJomTerY",
+      "title": "COOK AND CLEAN WITH ME 2019 | EASY CROCKPOT RECIPE | CLEAN THE HOUSE Amy Darley",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.493704855,
+      "performanceRatio": 0.134717866730707,
+      "viewCount": 13293,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bM6Xw7t3R9M",
+      "title": "MAKING A CHEF'S KNIFE IN FLORENTINE FEATHER DAMASCUS!!! Part 1",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.492243171,
+      "performanceRatio": 0.656462581170449,
+      "viewCount": 423044,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "KZjIhRvCfyQ",
+      "title": "First Chainsaw Carving - Cornelius the Chicken",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.491769224,
+      "performanceRatio": 0.410909203860924,
+      "viewCount": 212138,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JSJbVJIBO4M",
+      "title": "Professional Chef gives ENTIRE Shellfish Masterclass",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.490445942,
+      "performanceRatio": 0.0400409500324894,
+      "viewCount": 570,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "N76SdhQWdxA",
+      "title": "Can you cook on a CROWBAR? (Open Fire Cooking Hack)",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.49035874,
+      "performanceRatio": 0.488609188214083,
+      "viewCount": 106298,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "US8Hwq1WUbQ",
+      "title": "Teaching April Wilkerson to Cook",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.489071786,
+      "performanceRatio": 0.190781643027599,
+      "viewCount": 28594,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YltG4yy0NMA",
+      "title": "How to Build a Chicken Brooder - Homemade Simple and Easy",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.489023983,
+      "performanceRatio": 0.500615755997478,
+      "viewCount": 123641,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "ZSL_Q6Pe-Ao",
+      "title": "Every Cooking Gadget You'll Ever Need",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.488027573,
+      "performanceRatio": 0,
+      "viewCount": 2462147,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "zxpeRjykAs4",
+      "title": "The 5 Knife Grips Essential for Spoon Carving: Safe and Efficient",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.487583637,
+      "performanceRatio": 0.220225561006223,
+      "viewCount": 33007,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4iUUx8Qtqec",
+      "title": "New Steak Cooking Method with Surprising Results!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.486946791,
+      "performanceRatio": 0.779430054043791,
+      "viewCount": 550401,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "SMSDUPx-qZI",
+      "title": "Cooking Challenge vs Shaq",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.48668465,
+      "performanceRatio": 0.518052493522641,
+      "viewCount": 8475959,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "uYy7QK5Ja4U",
+      "title": "Every Way To Screw Up Burgers | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.486026376,
+      "performanceRatio": 1.5151563340226,
+      "viewCount": 1351187,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "au2v9cevX0c",
+      "title": "POV: Cooking the Ultimate Biryani (Step by Step Guide)",
+      "channelName": "Fallow",
+      "similarityScore": 0.485616624,
+      "performanceRatio": 0.515951956528706,
+      "viewCount": 463221,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "w4CMaKF_IXI",
+      "title": "I Tried Every Fast Food Chicken Tender In America",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.485440582,
+      "performanceRatio": 0,
+      "viewCount": 3605058,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "XxFmnF9XVoU",
+      "title": "TEACHING OUR EDITOR TO MAKE A KNIFE!!!",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.484827697,
+      "performanceRatio": 0.902774931592075,
+      "viewCount": 581775,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "o1i-GLEUTaM",
+      "title": "Cooking Fillet Steak In 3 Levels Of Difficulty",
+      "channelName": "Fallow",
+      "similarityScore": 0.484554052,
+      "performanceRatio": 1,
+      "viewCount": 133484,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential cooking techniques for preparing chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "2kvfcJrdQww",
+      "title": "POV: How to Cook Fish Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.484305352,
+      "performanceRatio": 0.124720607183926,
+      "viewCount": 111974,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "oSPlKPooPJk",
+      "title": "Every Way To Screw Up Thanksgiving Dinner | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.4830015,
+      "performanceRatio": 0.885139253308936,
+      "viewCount": 789350,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "i0LcsVhc_3c",
+      "title": "Elevate Your Bread Making Skills",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.481394768,
+      "performanceRatio": 0.25827226442038,
+      "viewCount": 1228,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "f-6uoKqSdqU",
+      "title": "MAKING A CHEF'S KNIFE IN FLORENTINE FEATHER DAMASCUS!!! Part 2",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.480650187,
+      "performanceRatio": 0.666549018462097,
+      "viewCount": 429544,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "DP8YDGMBSNo",
+      "title": "Getting it all done | Meal planning, meal prepping, pantry and refrigerator clean out!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.480420649,
+      "performanceRatio": 0.233211429533971,
+      "viewCount": 925,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "rxOJQjxKPiM",
+      "title": "Your Oven is a Liar! Perfect your roast with surface temperature cooking.",
+      "channelName": "Chris Young",
+      "similarityScore": 0.480135441,
+      "performanceRatio": 0.113194344221905,
+      "viewCount": 53486,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "NBXiUpJbzQE",
+      "title": "Crock Pot Cooking! {chicken and rice}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.479951322,
+      "performanceRatio": 32.468073400416,
+      "viewCount": 128780,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "r9wPO5lK3hQ",
+      "title": "COOK WITH ME // EASY WEEKDAY MEAL // Q&A WITH CHANCE",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.479597509,
+      "performanceRatio": 0.0560843056110534,
+      "viewCount": 5534,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "uC6VBDJlm4w",
+      "title": "Does Basting Work? | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.478868961,
+      "performanceRatio": 2.51645676482688,
+      "viewCount": 1189063,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "CYEFR_kg6Us",
+      "title": "How to Make the Best Fish & Chips | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.478842,
+      "performanceRatio": 2.10102354119313,
+      "viewCount": 1873652,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "fNj356KxKko",
+      "title": "I Tested Viral Cooking Gadgets",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.478762537,
+      "performanceRatio": 0,
+      "viewCount": 4878383,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "r3iFi0cY_38",
+      "title": "Five tips that will help you save money on groceries!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.478603572,
+      "performanceRatio": 0.41322544108776,
+      "viewCount": 1639,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Y_qzjApR-yM",
+      "title": "This chicken has a secret up its sleeve",
+      "channelName": "Uri Tuchman",
+      "similarityScore": 0.478505582,
+      "performanceRatio": 0.405489961996403,
+      "viewCount": 135909,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "aAzN2efRXns",
+      "title": "47 Food Hacks To Make Your Food Healthier",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.478145421,
+      "performanceRatio": 0,
+      "viewCount": 1892440,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "UJIVZkTW9yA",
+      "title": "Chef Tips for Better Risotto",
+      "channelName": "Fallow",
+      "similarityScore": 0.478001863,
+      "performanceRatio": 0.965464744161828,
+      "viewCount": 866793,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "SHelpAy8J20",
+      "title": "FREEZE DRY - Can You DIY a Better Camp Meal than Big Brand??",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.477802664,
+      "performanceRatio": 0.0836795378705737,
+      "viewCount": 59091,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "_jKYjg35Cm0",
+      "title": "Cook Your Turkey From Frozen (Trust Me)\"",
+      "channelName": "Chris Young",
+      "similarityScore": 0.477728754,
+      "performanceRatio": 1,
+      "viewCount": 663598,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "WcGYBX6Ucvg",
+      "title": "The 50 Easiest 3-Ingredient Recipes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.476694971,
+      "performanceRatio": 0,
+      "viewCount": 4637989,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "QUzbFSXOb8I",
+      "title": "POV:  How to Cook Onion Rings Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.475730479,
+      "performanceRatio": 0.471555590571036,
+      "viewCount": 423362,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jtTpxGfRuoM",
+      "title": "Every Way To Screw Up Pancakes | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.475723833,
+      "performanceRatio": 0.965726340885169,
+      "viewCount": 861216,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "oN_4nACyzQc",
+      "title": "Time Management Tips!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.475248784,
+      "performanceRatio": 1.47591319836958,
+      "viewCount": 5854,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "ZtNtSVIiitE",
+      "title": "Japanese-Style Chicken Bucket Meal from KFC Dating Game | Arcade with Alvin",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.474625498,
+      "performanceRatio": 0.390056709402986,
+      "viewCount": 347845,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "EA01tbpaZDY",
+      "title": "20 Practical Kitchen Organization Ideas that Will Save You a Ton of Space",
+      "channelName": "Home Organization Ideas for Life",
+      "similarityScore": 0.474574417,
+      "performanceRatio": 1.51941747572816,
+      "viewCount": 313,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "vgPJZ1ktT50",
+      "title": "Cooking Challenge vs Dude Perfect",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.474291742,
+      "performanceRatio": 0.985844728546091,
+      "viewCount": 16129600,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "lHbrj9WBcE0",
+      "title": "Cooking Challenge vs My Family",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.473998487,
+      "performanceRatio": 0.373028264989243,
+      "viewCount": 6103189,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "2ywTcBSXAiQ",
+      "title": "Xmas Spinner Turkey Cooking Machine (With Jamie Oliver)",
+      "channelName": "colinfurze",
+      "similarityScore": 0.47311309,
+      "performanceRatio": 0.789908576358764,
+      "viewCount": 3603018,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "83PanqsoBfI",
+      "title": "DiResta Digital Chicken Coop",
+      "channelName": "jimmydiresta",
+      "similarityScore": 0.472290576,
+      "performanceRatio": 0.433003812173587,
+      "viewCount": 169549,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "EV9YWiVFqUY",
+      "title": "Cooking Challenge vs My Girlfriend",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.472174644,
+      "performanceRatio": 0.845423219430898,
+      "viewCount": 13832136,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "PeBiIU6_PnQ",
+      "title": "22 Productivity Tips From a Lazy Farmer",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.472052842,
+      "performanceRatio": 0.906129403299124,
+      "viewCount": 135809,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "N7VbFmptZ5g",
+      "title": "POV: Cooking 1300 Wings at the Worlds Biggest Chicken Wing Festival",
+      "channelName": "Fallow",
+      "similarityScore": 0.471901327,
+      "performanceRatio": 0.0511094520267349,
+      "viewCount": 45886,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "VEAmtpkxXXQ",
+      "title": "Top 5 Easy Weeknight Meals with Pork Tenderloin | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.471233755,
+      "performanceRatio": 0.312018455072804,
+      "viewCount": 278252,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "eiyOkjE3l_I",
+      "title": "Chef's Guide to Perfect Beef Wellington",
+      "channelName": "Fallow",
+      "similarityScore": 0.471011966,
+      "performanceRatio": 0.470919590546905,
+      "viewCount": 422791,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "dDu-ehIBqBw",
+      "title": "POV: How to Cook Porchetta Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.470843643,
+      "performanceRatio": 0.261490685928354,
+      "viewCount": 234766,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "pO_pD2GENGo",
+      "title": "Cooking Challenge vs Uncle Roger",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.470637828,
+      "performanceRatio": 0.806941499983068,
+      "viewCount": 13202529,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "pissds32LFE",
+      "title": "Skills To Create Swan Pots From Electric Fan Cages",
+      "channelName": "DIY Cement Projects",
+      "similarityScore": 0.470294654,
+      "performanceRatio": 0.266367971040518,
+      "viewCount": 148208,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "NZ4p_8DXkrY",
+      "title": "Every Way to Cook Steak (34 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.469636947,
+      "performanceRatio": 0,
+      "viewCount": 3281462,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "1xnBIBhj3Vc",
+      "title": "How to Train your Chickens to lay eggs where you want! Quick and Easy",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.469488323,
+      "performanceRatio": 1.19301794622254,
+      "viewCount": 294649,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "S-TmmjEN-V0",
+      "title": "Meals So Easy A College Student Could Make It",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.469335616,
+      "performanceRatio": 0,
+      "viewCount": 6757709,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "H0X4PZSFtak",
+      "title": "Cooking Challenge vs MrBeast",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.469170362,
+      "performanceRatio": 1.51644385894668,
+      "viewCount": 24810837,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "76BNMNsSnTg",
+      "title": "LAST WEEK of raising MEAT CHICKENS - Will they be big enough for butchering? FINAL THOUGHTS",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.468576252,
+      "performanceRatio": 0.0813837418769044,
+      "viewCount": 170,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "fIrpnl3cb5E",
+      "title": "How To Prepare Turbot",
+      "channelName": "Fallow",
+      "similarityScore": 0.468544334,
+      "performanceRatio": 1.27003412874742,
+      "viewCount": 1140235,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "meal preparation tips for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mImowJDESMM",
+      "title": "MAKING A TWISTED MULTI-BAR CHEF'S KNIFE!!! Part 1",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.46751368,
+      "performanceRatio": 1.12516070099833,
+      "viewCount": 725087,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "r5WNjoeJNzg",
+      "title": "POV: Cooking Restaurant Quality Fish (How To Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.4674173,
+      "performanceRatio": 1.24596525918272,
+      "viewCount": 1118626,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "xI7gWfO3kok",
+      "title": "Quick grocery shopping tip",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.466968536,
+      "performanceRatio": 0.473986472998773,
+      "viewCount": 1880,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "-hePdX-n8w0",
+      "title": "Guide to Making the Perfect BLT | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.466938525,
+      "performanceRatio": 1.24444176094939,
+      "viewCount": 1109769,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "GapkjSTx3Ao",
+      "title": "SOUS SPEED: Sous Vide But 4X Faster",
+      "channelName": "Chris Young",
+      "similarityScore": 0.466744661,
+      "performanceRatio": 1,
+      "viewCount": 520179,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "hq2hRMDYKWQ",
+      "title": "Surf and Turf Three Ways | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.465696603,
+      "performanceRatio": 0.917863670651451,
+      "viewCount": 818533,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8YnYdtL7tJY",
+      "title": "How To Design The Perfect DIY Home Cook's Kitchen",
+      "channelName": "Lowe's Home Improvement",
+      "similarityScore": 0.465049058,
+      "performanceRatio": 0.117993065988501,
+      "viewCount": 17427,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "yEsr1eFsm8Q",
+      "title": "Potato Perfection: The Ultimate Restaurant-Quality Recipe",
+      "channelName": "Fallow",
+      "similarityScore": 0.464519113,
+      "performanceRatio": 0.386231342149818,
+      "viewCount": 346758,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "UPoJFL-l9jw",
+      "title": "Cooking with thermite",
+      "channelName": "Applied Science",
+      "similarityScore": 0.464518,
+      "performanceRatio": 0.631189237481656,
+      "viewCount": 200558,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "OvSph3r4dSU",
+      "title": "New recipes to try in February!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.463860542,
+      "performanceRatio": 0.247582296002551,
+      "viewCount": 982,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "oHEYV2rHu1Y",
+      "title": "Babish Makes You The Ultimate Steak Sandwich | Cook Along",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.463833,
+      "performanceRatio": 0.491041191060032,
+      "viewCount": 437901,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "x5-jANW4BrQ",
+      "title": "Basics with Babish Livestream: Cookalong, Q&A, and New Cookbook!",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.463781416,
+      "performanceRatio": 0.0744577771833956,
+      "viewCount": 66400,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "T3j6YgqeoG4",
+      "title": "Chef Guide to Making Curry & Naan at Home",
+      "channelName": "Fallow",
+      "similarityScore": 0.463693112,
+      "performanceRatio": 0.835262952882022,
+      "viewCount": 749898,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "FqcFVJ4AQoc",
+      "title": "MAKING A TWISTED MULTI-BAR CHEF'S KNIFE!!! PART 3",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.463637084,
+      "performanceRatio": 1.04929672672889,
+      "viewCount": 676198,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OVSyLo_Y5aA",
+      "title": "Testing Viral TikTok Food Hacks",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.463556468,
+      "performanceRatio": 0.872191798464626,
+      "viewCount": 14270102,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "gZDBaXButhE",
+      "title": "MAKING A TWISTED MULTI-BAR CHEF'S KNIFE!!! PART 2",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.46316272,
+      "performanceRatio": 0.96480652093571,
+      "viewCount": 621750,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "coFQpJ6Xo94",
+      "title": "20 Best Ideas for Your Most Organized Kitchen Ever",
+      "channelName": "Home Organization Ideas for Life",
+      "similarityScore": 0.462055385,
+      "performanceRatio": 0.514563106796116,
+      "viewCount": 106,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "IB6DqKZqfCg",
+      "title": "Next Level Rice: Secrets to Restaurant-Quality",
+      "channelName": "Fallow",
+      "similarityScore": 0.461929053,
+      "performanceRatio": 0.546692700251973,
+      "viewCount": 490820,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "RAFWnPXB4Rk",
+      "title": "3 LEVELS of Cutting Boards - Beginner to PRO Build",
+      "channelName": "John Malecki",
+      "similarityScore": 0.461354882,
+      "performanceRatio": 2.7727931679781,
+      "viewCount": 1583986,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "lzwqdnY5Qfg",
+      "title": "10 Tips to be a successful Lazy Gardener",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.460734367,
+      "performanceRatio": 1.18426200353863,
+      "viewCount": 177495,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "S8Nn1zytI9s",
+      "title": "✅GET IT ALL DONE - Cleaning, Workout, Closet Declutter, & EASY Recipe!",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.460616827,
+      "performanceRatio": 0.441995811459139,
+      "viewCount": 43613,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "5PAX_gQWCIE",
+      "title": "SUPER EASY CROCKPOT MEAL- BBQ Chicken Sandwiches #easyrecipe #barbecue #familydinner",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.460218489,
+      "performanceRatio": 1,
+      "viewCount": 9006,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "TvYP7GvXwXs",
+      "title": "MAKE Your Favorite Foods at HOME and SAVE BIG!",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.46020788,
+      "performanceRatio": 0.235534123549629,
+      "viewCount": 492,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "RFMb1xEl6Lw",
+      "title": "POV: How to Cook Dauphinoise Potatoes Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.460158259,
+      "performanceRatio": 0.742931565841178,
+      "viewCount": 667003,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "7rRffDubt2k",
+      "title": "How to Prevent Soft Shell Eggs from your Chickens",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.459968656,
+      "performanceRatio": 0.25259350812354,
+      "viewCount": 62385,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to ensure food safety when cooking chicken",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "T5iZNAsMFtQ",
+      "title": "How To Build A Modern Minimalist Kitchen",
+      "channelName": "Black Hills Woodworking",
+      "similarityScore": 0.459919214,
+      "performanceRatio": 0.0460965510057035,
+      "viewCount": 90,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bhv0XmJCJJ8",
+      "title": "I Tested Steak Recipes From Every Decade",
+      "channelName": "Patrick Zeinali",
+      "similarityScore": 0.459705114,
+      "performanceRatio": 0,
+      "viewCount": 2333705,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "drO2q_tx8Jg",
+      "title": "50 Ways To Cook A Steak",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.459340274,
+      "performanceRatio": 1.16570943931727,
+      "viewCount": 19072402,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "jeCk5e0YsF0",
+      "title": "Souvlaki | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.458393604,
+      "performanceRatio": 1.47511060904107,
+      "viewCount": 1315475,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jrt1sor_L28",
+      "title": "The 5 Dumbest Mistakes Gardeners Make Planting Seeds",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.457941473,
+      "performanceRatio": 1,
+      "viewCount": 474504,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "oH2EGCwakkI",
+      "title": "Every Way to Scramble Eggs",
+      "channelName": "Fallow",
+      "similarityScore": 0.457899034,
+      "performanceRatio": 1,
+      "viewCount": 318794,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Rmy8fccw8Yo",
+      "title": "How To Pick The Best Protein Supplement For Muscle Growth",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.457814455,
+      "performanceRatio": 0.679470176230978,
+      "viewCount": 452095,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Uct0-gkfEsk",
+      "title": "Shrimp 7 Ways | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.457443982,
+      "performanceRatio": 0.481275335917107,
+      "viewCount": 429192,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "OOfdxjL1FWY",
+      "title": "How to Make Pan Sauces Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.457338035,
+      "performanceRatio": 0.699781581717137,
+      "viewCount": 628263,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "w96vBKFtPok",
+      "title": "Freezing Makes The Perfect Beef Wellington Foolproof & Easy",
+      "channelName": "Chris Young",
+      "similarityScore": 0.457292467,
+      "performanceRatio": 0.780583000033179,
+      "viewCount": 368837,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "o0EofnLEVhk",
+      "title": "SMALL KITCHEN ORGANIZATION / ULTIMATE CLEAN WITH ME / EXTREME CLEANING MOTIVATION",
+      "channelName": "Catherine Elaine",
+      "similarityScore": 0.457290649,
+      "performanceRatio": 0.216065116767466,
+      "viewCount": 15390,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Kokh8HHds_Y",
+      "title": "I Made Fast Food Healthy (10 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.456875622,
+      "performanceRatio": 0,
+      "viewCount": 2164540,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "-oSJ3b3KwGU",
+      "title": "Vacuum and pressure frying fruits and vegetables",
+      "channelName": "Applied Science",
+      "similarityScore": 0.456635743,
+      "performanceRatio": 0.733922164012205,
+      "viewCount": 233201,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "6t4zw37H1_A",
+      "title": "Grocery shopping tips!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.456549,
+      "performanceRatio": 0.561724394596419,
+      "viewCount": 2228,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "GymqadVYSXk",
+      "title": "How to Make the Chicken Meatball Hotpot from Jujutsu Kaisen | Anime with Alvin",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.456390679,
+      "performanceRatio": 0.512374914115967,
+      "viewCount": 456926,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "i8J_oL3FJtU",
+      "title": "Essential Router Skills: A NO BS Beginner's Guide to Woodworking",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.45608,
+      "performanceRatio": 1.0196126707024,
+      "viewCount": 280086,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "g-M3SkGbUjc",
+      "title": "52 Week Organizing Challenge {week 15 meal planning}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.455413669,
+      "performanceRatio": 3.83349166060976,
+      "viewCount": 15205,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "I-ThkLc5QiU",
+      "title": "I Tried Every Fast Food Fried Chicken in America",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.455215961,
+      "performanceRatio": 0,
+      "viewCount": 3533392,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "zfnvbw4s9CA",
+      "title": "The best way to tame your overwhelming to-do list",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.454985172,
+      "performanceRatio": 0.27945412761706,
+      "viewCount": 184422,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Iwg9g_9m2lw",
+      "title": "Making The Chick-fil-A Spicy Deluxe At Home | But Better",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.45490998,
+      "performanceRatio": 0,
+      "viewCount": 1537937,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "rX1CXF3TU-c",
+      "title": "3 Tools to Start Knife Making",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.454837561,
+      "performanceRatio": 0.131631063471993,
+      "viewCount": 14915,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "c9IoKuFrNlU",
+      "title": "Edward's Cornflake Chicken from The Office | Binging With Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.454816043,
+      "performanceRatio": 0.818861739447119,
+      "viewCount": 730245,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "H_erG7HSK0A",
+      "title": "100 Food Hacks I Learned In Restaurants",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.454553336,
+      "performanceRatio": 0,
+      "viewCount": 14547386,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4W_Iv6LnazU",
+      "title": "5 Most Common Wire Stripping Mistakes",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.454249233,
+      "performanceRatio": 0.0825692511253187,
+      "viewCount": 40826,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qJwpphrBsbc",
+      "title": "Cheat Meals Done RIGHT For More Gains (Complete Guide)",
+      "channelName": "Casey Kelly",
+      "similarityScore": 0.453895837,
+      "performanceRatio": 0.5006282714525,
+      "viewCount": 42875,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "CtW3blfuFKc",
+      "title": "Q&A: In terms of training, what’s the most I can get done in the least amount of time?",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.453408301,
+      "performanceRatio": 0.317180693395932,
+      "viewCount": 3926,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "dt0Rxd3lPoA",
+      "title": "5 Mistakes You Should Avoid When Painting Kitchen Cabinets!",
+      "channelName": "DIY Home Improvement Guy",
+      "similarityScore": 0.453303,
+      "performanceRatio": 0.0484338813602073,
+      "viewCount": 2142,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Qh2IXdkEIfY",
+      "title": "Getting a Chisel Scary Sharp - Essential Woodworking Skills",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.453253776,
+      "performanceRatio": 5.83314946191059,
+      "viewCount": 1602357,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "h-UB3Ns0jnE",
+      "title": "February Meal Plan {plum paper meal planner}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.453098476,
+      "performanceRatio": 0.515082108689624,
+      "viewCount": 2043,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "18hdPvBXJAM",
+      "title": "MAKING A FLORENTINE CHEF'S KNIFE IN FLORENTINE FEATHER DAMASCUS!!! Part 3",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.453011125,
+      "performanceRatio": 0.551302937727311,
+      "viewCount": 355276,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "UTgoSLXw0VQ",
+      "title": "POV: Chef Running a Chicken Restaurant",
+      "channelName": "Fallow",
+      "similarityScore": 0.452892721,
+      "performanceRatio": 0.330018296234174,
+      "viewCount": 296290,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "_WAYv58Eq9w",
+      "title": "7 Quick Productivity Tips for Getting Work Done Faster",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.452806026,
+      "performanceRatio": 0.364985074214239,
+      "viewCount": 240867,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "23lKOTVYRGc",
+      "title": "3 Course Dinner from Drop | Binging with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.452752143,
+      "performanceRatio": 0.236246453268039,
+      "viewCount": 210680,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "GoCYou8Pwmc",
+      "title": "Every Way To Make Instant Ramen",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.452712864,
+      "performanceRatio": 0,
+      "viewCount": 3870869,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "8ewFBbyNtgk",
+      "title": "I Cooked YouTubers Their Favorite Foods",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.452683836,
+      "performanceRatio": 1.81519699687318,
+      "viewCount": 29698796,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "lGi2GPQnQdE",
+      "title": "13 Budget Muscle Building Foods & 3 High Protein Meal Recipes!",
+      "channelName": "The Movement",
+      "similarityScore": 0.452562243,
+      "performanceRatio": 0.0799689116841324,
+      "viewCount": 24900,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qlGMUHWPYvg",
+      "title": "Jacuzzi-Braised Chicken from Yunnan, China | Street Food with Senpai Kai",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.452192545,
+      "performanceRatio": 0.367467072033114,
+      "viewCount": 327700,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "ZxDG9sHsZJM",
+      "title": "Quick mommy tip",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.451880485,
+      "performanceRatio": 0.221109647244641,
+      "viewCount": 877,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "9UX7NJLYyb4",
+      "title": "Can Supersonic Heating Cook Steak?",
+      "channelName": "BPS.space",
+      "similarityScore": 0.451811224,
+      "performanceRatio": 1,
+      "viewCount": 769129,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "J5SXT9r2214",
+      "title": "How to Get More Done and Waste Less Time",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.451606482,
+      "performanceRatio": 0.622884100133276,
+      "viewCount": 411064,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the best meal preparation tips for busy cooks",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Nne4vRy0DCE",
+      "title": "Deep Fried Pork Cutlet from Cooking Mama | Arcade with Alvin",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.450813115,
+      "performanceRatio": 0.560273467615798,
+      "viewCount": 499641,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qAvNsI2wR9I",
+      "title": "Chicken Coop Build Part 2",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.450608701,
+      "performanceRatio": 0.197727285134045,
+      "viewCount": 29635,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "cKk421VTXDU",
+      "title": "I Tested Every Tik Tok Shop Cooking Gadget",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.450583875,
+      "performanceRatio": 0,
+      "viewCount": 2506952,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "t6k1UTAbdiM",
+      "title": "Crocktober | Easy Crock Pot Buffalo Chicken",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.450120598,
+      "performanceRatio": 0.142448062363993,
+      "viewCount": 565,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "LHwZCJNuwqE",
+      "title": "Making Celebrity Chefs' Best Recipes But Better",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.449988097,
+      "performanceRatio": 0,
+      "viewCount": 3242846,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "XbzBR-tKP24",
+      "title": "How Chefs Cook Every Steak",
+      "channelName": "Fallow",
+      "similarityScore": 0.449848354,
+      "performanceRatio": 0.43407725639949,
+      "viewCount": 389714,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "QmmItIofzfI",
+      "title": "An Oven That Cooks With A Camera | June Smart Oven REVIEW (Ep#2)",
+      "channelName": "Chris Young",
+      "similarityScore": 0.448913634,
+      "performanceRatio": 0.0812948125602217,
+      "viewCount": 38413,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "GfY4V-ubHjY",
+      "title": "I Tried The Best Fried Chicken In America",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.448889166,
+      "performanceRatio": 1,
+      "viewCount": 1725585,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "2k0E0cZ4OzM",
+      "title": "Step by step tutorial on how to make a bread knife",
+      "channelName": "Sawdust and splinters",
+      "similarityScore": 0.448680609,
+      "performanceRatio": 0.506658463568379,
+      "viewCount": 9719,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are essential culinary skills for beginners",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "zJJXH2Cngms",
+      "title": "Making 3 Knife Sheaths: 21 Essential Steps to Follow",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.447813809,
+      "performanceRatio": 7.18882114855402,
+      "viewCount": 814559,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "3vZInTf5_1I",
+      "title": "We Found the Perfect French Fry Technique (How to Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.447589,
+      "performanceRatio": 0.291731317548584,
+      "viewCount": 261916,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "oJFms17qczA",
+      "title": "Chicken Coop Build Under $500 - with FREE PLANS",
+      "channelName": "Woodbrew",
+      "similarityScore": 0.447519779,
+      "performanceRatio": 0.502629124865127,
+      "viewCount": 36772,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "63sQzNzye2k",
+      "title": "The Chef’s FAVORITE Pan: Making a Carbon Steel Heirloom! DIY HouseMade Kit",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.447366,
+      "performanceRatio": 0.0449037110925579,
+      "viewCount": 5088,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "NqgiPET1qKY",
+      "title": "I Tested Viral Tik Tok Food Hacks",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.447279096,
+      "performanceRatio": 0,
+      "viewCount": 3276793,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Hh7C6N_bwhw",
+      "title": "Cooking with Blastoise",
+      "channelName": "Ryan Mercer",
+      "similarityScore": 0.447270483,
+      "performanceRatio": 0.0836994949405798,
+      "viewCount": 646,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qiGJm7RD1fs",
+      "title": "Babish's Guide to Summer Grilling",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.447160184,
+      "performanceRatio": 0.230770891129688,
+      "viewCount": 205797,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "REWe549wF7Y",
+      "title": "How to Cook Fish in Paper",
+      "channelName": "Fallow",
+      "similarityScore": 0.446381152,
+      "performanceRatio": 0.523645217766309,
+      "viewCount": 470128,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "8kDmIrou6So",
+      "title": "DITL: COOK & CLEAN WITH ME vlog | Stay-at-home mom",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.445629179,
+      "performanceRatio": 0.151756742205757,
+      "viewCount": 317,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "aoqpxVjJRMQ",
+      "title": "Cook a PERFECT Steak in Less Than 90 Seconds?",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.444766492,
+      "performanceRatio": 0.0869196045922043,
+      "viewCount": 61379,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "33Mu4Z8-ImM",
+      "title": "Make Chicken Milanese With Your Leftovers | What the Fridge?",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.444066405,
+      "performanceRatio": 0.425036165750257,
+      "viewCount": 379039,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "ZvC2jtmVAMs",
+      "title": "i actually read the essay before the recipe, here's why",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.443731397,
+      "performanceRatio": 1,
+      "viewCount": 301973,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "pdf8inDpp0k",
+      "title": "My Chicken Coop Walkthrough Tour With MUST HAVE Features!",
+      "channelName": "Third Coast Craftsman",
+      "similarityScore": 0.44350642,
+      "performanceRatio": 2.14841055417546,
+      "viewCount": 909835,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "DZzM_Myj2ec",
+      "title": "MAKING A SKINNING KNIFE WITH BASIC TOOLS!!!",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.443327218,
+      "performanceRatio": 1.04182345257557,
+      "viewCount": 671382,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "uPgSpktlf4g",
+      "title": "Ultimate Backyard Chicken Coop Build | How To DIY",
+      "channelName": "Third Coast Craftsman",
+      "similarityScore": 0.443312436,
+      "performanceRatio": 3.8623242683397,
+      "viewCount": 1635664,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "HZMCDENEhMk",
+      "title": "Cooking Cambodian Beef Sticks: My First Attempt",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.442347795,
+      "performanceRatio": 0.405256562697248,
+      "viewCount": 5769,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "QR-BtMMJjEA",
+      "title": "Smoking Candle Kit from Mr. Chicken!",
+      "channelName": "jasperjanderson",
+      "similarityScore": 0.441098124,
+      "performanceRatio": 0.52925740488825,
+      "viewCount": 6487,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "2_E1UZYZKF8",
+      "title": "From Old Pallets to Chicken MANSION: A Great DIY Idea You Can Try!",
+      "channelName": "Woodworking Skill",
+      "similarityScore": 0.440582693,
+      "performanceRatio": 0.0663290688868606,
+      "viewCount": 7107,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "HO2JekAioH0",
+      "title": "i made an onlyfans… for my CHICKEN",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.440036178,
+      "performanceRatio": 0,
+      "viewCount": 5663072,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "F_9PnhbCcUM",
+      "title": "Testing 100 Viral Food Hacks",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.4396905,
+      "performanceRatio": 1.35334986469797,
+      "viewCount": 22142424,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to ensure food safety when cooking chicken",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "gQVt-fSwJSI",
+      "title": "12 Mistakes to Avoid Turning a Cup TMA Cup Challange",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.439229608,
+      "performanceRatio": 0.366721147778237,
+      "viewCount": 8941,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "0NlML-xA_lA",
+      "title": "POV: Cooking the Ultimate Mac & Cheese (Chef's Favourite Recipe)",
+      "channelName": "Fallow",
+      "similarityScore": 0.439170241,
+      "performanceRatio": 0.608976149200039,
+      "viewCount": 546738,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Tw5lyfLQSLw",
+      "title": "RAISING CHICKENS & DUCKS together- how we set up our coop for ducks and chickens",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.43906197,
+      "performanceRatio": 10.8647295405667,
+      "viewCount": 22695,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "3IrpeRjq5Js",
+      "title": "Great Depression Cooking: Fried Chicken Dinner",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.438242733,
+      "performanceRatio": 0.201363572307929,
+      "viewCount": 30180,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "PFgaUEsd9m0",
+      "title": "Unlock Your Creativity: Easy Step-by-Step Tutorial for Making a Comfort Bird, No Carving Necessary",
+      "channelName": "Sawdust and splinters",
+      "similarityScore": 0.437852085,
+      "performanceRatio": 0.534861182859509,
+      "viewCount": 10260,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "gSyJm0urgDw",
+      "title": "Do you want to decor and save space of your kitchen then you must watch this video//ideas//tips",
+      "channelName": "HANDICRAFT WOODWORKING PROJECT",
+      "similarityScore": 0.43763721,
+      "performanceRatio": 0.662721132196848,
+      "viewCount": 5858,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "PuqdPxzUc-8",
+      "title": "Making Corndogs Using Potstickers and Scallion Pancakes | What's in the Fridge?",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.43662703,
+      "performanceRatio": 0.674209565635317,
+      "viewCount": 601247,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "pTt4BjY34gk",
+      "title": "The Egg Bar from Severance | Binging with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.43614468,
+      "performanceRatio": 0.613136246711876,
+      "viewCount": 546783,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "OJVvQQeKjls",
+      "title": "Every Potato Dish You'd Ever Need to Know",
+      "channelName": "Fallow",
+      "similarityScore": 0.435887873,
+      "performanceRatio": 0.34043042972905,
+      "viewCount": 305638,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "dCscZaMWzSA",
+      "title": "I Made REAL Boneless Wings",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.435619473,
+      "performanceRatio": 0,
+      "viewCount": 1790143,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xqNL7theV-U",
+      "title": "Avoid These 3 Rookie Mistakes When Soldering Copper Pipe",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.435239673,
+      "performanceRatio": 0.0289354400590294,
+      "viewCount": 14307,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "d5PpnElKWUU",
+      "title": "Can I Turn Mark Rober Into A MasterChef?",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.435235441,
+      "performanceRatio": 0.633178848789546,
+      "viewCount": 10359564,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OBrEJz-zNyY",
+      "title": "10 Tips for a PERFECT Paint Job",
+      "channelName": "Home RenoVision DIY",
+      "similarityScore": 0.435073107,
+      "performanceRatio": 0.483823067748024,
+      "viewCount": 196352,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qRRfksZxLyc",
+      "title": "Tasting Food From Every Decade",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.434966564,
+      "performanceRatio": 1.5928763464761,
+      "viewCount": 26061364,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "tGEzJTdZ1xc",
+      "title": "Mastering Eggs Benedict: English Muffins & Hollandaise from Scratch | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.434761554,
+      "performanceRatio": 0.693605592321179,
+      "viewCount": 618544,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "IYHCa8edLfE",
+      "title": "DIY Backyard Chicken Coop | How to Build - Part 1",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.434557587,
+      "performanceRatio": 1.28950272813128,
+      "viewCount": 665725,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "w-bhtdPyBRo",
+      "title": "i cooked every type of garlic (ft. Erwan Heussaff)",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.434355438,
+      "performanceRatio": 0.163132221997586,
+      "viewCount": 139216,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "Ua4WQ72IhSE",
+      "title": "Cook and Clean with Me | Halloween 2020",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.434126347,
+      "performanceRatio": 0.217327840279225,
+      "viewCount": 862,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "29-iV4_b_S4",
+      "title": "HOW TO MEAL PLAN THE EASY WAY // MONTHLY MEAL PLANNING // Amy Darley",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.433682412,
+      "performanceRatio": 0.842997583128485,
+      "viewCount": 83181,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "list of best chicken meal preparation methods",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "OSZc1n7ssbA",
+      "title": "4 Common Mistakes That Ruin a Flat Table Top",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.433531255,
+      "performanceRatio": 11.4360580749451,
+      "viewCount": 986760,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "NDDAeUt7iwI",
+      "title": "Building the Ultimate Chicken Coop | Part 2",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.433361828,
+      "performanceRatio": 0.143075773049558,
+      "viewCount": 73865,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "chicken cooking tutorial video",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "RcOAtrUdwmU",
+      "title": "How to Make the Best Tex-Mex Enchiladas | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.432585776,
+      "performanceRatio": 0.933717346160771,
+      "viewCount": 832671,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "ARDpbyxkzXI",
+      "title": "The Perfect Tortilla: Mastering Spain's Most Iconic Dish",
+      "channelName": "Fallow",
+      "similarityScore": 0.431353152,
+      "performanceRatio": 0.557192826744935,
+      "viewCount": 500247,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "top tips for cooking chicken perfectly",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "qMu5uIrkXnA",
+      "title": "Very High Skills Of Young Craftsman: Handle Burned Wood into A Masterpiece",
+      "channelName": "Woodworking Projects",
+      "similarityScore": 0.431173503,
+      "performanceRatio": 0.153146657464685,
+      "viewCount": 5618,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ah8mRZPk6sE",
+      "title": "Cooking Challenge Against My Brothers",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.431088656,
+      "performanceRatio": 0.46653438086008,
+      "viewCount": 7633061,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "1IbS37UT9bI",
+      "title": "5 Screw Mistakes You Must Avoid for Effortless DIY Success",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.430862397,
+      "performanceRatio": 0.099167640484685,
+      "viewCount": 49033,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JZM1fQitsx8",
+      "title": "Making a Centrifugal TURKEY Cooking Machine",
+      "channelName": "colinfurze",
+      "similarityScore": 0.430532247,
+      "performanceRatio": 0.646243931835944,
+      "viewCount": 2947719,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bSERj23wFzs",
+      "title": "Chef Guide to Spanish Omelette",
+      "channelName": "Fallow",
+      "similarityScore": 0.428875089,
+      "performanceRatio": 5.18029705118922,
+      "viewCount": 4650864,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "yS_hULBuygY",
+      "title": "Building a Chicken Coop - Part 1",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.428728163,
+      "performanceRatio": 4.54104470281553,
+      "viewCount": 2344382,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pEKyhFPKLT0",
+      "title": "Fixing Your STRANGEST Recipes ft. @NickDiGiovanni",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.428610414,
+      "performanceRatio": 0.986228020708121,
+      "viewCount": 879499,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "nSQFzjZa6aU",
+      "title": "10 EPOXY Mistakes Beginners Make",
+      "channelName": "John Malecki",
+      "similarityScore": 0.428329557,
+      "performanceRatio": 0.768228042490611,
+      "viewCount": 438858,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cDokpTWM5qw",
+      "title": "I Tested Viral Tik Tok Recipes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.427764803,
+      "performanceRatio": 0,
+      "viewCount": 3936105,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oTtiWspz1Gs",
+      "title": "Just What You Need For Outdoor Cooking | Backyard Projects",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.427538335,
+      "performanceRatio": 0.0557609182939196,
+      "viewCount": 46486,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "9tdyZWbGWO0",
+      "title": "5 Resume Mistakes You Need to Avoid",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.427408308,
+      "performanceRatio": 1.72649621528923,
+      "viewCount": 1139378,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "o54chvNrT2g",
+      "title": "Quick and easy crock pot recipe!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.426432937,
+      "performanceRatio": 0.335572338064557,
+      "viewCount": 1331,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "R63JO1dNY_c",
+      "title": "Every Way To Cook A Potato (43 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.426271886,
+      "performanceRatio": 0,
+      "viewCount": 5740447,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "1MjfssKGVRg",
+      "title": "5 Things Everyone Gets Wrong About Gaining Muscle",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.42567727,
+      "performanceRatio": 0.902597664554068,
+      "viewCount": 600556,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "5inVS8RSz7Q",
+      "title": "Ranking Your STRANGEST Recipes | Best with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.425510079,
+      "performanceRatio": 3.9568757880248,
+      "viewCount": 3528665,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "aMisV33M6c8",
+      "title": "Making a BUTTERFLY KNIFE with Will Stelter!",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.425463885,
+      "performanceRatio": 1.04964587263514,
+      "viewCount": 676423,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "advanced culinary skills for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "WL9yDxMD-jg",
+      "title": "Transform Collard Greens  Freeze Drying for Nutritious Powder 1",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.425277531,
+      "performanceRatio": 1.74165522936903,
+      "viewCount": 8281,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "meal preparation tips for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "dUzRueUDgJA",
+      "title": "Reverse Searing: The Temperature You're Missing",
+      "channelName": "Chris Young",
+      "similarityScore": 0.424197286,
+      "performanceRatio": 1,
+      "viewCount": 118725,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "comparison of different chicken cooking techniques",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "pT3_wgEas3g",
+      "title": "How Chefs Create a Restaurant Menu That Works",
+      "channelName": "Fallow",
+      "similarityScore": 0.424129069,
+      "performanceRatio": 0.168643593088608,
+      "viewCount": 151408,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Nz5eBh7xukQ",
+      "title": "SAME Recipe: Are Expensive Ingredients Better?",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.423375517,
+      "performanceRatio": 0.844171911727141,
+      "viewCount": 596119,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "qGiFC5RsCtU",
+      "title": "5 beginner mistakes that KILL your gym progress",
+      "channelName": "Owen Blair",
+      "similarityScore": 0.42331022,
+      "performanceRatio": 0.0461237293358299,
+      "viewCount": 3651,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "e7XnRzXj6zw",
+      "title": "Steak: Filet, NY Strip, & Flank | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.4227404,
+      "performanceRatio": 0.626234760194998,
+      "viewCount": 558464,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential cooking techniques for preparing chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jT_xCFuYyS4",
+      "title": "5 Things Everyone Gets Wrong About Arm Training",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.422675341,
+      "performanceRatio": 0.621076575865785,
+      "viewCount": 413242,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mHOteJaTrkM",
+      "title": "Winterise The Vegetable Garden: Essential Prep",
+      "channelName": "The Farmyard Garden ",
+      "similarityScore": 0.422549605,
+      "performanceRatio": 0.622283841784401,
+      "viewCount": 2570,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "meal preparation tips for cooking chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "d8tJHQlxZrU",
+      "title": "Which Country Has The Best Fried Chicken?",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.422381878,
+      "performanceRatio": 0,
+      "viewCount": 4674921,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "aNJ1S1kC2CQ",
+      "title": "Ranking Your STRANGEST Recipes (Part 2!) | Best with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.421063453,
+      "performanceRatio": 2.08570587197136,
+      "viewCount": 1859992,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "ak6xKjbC8WY",
+      "title": "3 Delicious Garden-to-Table Recipes (w/ Amanda Frederickson)",
+      "channelName": "Lowe's Home Improvement",
+      "similarityScore": 0.420965046,
+      "performanceRatio": 0.0601035431674941,
+      "viewCount": 8877,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "x5lBJE2Ok8E",
+      "title": "The Genius of Chicken Shop Date",
+      "channelName": "Colin and Samir",
+      "similarityScore": 0.420794278,
+      "performanceRatio": 0,
+      "viewCount": 294096,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "ultimate guide to chicken recipes",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "4ztpiD3iplI",
+      "title": "The Best Sauce for Pork",
+      "channelName": "Fallow",
+      "similarityScore": 0.420681596,
+      "performanceRatio": 0.505895136532424,
+      "viewCount": 454192,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8pCCdx33qQg",
+      "title": "Most Common Dust Collection Mistakes",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.419603556,
+      "performanceRatio": 1.09997132833831,
+      "viewCount": 94911,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pYA8H8KaLNg",
+      "title": "Proof Resting Doesn't Keep Meat Juicy",
+      "channelName": "Chris Young",
+      "similarityScore": 0.419543087,
+      "performanceRatio": 1.82996606079837,
+      "viewCount": 864686,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes in cooking chicken recipes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "fMt2ca4jdY4",
+      "title": "How to Make the Best Pasta Salad (Three Ways) | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.418696284,
+      "performanceRatio": 0.735675357781863,
+      "viewCount": 656061,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YFpnNixm5Vs",
+      "title": "Why Flip Your Steak Every 30 seconds?",
+      "channelName": "Chris Young",
+      "similarityScore": 0.418347925,
+      "performanceRatio": 0.488592130042973,
+      "viewCount": 230867,
+      "foundVia": {
+        "thread": "Format Exploration",
+        "query": "explainer on food safety when cooking chicken",
+        "threadPurpose": "Discover patterns that work across different content formats"
+      }
+    },
+    {
+      "videoId": "gZZ-URbyi38",
+      "title": "4 EASY CHRISTMAS RECIPES // PINTEREST INSPIRED RECIPES // COOK WITH ME Amy Darley",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.416351467,
+      "performanceRatio": 0.132974733271166,
+      "viewCount": 13121,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "HiL6uPNlqRw",
+      "title": "How to choose a cleaning solution",
+      "channelName": "Applied Science",
+      "similarityScore": 0.415739864,
+      "performanceRatio": 0.771832920774358,
+      "viewCount": 245247,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "odETEKWkMA8",
+      "title": "Cooking What I Find In The Arctic Circle",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.415145934,
+      "performanceRatio": 0,
+      "viewCount": 1200767,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Fzz7y5F3Dfk",
+      "title": "How to Pick the BEST Exercises for Muscle Growth",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.414898455,
+      "performanceRatio": 0.393936246501461,
+      "viewCount": 262111,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "WUiinOuFLkA",
+      "title": "I Tested Viral Celebrity Recipes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.414875925,
+      "performanceRatio": 0,
+      "viewCount": 4137200,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "xC6Su2BZRVw",
+      "title": "PROTEIN-PACKED Fried Rice Recipe! 🍚",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.413866222,
+      "performanceRatio": 0.989030943173347,
+      "viewCount": 43338,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "DtFpRjd7GRo",
+      "title": "What’s the Best British Pub Classic Dish?",
+      "channelName": "Fallow",
+      "similarityScore": 0.413499922,
+      "performanceRatio": 1,
+      "viewCount": 768030,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "iNn2jqwKHy0",
+      "title": "Crock Pot Cooking! {Chili}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.413109094,
+      "performanceRatio": 0.36280134821555,
+      "viewCount": 1439,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Kz1fN8e002Y",
+      "title": "Delicious Chicken Tzatziki Salad Recipe! 🥗",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.412477016,
+      "performanceRatio": 0.719328426065437,
+      "viewCount": 31520,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best recipe for cooking a chicken",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8KAqFcwdlEs",
+      "title": "How to make 3 different Chicken Feeders with PVC",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.412276924,
+      "performanceRatio": 7.04551458165679,
+      "viewCount": 1740086,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DESOvso0miE",
+      "title": "9 Dishes that Made Chefs Famous",
+      "channelName": "Fallow",
+      "similarityScore": 0.411731273,
+      "performanceRatio": 1,
+      "viewCount": 2849779,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are the various types of recipes in modern cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "remUkSQNGgA",
+      "title": "How To Build A Chicken Coop Run | DIY",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.410423905,
+      "performanceRatio": 6.84024225552601,
+      "viewCount": 3531377,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jYdqsa3of2o",
+      "title": "Before You Ruin Your Kitchen, Watch This First.",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.408349246,
+      "performanceRatio": 0.206406107967913,
+      "viewCount": 116874,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to ensure food safety when cooking chicken",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "VXBAow2VRBk",
+      "title": "CHRISTMAS DINNER VEGETABLES",
+      "channelName": "The Farmyard Garden ",
+      "similarityScore": 0.406808019,
+      "performanceRatio": 0.161261104524673,
+      "viewCount": 666,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "QvfA7aUxGVA",
+      "title": "Pre-Raising Wood Grain: Easy Water Bath Technique",
+      "channelName": "The Wood Whisperer",
+      "similarityScore": 0.4052746,
+      "performanceRatio": 0.0936092033177534,
+      "viewCount": 17842,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "tUlknSSRXDI",
+      "title": "How to Cook Steak on a Stainless Steel Pan!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.404093236,
+      "performanceRatio": 0.944118559210886,
+      "viewCount": 41370,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "what are different cooking techniques for poultry",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "ErVdMfnPDPQ",
+      "title": "Crock Pot Cooking! {Ribs}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.403397858,
+      "performanceRatio": 0.457346522350944,
+      "viewCount": 1814,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a chicken",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "7YWTeLCWEBc",
+      "title": "Sunday Meal GAME CHANGER You Need to Try!",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.40311566,
+      "performanceRatio": 0.458286045742677,
+      "viewCount": 2179,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to choose the best chicken recipe for dinner",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    }
+  ],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 2,
+    "above_avg": 4,
+    "normal": 39
+  },
+  "claudePrompts": {
+    "Domain Hierarchy": "Analyze these high-performing YouTube video titles about \"how to cook a chicken\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Domain Hierarchy - Purpose: Find universal patterns that work across the entire category\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: xniS7kMpW4I] \"The 5 Sauces Every Chef Needs to Learn\" - 5.1x avg (4,544,323 views | Engagement: 3.21%)\n2. 💪 [ID: 3px1ZHVUNKc] \"Every Way to Fry an Egg\" - 4.8x avg (4,304,904 views | Engagement: 3.45%)\n3. ✅ [ID: _uVcEns2hKg] \"5 Sauces Every Chef Needs to Learn\" - 2.2x avg (2,016,889 views | Engagement: 3.86%)\n4. ✅ [ID: J60DCvBCAIo] \"Every Knife a Chef Needs to Own\" - 2.0x avg (1,753,744 views | Engagement: 1.68%)\n5. ✅ [ID: YTAa4h_822Y] \"Every Way to Fry an Egg\" - 1.8x avg (1,660,369 views | Engagement: 1.49%)\n6. ✅ [ID: DBZW2Pd1Evs] \"MEAL PREP SECRETS ft. Mealsdotkom\" - 1.6x avg (23,018 views | Engagement: 2.97%)\n7. ✅ [ID: Ap0zNHgZxfA] \"The 3 Salmon Techniques Every Chef Should Learn\" - 1.5x avg (1,330,845 views | Engagement: 1.77%)\n8. ✅ [ID: srKF3qtTlaE] \"The 6 Stocks & Broths Every Chef Needs to Learn\" - 1.1x avg (1,005,269 views | Engagement: 2.76%)\n9. ✅ [ID: 8o8GXceXF60] \"why do some ingredients come with a recipe? #historyfacts\" - 1.0x avg (516,528 views | Engagement: 7.67%)\n10. ✅ [ID: 8A_i-PFRieQ] \"The 5 Skills Every Chef Needs to Learn\" - 0.8x avg (695,204 views | Engagement: 2.04%)\n11. ✅ [ID: rxWYxuhm49U] \"The 3 Breakfast Techniques Every Chef Should Learn\" - 0.8x avg (675,077 views | Engagement: 1.68%)\n12. ✅ [ID: HiJz4oplV2g] \"Getting things done {meal planning}\" - 0.6x avg (2,526 views | Engagement: 4.63%)\n13. ✅ [ID: 1xfA9nStBHc] \"Tips to get organized for dinner time!\" - 0.5x avg (2,144 views | Engagement: 5.41%)\n14. ✅ [ID: 0mqKloV-NTA] \"Quick tip! Get organized for dinner time!\" - 0.4x avg (1,779 views | Engagement: 8.09%)\n15. ✅ [ID: qal3bbhiG88] \"The 4 Purees Every Chef Needs to Learn\" - 0.4x avg (342,204 views | Engagement: 4.07%)\n16. ✅ [ID: BIFZqkk_25k] \"Dinner tips for busy nights!\" - 0.4x avg (1,465 views | Engagement: 7.03%)\n17. ✅ [ID: jhePLqQ8dSc] \"How to Prep & Cook a Pigeon\" - 0.3x avg (225,715 views | Engagement: 3.72%)\n18. ✅ [ID: KIEvBvs-htI] \"How a head chef would learn to cook If he could start over\" - 0.2x avg (211,459 views | Engagement: 4.16%)\n19. ✅ [ID: YikSIxDCiyM] \"Farm To Table Cooking Basics: Pasta on a Time Crunch\" - 0.2x avg (24,350 views | Engagement: 8.36%)\n20. ✅ [ID: HyLJNWZB0cs] \"COOK AND CLEAN WITH ME SPRING 2020 / EASY DINNER IDEA / NIGHTLY CLEANING ROUTINE\" - 0.1x avg (10,141 views | Engagement: 5.06%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a chicken\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "Format Exploration": "Analyze these high-performing YouTube video titles about \"how to cook a chicken\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Format Exploration - Purpose: Discover patterns that work across different content formats\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. ✅ [ID: hTX7B61GDo8] \"We Found the Perfect Poached Egg Technique (How to Make it at Home)\" - 2.9x avg (2,565,280 views | Engagement: 0.60%)\n2. ✅ [ID: uC6VBDJlm4w] \"Does Basting Work? | TESTED\" - 2.5x avg (1,189,063 views | Engagement: 2.52%)\n3. ✅ [ID: CYEFR_kg6Us] \"How to Make the Best Fish & Chips | Basics with Babish\" - 2.1x avg (1,873,652 views | Engagement: 2.32%)\n4. ✅ [ID: q2OKZMDOuV8] \"How to Butcher a Chicken 🇫🇷 vs 🇯🇵\" - 2.1x avg (1,861,862 views | Engagement: 4.71%)\n5. ✅ [ID: mXtKxjyfRFU] \"How to Make the Best Wings at Home | Basics with Babish\" - 1.8x avg (1,644,145 views | Engagement: 2.34%)\n6. ✅ [ID: DmuwqqHjgT4] \"Why You Should Temper Steaks | TESTED\" - 1.8x avg (833,139 views | Engagement: 3.34%)\n7. ✅ [ID: 8VY0RnxaZJc] \"Cooking Chicken In 3 Levels Of Difficulty\" - 0.9x avg (851,086 views | Engagement: 2.35%)\n8. ✅ [ID: nHvfNe3jzEs] \"Ultimate Chef Guide to Cooking Roast Dinner\" - 0.9x avg (811,318 views | Engagement: 1.57%)\n9. ✅ [ID: jHDrv64NK2M] \"8 Recipes Using Every Part of a Rotisserie Chicken | Basics with Babish\" - 0.9x avg (776,024 views | Engagement: 2.94%)\n10. ✅ [ID: Xo0v7ZuA9C0] \"Beer Can Chicken | Basics with Babish\" - 0.8x avg (691,969 views | Engagement: 3.15%)\n11. ✅ [ID: HSs-H_dNM6s] \"The Ultimate Chef Guide to Perfect Roast Potatoes\" - 0.7x avg (635,689 views | Engagement: 1.24%)\n12. ✅ [ID: gfX1FYUc9-4] \"The Best Barbecue Chicken (Without a Recipe) | Basics with Babish\" - 0.5x avg (478,618 views | Engagement: 3.45%)\n13. ✅ [ID: G8xELw231qs] \"How To Cook The Perfect Steak\" - 0.5x avg (8,717,547 views | Engagement: 2.21%)\n14. ✅ [ID: p0yh4cvD8E8] \"POV: Cooking Restaurant Quality Chicken Wings & Sauce (How to Make Them at Home)\" - 0.5x avg (451,347 views | Engagement: 1.95%)\n15. ✅ [ID: OlzAbXI_z4k] \"We Found the Perfect Fried Chicken Technique\" - 0.4x avg (343,226 views | Engagement: 1.31%)\n16. ✅ [ID: BPl_G3NRUnk] \"POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)\" - 0.3x avg (297,337 views | Engagement: 3.08%)\n17. ✅ [ID: inphbadzM_8] \"POV: How to Cook Duck Like a Chef\" - 0.3x avg (257,334 views | Engagement: 1.81%)\n18. ✅ [ID: cFrduFR70pw] \"The Ultimate Chef Guide to Perfectly Cooked Turkey!\" - 0.2x avg (159,698 views | Engagement: 1.92%)\n19. ✅ [ID: YTzUMwbb4KI] \"Dry-age for (actually) crisp roast chicken\" - 0.1x avg (53,258 views | Engagement: 4.44%)\n20. ✅ [ID: O3F9iKLTWMs] \"Cooking Rotisserie Chicken in London\" - 0.1x avg (62,661 views | Engagement: 1.95%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a chicken\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "Direct Variations": "Analyze these high-performing YouTube video titles about \"how to cook a chicken\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Direct Variations - Purpose: Find patterns specific to this exact topic\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 🌟 [ID: A5lgWamvbT0] \"Fried Chicken #recipe #chicken #cooking #homestead #fyp #howto #share #viral #like #food #delicious\" - 11.5x avg (54,663 views | Engagement: 4.74%)\n2. 🌟 [ID: Tw5lyfLQSLw] \"RAISING CHICKENS & DUCKS together- how we set up our coop for ducks and chickens\" - 10.9x avg (22,695 views | Engagement: 1.47%)\n3. 💪 [ID: zJJXH2Cngms] \"Making 3 Knife Sheaths: 21 Essential Steps to Follow\" - 7.2x avg (814,559 views | Engagement: 2.60%)\n4. 💪 [ID: Qh2IXdkEIfY] \"Getting a Chisel Scary Sharp - Essential Woodworking Skills\" - 5.8x avg (1,602,357 views | Engagement: 1.16%)\n5. 💪 [ID: plj7VaTcgAc] \"Common Mistakes in Turkey Breeding\" - 3.2x avg (24,835 views | Engagement: 0.77%)\n6. 💪 [ID: tjQWzOFFxKU] \"Every Way to Screw Up Steak | Botched By Babish\" - 3.0x avg (2,705,688 views | Engagement: 2.42%)\n7. ✅ [ID: VgHMxzcFFF4] \"Crock Pot Cooking! {Lemon Chicken}\" - 1.8x avg (7,313 views | Engagement: 2.57%)\n8. ✅ [ID: uYy7QK5Ja4U] \"Every Way To Screw Up Burgers | Botched by Babish\" - 1.5x avg (1,351,187 views | Engagement: 3.08%)\n9. ✅ [ID: oUuFr2y2gpc] \"Cilantro Lime Chicken 🍗 Recipe!\" - 1.4x avg (59,429 views | Engagement: 8.48%)\n10. ✅ [ID: _8n4rDTkx_w] \"Every Way to Screw Up a French Omelette | Botched by Babish\" - 1.1x avg (998,075 views | Engagement: 2.91%)\n11. ✅ [ID: 5YVb2nb391Q] \"Homemade Chicken Tenders Recipe for Picky Eaters!\" - 0.8x avg (35,286 views | Engagement: 6.78%)\n12. ✅ [ID: EaCnovM9JSM] \"Every Way to Screw Up Chicken Breast (& How to Fix It) | Botched by Babish\" - 0.7x avg (645,548 views | Engagement: 3.14%)\n13. ✅ [ID: Wf5FXUUXkvE] \"Easy Chicken Wing Recipe for Picky Eaters!\" - 0.6x avg (24,831 views | Engagement: 6.91%)\n14. ✅ [ID: ajVOw1hnccA] \"One Pan Chicken Recipe!\" - 0.4x avg (17,577 views | Engagement: 10.04%)\n15. ✅ [ID: yzQFsmurEfM] \"Preztel Chicken with Mushroom Gravy\" - 0.3x avg (228,779 views | Engagement: 4.20%)\n16. ✅ [ID: NZgFAIHZ4vc] \"How I Make My Homemade Natural Seasoning | GREAT FOR CHICKEN, FISH, AND VEGETABLES!\" - 0.2x avg (999 views | Engagement: 9.61%)\n17. ✅ [ID: _rnMXU5hM7k] \"ROASTED CHICKEN CAULIFLOWER SOUP\" - 0.2x avg (764 views | Engagement: 12.57%)\n18. ✅ [ID: vdbRZCI85oE] \"CHICKEN CUTS - How to cut up a whole chicken & what to do with the rest of the chicken\" - 0.1x avg (258 views | Engagement: 6.20%)\n19. ✅ [ID: TULreIfJHSY] \"What Everyone Gets Wrong About Chefs\" - 0.1x avg (94,680 views | Engagement: 3.39%)\n20. ✅ [ID: SYWeuAFL00Q] \"Pressure Canning chicken for years of meat storage- HOMESTEAD SKILLS\" - 0.1x avg (143 views | Engagement: 9.09%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a chicken\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "original": "Analyze these high-performing YouTube video titles about \"how to cook a chicken\" and identify actionable title patterns.\n\nAnalysis Context: Thread: original - Purpose: Original search query\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 🌟 [ID: NBXiUpJbzQE] \"Crock Pot Cooking! {chicken and rice}\" - 32.5x avg (128,780 views | Engagement: 1.12%)\n2. ✅ [ID: _jKYjg35Cm0] \"Cook Your Turkey From Frozen (Trust Me)\"\" - 1.0x avg (663,598 views | Engagement: 2.87%)\n3. ✅ [ID: REWe549wF7Y] \"How to Cook Fish in Paper\" - 0.5x avg (470,128 views | Engagement: 3.56%)\n4. ✅ [ID: ErVdMfnPDPQ] \"Crock Pot Cooking! {Ribs}\" - 0.5x avg (1,814 views | Engagement: 6.17%)\n5. ✅ [ID: XpOQ5ZDyw9E] \"Cook Your Chicken With a Brick!\" - 0.4x avg (329,147 views | Engagement: 1.84%)\n6. ✅ [ID: R2FqGmD1E08] \"How to Cook Scallops Like a Chef\" - 0.2x avg (177,482 views | Engagement: 2.63%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a chicken\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant"
+  },
+  "discoveredPatterns": [
+    {
+      "pattern": "Crock Pot Format",
+      "explanation": "Using 'Crock Pot Cooking!' with specific food in curly brackets creates a clear, scannable format that performed exceptionally well",
+      "template": "Crock Pot Cooking! {[FOOD TYPE]}",
+      "examples": [
+        "Crock Pot Cooking! {chicken and rice}",
+        "Crock Pot Cooking! {Ribs}"
+      ],
+      "video_ids": [
+        "NBXiUpJbzQE",
+        "ErVdMfnPDPQ"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 16.5,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Hashtag Stack",
+      "explanation": "Using a strategic stack of relevant hashtags in the title itself drives discovery and engagement, especially effective for cooking/food content",
+      "template": "[RECIPE_NAME] #recipe #chicken #cooking #[CATEGORY] #fyp #howto #[ADDITIONAL_TAGS]",
+      "examples": [
+        "Fried Chicken #recipe #chicken #cooking #homestead #fyp #howto #share #viral #like #food #delicious"
+      ],
+      "video_ids": [
+        "A5lgWamvbT0"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 11.5,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Comprehensive Guide Format",
+      "explanation": "Titles that promise complete coverage of a topic with specific steps or components perform well",
+      "template": "[TOPIC] - [NUMBER] Essential Steps to [OUTCOME]",
+      "examples": [
+        "Making 3 Knife Sheaths: 21 Essential Steps to Follow",
+        "CHICKEN CUTS - How to cut up a whole chicken & what to do with the rest of the chicken"
+      ],
+      "video_ids": [
+        "zJJXH2Cngms",
+        "vdbRZCI85oE"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 3.65,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Every [X] Pattern",
+      "explanation": "Using 'Every' creates comprehensiveness and suggests complete coverage of a topic, driving high engagement from viewers seeking mastery",
+      "template": "Every Way to [COOK METHOD] a [FOOD]",
+      "examples": [
+        "Every Way to Fry an Egg",
+        "Every Knife a Chef Needs to Own"
+      ],
+      "video_ids": [
+        "3px1ZHVUNKc",
+        "J60DCvBCAIo"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 3.4,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Numbered Essential Skills",
+      "explanation": "Specific numbers combined with 'Every Chef Needs' creates authority and clear value proposition",
+      "template": "The [NUMBER] [TECHNIQUES/SKILLS] Every Chef Needs to Learn",
+      "examples": [
+        "The 5 Sauces Every Chef Needs to Learn",
+        "The 6 Stocks & Broths Every Chef Needs to Learn",
+        "The 5 Skills Every Chef Needs to Learn"
+      ],
+      "video_ids": [
+        "xniS7kMpW4I",
+        "srKF3qtTlaE",
+        "8A_i-PFRieQ"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 2.7,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Perfect Technique Promise",
+      "explanation": "Titles that promise the 'perfect' or 'best' version of a dish create high viewer confidence and suggest definitive authority",
+      "template": "We Found the Perfect [DISH] Technique (How to Make it at Home)",
+      "examples": [
+        "We Found the Perfect Poached Egg Technique (How to Make it at Home)",
+        "We Found the Perfect Fried Chicken Technique",
+        "How to Make the Best Wings at Home | Basics with Babish"
+      ],
+      "video_ids": [
+        "hTX7B61GDo8",
+        "OlzAbXI_z4k",
+        "mXtKxjyfRFU"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 2.4,
+      "source_thread": "Format Exploration",
+      "thread_purpose": "Discover patterns that work across different content formats"
+    },
+    {
+      "pattern": "Testing/Comparison Format",
+      "explanation": "Titles that frame content as experiments or comparisons create curiosity and promise evidence-based insights",
+      "template": "[TECHNIQUE] [QUESTION] | TESTED",
+      "examples": [
+        "Does Basting Work? | TESTED",
+        "Why You Should Temper Steaks | TESTED",
+        "How to Butcher a Chicken 🇫🇷 vs 🇯🇵"
+      ],
+      "video_ids": [
+        "uC6VBDJlm4w",
+        "DmuwqqHjgT4",
+        "q2OKZMDOuV8"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 2.1,
+      "source_thread": "Format Exploration",
+      "thread_purpose": "Discover patterns that work across different content formats"
+    },
+    {
+      "pattern": "Chef Authority Pattern",
+      "explanation": "Referencing professional expertise creates credibility and attracts viewers seeking expert knowledge",
+      "template": "How a [CHEF TYPE] Would [ACTION] If [CONDITION]",
+      "examples": [
+        "How a head chef would learn to cook If he could start over",
+        "The 3 Salmon Techniques Every Chef Should Learn"
+      ],
+      "video_ids": [
+        "KIEvBvs-htI",
+        "Ap0zNHgZxfA"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 1.8,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Every Way to Screw Up",
+      "explanation": "Addressing common mistakes creates immediate value proposition and validates viewer concerns",
+      "template": "Every Way to Screw Up [DISH] | Botched By [CREATOR]",
+      "examples": [
+        "Every Way to Screw Up Steak | Botched By Babish",
+        "Every Way To Screw Up Burgers | Botched by Babish",
+        "Every Way to Screw Up Chicken Breast (& How to Fix It) | Botched by Babish"
+      ],
+      "video_ids": [
+        "tjQWzOFFxKU",
+        "uYy7QK5Ja4U",
+        "EaCnovM9JSM"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 1.7,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Emoji-Enhanced Recipe",
+      "explanation": "Using relevant emojis in recipe titles increases visual appeal and engagement",
+      "template": "[RECIPE_NAME] [RELEVANT_EMOJI] Recipe!",
+      "examples": [
+        "Cilantro Lime Chicken 🍗 Recipe!",
+        "One Pan Chicken Recipe!"
+      ],
+      "video_ids": [
+        "oUuFr2y2gpc",
+        "ajVOw1hnccA"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 0.9,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Specific Audience Targeting",
+      "explanation": "Directly addressing a specific audience segment (like 'picky eaters') creates immediate relevance",
+      "template": "[DISH_NAME] Recipe for [SPECIFIC_AUDIENCE]!",
+      "examples": [
+        "Homemade Chicken Tenders Recipe for Picky Eaters!",
+        "Easy Chicken Wing Recipe for Picky Eaters!"
+      ],
+      "video_ids": [
+        "5YVb2nb391Q",
+        "Wf5FXUUXkvE"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 0.7,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Unexpected Method Hook",
+      "explanation": "Titles that challenge conventional cooking methods with a surprising twist generate curiosity",
+      "template": "Cook Your [FOOD] With a [UNEXPECTED ITEM]!",
+      "examples": [
+        "Cook Your Turkey From Frozen (Trust Me)",
+        "Cook Your Chicken With a Brick!"
+      ],
+      "video_ids": [
+        "_jKYjg35Cm0",
+        "XpOQ5ZDyw9E"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 0.7,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Ultimate Chef Guide",
+      "explanation": "Positioning content as an authoritative guide from a professional chef adds credibility and perceived value",
+      "template": "The Ultimate Chef Guide to [COOKING TECHNIQUE/DISH]",
+      "examples": [
+        "Ultimate Chef Guide to Cooking Roast Dinner",
+        "The Ultimate Chef Guide to Perfect Roast Potatoes",
+        "The Ultimate Chef Guide to Perfectly Cooked Turkey!"
+      ],
+      "video_ids": [
+        "nHvfNe3jzEs",
+        "HSs-H_dNM6s",
+        "cFrduFR70pw"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 0.6,
+      "source_thread": "Format Exploration",
+      "thread_purpose": "Discover patterns that work across different content formats"
+    },
+    {
+      "pattern": "Simple Technique Focus",
+      "explanation": "Clear, straightforward titles that focus on a specific cooking technique perform well",
+      "template": "How to Cook [FOOD] in [METHOD]",
+      "examples": [
+        "How to Cook Fish in Paper"
+      ],
+      "video_ids": [
+        "REWe549wF7Y"
+      ],
+      "confidence": 0.65,
+      "performance_multiplier": 0.5,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Quick Solution Promise",
+      "explanation": "Appeals to busy viewers by promising efficient solutions to common cooking challenges",
+      "template": "[QUICK/EASY] [MEAL TYPE] tips for [SITUATION]",
+      "examples": [
+        "Quick tip! Get organized for dinner time!",
+        "Dinner tips for busy nights!",
+        "Tips to get organized for dinner time!"
+      ],
+      "video_ids": [
+        "0mqKloV-NTA",
+        "BIFZqkk_25k",
+        "1xfA9nStBHc"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 0.4,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Restaurant Quality POV",
+      "explanation": "Promising restaurant-level results while using POV format suggests exclusive insider knowledge",
+      "template": "POV: Cooking Restaurant Quality [DISH] (How to Make [it/them] at Home)",
+      "examples": [
+        "POV: Cooking Restaurant Quality Chicken Wings & Sauce (How to Make Them at Home)",
+        "POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)",
+        "POV: How to Cook Duck Like a Chef"
+      ],
+      "video_ids": [
+        "p0yh4cvD8E8",
+        "BPl_G3NRUnk",
+        "inphbadzM_8"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 0.4,
+      "source_thread": "Format Exploration",
+      "thread_purpose": "Discover patterns that work across different content formats"
+    },
+    {
+      "pattern": "Professional Authority",
+      "explanation": "Positioning the content as professional-level instruction adds credibility and attracts viewers seeking expertise",
+      "template": "How to Cook [FOOD] Like a Chef",
+      "examples": [
+        "How to Cook Scallops Like a Chef"
+      ],
+      "video_ids": [
+        "R2FqGmD1E08"
+      ],
+      "confidence": 0.6,
+      "performance_multiplier": 0.2,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    }
+  ],
+  "threadAnalysis": [
+    {
+      "thread": "Domain Hierarchy",
+      "videosAnalyzed": 20,
+      "patternsFound": 4
+    },
+    {
+      "thread": "Format Exploration",
+      "videosAnalyzed": 20,
+      "patternsFound": 4
+    },
+    {
+      "thread": "Direct Variations",
+      "videosAnalyzed": 20,
+      "patternsFound": 5
+    },
+    {
+      "thread": "original",
+      "videosAnalyzed": 6,
+      "patternsFound": 4
+    }
+  ],
+  "processingSteps": [
+    {
+      "step": "Multi-Threaded Query Expansion",
+      "duration_ms": 4914,
+      "details": {
+        "originalQuery": "how to cook a chicken",
+        "threads": [
+          {
+            "name": "Direct Variations",
+            "purpose": "Find patterns specific to this exact topic",
+            "queryCount": 6,
+            "queries": [
+              "best recipe for cooking a chicken",
+              "essential cooking techniques for preparing chicken",
+              "meal preparation tips for cooking chicken",
+              "common mistakes in cooking chicken recipes",
+              "how to ensure food safety when cooking chicken",
+              "advanced culinary skills for cooking chicken"
+            ]
+          },
+          {
+            "name": "Format Exploration",
+            "purpose": "Discover patterns that work across different content formats",
+            "queryCount": 6,
+            "queries": [
+              "chicken cooking tutorial video",
+              "ultimate guide to chicken recipes",
+              "top tips for cooking chicken perfectly",
+              "comparison of different chicken cooking techniques",
+              "list of best chicken meal preparation methods",
+              "explainer on food safety when cooking chicken"
+            ]
+          },
+          {
+            "name": "Domain Hierarchy",
+            "purpose": "Find universal patterns that work across the entire category",
+            "queryCount": 6,
+            "queries": [
+              "what are different cooking techniques for poultry",
+              "how to choose the best chicken recipe for dinner",
+              "what are essential culinary skills for beginners",
+              "what are the best meal preparation tips for busy cooks",
+              "how to ensure food safety when cooking chicken",
+              "what are the various types of recipes in modern cooking"
+            ]
+          }
+        ],
+        "totalQueries": 19
+      }
+    },
+    {
+      "step": "Multi-Query Embedding",
+      "duration_ms": 791,
+      "details": {
+        "embeddingModel": "text-embedding-3-small",
+        "queriesEmbedded": 19,
+        "totalTokens": 131,
+        "totalCost": 0.0000026200000000000007
+      }
+    },
+    {
+      "step": "Multi-Query Pinecone Search",
+      "duration_ms": 1076,
+      "details": {
+        "threshold": 0.4,
+        "videosPerQuery": 300,
+        "totalQueriesSearched": 19,
+        "totalResultsBeforeDedupe": 1265,
+        "uniqueVideosFound": 321,
+        "scoreDistribution": {
+          "0.6": 11,
+          "0.5": 67,
+          "0.4": 243
+        }
+      }
+    },
+    {
+      "step": "Fetch Video Details",
+      "duration_ms": 95,
+      "details": {
+        "videosFetched": 321,
+        "totalVideosProcessed": 321
+      }
+    },
+    {
+      "step": "Multi-Threaded Claude Pattern Discovery",
+      "duration_ms": 21498,
+      "details": {
+        "threadsAnalyzed": 4,
+        "threadBreakdown": [
+          {
+            "thread": "Domain Hierarchy",
+            "videosAnalyzed": 20,
+            "patternsFound": 4
+          },
+          {
+            "thread": "Format Exploration",
+            "videosAnalyzed": 20,
+            "patternsFound": 4
+          },
+          {
+            "thread": "Direct Variations",
+            "videosAnalyzed": 20,
+            "patternsFound": 5
+          },
+          {
+            "thread": "original",
+            "videosAnalyzed": 6,
+            "patternsFound": 4
+          }
+        ],
+        "totalVideosFound": 45,
+        "performanceDistribution": {
+          "superstar": 0,
+          "strong": 2,
+          "above_avg": 4,
+          "normal": 39
+        },
+        "totalPatternsFound": 17,
+        "inputTokens": 5956,
+        "outputTokens": 2966,
+        "cost": 0.062358000000000004
+      }
+    },
+    {
+      "step": "Title Generation",
+      "duration_ms": 1,
+      "details": {
+        "titlesGenerated": 17
+      }
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "tokens": 131,
+      "cost": 0.0000026200000000000007
+    },
+    "claude": {
+      "inputTokens": 5956,
+      "outputTokens": 2966,
+      "inputCost": 0.017868000000000002,
+      "outputCost": 0.04449,
+      "totalCost": 0.062358000000000004
+    },
+    "totalCost": 0.062360620000000005
+  },
+  "totalProcessingTime": 28376,
+  "analysis": {
+    "totalVideos": 321,
+    "relevantVideos": 317,
+    "relevancePercentage": 98.75389408099689,
+    "topChannels": [
+      {
+        "channel": "Fallow",
+        "count": 60
+      },
+      {
+        "channel": "Babish Culinary Universe",
+        "count": 42
+      },
+      {
+        "channel": "Joshua Weissman",
+        "count": 31
+      },
+      {
+        "channel": "OrganizedLittleLady",
+        "count": 25
+      },
+      {
+        "channel": "Nick DiGiovanni",
+        "count": 17
+      },
+      {
+        "channel": "Chris Young",
+        "count": 12
+      },
+      {
+        "channel": "Santa Cruz Medicinals",
+        "count": 9
+      },
+      {
+        "channel": "Anne of All Trades",
+        "count": 9
+      },
+      {
+        "channel": "Amy Darley",
+        "count": 9
+      },
+      {
+        "channel": "Alec Steele",
+        "count": 9
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 0.971408860831264,
+      "highPerformers": 17,
+      "superStars": 4
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.4779221978691585,
+      "highSimilarity": 0,
+      "lowSimilarity": 243
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "chicken",
+          "count": 63,
+          "percentage": 19.626168224299064
+        },
+        {
+          "topic": "cook",
+          "count": 37,
+          "percentage": 11.526479750778815
+        },
+        {
+          "topic": "every",
+          "count": 36,
+          "percentage": 11.214953271028037
+        },
+        {
+          "topic": "cooking",
+          "count": 36,
+          "percentage": 11.214953271028037
+        },
+        {
+          "topic": "babish",
+          "count": 33,
+          "percentage": 10.2803738317757
+        },
+        {
+          "topic": "chef",
+          "count": 27,
+          "percentage": 8.411214953271028
+        },
+        {
+          "topic": "make",
+          "count": 23,
+          "percentage": 7.165109034267912
+        },
+        {
+          "topic": "easy",
+          "count": 21,
+          "percentage": 6.5420560747663545
+        },
+        {
+          "topic": "making",
+          "count": 20,
+          "percentage": 6.230529595015576
+        },
+        {
+          "topic": "basics",
+          "count": 17,
+          "percentage": 5.29595015576324
+        },
+        {
+          "topic": "recipes",
+          "count": 16,
+          "percentage": 4.984423676012461
+        },
+        {
+          "topic": "meal",
+          "count": 16,
+          "percentage": 4.984423676012461
+        },
+        {
+          "topic": "perfect",
+          "count": 14,
+          "percentage": 4.361370716510903
+        },
+        {
+          "topic": "pov:",
+          "count": 13,
+          "percentage": 4.049844236760125
+        },
+        {
+          "topic": "food",
+          "count": 13,
+          "percentage": 4.049844236760125
+        },
+        {
+          "topic": "mistakes",
+          "count": 13,
+          "percentage": 4.049844236760125
+        },
+        {
+          "topic": "steak",
+          "count": 13,
+          "percentage": 4.049844236760125
+        },
+        {
+          "topic": "learn",
+          "count": 11,
+          "percentage": 3.4267912772585665
+        },
+        {
+          "topic": "part",
+          "count": 11,
+          "percentage": 3.4267912772585665
+        },
+        {
+          "topic": "dinner",
+          "count": 10,
+          "percentage": 3.115264797507788
+        }
+      ],
+      "conceptWordsFound": [
+        "cook",
+        "chicken"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "every",
+          "count": 36,
+          "percentage": 11.214953271028037
+        },
+        {
+          "topic": "cooking",
+          "count": 36,
+          "percentage": 11.214953271028037
+        },
+        {
+          "topic": "babish",
+          "count": 33,
+          "percentage": 10.2803738317757
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 4,
+      "threadStats": [
+        {
+          "thread": "Format Exploration",
+          "purpose": "Discover patterns that work across different content formats",
+          "videoCount": 125,
+          "queryCount": 6,
+          "avgPerformance": 0.6784121937222042,
+          "avgSimilarity": 0.478711089768,
+          "superstarCount": 0,
+          "strongCount": 2,
+          "coverage": 38.940809968847354,
+          "qualityScore": 0.32476344056865586
+        },
+        {
+          "thread": "Domain Hierarchy",
+          "purpose": "Find universal patterns that work across the entire category",
+          "videoCount": 110,
+          "queryCount": 6,
+          "avgPerformance": 0.8310743378080385,
+          "avgSimilarity": 0.4830231239000002,
+          "superstarCount": 0,
+          "strongCount": 6,
+          "coverage": 34.26791277258567,
+          "qualityScore": 0.4014281228411628
+        },
+        {
+          "thread": "Direct Variations",
+          "purpose": "Find patterns specific to this exact topic",
+          "videoCount": 78,
+          "queryCount": 5,
+          "avgPerformance": 1.2896048267660911,
+          "avgSimilarity": 0.4689483118717949,
+          "superstarCount": 3,
+          "strongCount": 5,
+          "coverage": 24.299065420560748,
+          "qualityScore": 0.604758006493677
+        },
+        {
+          "thread": "original",
+          "purpose": "Original search query",
+          "videoCount": 8,
+          "queryCount": 1,
+          "avgPerformance": 4.376670808115116,
+          "avgSimilarity": 0.4829534174999999,
+          "superstarCount": 1,
+          "strongCount": 0,
+          "coverage": 2.4922118380062304,
+          "qualityScore": 2.113728124051682
+        }
+      ],
+      "bestPerformingThread": "original",
+      "mostProductiveThread": "Format Exploration"
+    },
+    "potentialIssues": []
+  }
+}

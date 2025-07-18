@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "(lsof -ti:3000 | xargs kill -9 2>/dev/null || true) && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -26,7 +26,8 @@
     "test:patterns:api": "dotenv -e .env -- node --loader tsx tests/integration-tests/api-integration-tests.js",
     "test:patterns:fix": "dotenv -e .env -- node --loader tsx test-and-fix-patterns.js",
     "test:patterns:all": "npm run test:patterns:unit && npm run test:patterns:api && npm run test:patterns:full",
-    "test:patterns:quick": "dotenv -e .env -- node --loader tsx quick-pattern-test.js"
+    "test:patterns:quick": "dotenv -e .env -- node --loader tsx quick-pattern-test.js",
+    "analyze-search": "node scripts/analyze-search-log.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
@@ -94,7 +95,7 @@
     "dotenv-cli": "^8.0.0",
     "embla-carousel-react": "8.5.1",
     "fast-xml-parser": "^5.2.5",
-    "framer-motion": "^12.23.1",
+    "framer-motion": "^12.23.6",
     "input-otp": "1.4.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.454.0",
@@ -129,6 +130,7 @@
     "concurrently": "^9.2.0",
     "eslint": "^9.29.0",
     "eslint-config-next": "^15.3.4",
+    "kill-port": "^2.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.3",

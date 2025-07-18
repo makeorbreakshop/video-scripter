@@ -1,0 +1,2562 @@
+{
+  "timestamp": "2025-07-17T18:18:50.824Z",
+  "concept": "simple test",
+  "expandedQueries": [
+    "simple assessment techniques in education",
+    "basic quiz methods for learning evaluation",
+    "easy knowledge check strategies for formative assessment",
+    "straightforward examination formats in educational settings",
+    "simple evaluation approaches for assessing student learning",
+    "What are different types of assessments used in education?",
+    "How do formative assessments improve student learning outcomes?",
+    "What are the various methods of evaluation in educational settings?",
+    "What role do quizzes play in the overall learning process?",
+    "How can knowledge checks be integrated into curriculum design?",
+    "What are the best practices for conducting examinations in schools?"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadId": "thread_1_direct",
+      "threadName": "Direct Variations",
+      "purpose": "Find patterns specific to this exact topic",
+      "queries": [
+        "simple assessment techniques in education",
+        "basic quiz methods for learning evaluation",
+        "easy knowledge check strategies for formative assessment",
+        "straightforward examination formats in educational settings",
+        "simple evaluation approaches for assessing student learning"
+      ]
+    },
+    {
+      "threadId": "thread_3_domain",
+      "threadName": "Domain Hierarchy",
+      "purpose": "Find universal patterns that work across the entire category",
+      "queries": [
+        "What are different types of assessments used in education?",
+        "How do formative assessments improve student learning outcomes?",
+        "What are the various methods of evaluation in educational settings?",
+        "What role do quizzes play in the overall learning process?",
+        "How can knowledge checks be integrated into curriculum design?",
+        "What are the best practices for conducting examinations in schools?"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "Q1y8c_MZYvE",
+      "title": "5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.539737344,
+      "performanceRatio": 7.11536861881124,
+      "viewCount": 4695692,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jeht_P2GBwI",
+      "title": "5 Rules for Answering ESSAY Questions on Exams",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.530167341,
+      "performanceRatio": 0.997906502547705,
+      "viewCount": 658555,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "theQAe0Hw4M",
+      "title": "Very Simple Science Experiments",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.522832572,
+      "performanceRatio": 0.0162177032607526,
+      "viewCount": 1423,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "g0VFwuKr4bQ",
+      "title": "Scout V 0.1 - Dynamic Test 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.512411654,
+      "performanceRatio": 0.258946824381954,
+      "viewCount": 64270,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "pr4DHbE85fM",
+      "title": "Easy Tool Tests and Quick Fixes",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.505068779,
+      "performanceRatio": 0.175506798138149,
+      "viewCount": 90608,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "8XKzox5ga8A",
+      "title": "How to answer ANY question on a test",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.501640677,
+      "performanceRatio": 1,
+      "viewCount": 97422,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "bjwUfRTnKEA",
+      "title": "Should You Change Answers on Multiple-Choice Exams? - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.499174207,
+      "performanceRatio": 0.0835049943321347,
+      "viewCount": 55108,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "q3V2FVSTEos",
+      "title": "judge simulator",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.498555213,
+      "performanceRatio": 0,
+      "viewCount": 375263,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "zEA2ENkTAhM",
+      "title": "Test Stream",
+      "channelName": "Make or Break Shop",
+      "similarityScore": 0.495739162,
+      "performanceRatio": -0.999970071076565,
+      "viewCount": 2,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "USkDbcGPKP0",
+      "title": "A Brain Hack (of sorts) for Exams and Tests - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.492393583,
+      "performanceRatio": 0.424481700792176,
+      "viewCount": 280131,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mb9LuI5K7KU",
+      "title": "Scout V 0.3 - Dynamic Test 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.489832073,
+      "performanceRatio": 0.118155820317803,
+      "viewCount": 29326,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "LfuK8rHzFMY",
+      "title": "Scout V 0.2 - Dynamic Test 2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.489521563,
+      "performanceRatio": 0.132531458553291,
+      "viewCount": 32894,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "VlDTMIgGbRo",
+      "title": "I Tested 1-Star Drive Thrus",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.488654584,
+      "performanceRatio": 0,
+      "viewCount": 33444301,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "fKqFneT4sg4",
+      "title": "How to figure out what will be on the exam",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.480977356,
+      "performanceRatio": 1,
+      "viewCount": 39086,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "straightforward examination formats in educational settings",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "agtoHvcpcP4",
+      "title": "Sprint - Test Flight 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.47497794,
+      "performanceRatio": 0.530851062599483,
+      "viewCount": 131756,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "8tkMoZexLFg",
+      "title": "Echo - Drop Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.474522173,
+      "performanceRatio": 0.135106019324725,
+      "viewCount": 33533,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "zjX2iLeC8Hg",
+      "title": "Test Barrel Proof Testing",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.473661751,
+      "performanceRatio": 0.709351864356837,
+      "viewCount": 6256,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "CrnDiaS_jcY",
+      "title": "Husband & Wife Test Viral Instagram Tools",
+      "channelName": "Evan and Katelyn",
+      "similarityScore": 0.471261,
+      "performanceRatio": 1,
+      "viewCount": 743611,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "83MqrYM81eQ",
+      "title": "Fake Yeti TESTED! | Part 1",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.467421055,
+      "performanceRatio": 2.95497428606231,
+      "viewCount": 72045,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "OY6Z8gNKp-w",
+      "title": "10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.46659711,
+      "performanceRatio": 0.485072371899179,
+      "viewCount": 320117,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xznKfiBmVZo",
+      "title": "Quiz Game Buttons // How-To | I Like To Make Stuff",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.466507763,
+      "performanceRatio": 0.805261798395686,
+      "viewCount": 455966,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "CM0TskDKoew",
+      "title": "Echo - Drop Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.464922339,
+      "performanceRatio": 0.295353289375192,
+      "viewCount": 73306,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UEP6KqeMwvk",
+      "title": "How To Practice Efficiently",
+      "channelName": "Charles Cornell",
+      "similarityScore": 0.458793283,
+      "performanceRatio": 0.302039773529311,
+      "viewCount": 166648,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VtywJHjemks",
+      "title": "Testing Ultralumen!",
+      "channelName": "gordontarpley",
+      "similarityScore": 0.458274305,
+      "performanceRatio": 0.468246817274392,
+      "viewCount": 1881,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "7DZc94SBF0g",
+      "title": "I made an absurd test indicator",
+      "channelName": "Uri Tuchman",
+      "similarityScore": 0.458234489,
+      "performanceRatio": 0.618037364248084,
+      "viewCount": 207149,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "dnVJN02dM2k",
+      "title": "Surface Transducer first test",
+      "channelName": "gordontarpley",
+      "similarityScore": 0.454740971,
+      "performanceRatio": 1.22550722033059,
+      "viewCount": 4923,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "JL0pqJeE4_w",
+      "title": "5 Active Reading Strategies for Textbook Assignments - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.454547077,
+      "performanceRatio": 1.44926502856433,
+      "viewCount": 956423,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "edO_yhJ7bUc",
+      "title": "Create A Material Test on WeCreat (So Easy!)",
+      "channelName": "Fresh Start Customs",
+      "similarityScore": 0.454069018,
+      "performanceRatio": 2.02743484598475,
+      "viewCount": 4975,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "gFRlpBzY48k",
+      "title": "Peer Evaluations at Ranger School",
+      "channelName": "Gritty Soldier",
+      "similarityScore": 0.453653604,
+      "performanceRatio": 0.275291950928626,
+      "viewCount": 11765,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the various methods of evaluation in educational settings?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "QLNRJF7Zg28",
+      "title": "if i laugh i do a LIE DETECTOR TEST...",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.453571767,
+      "performanceRatio": 0,
+      "viewCount": 3220913,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UDyY8_Kt3xY",
+      "title": "How to SPEED LEARN like a Harvard student ('Easy mode')",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.452675223,
+      "performanceRatio": 1,
+      "viewCount": 46475,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "1gTBZyGJyQc",
+      "title": "oops.. Testing TESLA's PERFORMANCE MODEL 3",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.452513695,
+      "performanceRatio": 0.618484049929261,
+      "viewCount": 2063543,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GOWC5fzv70k",
+      "title": "Sprint - Test Flight 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.448851824,
+      "performanceRatio": 0.342976620076836,
+      "viewCount": 85126,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GlzU7DirQ_0",
+      "title": "Fineas - Test Flight 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.447918296,
+      "performanceRatio": 1.27462917942236,
+      "viewCount": 316360,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "S2PQK63fvHA",
+      "title": "Signal R2 - User Error Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.447644413,
+      "performanceRatio": 0.0451897865608838,
+      "viewCount": 11216,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "D7UskNM6Lsc",
+      "title": "Google Statistical Coding & Algorithms Mock Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.446966618,
+      "performanceRatio": 1.09180424648821,
+      "viewCount": 16894,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "14Juc3PAHHk",
+      "title": "Scout V 1.0 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.446816176,
+      "performanceRatio": 0.0886672283207355,
+      "viewCount": 22007,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "vWIzeSA4l-0",
+      "title": "I Tested 1-Star Camping",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.446646899,
+      "performanceRatio": 0,
+      "viewCount": 27926547,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "ejALPYa6IeY",
+      "title": "Scout V 0.5 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.446145147,
+      "performanceRatio": 0.0854842815141112,
+      "viewCount": 21217,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "SxsW-XZ9cQw",
+      "title": "TESTING SEGWAY ELECTRIC SHOES",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.445700914,
+      "performanceRatio": 2.96597549151333,
+      "viewCount": 9895838,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "p3h4RlGCyz4",
+      "title": "Simple Science Projects",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.445477068,
+      "performanceRatio": 0.0170838630975883,
+      "viewCount": 1499,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "h0HjktaeEpA",
+      "title": "I Tested 1-Star Kitchen Gadgets",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.443361282,
+      "performanceRatio": 2.09062268537004,
+      "viewCount": 34205090,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Hbyg0d1njk0",
+      "title": "Tone Wood Tester: One guitar to test them all",
+      "channelName": "tim sway",
+      "similarityScore": 0.44319281,
+      "performanceRatio": 14.4268532291798,
+      "viewCount": 498166,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GnzLyTycCDM",
+      "title": "Ace Your Python Interview - 4 Common TRICKY Questions",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.442983985,
+      "performanceRatio": 0.180954888727773,
+      "viewCount": 2800,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "9EMoea_ReUA",
+      "title": "Echo - Test Vehicle 2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.442633569,
+      "performanceRatio": 0.0806695708382681,
+      "viewCount": 20022,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "8_hJ48LCXWs",
+      "title": "Echo - Landing Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.441061765,
+      "performanceRatio": 0.632983364626217,
+      "viewCount": 157105,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "2sWVLMVQsu0",
+      "title": "A/B Testing Interview with a Google Data Scientist",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.439959049,
+      "performanceRatio": 2.90923759677479,
+      "viewCount": 45016,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "z2ZJiIt4pmo",
+      "title": "How To Remember Everything You Learn",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.438813716,
+      "performanceRatio": 1.56102988209174,
+      "viewCount": 833390,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XwASPWXh0us",
+      "title": "Sprint - Test Flight 4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.43751049,
+      "performanceRatio": 0.345885591715295,
+      "viewCount": 85848,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "-9c782blnEw",
+      "title": "HOMEMADE SCREW TANK WATER TEST",
+      "channelName": "colinfurze",
+      "similarityScore": 0.436638564,
+      "performanceRatio": 1.28378268933152,
+      "viewCount": 5855731,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "O0wUmPonkrA",
+      "title": "Hammer-in Ladder Steps Test",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.435637861,
+      "performanceRatio": 0.00884422081519074,
+      "viewCount": 78,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "8mEOTAL3D9w",
+      "title": "I Tested Invisible Products!",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.435618103,
+      "performanceRatio": 1,
+      "viewCount": 278647,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "fHfHSq7PVDU",
+      "title": "How to Beat Test Anxiety and Take on Exams Without Stress",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.435597152,
+      "performanceRatio": 1.02424236669615,
+      "viewCount": 675935,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the best practices for conducting examinations in schools?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jYWfiP7w5w0",
+      "title": "10 Study Tips for Earning an A on Your Next Exam - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.434980035,
+      "performanceRatio": 1.41898333068502,
+      "viewCount": 936439,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cDRNM7XTnUw",
+      "title": "Building a Tensile Tester the Easy (Lazy) Way!",
+      "channelName": "Clough42",
+      "similarityScore": 0.434863448,
+      "performanceRatio": 0.553207342266686,
+      "viewCount": 42753,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "M7-h3FO-KKo",
+      "title": "Testing If You Can Blow Your Own Sail",
+      "channelName": "Mark Rober",
+      "similarityScore": 0.434712678,
+      "performanceRatio": 1.03417288710366,
+      "viewCount": 56050712,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "uF1V2MqX2U0",
+      "title": "Google Machine Learning System Design Mock Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.434425771,
+      "performanceRatio": 3.81336577295392,
+      "viewCount": 59006,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XcXSmGDxH-4",
+      "title": "The TRAVEL EXPERIMENT",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.433845967,
+      "performanceRatio": 0.873562117891304,
+      "viewCount": 2914599,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "C3H4LKmcw1M",
+      "title": "Test Your Prompts with Every ChatBot (for Free)",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.433797508,
+      "performanceRatio": 0.277832089443985,
+      "viewCount": 40026,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "1ZNeR6zrpoQ",
+      "title": "Back to school series {Paperwork Organization}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.432940066,
+      "performanceRatio": 0.513821506367819,
+      "viewCount": 2038,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "straightforward examination formats in educational settings",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "J2ACQsmkPJs",
+      "title": "Sprint - Test Flight 2 + Q&A",
+      "channelName": "BPS.space",
+      "similarityScore": 0.432434142,
+      "performanceRatio": 0.453356380474658,
+      "viewCount": 112522,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "S4HfGVRU_xY",
+      "title": "Echo - Landing Test #5",
+      "channelName": "BPS.space",
+      "similarityScore": 0.432130486,
+      "performanceRatio": 0.760083668375293,
+      "viewCount": 188651,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "OdV5ts6D8_4",
+      "title": "Testing the Bambu Lab H2D",
+      "channelName": "3D Printing Nerd",
+      "similarityScore": 0.431493759,
+      "performanceRatio": 3.27949436990465,
+      "viewCount": 250195,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "igtcGMTDUIs",
+      "title": "Rocket Motor Test Stand",
+      "channelName": "BPS.space",
+      "similarityScore": 0.43127057,
+      "performanceRatio": 0.930065114988803,
+      "viewCount": 230840,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "E5VSRX2a6yc",
+      "title": "Testing a Capacitor on your AC",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.431207955,
+      "performanceRatio": 1.60633788520153,
+      "viewCount": 39164,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "WKpqoOe8lws",
+      "title": "Echo - Landing Test #6",
+      "channelName": "BPS.space",
+      "similarityScore": 0.429988295,
+      "performanceRatio": 1.23971749071426,
+      "viewCount": 307695,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "QrSCwxrLrRc",
+      "title": "why AI can't pass this test",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.429855198,
+      "performanceRatio": 0.961931242322365,
+      "viewCount": 820906,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "JiRHgYVFF1k",
+      "title": "Best vise liner testing",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.429464072,
+      "performanceRatio": 0.199745028762106,
+      "viewCount": 19455,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "743suYvYdSQ",
+      "title": "I Tested Limited Edition Food Products",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.429433674,
+      "performanceRatio": 0.776116066124373,
+      "viewCount": 5327115,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "O3hlnwi2eE0",
+      "title": "Six-Figure Data Science Job - Mentorship Series - EP.03 - A/B Testing Case Study",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.429387152,
+      "performanceRatio": 0.0677934565269406,
+      "viewCount": 1049,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "lXy-x6lkQvQ",
+      "title": "Echo - Landing Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.429088444,
+      "performanceRatio": 0.693717212933881,
+      "viewCount": 172179,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "G0sjAMCEVwg",
+      "title": "Q&A Experiment with Matt Cremona, Jay Bates & Myself",
+      "channelName": "Nick Ferry",
+      "similarityScore": 0.427901894,
+      "performanceRatio": 0.0528027185789058,
+      "viewCount": 5709,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "tU8F5ejiaFA",
+      "title": "How to actually OUTSMART anyone in class (the easy way)",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.427639335,
+      "performanceRatio": 1,
+      "viewCount": 47879,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "GpYIGWYF-yE",
+      "title": "Testing Color in Super Glue: Does it work?",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.427628547,
+      "performanceRatio": 0.0234191047685591,
+      "viewCount": 5784,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "h3WGLvYlzb8",
+      "title": "Echo - Landing Test #3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.426856548,
+      "performanceRatio": 0.504384255545414,
+      "viewCount": 125187,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UjU8ukIOAdA",
+      "title": "Accelerated Japanese Learning Challenge: Preview! - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.426643431,
+      "performanceRatio": 0.0277678199378741,
+      "viewCount": 18325,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "rMuBLgIlIi4",
+      "title": "These 3 Stats Question Types Fail 9 of 10 Candidates—Review Them Before Your Next Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.426496238,
+      "performanceRatio": 0.0512490095575443,
+      "viewCount": 793,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XxhixaV1ke4",
+      "title": "Sanity Check.. (bounced)",
+      "channelName": "Mechanical Triage",
+      "similarityScore": 0.425559342,
+      "performanceRatio": 0.00243999856692168,
+      "viewCount": 216,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "AYizjsL3OU0",
+      "title": "XTool D1- 3 Easy Maintenance Checks!",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.424393654,
+      "performanceRatio": 2.51031051125889,
+      "viewCount": 10184,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UL7fZS304Yw",
+      "title": "Ground Testing - Build Signal R2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.423132777,
+      "performanceRatio": 0.123127663810682,
+      "viewCount": 30560,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "VIwwE1QrsWw",
+      "title": "I Tested 1-Star Restaurants",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.422549188,
+      "performanceRatio": 0,
+      "viewCount": 28636232,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "BmicBpOXPlc",
+      "title": "I Tested 1-Star Restaurants",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.422549188,
+      "performanceRatio": 1.07477147292343,
+      "viewCount": 17584548,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "ULKnTjln2DQ",
+      "title": "Q & A #1",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.422408909,
+      "performanceRatio": 0.452879905146212,
+      "viewCount": 233806,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Hpaf5nbHV7U",
+      "title": "Scout V 0.7 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.421150625,
+      "performanceRatio": 0.0936995075124745,
+      "viewCount": 23256,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "52uJRJ6TuXA",
+      "title": "Discussing Design for Test with @BrownieBites-EE  | Maker Chat Ep.03",
+      "channelName": "PCBWay",
+      "similarityScore": 0.420206755,
+      "performanceRatio": 0.000281,
+      "viewCount": 281,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "How can knowledge checks be integrated into curriculum design?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Lt54CX9DmS4",
+      "title": "How to Study for Exams - An Evidence-Based Masterclass",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.420025349,
+      "performanceRatio": 5.17211893698741,
+      "viewCount": 2761249,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the best practices for conducting examinations in schools?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "yx5zLykjKy8",
+      "title": "Echo - Landing Test #4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.418856561,
+      "performanceRatio": 0.982579708251514,
+      "viewCount": 243874,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "sscOzDM5id0",
+      "title": "Back to school series {Homework Organization}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.418388933,
+      "performanceRatio": 0.423814500590924,
+      "viewCount": 1681,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "straightforward examination formats in educational settings",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qWUUP5p0Auo",
+      "title": "Exam Tips: How to Study for Finals - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.418275207,
+      "performanceRatio": 0.619855021167066,
+      "viewCount": 409065,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pzYHxth56oo",
+      "title": "Scout V 0.9 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.418004423,
+      "performanceRatio": 0.0684655887151479,
+      "viewCount": 16993,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GBjiEmN5HzA",
+      "title": "The Most Comprehensive Sharpening Test Ever Done",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.417419136,
+      "performanceRatio": 0.483177133298303,
+      "viewCount": 132728,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "j_k06bihD-0",
+      "title": "I Tested Dumb Viral DIY TIkToks",
+      "channelName": "John Malecki",
+      "similarityScore": 0.417099983,
+      "performanceRatio": 4.33702994519765,
+      "viewCount": 2477572,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "HcTrKOZodRk",
+      "title": "COMPETE WiTH YOURSELF",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.416478038,
+      "performanceRatio": 0.341838167662933,
+      "viewCount": 1140527,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "9z69lUQfmS8",
+      "title": "A 3 MiNUTE EXPERiMENT; IT WORKED!!!",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.41642946,
+      "performanceRatio": 0.492199342002485,
+      "viewCount": 1642200,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "WQ0LNBvLa4w",
+      "title": "September OLL Challenge Week 1 (Routines)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.41611889,
+      "performanceRatio": 0.439445969381309,
+      "viewCount": 1743,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "At0zKZ0_u2o",
+      "title": "ADIDAS CONEXT 19 | PLAY TEST",
+      "channelName": "DavidMC",
+      "similarityScore": 0.415409625,
+      "performanceRatio": 0,
+      "viewCount": 21353,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UlTPdJBMOOs",
+      "title": "OLL Challenge Week 3 (Morning Routine)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.415314108,
+      "performanceRatio": 0.392047322081432,
+      "viewCount": 1555,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YitcDk-Wwiw",
+      "title": "How to Make Studying Fun (or at Least Less Boring)",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.415132135,
+      "performanceRatio": 1.15442911976368,
+      "viewCount": 761850,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What role do quizzes play in the overall learning process?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "msG2G0zv0bE",
+      "title": "String Spacer Prototype (and a new Wrench!) - Beta Testers Needed - SqWAYre Tools",
+      "channelName": "tim sway",
+      "similarityScore": 0.414572716,
+      "performanceRatio": 0.0806823691229328,
+      "viewCount": 2786,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "jnku-xdku8U",
+      "title": "Study with Me - A 1 Hour, Real-Time Study Session for 2019",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.414236069,
+      "performanceRatio": 0.433470443377249,
+      "viewCount": 286063,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "straightforward examination formats in educational settings",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "k0E1K2ajOGM",
+      "title": "Middle School Science Projects",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.414120138,
+      "performanceRatio": 0.0647568446434269,
+      "viewCount": 5682,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the best practices for conducting examinations in schools?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "aMFq_i9h-98",
+      "title": "OLL Challenge (planning system)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.413931549,
+      "performanceRatio": 0.215562997028697,
+      "viewCount": 855,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "uVk6v9R5ebo",
+      "title": "I Tested 1-Star Chinese Restaurants",
+      "channelName": "Dylan",
+      "similarityScore": 0.413508862,
+      "performanceRatio": 1,
+      "viewCount": 967757,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "EJj2BA1BhNA",
+      "title": "Testing (almost) Every Filament So You Don't Have To!",
+      "channelName": "Frankly Built",
+      "similarityScore": 0.413397551,
+      "performanceRatio": 0.324549302478866,
+      "viewCount": 119274,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "p11SIEjCgEE",
+      "title": "Testing a Cheap MINI Circular Saw (Worth It?",
+      "channelName": "DIY MAN",
+      "similarityScore": 0.412565053,
+      "performanceRatio": 0.274899291858815,
+      "viewCount": 24482,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "TBTBLqPCjPA",
+      "title": "Learning ALL the things",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.412477791,
+      "performanceRatio": 0.604597795502164,
+      "viewCount": 90616,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What role do quizzes play in the overall learning process?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "JuYwsNO5XyY",
+      "title": "8 Habits of Highly Successful Students",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.411448091,
+      "performanceRatio": 3.43067513442321,
+      "viewCount": 2264028,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "dCOtcL31-SU",
+      "title": "ISOLATION - Reviewing YOUR Photo Assignments!",
+      "channelName": "Peter McKinnon",
+      "similarityScore": 0.411243111,
+      "performanceRatio": 0.747077179285194,
+      "viewCount": 442547,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "v1veRGRvxQg",
+      "title": "How To SUCCEED As a STUDENT",
+      "channelName": "Nicolas Berndt",
+      "similarityScore": 0.411126524,
+      "performanceRatio": 0.128992034707896,
+      "viewCount": 46664,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "simple evaluation approaches for assessing student learning",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Q0WqJa4fOd0",
+      "title": "Q & A part 1",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.411113054,
+      "performanceRatio": 0.606601837252685,
+      "viewCount": 2406,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XDJpuwW1-4k",
+      "title": "Scout V 0.4 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.410887063,
+      "performanceRatio": 0.135162425976994,
+      "viewCount": 33547,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "F_9PnhbCcUM",
+      "title": "Testing 100 Viral Food Hacks",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.410759866,
+      "performanceRatio": 1.35334986469797,
+      "viewCount": 22142424,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "0VJT_F9KIwY",
+      "title": "xTool P2 vs xTool S1: Comparing side by side ACTION!",
+      "channelName": "Justin Laser",
+      "similarityScore": 0.410309017,
+      "performanceRatio": 1.00337020238645,
+      "viewCount": 64759,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "M7LRAWO9Lso",
+      "title": "HOMEMADE SCREW TANK Snow/Ice Test",
+      "channelName": "colinfurze",
+      "similarityScore": 0.409222692,
+      "performanceRatio": 0.517744666964583,
+      "viewCount": 2361594,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "OAC6qqOI3Nk",
+      "title": "BACK TO SCHOOL ORGANIZATION HACKS AND IDEAS // BACK TO SCHOOL PREPARATION",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.408784419,
+      "performanceRatio": 0.671157054407664,
+      "viewCount": 66225,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "0wmv4eV9EeI",
+      "title": "Middle School Science Fair Project Ideas",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.408783287,
+      "performanceRatio": 0.502008006486038,
+      "viewCount": 44048,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the best practices for conducting examinations in schools?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "WG5hMLm1ofI",
+      "title": "Simple Science Fair Projects",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.408697248,
+      "performanceRatio": 0.056881628232197,
+      "viewCount": 4991,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "oi6-D5BnQeA",
+      "title": "Community Question - Lightburn Material Test Setup",
+      "channelName": "Bearded Builds Co",
+      "similarityScore": 0.408475518,
+      "performanceRatio": 1,
+      "viewCount": 465,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "PEhiI90KX1Q",
+      "title": "Testing an \"Easy\" 3D Printer (With a Grandma)",
+      "channelName": "The Next Layer",
+      "similarityScore": 0.408285618,
+      "performanceRatio": 0.0899369535779049,
+      "viewCount": 7988,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "kawFTI5-kqU",
+      "title": "Why The Clamp Meter Is The Only Tester You Need | Pros and DIYers",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.408265471,
+      "performanceRatio": 1.56155309120688,
+      "viewCount": 772103,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "1jkNbSKe2D4",
+      "title": "Muppet Camera Test (4/21/2012)",
+      "channelName": "Puppet Nerd",
+      "similarityScore": 0.408031523,
+      "performanceRatio": 4.2043465747034,
+      "viewCount": 224878,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "LIcs3v0yTEY",
+      "title": "Homeschool Science Experiments",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.406930953,
+      "performanceRatio": 0.0162518937806277,
+      "viewCount": 1426,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What are the best practices for conducting examinations in schools?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Zp986RMLBD0",
+      "title": "I Tested 1-Star Hotels",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.406894863,
+      "performanceRatio": 0,
+      "viewCount": 32421447,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "zA3irEhwIX4",
+      "title": "I Tested EVERY Youtuber Sponsor",
+      "channelName": "Angelia Mor",
+      "similarityScore": 0.40579167,
+      "performanceRatio": 0.438177160928804,
+      "viewCount": 1064817,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "l4p-HogUr3k",
+      "title": "Hydrostatic Testing - Simplex Ep 6",
+      "channelName": "BPS.space",
+      "similarityScore": 0.405078828,
+      "performanceRatio": 0.991761905431636,
+      "viewCount": 246153,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "imoXaaDStmE",
+      "title": "close call",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.404141068,
+      "performanceRatio": 1.03505427454926,
+      "viewCount": 3453410,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "rd6OO5wkI0w",
+      "title": "ACE your Meta (Instagram) Data Science Case Study Interview Question - ULTIMATE GUIDE",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.403716624,
+      "performanceRatio": 0.460400938320234,
+      "viewCount": 7124,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jFPi7h9tVUo",
+      "title": "Connecting The Dots with Q & A",
+      "channelName": "Laser Everything",
+      "similarityScore": 0.403252572,
+      "performanceRatio": 0.209022391393925,
+      "viewCount": 635,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What role do quizzes play in the overall learning process?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "sANpMHl_zEQ",
+      "title": "I Tested 1-Star Theme Park Rides",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.403228223,
+      "performanceRatio": 0,
+      "viewCount": 854381,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "oMOiY62fujk",
+      "title": "This Happened Testing the RC Rocket | GIACO",
+      "channelName": "Giaco Whatever",
+      "similarityScore": 0.403115213,
+      "performanceRatio": 0.0601626229634526,
+      "viewCount": 21529,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "a_ck6y42X-I",
+      "title": "I Tested Discontinued Food Products (again...)",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.402796924,
+      "performanceRatio": 1,
+      "viewCount": 4711306,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Nl61Y8yznms",
+      "title": "I Tested Every Youtuber Product!",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.40252158,
+      "performanceRatio": 0,
+      "viewCount": 3585118,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "YCWTiDHegAI",
+      "title": "10 Steps to Earning Awesome Grades (While Studying Less)",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.402421,
+      "performanceRatio": 0.0999292999423184,
+      "viewCount": 65947,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ClAQUxQWYO8",
+      "title": "Welded Eye Hammer Test",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.401838183,
+      "performanceRatio": 0.0231310390551142,
+      "viewCount": 204,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UuDNc-_4v94",
+      "title": "Homemade Screw Tank Test Drive",
+      "channelName": "colinfurze",
+      "similarityScore": 0.401624024,
+      "performanceRatio": 3.0220659356971,
+      "viewCount": 13784580,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "fsL6q-yij8I",
+      "title": "7 Mistakes Students Make Every Year",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.401511937,
+      "performanceRatio": 0.80570075776386,
+      "viewCount": 430141,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "easy knowledge check strategies for formative assessment",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "whjqHPussEc",
+      "title": "5 Rules for Running Improvement",
+      "channelName": "Gritty Soldier",
+      "similarityScore": 0.401420563,
+      "performanceRatio": 0.718169193191789,
+      "viewCount": 30692,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "basic quiz methods for learning evaluation",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cg8t4heRrdc",
+      "title": "Make ANY Website with ONE Sentence! (WebSim)",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.401283264,
+      "performanceRatio": 0.669896994957018,
+      "viewCount": 96509,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "S5_APAxM5Lg",
+      "title": "Can Music Help You Study More Effectively? - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.401172638,
+      "performanceRatio": 0.374919362209475,
+      "viewCount": 247423,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "What role do quizzes play in the overall learning process?",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "iTzKEmW2s-k",
+      "title": "Building A Rocket Motor Test Stand - Simplex Ep 5",
+      "channelName": "BPS.space",
+      "similarityScore": 0.401010633,
+      "performanceRatio": 0.83576527953432,
+      "viewCount": 207435,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "6NW72oH38ZE",
+      "title": "A Quick Question..",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.400879,
+      "performanceRatio": 0.619810308660452,
+      "viewCount": 2067968,
+      "foundVia": {
+        "thread": "original",
+        "query": "simple test",
+        "threadPurpose": "Original search query"
+      }
+    }
+  ],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 3,
+    "above_avg": 2,
+    "normal": 35
+  },
+  "claudePrompts": {
+    "Direct Variations": "Analyze these high-performing YouTube video titles about \"simple test\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Direct Variations - Purpose: Find patterns specific to this exact topic\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: Q1y8c_MZYvE] \"5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests\" - 7.1x avg (4,695,692 views | Engagement: 2.19%)\n2. 💪 [ID: uF1V2MqX2U0] \"Google Machine Learning System Design Mock Interview\" - 3.8x avg (59,006 views | Engagement: 1.30%)\n3. 💪 [ID: JuYwsNO5XyY] \"8 Habits of Highly Successful Students\" - 3.4x avg (2,264,028 views | Engagement: 3.22%)\n4. ✅ [ID: 2sWVLMVQsu0] \"A/B Testing Interview with a Google Data Scientist\" - 2.9x avg (45,016 views | Engagement: 1.84%)\n5. ✅ [ID: z2ZJiIt4pmo] \"How To Remember Everything You Learn\" - 1.6x avg (833,390 views | Engagement: 3.34%)\n6. ✅ [ID: JL0pqJeE4_w] \"5 Active Reading Strategies for Textbook Assignments - College Info Geek\" - 1.4x avg (956,423 views | Engagement: 2.48%)\n7. ✅ [ID: jYWfiP7w5w0] \"10 Study Tips for Earning an A on Your Next Exam - College Info Geek\" - 1.4x avg (936,439 views | Engagement: 3.06%)\n8. ✅ [ID: D7UskNM6Lsc] \"Google Statistical Coding & Algorithms Mock Interview\" - 1.1x avg (16,894 views | Engagement: 1.58%)\n9. ✅ [ID: 8XKzox5ga8A] \"How to answer ANY question on a test\" - 1.0x avg (97,422 views | Engagement: 5.03%)\n10. ✅ [ID: fKqFneT4sg4] \"How to figure out what will be on the exam\" - 1.0x avg (39,086 views | Engagement: 5.94%)\n11. ✅ [ID: UDyY8_Kt3xY] \"How to SPEED LEARN like a Harvard student ('Easy mode')\" - 1.0x avg (46,475 views | Engagement: 6.54%)\n12. ✅ [ID: tU8F5ejiaFA] \"How to actually OUTSMART anyone in class (the easy way)\" - 1.0x avg (47,879 views | Engagement: 6.74%)\n13. ✅ [ID: jeht_P2GBwI] \"5 Rules for Answering ESSAY Questions on Exams\" - 1.0x avg (658,555 views | Engagement: 2.31%)\n14. ✅ [ID: fsL6q-yij8I] \"7 Mistakes Students Make Every Year\" - 0.8x avg (430,141 views | Engagement: 4.26%)\n15. ✅ [ID: xznKfiBmVZo] \"Quiz Game Buttons // How-To | I Like To Make Stuff\" - 0.8x avg (455,966 views | Engagement: 1.90%)\n16. ✅ [ID: dCOtcL31-SU] \"ISOLATION - Reviewing YOUR Photo Assignments!\" - 0.7x avg (442,547 views | Engagement: 6.25%)\n17. ✅ [ID: whjqHPussEc] \"5 Rules for Running Improvement\" - 0.7x avg (30,692 views | Engagement: 6.90%)\n18. ✅ [ID: OAC6qqOI3Nk] \"BACK TO SCHOOL ORGANIZATION HACKS AND IDEAS // BACK TO SCHOOL PREPARATION\" - 0.7x avg (66,225 views | Engagement: 6.37%)\n19. ✅ [ID: qWUUP5p0Auo] \"Exam Tips: How to Study for Finals - College Info Geek\" - 0.6x avg (409,065 views | Engagement: 2.56%)\n20. ✅ [ID: Q0WqJa4fOd0] \"Q & A part 1\" - 0.6x avg (2,406 views | Engagement: 4.36%)\n21. ✅ [ID: 1ZNeR6zrpoQ] \"Back to school series {Paperwork Organization}\" - 0.5x avg (2,038 views | Engagement: 4.91%)\n22. ✅ [ID: OY6Z8gNKp-w] \"10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek\" - 0.5x avg (320,117 views | Engagement: 2.30%)\n23. ✅ [ID: rd6OO5wkI0w] \"ACE your Meta (Instagram) Data Science Case Study Interview Question - ULTIMATE GUIDE\" - 0.5x avg (7,124 views | Engagement: 2.34%)\n24. ✅ [ID: ULKnTjln2DQ] \"Q & A #1\" - 0.5x avg (233,806 views | Engagement: 2.81%)\n25. ✅ [ID: WQ0LNBvLa4w] \"September OLL Challenge Week 1 (Routines)\" - 0.4x avg (1,743 views | Engagement: 8.15%)\n26. ✅ [ID: jnku-xdku8U] \"Study with Me - A 1 Hour, Real-Time Study Session for 2019\" - 0.4x avg (286,063 views | Engagement: 2.14%)\n27. ✅ [ID: USkDbcGPKP0] \"A Brain Hack (of sorts) for Exams and Tests - College Info Geek\" - 0.4x avg (280,131 views | Engagement: 2.67%)\n28. ✅ [ID: sscOzDM5id0] \"Back to school series {Homework Organization}\" - 0.4x avg (1,681 views | Engagement: 5.06%)\n29. ✅ [ID: UlTPdJBMOOs] \"OLL Challenge Week 3 (Morning Routine)\" - 0.4x avg (1,555 views | Engagement: 5.08%)\n30. ✅ [ID: UEP6KqeMwvk] \"How To Practice Efficiently\" - 0.3x avg (166,648 views | Engagement: 10.16%)\n31. ✅ [ID: C3H4LKmcw1M] \"Test Your Prompts with Every ChatBot (for Free)\" - 0.3x avg (40,026 views | Engagement: 4.92%)\n32. ✅ [ID: aMFq_i9h-98] \"OLL Challenge (planning system)\" - 0.2x avg (855 views | Engagement: 5.38%)\n33. ✅ [ID: GnzLyTycCDM] \"Ace Your Python Interview - 4 Common TRICKY Questions\" - 0.2x avg (2,800 views | Engagement: 1.29%)\n34. ✅ [ID: v1veRGRvxQg] \"How To SUCCEED As a STUDENT\" - 0.1x avg (46,664 views | Engagement: 7.17%)\n35. ✅ [ID: YCWTiDHegAI] \"10 Steps to Earning Awesome Grades (While Studying Less)\" - 0.1x avg (65,947 views | Engagement: 2.61%)\n36. ✅ [ID: bjwUfRTnKEA] \"Should You Change Answers on Multiple-Choice Exams? - College Info Geek\" - 0.1x avg (55,108 views | Engagement: 2.76%)\n37. ✅ [ID: O3hlnwi2eE0] \"Six-Figure Data Science Job - Mentorship Series - EP.03 - A/B Testing Case Study\" - 0.1x avg (1,049 views | Engagement: 4.10%)\n38. ✅ [ID: G0sjAMCEVwg] \"Q&A Experiment with Matt Cremona, Jay Bates & Myself\" - 0.1x avg (5,709 views | Engagement: 5.92%)\n39. ✅ [ID: rMuBLgIlIi4] \"These 3 Stats Question Types Fail 9 of 10 Candidates—Review Them Before Your Next Interview\" - 0.1x avg (793 views | Engagement: 4.41%)\n40. ✅ [ID: UjU8ukIOAdA] \"Accelerated Japanese Learning Challenge: Preview! - College Info Geek\" - 0.0x avg (18,325 views | Engagement: 3.16%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"simple test\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "original": "Analyze these high-performing YouTube video titles about \"simple test\" and identify actionable title patterns.\n\nAnalysis Context: Thread: original - Purpose: Original search query\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 🌟 [ID: Hbyg0d1njk0] \"Tone Wood Tester: One guitar to test them all\" - 14.4x avg (498,166 views | Engagement: 3.63%)\n2. 💪 [ID: j_k06bihD-0] \"I Tested Dumb Viral DIY TIkToks\" - 4.3x avg (2,477,572 views | Engagement: 2.79%)\n3. 💪 [ID: 1jkNbSKe2D4] \"Muppet Camera Test (4/21/2012)\" - 4.2x avg (224,878 views | Engagement: 1.21%)\n4. 💪 [ID: OdV5ts6D8_4] \"Testing the Bambu Lab H2D\" - 3.3x avg (250,195 views | Engagement: 3.27%)\n5. 💪 [ID: UuDNc-_4v94] \"Homemade Screw Tank Test Drive\" - 3.0x avg (13,784,580 views | Engagement: 1.88%)\n6. ✅ [ID: SxsW-XZ9cQw] \"TESTING SEGWAY ELECTRIC SHOES\" - 3.0x avg (9,895,838 views | Engagement: 1.67%)\n7. ✅ [ID: 83MqrYM81eQ] \"Fake Yeti TESTED! | Part 1\" - 3.0x avg (72,045 views | Engagement: 0.55%)\n8. ✅ [ID: AYizjsL3OU0] \"XTool D1- 3 Easy Maintenance Checks!\" - 2.5x avg (10,184 views | Engagement: 4.32%)\n9. ✅ [ID: h0HjktaeEpA] \"I Tested 1-Star Kitchen Gadgets\" - 2.1x avg (34,205,090 views | Engagement: 1.17%)\n10. ✅ [ID: edO_yhJ7bUc] \"Create A Material Test on WeCreat (So Easy!)\" - 2.0x avg (4,975 views | Engagement: 2.41%)\n11. ✅ [ID: E5VSRX2a6yc] \"Testing a Capacitor on your AC\" - 1.6x avg (39,164 views | Engagement: 0.98%)\n12. ✅ [ID: kawFTI5-kqU] \"Why The Clamp Meter Is The Only Tester You Need | Pros and DIYers\" - 1.6x avg (772,103 views | Engagement: 1.98%)\n13. ✅ [ID: F_9PnhbCcUM] \"Testing 100 Viral Food Hacks\" - 1.4x avg (22,142,424 views | Engagement: 1.56%)\n14. ✅ [ID: -9c782blnEw] \"HOMEMADE SCREW TANK WATER TEST\" - 1.3x avg (5,855,731 views | Engagement: 3.14%)\n15. ✅ [ID: GlzU7DirQ_0] \"Fineas - Test Flight 1\" - 1.3x avg (316,360 views | Engagement: 4.62%)\n16. ✅ [ID: WKpqoOe8lws] \"Echo - Landing Test #6\" - 1.2x avg (307,695 views | Engagement: 3.43%)\n17. ✅ [ID: dnVJN02dM2k] \"Surface Transducer first test\" - 1.2x avg (4,923 views | Engagement: 0.77%)\n18. ✅ [ID: BmicBpOXPlc] \"I Tested 1-Star Restaurants\" - 1.1x avg (17,584,548 views | Engagement: 1.20%)\n19. ✅ [ID: imoXaaDStmE] \"close call\" - 1.0x avg (3,453,410 views | Engagement: 2.52%)\n20. ✅ [ID: M7-h3FO-KKo] \"Testing If You Can Blow Your Own Sail\" - 1.0x avg (56,050,712 views | Engagement: 2.20%)\n21. ✅ [ID: 0VJT_F9KIwY] \"xTool P2 vs xTool S1: Comparing side by side ACTION!\" - 1.0x avg (64,759 views | Engagement: 2.34%)\n22. ✅ [ID: CrnDiaS_jcY] \"Husband & Wife Test Viral Instagram Tools\" - 1.0x avg (743,611 views | Engagement: 5.43%)\n23. ✅ [ID: 8mEOTAL3D9w] \"I Tested Invisible Products!\" - 1.0x avg (278,647 views | Engagement: 1.38%)\n24. ✅ [ID: uVk6v9R5ebo] \"I Tested 1-Star Chinese Restaurants\" - 1.0x avg (967,757 views | Engagement: 2.83%)\n25. ✅ [ID: oi6-D5BnQeA] \"Community Question - Lightburn Material Test Setup\" - 1.0x avg (465 views | Engagement: 4.95%)\n26. ✅ [ID: a_ck6y42X-I] \"I Tested Discontinued Food Products (again...)\" - 1.0x avg (4,711,306 views | Engagement: 1.66%)\n27. ✅ [ID: l4p-HogUr3k] \"Hydrostatic Testing - Simplex Ep 6\" - 1.0x avg (246,153 views | Engagement: 5.56%)\n28. ✅ [ID: yx5zLykjKy8] \"Echo - Landing Test #4\" - 1.0x avg (243,874 views | Engagement: 3.86%)\n29. ✅ [ID: QrSCwxrLrRc] \"why AI can't pass this test\" - 1.0x avg (820,906 views | Engagement: 6.15%)\n30. ✅ [ID: igtcGMTDUIs] \"Rocket Motor Test Stand\" - 0.9x avg (230,840 views | Engagement: 4.14%)\n31. ✅ [ID: XcXSmGDxH-4] \"The TRAVEL EXPERIMENT\" - 0.9x avg (2,914,599 views | Engagement: 4.06%)\n32. ✅ [ID: iTzKEmW2s-k] \"Building A Rocket Motor Test Stand - Simplex Ep 5\" - 0.8x avg (207,435 views | Engagement: 6.18%)\n33. ✅ [ID: 743suYvYdSQ] \"I Tested Limited Edition Food Products\" - 0.8x avg (5,327,115 views | Engagement: 1.79%)\n34. ✅ [ID: S4HfGVRU_xY] \"Echo - Landing Test #5\" - 0.8x avg (188,651 views | Engagement: 3.70%)\n35. ✅ [ID: zjX2iLeC8Hg] \"Test Barrel Proof Testing\" - 0.7x avg (6,256 views | Engagement: 4.11%)\n36. ✅ [ID: lXy-x6lkQvQ] \"Echo - Landing Test #2\" - 0.7x avg (172,179 views | Engagement: 4.05%)\n37. ✅ [ID: cg8t4heRrdc] \"Make ANY Website with ONE Sentence! (WebSim)\" - 0.7x avg (96,509 views | Engagement: 3.94%)\n38. ✅ [ID: 8_hJ48LCXWs] \"Echo - Landing Test #1\" - 0.6x avg (157,105 views | Engagement: 3.23%)\n39. ✅ [ID: 1gTBZyGJyQc] \"oops.. Testing TESLA's PERFORMANCE MODEL 3\" - 0.6x avg (2,063,543 views | Engagement: 3.54%)\n40. ✅ [ID: 7DZc94SBF0g] \"I made an absurd test indicator\" - 0.6x avg (207,149 views | Engagement: 5.14%)\n41. ✅ [ID: cDRNM7XTnUw] \"Building a Tensile Tester the Easy (Lazy) Way!\" - 0.6x avg (42,753 views | Engagement: 6.28%)\n42. ✅ [ID: agtoHvcpcP4] \"Sprint - Test Flight 1\" - 0.5x avg (131,756 views | Engagement: 6.33%)\n43. ✅ [ID: M7LRAWO9Lso] \"HOMEMADE SCREW TANK Snow/Ice Test\" - 0.5x avg (2,361,594 views | Engagement: 3.46%)\n44. ✅ [ID: h3WGLvYlzb8] \"Echo - Landing Test #3\" - 0.5x avg (125,187 views | Engagement: 3.84%)\n45. ✅ [ID: 9z69lUQfmS8] \"A 3 MiNUTE EXPERiMENT; IT WORKED!!!\" - 0.5x avg (1,642,200 views | Engagement: 6.36%)\n46. ✅ [ID: GBjiEmN5HzA] \"The Most Comprehensive Sharpening Test Ever Done\" - 0.5x avg (132,728 views | Engagement: 3.44%)\n47. ✅ [ID: VtywJHjemks] \"Testing Ultralumen!\" - 0.5x avg (1,881 views | Engagement: 6.65%)\n48. ✅ [ID: J2ACQsmkPJs] \"Sprint - Test Flight 2 + Q&A\" - 0.5x avg (112,522 views | Engagement: 5.70%)\n49. ✅ [ID: zA3irEhwIX4] \"I Tested EVERY Youtuber Sponsor\" - 0.4x avg (1,064,817 views | Engagement: 4.65%)\n50. ✅ [ID: XwASPWXh0us] \"Sprint - Test Flight 4\" - 0.3x avg (85,848 views | Engagement: 5.89%)\n51. ✅ [ID: GOWC5fzv70k] \"Sprint - Test Flight 3\" - 0.3x avg (85,126 views | Engagement: 6.22%)\n52. ✅ [ID: HcTrKOZodRk] \"COMPETE WiTH YOURSELF\" - 0.3x avg (1,140,527 views | Engagement: 4.16%)\n53. ✅ [ID: EJj2BA1BhNA] \"Testing (almost) Every Filament So You Don't Have To!\" - 0.3x avg (119,274 views | Engagement: 3.36%)\n54. ✅ [ID: CM0TskDKoew] \"Echo - Drop Test #2\" - 0.3x avg (73,306 views | Engagement: 1.46%)\n55. ✅ [ID: p11SIEjCgEE] \"Testing a Cheap MINI Circular Saw (Worth It?\" - 0.3x avg (24,482 views | Engagement: 1.08%)\n56. ✅ [ID: g0VFwuKr4bQ] \"Scout V 0.1 - Dynamic Test 1\" - 0.3x avg (64,270 views | Engagement: 2.73%)\n57. ✅ [ID: JiRHgYVFF1k] \"Best vise liner testing\" - 0.2x avg (19,455 views | Engagement: 2.65%)\n58. ✅ [ID: pr4DHbE85fM] \"Easy Tool Tests and Quick Fixes\" - 0.2x avg (90,608 views | Engagement: 5.76%)\n59. ✅ [ID: XDJpuwW1-4k] \"Scout V 0.4 Test Launch\" - 0.1x avg (33,547 views | Engagement: 2.81%)\n60. ✅ [ID: 8tkMoZexLFg] \"Echo - Drop Test #1\" - 0.1x avg (33,533 views | Engagement: 2.34%)\n61. ✅ [ID: LfuK8rHzFMY] \"Scout V 0.2 - Dynamic Test 2\" - 0.1x avg (32,894 views | Engagement: 2.88%)\n62. ✅ [ID: UL7fZS304Yw] \"Ground Testing - Build Signal R2\" - 0.1x avg (30,560 views | Engagement: 2.14%)\n63. ✅ [ID: mb9LuI5K7KU] \"Scout V 0.3 - Dynamic Test 3\" - 0.1x avg (29,326 views | Engagement: 2.98%)\n64. ✅ [ID: Hpaf5nbHV7U] \"Scout V 0.7 Test Launch\" - 0.1x avg (23,256 views | Engagement: 2.58%)\n65. ✅ [ID: PEhiI90KX1Q] \"Testing an \"Easy\" 3D Printer (With a Grandma)\" - 0.1x avg (7,988 views | Engagement: 5.51%)\n66. ✅ [ID: 14Juc3PAHHk] \"Scout V 1.0 Test Launch\" - 0.1x avg (22,007 views | Engagement: 2.42%)\n67. ✅ [ID: ejALPYa6IeY] \"Scout V 0.5 Test Launch\" - 0.1x avg (21,217 views | Engagement: 2.77%)\n68. ✅ [ID: msG2G0zv0bE] \"String Spacer Prototype (and a new Wrench!) - Beta Testers Needed - SqWAYre Tools\" - 0.1x avg (2,786 views | Engagement: 8.61%)\n69. ✅ [ID: 9EMoea_ReUA] \"Echo - Test Vehicle 2\" - 0.1x avg (20,022 views | Engagement: 2.98%)\n70. ✅ [ID: pzYHxth56oo] \"Scout V 0.9 Test Launch\" - 0.1x avg (16,993 views | Engagement: 2.73%)\n71. ✅ [ID: oMOiY62fujk] \"This Happened Testing the RC Rocket | GIACO\" - 0.1x avg (21,529 views | Engagement: 5.17%)\n72. ✅ [ID: WG5hMLm1ofI] \"Simple Science Fair Projects\" - 0.1x avg (4,991 views | Engagement: 0.98%)\n73. ✅ [ID: S2PQK63fvHA] \"Signal R2 - User Error Testing\" - 0.0x avg (11,216 views | Engagement: 2.66%)\n74. ✅ [ID: GpYIGWYF-yE] \"Testing Color in Super Glue: Does it work?\" - 0.0x avg (5,784 views | Engagement: 5.39%)\n75. ✅ [ID: ClAQUxQWYO8] \"Welded Eye Hammer Test\" - 0.0x avg (204 views | Engagement: 11.76%)\n76. ✅ [ID: p3h4RlGCyz4] \"Simple Science Projects\" - 0.0x avg (1,499 views | Engagement: 1.87%)\n77. ✅ [ID: theQAe0Hw4M] \"Very Simple Science Experiments\" - 0.0x avg (1,423 views | Engagement: 1.90%)\n78. ✅ [ID: O0wUmPonkrA] \"Hammer-in Ladder Steps Test\" - 0.0x avg (78 views | Engagement: 30.77%)\n79. ✅ [ID: XxhixaV1ke4] \"Sanity Check.. (bounced)\" - 0.0x avg (216 views | Engagement: 1.39%)\n80. ✅ [ID: zEA2ENkTAhM] \"Test Stream\" - -1.0x avg (2 views | Engagement: 0.00%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"simple test\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "Domain Hierarchy": "Analyze these high-performing YouTube video titles about \"simple test\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Domain Hierarchy - Purpose: Find universal patterns that work across the entire category\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: Lt54CX9DmS4] \"How to Study for Exams - An Evidence-Based Masterclass\" - 5.2x avg (2,761,249 views | Engagement: 2.62%)\n2. ✅ [ID: YitcDk-Wwiw] \"How to Make Studying Fun (or at Least Less Boring)\" - 1.2x avg (761,850 views | Engagement: 4.25%)\n3. ✅ [ID: fHfHSq7PVDU] \"How to Beat Test Anxiety and Take on Exams Without Stress\" - 1.0x avg (675,935 views | Engagement: 2.89%)\n4. ✅ [ID: TBTBLqPCjPA] \"Learning ALL the things\" - 0.6x avg (90,616 views | Engagement: 2.16%)\n5. ✅ [ID: 0wmv4eV9EeI] \"Middle School Science Fair Project Ideas\" - 0.5x avg (44,048 views | Engagement: 0.68%)\n6. ✅ [ID: S5_APAxM5Lg] \"Can Music Help You Study More Effectively? - College Info Geek\" - 0.4x avg (247,423 views | Engagement: 3.43%)\n7. ✅ [ID: gFRlpBzY48k] \"Peer Evaluations at Ranger School\" - 0.3x avg (11,765 views | Engagement: 5.55%)\n8. ✅ [ID: jFPi7h9tVUo] \"Connecting The Dots with Q & A\" - 0.2x avg (635 views | Engagement: 5.83%)\n9. ✅ [ID: k0E1K2ajOGM] \"Middle School Science Projects\" - 0.1x avg (5,682 views | Engagement: 1.30%)\n10. ✅ [ID: LIcs3v0yTEY] \"Homeschool Science Experiments\" - 0.0x avg (1,426 views | Engagement: 1.40%)\n11. ✅ [ID: 52uJRJ6TuXA] \"Discussing Design for Test with @BrownieBites-EE  | Maker Chat Ep.03\" - 0.0x avg (281 views | Engagement: 5.34%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"simple test\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant"
+  },
+  "discoveredPatterns": [
+    {
+      "pattern": "How to [ACTION] for [PURPOSE]",
+      "explanation": "This pattern works because it clearly states the action the viewer will learn to take and the benefit they will gain, creating a strong value proposition.",
+      "template": "How to [ACTION] for [PURPOSE]",
+      "examples": [
+        "How to Study for Exams - An Evidence-Based Masterclass",
+        "How to Beat Test Anxiety and Take on Exams Without Stress"
+      ],
+      "video_ids": [
+        "Lt54CX9DmS4",
+        "fHfHSq7PVDU"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 5.2,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Rules and Strategies",
+      "explanation": "Titles that include 'rules' or 'strategies' suggest actionable advice, appealing to viewers seeking guidance on specific tasks like tests.",
+      "template": "5 [RULES/STRATEGIES] for [ACHIEVING DESIRED OUTCOME] on [TOPIC]",
+      "examples": [
+        "5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests",
+        "5 Rules for Answering ESSAY Questions on Exams",
+        "10 Steps to Earning Awesome Grades (While Studying Less)"
+      ],
+      "video_ids": [
+        "Q1y8c_MZYvE",
+        "jeht_P2GBwI",
+        "YCWTiDHegAI"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 4,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Descriptive and Engaging Action Phrase",
+      "explanation": "This pattern works by clearly indicating the action being taken, which piques curiosity and encourages viewers to click to see the results.",
+      "template": "[Action Verb] [Subject] [Additional Context]",
+      "examples": [
+        "I Tested Dumb Viral DIY TIkToks",
+        "Testing the Bambu Lab H2D",
+        "I Tested 1-Star Kitchen Gadgets"
+      ],
+      "video_ids": [
+        "j_k06bihD-0",
+        "OdV5ts6D8_4",
+        "h0HjktaeEpA"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 4,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "How to [Achieve Outcome]",
+      "explanation": "This format directly addresses the viewer's desire to learn a specific skill or outcome, creating a clear value proposition.",
+      "template": "How to [ACHIEVE DESIRED OUTCOME] on [TOPIC]",
+      "examples": [
+        "How To Remember Everything You Learn",
+        "How to SPEED LEARN like a Harvard student ('Easy mode')",
+        "How to actually OUTSMART anyone in class (the easy way)"
+      ],
+      "video_ids": [
+        "z2ZJiIt4pmo",
+        "UDyY8_Kt3xY",
+        "tU8F5ejiaFA"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 3.8,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Unique or Intriguing Subject Matter",
+      "explanation": "Titles that focus on unique subjects or unexpected comparisons generate interest and encourage viewers to learn more.",
+      "template": "[Unique Subject] [Action Verb] [Context]",
+      "examples": [
+        "Tone Wood Tester: One guitar to test them all",
+        "Fake Yeti TESTED! | Part 1",
+        "I Tested 1-Star Restaurants"
+      ],
+      "video_ids": [
+        "Hbyg0d1njk0",
+        "83MqrYM81eQ",
+        "BmicBpOXPlc"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 3.8,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Numbered Lists",
+      "explanation": "Using numbers in titles (e.g., '5 Tips', '10 Ways') provides a clear structure and suggests concise, digestible content, which is appealing to viewers.",
+      "template": "[NUMBER] [TIPS/WAYS] to [ACHIEVE DESIRED OUTCOME] on [TOPIC]",
+      "examples": [
+        "10 Study Tips for Earning an A on Your Next Exam",
+        "8 Habits of Highly Successful Students",
+        "10 Ways to Avoid Making Stupid Mistakes on Exams"
+      ],
+      "video_ids": [
+        "jYWfiP7w5w0",
+        "JuYwsNO5XyY",
+        "OY6Z8gNKp-w"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 3.5,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "List Format with Quantifiable Elements",
+      "explanation": "Using numbers or lists in titles creates a clear expectation of content and can attract viewers looking for specific information.",
+      "template": "Testing [Number] [Subject] [Context]",
+      "examples": [
+        "Testing 100 Viral Food Hacks",
+        "I Tested EVERY Youtuber Sponsor",
+        "I Tested Limited Edition Food Products"
+      ],
+      "video_ids": [
+        "F_9PnhbCcUM",
+        "zA3irEhwIX4",
+        "743suYvYdSQ"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 3.5,
+      "source_thread": "original",
+      "thread_purpose": "Original search query",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Questions that Create Curiosity",
+      "explanation": "Titles framed as questions pique curiosity and encourage clicks, as viewers want to find out the answers.",
+      "template": "How to [ANSWER A SPECIFIC QUESTION] about [TOPIC]",
+      "examples": [
+        "How to figure out what will be on the exam",
+        "How to answer ANY question on a test",
+        "Should You Change Answers on Multiple-Choice Exams?"
+      ],
+      "video_ids": [
+        "fKqFneT4sg4",
+        "8XKzox5ga8A",
+        "bjwUfRTnKEA"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 3.2,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Emotional Hooks",
+      "explanation": "Titles that evoke emotions or present challenges (e.g., 'outsmart', 'avoid mistakes') resonate with viewers' aspirations or fears.",
+      "template": "How to [ACHIEVE DESIRED OUTCOME] and [EMOTIONAL HOOK]",
+      "examples": [
+        "How to actually OUTSMART anyone in class (the easy way)",
+        "10 Ways to Avoid Making Stupid Mistakes on Exams",
+        "These 3 Stats Question Types Fail 9 of 10 Candidates"
+      ],
+      "video_ids": [
+        "tU8F5ejiaFA",
+        "OY6Z8gNKp-w",
+        "rMuBLgIlIi4"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 3,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Question Format that Creates Urgency",
+      "explanation": "Questions in titles engage viewers by prompting them to seek answers, creating a sense of urgency to find out more.",
+      "template": "Can [Subject] [Action Verb] [Context]?",
+      "examples": [
+        "Why The Clamp Meter Is The Only Tester You Need | Pros and DIYers",
+        "why AI can't pass this test"
+      ],
+      "video_ids": [
+        "kawFTI5-kqU",
+        "QrSCwxrLrRc"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 3,
+      "source_thread": "original",
+      "thread_purpose": "Original search query",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Emotional Hook with Personal Experience",
+      "explanation": "Titles that include personal experiences or emotional hooks resonate with viewers, making them more likely to click.",
+      "template": "I [Action Verb] [Subject] [Emotional Context]",
+      "examples": [
+        "I Tested Invisible Products!",
+        "I made an absurd test indicator"
+      ],
+      "video_ids": [
+        "8mEOTAL3D9w",
+        "7DZc94SBF0g"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 2.8,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "How to Make [TOPIC] [ADJECTIVE]",
+      "explanation": "Using 'How to Make' followed by a topic and an adjective appeals to viewers looking for improvement or enhancement in their experience.",
+      "template": "How to Make [TOPIC] [ADJECTIVE]",
+      "examples": [
+        "How to Make Studying Fun (or at Least Less Boring)"
+      ],
+      "video_ids": [
+        "YitcDk-Wwiw",
+        "sQWPnaiixe0",
+        "PLZB8IgSBUw",
+        "eOiPSLQRbd8",
+        "ZPA_yddC8Lw",
+        "GTsmM7parCg",
+        "dchnIRTyXpQ",
+        "jcaqhNlRRB0"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 1.2,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category",
+      "additional_examples_found": 7
+    },
+    {
+      "pattern": "Learning [CONCEPT] - [SUBTITLE]",
+      "explanation": "This pattern indicates a comprehensive approach to a subject, often appealing to viewers seeking in-depth knowledge.",
+      "template": "Learning [CONCEPT] - [SUBTITLE]",
+      "examples": [
+        "Learning ALL the things"
+      ],
+      "video_ids": [
+        "TBTBLqPCjPA"
+      ],
+      "confidence": 0.6,
+      "performance_multiplier": 0.6,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Can [TOPIC] Help You [ACTION]?",
+      "explanation": "This question format creates curiosity and engages viewers by prompting them to consider the effectiveness of the topic in achieving a desired outcome.",
+      "template": "Can [TOPIC] Help You [ACTION]?",
+      "examples": [
+        "Can Music Help You Study More Effectively?"
+      ],
+      "video_ids": [
+        "S5_APAxM5Lg"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 0.4,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Discussing [TOPIC] with [PERSON/ENTITY]",
+      "explanation": "This pattern leverages the authority or expertise of a person or entity, which can attract viewers interested in insights from recognized figures.",
+      "template": "Discussing [TOPIC] with [PERSON/ENTITY]",
+      "examples": [
+        "Discussing Design for Test with @BrownieBites-EE | Maker Chat Ep.03"
+      ],
+      "video_ids": [
+        "52uJRJ6TuXA"
+      ],
+      "confidence": 0.5,
+      "performance_multiplier": 0,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category",
+      "additional_examples_found": 0
+    }
+  ],
+  "threadAnalysis": [
+    {
+      "thread": "Direct Variations",
+      "videosAnalyzed": 40,
+      "patternsFound": 5
+    },
+    {
+      "thread": "original",
+      "videosAnalyzed": 80,
+      "patternsFound": 5
+    },
+    {
+      "thread": "Domain Hierarchy",
+      "videosAnalyzed": 11,
+      "patternsFound": 5
+    }
+  ],
+  "processingSteps": [
+    {
+      "step": "Multi-Threaded Query Expansion",
+      "duration_ms": 14279,
+      "details": {
+        "originalQuery": "simple test",
+        "threads": [
+          {
+            "name": "Direct Variations",
+            "purpose": "Find patterns specific to this exact topic",
+            "queryCount": 5,
+            "queries": [
+              "simple assessment techniques in education",
+              "basic quiz methods for learning evaluation",
+              "easy knowledge check strategies for formative assessment",
+              "straightforward examination formats in educational settings",
+              "simple evaluation approaches for assessing student learning"
+            ]
+          },
+          {
+            "name": "Domain Hierarchy",
+            "purpose": "Find universal patterns that work across the entire category",
+            "queryCount": 6,
+            "queries": [
+              "What are different types of assessments used in education?",
+              "How do formative assessments improve student learning outcomes?",
+              "What are the various methods of evaluation in educational settings?",
+              "What role do quizzes play in the overall learning process?",
+              "How can knowledge checks be integrated into curriculum design?",
+              "What are the best practices for conducting examinations in schools?"
+            ]
+          }
+        ],
+        "totalQueries": 12
+      }
+    },
+    {
+      "step": "Multi-Query Embedding",
+      "duration_ms": 1586,
+      "details": {
+        "embeddingModel": "text-embedding-3-small",
+        "queriesEmbedded": 12,
+        "totalTokens": 98,
+        "totalCost": 0.00000196
+      }
+    },
+    {
+      "step": "Multi-Query Pinecone Search",
+      "duration_ms": 901,
+      "details": {
+        "threshold": 0.4,
+        "videosPerQuery": 300,
+        "totalQueriesSearched": 12,
+        "totalResultsBeforeDedupe": 188,
+        "uniqueVideosFound": 141,
+        "scoreDistribution": {
+          "0.5": 6,
+          "0.4": 135
+        }
+      }
+    },
+    {
+      "step": "Fetch Video Details",
+      "duration_ms": 92,
+      "details": {
+        "videosFetched": 141,
+        "totalVideosProcessed": 141
+      }
+    },
+    {
+      "step": "Multi-Threaded Pattern Discovery",
+      "duration_ms": 20333,
+      "details": {
+        "threadsAnalyzed": 3,
+        "threadBreakdown": [
+          {
+            "thread": "Direct Variations",
+            "videosAnalyzed": 40,
+            "patternsFound": 5
+          },
+          {
+            "thread": "original",
+            "videosAnalyzed": 80,
+            "patternsFound": 5
+          },
+          {
+            "thread": "Domain Hierarchy",
+            "videosAnalyzed": 11,
+            "patternsFound": 5
+          }
+        ],
+        "totalVideosFound": 40,
+        "performanceDistribution": {
+          "superstar": 0,
+          "strong": 3,
+          "above_avg": 2,
+          "normal": 35
+        },
+        "totalPatternsFound": 15,
+        "inputTokens": 7494,
+        "outputTokens": 2215,
+        "cost": 0.0024530999999999997
+      }
+    },
+    {
+      "step": "Phase 2: Pattern Example Enrichment",
+      "duration_ms": 1512,
+      "details": {
+        "patternsEnriched": 15,
+        "totalAdditionalExamples": 7
+      }
+    },
+    {
+      "step": "Pattern Verification",
+      "duration_ms": 10783,
+      "details": {
+        "patternsAnalyzed": 15,
+        "patternsVerified": 0,
+        "patternsFiltered": 15
+      }
+    },
+    {
+      "step": "Title Generation",
+      "duration_ms": 0,
+      "details": {
+        "titlesGenerated": 0
+      }
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "tokens": 98,
+      "cost": 0.00000196
+    },
+    "claude": {
+      "inputTokens": 7494,
+      "outputTokens": 2215,
+      "inputCost": 0.0011240999999999998,
+      "outputCost": 0.0013289999999999999,
+      "totalCost": 0.0024530999999999997
+    },
+    "totalCost": 0.00245506
+  },
+  "totalProcessingTime": 49488,
+  "analysis": {
+    "totalVideos": 141,
+    "relevantVideos": 88,
+    "relevancePercentage": 62.4113475177305,
+    "topChannels": [
+      {
+        "channel": "BPS.space",
+        "count": 27
+      },
+      {
+        "channel": "Thomas Frank",
+        "count": 15
+      },
+      {
+        "channel": "CaseyNeistat",
+        "count": 7
+      },
+      {
+        "channel": "Jay Feng",
+        "count": 7
+      },
+      {
+        "channel": "DIY Projects",
+        "count": 6
+      },
+      {
+        "channel": "OrganizedLittleLady",
+        "count": 6
+      },
+      {
+        "channel": "The Angry Explainer",
+        "count": 4
+      },
+      {
+        "channel": "Ryan Trahan",
+        "count": 4
+      },
+      {
+        "channel": "Veteran Iron&Outdoors",
+        "count": 3
+      },
+      {
+        "channel": "Nick DiGiovanni",
+        "count": 3
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 0.9031551533224882,
+      "highPerformers": 9,
+      "superStars": 1
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.43483039618439717,
+      "highSimilarity": 0,
+      "lowSimilarity": 135
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "test",
+          "count": 45,
+          "percentage": 31.914893617021278
+        },
+        {
+          "topic": "testing",
+          "count": 19,
+          "percentage": 13.47517730496454
+        },
+        {
+          "topic": "tested",
+          "count": 14,
+          "percentage": 9.929078014184398
+        },
+        {
+          "topic": "echo",
+          "count": 9,
+          "percentage": 6.382978723404255
+        },
+        {
+          "topic": "science",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "scout",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "college",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "info",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "geek",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "1-star",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "study",
+          "count": 8,
+          "percentage": 5.673758865248227
+        },
+        {
+          "topic": "school",
+          "count": 7,
+          "percentage": 4.964539007092199
+        },
+        {
+          "topic": "interview",
+          "count": 6,
+          "percentage": 4.25531914893617
+        },
+        {
+          "topic": "landing",
+          "count": 6,
+          "percentage": 4.25531914893617
+        },
+        {
+          "topic": "exams",
+          "count": 5,
+          "percentage": 3.546099290780142
+        },
+        {
+          "topic": "flight",
+          "count": 5,
+          "percentage": 3.546099290780142
+        },
+        {
+          "topic": "launch",
+          "count": 5,
+          "percentage": 3.546099290780142
+        },
+        {
+          "topic": "every",
+          "count": 5,
+          "percentage": 3.546099290780142
+        },
+        {
+          "topic": "easy",
+          "count": 4,
+          "percentage": 2.8368794326241136
+        },
+        {
+          "topic": "question",
+          "count": 4,
+          "percentage": 2.8368794326241136
+        }
+      ],
+      "conceptWordsFound": [
+        "simple",
+        "test"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "testing",
+          "count": 19,
+          "percentage": 13.47517730496454
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 3,
+      "threadStats": [
+        {
+          "thread": "original",
+          "purpose": "Original search query",
+          "videoCount": 89,
+          "queryCount": 1,
+          "avgPerformance": 0.8951869017416323,
+          "avgSimilarity": 0.43430981488764037,
+          "superstarCount": 1,
+          "strongCount": 4,
+          "coverage": 63.12056737588653,
+          "qualityScore": 0.3887884575852486
+        },
+        {
+          "thread": "Direct Variations",
+          "purpose": "Find patterns specific to this exact topic",
+          "videoCount": 41,
+          "queryCount": 4,
+          "avgPerformance": 0.9335444559774152,
+          "avgSimilarity": 0.4406380478780488,
+          "superstarCount": 0,
+          "strongCount": 3,
+          "coverage": 29.078014184397162,
+          "qualityScore": 0.4113552066892633
+        },
+        {
+          "thread": "Domain Hierarchy",
+          "purpose": "Find universal patterns that work across the entire category",
+          "videoCount": 11,
+          "queryCount": 4,
+          "avgPerformance": 0.8543563334901383,
+          "avgSimilarity": 0.41739567036363634,
+          "superstarCount": 0,
+          "strongCount": 1,
+          "coverage": 7.801418439716312,
+          "qualityScore": 0.35660463454653474
+        }
+      ],
+      "bestPerformingThread": "Direct Variations",
+      "mostProductiveThread": "original"
+    },
+    "potentialIssues": [
+      {
+        "type": "TOPIC_DRIFT",
+        "message": "53 videos don't match concept keywords",
+        "severity": "medium",
+        "examples": [
+          "5 Rules for Answering ESSAY Questions on Exams",
+          "Should You Change Answers on Multiple-Choice Exams? - College Info Geek",
+          "judge simulator",
+          "How to figure out what will be on the exam",
+          "10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek"
+        ]
+      }
+    ]
+  }
+}

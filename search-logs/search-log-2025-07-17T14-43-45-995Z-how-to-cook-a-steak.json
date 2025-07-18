@@ -1,0 +1,4724 @@
+{
+  "timestamp": "2025-07-17T14:43:45.994Z",
+  "concept": "how to cook a steak",
+  "expandedQueries": [
+    "common mistakes when cooking a steak",
+    "best techniques for achieving a perfectly cooked steak",
+    "how to cook a steak in under 10 minutes",
+    "steak cooking methods: grilling vs. pan-searing",
+    "essential tools for cooking the perfect steak",
+    "how to season a steak for maximum flavor",
+    "how to cook a steak medium rare",
+    "best methods for cooking steak",
+    "cooking techniques for meats",
+    "culinary skills for home cooking",
+    "trends in culinary arts",
+    "food preparation techniques in gastronomy"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadId": "thread_1_direct",
+      "threadName": "Direct Variations",
+      "purpose": "Find patterns specific to this exact topic",
+      "queries": [
+        "common mistakes when cooking a steak",
+        "best techniques for achieving a perfectly cooked steak",
+        "how to cook a steak in under 10 minutes",
+        "steak cooking methods: grilling vs. pan-searing",
+        "essential tools for cooking the perfect steak",
+        "how to season a steak for maximum flavor"
+      ]
+    },
+    {
+      "threadId": "thread_2_format",
+      "threadName": "Format Exploration",
+      "purpose": "Discover patterns that work across different content formats",
+      "queries": []
+    },
+    {
+      "threadId": "thread_3_domain",
+      "threadName": "Domain Hierarchy",
+      "purpose": "Find universal patterns that work across the entire category",
+      "queries": [
+        "how to cook a steak medium rare",
+        "best methods for cooking steak",
+        "cooking techniques for meats",
+        "culinary skills for home cooking",
+        "trends in culinary arts",
+        "food preparation techniques in gastronomy"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "G8xELw231qs",
+      "title": "How To Cook The Perfect Steak",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.811992407,
+      "performanceRatio": 0.532818405651894,
+      "viewCount": 8717547,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "aoqpxVjJRMQ",
+      "title": "Cook a PERFECT Steak in Less Than 90 Seconds?",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.769105494,
+      "performanceRatio": 0.0869196045922043,
+      "viewCount": 61379,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "tUlknSSRXDI",
+      "title": "How to Cook Steak on a Stainless Steel Pan!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.716453731,
+      "performanceRatio": 0.944118559210886,
+      "viewCount": 41370,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "drO2q_tx8Jg",
+      "title": "50 Ways To Cook A Steak",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.694286048,
+      "performanceRatio": 1.16570943931727,
+      "viewCount": 19072402,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "XbzBR-tKP24",
+      "title": "How Chefs Cook Every Steak",
+      "channelName": "Fallow",
+      "similarityScore": 0.693933845,
+      "performanceRatio": 0.43407725639949,
+      "viewCount": 389714,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "QiFcL9Un7B8",
+      "title": "How to cook a delicious steak dinner tonight!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.688400328,
+      "performanceRatio": 0.460557327615057,
+      "viewCount": 20181,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "NZ4p_8DXkrY",
+      "title": "Every Way to Cook Steak (34 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.679547787,
+      "performanceRatio": 0,
+      "viewCount": 3281462,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DmuwqqHjgT4",
+      "title": "Why You Should Temper Steaks | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.655967712,
+      "performanceRatio": 1.76320201081953,
+      "viewCount": 833139,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "6--rESQNjNw",
+      "title": "The EASIEST Way to Cook a $150 Steak!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.64010185,
+      "performanceRatio": 0.0657699557777144,
+      "viewCount": 46444,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "tjQWzOFFxKU",
+      "title": "Every Way to Screw Up Steak | Botched By Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.637501359,
+      "performanceRatio": 3.03402882879198,
+      "viewCount": 2705688,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "o1i-GLEUTaM",
+      "title": "Cooking Fillet Steak In 3 Levels Of Difficulty",
+      "channelName": "Fallow",
+      "similarityScore": 0.635946214,
+      "performanceRatio": 1,
+      "viewCount": 133484,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "4iUUx8Qtqec",
+      "title": "New Steak Cooking Method with Surprising Results!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.634564459,
+      "performanceRatio": 0.779430054043791,
+      "viewCount": 550401,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8A_i-PFRieQ",
+      "title": "The 5 Skills Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.630667746,
+      "performanceRatio": 0.774342838486559,
+      "viewCount": 695204,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "kAtSceDRMIw",
+      "title": "How Michelin Chefs Cook Every Steak (Rump to Ribeye)",
+      "channelName": "Fallow",
+      "similarityScore": 0.616368294,
+      "performanceRatio": 0.630248178028148,
+      "viewCount": 565836,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "P6W8kwmwcno",
+      "title": "Learn How To Cook in Under 25 Minutes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.606650949,
+      "performanceRatio": 0,
+      "viewCount": 2000217,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Ap0zNHgZxfA",
+      "title": "The 3 Salmon Techniques Every Chef Should Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.599893332,
+      "performanceRatio": 1.48234229792355,
+      "viewCount": 1330845,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "hi5mrEIJ3_w",
+      "title": "How Michelin Chefs Cook Steak (From Blue to Well Done)",
+      "channelName": "Fallow",
+      "similarityScore": 0.599680543,
+      "performanceRatio": 4.12062856264756,
+      "viewCount": 3699495,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "YFpnNixm5Vs",
+      "title": "Why Flip Your Steak Every 30 seconds?",
+      "channelName": "Chris Young",
+      "similarityScore": 0.574292064,
+      "performanceRatio": 0.488592130042973,
+      "viewCount": 230867,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "KIEvBvs-htI",
+      "title": "How a head chef would learn to cook If he could start over",
+      "channelName": "Fallow",
+      "similarityScore": 0.57237643,
+      "performanceRatio": 0.235530523822546,
+      "viewCount": 211459,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "9UX7NJLYyb4",
+      "title": "Can Supersonic Heating Cook Steak?",
+      "channelName": "BPS.space",
+      "similarityScore": 0.566997409,
+      "performanceRatio": 1,
+      "viewCount": 769129,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "rxWYxuhm49U",
+      "title": "The 3 Breakfast Techniques Every Chef Should Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.566871643,
+      "performanceRatio": 0.751924673012512,
+      "viewCount": 675077,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DvyEekmOkGw",
+      "title": "The 5 Steak Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.563062489,
+      "performanceRatio": 0.721264125439398,
+      "viewCount": 647550,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qal3bbhiG88",
+      "title": "The 4 Purees Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.558915913,
+      "performanceRatio": 0.381158935652635,
+      "viewCount": 342204,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oHEYV2rHu1Y",
+      "title": "Babish Makes You The Ultimate Steak Sandwich | Cook Along",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.551317215,
+      "performanceRatio": 0.491041191060032,
+      "viewCount": 437901,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "e7XnRzXj6zw",
+      "title": "Steak: Filet, NY Strip, & Flank | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.550637484,
+      "performanceRatio": 0.626234760194998,
+      "viewCount": 558464,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "pYA8H8KaLNg",
+      "title": "Proof Resting Doesn't Keep Meat Juicy",
+      "channelName": "Chris Young",
+      "similarityScore": 0.550514,
+      "performanceRatio": 1.82996606079837,
+      "viewCount": 864686,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "BPl_G3NRUnk",
+      "title": "POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.548914,
+      "performanceRatio": 0.33118448191765,
+      "viewCount": 297337,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YikSIxDCiyM",
+      "title": "Farm To Table Cooking Basics: Pasta on a Time Crunch",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.54784584,
+      "performanceRatio": 0.162465307677206,
+      "viewCount": 24350,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "W4hi6oVe4LQ",
+      "title": "Let's Make: Steak and Eggs au Poivre | Cook-Along with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.547648847,
+      "performanceRatio": 0.303764182514868,
+      "viewCount": 270891,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "H_erG7HSK0A",
+      "title": "100 Food Hacks I Learned In Restaurants",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.546875477,
+      "performanceRatio": 0,
+      "viewCount": 14547386,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "QWJIGono9kk",
+      "title": "How Chefs Save Money on Meat (3 MEATS 9 RECIPES)",
+      "channelName": "Fallow",
+      "similarityScore": 0.546245,
+      "performanceRatio": 0.811940353047916,
+      "viewCount": 728959,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "9msDfJR-ct4",
+      "title": "50 Food Mistakes You Need To Avoid",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.544694901,
+      "performanceRatio": 0,
+      "viewCount": 3186791,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "tATVfCq8Vzg",
+      "title": "We Cooked Every Steak to See if Wagyu is Overrated",
+      "channelName": "Fallow",
+      "similarityScore": 0.544665754,
+      "performanceRatio": 1.95009414053941,
+      "viewCount": 1750792,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Acv7WrrpkKI",
+      "title": "This Makes Your Steak 30% Juicier! | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.544490516,
+      "performanceRatio": 0.308690876912673,
+      "viewCount": 145861,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "c3dJnF-WT74",
+      "title": "How To Fry Anything Like A Chef",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.543797076,
+      "performanceRatio": 0,
+      "viewCount": 1759105,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "eiyOkjE3l_I",
+      "title": "Chef's Guide to Perfect Beef Wellington",
+      "channelName": "Fallow",
+      "similarityScore": 0.541896045,
+      "performanceRatio": 0.470919590546905,
+      "viewCount": 422791,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cFrduFR70pw",
+      "title": "The Ultimate Chef Guide to Perfectly Cooked Turkey!",
+      "channelName": "Fallow",
+      "similarityScore": 0.538131177,
+      "performanceRatio": 0.177877288710402,
+      "viewCount": 159698,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "HSs-H_dNM6s",
+      "title": "The Ultimate Chef Guide to Perfect Roast Potatoes",
+      "channelName": "Fallow",
+      "similarityScore": 0.537047863,
+      "performanceRatio": 0.708052923537094,
+      "viewCount": 635689,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "DUg5yVx0iiY",
+      "title": "Living on a homestead + cooking from scratch",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.536976039,
+      "performanceRatio": 0.156544021139693,
+      "viewCount": 327,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "7bFa3_eelWQ",
+      "title": "Secret Food Hacks I Learned In Restaurants",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.535518,
+      "performanceRatio": 0,
+      "viewCount": 2977481,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "nHvfNe3jzEs",
+      "title": "Ultimate Chef Guide to Cooking Roast Dinner",
+      "channelName": "Fallow",
+      "similarityScore": 0.534019,
+      "performanceRatio": 0.903674724304287,
+      "viewCount": 811318,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bhv0XmJCJJ8",
+      "title": "I Tested Steak Recipes From Every Decade",
+      "channelName": "Patrick Zeinali",
+      "similarityScore": 0.529513478,
+      "performanceRatio": 0,
+      "viewCount": 2333705,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mXtKxjyfRFU",
+      "title": "How to Make the Best Wings at Home | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.529496849,
+      "performanceRatio": 1.84366539257822,
+      "viewCount": 1644145,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "SYWeuAFL00Q",
+      "title": "Pressure Canning chicken for years of meat storage- HOMESTEAD SKILLS",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.52842015,
+      "performanceRatio": 0.0684580887552784,
+      "viewCount": 143,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8YnYdtL7tJY",
+      "title": "How To Design The Perfect DIY Home Cook's Kitchen",
+      "channelName": "Lowe's Home Improvement",
+      "similarityScore": 0.527661324,
+      "performanceRatio": 0.117993065988501,
+      "viewCount": 17427,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "-fbAvHY0Xrs",
+      "title": "POV: Cook Restaurant Quality Mussels (How to Make Them at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.527391,
+      "performanceRatio": 0.245230916484814,
+      "viewCount": 220168,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "srKF3qtTlaE",
+      "title": "The 6 Stocks & Broths Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.52566433,
+      "performanceRatio": 1.11970421761461,
+      "viewCount": 1005269,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "gH5KiPD_wZc",
+      "title": "We tried cooking a FROZEN Steak in the Air Fryer! 🥩",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.52474618,
+      "performanceRatio": 2.54056210987654,
+      "viewCount": 111324,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "6DbsOZU8mBM",
+      "title": "Cooking Wagyu On A 500 Degree Salt Rock",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.524193466,
+      "performanceRatio": 0.6902100665731,
+      "viewCount": 11292663,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "dUzRueUDgJA",
+      "title": "Reverse Searing: The Temperature You're Missing",
+      "channelName": "Chris Young",
+      "similarityScore": 0.522799194,
+      "performanceRatio": 1,
+      "viewCount": 118725,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "-nvLPTiHcEc",
+      "title": "FORGING GRILLIN' TOOLS!!!",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.520626426,
+      "performanceRatio": 0.587716528109743,
+      "viewCount": 378742,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "r5WNjoeJNzg",
+      "title": "POV: Cooking Restaurant Quality Fish (How To Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.51932472,
+      "performanceRatio": 1.24596525918272,
+      "viewCount": 1118626,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "SLPWHz8jh3w",
+      "title": "Can I Cook RAW MEAT in Hot Sugar?!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.516704559,
+      "performanceRatio": 0.50612731062548,
+      "viewCount": 357406,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "_uVcEns2hKg",
+      "title": "5 Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.516476452,
+      "performanceRatio": 2.24648240397397,
+      "viewCount": 2016889,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jHDrv64NK2M",
+      "title": "8 Recipes Using Every Part of a Rotisserie Chicken | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.516154706,
+      "performanceRatio": 0.87019611567722,
+      "viewCount": 776024,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "zhI7bQyTmHw",
+      "title": "Learn To Cook In Less Than 1 Hour",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.515755713,
+      "performanceRatio": 0.757248131540496,
+      "viewCount": 12389486,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JwU9Ar2R5uw",
+      "title": "Can We Tenderize Steak Using an Ultrasonic Cleaner??",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.514870226,
+      "performanceRatio": 0.107689735101888,
+      "viewCount": 76046,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ZjFcB1IeJuY",
+      "title": "I Cooked A Whole Wagyu Cow",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.51448822,
+      "performanceRatio": 1.27868411829811,
+      "viewCount": 20920803,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "q_sN1n1_ZJo",
+      "title": "Reverse Sear vs Sous Vide? | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.514334,
+      "performanceRatio": 0.455877809043418,
+      "viewCount": 215409,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "T3j6YgqeoG4",
+      "title": "Chef Guide to Making Curry & Naan at Home",
+      "channelName": "Fallow",
+      "similarityScore": 0.513971746,
+      "performanceRatio": 0.835262952882022,
+      "viewCount": 749898,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8VY0RnxaZJc",
+      "title": "Cooking Chicken In 3 Levels Of Difficulty",
+      "channelName": "Fallow",
+      "similarityScore": 0.512428761,
+      "performanceRatio": 0.947969731238847,
+      "viewCount": 851086,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "J60DCvBCAIo",
+      "title": "Every Knife a Chef Needs to Own",
+      "channelName": "Fallow",
+      "similarityScore": 0.511735499,
+      "performanceRatio": 1.95338218269569,
+      "viewCount": 1753744,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "CHpT7U1u9_w",
+      "title": "3 Ways to Cook Octopus Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.511193216,
+      "performanceRatio": 0.295966119810834,
+      "viewCount": 265718,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "i81yhFUNur4",
+      "title": "Transforming Tools into Kitchen Treasures: Forged Knife, Fork & Spoon",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.509842277,
+      "performanceRatio": 0.0791286701367677,
+      "viewCount": 8966,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xniS7kMpW4I",
+      "title": "The 5 Sauces Every Chef Needs to Learn",
+      "channelName": "Fallow",
+      "similarityScore": 0.509629726,
+      "performanceRatio": 5.0616279118356,
+      "viewCount": 4544323,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "ZSL_Q6Pe-Ao",
+      "title": "Every Cooking Gadget You'll Ever Need",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.507049799,
+      "performanceRatio": 0,
+      "viewCount": 2462147,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "4GK85_mCWLc",
+      "title": "EASY steak, potatoes, and green bean crock pot recipe!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.506300092,
+      "performanceRatio": 0.374903130504881,
+      "viewCount": 1487,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Htjbu-PZ-zU",
+      "title": "Molecular gastronomy (playing with food): \"reverse\" spherification maraschino cherries",
+      "channelName": "Applied Science",
+      "similarityScore": 0.506074846,
+      "performanceRatio": 0.474388006022185,
+      "viewCount": 150735,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "dDu-ehIBqBw",
+      "title": "POV: How to Cook Porchetta Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.505278111,
+      "performanceRatio": 0.261490685928354,
+      "viewCount": 234766,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "OSZc1n7ssbA",
+      "title": "4 Common Mistakes That Ruin a Flat Table Top",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.504514933,
+      "performanceRatio": 11.4360580749451,
+      "viewCount": 986760,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "i0LcsVhc_3c",
+      "title": "Elevate Your Bread Making Skills",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.503717065,
+      "performanceRatio": 0.25827226442038,
+      "viewCount": 1228,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "BAxICJRICNU",
+      "title": "My Top 5 Easy, Sexy Dishes | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.502824843,
+      "performanceRatio": 0.779618902544859,
+      "viewCount": 695249,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "inphbadzM_8",
+      "title": "POV: How to Cook Duck Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.502449453,
+      "performanceRatio": 0.286627723659674,
+      "viewCount": 257334,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "63sQzNzye2k",
+      "title": "The Chef’s FAVORITE Pan: Making a Carbon Steel Heirloom! DIY HouseMade Kit",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.501248777,
+      "performanceRatio": 0.0449037110925579,
+      "viewCount": 5088,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "US8Hwq1WUbQ",
+      "title": "Teaching April Wilkerson to Cook",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.49995172,
+      "performanceRatio": 0.190781643027599,
+      "viewCount": 28594,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "p0yh4cvD8E8",
+      "title": "POV: Cooking Restaurant Quality Chicken Wings & Sauce (How to Make Them at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.499086142,
+      "performanceRatio": 0.502726274765958,
+      "viewCount": 451347,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "OlzAbXI_z4k",
+      "title": "We Found the Perfect Fried Chicken Technique",
+      "channelName": "Fallow",
+      "similarityScore": 0.498469204,
+      "performanceRatio": 0.382297275450641,
+      "viewCount": 343226,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "58hC3MCVwkw",
+      "title": "Pierogi | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.497832447,
+      "performanceRatio": 1.61598270503834,
+      "viewCount": 1441102,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "MvSYttvUxA0",
+      "title": "POV: Cooking Restaurant Quality Mashed Potatoes (How to Make Them at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.497570783,
+      "performanceRatio": 0.357155782377646,
+      "viewCount": 320654,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "0eUthI1kKYQ",
+      "title": "Can I DRY AGE Steak in a VACUUM?",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.496996343,
+      "performanceRatio": 1.81455348538549,
+      "viewCount": 1281362,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Ubj0rdvdpqs",
+      "title": "3 Easy Fish Recipes Ready in Under 20 min | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.496849447,
+      "performanceRatio": 0.507684298423826,
+      "viewCount": 452743,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "TULreIfJHSY",
+      "title": "What Everyone Gets Wrong About Chefs",
+      "channelName": "Fallow",
+      "similarityScore": 0.496058792,
+      "performanceRatio": 0.10545793745132,
+      "viewCount": 94680,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "3vZInTf5_1I",
+      "title": "We Found the Perfect French Fry Technique (How to Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.495307446,
+      "performanceRatio": 0.291731317548584,
+      "viewCount": 261916,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Ag7Nsda0pYE",
+      "title": "Babish Cook-Along: Pasta Aglio e Olio (Basic vs. Advanced)",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.49477905,
+      "performanceRatio": 0.492528103899568,
+      "viewCount": 439227,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Kqp9pT1UOXM",
+      "title": "POV: Restaurant Quality Risotto at Home",
+      "channelName": "Fallow",
+      "similarityScore": 0.494751126,
+      "performanceRatio": 0.295048319425749,
+      "viewCount": 264894,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "R2FqGmD1E08",
+      "title": "How to Cook Scallops Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.493183881,
+      "performanceRatio": 0.197685737798217,
+      "viewCount": 177482,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jhePLqQ8dSc",
+      "title": "How to Prep & Cook a Pigeon",
+      "channelName": "Fallow",
+      "similarityScore": 0.491184831,
+      "performanceRatio": 0.251409361552859,
+      "viewCount": 225715,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "hq2hRMDYKWQ",
+      "title": "Surf and Turf Three Ways | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.490859628,
+      "performanceRatio": 0.917863670651451,
+      "viewCount": 818533,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "2kvfcJrdQww",
+      "title": "POV: How to Cook Fish Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.490689248,
+      "performanceRatio": 0.124720607183926,
+      "viewCount": 111974,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "LHwZCJNuwqE",
+      "title": "Making Celebrity Chefs' Best Recipes But Better",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.488040268,
+      "performanceRatio": 0,
+      "viewCount": 3242846,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "JSJbVJIBO4M",
+      "title": "Professional Chef gives ENTIRE Shellfish Masterclass",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.486456037,
+      "performanceRatio": 0.0400409500324894,
+      "viewCount": 570,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "UPoJFL-l9jw",
+      "title": "Cooking with thermite",
+      "channelName": "Applied Science",
+      "similarityScore": 0.485260248,
+      "performanceRatio": 0.631189237481656,
+      "viewCount": 200558,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "N76SdhQWdxA",
+      "title": "Can you cook on a CROWBAR? (Open Fire Cooking Hack)",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.484484106,
+      "performanceRatio": 0.488609188214083,
+      "viewCount": 106298,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "OOfdxjL1FWY",
+      "title": "How to Make Pan Sauces Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.484431684,
+      "performanceRatio": 0.699781581717137,
+      "viewCount": 628263,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "EIMT_gFsp40",
+      "title": "SUMMER HOMEMAKING in the KITCHEN | Cleaning, cooking and canning in Summer",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.483873785,
+      "performanceRatio": 0.207289177839409,
+      "viewCount": 433,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "rsMsPMTkRAA",
+      "title": "I Cooked Against A Michelin Star Chef",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.482318282,
+      "performanceRatio": 0.714499609413133,
+      "viewCount": 11690069,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YTzUMwbb4KI",
+      "title": "Dry-age for (actually) crisp roast chicken",
+      "channelName": "Chris Young",
+      "similarityScore": 0.481865317,
+      "performanceRatio": 0.112711819627009,
+      "viewCount": 53258,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Wfrq_DLb8wI",
+      "title": "How To Make Beef Wellington",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.481825471,
+      "performanceRatio": 0.667287294131574,
+      "viewCount": 10917619,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "FUjhf-wVg8Q",
+      "title": "How to Remove Rust & Protect Tools | Ultimate Cast Iron & Blade Cleaning Guide!",
+      "channelName": "Dell's DIY",
+      "similarityScore": 0.48109287,
+      "performanceRatio": 0.0289916921407002,
+      "viewCount": 625,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "fIrpnl3cb5E",
+      "title": "How To Prepare Turbot",
+      "channelName": "Fallow",
+      "similarityScore": 0.48078385,
+      "performanceRatio": 1.27003412874742,
+      "viewCount": 1140235,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "10eBYKtTDE8",
+      "title": "A HOMEMAKER'S DITL - Cooking, cleaning, homeschool + Zucchini lasagna RECIPE!",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.479973555,
+      "performanceRatio": 0.111064871267305,
+      "viewCount": 232,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "rxOJQjxKPiM",
+      "title": "Your Oven is a Liar! Perfect your roast with surface temperature cooking.",
+      "channelName": "Chris Young",
+      "similarityScore": 0.478638053,
+      "performanceRatio": 0.113194344221905,
+      "viewCount": 53486,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "w-bhtdPyBRo",
+      "title": "i cooked every type of garlic (ft. Erwan Heussaff)",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.478285074,
+      "performanceRatio": 0.163132221997586,
+      "viewCount": 139216,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "s8OcZYCBaOo",
+      "title": "Drinking Steak Juice After Spinning Steak at 500MPH",
+      "channelName": "Chris Young",
+      "similarityScore": 0.478268713,
+      "performanceRatio": 1,
+      "viewCount": 701746,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GapkjSTx3Ao",
+      "title": "SOUS SPEED: Sous Vide But 4X Faster",
+      "channelName": "Chris Young",
+      "similarityScore": 0.477445304,
+      "performanceRatio": 1,
+      "viewCount": 520179,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qRRfksZxLyc",
+      "title": "Tasting Food From Every Decade",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.475617647,
+      "performanceRatio": 1.5928763464761,
+      "viewCount": 26061364,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4W_Iv6LnazU",
+      "title": "5 Most Common Wire Stripping Mistakes",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.475040227,
+      "performanceRatio": 0.0825692511253187,
+      "viewCount": 40826,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "fNj356KxKko",
+      "title": "I Tested Viral Cooking Gadgets",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.473034889,
+      "performanceRatio": 0,
+      "viewCount": 4878383,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "JeeG7cx2V9M",
+      "title": "Every Way To Cook Chicken Breast (30 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.4717457,
+      "performanceRatio": 0,
+      "viewCount": 2564342,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "qwebjK9hAS4",
+      "title": "Rendering Beef Tallow: The Ultimate Guide",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.470337719,
+      "performanceRatio": 0.237240321063671,
+      "viewCount": 1128,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "QUzbFSXOb8I",
+      "title": "POV:  How to Cook Onion Rings Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.469115525,
+      "performanceRatio": 0.471555590571036,
+      "viewCount": 423362,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "x5-jANW4BrQ",
+      "title": "Basics with Babish Livestream: Cookalong, Q&A, and New Cookbook!",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.468952775,
+      "performanceRatio": 0.0744577771833956,
+      "viewCount": 66400,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "UJIVZkTW9yA",
+      "title": "Chef Tips for Better Risotto",
+      "channelName": "Fallow",
+      "similarityScore": 0.468725473,
+      "performanceRatio": 0.965464744161828,
+      "viewCount": 866793,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "uC6VBDJlm4w",
+      "title": "Does Basting Work? | TESTED",
+      "channelName": "Chris Young",
+      "similarityScore": 0.46778,
+      "performanceRatio": 2.51645676482688,
+      "viewCount": 1189063,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "DBZW2Pd1Evs",
+      "title": "MEAL PREP SECRETS ft. Mealsdotkom",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.467638731,
+      "performanceRatio": 1.61695190850498,
+      "viewCount": 23018,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "IB6DqKZqfCg",
+      "title": "Next Level Rice: Secrets to Restaurant-Quality",
+      "channelName": "Fallow",
+      "similarityScore": 0.466891497,
+      "performanceRatio": 0.546692700251973,
+      "viewCount": 490820,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "w96vBKFtPok",
+      "title": "Freezing Makes The Perfect Beef Wellington Foolproof & Easy",
+      "channelName": "Chris Young",
+      "similarityScore": 0.465445727,
+      "performanceRatio": 0.780583000033179,
+      "viewCount": 368837,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "F_9PnhbCcUM",
+      "title": "Testing 100 Viral Food Hacks",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.465308845,
+      "performanceRatio": 1.35334986469797,
+      "viewCount": 22142424,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Ugv3Lh7RZUM",
+      "title": "Does a Vacuum HURT Marinades??",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.465141684,
+      "performanceRatio": 0.318364877661757,
+      "viewCount": 224816,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "hTX7B61GDo8",
+      "title": "We Found the Perfect Poached Egg Technique (How to Make it at Home)",
+      "channelName": "Fallow",
+      "similarityScore": 0.464025825,
+      "performanceRatio": 2.85729972312127,
+      "viewCount": 2565280,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "RFMb1xEl6Lw",
+      "title": "POV: How to Cook Dauphinoise Potatoes Like a Chef",
+      "channelName": "Fallow",
+      "similarityScore": 0.463581294,
+      "performanceRatio": 0.742931565841178,
+      "viewCount": 667003,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "FEZioC-qMd4",
+      "title": "Easy Carnitas | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.463551044,
+      "performanceRatio": 0.892748748428913,
+      "viewCount": 796136,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oTtiWspz1Gs",
+      "title": "Just What You Need For Outdoor Cooking | Backyard Projects",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.462949634,
+      "performanceRatio": 0.0557609182939196,
+      "viewCount": 46486,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "lndTllGn39E",
+      "title": "How I manage my household {meal planning}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.462601215,
+      "performanceRatio": 1.018818796483,
+      "viewCount": 4041,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "IaMMnRiAvY4",
+      "title": "We Recreated London’s Most Famous Steak & Sauce",
+      "channelName": "Fallow",
+      "similarityScore": 0.462569475,
+      "performanceRatio": 0.453156143287995,
+      "viewCount": 406843,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "RukdHqgmeko",
+      "title": "I tried Nick DiGiovanni's Cookbook, Knife Drop",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.461287051,
+      "performanceRatio": 1.05722157541924,
+      "viewCount": 15050,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "uYy7QK5Ja4U",
+      "title": "Every Way To Screw Up Burgers | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.460937053,
+      "performanceRatio": 1.5151563340226,
+      "viewCount": 1351187,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "2JH2f4ytqEI",
+      "title": "5 Must-Have Metalworking And Welding Tools For Beginners // Quick Tips",
+      "channelName": "Crafted Workshop",
+      "similarityScore": 0.460829467,
+      "performanceRatio": 2.35879389758469,
+      "viewCount": 805620,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "d5PpnElKWUU",
+      "title": "Can I Turn Mark Rober Into A MasterChef?",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.460651517,
+      "performanceRatio": 0.633178848789546,
+      "viewCount": 10359564,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "culinary skills for home cooking",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Y2cwkjOb1LE",
+      "title": "Pesto | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.46005854,
+      "performanceRatio": 1.26162760271314,
+      "viewCount": 1125095,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4AN4Ujh3fHk",
+      "title": "8 Essential Welding Tools (All For Under $50)",
+      "channelName": "Make Everything",
+      "similarityScore": 0.4577353,
+      "performanceRatio": 2.60619362436766,
+      "viewCount": 308802,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "NTNPy0a39AY",
+      "title": "The Secret Technique Behind Fast Food Chicken Burgers",
+      "channelName": "Fallow",
+      "similarityScore": 0.457362145,
+      "performanceRatio": 0.251127561191904,
+      "viewCount": 225462,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ak6xKjbC8WY",
+      "title": "3 Delicious Garden-to-Table Recipes (w/ Amanda Frederickson)",
+      "channelName": "Lowe's Home Improvement",
+      "similarityScore": 0.456579596,
+      "performanceRatio": 0.0601035431674941,
+      "viewCount": 8877,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4qNBZqXnq8U",
+      "title": "Food organization",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.456147403,
+      "performanceRatio": 0.463901654424331,
+      "viewCount": 1840,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Txzy1GrGBcc",
+      "title": "Cheap vs Expensive Supermarket Steak Challenge",
+      "channelName": "Fallow",
+      "similarityScore": 0.455916762,
+      "performanceRatio": 0.711726352748273,
+      "viewCount": 638987,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "X7ZDVmec1hc",
+      "title": "50 Home Cooks Try to Make The Perfect Burger",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.455721,
+      "performanceRatio": 1,
+      "viewCount": 1734480,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mToxe3Mc5EE",
+      "title": "Achieve Perfection: Best Finish for Cutting Boards",
+      "channelName": "Sawdust and splinters",
+      "similarityScore": 0.455715388,
+      "performanceRatio": 0.41913098539868,
+      "viewCount": 8040,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "-oSJ3b3KwGU",
+      "title": "Vacuum and pressure frying fruits and vegetables",
+      "channelName": "Applied Science",
+      "similarityScore": 0.454932958,
+      "performanceRatio": 0.733922164012205,
+      "viewCount": 233201,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "4rN4T57JZso",
+      "title": "Are Cooking Shows Dead?",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.453594089,
+      "performanceRatio": 0,
+      "viewCount": 741674,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "qiGJm7RD1fs",
+      "title": "Babish's Guide to Summer Grilling",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.452749431,
+      "performanceRatio": 0.230770891129688,
+      "viewCount": 205797,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "bM6Xw7t3R9M",
+      "title": "MAKING A CHEF'S KNIFE IN FLORENTINE FEATHER DAMASCUS!!! Part 1",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.452420712,
+      "performanceRatio": 0.656462581170449,
+      "viewCount": 423044,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "jeCk5e0YsF0",
+      "title": "Souvlaki | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.451623768,
+      "performanceRatio": 1.47511060904107,
+      "viewCount": 1315475,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Uct0-gkfEsk",
+      "title": "Shrimp 7 Ways | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.451509804,
+      "performanceRatio": 0.481275335917107,
+      "viewCount": 429192,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "EaCnovM9JSM",
+      "title": "Every Way to Screw Up Chicken Breast (& How to Fix It) | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.451255023,
+      "performanceRatio": 0.723886583511847,
+      "viewCount": 645548,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "nfg9wHMGPy8",
+      "title": "How To Build A Deck In 9 Minutes",
+      "channelName": "Home RenoVision DIY",
+      "similarityScore": 0.450813979,
+      "performanceRatio": 0.0778002237872602,
+      "viewCount": 31574,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "eom0qu5YO94",
+      "title": "Scary Sharp - The Cheapest Way to Get a Perfect Razor Sharp Edge",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.450745523,
+      "performanceRatio": 3.11608260572058,
+      "viewCount": 855983,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ZJTi2lEe6Aw",
+      "title": "Top Tools Every DIYer Should Own",
+      "channelName": "HouseImprovements",
+      "similarityScore": 0.450640053,
+      "performanceRatio": 0.28472314189816,
+      "viewCount": 140698,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ujNGAGc1Fqc",
+      "title": "How Cheap Can You Make Gordon Ramsay Food?",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.450574577,
+      "performanceRatio": 0.00429877722689782,
+      "viewCount": 29506,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "O3F9iKLTWMs",
+      "title": "Cooking Rotisserie Chicken in London",
+      "channelName": "Fallow",
+      "similarityScore": 0.450425595,
+      "performanceRatio": 0.0697940411769873,
+      "viewCount": 62661,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oEaMp5tzrHU",
+      "title": "We Cooked The Best Michelin Star Dish From Every Decade",
+      "channelName": "Fallow",
+      "similarityScore": 0.449685156,
+      "performanceRatio": 2.57717345680109,
+      "viewCount": 2313783,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "ebtoOdddJE0",
+      "title": "Behind the Scenes: How a Restaurant Order Comes to Life",
+      "channelName": "Fallow",
+      "similarityScore": 0.449330628,
+      "performanceRatio": 0.243082327961962,
+      "viewCount": 218239,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "GlvoPLvpisg",
+      "title": "POV: How a Chef Runs a Fine Dining Kitchen",
+      "channelName": "Fallow",
+      "similarityScore": 0.448687464,
+      "performanceRatio": 0.220707602069249,
+      "viewCount": 198151,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "8EHZXBF6zjg",
+      "title": "Building The ULTIMATE Outdoor Kitchen",
+      "channelName": "DIY With Greg",
+      "similarityScore": 0.448087305,
+      "performanceRatio": 0.439158175502743,
+      "viewCount": 29850,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "9UxczQUGP_8",
+      "title": "Cooking on the Biolite BaseCamp Stove",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.447846502,
+      "performanceRatio": 0.0607852299527287,
+      "viewCount": 1482,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "VwrWiXNrGuU",
+      "title": "Everything You Need To Know To Sharpen + Maintain Your Chainsaw Like A Pro",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.446807265,
+      "performanceRatio": 0.198087577808155,
+      "viewCount": 29689,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "MpFukTlrgjo",
+      "title": "Avoid These Mistakes I Made with French Cleats",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.445953071,
+      "performanceRatio": 0.272498127598339,
+      "viewCount": 67301,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "z6XCWy_2bYE",
+      "title": "Fermented Veggies the EASY way // Homesteading",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.445556253,
+      "performanceRatio": 0.11948372607324,
+      "viewCount": 17908,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "food preparation techniques in gastronomy",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "864HPoYMKXQ",
+      "title": "Crock Pot Cooking {BBQ chicken sandwiches}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.444005966,
+      "performanceRatio": 0.35069956592622,
+      "viewCount": 1391,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "xqNL7theV-U",
+      "title": "Avoid These 3 Rookie Mistakes When Soldering Copper Pipe",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.443862826,
+      "performanceRatio": 0.0289354400590294,
+      "viewCount": 14307,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "x9SiO0GgtkY",
+      "title": "2 Ways to Make a Cutting Board | Brisket Board",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.443106443,
+      "performanceRatio": 0.140638620069174,
+      "viewCount": 12135,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "9tdyZWbGWO0",
+      "title": "5 Resume Mistakes You Need to Avoid",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.442887604,
+      "performanceRatio": 1.72649621528923,
+      "viewCount": 1139378,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "7YHqVvMmWLc",
+      "title": "Every Way To Cook An Egg (100 Methods)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.441666901,
+      "performanceRatio": 0,
+      "viewCount": 3003756,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "5b1gttjyyHE",
+      "title": "Heat Metal In Seconds With The Amazing Induction Forge - Metal Working Tools You Need",
+      "channelName": "Make Everything",
+      "similarityScore": 0.440099567,
+      "performanceRatio": 0.469365004843177,
+      "viewCount": 55614,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Hh7C6N_bwhw",
+      "title": "Cooking with Blastoise",
+      "channelName": "Ryan Mercer",
+      "similarityScore": 0.439829499,
+      "performanceRatio": 0.0836994949405798,
+      "viewCount": 646,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "vdbRZCI85oE",
+      "title": "CHICKEN CUTS - How to cut up a whole chicken & what to do with the rest of the chicken",
+      "channelName": "Home with the Hursts",
+      "similarityScore": 0.439823478,
+      "performanceRatio": 0.123511796495537,
+      "viewCount": 258,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "NnhGasoTOdg",
+      "title": "Crock Pot Cooking! {sausages, onions, and peppers}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.439774036,
+      "performanceRatio": 0.793675221808584,
+      "viewCount": 3148,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "7sgv_p_zLrU",
+      "title": "Making a Stainless Steel Carving Knife",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.439698249,
+      "performanceRatio": 0.0982711670225324,
+      "viewCount": 69395,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jE8We16tJFI",
+      "title": "Which Country Has The Best Steak? (ft. Guga)",
+      "channelName": "Patrick Zeinali",
+      "similarityScore": 0.439323813,
+      "performanceRatio": 0,
+      "viewCount": 496423,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "f5fkAEdO-p4",
+      "title": "Ultimate DIY Outdoor Stove: Cook Like a Pro in Your Backyard! | Backyard Project",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.438645512,
+      "performanceRatio": 0.365867001887595,
+      "viewCount": 305011,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "7yo6hWKTo-g",
+      "title": "Making Your Own Branding Iron",
+      "channelName": "Switch & Lever",
+      "similarityScore": 0.438594401,
+      "performanceRatio": 1.97408040013663,
+      "viewCount": 374673,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "rKBJt1w80jU",
+      "title": "Get Perfect Cuts Every Time - My Favorite Table Saw Tip",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.438586503,
+      "performanceRatio": 0.664201101922291,
+      "viewCount": 182455,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "m92VbkLMAwY",
+      "title": "Crock Pot Cooking! {Beef Stew}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.437840372,
+      "performanceRatio": 0.602063668894186,
+      "viewCount": 2388,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YVJ04d5jZCc",
+      "title": "Steel Plate BBQ - Cheap and Easy Outdoor Kitchen",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.437263668,
+      "performanceRatio": 2.27752703894243,
+      "viewCount": 495481,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "4ztpiD3iplI",
+      "title": "The Best Sauce for Pork",
+      "channelName": "Fallow",
+      "similarityScore": 0.436253667,
+      "performanceRatio": 0.505895136532424,
+      "viewCount": 454192,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "eaDxAOZ16tM",
+      "title": "how to remove rust from cast iron",
+      "channelName": "wittworks",
+      "similarityScore": 0.436211437,
+      "performanceRatio": 1,
+      "viewCount": 195207,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "REWe549wF7Y",
+      "title": "How to Cook Fish in Paper",
+      "channelName": "Fallow",
+      "similarityScore": 0.435982376,
+      "performanceRatio": 0.523645217766309,
+      "viewCount": 470128,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "z8Otk01Xi-U",
+      "title": "I Made The Perfect Burger",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.434942424,
+      "performanceRatio": 0,
+      "viewCount": 2483886,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VEAmtpkxXXQ",
+      "title": "Top 5 Easy Weeknight Meals with Pork Tenderloin | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.43454656,
+      "performanceRatio": 0.312018455072804,
+      "viewCount": 278252,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "b4_0Uoqshu8",
+      "title": "How to Make Bordelaise Sauce",
+      "channelName": "Fallow",
+      "similarityScore": 0.433534235,
+      "performanceRatio": 0.41016655146426,
+      "viewCount": 368247,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "YmspkFff4tc",
+      "title": "Crafting a Branding Iron & More! | Compilation",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.433123559,
+      "performanceRatio": 0.167381115577454,
+      "viewCount": 139540,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "rX1CXF3TU-c",
+      "title": "3 Tools to Start Knife Making",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.432989091,
+      "performanceRatio": 0.131631063471993,
+      "viewCount": 14915,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xq8xphVOciw",
+      "title": "Making a Custom Smash-Burger Griddle",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.432373315,
+      "performanceRatio": 0.0463890321971917,
+      "viewCount": 32758,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "1MjfssKGVRg",
+      "title": "5 Things Everyone Gets Wrong About Gaining Muscle",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.432296216,
+      "performanceRatio": 0.902597664554068,
+      "viewCount": 600556,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "yEsr1eFsm8Q",
+      "title": "Potato Perfection: The Ultimate Restaurant-Quality Recipe",
+      "channelName": "Fallow",
+      "similarityScore": 0.431862354,
+      "performanceRatio": 0.386231342149818,
+      "viewCount": 346758,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "foRIrTnlSx0",
+      "title": "selling charcuterie boards: the easy way",
+      "channelName": "Jennie and Davis",
+      "similarityScore": 0.431717,
+      "performanceRatio": 3.28002400419398,
+      "viewCount": 140569,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "lvOfI97Ifx4",
+      "title": "Steak Quesadilla Recipe for Picky Eaters!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.430782378,
+      "performanceRatio": 0.822640601979086,
+      "viewCount": 36047,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ErVdMfnPDPQ",
+      "title": "Crock Pot Cooking! {Ribs}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.430253893,
+      "performanceRatio": 0.457346522350944,
+      "viewCount": 1814,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "f8OsF52oXfk",
+      "title": "Start My BBQ Charcoal in Record Time!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.43001309,
+      "performanceRatio": 0.11515123490795,
+      "viewCount": 81315,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "BIFZqkk_25k",
+      "title": "Dinner tips for busy nights!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.429057151,
+      "performanceRatio": 0.369356480288938,
+      "viewCount": 1465,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jcaqhNlRRB0",
+      "title": "How to Make a Simple Propane Forge for Blacksmithing | I Like To Make Stuff",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.428691387,
+      "performanceRatio": 2.14547276033612,
+      "viewCount": 1214838,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "LAgVbK5EagM",
+      "title": "Red Wine Sauce LIKE A CHEF",
+      "channelName": "Fallow",
+      "similarityScore": 0.428343713,
+      "performanceRatio": 1.28465990163159,
+      "viewCount": 1153366,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "0IimVPbxTBc",
+      "title": "POV: 10 Minute Leftover Fried Rice",
+      "channelName": "Fallow",
+      "similarityScore": 0.427496642,
+      "performanceRatio": 0.216493962679955,
+      "viewCount": 194368,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jHm4M6Gv0pU",
+      "title": "Trying The Ridge Method For Asparagus",
+      "channelName": "The Farmyard Garden ",
+      "similarityScore": 0.427376628,
+      "performanceRatio": 0.112592212618578,
+      "viewCount": 465,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "5SXTUI6q4ls",
+      "title": "MAKING A STAINLESS DAMASCUS CARVING KNIFE AND FORK!!! Part 4",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.427303195,
+      "performanceRatio": 0.552646761526475,
+      "viewCount": 356142,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "DO0cyBzk4NI",
+      "title": "Paint Tips and Tricks For The Best Results Possible | Outdoor Kitchen Part 8",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.426845759,
+      "performanceRatio": 0.236427073480755,
+      "viewCount": 122059,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "_iDrJhAdqXM",
+      "title": "How to make the perfect breakfast burger!",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.426693678,
+      "performanceRatio": 0.159331793708005,
+      "viewCount": 142089,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "UXlvkjIZGDs",
+      "title": "Folding Camp Grill with Griddle",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.426553,
+      "performanceRatio": 0.0300839062212937,
+      "viewCount": 21244,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "3px1ZHVUNKc",
+      "title": "Every Way to Fry an Egg",
+      "channelName": "Fallow",
+      "similarityScore": 0.426530868,
+      "performanceRatio": 4.7949545497036,
+      "viewCount": 4304904,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "YTAa4h_822Y",
+      "title": "Every Way to Fry an Egg",
+      "channelName": "Fallow",
+      "similarityScore": 0.426394731,
+      "performanceRatio": 1.84937780046589,
+      "viewCount": 1660369,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "EoVha2o6Ldk",
+      "title": "Jerk Meat Platter from Futurama | Binging with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.425752491,
+      "performanceRatio": 1.77121932100126,
+      "viewCount": 1579539,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "q-dsVszrMdw",
+      "title": "Tool Gifts for WoodWorkers",
+      "channelName": "DIY Home & Garden Projects",
+      "similarityScore": 0.425741106,
+      "performanceRatio": 0.0235296985196442,
+      "viewCount": 504,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "-ojGxNVID2w",
+      "title": "Making a Titanium Chef's Knife",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.425668627,
+      "performanceRatio": 2.00084346202504,
+      "viewCount": 1289403,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "AXH6QfHnpv8",
+      "title": "Tools That Need To Exist | Awesome Woodworking Tools",
+      "channelName": "Bourbon Moth Woodworking",
+      "similarityScore": 0.425408572,
+      "performanceRatio": 0.360150035016212,
+      "viewCount": 187055,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "CYEFR_kg6Us",
+      "title": "How to Make the Best Fish & Chips | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.425236791,
+      "performanceRatio": 2.10102354119313,
+      "viewCount": 1873652,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jT0BAMoJOb0",
+      "title": "Grilling for My Picky Brother",
+      "channelName": "Casey Kelly",
+      "similarityScore": 0.424829721,
+      "performanceRatio": 1,
+      "viewCount": 60449,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "EV4lSoVulSM",
+      "title": "$1 vs $10,000 Steak",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.424487531,
+      "performanceRatio": 1.70275229133504,
+      "viewCount": 27859066,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "e2Frbe2a2PE",
+      "title": "TIG Welding Tips and Tricks for the Beginner with Jody Collier",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.424458414,
+      "performanceRatio": 2.46729791349959,
+      "viewCount": 60155,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "h_D0EoXppYs",
+      "title": "Clean Rust From Your Cast Iron Table and Protect Your Saw",
+      "channelName": "Myers Woodshop (Ben Myers)",
+      "similarityScore": 0.42435059,
+      "performanceRatio": 0.0351325654075083,
+      "viewCount": 1053,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "yIMbvF2AocI",
+      "title": "TEMPERATURE CONTROLLED FORGE!!!",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.424222499,
+      "performanceRatio": 0.668102329805011,
+      "viewCount": 430545,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "SPTrHYoBxqA",
+      "title": "Learning How To Forge Weld Made Easy",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.424094349,
+      "performanceRatio": 0.587460359532093,
+      "viewCount": 5181,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "d1LmyJiHCJs",
+      "title": "The perfect camping grill made from Fire Extinguisher!!",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.423994333,
+      "performanceRatio": 0.785342580612436,
+      "viewCount": 170853,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XpOQ5ZDyw9E",
+      "title": "Cook Your Chicken With a Brick!",
+      "channelName": "Fallow",
+      "similarityScore": 0.423903823,
+      "performanceRatio": 0.366615586589455,
+      "viewCount": 329147,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "7ivYyAE9b-I",
+      "title": "Epic DIY BBQ & Stove Builds – Genius Ideas You Need to Try!",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.423553497,
+      "performanceRatio": 0.00885126309191655,
+      "viewCount": 7379,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "DESOvso0miE",
+      "title": "9 Dishes that Made Chefs Famous",
+      "channelName": "Fallow",
+      "similarityScore": 0.423139691,
+      "performanceRatio": 1,
+      "viewCount": 2849779,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "xCvxQ6ornIA",
+      "title": "Essential DIY Metal Cutting Techniques You Need to Know",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.423032433,
+      "performanceRatio": 0.0122099209937144,
+      "viewCount": 10179,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "gP6Nv9i-0Sg",
+      "title": "MAKING A STAINLESS DAMASCUS CARVING KNIFE AND FORK!!! Part 1",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.422754854,
+      "performanceRatio": 0.704934895274942,
+      "viewCount": 454281,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "-hePdX-n8w0",
+      "title": "Guide to Making the Perfect BLT | Basics with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.422560453,
+      "performanceRatio": 1.24444176094939,
+      "viewCount": 1109769,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "5bCc76hsBaw",
+      "title": "Secret Steel Hacks To Make Your Home Look More Expensive | Metalworking Project",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.422406852,
+      "performanceRatio": 1.57860040138265,
+      "viewCount": 1316026,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "QvfA7aUxGVA",
+      "title": "Pre-Raising Wood Grain: Easy Water Bath Technique",
+      "channelName": "The Wood Whisperer",
+      "similarityScore": 0.422182888,
+      "performanceRatio": 0.0936092033177534,
+      "viewCount": 17842,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "_jKYjg35Cm0",
+      "title": "Cook Your Turkey From Frozen (Trust Me)\"",
+      "channelName": "Chris Young",
+      "similarityScore": 0.422144383,
+      "performanceRatio": 1,
+      "viewCount": 663598,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "q2OKZMDOuV8",
+      "title": "How to Butcher a Chicken 🇫🇷 vs 🇯🇵",
+      "channelName": "Fallow",
+      "similarityScore": 0.422142088,
+      "performanceRatio": 2.07380784050475,
+      "viewCount": 1861862,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "5ecFuTlClW0",
+      "title": "POV: 4 Hours of Top Chefs Working",
+      "channelName": "Fallow",
+      "similarityScore": 0.421648979,
+      "performanceRatio": 0.460308080512064,
+      "viewCount": 413264,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "vRr9jq7ZnJQ",
+      "title": "Making the Sharpest Bread Knife",
+      "channelName": "Switch & Lever",
+      "similarityScore": 0.421127439,
+      "performanceRatio": 0.159392003867195,
+      "viewCount": 30252,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "zwE_2Owp3fA",
+      "title": "How to make a mini lathe in 10 minutes",
+      "channelName": "izzy swan",
+      "similarityScore": 0.420799762,
+      "performanceRatio": 3.44805765793745,
+      "viewCount": 905837,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "bPV8QbwKhd0",
+      "title": "Forging a Railroad Spike Knife",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.420724452,
+      "performanceRatio": 0.654289785626762,
+      "viewCount": 74137,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "IYM4_J95H2I",
+      "title": "Cooking For The World’s Strongest Man (10,000 Calories)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.420606971,
+      "performanceRatio": 0,
+      "viewCount": 3151307,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "J6II9F91t4I",
+      "title": "The BEST DIY Forge On The Market",
+      "channelName": "Make Everything",
+      "similarityScore": 0.42060104,
+      "performanceRatio": 0.253021952119942,
+      "viewCount": 29980,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "vevgtX3M0Jc",
+      "title": "The one MUST HAVE tool for the router table. Plus.....perfect miters every single time",
+      "channelName": "Sawdust and splinters",
+      "similarityScore": 0.420397311,
+      "performanceRatio": 11.2409470623778,
+      "viewCount": 215630,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "89jQLjCoWig",
+      "title": "Every Way to Cook Fried Chicken (32 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.419897407,
+      "performanceRatio": 0,
+      "viewCount": 4771153,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "mWJo7t7HoGI",
+      "title": "9 Dishes That Made Chefs Famous",
+      "channelName": "Fallow",
+      "similarityScore": 0.418505609,
+      "performanceRatio": 0.722557288360616,
+      "viewCount": 648711,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "sRO4dsOEItY",
+      "title": "Gourmet Meat Stew from Breath of the Wild | Arcade with Alvin",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.418317705,
+      "performanceRatio": 1.19365796858371,
+      "viewCount": 1064481,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "cooking techniques for meats",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "9JLBpcdmn2c",
+      "title": "5 Table Saw Tools To Up Your Game",
+      "channelName": "izzy swan",
+      "similarityScore": 0.418153614,
+      "performanceRatio": 0.684813834129709,
+      "viewCount": 179907,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "TIgY4Z7y1TQ",
+      "title": "I Tried This Viral Chef Cuso Recipe! Parmesan Onion Rings with Crusted Filet!",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.418055594,
+      "performanceRatio": 1.35903322019742,
+      "viewCount": 59551,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VxWl85mAbvg",
+      "title": "Setting Up and using a Cheap Sharpening System - Sharpen Chisels and Hand Plane Irons",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.417932063,
+      "performanceRatio": 0.17161337217983,
+      "viewCount": 16715,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YybjAs5T_r8",
+      "title": "10 Common Wood Turning Mistakes",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.417930216,
+      "performanceRatio": 10.5214724381294,
+      "viewCount": 907845,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OgQUR2YcuuU",
+      "title": "Water-Cooled Torch: The BEST Welding for Detailed Work!",
+      "channelName": "Jason Hurst",
+      "similarityScore": 0.417780519,
+      "performanceRatio": 1.17906237938304,
+      "viewCount": 1241,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "49u4ERWIw_8",
+      "title": "Polish Steel Fast! - Metal Working Tools You Need!",
+      "channelName": "Make Everything",
+      "similarityScore": 0.417638272,
+      "performanceRatio": 0.502558311637298,
+      "viewCount": 59547,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "o54chvNrT2g",
+      "title": "Quick and easy crock pot recipe!",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.417401016,
+      "performanceRatio": 0.335572338064557,
+      "viewCount": 1331,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "cKk421VTXDU",
+      "title": "I Tested Every Tik Tok Shop Cooking Gadget",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.416932613,
+      "performanceRatio": 0,
+      "viewCount": 2506952,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jT_xCFuYyS4",
+      "title": "5 Things Everyone Gets Wrong About Arm Training",
+      "channelName": "Renaissance Periodization",
+      "similarityScore": 0.416887045,
+      "performanceRatio": 0.621076575865785,
+      "viewCount": 413242,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "26Mfs_nViC0",
+      "title": "5 Tips To Better Flux-Core Welding",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.41685465,
+      "performanceRatio": 34.2678169407124,
+      "viewCount": 835481,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "aqpJS_L6844",
+      "title": "Tips and tricks for perfect table top epoxy every time. Step by step tutorial",
+      "channelName": "Sawdust and splinters",
+      "similarityScore": 0.41675216,
+      "performanceRatio": 0.371170723387886,
+      "viewCount": 7120,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "kvj6ch2GN6s",
+      "title": "I Bought Amazon Blacksmithing Tools",
+      "channelName": "Alec Steele",
+      "similarityScore": 0.416582972,
+      "performanceRatio": 3.8388251005008,
+      "viewCount": 2473853,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "essential tools for cooking the perfect steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "q8cgxircSUw",
+      "title": "50 Ways To Cook An Egg",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.414983064,
+      "performanceRatio": 0.45641678383445,
+      "viewCount": 7467525,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "Otwz4ot7MIQ",
+      "title": "Potato Rösti LIKE A CHEF",
+      "channelName": "Fallow",
+      "similarityScore": 0.413818777,
+      "performanceRatio": 0.910584959242479,
+      "viewCount": 817522,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "rQk_4rd3nL0",
+      "title": "Follow these steps to perform the perfect deadlift",
+      "channelName": "JTM_FIT",
+      "similarityScore": 0.413281024,
+      "performanceRatio": 0.124094929401477,
+      "viewCount": 3263,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "_8n4rDTkx_w",
+      "title": "Every Way to Screw Up a French Omelette | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.41287446,
+      "performanceRatio": 1.11919346328792,
+      "viewCount": 998075,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8JX9SUMn1pQ",
+      "title": "Achieving the Perfect Finish: No BS Guide to Sanding like a Pro",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.412827641,
+      "performanceRatio": 0.566530358097375,
+      "viewCount": 155625,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "best techniques for achieving a perfectly cooked steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "MDUEN7wlm-I",
+      "title": "$5,000 TINY BBQ. Cooks 2 hotdogs",
+      "channelName": "jimmydiresta",
+      "similarityScore": 0.412584096,
+      "performanceRatio": 0.444457858482315,
+      "viewCount": 174034,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Jc5DVWqI3mA",
+      "title": "Cooking a (Not-So-Authentic) Spaghetti Carbonara",
+      "channelName": "Fallow",
+      "similarityScore": 0.412282735,
+      "performanceRatio": 0.531401967622783,
+      "viewCount": 477092,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qGiFC5RsCtU",
+      "title": "5 beginner mistakes that KILL your gym progress",
+      "channelName": "Owen Blair",
+      "similarityScore": 0.41186,
+      "performanceRatio": 0.0461237293358299,
+      "viewCount": 3651,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "nSQFzjZa6aU",
+      "title": "10 EPOXY Mistakes Beginners Make",
+      "channelName": "John Malecki",
+      "similarityScore": 0.409412622,
+      "performanceRatio": 0.768228042490611,
+      "viewCount": 438858,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8aKpqlenQF4",
+      "title": "I Cooked Viral Vintage Recipes",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.409068733,
+      "performanceRatio": 0,
+      "viewCount": 2018219,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "pT3_wgEas3g",
+      "title": "How Chefs Create a Restaurant Menu That Works",
+      "channelName": "Fallow",
+      "similarityScore": 0.408540457,
+      "performanceRatio": 0.168643593088608,
+      "viewCount": 151408,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "oSPlKPooPJk",
+      "title": "Every Way To Screw Up Thanksgiving Dinner | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.408098042,
+      "performanceRatio": 0.885139253308936,
+      "viewCount": 789350,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VYdtZ3T6hmQ",
+      "title": "Avoid These Mistakes With The  2 Most Common PEX Fittings",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.408001065,
+      "performanceRatio": 0.370483654978209,
+      "viewCount": 183184,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "R63JO1dNY_c",
+      "title": "Every Way To Cook A Potato (43 Ways)",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.407948017,
+      "performanceRatio": 0,
+      "viewCount": 5740447,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "PAKhf6s3h08",
+      "title": "How to Make a Cedar BBQ Brush - 2 Methods",
+      "channelName": "DIY Builds",
+      "similarityScore": 0.407461464,
+      "performanceRatio": 0.0930752379923218,
+      "viewCount": 8397,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bQ0NudQ5cvI",
+      "title": "Kitchen Trends to add Character on a Budget | Showroom Steals Season 2, Episode 1",
+      "channelName": "Lowe's Home Improvement",
+      "similarityScore": 0.406868607,
+      "performanceRatio": 4.82515604882291,
+      "viewCount": 712652,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "trends in culinary arts",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "kcOWLnNDQIc",
+      "title": "Crock pot cooking! {Corned Beef}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.406416595,
+      "performanceRatio": 0.337337181315084,
+      "viewCount": 1338,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "0u0IXZIE6MQ",
+      "title": "DIY Portable Camping Grill (Mini Hot Plate)",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.40496859,
+      "performanceRatio": 0.590276745693237,
+      "viewCount": 128416,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "_rk1Foi8E8g",
+      "title": "How to Make Sanji's Tuna Saute from One Piece | Binging with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.404031157,
+      "performanceRatio": 0.725113342672068,
+      "viewCount": 646642,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "f9kJNrOqYQE",
+      "title": "We Cooked the Most Feared 3-Michelin-Star Dish for a Legend",
+      "channelName": "Fallow",
+      "similarityScore": 0.403328061,
+      "performanceRatio": 0.755394270342052,
+      "viewCount": 678192,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Vz9ZdPLbYM8",
+      "title": "INSANE Beef Stew Recipe! 🥩 🍲",
+      "channelName": "Santa Cruz Medicinals",
+      "similarityScore": 0.401779741,
+      "performanceRatio": 0.965228292526575,
+      "viewCount": 42295,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to cook a steak in under 10 minutes",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xapAtHfqjCo",
+      "title": "5 Most Common Mistakes That Will Ruin Your Concrete Project!",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.400796592,
+      "performanceRatio": 0.0675059144677629,
+      "viewCount": 33378,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Wv0TlUkYAMU",
+      "title": "Every Way to Screw Up Mac & Cheese | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.4007608,
+      "performanceRatio": 1.3455462272775,
+      "viewCount": 1199932,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "G0nNYJCDHtA",
+      "title": "Table Saw Mistakes",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.399588794,
+      "performanceRatio": 0.132827294982514,
+      "viewCount": 11461,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pkZK1_qeroU",
+      "title": "Are you clamping wrong?",
+      "channelName": "izzy swan",
+      "similarityScore": 0.399384022,
+      "performanceRatio": 1,
+      "viewCount": 17436,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "H684QERwexQ",
+      "title": "How to Light a Gas Grill SAFELY",
+      "channelName": "Pros DIY",
+      "similarityScore": 0.398882121,
+      "performanceRatio": 0.373281136323347,
+      "viewCount": 142201,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "L7sUsGQpDVI",
+      "title": "How to Make a Bulgogi Inspired Philly Cheesesteak (ft. Daniel Williams)",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.398465663,
+      "performanceRatio": 0.544687795250255,
+      "viewCount": 485742,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "hAHn_WFdEmM",
+      "title": "19 STUPID Oil Change MISTAKES That DESTROY Your Engine",
+      "channelName": "Car Care Clues",
+      "similarityScore": 0.39743349,
+      "performanceRatio": 1,
+      "viewCount": 26769,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VX7-PocXRK0",
+      "title": "HUGE Mistake Beginner Woodworkers Make #woodworkingtips",
+      "channelName": "731 Woodworks",
+      "similarityScore": 0.396541953,
+      "performanceRatio": 0.14213678897175,
+      "viewCount": 24530,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "7Sz1BEnFDYE",
+      "title": "How to Eat a Crab",
+      "channelName": "Fallow",
+      "similarityScore": 0.395313144,
+      "performanceRatio": 0.464969481739713,
+      "viewCount": 417449,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "pQGCx39XFbk",
+      "title": "How To Make The Best Vanilla Extract",
+      "channelName": "Black's Tropical Homestead",
+      "similarityScore": 0.394520491,
+      "performanceRatio": 0.40465459018307,
+      "viewCount": 1924,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "H5Dpyokaz2I",
+      "title": "Camp Fire Cookout LIVE! Let's Make a Stew",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.393155754,
+      "performanceRatio": 0.062731049222858,
+      "viewCount": 7108,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "plj7VaTcgAc",
+      "title": "Common Mistakes in Turkey Breeding",
+      "channelName": "Ryan Mercer",
+      "similarityScore": 0.391426384,
+      "performanceRatio": 3.21776618707322,
+      "viewCount": 24835,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "SeV43q7wKUY",
+      "title": "22 Ways to Cook an Egg (Ranked) | Best with Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.391415507,
+      "performanceRatio": 1.00248762566534,
+      "viewCount": 893999,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "best methods for cooking steak",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "1IbS37UT9bI",
+      "title": "5 Screw Mistakes You Must Avoid for Effortless DIY Success",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.391344637,
+      "performanceRatio": 0.099167640484685,
+      "viewCount": 49033,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "common mistakes when cooking a steak",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "NZgFAIHZ4vc",
+      "title": "How I Make My Homemade Natural Seasoning | GREAT FOR CHICKEN, FISH, AND VEGETABLES!",
+      "channelName": "Mooregirl",
+      "similarityScore": 0.388359189,
+      "performanceRatio": 0.212892434133193,
+      "viewCount": 999,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "bH2g48Am-54",
+      "title": "I Challenged @GugaFoods to a STEAK OFF!",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.38706,
+      "performanceRatio": 0.750842765826782,
+      "viewCount": 669587,
+      "foundVia": {
+        "thread": "original",
+        "query": "how to cook a steak",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "ZhO8zLxiy8U",
+      "title": "Cast Iron: Like New to Like Old / Re-finishing and Re-seasoning // How to restore",
+      "channelName": "YouCanMakeThisToo",
+      "similarityScore": 0.385593176,
+      "performanceRatio": 0.0965173817829489,
+      "viewCount": 8328,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "H0X4PZSFtak",
+      "title": "Cooking Challenge vs MrBeast",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.38003698,
+      "performanceRatio": 1.51644385894668,
+      "viewCount": 24810837,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "CofpcrSyCPg",
+      "title": "How to Make the Super Sour Lemon Burger from Boruto | Anime with Alvin",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.378305376,
+      "performanceRatio": 0.475775104033304,
+      "viewCount": 424287,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "oa4e0x9ZWKo",
+      "title": "DiResta Fire Pot Grill RING",
+      "channelName": "jimmydiresta",
+      "similarityScore": 0.375564367,
+      "performanceRatio": 2.50969263899916,
+      "viewCount": 982707,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "RJWQjEmJK6M",
+      "title": "DIY Portable BBQ Grill: Turn a Propane Tank into Your Cooking Companion | Metalworking Project",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.374574095,
+      "performanceRatio": 0.645657599355506,
+      "viewCount": 538263,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "dG3wVVVh0jM",
+      "title": "I Built a Motorized Grill From Scratch - And It Actually Works!",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.372123271,
+      "performanceRatio": 0.04840905605102,
+      "viewCount": 40357,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "advoOf9mosE",
+      "title": "Tasting Every Rare Fast Food Item",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.370225698,
+      "performanceRatio": 0.364766766857353,
+      "viewCount": 5968021,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bliaJVttu9s",
+      "title": "Feast Like a Warrior: Forge an Eating SPIKE!",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.36950615,
+      "performanceRatio": 0.0363430586240474,
+      "viewCount": 4118,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "71A9LXE85NU",
+      "title": "\"Trash to Treasure\" Grill - DIY Yakitori BBQ made from I Beam",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.364316195,
+      "performanceRatio": 0.721266002655143,
+      "viewCount": 156913,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "SMSDUPx-qZI",
+      "title": "Cooking Challenge vs Shaq",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.363710344,
+      "performanceRatio": 0.518052493522641,
+      "viewCount": 8475959,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "dA58Ar_9Gcw",
+      "title": "How to Make Metal Rust Instantly.",
+      "channelName": "Make Something",
+      "similarityScore": 0.362601072,
+      "performanceRatio": 1.49719010216456,
+      "viewCount": 303490,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pO_pD2GENGo",
+      "title": "Cooking Challenge vs Uncle Roger",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.360613585,
+      "performanceRatio": 0.806941499983068,
+      "viewCount": 13202529,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JLQy03U2RWI",
+      "title": "Diy Wood Finishing - Vinegar And Steel Wool! Tips And Tricks",
+      "channelName": "izzy swan",
+      "similarityScore": 0.360166699,
+      "performanceRatio": 1.21856338603987,
+      "viewCount": 320128,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "e1b8aFeQ6CM",
+      "title": "I Tried The World's Rarest Restaurants",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.359993041,
+      "performanceRatio": 0.856029044787772,
+      "viewCount": 14005660,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "0NlML-xA_lA",
+      "title": "POV: Cooking the Ultimate Mac & Cheese (Chef's Favourite Recipe)",
+      "channelName": "Fallow",
+      "similarityScore": 0.35694769,
+      "performanceRatio": 0.608976149200039,
+      "viewCount": 546738,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "02wpPe8ojvE",
+      "title": "How to Fillet a Whole Salmon",
+      "channelName": "Fallow",
+      "similarityScore": 0.354951262,
+      "performanceRatio": 0.953600169280845,
+      "viewCount": 856141,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "how to season a steak for maximum flavor",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "p6Raa2Pv12Y",
+      "title": "BBQ Grilling Station |  Plans",
+      "channelName": "Michael Alm (ALM FAB)",
+      "similarityScore": 0.353303432,
+      "performanceRatio": 1.00047875617266,
+      "viewCount": 358664,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "SmqQD9XjEN4",
+      "title": "Scrap Wood Butcher Block: Grill Cart/ Outdoor Kitchen Island Build",
+      "channelName": "Six Eight Woodworks",
+      "similarityScore": 0.350795597,
+      "performanceRatio": 0.0923592035553498,
+      "viewCount": 6818,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "TDTiPOU7Mds",
+      "title": "I Cooked Minecraft Food IRL",
+      "channelName": "Patrick Zeinali",
+      "similarityScore": 0.350689113,
+      "performanceRatio": 0,
+      "viewCount": 570732,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bBdf-eWTBZ4",
+      "title": "The 300 Hour Beef Wellington",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.349373609,
+      "performanceRatio": 0,
+      "viewCount": 1567723,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "0Fr5nb47iwo",
+      "title": "We Cooked Every Michelin Rated Omelette",
+      "channelName": "Fallow",
+      "similarityScore": 0.348585129,
+      "performanceRatio": 0.619802629470707,
+      "viewCount": 556458,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "lHbrj9WBcE0",
+      "title": "Cooking Challenge vs My Family",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.347568035,
+      "performanceRatio": 0.373028264989243,
+      "viewCount": 6103189,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "3Q0yXJY9_WE",
+      "title": "What portable grill would you use for your BBQ? | Backyard Project",
+      "channelName": "Totally Handy",
+      "similarityScore": 0.347203463,
+      "performanceRatio": 0.498839866781809,
+      "viewCount": 415866,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "pRMwnkwph8Q",
+      "title": "Turn Steel Black - Cold and Hot Bluing Process Explained",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.34686932,
+      "performanceRatio": 0.592055629170243,
+      "viewCount": 128803,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "steak cooking methods: grilling vs. pan-searing",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "oFFdtWnZ5Jk",
+      "title": "World's Spiciest Cooking Challenge",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.338942558,
+      "performanceRatio": 1.46102144763971,
+      "viewCount": 23904060,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "y0CYVLjss4g",
+      "title": "Black Pudding Rosti LIKE A CHEF",
+      "channelName": "Fallow",
+      "similarityScore": 0.338482499,
+      "performanceRatio": 0.263824171130725,
+      "viewCount": 236861,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "fYIk4ohZkYc",
+      "title": "Ribwich from The Simpsons | Botched by Babish",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.338321298,
+      "performanceRatio": 2.07054519203884,
+      "viewCount": 1846472,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "bSERj23wFzs",
+      "title": "Chef Guide to Spanish Omelette",
+      "channelName": "Fallow",
+      "similarityScore": 0.337874204,
+      "performanceRatio": 5.18029705118922,
+      "viewCount": 4650864,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "zpTOtt9gOE8",
+      "title": "I Trained A Rat To Cook Ratatouille",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.335918278,
+      "performanceRatio": 0.942535733985389,
+      "viewCount": 15421013,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "lR4zL99dewU",
+      "title": "Tasting The Rarest Foods On The Internet",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.335897744,
+      "performanceRatio": 0.785874459713952,
+      "viewCount": 12857847,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "QfBDJI8fh-A",
+      "title": "How to Make a Wooden Spoon (Cooking Spoon)",
+      "channelName": "DIY Builds",
+      "similarityScore": 0.335685939,
+      "performanceRatio": 0.232859902315434,
+      "viewCount": 21008,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "soDBjctTuk0",
+      "title": "Chef Guide to MICHELIN Quality Chips",
+      "channelName": "Fallow",
+      "similarityScore": 0.335482836,
+      "performanceRatio": 1.00682256709703,
+      "viewCount": 903924,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    },
+    {
+      "videoId": "6GZDBmQsaw0",
+      "title": "Binging with Babish: Cola-Braised Short Rib from The Bear",
+      "channelName": "Babish Culinary Universe",
+      "similarityScore": 0.33412841,
+      "performanceRatio": 3.6453126018908,
+      "viewCount": 3250819,
+      "foundVia": {
+        "thread": "Domain Hierarchy",
+        "query": "how to cook a steak medium rare",
+        "threadPurpose": "Find universal patterns that work across the entire category"
+      }
+    }
+  ],
+  "performanceDistribution": {
+    "superstar": 1,
+    "strong": 1,
+    "above_avg": 6,
+    "normal": 37
+  },
+  "claudePrompts": {
+    "Direct Variations": "Analyze these high-performing YouTube video titles about \"how to cook a steak\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Direct Variations - Purpose: Find patterns specific to this exact topic\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 🌟 [ID: OSZc1n7ssbA] \"4 Common Mistakes That Ruin a Flat Table Top\" - 11.4x avg (986,760 views | Engagement: 1.29%)\n2. 💪 [ID: tjQWzOFFxKU] \"Every Way to Screw Up Steak | Botched By Babish\" - 3.0x avg (2,705,688 views | Engagement: 2.42%)\n3. ✅ [ID: hTX7B61GDo8] \"We Found the Perfect Poached Egg Technique (How to Make it at Home)\" - 2.9x avg (2,565,280 views | Engagement: 0.60%)\n4. ✅ [ID: 4AN4Ujh3fHk] \"8 Essential Welding Tools (All For Under $50)\" - 2.6x avg (308,802 views | Engagement: 2.16%)\n5. ✅ [ID: 2JH2f4ytqEI] \"5 Must-Have Metalworking And Welding Tools For Beginners // Quick Tips\" - 2.4x avg (805,620 views | Engagement: 2.06%)\n6. ✅ [ID: J60DCvBCAIo] \"Every Knife a Chef Needs to Own\" - 2.0x avg (1,753,744 views | Engagement: 1.68%)\n7. ✅ [ID: DmuwqqHjgT4] \"Why You Should Temper Steaks | TESTED\" - 1.8x avg (833,139 views | Engagement: 3.34%)\n8. ✅ [ID: uYy7QK5Ja4U] \"Every Way To Screw Up Burgers | Botched by Babish\" - 1.5x avg (1,351,187 views | Engagement: 3.08%)\n9. ✅ [ID: DvyEekmOkGw] \"The 5 Steak Sauces Every Chef Needs to Learn\" - 0.7x avg (647,550 views | Engagement: 2.66%)\n10. ✅ [ID: HSs-H_dNM6s] \"The Ultimate Chef Guide to Perfect Roast Potatoes\" - 0.7x avg (635,689 views | Engagement: 1.24%)\n11. ✅ [ID: kAtSceDRMIw] \"How Michelin Chefs Cook Every Steak (Rump to Ribeye)\" - 0.6x avg (565,836 views | Engagement: 1.96%)\n12. ✅ [ID: G8xELw231qs] \"How To Cook The Perfect Steak\" - 0.5x avg (8,717,547 views | Engagement: 2.21%)\n13. ✅ [ID: oHEYV2rHu1Y] \"Babish Makes You The Ultimate Steak Sandwich | Cook Along\" - 0.5x avg (437,901 views | Engagement: 2.45%)\n14. ✅ [ID: YFpnNixm5Vs] \"Why Flip Your Steak Every 30 seconds?\" - 0.5x avg (230,867 views | Engagement: 3.68%)\n15. ✅ [ID: eiyOkjE3l_I] \"Chef's Guide to Perfect Beef Wellington\" - 0.5x avg (422,791 views | Engagement: 2.03%)\n16. ✅ [ID: XbzBR-tKP24] \"How Chefs Cook Every Steak\" - 0.4x avg (389,714 views | Engagement: 2.54%)\n17. ✅ [ID: Acv7WrrpkKI] \"This Makes Your Steak 30% Juicier! | TESTED\" - 0.3x avg (145,861 views | Engagement: 4.72%)\n18. ✅ [ID: cFrduFR70pw] \"The Ultimate Chef Guide to Perfectly Cooked Turkey!\" - 0.2x avg (159,698 views | Engagement: 1.92%)\n19. ✅ [ID: aoqpxVjJRMQ] \"Cook a PERFECT Steak in Less Than 90 Seconds?\" - 0.1x avg (61,379 views | Engagement: 6.73%)\n20. ✅ [ID: 6--rESQNjNw] \"The EASIEST Way to Cook a $150 Steak!\" - 0.1x avg (46,444 views | Engagement: 6.34%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a steak\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "original": "Analyze these high-performing YouTube video titles about \"how to cook a steak\" and identify actionable title patterns.\n\nAnalysis Context: Thread: original - Purpose: Original search query\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: hi5mrEIJ3_w] \"How Michelin Chefs Cook Steak (From Blue to Well Done)\" - 4.1x avg (3,699,495 views | Engagement: 1.33%)\n2. ✅ [ID: gH5KiPD_wZc] \"We tried cooking a FROZEN Steak in the Air Fryer! 🥩\" - 2.5x avg (111,324 views | Engagement: 4.23%)\n3. ✅ [ID: tATVfCq8Vzg] \"We Cooked Every Steak to See if Wagyu is Overrated\" - 2.0x avg (1,750,792 views | Engagement: 1.78%)\n4. ✅ [ID: 0eUthI1kKYQ] \"Can I DRY AGE Steak in a VACUUM?\" - 1.8x avg (1,281,362 views | Engagement: 2.31%)\n5. ✅ [ID: ZjFcB1IeJuY] \"I Cooked A Whole Wagyu Cow\" - 1.3x avg (20,920,803 views | Engagement: 2.36%)\n6. ✅ [ID: drO2q_tx8Jg] \"50 Ways To Cook A Steak\" - 1.2x avg (19,072,402 views | Engagement: 1.19%)\n7. ✅ [ID: o1i-GLEUTaM] \"Cooking Fillet Steak In 3 Levels Of Difficulty\" - 1.0x avg (133,484 views | Engagement: 2.78%)\n8. ✅ [ID: s8OcZYCBaOo] \"Drinking Steak Juice After Spinning Steak at 500MPH\" - 1.0x avg (701,746 views | Engagement: 3.33%)\n9. ✅ [ID: eaDxAOZ16tM] \"how to remove rust from cast iron\" - 1.0x avg (195,207 views | Engagement: 2.02%)\n10. ✅ [ID: tUlknSSRXDI] \"How to Cook Steak on a Stainless Steel Pan!\" - 0.9x avg (41,370 views | Engagement: 5.27%)\n11. ✅ [ID: RFMb1xEl6Lw] \"POV: How to Cook Dauphinoise Potatoes Like a Chef\" - 0.7x avg (667,003 views | Engagement: 1.90%)\n12. ✅ [ID: Wfrq_DLb8wI] \"How To Make Beef Wellington\" - 0.7x avg (10,917,619 views | Engagement: 1.79%)\n13. ✅ [ID: e7XnRzXj6zw] \"Steak: Filet, NY Strip, & Flank | Basics with Babish\" - 0.6x avg (558,464 views | Engagement: 3.23%)\n14. ✅ [ID: REWe549wF7Y] \"How to Cook Fish in Paper\" - 0.5x avg (470,128 views | Engagement: 3.56%)\n15. ✅ [ID: 7Sz1BEnFDYE] \"How to Eat a Crab\" - 0.5x avg (417,449 views | Engagement: 2.47%)\n16. ✅ [ID: QiFcL9Un7B8] \"How to cook a delicious steak dinner tonight!\" - 0.5x avg (20,181 views | Engagement: 11.64%)\n17. ✅ [ID: b4_0Uoqshu8] \"How to Make Bordelaise Sauce\" - 0.4x avg (368,247 views | Engagement: 2.84%)\n18. ✅ [ID: H684QERwexQ] \"How to Light a Gas Grill SAFELY\" - 0.4x avg (142,201 views | Engagement: 0.64%)\n19. ✅ [ID: W4hi6oVe4LQ] \"Let's Make: Steak and Eggs au Poivre | Cook-Along with Babish\" - 0.3x avg (270,891 views | Engagement: 2.75%)\n20. ✅ [ID: H5Dpyokaz2I] \"Camp Fire Cookout LIVE! Let's Make a Stew\" - 0.1x avg (7,108 views | Engagement: 2.87%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a steak\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "Domain Hierarchy": "Analyze these high-performing YouTube video titles about \"how to cook a steak\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Domain Hierarchy - Purpose: Find universal patterns that work across the entire category\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: xniS7kMpW4I] \"The 5 Sauces Every Chef Needs to Learn\" - 5.1x avg (4,544,323 views | Engagement: 3.21%)\n2. ✅ [ID: _uVcEns2hKg] \"5 Sauces Every Chef Needs to Learn\" - 2.2x avg (2,016,889 views | Engagement: 3.86%)\n3. ✅ [ID: mXtKxjyfRFU] \"How to Make the Best Wings at Home | Basics with Babish\" - 1.8x avg (1,644,145 views | Engagement: 2.34%)\n4. ✅ [ID: pYA8H8KaLNg] \"Proof Resting Doesn't Keep Meat Juicy\" - 1.8x avg (864,686 views | Engagement: 3.73%)\n5. ✅ [ID: 58hC3MCVwkw] \"Pierogi | Basics with Babish\" - 1.6x avg (1,441,102 views | Engagement: 3.61%)\n6. ✅ [ID: Ap0zNHgZxfA] \"The 3 Salmon Techniques Every Chef Should Learn\" - 1.5x avg (1,330,845 views | Engagement: 1.77%)\n7. ✅ [ID: 9UX7NJLYyb4] \"Can Supersonic Heating Cook Steak?\" - 1.0x avg (769,129 views | Engagement: 6.31%)\n8. ✅ [ID: nHvfNe3jzEs] \"Ultimate Chef Guide to Cooking Roast Dinner\" - 0.9x avg (811,318 views | Engagement: 1.57%)\n9. ✅ [ID: QWJIGono9kk] \"How Chefs Save Money on Meat (3 MEATS 9 RECIPES)\" - 0.8x avg (728,959 views | Engagement: 2.23%)\n10. ✅ [ID: 4iUUx8Qtqec] \"New Steak Cooking Method with Surprising Results!\" - 0.8x avg (550,401 views | Engagement: 4.77%)\n11. ✅ [ID: 8A_i-PFRieQ] \"The 5 Skills Every Chef Needs to Learn\" - 0.8x avg (695,204 views | Engagement: 2.04%)\n12. ✅ [ID: rxWYxuhm49U] \"The 3 Breakfast Techniques Every Chef Should Learn\" - 0.8x avg (675,077 views | Engagement: 1.68%)\n13. ✅ [ID: qal3bbhiG88] \"The 4 Purees Every Chef Needs to Learn\" - 0.4x avg (342,204 views | Engagement: 4.07%)\n14. ✅ [ID: BPl_G3NRUnk] \"POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)\" - 0.3x avg (297,337 views | Engagement: 3.08%)\n15. ✅ [ID: -fbAvHY0Xrs] \"POV: Cook Restaurant Quality Mussels (How to Make Them at Home)\" - 0.2x avg (220,168 views | Engagement: 1.89%)\n16. ✅ [ID: KIEvBvs-htI] \"How a head chef would learn to cook If he could start over\" - 0.2x avg (211,459 views | Engagement: 4.16%)\n17. ✅ [ID: YikSIxDCiyM] \"Farm To Table Cooking Basics: Pasta on a Time Crunch\" - 0.2x avg (24,350 views | Engagement: 8.36%)\n18. ✅ [ID: DUg5yVx0iiY] \"Living on a homestead + cooking from scratch\" - 0.2x avg (327 views | Engagement: 7.65%)\n19. ✅ [ID: 8YnYdtL7tJY] \"How To Design The Perfect DIY Home Cook's Kitchen\" - 0.1x avg (17,427 views | Engagement: 2.53%)\n20. ✅ [ID: SYWeuAFL00Q] \"Pressure Canning chicken for years of meat storage- HOMESTEAD SKILLS\" - 0.1x avg (143 views | Engagement: 9.09%)\n\nYour task:\n1. Identify 3-5 specific, actionable title patterns that are common among these high performers\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify which video IDs from the list demonstrate that pattern\n4. Create a template that can be applied to new videos about \"how to cook a steak\"\n\nReturn a JSON array with this structure:\n[\n  {\n    \"pattern\": \"Short descriptive name\",\n    \"explanation\": \"Why this pattern works\",\n    \"template\": \"Template with [VARIABLES] that can be filled in\",\n    \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\"],\n    \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\"],\n    \"confidence\": 0.8,\n    \"performance_multiplier\": 3.5\n  }\n]\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant"
+  },
+  "discoveredPatterns": [
+    {
+      "pattern": "Common Mistakes Pattern",
+      "explanation": "Frames content around mistakes/errors, creating urgency to learn and avoid pitfalls. High engagement as viewers want to prevent costly errors.",
+      "template": "[NUMBER] Common [MISTAKES/WAYS] to Screw Up [ITEM]",
+      "examples": [
+        "4 Common Mistakes That Ruin a Flat Table Top",
+        "Every Way to Screw Up Steak | Botched By Babish",
+        "Every Way To Screw Up Burgers | Botched by Babish"
+      ],
+      "video_ids": [
+        "OSZc1n7ssbA",
+        "tjQWzOFFxKU",
+        "uYy7QK5Ja4U"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 5.3,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Expert Authority Angle",
+      "explanation": "Leveraging prestigious culinary expertise (e.g., Michelin) creates trust and curiosity about professional techniques",
+      "template": "How [EXPERT_TYPE] Chefs Cook [FOOD_ITEM] ([UNIQUE_ANGLE])",
+      "examples": [
+        "How Michelin Chefs Cook Steak (From Blue to Well Done)"
+      ],
+      "video_ids": [
+        "hi5mrEIJ3_w"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 4.1,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Numerical Authority Pattern",
+      "explanation": "Uses specific numbers combined with expert positioning to establish credibility and promise comprehensive coverage",
+      "template": "[NUMBER] [Essential/Must-Have] [ITEM] [Every/All] [EXPERT] Needs",
+      "examples": [
+        "8 Essential Welding Tools (All For Under $50)",
+        "5 Must-Have Metalworking And Welding Tools For Beginners",
+        "The 5 Steak Sauces Every Chef Needs to Learn"
+      ],
+      "video_ids": [
+        "4AN4Ujh3fHk",
+        "2JH2f4ytqEI",
+        "DvyEekmOkGw"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 2.4,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Experimental Challenge",
+      "explanation": "Titles that pose unusual cooking methods or experiments create curiosity and debate",
+      "template": "[QUESTION_WORD] [SUBJECT] [UNUSUAL_METHOD] [FOOD_ITEM] in [DEVICE/METHOD]?",
+      "examples": [
+        "Can I DRY AGE Steak in a VACUUM?",
+        "We tried cooking a FROZEN Steak in the Air Fryer! 🥩"
+      ],
+      "video_ids": [
+        "0eUthI1kKYQ",
+        "gH5KiPD_wZc"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 2.15,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "X Things Every Chef Needs",
+      "explanation": "Combines authority ('chef'), specific numbers, and universal need ('needs to learn') to create both aspiration and actionable value",
+      "template": "The [X] [Things] Every Chef Needs to Learn",
+      "examples": [
+        "The 5 Sauces Every Chef Needs to Learn",
+        "The 4 Purees Every Chef Needs to Learn",
+        "The 5 Skills Every Chef Needs to Learn"
+      ],
+      "video_ids": [
+        "xniS7kMpW4I",
+        "_uVcEns2hKg",
+        "qal3bbhiG88",
+        "8A_i-PFRieQ"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 2.1,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Quantified Improvement Pattern",
+      "explanation": "Uses specific percentages or metrics to promise measurable improvements, creating concrete value proposition",
+      "template": "This Makes Your [FOOD] [NUMBER]% [BETTER]! | TESTED",
+      "examples": [
+        "This Makes Your Steak 30% Juicier! | TESTED",
+        "Why You Should Temper Steaks | TESTED"
+      ],
+      "video_ids": [
+        "Acv7WrrpkKI",
+        "DmuwqqHjgT4"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 1.8,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "Comprehensive Comparison",
+      "explanation": "Videos that promise to test or compare multiple variations appeal to viewers seeking definitive answers",
+      "template": "We [TESTED/COOKED] Every [FOOD_ITEM] to [ANSWER_QUESTION]",
+      "examples": [
+        "We Cooked Every Steak to See if Wagyu is Overrated",
+        "50 Ways To Cook A Steak"
+      ],
+      "video_ids": [
+        "tATVfCq8Vzg",
+        "drO2q_tx8Jg"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 1.6,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Extreme Scale/Quantity",
+      "explanation": "Titles featuring unusual quantities or extreme versions of familiar foods create intrigue",
+      "template": "I Cooked A [EXTREME_DESCRIPTOR] [FOOD_ITEM]",
+      "examples": [
+        "I Cooked A Whole Wagyu Cow"
+      ],
+      "video_ids": [
+        "ZjFcB1IeJuY"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 1.3,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "Surprising Results/Proof",
+      "explanation": "Creates curiosity by challenging conventional wisdom or promising unexpected outcomes",
+      "template": "[Proof/New] [Topic] [Has Surprising Results/Doesn't Work]",
+      "examples": [
+        "Proof Resting Doesn't Keep Meat Juicy",
+        "New Steak Cooking Method with Surprising Results!"
+      ],
+      "video_ids": [
+        "pYA8H8KaLNg",
+        "4iUUx8Qtqec"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 1.3,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Chef Technique Collection",
+      "explanation": "Positions content as professional-level techniques, making viewers feel they're getting insider knowledge",
+      "template": "The [X] [Food Type] Techniques Every Chef Should Learn",
+      "examples": [
+        "The 3 Salmon Techniques Every Chef Should Learn",
+        "The 3 Breakfast Techniques Every Chef Should Learn"
+      ],
+      "video_ids": [
+        "Ap0zNHgZxfA",
+        "rxWYxuhm49U"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 1.15,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    },
+    {
+      "pattern": "Expert Method Pattern",
+      "explanation": "Leverages professional authority by showing how experts approach the task, suggesting insider knowledge",
+      "template": "How [EXPERTS] Cook Every [FOOD] ([DETAILS])",
+      "examples": [
+        "How Michelin Chefs Cook Every Steak (Rump to Ribeye)",
+        "How Chefs Cook Every Steak"
+      ],
+      "video_ids": [
+        "kAtSceDRMIw",
+        "XbzBR-tKP24"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 0.5,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    },
+    {
+      "pattern": "POV Restaurant Quality",
+      "explanation": "Combines first-person perspective with professional standards, promising restaurant-level results at home",
+      "template": "POV: [Cooking/Make] Restaurant Quality [Dish] (How To Make at Home)",
+      "examples": [
+        "POV: Cooking Restaurant Quality Chicken Veloute (How To Make at Home)",
+        "POV: Cook Restaurant Quality Mussels (How to Make Them at Home)"
+      ],
+      "video_ids": [
+        "BPl_G3NRUnk",
+        "-fbAvHY0Xrs"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 0.25,
+      "source_thread": "Domain Hierarchy",
+      "thread_purpose": "Find universal patterns that work across the entire category"
+    }
+  ],
+  "threadAnalysis": [
+    {
+      "thread": "Direct Variations",
+      "videosAnalyzed": 20,
+      "patternsFound": 4
+    },
+    {
+      "thread": "original",
+      "videosAnalyzed": 20,
+      "patternsFound": 4
+    },
+    {
+      "thread": "Domain Hierarchy",
+      "videosAnalyzed": 20,
+      "patternsFound": 4
+    }
+  ],
+  "processingSteps": [
+    {
+      "step": "Multi-Threaded Query Expansion",
+      "duration_ms": 2449,
+      "details": {
+        "originalQuery": "how to cook a steak",
+        "threads": [
+          {
+            "name": "Direct Variations",
+            "purpose": "Find patterns specific to this exact topic",
+            "queryCount": 6,
+            "queries": [
+              "common mistakes when cooking a steak",
+              "best techniques for achieving a perfectly cooked steak",
+              "how to cook a steak in under 10 minutes",
+              "steak cooking methods: grilling vs. pan-searing",
+              "essential tools for cooking the perfect steak",
+              "how to season a steak for maximum flavor"
+            ]
+          },
+          {
+            "name": "Format Exploration",
+            "purpose": "Discover patterns that work across different content formats",
+            "queryCount": 0,
+            "queries": []
+          },
+          {
+            "name": "Domain Hierarchy",
+            "purpose": "Find universal patterns that work across the entire category",
+            "queryCount": 6,
+            "queries": [
+              "how to cook a steak medium rare",
+              "best methods for cooking steak",
+              "cooking techniques for meats",
+              "culinary skills for home cooking",
+              "trends in culinary arts",
+              "food preparation techniques in gastronomy"
+            ]
+          }
+        ],
+        "totalQueries": 13
+      }
+    },
+    {
+      "step": "Multi-Query Embedding",
+      "duration_ms": 2289,
+      "details": {
+        "embeddingModel": "text-embedding-3-small",
+        "queriesEmbedded": 13,
+        "totalTokens": 90,
+        "totalCost": 0.0000018000000000000001
+      }
+    },
+    {
+      "step": "Multi-Query Pinecone Search",
+      "duration_ms": 1405,
+      "details": {
+        "threshold": 0.2,
+        "videosPerQuery": 300,
+        "totalQueriesSearched": 13,
+        "totalResultsBeforeDedupe": 1021,
+        "uniqueVideosFound": 313,
+        "scoreDistribution": {
+          "0.8": 1,
+          "0.7": 2,
+          "0.6": 12,
+          "0.5": 59,
+          "0.4": 192,
+          "0.3": 47
+        }
+      }
+    },
+    {
+      "step": "Fetch Video Details",
+      "duration_ms": 114,
+      "details": {
+        "videosFetched": 313,
+        "totalVideosProcessed": 313
+      }
+    },
+    {
+      "step": "Multi-Threaded Claude Pattern Discovery",
+      "duration_ms": 16142,
+      "details": {
+        "threadsAnalyzed": 3,
+        "threadBreakdown": [
+          {
+            "thread": "Direct Variations",
+            "videosAnalyzed": 20,
+            "patternsFound": 4
+          },
+          {
+            "thread": "original",
+            "videosAnalyzed": 20,
+            "patternsFound": 4
+          },
+          {
+            "thread": "Domain Hierarchy",
+            "videosAnalyzed": 20,
+            "patternsFound": 4
+          }
+        ],
+        "totalVideosFound": 45,
+        "performanceDistribution": {
+          "superstar": 1,
+          "strong": 1,
+          "above_avg": 6,
+          "normal": 37
+        },
+        "totalPatternsFound": 12,
+        "inputTokens": 5095,
+        "outputTokens": 2074,
+        "cost": 0.046395
+      }
+    },
+    {
+      "step": "Title Generation",
+      "duration_ms": 1,
+      "details": {
+        "titlesGenerated": 12
+      }
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "tokens": 90,
+      "cost": 0.0000018000000000000001
+    },
+    "claude": {
+      "inputTokens": 5095,
+      "outputTokens": 2074,
+      "inputCost": 0.015285,
+      "outputCost": 0.03111,
+      "totalCost": 0.046395
+    },
+    "totalCost": 0.0463968
+  },
+  "totalProcessingTime": 22401,
+  "analysis": {
+    "totalVideos": 313,
+    "relevantVideos": 310,
+    "relevancePercentage": 99.04153354632588,
+    "topChannels": [
+      {
+        "channel": "Fallow",
+        "count": 75
+      },
+      {
+        "channel": "Babish Culinary Universe",
+        "count": 35
+      },
+      {
+        "channel": "Nick DiGiovanni",
+        "count": 21
+      },
+      {
+        "channel": "Joshua Weissman",
+        "count": 20
+      },
+      {
+        "channel": "Chris Young",
+        "count": 13
+      },
+      {
+        "channel": "Nate From the Internet",
+        "count": 11
+      },
+      {
+        "channel": "OrganizedLittleLady",
+        "count": 10
+      },
+      {
+        "channel": "Totally Handy",
+        "count": 9
+      },
+      {
+        "channel": "Alec Steele",
+        "count": 7
+      },
+      {
+        "channel": "Santa Cruz Medicinals",
+        "count": 6
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 0.9785287511330267,
+      "highPerformers": 16,
+      "superStars": 4
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.4597780989137382,
+      "highSimilarity": 3,
+      "lowSimilarity": 239
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "every",
+          "count": 39,
+          "percentage": 12.460063897763577
+        },
+        {
+          "topic": "cook",
+          "count": 38,
+          "percentage": 12.140575079872203
+        },
+        {
+          "topic": "cooking",
+          "count": 33,
+          "percentage": 10.543130990415335
+        },
+        {
+          "topic": "chef",
+          "count": 33,
+          "percentage": 10.543130990415335
+        },
+        {
+          "topic": "make",
+          "count": 31,
+          "percentage": 9.904153354632587
+        },
+        {
+          "topic": "steak",
+          "count": 29,
+          "percentage": 9.26517571884984
+        },
+        {
+          "topic": "babish",
+          "count": 28,
+          "percentage": 8.945686900958465
+        },
+        {
+          "topic": "perfect",
+          "count": 20,
+          "percentage": 6.3897763578274756
+        },
+        {
+          "topic": "like",
+          "count": 19,
+          "percentage": 6.070287539936102
+        },
+        {
+          "topic": "chicken",
+          "count": 18,
+          "percentage": 5.7507987220447285
+        },
+        {
+          "topic": "basics",
+          "count": 15,
+          "percentage": 4.792332268370607
+        },
+        {
+          "topic": "pov:",
+          "count": 15,
+          "percentage": 4.792332268370607
+        },
+        {
+          "topic": "mistakes",
+          "count": 15,
+          "percentage": 4.792332268370607
+        },
+        {
+          "topic": "making",
+          "count": 14,
+          "percentage": 4.472843450479233
+        },
+        {
+          "topic": "tools",
+          "count": 12,
+          "percentage": 3.8338658146964857
+        },
+        {
+          "topic": "learn",
+          "count": 11,
+          "percentage": 3.5143769968051117
+        },
+        {
+          "topic": "guide",
+          "count": 11,
+          "percentage": 3.5143769968051117
+        },
+        {
+          "topic": "easy",
+          "count": 11,
+          "percentage": 3.5143769968051117
+        },
+        {
+          "topic": "ultimate",
+          "count": 10,
+          "percentage": 3.1948881789137378
+        },
+        {
+          "topic": "cooked",
+          "count": 10,
+          "percentage": 3.1948881789137378
+        }
+      ],
+      "conceptWordsFound": [
+        "cook",
+        "steak"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "every",
+          "count": 39,
+          "percentage": 12.460063897763577
+        },
+        {
+          "topic": "cooking",
+          "count": 33,
+          "percentage": 10.543130990415335
+        },
+        {
+          "topic": "chef",
+          "count": 33,
+          "percentage": 10.543130990415335
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 3,
+      "threadStats": [
+        {
+          "thread": "Direct Variations",
+          "purpose": "Find patterns specific to this exact topic",
+          "videoCount": 164,
+          "queryCount": 6,
+          "avgPerformance": 1.0838315448836626,
+          "avgSimilarity": 0.4490903576768296,
+          "superstarCount": 4,
+          "strongCount": 5,
+          "coverage": 52.39616613418531,
+          "qualityScore": 0.48673829615323483
+        },
+        {
+          "thread": "Domain Hierarchy",
+          "purpose": "Find universal patterns that work across the entire category",
+          "videoCount": 128,
+          "queryCount": 6,
+          "avgPerformance": 0.8307059687171923,
+          "avgSimilarity": 0.46439032862500007,
+          "superstarCount": 0,
+          "strongCount": 6,
+          "coverage": 40.894568690095845,
+          "qualityScore": 0.3857718178033259
+        },
+        {
+          "thread": "original",
+          "purpose": "Original search query",
+          "videoCount": 21,
+          "queryCount": 1,
+          "avgPerformance": 1.0571791308531526,
+          "avgSimilarity": 0.5151316303333333,
+          "superstarCount": 0,
+          "strongCount": 1,
+          "coverage": 6.7092651757188495,
+          "qualityScore": 0.5445864092307608
+        }
+      ],
+      "bestPerformingThread": "original",
+      "mostProductiveThread": "Direct Variations"
+    },
+    "potentialIssues": []
+  }
+}

@@ -274,27 +274,6 @@ export default function TitleGeneratorPage() {
               Generate high-performing YouTube titles based on patterns from 100K+ successful videos
             </p>
             
-            {/* Version Links - Smaller */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Link href="/title-generator/version1-minimal">
-                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
-                  <Palette className="h-3 w-3 mr-1" />
-                  Minimal
-                </Button>
-              </Link>
-              <Link href="/title-generator/version2-dashboard">
-                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
-                  <Layout className="h-3 w-3 mr-1" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Link href="/title-generator/version3-cards">
-                <Button variant="ghost" size="sm" className="text-xs text-gray-400 hover:text-gray-100">
-                  <Layers className="h-3 w-3 mr-1" />
-                  Cards
-                </Button>
-              </Link>
-            </div>
           </div>
         </div>
       </div>
@@ -365,16 +344,6 @@ export default function TitleGeneratorPage() {
           concept={concept}
         />
 
-        {/* Search Stats - Show during loading and after results */}
-        {(isLoading || results) && (
-          <SearchStats 
-            isActive={isLoading || !!results}
-            videosFound={searchStats.videosFound}
-            patternsFound={searchStats.patternsFound}
-            topPerformance={searchStats.topPerformance}
-            channelsRepresented={searchStats.channelsRepresented}
-          />
-        )}
 
         {/* Results Shimmer */}
         {isLoading && (
@@ -552,7 +521,7 @@ export default function TitleGeneratorPage() {
                             <div>
                               <h4 className="text-xs font-medium text-gray-400 mb-2">Videos Using This Pattern:</h4>
                               <div className="space-y-2">
-                                {patternVideos[index].slice(0, 3).map((video) => (
+                                {patternVideos[index].map((video) => (
                                   <div key={video.id} className="flex items-center gap-3 p-2 bg-gray-750 rounded hover:bg-gray-700 transition-colors">
                                     {video.thumbnail_url && (
                                       <img 
@@ -569,6 +538,18 @@ export default function TitleGeneratorPage() {
                                         <span>{video.channel_name}</span>
                                         <span>•</span>
                                         <span>{video.view_count.toLocaleString()} views</span>
+                                        {video.performance_ratio && (
+                                          <>
+                                            <span>•</span>
+                                            <span className="text-green-400">{video.performance_ratio.toFixed(1)}x</span>
+                                          </>
+                                        )}
+                                        {video.published_at && (
+                                          <>
+                                            <span>•</span>
+                                            <span>{new Date(video.published_at).toLocaleDateString()}</span>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                     <a 

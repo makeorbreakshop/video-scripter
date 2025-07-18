@@ -738,15 +738,11 @@ async function expandConceptMultiThreaded(concept: string): Promise<ThreadExpans
   // Thread 1: Direct variations (always run)
   threads.push(expandDirectVariations(concept, domainContext));
   
-  // Thread 2: Format exploration (run if beneficial)
-  if (queryType.hasFormat || queryType.type === 'product_review' || queryType.type === 'technique') {
-    threads.push(expandFormatVariations(concept, domainContext));
-  }
+  // Thread 2: Format exploration (always run for pattern diversity)
+  threads.push(expandFormatVariations(concept, domainContext));
   
-  // Thread 3: Domain hierarchy (run for specific queries)
-  if (queryType.specificity !== 'low') {
-    threads.push(expandDomainHierarchy(concept, domainContext));
-  }
+  // Thread 3: Domain hierarchy (always run for universal patterns)
+  threads.push(expandDomainHierarchy(concept, domainContext));
   
   // Execute all threads in parallel
   const results = await Promise.all(threads);

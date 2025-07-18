@@ -1,0 +1,2000 @@
+{
+  "timestamp": "2025-07-17T18:38:55.212Z",
+  "concept": "test",
+  "expandedQueries": [
+    "assessment strategies for effective test preparation in education",
+    "evaluation methods for standardized tests in education",
+    "examination techniques to improve learning outcomes in education",
+    "quiz formats that enhance student engagement in educational assessments",
+    "standardized test performance analysis and its impact on education"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadId": "thread_1_direct",
+      "threadName": "Direct Variations",
+      "purpose": "Find patterns specific to this exact topic",
+      "queries": [
+        "assessment strategies for effective test preparation in education",
+        "evaluation methods for standardized tests in education",
+        "examination techniques to improve learning outcomes in education",
+        "quiz formats that enhance student engagement in educational assessments",
+        "standardized test performance analysis and its impact on education"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "zEA2ENkTAhM",
+      "title": "Test Stream",
+      "channelName": "Make or Break Shop",
+      "similarityScore": 0.555878162,
+      "performanceRatio": -0.999970071076565,
+      "viewCount": 2,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "USkDbcGPKP0",
+      "title": "A Brain Hack (of sorts) for Exams and Tests - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.54943651,
+      "performanceRatio": 0.424481700792176,
+      "viewCount": 280131,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Q1y8c_MZYvE",
+      "title": "5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.548206031,
+      "performanceRatio": 7.11536861881124,
+      "viewCount": 4695692,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OY6Z8gNKp-w",
+      "title": "10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.515288293,
+      "performanceRatio": 0.485072371899179,
+      "viewCount": 320117,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Lt54CX9DmS4",
+      "title": "How to Study for Exams - An Evidence-Based Masterclass",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.511587322,
+      "performanceRatio": 5.17211893698741,
+      "viewCount": 2761249,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jYWfiP7w5w0",
+      "title": "10 Study Tips for Earning an A on Your Next Exam - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.502785206,
+      "performanceRatio": 1.41898333068502,
+      "viewCount": 936439,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "fHfHSq7PVDU",
+      "title": "How to Beat Test Anxiety and Take on Exams Without Stress",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.50148195,
+      "performanceRatio": 1.02424236669615,
+      "viewCount": 675935,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8XKzox5ga8A",
+      "title": "How to answer ANY question on a test",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.497695,
+      "performanceRatio": 1,
+      "viewCount": 97422,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jeht_P2GBwI",
+      "title": "5 Rules for Answering ESSAY Questions on Exams",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.496988356,
+      "performanceRatio": 0.997906502547705,
+      "viewCount": 658555,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "qWUUP5p0Auo",
+      "title": "Exam Tips: How to Study for Finals - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.493820667,
+      "performanceRatio": 0.619855021167066,
+      "viewCount": 409065,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "zjX2iLeC8Hg",
+      "title": "Test Barrel Proof Testing",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.493081361,
+      "performanceRatio": 0.709351864356837,
+      "viewCount": 6256,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "bjwUfRTnKEA",
+      "title": "Should You Change Answers on Multiple-Choice Exams? - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.484731555,
+      "performanceRatio": 0.0835049943321347,
+      "viewCount": 55108,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JL0pqJeE4_w",
+      "title": "5 Active Reading Strategies for Textbook Assignments - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.477779388,
+      "performanceRatio": 1.44926502856433,
+      "viewCount": 956423,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "hCSHuvDejGA",
+      "title": "how to learn ANYTHING faster than anyone",
+      "channelName": "Older Brother",
+      "similarityScore": 0.477677703,
+      "performanceRatio": 1,
+      "viewCount": 1255303,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YCWTiDHegAI",
+      "title": "10 Steps to Earning Awesome Grades (While Studying Less)",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.471417606,
+      "performanceRatio": 0.0999292999423184,
+      "viewCount": 65947,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "YitcDk-Wwiw",
+      "title": "How to Make Studying Fun (or at Least Less Boring)",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.470349729,
+      "performanceRatio": 1.15442911976368,
+      "viewCount": 761850,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "5ad6grll-ak",
+      "title": "How to Study Effectively: 8 Advanced Tips - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.468023509,
+      "performanceRatio": 4.73959031205789,
+      "viewCount": 3127829,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "OAC6qqOI3Nk",
+      "title": "BACK TO SCHOOL ORGANIZATION HACKS AND IDEAS // BACK TO SCHOOL PREPARATION",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.467906266,
+      "performanceRatio": 0.671157054407664,
+      "viewCount": 66225,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "z2ZJiIt4pmo",
+      "title": "How To Remember Everything You Learn",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.465296119,
+      "performanceRatio": 1.56102988209174,
+      "viewCount": 833390,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "v1veRGRvxQg",
+      "title": "How To SUCCEED As a STUDENT",
+      "channelName": "Nicolas Berndt",
+      "similarityScore": 0.46259737,
+      "performanceRatio": 0.128992034707896,
+      "viewCount": 46664,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jnku-xdku8U",
+      "title": "Study with Me - A 1 Hour, Real-Time Study Session for 2019",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.460906982,
+      "performanceRatio": 0.433470443377249,
+      "viewCount": 286063,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "VtywJHjemks",
+      "title": "Testing Ultralumen!",
+      "channelName": "gordontarpley",
+      "similarityScore": 0.460522532,
+      "performanceRatio": 0.468246817274392,
+      "viewCount": 1881,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "riv1sBG1RUo",
+      "title": "Google VEO 3 Tutorial: How to Create ALL Viral Mindblowing Formats (30 Prompts Included)",
+      "channelName": "CyberJungle",
+      "similarityScore": 0.458911717,
+      "performanceRatio": 1,
+      "viewCount": 58435,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "PODMAIHiZvU",
+      "title": "Launch",
+      "channelName": "Rex Krueger",
+      "similarityScore": 0.457612395,
+      "performanceRatio": 0.230255040165859,
+      "viewCount": 41890,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "LRz9tBw6DWE",
+      "title": "Overcoming Learning Disabilities and Learning to LEARN",
+      "channelName": "Anne of All Trades",
+      "similarityScore": 0.454412371,
+      "performanceRatio": 0.371128142679134,
+      "viewCount": 55624,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "eVajQPuRmk8",
+      "title": "The Most Powerful Way to Remember What You Study",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.450413108,
+      "performanceRatio": 5.81162969617835,
+      "viewCount": 3835307,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "q3V2FVSTEos",
+      "title": "judge simulator",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.44974494,
+      "performanceRatio": 0,
+      "viewCount": 375263,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "B8V5EfJLX9U",
+      "title": "How to Double Your Learning Speed – The LPC Method",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.449545473,
+      "performanceRatio": 0.403247842086068,
+      "viewCount": 266118,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "agtoHvcpcP4",
+      "title": "Sprint - Test Flight 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.44835791,
+      "performanceRatio": 0.530851062599483,
+      "viewCount": 131756,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UDyY8_Kt3xY",
+      "title": "How to SPEED LEARN like a Harvard student ('Easy mode')",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.447578222,
+      "performanceRatio": 1,
+      "viewCount": 46475,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "UEP6KqeMwvk",
+      "title": "How To Practice Efficiently",
+      "channelName": "Charles Cornell",
+      "similarityScore": 0.447210193,
+      "performanceRatio": 0.302039773529311,
+      "viewCount": 166648,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "GOWC5fzv70k",
+      "title": "Sprint - Test Flight 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.447131544,
+      "performanceRatio": 0.342976620076836,
+      "viewCount": 85126,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "XwASPWXh0us",
+      "title": "Sprint - Test Flight 4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.445915729,
+      "performanceRatio": 0.345885591715295,
+      "viewCount": 85848,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "kmDMrxUSXKY",
+      "title": "5 Ways to Read Faster That ACTUALLY Work - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.445844918,
+      "performanceRatio": 3.53293193075977,
+      "viewCount": 2331511,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "UL7fZS304Yw",
+      "title": "Ground Testing - Build Signal R2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.444742084,
+      "performanceRatio": 0.123127663810682,
+      "viewCount": 30560,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "mzCEJVtED0U",
+      "title": "How to Study Effectively with Flash Cards - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.442832,
+      "performanceRatio": 3.15024970134475,
+      "viewCount": 2078965,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "At0zKZ0_u2o",
+      "title": "ADIDAS CONEXT 19 | PLAY TEST",
+      "channelName": "DavidMC",
+      "similarityScore": 0.441520303,
+      "performanceRatio": 0,
+      "viewCount": 21353,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "UjU8ukIOAdA",
+      "title": "Accelerated Japanese Learning Challenge: Preview! - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.441170841,
+      "performanceRatio": 0.0277678199378741,
+      "viewCount": 18325,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "LfuK8rHzFMY",
+      "title": "Scout V 0.2 - Dynamic Test 2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.440404713,
+      "performanceRatio": 0.132531458553291,
+      "viewCount": 32894,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "HsWYxfVzX_U",
+      "title": "Online Classes: A Survival Guide",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.440351069,
+      "performanceRatio": 1.00713466207958,
+      "viewCount": 664645,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "ka1Pqk2o3tM",
+      "title": "The ChatGPT Playbook of EPIC Prompts",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.440238208,
+      "performanceRatio": 4.52648488101028,
+      "viewCount": 652110,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xznKfiBmVZo",
+      "title": "Quiz Game Buttons // How-To | I Like To Make Stuff",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.439666033,
+      "performanceRatio": 0.805261798395686,
+      "viewCount": 455966,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "hgxY4o1n3w4",
+      "title": "Have there been attempts to quantify the benefits associated with individualizing training?",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.439138651,
+      "performanceRatio": 0.202539989389608,
+      "viewCount": 2507,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "standardized test performance analysis and its impact on education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "g0VFwuKr4bQ",
+      "title": "Scout V 0.1 - Dynamic Test 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.436699599,
+      "performanceRatio": 0.258946824381954,
+      "viewCount": 64270,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "CUbeQ7Q3s2Q",
+      "title": "How to Make a Final Exam Study Schedule - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.435395598,
+      "performanceRatio": 0.736393492969632,
+      "viewCount": 485973,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "mb9LuI5K7KU",
+      "title": "Scout V 0.3 - Dynamic Test 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.434010744,
+      "performanceRatio": 0.118155820317803,
+      "viewCount": 29326,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "EgD5pqzNxO0",
+      "title": "Q&A Part 8 - Out of the Box",
+      "channelName": "Ronnie & Barty",
+      "similarityScore": 0.43374303,
+      "performanceRatio": 0.201237413738871,
+      "viewCount": 44426,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8tkMoZexLFg",
+      "title": "Echo - Drop Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.433365226,
+      "performanceRatio": 0.135106019324725,
+      "viewCount": 33533,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "EA-CmUvIsjg",
+      "title": "WW Thread Tap - Launch and Testing",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.432612598,
+      "performanceRatio": 0.300495374032861,
+      "viewCount": 29268,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "CM0TskDKoew",
+      "title": "Echo - Drop Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.432489932,
+      "performanceRatio": 0.295353289375192,
+      "viewCount": 73306,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "S2PQK63fvHA",
+      "title": "Signal R2 - User Error Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.432346582,
+      "performanceRatio": 0.0451897865608838,
+      "viewCount": 11216,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "fEjCfOgq9bc",
+      "title": "college",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.430655897,
+      "performanceRatio": 0.94957577537596,
+      "viewCount": 3168215,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "G0sjAMCEVwg",
+      "title": "Q&A Experiment with Matt Cremona, Jay Bates & Myself",
+      "channelName": "Nick Ferry",
+      "similarityScore": 0.42989102,
+      "performanceRatio": 0.0528027185789058,
+      "viewCount": 5709,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8_hJ48LCXWs",
+      "title": "Echo - Landing Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.428636551,
+      "performanceRatio": 0.632983364626217,
+      "viewCount": 157105,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "0EyxipDhMXg",
+      "title": "Live RCS Roll Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.427141637,
+      "performanceRatio": 0.0941427026374475,
+      "viewCount": 23366,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "_f-qkGJBPts",
+      "title": "How to Learn Faster with the Feynman Technique (Example Included)",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.426702619,
+      "performanceRatio": 10.8877099198894,
+      "viewCount": 7185198,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "TMX5BcHI51k",
+      "title": "Q&A Experiment with Matt Cremona & Nick Ferry",
+      "channelName": "Jay Bates",
+      "similarityScore": 0.426271707,
+      "performanceRatio": 0.100819428731691,
+      "viewCount": 18243,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "a0ns1dTwJNs",
+      "title": "Tips and Tricks to increase your professional level!",
+      "channelName": "WillWood - Diy & woodworking",
+      "similarityScore": 0.425992548,
+      "performanceRatio": 0.279730149280641,
+      "viewCount": 98240,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "8zaKVFC9Eu4",
+      "title": "How to Study for Exams with Flashcards (Anki Masterclass)",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.424727201,
+      "performanceRatio": 1.19775360277171,
+      "viewCount": 639447,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "yx5zLykjKy8",
+      "title": "Echo - Landing Test #4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.424084,
+      "performanceRatio": 0.982579708251514,
+      "viewCount": 243874,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "WKpqoOe8lws",
+      "title": "Echo - Landing Test #6",
+      "channelName": "BPS.space",
+      "similarityScore": 0.423172534,
+      "performanceRatio": 1.23971749071426,
+      "viewCount": 307695,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Xw8KuGD1fJ4",
+      "title": "How to Remember More of What You Read",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.422676533,
+      "performanceRatio": 1.23008487495376,
+      "viewCount": 811778,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "lXy-x6lkQvQ",
+      "title": "Echo - Landing Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.422644943,
+      "performanceRatio": 0.693717212933881,
+      "viewCount": 172179,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "7Qebh2vf888",
+      "title": "Better Tensile Testing Grips | Tensile Tester Part 2",
+      "channelName": "Clough42",
+      "similarityScore": 0.422613531,
+      "performanceRatio": 0.348852009157483,
+      "viewCount": 26960,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "SxsW-XZ9cQw",
+      "title": "TESTING SEGWAY ELECTRIC SHOES",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.422565609,
+      "performanceRatio": 2.96597549151333,
+      "viewCount": 9895838,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "fKqFneT4sg4",
+      "title": "How to figure out what will be on the exam",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.421639591,
+      "performanceRatio": 1,
+      "viewCount": 39086,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "S4HfGVRU_xY",
+      "title": "Echo - Landing Test #5",
+      "channelName": "BPS.space",
+      "similarityScore": 0.421486616,
+      "performanceRatio": 0.760083668375293,
+      "viewCount": 188651,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "WK7dv0RKNGQ",
+      "title": "Invention Ideas for Students",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.421143442,
+      "performanceRatio": 0.206351184286147,
+      "viewCount": 18106,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JuYwsNO5XyY",
+      "title": "8 Habits of Highly Successful Students",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.419618815,
+      "performanceRatio": 3.43067513442321,
+      "viewCount": 2264028,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "r7YG6NkgxDA",
+      "title": "Only Idiots Use These Study Methods (Backed by Science)",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.419442207,
+      "performanceRatio": 1,
+      "viewCount": 3617,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "52uJRJ6TuXA",
+      "title": "Discussing Design for Test with @BrownieBites-EE  | Maker Chat Ep.03",
+      "channelName": "PCBWay",
+      "similarityScore": 0.418912,
+      "performanceRatio": 0.000281,
+      "viewCount": 281,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "AffuwyJZTQQ",
+      "title": "How to Take Notes in Class: The 5 Best Methods - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.418891132,
+      "performanceRatio": 3.63532055794679,
+      "viewCount": 2399081,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "h3WGLvYlzb8",
+      "title": "Echo - Landing Test #3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.418747604,
+      "performanceRatio": 0.504384255545414,
+      "viewCount": 125187,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "NsjrTfA_ysU",
+      "title": "Live RCS Ground Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.418397,
+      "performanceRatio": 0.0913626604898895,
+      "viewCount": 22676,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "d_v34uZXsAU",
+      "title": "ULTIMATE Back-to-School Prep: Closet Cleanouts, Outfit Ideas, Teacher Gifts, Meal Plans & More!",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.416248471,
+      "performanceRatio": 0.72511311567858,
+      "viewCount": 71549,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "FWAP4m0-zt8",
+      "title": "Kling 2.0 Tutorial - Best Video Generator of 2025! (Easy Prompts)",
+      "channelName": "AI Andy",
+      "similarityScore": 0.4162049,
+      "performanceRatio": 1,
+      "viewCount": 10605,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "Kzm-tz357Hg",
+      "title": "BACK TO SCHOOL PREP 2024 | CLEAN, ORGANIZE & PREP WITH ME!",
+      "channelName": "Amy Darley",
+      "similarityScore": 0.416190892,
+      "performanceRatio": 0.315446349195817,
+      "viewCount": 31126,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "JiRHgYVFF1k",
+      "title": "Best vise liner testing",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.415702969,
+      "performanceRatio": 0.199745028762106,
+      "viewCount": 19455,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "2f7_aiK9JI0",
+      "title": "TORTURE TESTING KUKRI FROM KNIVES BY HAND",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.415067881,
+      "performanceRatio": 0.100037230671191,
+      "viewCount": 2439,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "C3H4LKmcw1M",
+      "title": "Test Your Prompts with Every ChatBot (for Free)",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.414937854,
+      "performanceRatio": 0.277832089443985,
+      "viewCount": 40026,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "tU8F5ejiaFA",
+      "title": "How to actually OUTSMART anyone in class (the easy way)",
+      "channelName": "The Angry Explainer",
+      "similarityScore": 0.414696127,
+      "performanceRatio": 1,
+      "viewCount": 47879,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "RoIBOS1b9nY",
+      "title": "Testing $0 Nike Football Boots | Are They Playable?",
+      "channelName": "DavidMC",
+      "similarityScore": 0.414530784,
+      "performanceRatio": 0,
+      "viewCount": 5425,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "CSTxR4w9XPg",
+      "title": "Can you teach Creativity & Interesting Tools (FT26)",
+      "channelName": "Nick Ferry",
+      "similarityScore": 0.41340366,
+      "performanceRatio": 0.0628379173279184,
+      "viewCount": 6794,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "FbD8n4J_MuM",
+      "title": "How to Learn Any Skill Twice as Fast",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.413183838,
+      "performanceRatio": 0.352947553800243,
+      "viewCount": 232923,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "743suYvYdSQ",
+      "title": "I Tested Limited Edition Food Products",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.412762731,
+      "performanceRatio": 0.776116066124373,
+      "viewCount": 5327115,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "J2ACQsmkPJs",
+      "title": "Sprint - Test Flight 2 + Q&A",
+      "channelName": "BPS.space",
+      "similarityScore": 0.412745118,
+      "performanceRatio": 0.453356380474658,
+      "viewCount": 112522,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "9EMoea_ReUA",
+      "title": "Echo - Test Vehicle 2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.412167668,
+      "performanceRatio": 0.0806695708382681,
+      "viewCount": 20022,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "reRYtjr1BNo",
+      "title": "Study With Me - A 45-Minute Focused Study Session",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.411624134,
+      "performanceRatio": 0.755219544533514,
+      "viewCount": 498397,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "S5_APAxM5Lg",
+      "title": "Can Music Help You Study More Effectively? - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.41137287,
+      "performanceRatio": 0.374919362209475,
+      "viewCount": 247423,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XeYUth6ij-s",
+      "title": "How I Use Sticky/Post-It Notes to Organize {Collab}",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.411267847,
+      "performanceRatio": 3.074609062883,
+      "viewCount": 12195,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "QLNRJF7Zg28",
+      "title": "if i laugh i do a LIE DETECTOR TEST...",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.409495741,
+      "performanceRatio": 0,
+      "viewCount": 3220913,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "GlzU7DirQ_0",
+      "title": "Fineas - Test Flight 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.409187347,
+      "performanceRatio": 1.27462917942236,
+      "viewCount": 316360,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "Bxv9lf5HjZM",
+      "title": "13 Essential, Science-Backed Study Tips",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.409160495,
+      "performanceRatio": 0.341808604585328,
+      "viewCount": 225572,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "520vxL5R-rc",
+      "title": "Back to school tips",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.408213168,
+      "performanceRatio": 0.176232204588374,
+      "viewCount": 699,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "assessment strategies for effective test preparation in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "uD4RtpT610E",
+      "title": "I Tested 1-Star Hotels (finale)",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.407853484,
+      "performanceRatio": 0,
+      "viewCount": 13136774,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "M1zWlEeCisE",
+      "title": "Monthly Q&A Stream",
+      "channelName": "Skill Tree",
+      "similarityScore": 0.407380611,
+      "performanceRatio": 1,
+      "viewCount": 1261,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "xdrXNGEVuBY",
+      "title": "Use this simple yet highly effective technique to maximize your results💪🏻",
+      "channelName": "JTM_FIT",
+      "similarityScore": 0.406753272,
+      "performanceRatio": 0.229554702380422,
+      "viewCount": 6036,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "UXq1VFWTQE0",
+      "title": "Announcing ThinkerCon! - A Celebration of Online Educational Content",
+      "channelName": "SmarterEveryDay",
+      "similarityScore": 0.406544626,
+      "performanceRatio": 0.0342372348037137,
+      "viewCount": 116311,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "FeLNpX1GljM",
+      "title": "5 High Income Skills for Students to Learn in 2025",
+      "channelName": "Ali Abdaal",
+      "similarityScore": 0.404458553,
+      "performanceRatio": 2.81077348403232,
+      "viewCount": 1500593,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "hP5TNI_2VRs",
+      "title": "How to Study with INTENSE Focus - 7 Essential Tips",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.403675348,
+      "performanceRatio": 2.15585111165686,
+      "viewCount": 1422725,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "examination techniques to improve learning outcomes in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "jFPi7h9tVUo",
+      "title": "Connecting The Dots with Q & A",
+      "channelName": "Laser Everything",
+      "similarityScore": 0.403669834,
+      "performanceRatio": 0.209022391393925,
+      "viewCount": 635,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "wBgl1zNGF98",
+      "title": "NIKE MAGIA NIGERIA | PLAY TEST",
+      "channelName": "DavidMC",
+      "similarityScore": 0.403134942,
+      "performanceRatio": 0,
+      "viewCount": 2168,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "XcXSmGDxH-4",
+      "title": "The TRAVEL EXPERIMENT",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.403091848,
+      "performanceRatio": 0.873562117891304,
+      "viewCount": 2914599,
+      "foundVia": {
+        "thread": "original",
+        "query": "test",
+        "threadPurpose": "Original search query"
+      }
+    },
+    {
+      "videoId": "al-9ixYFoLM",
+      "title": "33 Ways to use The NEW Midjourney Editor for NEXT LEVEL Results!",
+      "channelName": "Wade McMaster - Creator Impact",
+      "similarityScore": 0.402525395,
+      "performanceRatio": 1,
+      "viewCount": 13953,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "XqmrRxLlZTs",
+      "title": "the SAT doesn't work, here's why we still use it",
+      "channelName": "Answer in Progress",
+      "similarityScore": 0.401751071,
+      "performanceRatio": 0.83519019868328,
+      "viewCount": 712746,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "evaluation methods for standardized tests in education",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    },
+    {
+      "videoId": "I4RVtpywD0o",
+      "title": "Community Showcase - Australian Edition with Michael from Teaching Tech, Jaytee and Sam Taylor",
+      "channelName": "The Edge of Tech",
+      "similarityScore": 0.401046067,
+      "performanceRatio": 0.0304697925965195,
+      "viewCount": 798,
+      "foundVia": {
+        "thread": "Direct Variations",
+        "query": "quiz formats that enhance student engagement in educational assessments",
+        "threadPurpose": "Find patterns specific to this exact topic"
+      }
+    }
+  ],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 0,
+    "above_avg": 1,
+    "normal": 33
+  },
+  "claudePrompts": {
+    "original": "Analyze these high-performing YouTube video titles about \"test\" and identify actionable title patterns.\n\nAnalysis Context: Thread: original - Purpose: Original search query\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. ✅ [ID: SxsW-XZ9cQw] \"TESTING SEGWAY ELECTRIC SHOES\" - 3.0x avg (9,895,838 views | Engagement: 1.67%)\n2. ✅ [ID: GlzU7DirQ_0] \"Fineas - Test Flight 1\" - 1.3x avg (316,360 views | Engagement: 4.62%)\n3. ✅ [ID: WKpqoOe8lws] \"Echo - Landing Test #6\" - 1.2x avg (307,695 views | Engagement: 3.43%)\n4. ✅ [ID: yx5zLykjKy8] \"Echo - Landing Test #4\" - 1.0x avg (243,874 views | Engagement: 3.86%)\n5. ✅ [ID: fEjCfOgq9bc] \"college\" - 0.9x avg (3,168,215 views | Engagement: 2.79%)\n6. ✅ [ID: XcXSmGDxH-4] \"The TRAVEL EXPERIMENT\" - 0.9x avg (2,914,599 views | Engagement: 4.06%)\n7. ✅ [ID: 743suYvYdSQ] \"I Tested Limited Edition Food Products\" - 0.8x avg (5,327,115 views | Engagement: 1.79%)\n8. ✅ [ID: S4HfGVRU_xY] \"Echo - Landing Test #5\" - 0.8x avg (188,651 views | Engagement: 3.70%)\n9. ✅ [ID: zjX2iLeC8Hg] \"Test Barrel Proof Testing\" - 0.7x avg (6,256 views | Engagement: 4.11%)\n10. ✅ [ID: lXy-x6lkQvQ] \"Echo - Landing Test #2\" - 0.7x avg (172,179 views | Engagement: 4.05%)\n11. ✅ [ID: 8_hJ48LCXWs] \"Echo - Landing Test #1\" - 0.6x avg (157,105 views | Engagement: 3.23%)\n12. ✅ [ID: agtoHvcpcP4] \"Sprint - Test Flight 1\" - 0.5x avg (131,756 views | Engagement: 6.33%)\n13. ✅ [ID: h3WGLvYlzb8] \"Echo - Landing Test #3\" - 0.5x avg (125,187 views | Engagement: 3.84%)\n14. ✅ [ID: VtywJHjemks] \"Testing Ultralumen!\" - 0.5x avg (1,881 views | Engagement: 6.65%)\n15. ✅ [ID: J2ACQsmkPJs] \"Sprint - Test Flight 2 + Q&A\" - 0.5x avg (112,522 views | Engagement: 5.70%)\n16. ✅ [ID: 7Qebh2vf888] \"Better Tensile Testing Grips | Tensile Tester Part 2\" - 0.3x avg (26,960 views | Engagement: 9.17%)\n17. ✅ [ID: XwASPWXh0us] \"Sprint - Test Flight 4\" - 0.3x avg (85,848 views | Engagement: 5.89%)\n18. ✅ [ID: GOWC5fzv70k] \"Sprint - Test Flight 3\" - 0.3x avg (85,126 views | Engagement: 6.22%)\n19. ✅ [ID: EA-CmUvIsjg] \"WW Thread Tap - Launch and Testing\" - 0.3x avg (29,268 views | Engagement: 2.96%)\n20. ✅ [ID: CM0TskDKoew] \"Echo - Drop Test #2\" - 0.3x avg (73,306 views | Engagement: 1.46%)\n21. ✅ [ID: C3H4LKmcw1M] \"Test Your Prompts with Every ChatBot (for Free)\" - 0.3x avg (40,026 views | Engagement: 4.92%)\n22. ✅ [ID: g0VFwuKr4bQ] \"Scout V 0.1 - Dynamic Test 1\" - 0.3x avg (64,270 views | Engagement: 2.73%)\n23. ✅ [ID: PODMAIHiZvU] \"Launch\" - 0.2x avg (41,890 views | Engagement: 1.01%)\n24. ✅ [ID: JiRHgYVFF1k] \"Best vise liner testing\" - 0.2x avg (19,455 views | Engagement: 2.65%)\n25. ✅ [ID: 8tkMoZexLFg] \"Echo - Drop Test #1\" - 0.1x avg (33,533 views | Engagement: 2.34%)\n26. ✅ [ID: LfuK8rHzFMY] \"Scout V 0.2 - Dynamic Test 2\" - 0.1x avg (32,894 views | Engagement: 2.88%)\n27. ✅ [ID: UL7fZS304Yw] \"Ground Testing - Build Signal R2\" - 0.1x avg (30,560 views | Engagement: 2.14%)\n28. ✅ [ID: mb9LuI5K7KU] \"Scout V 0.3 - Dynamic Test 3\" - 0.1x avg (29,326 views | Engagement: 2.98%)\n29. ✅ [ID: 2f7_aiK9JI0] \"TORTURE TESTING KUKRI FROM KNIVES BY HAND\" - 0.1x avg (2,439 views | Engagement: 3.69%)\n30. ✅ [ID: 0EyxipDhMXg] \"Live RCS Roll Testing\" - 0.1x avg (23,366 views | Engagement: 3.33%)\n31. ✅ [ID: NsjrTfA_ysU] \"Live RCS Ground Testing\" - 0.1x avg (22,676 views | Engagement: 4.90%)\n32. ✅ [ID: 9EMoea_ReUA] \"Echo - Test Vehicle 2\" - 0.1x avg (20,022 views | Engagement: 2.98%)\n33. ✅ [ID: S2PQK63fvHA] \"Signal R2 - User Error Testing\" - 0.0x avg (11,216 views | Engagement: 2.66%)\n34. ✅ [ID: zEA2ENkTAhM] \"Test Stream\" - -1.0x avg (2 views | Engagement: 0.00%)\n\nYour task:\n1. Identify 3-4 specific, actionable title patterns that appear in MANY videos (at least 10-15 examples each)\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify ALL video IDs from the list that demonstrate that pattern (more examples = better pattern)\n4. Create a template that can be applied to new videos about \"test\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\", \"Fourth example\", \"Fifth example\", \"etc... include 10-15 examples\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match this pattern (10-15+ preferred)\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant",
+    "Direct Variations": "Analyze these high-performing YouTube video titles about \"test\" and identify actionable title patterns.\n\nAnalysis Context: Thread: Direct Variations - Purpose: Find patterns specific to this exact topic\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 🌟 [ID: _f-qkGJBPts] \"How to Learn Faster with the Feynman Technique (Example Included)\" - 10.9x avg (7,185,198 views | Engagement: 3.18%)\n2. 💪 [ID: Q1y8c_MZYvE] \"5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests\" - 7.1x avg (4,695,692 views | Engagement: 2.19%)\n3. 💪 [ID: eVajQPuRmk8] \"The Most Powerful Way to Remember What You Study\" - 5.8x avg (3,835,307 views | Engagement: 2.95%)\n4. 💪 [ID: Lt54CX9DmS4] \"How to Study for Exams - An Evidence-Based Masterclass\" - 5.2x avg (2,761,249 views | Engagement: 2.62%)\n5. 💪 [ID: 5ad6grll-ak] \"How to Study Effectively: 8 Advanced Tips - College Info Geek\" - 4.7x avg (3,127,829 views | Engagement: 2.63%)\n6. 💪 [ID: ka1Pqk2o3tM] \"The ChatGPT Playbook of EPIC Prompts\" - 4.5x avg (652,110 views | Engagement: 3.54%)\n7. 💪 [ID: AffuwyJZTQQ] \"How to Take Notes in Class: The 5 Best Methods - College Info Geek\" - 3.6x avg (2,399,081 views | Engagement: 2.20%)\n8. 💪 [ID: kmDMrxUSXKY] \"5 Ways to Read Faster That ACTUALLY Work - College Info Geek\" - 3.5x avg (2,331,511 views | Engagement: 3.00%)\n9. 💪 [ID: JuYwsNO5XyY] \"8 Habits of Highly Successful Students\" - 3.4x avg (2,264,028 views | Engagement: 3.22%)\n10. 💪 [ID: mzCEJVtED0U] \"How to Study Effectively with Flash Cards - College Info Geek\" - 3.2x avg (2,078,965 views | Engagement: 3.05%)\n11. 💪 [ID: XeYUth6ij-s] \"How I Use Sticky/Post-It Notes to Organize {Collab}\" - 3.1x avg (12,195 views | Engagement: 2.14%)\n12. ✅ [ID: FeLNpX1GljM] \"5 High Income Skills for Students to Learn in 2025\" - 2.8x avg (1,500,593 views | Engagement: 3.85%)\n13. ✅ [ID: hP5TNI_2VRs] \"How to Study with INTENSE Focus - 7 Essential Tips\" - 2.2x avg (1,422,725 views | Engagement: 3.71%)\n14. ✅ [ID: z2ZJiIt4pmo] \"How To Remember Everything You Learn\" - 1.6x avg (833,390 views | Engagement: 3.34%)\n15. ✅ [ID: JL0pqJeE4_w] \"5 Active Reading Strategies for Textbook Assignments - College Info Geek\" - 1.4x avg (956,423 views | Engagement: 2.48%)\n16. ✅ [ID: jYWfiP7w5w0] \"10 Study Tips for Earning an A on Your Next Exam - College Info Geek\" - 1.4x avg (936,439 views | Engagement: 3.06%)\n17. ✅ [ID: Xw8KuGD1fJ4] \"How to Remember More of What You Read\" - 1.2x avg (811,778 views | Engagement: 4.08%)\n18. ✅ [ID: 8zaKVFC9Eu4] \"How to Study for Exams with Flashcards (Anki Masterclass)\" - 1.2x avg (639,447 views | Engagement: 2.19%)\n19. ✅ [ID: YitcDk-Wwiw] \"How to Make Studying Fun (or at Least Less Boring)\" - 1.2x avg (761,850 views | Engagement: 4.25%)\n20. ✅ [ID: fHfHSq7PVDU] \"How to Beat Test Anxiety and Take on Exams Without Stress\" - 1.0x avg (675,935 views | Engagement: 2.89%)\n21. ✅ [ID: HsWYxfVzX_U] \"Online Classes: A Survival Guide\" - 1.0x avg (664,645 views | Engagement: 4.71%)\n22. ✅ [ID: 8XKzox5ga8A] \"How to answer ANY question on a test\" - 1.0x avg (97,422 views | Engagement: 5.03%)\n23. ✅ [ID: hCSHuvDejGA] \"how to learn ANYTHING faster than anyone\" - 1.0x avg (1,255,303 views | Engagement: 8.11%)\n24. ✅ [ID: riv1sBG1RUo] \"Google VEO 3 Tutorial: How to Create ALL Viral Mindblowing Formats (30 Prompts Included)\" - 1.0x avg (58,435 views | Engagement: 4.14%)\n25. ✅ [ID: UDyY8_Kt3xY] \"How to SPEED LEARN like a Harvard student ('Easy mode')\" - 1.0x avg (46,475 views | Engagement: 6.54%)\n26. ✅ [ID: fKqFneT4sg4] \"How to figure out what will be on the exam\" - 1.0x avg (39,086 views | Engagement: 5.94%)\n27. ✅ [ID: r7YG6NkgxDA] \"Only Idiots Use These Study Methods (Backed by Science)\" - 1.0x avg (3,617 views | Engagement: 12.69%)\n28. ✅ [ID: FWAP4m0-zt8] \"Kling 2.0 Tutorial - Best Video Generator of 2025! (Easy Prompts)\" - 1.0x avg (10,605 views | Engagement: 3.58%)\n29. ✅ [ID: tU8F5ejiaFA] \"How to actually OUTSMART anyone in class (the easy way)\" - 1.0x avg (47,879 views | Engagement: 6.74%)\n30. ✅ [ID: M1zWlEeCisE] \"Monthly Q&A Stream\" - 1.0x avg (1,261 views | Engagement: 4.84%)\n31. ✅ [ID: al-9ixYFoLM] \"33 Ways to use The NEW Midjourney Editor for NEXT LEVEL Results!\" - 1.0x avg (13,953 views | Engagement: 6.04%)\n32. ✅ [ID: jeht_P2GBwI] \"5 Rules for Answering ESSAY Questions on Exams\" - 1.0x avg (658,555 views | Engagement: 2.31%)\n33. ✅ [ID: XqmrRxLlZTs] \"the SAT doesn't work, here's why we still use it\" - 0.8x avg (712,746 views | Engagement: 6.79%)\n34. ✅ [ID: xznKfiBmVZo] \"Quiz Game Buttons // How-To | I Like To Make Stuff\" - 0.8x avg (455,966 views | Engagement: 1.90%)\n35. ✅ [ID: reRYtjr1BNo] \"Study With Me - A 45-Minute Focused Study Session\" - 0.8x avg (498,397 views | Engagement: 1.78%)\n36. ✅ [ID: CUbeQ7Q3s2Q] \"How to Make a Final Exam Study Schedule - College Info Geek\" - 0.7x avg (485,973 views | Engagement: 2.62%)\n37. ✅ [ID: d_v34uZXsAU] \"ULTIMATE Back-to-School Prep: Closet Cleanouts, Outfit Ideas, Teacher Gifts, Meal Plans & More!\" - 0.7x avg (71,549 views | Engagement: 4.78%)\n38. ✅ [ID: OAC6qqOI3Nk] \"BACK TO SCHOOL ORGANIZATION HACKS AND IDEAS // BACK TO SCHOOL PREPARATION\" - 0.7x avg (66,225 views | Engagement: 6.37%)\n39. ✅ [ID: qWUUP5p0Auo] \"Exam Tips: How to Study for Finals - College Info Geek\" - 0.6x avg (409,065 views | Engagement: 2.56%)\n40. ✅ [ID: OY6Z8gNKp-w] \"10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek\" - 0.5x avg (320,117 views | Engagement: 2.30%)\n41. ✅ [ID: jnku-xdku8U] \"Study with Me - A 1 Hour, Real-Time Study Session for 2019\" - 0.4x avg (286,063 views | Engagement: 2.14%)\n42. ✅ [ID: USkDbcGPKP0] \"A Brain Hack (of sorts) for Exams and Tests - College Info Geek\" - 0.4x avg (280,131 views | Engagement: 2.67%)\n43. ✅ [ID: B8V5EfJLX9U] \"How to Double Your Learning Speed – The LPC Method\" - 0.4x avg (266,118 views | Engagement: 5.19%)\n44. ✅ [ID: S5_APAxM5Lg] \"Can Music Help You Study More Effectively? - College Info Geek\" - 0.4x avg (247,423 views | Engagement: 3.43%)\n45. ✅ [ID: LRz9tBw6DWE] \"Overcoming Learning Disabilities and Learning to LEARN\" - 0.4x avg (55,624 views | Engagement: 6.03%)\n46. ✅ [ID: FbD8n4J_MuM] \"How to Learn Any Skill Twice as Fast\" - 0.4x avg (232,923 views | Engagement: 6.14%)\n47. ✅ [ID: Bxv9lf5HjZM] \"13 Essential, Science-Backed Study Tips\" - 0.3x avg (225,572 views | Engagement: 3.79%)\n48. ✅ [ID: Kzm-tz357Hg] \"BACK TO SCHOOL PREP 2024 | CLEAN, ORGANIZE & PREP WITH ME!\" - 0.3x avg (31,126 views | Engagement: 6.98%)\n49. ✅ [ID: UEP6KqeMwvk] \"How To Practice Efficiently\" - 0.3x avg (166,648 views | Engagement: 10.16%)\n50. ✅ [ID: a0ns1dTwJNs] \"Tips and Tricks to increase your professional level!\" - 0.3x avg (98,240 views | Engagement: 1.00%)\n51. ✅ [ID: xdrXNGEVuBY] \"Use this simple yet highly effective technique to maximize your results💪🏻\" - 0.2x avg (6,036 views | Engagement: 4.27%)\n52. ✅ [ID: jFPi7h9tVUo] \"Connecting The Dots with Q & A\" - 0.2x avg (635 views | Engagement: 5.83%)\n53. ✅ [ID: WK7dv0RKNGQ] \"Invention Ideas for Students\" - 0.2x avg (18,106 views | Engagement: 0.75%)\n54. ✅ [ID: hgxY4o1n3w4] \"Have there been attempts to quantify the benefits associated with individualizing training?\" - 0.2x avg (2,507 views | Engagement: 3.03%)\n55. ✅ [ID: EgD5pqzNxO0] \"Q&A Part 8 - Out of the Box\" - 0.2x avg (44,426 views | Engagement: 6.28%)\n56. ✅ [ID: 520vxL5R-rc] \"Back to school tips\" - 0.2x avg (699 views | Engagement: 5.58%)\n57. ✅ [ID: v1veRGRvxQg] \"How To SUCCEED As a STUDENT\" - 0.1x avg (46,664 views | Engagement: 7.17%)\n58. ✅ [ID: TMX5BcHI51k] \"Q&A Experiment with Matt Cremona & Nick Ferry\" - 0.1x avg (18,243 views | Engagement: 3.96%)\n59. ✅ [ID: YCWTiDHegAI] \"10 Steps to Earning Awesome Grades (While Studying Less)\" - 0.1x avg (65,947 views | Engagement: 2.61%)\n60. ✅ [ID: bjwUfRTnKEA] \"Should You Change Answers on Multiple-Choice Exams? - College Info Geek\" - 0.1x avg (55,108 views | Engagement: 2.76%)\n61. ✅ [ID: CSTxR4w9XPg] \"Can you teach Creativity & Interesting Tools (FT26)\" - 0.1x avg (6,794 views | Engagement: 4.74%)\n62. ✅ [ID: G0sjAMCEVwg] \"Q&A Experiment with Matt Cremona, Jay Bates & Myself\" - 0.1x avg (5,709 views | Engagement: 5.92%)\n63. ✅ [ID: UXq1VFWTQE0] \"Announcing ThinkerCon! - A Celebration of Online Educational Content\" - 0.0x avg (116,311 views | Engagement: 4.28%)\n64. ✅ [ID: I4RVtpywD0o] \"Community Showcase - Australian Edition with Michael from Teaching Tech, Jaytee and Sam Taylor\" - 0.0x avg (798 views | Engagement: 7.27%)\n65. ✅ [ID: UjU8ukIOAdA] \"Accelerated Japanese Learning Challenge: Preview! - College Info Geek\" - 0.0x avg (18,325 views | Engagement: 3.16%)\n66. ✅ [ID: 52uJRJ6TuXA] \"Discussing Design for Test with @BrownieBites-EE  | Maker Chat Ep.03\" - 0.0x avg (281 views | Engagement: 5.34%)\n\nYour task:\n1. Identify 3-4 specific, actionable title patterns that appear in MANY videos (at least 10-15 examples each)\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify ALL video IDs from the list that demonstrate that pattern (more examples = better pattern)\n4. Create a template that can be applied to new videos about \"test\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\", \"Fourth example\", \"Fifth example\", \"etc... include 10-15 examples\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match this pattern (10-15+ preferred)\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant"
+  },
+  "discoveredPatterns": [
+    {
+      "pattern": "Testing Unique Products",
+      "explanation": "Titles that highlight the testing of unique or innovative products tend to attract curiosity and engagement. This pattern works well as it suggests an exploration of new technology or experiences.",
+      "template": "I Tested [PRODUCT NAME] - [DESCRIPTIVE PHRASE]",
+      "examples": [
+        "TESTING SEGWAY ELECTRIC SHOES",
+        "I Tested Limited Edition Food Products",
+        "Testing Ultralumen!",
+        "TORTURE TESTING KUKRI FROM KNIVES BY HAND"
+      ],
+      "video_ids": [
+        "SxsW-XZ9cQw",
+        "743suYvYdSQ",
+        "VtywJHjemks",
+        "2f7_aiK9JI0",
+        "j_k06bihD-0",
+        "83MqrYM81eQ",
+        "h0HjktaeEpA"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 4.2,
+      "source_thread": "original",
+      "thread_purpose": "Original search query",
+      "additional_examples_found": 3
+    },
+    {
+      "pattern": "How to [Achieve a Specific Outcome]",
+      "explanation": "This pattern works because it directly addresses the viewer's desire to learn a specific skill or achieve a goal, creating an immediate value proposition.",
+      "template": "How to [ACHIEVE A SPECIFIC OUTCOME] - [ADDITIONAL CONTEXT]",
+      "examples": [
+        "How to Learn Faster with the Feynman Technique (Example Included)",
+        "How to Study for Exams - An Evidence-Based Masterclass",
+        "How to Study Effectively: 8 Advanced Tips - College Info Geek",
+        "How to Take Notes in Class: The 5 Best Methods - College Info Geek",
+        "How to Remember Everything You Learn",
+        "How to Study Effectively with Flash Cards - College Info Geek",
+        "How to Make Studying Fun (or at Least Less Boring)",
+        "How to Beat Test Anxiety and Take on Exams Without Stress",
+        "How to answer ANY question on a test",
+        "How to SPEED LEARN like a Harvard student ('Easy mode')"
+      ],
+      "video_ids": [
+        "_f-qkGJBPts",
+        "Lt54CX9DmS4",
+        "5ad6grll-ak",
+        "AffuwyJZTQQ",
+        "z2ZJiIt4pmo",
+        "mzCEJVtED0U",
+        "YitcDk-Wwiw",
+        "fHfHSq7PVDU",
+        "8XKzox5ga8A",
+        "UDyY8_Kt3xY"
+      ],
+      "confidence": 0.9,
+      "performance_multiplier": 4,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Landing Test Series",
+      "explanation": "The use of a series format in titles (e.g., 'Landing Test #X') creates a sense of continuity and encourages viewers to watch multiple videos in the series. This pattern effectively builds anticipation and loyalty.",
+      "template": "[PRODUCT/OBJECT] - Landing Test #[NUMBER]",
+      "examples": [
+        "Echo - Landing Test #6",
+        "Echo - Landing Test #5",
+        "Echo - Landing Test #4",
+        "Echo - Landing Test #3",
+        "Echo - Landing Test #2",
+        "Echo - Landing Test #1"
+      ],
+      "video_ids": [
+        "WKpqoOe8lws",
+        "S4HfGVRU_xY",
+        "yx5zLykjKy8",
+        "h3WGLvYlzb8",
+        "lXy-x6lkQvQ",
+        "8_hJ48LCXWs",
+        "YixmPK26upk"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 3.8,
+      "source_thread": "original",
+      "thread_purpose": "Original search query",
+      "additional_examples_found": 1
+    },
+    {
+      "pattern": "X Tips/Rules for [Achieving a Goal]",
+      "explanation": "Using numbers in titles creates a clear expectation of structured content, which appeals to viewers looking for concise and actionable advice.",
+      "template": "[NUMBER] Tips/Rules for [ACHIEVING A GOAL]",
+      "examples": [
+        "5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests",
+        "5 Ways to Read Faster That ACTUALLY Work - College Info Geek",
+        "8 Habits of Highly Successful Students",
+        "10 Study Tips for Earning an A on Your Next Exam - College Info Geek",
+        "5 Active Reading Strategies for Textbook Assignments - College Info Geek",
+        "5 High Income Skills for Students to Learn in 2025",
+        "5 Rules for Answering ESSAY Questions on Exams",
+        "10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek"
+      ],
+      "video_ids": [
+        "Q1y8c_MZYvE",
+        "kmDMrxUSXKY",
+        "JuYwsNO5XyY",
+        "jYWfiP7w5w0",
+        "JL0pqJeE4_w",
+        "FeLNpX1GljM",
+        "jeht_P2GBI",
+        "OY6Z8gNKp-w",
+        "2YaHMNeZrDc",
+        "2U4Op1wWo34",
+        "Ba0j5cf7lVI"
+      ],
+      "confidence": 0.85,
+      "performance_multiplier": 3.8,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 3
+    },
+    {
+      "pattern": "Test Flight Series",
+      "explanation": "Similar to the landing test series, titles that indicate a sequence of test flights create a narrative that can engage viewers over multiple videos. This pattern is particularly effective in tech and aviation-related content.",
+      "template": "[PRODUCT/OBJECT] - Test Flight #[NUMBER]",
+      "examples": [
+        "Fineas - Test Flight 1",
+        "Sprint - Test Flight 1",
+        "Sprint - Test Flight 2 + Q&A",
+        "Sprint - Test Flight 3",
+        "Sprint - Test Flight 4"
+      ],
+      "video_ids": [
+        "GlzU7DirQ_0",
+        "agtoHvcpcP4",
+        "J2ACQsmkPJs",
+        "GOWC5fzv70k",
+        "XwASPWXh0us",
+        "ff5245EBfis",
+        "QQt-9SSJ51c",
+        "YixmPK26upk"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 3.6,
+      "source_thread": "original",
+      "thread_purpose": "Original search query",
+      "additional_examples_found": 3
+    },
+    {
+      "pattern": "The Most [Adjective] Way to [Achieve a Goal]",
+      "explanation": "This pattern creates curiosity and emphasizes the effectiveness of the method being presented, encouraging viewers to click to learn more.",
+      "template": "The Most [ADJECTIVE] Way to [ACHIEVE A GOAL]",
+      "examples": [
+        "The Most Powerful Way to Remember What You Study",
+        "The Most Effective Study Method for Students",
+        "The Most Efficient Way to Prepare for Exams"
+      ],
+      "video_ids": [
+        "eVajQPuRmk8",
+        "Lt54CX9DmS4",
+        "5ad6grll-ak"
+      ],
+      "confidence": 0.8,
+      "performance_multiplier": 3.5,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic",
+      "additional_examples_found": 0
+    },
+    {
+      "pattern": "Descriptive Testing Titles",
+      "explanation": "Titles that clearly describe the testing process or results tend to perform well as they set clear expectations for viewers. This pattern is effective for educational or informative content.",
+      "template": "[DESCRIPTIVE PHRASE] - [TESTING FOCUS]",
+      "examples": [
+        "Better Tensile Testing Grips | Tensile Tester Part 2",
+        "WW Thread Tap - Launch and Testing",
+        "Test Your Prompts with Every ChatBot (for Free)"
+      ],
+      "video_ids": [
+        "7Qebh2vf888",
+        "EA-CmUvIsjg",
+        "C3H4LKmcw1M"
+      ],
+      "confidence": 0.7,
+      "performance_multiplier": 3.2,
+      "source_thread": "original",
+      "thread_purpose": "Original search query"
+    },
+    {
+      "pattern": "How to [Action] Without [Negative Experience]",
+      "explanation": "This pattern addresses common pain points and fears, offering solutions that promise to alleviate those concerns, thus attracting viewers seeking relief.",
+      "template": "How to [ACTION] Without [NEGATIVE EXPERIENCE]",
+      "examples": [
+        "How to Beat Test Anxiety and Take on Exams Without Stress",
+        "How to Study for Exams Without Losing Your Mind",
+        "How to Learn Faster Without Overwhelm"
+      ],
+      "video_ids": [
+        "fHfHSq7PVDU",
+        "Lt54CX9DmS4",
+        "5ad6grll-ak"
+      ],
+      "confidence": 0.75,
+      "performance_multiplier": 3.2,
+      "source_thread": "Direct Variations",
+      "thread_purpose": "Find patterns specific to this exact topic"
+    }
+  ],
+  "threadAnalysis": [
+    {
+      "thread": "original",
+      "videosAnalyzed": 34,
+      "patternsFound": 4
+    },
+    {
+      "thread": "Direct Variations",
+      "videosAnalyzed": 66,
+      "patternsFound": 4
+    }
+  ],
+  "processingSteps": [
+    {
+      "step": "Multi-Threaded Query Expansion",
+      "duration_ms": 10348,
+      "details": {
+        "originalQuery": "test",
+        "threads": [
+          {
+            "name": "Direct Variations",
+            "purpose": "Find patterns specific to this exact topic",
+            "queryCount": 5,
+            "queries": [
+              "assessment strategies for effective test preparation in education",
+              "evaluation methods for standardized tests in education",
+              "examination techniques to improve learning outcomes in education",
+              "quiz formats that enhance student engagement in educational assessments",
+              "standardized test performance analysis and its impact on education"
+            ]
+          }
+        ],
+        "totalQueries": 6
+      }
+    },
+    {
+      "step": "Multi-Query Embedding",
+      "duration_ms": 389,
+      "details": {
+        "embeddingModel": "text-embedding-3-small",
+        "queriesEmbedded": 6,
+        "totalTokens": 44,
+        "totalCost": 8.799999999999999e-7
+      }
+    },
+    {
+      "step": "Multi-Query Pinecone Search",
+      "duration_ms": 2393,
+      "details": {
+        "threshold": 0.4,
+        "videosPerQuery": 300,
+        "totalQueriesSearched": 6,
+        "totalResultsBeforeDedupe": 148,
+        "uniqueVideosFound": 106,
+        "scoreDistribution": {
+          "0.5": 7,
+          "0.4": 99
+        }
+      }
+    },
+    {
+      "step": "Fetch Video Details",
+      "duration_ms": 78,
+      "details": {
+        "videosFetched": 106,
+        "totalVideosProcessed": 106
+      }
+    },
+    {
+      "step": "Multi-Threaded Pattern Discovery",
+      "duration_ms": 41577,
+      "details": {
+        "threadsAnalyzed": 2,
+        "threadBreakdown": [
+          {
+            "thread": "original",
+            "videosAnalyzed": 34,
+            "patternsFound": 4
+          },
+          {
+            "thread": "Direct Variations",
+            "videosAnalyzed": 66,
+            "patternsFound": 4
+          }
+        ],
+        "totalVideosFound": 34,
+        "performanceDistribution": {
+          "superstar": 0,
+          "strong": 0,
+          "above_avg": 1,
+          "normal": 33
+        },
+        "totalPatternsFound": 8,
+        "inputTokens": 5773,
+        "outputTokens": 1835,
+        "cost": 0.00196695
+      }
+    },
+    {
+      "step": "Phase 2: Pattern Example Enrichment",
+      "duration_ms": 1034,
+      "details": {
+        "patternsEnriched": 8,
+        "totalAdditionalExamples": 10
+      }
+    },
+    {
+      "step": "Pattern Verification",
+      "duration_ms": 0,
+      "details": {
+        "patternsAnalyzed": 8,
+        "patternsVerified": 8,
+        "patternsFiltered": 0
+      }
+    },
+    {
+      "step": "Title Generation",
+      "duration_ms": 2,
+      "details": {
+        "titlesGenerated": 8
+      }
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "tokens": 44,
+      "cost": 8.799999999999999e-7
+    },
+    "claude": {
+      "inputTokens": 5773,
+      "outputTokens": 1835,
+      "inputCost": 0.00086595,
+      "outputCost": 0.001101,
+      "totalCost": 0.00196695
+    },
+    "totalCost": 0.00196783
+  },
+  "totalProcessingTime": 55822,
+  "analysis": {
+    "totalVideos": 106,
+    "relevantVideos": 41,
+    "relevancePercentage": 38.67924528301887,
+    "topChannels": [
+      {
+        "channel": "Thomas Frank",
+        "count": 29
+      },
+      {
+        "channel": "BPS.space",
+        "count": 21
+      },
+      {
+        "channel": "The Angry Explainer",
+        "count": 5
+      },
+      {
+        "channel": "Ali Abdaal",
+        "count": 4
+      },
+      {
+        "channel": "Amy Darley",
+        "count": 3
+      },
+      {
+        "channel": "DavidMC",
+        "count": 3
+      },
+      {
+        "channel": "CaseyNeistat",
+        "count": 3
+      },
+      {
+        "channel": "BENOFTHEWEEK",
+        "count": 2
+      },
+      {
+        "channel": "Matt Wolfe",
+        "count": 2
+      },
+      {
+        "channel": "Andrew Klein",
+        "count": 2
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 1.0235757597062243,
+      "highPerformers": 11,
+      "superStars": 1
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.43889592104716996,
+      "highSimilarity": 0,
+      "lowSimilarity": 99
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "test",
+          "count": 25,
+          "percentage": 23.58490566037736
+        },
+        {
+          "topic": "study",
+          "count": 16,
+          "percentage": 15.09433962264151
+        },
+        {
+          "topic": "college",
+          "count": 14,
+          "percentage": 13.20754716981132
+        },
+        {
+          "topic": "info",
+          "count": 13,
+          "percentage": 12.264150943396226
+        },
+        {
+          "topic": "geek",
+          "count": 13,
+          "percentage": 12.264150943396226
+        },
+        {
+          "topic": "testing",
+          "count": 12,
+          "percentage": 11.320754716981133
+        },
+        {
+          "topic": "echo",
+          "count": 9,
+          "percentage": 8.49056603773585
+        },
+        {
+          "topic": "learn",
+          "count": 7,
+          "percentage": 6.60377358490566
+        },
+        {
+          "topic": "exams",
+          "count": 6,
+          "percentage": 5.660377358490567
+        },
+        {
+          "topic": "tips",
+          "count": 6,
+          "percentage": 5.660377358490567
+        },
+        {
+          "topic": "landing",
+          "count": 6,
+          "percentage": 5.660377358490567
+        },
+        {
+          "topic": "flight",
+          "count": 5,
+          "percentage": 4.716981132075472
+        },
+        {
+          "topic": "exam",
+          "count": 4,
+          "percentage": 3.7735849056603774
+        },
+        {
+          "topic": "back",
+          "count": 4,
+          "percentage": 3.7735849056603774
+        },
+        {
+          "topic": "school",
+          "count": 4,
+          "percentage": 3.7735849056603774
+        },
+        {
+          "topic": "learning",
+          "count": 4,
+          "percentage": 3.7735849056603774
+        },
+        {
+          "topic": "sprint",
+          "count": 4,
+          "percentage": 3.7735849056603774
+        },
+        {
+          "topic": "ways",
+          "count": 3,
+          "percentage": 2.8301886792452833
+        },
+        {
+          "topic": "faster",
+          "count": 3,
+          "percentage": 2.8301886792452833
+        },
+        {
+          "topic": "make",
+          "count": 3,
+          "percentage": 2.8301886792452833
+        }
+      ],
+      "conceptWordsFound": [
+        "test"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "study",
+          "count": 16,
+          "percentage": 15.09433962264151
+        },
+        {
+          "topic": "college",
+          "count": 14,
+          "percentage": 13.20754716981132
+        },
+        {
+          "topic": "info",
+          "count": 13,
+          "percentage": 12.264150943396226
+        },
+        {
+          "topic": "geek",
+          "count": 13,
+          "percentage": 12.264150943396226
+        },
+        {
+          "topic": "testing",
+          "count": 12,
+          "percentage": 11.320754716981133
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 2,
+      "threadStats": [
+        {
+          "thread": "Direct Variations",
+          "purpose": "Find patterns specific to this exact topic",
+          "videoCount": 66,
+          "queryCount": 5,
+          "avgPerformance": 1.3964122024869892,
+          "avgSimilarity": 0.44311677254545445,
+          "superstarCount": 1,
+          "strongCount": 10,
+          "coverage": 62.264150943396224,
+          "qualityScore": 0.6187736683091243
+        },
+        {
+          "thread": "original",
+          "purpose": "Original search query",
+          "videoCount": 40,
+          "queryCount": 1,
+          "avgPerformance": 0.4083956291179615,
+          "avgSimilarity": 0.43193151607500013,
+          "superstarCount": 0,
+          "strongCount": 0,
+          "coverage": 37.735849056603776,
+          "qualityScore": 0.17639894324332459
+        }
+      ],
+      "bestPerformingThread": "Direct Variations",
+      "mostProductiveThread": "Direct Variations"
+    },
+    "potentialIssues": [
+      {
+        "type": "LOW_RELEVANCE",
+        "message": "Only 38.7% of results are relevant to \"test\"",
+        "severity": "high"
+      },
+      {
+        "type": "TOPIC_DRIFT",
+        "message": "65 videos don't match concept keywords",
+        "severity": "medium",
+        "examples": [
+          "10 Ways to Avoid Making Stupid Mistakes on Exams - College Info Geek",
+          "How to Study for Exams - An Evidence-Based Masterclass",
+          "10 Study Tips for Earning an A on Your Next Exam - College Info Geek",
+          "5 Rules for Answering ESSAY Questions on Exams",
+          "Exam Tips: How to Study for Finals - College Info Geek"
+        ]
+      }
+    ]
+  }
+}

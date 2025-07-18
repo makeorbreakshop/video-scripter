@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const { data: videos, error } = await supabase
       .from('videos')
-      .select('id, title, channel_name, view_count, published_at, thumbnail_url')
+      .select('id, title, channel_name, view_count, published_at, thumbnail_url, performance_ratio')
       .in('id', videoIds);
 
     if (error) {
