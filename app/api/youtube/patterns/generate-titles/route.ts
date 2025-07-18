@@ -3,7 +3,7 @@ import { openai } from '@/lib/openai-client';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { pineconeService } from '@/lib/pinecone-service';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 // import { AnthropicAPI } from '@/lib/anthropic-api'; // No longer needed - using OpenAI
 import { searchLogger } from '@/lib/search-logger';
 
@@ -11,7 +11,7 @@ import { searchLogger } from '@/lib/search-logger';
 const ThreadSchema = z.object({
   angle: z.string(),
   intent: z.string(),
-  queries: z.array(z.string()).min(5).max(6)
+  queries: z.array(z.string()).min(3).max(3)
 });
 
 const ThreadExpansionSchema = z.object({
@@ -45,6 +45,11 @@ export interface TitleGenerationRequest {
     style?: 'informative' | 'emotional' | 'curiosity';
     maxSuggestions?: number;
     includeExamples?: boolean;
+    // Quality-based filtering
+    minPerformance?: number;   // Minimum performance multiplier (e.g., 3.0)
+    minConfidence?: number;    // Minimum confidence score (0-1)
+    minSampleSize?: number;    // Minimum number of example videos
+    balanceTypes?: boolean;    // Balance WIDE and DEEP patterns
   };
 }
 
@@ -69,6 +74,9 @@ export interface TitleSuggestion {
     video_ids: string[]; // IDs of videos that demonstrate this pattern
     source_thread?: string; // Which thread discovered this pattern
     thread_purpose?: string; // Purpose of the thread that found this
+    pattern_type?: 'WIDE' | 'DEEP'; // Cross-thread vs single-thread pattern
+    thread_count?: number; // Number of threads that found this pattern
+    found_by_threads?: string[]; // List of threads that discovered this pattern
   };
   evidence: {
     sample_size: number;
@@ -123,6 +131,12 @@ export interface TitleGenerationResponse {
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   let body: TitleGenerationRequest;
+  
+  // Initialize Supabase client
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   
   try {
     body = await req.json();
@@ -197,7 +211,7 @@ export async function POST(req: NextRequest) {
     stepStart = Date.now();
     console.log(`Searching Pinecone with ${embeddings.length} query embeddings`);
     const searchThreshold = 0.35; // Lowered threshold to get more videos
-    const videosPerQuery = 500; // Increased to get more videos per thread
+    const videosPerQuery = 300; // Reduced from 500 to optimize performance
     const searchPromises = embeddings.map((embedding, index) => 
       pineconeService.searchSimilar(
         embedding.embedding,
@@ -210,6 +224,10 @@ export async function POST(req: NextRequest) {
     );
     
     const searchResults = await Promise.all(searchPromises);
+    
+    // Debug: Check if embeddings are coming from search
+    const firstResult = searchResults[0]?.results[0];
+    console.log(`🔍 First search result has embedding: ${!!(firstResult?.embedding && firstResult.embedding.length > 0)}`);
     
     // Deduplicate and merge results with attribution
     const videoScoreMap = new Map<string, VideoWithAttribution>();
@@ -225,7 +243,8 @@ export async function POST(req: NextRequest) {
             similarity_score: existing ? Math.max(existing.similarity_score, result.similarity_score) : result.similarity_score,
             thread: existing && existing.similarity_score === result.similarity_score ? existing.thread : threadInfo.thread,
             query: existing && existing.similarity_score === result.similarity_score ? existing.query : query,
-            threadPurpose: existing && existing.similarity_score === result.similarity_score ? existing.threadPurpose : threadInfo.purpose
+            threadPurpose: existing && existing.similarity_score === result.similarity_score ? existing.threadPurpose : threadInfo.purpose,
+            embedding: result.embedding  // Add embedding from search results
           });
         }
       });
@@ -313,10 +332,30 @@ export async function POST(req: NextRequest) {
     // Get video details for debug info AND comprehensive logging
     stepStart = Date.now();
     const videoIds = similarVideos.map(v => v.video_id);
-    const { data: allVideoDetails } = await supabase
-      .from('videos')
-      .select('id, title, channel_name, view_count, performance_ratio')
-      .in('id', videoIds);
+    console.log(`📺 Fetching details for ${videoIds.length} videos...`);
+    
+    // Batch video fetching to avoid URI too large errors
+    const batchSize = 500; // Supabase can handle ~500 IDs per request
+    let allVideoDetails: any[] = [];
+    
+    for (let i = 0; i < videoIds.length; i += batchSize) {
+      const batchIds = videoIds.slice(i, i + batchSize);
+      const { data: batchVideos, error: batchError } = await supabase
+        .from('videos')
+        .select('id, title, channel_name, view_count, performance_ratio')
+        .in('id', batchIds);
+      
+      if (batchError) {
+        console.error(`❌ Error fetching video batch ${i}-${i + batchSize}:`, batchError);
+        continue;
+      }
+      
+      if (batchVideos) {
+        allVideoDetails = [...allVideoDetails, ...batchVideos];
+      }
+    }
+    
+    console.log(`✅ Successfully fetched ${allVideoDetails.length} video details`);
     
     // Create comprehensive video list for logging with attribution
     const allVideosWithDetails = similarVideos.map(v => {
@@ -361,81 +400,129 @@ export async function POST(req: NextRequest) {
     const pooledVideos = await createPooledVideosWithProvenance(similarVideos, allVideoDetails);
     console.log(`🏊 Created pool of ${pooledVideos.length} videos with provenance`);
     
+    // Debug: Check how many videos have embeddings
+    const videosWithEmbeddings = pooledVideos.filter(v => v.embedding && v.embedding.length > 0);
+    console.log(`📊 Videos with embeddings: ${videosWithEmbeddings.length}/${pooledVideos.length}`);
+    
     // Step 3b: Cluster videos by content similarity
+    stepStart = Date.now();
     const clusters = await clusterVideosByContent(pooledVideos);
     console.log(`🔮 Discovered ${clusters.length} content clusters`);
     
-    // Step 3c: Analyze each cluster for patterns
-    const threadAnalysisPromises = clusters.map(async (cluster) => {
-      const threadSources = Array.from(cluster.thread_sources).join(', ');
-      const isWide = cluster.thread_sources.size >= 3;
+    processingSteps.push({
+      step: 'DBSCAN Clustering',
+      duration_ms: Date.now() - stepStart,
+      details: {
+        pooledVideos: pooledVideos.length,
+        videosWithEmbeddings: pooledVideos.filter(v => v.embedding).length,
+        clustersFound: clusters.length,
+        widePatterns: clusters.filter(c => c.is_wide).length,
+        deepPatterns: clusters.filter(c => !c.is_wide).length,
+        avgClusterSize: clusters.length > 0 ? Math.round(clusters.reduce((sum, c) => sum + c.videos.length, 0) / clusters.length) : 0
+      }
+    });
+    
+    // Step 3c: Smart cluster selection and batched pattern analysis
+    const highQualityClusters = selectHighValueClusters(clusters);
+    console.log(`🎯 Selected ${highQualityClusters.length} high-quality clusters from ${clusters.length} total`);
+    
+    // Batch clusters for efficient API calls
+    const batchSize = 5; // Process 5 clusters per API call
+    const clusterBatches = createSmartBatches(highQualityClusters, batchSize);
+    console.log(`📦 Created ${clusterBatches.length} batches for pattern discovery`);
+    
+    // Process batches in parallel
+    const batchPromises = clusterBatches.map(async (batch, batchIndex) => {
+      console.log(`🔄 Processing batch ${batchIndex + 1}/${clusterBatches.length} with ${batch.length} clusters`);
       
-      console.log(`🧵 Analyzing cluster with ${cluster.videos.length} videos from ${cluster.thread_sources.size} threads: ${threadSources}`);
-      
-      // Run pattern analysis with cluster context
-      // Convert pooled videos to the format expected by pattern analysis
-      const clusterVideosForAnalysis = cluster.videos.slice(0, 100).map(v => ({
-        video_id: v.video_id,
-        similarity_score: v.similarity_score
+      // Prepare batch data for analysis
+      const batchData = batch.map((cluster, idx) => ({
+        cluster_id: `batch${batchIndex}_cluster${idx}`,
+        videos: cluster.videos.slice(0, 8), // Limit videos per cluster for token efficiency
+        thread_sources: Array.from(cluster.thread_sources),
+        is_wide: cluster.is_wide,
+        avg_performance: cluster.avg_performance,
+        quality: cluster.quality
       }));
       
-      const result = await discoverPatternsWithClaude(
-        clusterVideosForAnalysis,
+      const result = await analyzePatternsBatched(
+        batchData,
         body.concept,
-        `${isWide ? 'WIDE' : 'DEEP'} cluster from threads: ${threadSources}`
+        batchIndex
       );
       
       return {
-        cluster_id: clusters.indexOf(cluster),
-        thread_sources: Array.from(cluster.thread_sources),
-        is_wide: isWide,
-        avg_performance: cluster.avg_performance,
-        video_count: cluster.videos.length,
+        batchIndex,
+        clusters: batchData,
         ...result
       };
     });
     
-    const clusterAnalysisResults = await Promise.all(threadAnalysisPromises);
+    const batchResults = await Promise.all(batchPromises);
     
-    // Combine patterns from all clusters with attribution
+    // Flatten results from all batches
+    const clusterAnalysisResults = batchResults.flatMap(batch => 
+      batch.patterns.map((pattern: any, idx: number) => ({
+        cluster_id: batch.clusters[Math.floor(idx / 4)]?.cluster_id || 'unknown',
+        thread_sources: batch.clusters[Math.floor(idx / 4)]?.thread_sources || [],
+        is_wide: batch.clusters[Math.floor(idx / 4)]?.is_wide || false,
+        avg_performance: batch.clusters[Math.floor(idx / 4)]?.avg_performance || 1,
+        video_count: batch.clusters[Math.floor(idx / 4)]?.videos.length || 0,
+        patterns: [pattern],
+        prompt: batch.prompt,
+        usage: batch.usage,
+        stats: batch.stats
+      }))
+    );
+    
+    // Combine patterns from all batches with attribution
     const allPatterns: DiscoveredPattern[] = [];
     let totalClaudeInputTokens = 0;
     let totalClaudeOutputTokens = 0;
     const claudePrompts: Record<string, string> = {};
     
-    clusterAnalysisResults.forEach(result => {
-      // Add cluster attribution to each pattern
-      result.patterns.forEach(pattern => {
-        allPatterns.push({
-          ...pattern,
-          source_thread: result.thread_sources.join(', '),
-          thread_purpose: result.is_wide ? 'WIDE cross-thread pattern' : 'DEEP specialized pattern',
-          cluster_info: {
-            is_wide: result.is_wide,
-            thread_sources: result.thread_sources,
-            avg_performance: result.avg_performance,
-            video_count: result.video_count
-          }
-        } as DiscoveredPattern & { 
-          source_thread: string; 
-          thread_purpose: string;
-          cluster_info: {
-            is_wide: boolean;
-            thread_sources: string[];
-            avg_performance: number;
-            video_count: number;
-          };
-        });
-      });
-      
-      // Aggregate token usage
-      if (result.usage) {
-        totalClaudeInputTokens += result.usage.input_tokens;
-        totalClaudeOutputTokens += result.usage.output_tokens;
+    // Process batch results to extract patterns and token usage
+    batchResults.forEach((batch, batchIdx) => {
+      // Aggregate token usage from batch
+      if (batch.usage) {
+        totalClaudeInputTokens += batch.usage.input_tokens;
+        totalClaudeOutputTokens += batch.usage.output_tokens;
       }
       
-      // Store prompts for debugging
-      claudePrompts[`cluster_${result.cluster_id}`] = result.prompt;
+      // Store batch prompt for debugging
+      claudePrompts[`batch_${batchIdx}`] = batch.prompt;
+      
+      // Extract patterns with cluster attribution
+      batch.patterns.forEach((pattern: DiscoveredPattern, patternIdx: number) => {
+        // Determine which cluster this pattern came from (assuming 3-5 patterns per cluster)
+        const clusterIdx = Math.floor(patternIdx / 4);
+        const cluster = batch.clusters[clusterIdx];
+        
+        if (cluster) {
+          allPatterns.push({
+            ...pattern,
+            source_thread: cluster.thread_sources.join(', '),
+            thread_purpose: cluster.is_wide ? 'WIDE cross-thread pattern' : 'DEEP specialized pattern',
+            cluster_info: {
+              is_wide: cluster.is_wide,
+              thread_sources: cluster.thread_sources,
+              avg_performance: cluster.avg_performance,
+              video_count: cluster.videos.length
+            }
+          } as DiscoveredPattern & { 
+            source_thread: string; 
+            thread_purpose: string;
+            cluster_info: {
+              is_wide: boolean;
+              thread_sources: string[];
+              avg_performance: number;
+              video_count: number;
+            };
+          });
+        } else {
+          allPatterns.push(pattern);
+        }
+      });
     });
     
     // Sort patterns by performance multiplier
@@ -450,30 +537,32 @@ export async function POST(req: NextRequest) {
     const stats = clusterAnalysisResults[0]?.stats;
     
     processingSteps.push({
-      step: 'Multi-Threaded Pattern Discovery',
+      step: 'Batched Pattern Discovery',
       duration_ms: Date.now() - stepStart,
       details: {
-        threadsAnalyzed: clusterAnalysisResults.length,
-        threadBreakdown: clusterAnalysisResults.map(t => ({
-          thread: t.thread_sources.join(', '),
-          videosAnalyzed: t.stats?.analyzedCount || 0,
-          patternsFound: t.patterns.length
+        totalClusters: clusters.length,
+        highQualityClusters: highQualityClusters.length,
+        batches: clusterBatches.length,
+        batchBreakdown: batchResults.map((b, idx) => ({
+          batchIndex: idx,
+          clustersInBatch: b.clusters.length,
+          patternsFound: b.patterns.length,
+          tokensUsed: (b.usage?.input_tokens || 0) + (b.usage?.output_tokens || 0)
         })),
-        totalVideosFound: stats?.totalVideos || 0,
-        performanceDistribution: stats?.performanceDistribution || {},
         totalPatternsFound: allPatterns.length,
         inputTokens: totalClaudeInputTokens,
         outputTokens: totalClaudeOutputTokens,
-        cost: openaiTotalCost
+        cost: openaiTotalCost,
+        tokenSavings: `${((1 - clusterBatches.length / highQualityClusters.length) * 100).toFixed(0)}% fewer API calls`
       }
     });
     
-    // Phase 2: Find more examples of each pattern
-    stepStart = Date.now();
-    console.log(`🔍 Phase 2: Searching for more pattern examples for ${allPatterns.length} patterns...`);
+    // Phase 2: Skip enrichment - we already have plenty of videos from pool-and-cluster
+    // stepStart = Date.now();
+    // console.log(`🔍 Phase 2: Searching for more pattern examples for ${allPatterns.length} patterns...`);
     
-    // For each discovered pattern, search for more similar titles
-    const enrichedPatterns = await Promise.all(
+    // Skip enrichment and use patterns directly
+    const enrichedPatterns = allPatterns; /* await Promise.all(
       allPatterns.map(async (pattern) => {
         try {
           // Skip if pattern doesn't have required fields
@@ -535,9 +624,10 @@ export async function POST(req: NextRequest) {
         
         return pattern;
       })
-    );
+    ); */
     
-    processingSteps.push({
+    // Skip Phase 2 processing step
+    /* processingSteps.push({
       step: 'Phase 2: Pattern Example Enrichment',
       duration_ms: Date.now() - stepStart,
       details: {
@@ -546,7 +636,7 @@ export async function POST(req: NextRequest) {
           sum + (p.additional_examples_found || 0), 0
         )
       }
-    });
+    }); */
     
     // Use enriched patterns instead of original
     const finalPatterns = enrichedPatterns.filter(p => p !== undefined);
@@ -615,8 +705,49 @@ export async function POST(req: NextRequest) {
       console.error('Error logging search data:', error);
     }
     
+    // Quality-based filtering instead of hard limit
+    const qualityThresholds = {
+      minPerformance: body.options?.minPerformance || 3.0,  // 3x minimum
+      minConfidence: body.options?.minConfidence || 0.7,    // 70% confidence
+      minSampleSize: body.options?.minSampleSize || 5,      // 5+ examples
+      maxSuggestions: body.options?.maxSuggestions || 50,   // Safety limit
+      balanceTypes: body.options?.balanceTypes !== false    // Balance WIDE/DEEP
+    };
+    
+    // Filter by quality
+    let qualitySuggestions = suggestions.filter(s => 
+      s.pattern.performance_lift >= qualityThresholds.minPerformance &&
+      s.evidence.confidence_score >= qualityThresholds.minConfidence &&
+      s.evidence.sample_size >= qualityThresholds.minSampleSize
+    );
+    
+    // If balancing types, ensure we show both WIDE and DEEP
+    if (qualityThresholds.balanceTypes && qualitySuggestions.length > 0) {
+      const wideSuggestions = qualitySuggestions.filter(s => s.pattern.pattern_type === 'WIDE');
+      const deepSuggestions = qualitySuggestions.filter(s => s.pattern.pattern_type === 'DEEP');
+      
+      // Take top 5 WIDE and fill rest with DEEP (or vice versa)
+      const maxWide = Math.min(5, wideSuggestions.length);
+      const maxDeep = qualityThresholds.maxSuggestions - maxWide;
+      
+      qualitySuggestions = [
+        ...wideSuggestions.slice(0, maxWide),
+        ...deepSuggestions.slice(0, maxDeep)
+      ];
+      
+      // Re-sort by performance
+      qualitySuggestions.sort((a, b) => {
+        const scoreA = a.pattern.performance_lift * a.evidence.confidence_score;
+        const scoreB = b.pattern.performance_lift * b.evidence.confidence_score;
+        return scoreB - scoreA;
+      });
+    }
+    
+    // Apply safety limit
+    qualitySuggestions = qualitySuggestions.slice(0, qualityThresholds.maxSuggestions);
+    
     const response: TitleGenerationResponse = {
-      suggestions: suggestions.slice(0, body.options?.maxSuggestions || 8),
+      suggestions: qualitySuggestions,
       concept: body.concept,
       total_patterns_searched: finalPatterns.length,
       semantic_neighborhoods_found: threads.length,
@@ -629,12 +760,32 @@ export async function POST(req: NextRequest) {
         topVideos,
         allVideosWithDetails: allVideosWithDetails,
         // Multi-threaded debug info
-        threads: threads.map(t => ({
+        expandedThreads: threads.map(t => ({
           name: t.angle,
-          purpose: t.intent,
-          queries: [t.query],
-          videosFound: 0 // Will be populated by clustering
+          angle: t.angle,
+          intent: t.intent,
+          queries: t.queries,
+          results_count: 0 // Will be populated by clustering
         })),
+        // Pool-and-cluster data
+        poolAndCluster: {
+          totalPooled: pooledVideos.length,
+          performanceFiltered: pooledVideos.filter(v => v.performance_ratio >= 1.0).length,
+          deduplicated: pooledVideos.length,
+          clusters: clusters.map((cluster, idx) => ({
+            cluster_id: idx.toString(),
+            size: cluster.videos.length,
+            thread_overlap: cluster.thread_sources.size,
+            avg_performance: cluster.avg_performance,
+            is_wide: cluster.is_wide,
+            sample_titles: cluster.videos.slice(0, 3).map(v => v.title),
+            thread_sources: Array.from(cluster.thread_sources)
+          })),
+          clusteringMethod: pooledVideos.filter(v => v.embedding && v.embedding.length > 0).length > 0 ? 'DBSCAN on embeddings' : 'Fallback title-based',
+          epsilon: 0.25,
+          minPoints: 2,
+          noisePoints: pooledVideos.filter(v => v.embedding).length - clusters.reduce((sum, c) => sum + c.videos.length, 0)
+        },
         claudePrompts: claudePrompts,
         claudeResponse: finalPatterns,
         claudePatterns: finalPatterns,
@@ -712,6 +863,7 @@ interface VideoWithAttribution {
   thread: string;
   query: string;
   threadPurpose: string;
+  embedding?: number[];
 }
 
 async function classifyQueryType(concept: string): Promise<{
@@ -794,6 +946,127 @@ async function discoverPatternsWithClaude(
   return discoverPatternsWithOpenAI(similarVideos, concept, threadContext);
 }
 
+// Batched pattern analysis for efficiency
+async function analyzePatternsBatched(
+  clusterBatch: any[],
+  concept: string,
+  batchIndex: number
+): Promise<{
+  patterns: DiscoveredPattern[];
+  prompt: string;
+  usage?: { input_tokens: number; output_tokens: number };
+  stats?: { totalVideos: number; performanceDistribution: any; analyzedCount: number }
+}> {
+  // Initialize Supabase client for this function
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  
+  // Collect all video IDs from all clusters in the batch
+  const allVideoIds = clusterBatch.flatMap(cluster => 
+    cluster.videos.map((v: any) => v.video_id)
+  );
+  
+  // Fetch video details
+  const { data: videos, error } = await supabase
+    .from('videos')
+    .select(`
+      id, 
+      title, 
+      view_count, 
+      channel_name, 
+      published_at,
+      performance_ratio,
+      outlier_factor
+    `)
+    .in('id', allVideoIds)
+    .not('performance_ratio', 'is', null);
+
+  if (error || !videos) {
+    console.error('Failed to fetch video data for batch:', error);
+    return { patterns: [], prompt: '', usage: undefined, stats: undefined };
+  }
+
+  // Build the batched prompt
+  const prompt = `Analyze these ${clusterBatch.length} video clusters for "${concept}" and identify actionable title patterns.
+
+${clusterBatch.map((cluster, idx) => {
+  const clusterVideos = videos.filter(v => 
+    cluster.videos.some((cv: any) => cv.video_id === v.id)
+  );
+  
+  return `
+CLUSTER ${batchIndex * 5 + idx + 1} [${cluster.is_wide ? 'WIDE' : 'DEEP'}] - Quality: ${(cluster.quality * 100).toFixed(0)}%
+Sources: ${cluster.thread_sources.slice(0, 5).join(', ')}${cluster.thread_sources.length > 5 ? '...' : ''}
+Size: ${clusterVideos.length} videos | Avg: ${cluster.avg_performance.toFixed(1)}x
+
+Top performers:
+${clusterVideos
+  .sort((a, b) => b.performance_ratio - a.performance_ratio)
+  .slice(0, 8)
+  .map(v => `- "${v.title}" (${v.performance_ratio.toFixed(1)}x, ${v.channel_name})`)
+  .join('\\n')}
+`;
+}).join('\\n---\\n')}
+
+Identify 3-5 title patterns per cluster that appear multiple times with >3x performance.
+Focus on patterns that would work for new videos about "${concept}".
+
+Return a JSON object with a "patterns" array containing all patterns from all clusters.`;
+
+  try {
+    // Use OpenAI with structured output
+    const completion = await openai.beta.chat.completions.parse({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert at analyzing YouTube video titles to discover high-performing patterns. Always return valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000, // Limit output per batch
+      response_format: zodResponseFormat(PatternDiscoverySchema, "pattern_discovery")
+    });
+
+    const parsedResponse = completion.choices[0].message.parsed;
+    
+    if (!parsedResponse) {
+      console.error('Failed to parse OpenAI response for batch');
+      return { patterns: [], prompt, usage: { 
+        input_tokens: completion.usage?.prompt_tokens || 0,
+        output_tokens: completion.usage?.completion_tokens || 0
+      }};
+    }
+
+    const patterns = parsedResponse.patterns || [];
+    
+    console.log(`✅ Batch ${batchIndex + 1} discovered ${patterns.length} patterns`);
+
+    return { 
+      patterns, 
+      prompt, 
+      usage: {
+        input_tokens: completion.usage?.prompt_tokens || 0,
+        output_tokens: completion.usage?.completion_tokens || 0
+      },
+      stats: {
+        totalVideos: videos.length,
+        performanceDistribution: {},
+        analyzedCount: videos.length
+      }
+    };
+  } catch (error) {
+    console.error('Error analyzing patterns in batch:', error);
+    return { patterns: [], prompt, usage: undefined, stats: undefined };
+  }
+}
+
 async function discoverPatternsWithOpenAI(
   similarVideos: any[],
   concept: string,
@@ -806,6 +1079,13 @@ async function discoverPatternsWithOpenAI(
 }> {
   // Get full video data with performance metrics - USE EXISTING PERFORMANCE DATA!
   const videoIds = similarVideos.map(v => v.video_id);
+  
+  // Initialize Supabase client for this function
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  
   const { data: videos, error } = await supabase
     .from('videos')
     .select(`
@@ -1003,7 +1283,16 @@ async function generateTitlesFromPatterns(
     console.log(`🎭 Returning template: ${generatedTitle} from pattern ${pattern.pattern}`);
     
     // Add attribution if pattern has thread info
-    const patternWithAttribution = pattern as VerifiedPattern & { source_thread?: string; thread_purpose?: string };
+    const patternWithAttribution = pattern as VerifiedPattern & { 
+      source_thread?: string; 
+      thread_purpose?: string;
+      cluster_info?: {
+        is_wide: boolean;
+        thread_sources: string[];
+        avg_performance: number;
+        video_count: number;
+      };
+    };
     
     const suggestion: TitleSuggestion = {
       title: generatedTitle,
@@ -1017,6 +1306,10 @@ async function generateTitlesFromPatterns(
         // Add attribution info if available
         source_thread: patternWithAttribution.source_thread,
         thread_purpose: patternWithAttribution.thread_purpose,
+        // Add cluster-based pattern type info
+        pattern_type: patternWithAttribution.cluster_info?.is_wide ? 'WIDE' : 'DEEP',
+        thread_count: patternWithAttribution.cluster_info?.thread_sources.length || 1,
+        found_by_threads: patternWithAttribution.cluster_info?.thread_sources || [patternWithAttribution.source_thread || 'unknown'],
         // Add verification data
         verification: patternWithAttribution.verification
       },
@@ -1360,32 +1653,23 @@ async function expandThreadsWithLLM(concept: string): Promise<ThreadExpansion[]>
   try {
     console.log(`🎯 Expanding threads for: "${concept}"`);
     
-    const prompt = `Generate 15 diverse thread categories for: "${concept}"
+    const prompt = `Generate 12 diverse thread categories for: "${concept}"
 
-For each thread, create 6 specific search query variations. Each thread should explore a different angle:
-- Direct variations (2-3 threads)
-- Audience/skill levels (2-3 threads)  
-- Content formats (tutorials, reviews, comparisons, mistakes) (3-4 threads)
-- Problems/outcomes/benefits (2-3 threads)
-- Adjacent/creative angles (2-3 threads)
+For each thread, create 3 specific search query variations. Each thread should explore a different angle:
+- Direct variations (2 threads)
+- Audience/skill levels (2 threads)  
+- Content formats (tutorials, reviews, comparisons, mistakes) (3 threads)
+- Problems/outcomes/benefits (2 threads)
+- Adjacent/creative angles (3 threads)
 
 Return a JSON object with a "threads" array. Each thread should have:
 {
   "angle": "brief angle description",
   "intent": "what videos this will find", 
-  "queries": ["query1", "query2", "query3", "query4", "query5", "query6"]
+  "queries": ["query1", "query2", "query3"]
 }
 
-Example structure:
-{
-  "threads": [
-    {
-      "angle": "Direct variations",
-      "intent": "Find videos about the exact topic",
-      "queries": ["variation1", "variation2", "variation3", "variation4", "variation5", "variation6"]
-    }
-  ]
-}`;
+Keep queries concise and focused. Total output should be 36 queries (12 threads × 3 queries).`;
 
     const response = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",
@@ -1447,6 +1731,47 @@ interface VideoCluster {
   centroid_similarity: number;
 }
 
+// Types for cluster quality scoring
+interface ScoredCluster extends VideoCluster {
+  quality: number;
+  size: number;
+}
+
+// Smart cluster selection with quality scoring
+function selectHighValueClusters(clusters: VideoCluster[]): ScoredCluster[] {
+  return clusters
+    .map(cluster => ({
+      ...cluster,
+      size: cluster.videos.length,
+      quality: calculateClusterQuality(cluster)
+    }))
+    .sort((a, b) => b.quality - a.quality)
+    .slice(0, 20); // Focus on top 20 clusters
+}
+
+function calculateClusterQuality(cluster: VideoCluster): number {
+  const sizeScore = Math.min(cluster.videos.length / 10, 1); // Favor 10+ videos
+  const performanceScore = Math.min(cluster.avg_performance / 5, 1); // Normalize to 0-1
+  const diversityScore = Math.min(cluster.thread_sources.size / 8, 1); // Thread variety
+  const coherenceScore = cluster.centroid_similarity || 0.7; // Use similarity as coherence proxy
+  
+  return (sizeScore * 0.3) + 
+         (performanceScore * 0.3) + 
+         (diversityScore * 0.2) + 
+         (coherenceScore * 0.2);
+}
+
+// Create batches of clusters for efficient API calls
+function createSmartBatches(clusters: ScoredCluster[], batchSize: number): ScoredCluster[][] {
+  const batches: ScoredCluster[][] = [];
+  
+  for (let i = 0; i < clusters.length; i += batchSize) {
+    batches.push(clusters.slice(i, i + batchSize));
+  }
+  
+  return batches;
+}
+
 async function createPooledVideosWithProvenance(
   similarVideos: VideoWithAttribution[], 
   allVideoDetails: any[]
@@ -1466,7 +1791,8 @@ async function createPooledVideosWithProvenance(
         similarity_score: video.similarity_score,
         found_by_threads: new Set(),
         thread_purposes: new Set(),
-        view_count: details?.view_count || 0
+        view_count: details?.view_count || 0,
+        embedding: video.embedding  // Include embedding from search results
       });
     }
     
@@ -1474,27 +1800,166 @@ async function createPooledVideosWithProvenance(
     pooledVideo.found_by_threads.add(video.thread);
     pooledVideo.thread_purposes.add(video.threadPurpose);
     
-    // Keep highest similarity score
+    // Keep highest similarity score and corresponding embedding
     if (video.similarity_score > pooledVideo.similarity_score) {
       pooledVideo.similarity_score = video.similarity_score;
+      if (video.embedding) {
+        pooledVideo.embedding = video.embedding;
+      }
     }
   });
   
   // Filter for performance and return
   return Array.from(videoMap.values())
-    .filter(v => v.performance_ratio >= 1.0) // Lowered performance filter to include more videos
+    .filter(v => v.performance_ratio >= 1.0) // Only keep videos that performed at or above channel average
     .sort((a, b) => b.performance_ratio - a.performance_ratio);
 }
 
+// Calculate cosine similarity between two vectors
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// DBSCAN clustering implementation
+function dbscan(videos: PooledVideo[], epsilon: number, minPoints: number): number[] {
+  const n = videos.length;
+  const labels = new Array(n).fill(-1); // -1 = unvisited, -2 = noise, 0+ = cluster ID
+  let clusterId = 0;
+  
+  // Helper to find neighbors within epsilon distance
+  function findNeighbors(pointIdx: number): number[] {
+    const neighbors: number[] = [];
+    const point = videos[pointIdx];
+    if (!point.embedding) return neighbors;
+    
+    for (let i = 0; i < n; i++) {
+      if (i === pointIdx || !videos[i].embedding) continue;
+      
+      const similarity = cosineSimilarity(point.embedding, videos[i].embedding!);
+      if (similarity >= (1 - epsilon)) { // Convert epsilon distance to similarity
+        neighbors.push(i);
+      }
+    }
+    
+    return neighbors;
+  }
+  
+  // Main DBSCAN algorithm
+  for (let i = 0; i < n; i++) {
+    if (labels[i] !== -1 || !videos[i].embedding) continue; // Skip visited or no embedding
+    
+    const neighbors = findNeighbors(i);
+    
+    if (neighbors.length < minPoints - 1) {
+      labels[i] = -2; // Mark as noise
+      continue;
+    }
+    
+    // Start new cluster
+    labels[i] = clusterId;
+    const seeds = [...neighbors];
+    
+    while (seeds.length > 0) {
+      const currentIdx = seeds.shift()!;
+      
+      if (labels[currentIdx] === -2) {
+        labels[currentIdx] = clusterId; // Change noise to border point
+      }
+      
+      if (labels[currentIdx] !== -1) continue; // Skip if already processed
+      
+      labels[currentIdx] = clusterId;
+      
+      const currentNeighbors = findNeighbors(currentIdx);
+      if (currentNeighbors.length >= minPoints - 1) {
+        seeds.push(...currentNeighbors.filter(idx => labels[idx] === -1));
+      }
+    }
+    
+    clusterId++;
+  }
+  
+  return labels;
+}
+
 async function clusterVideosByContent(pooledVideos: PooledVideo[]): Promise<VideoCluster[]> {
-  // Simple clustering based on title similarity and thread overlap
+  // Filter videos that have embeddings
+  const videosWithEmbeddings = pooledVideos.filter(v => v.embedding && v.embedding.length > 0);
+  
+  if (videosWithEmbeddings.length === 0) {
+    console.warn('⚠️ No videos with embeddings found, falling back to simple clustering');
+    return fallbackClustering(pooledVideos);
+  }
+  
+  console.log(`🔬 Running DBSCAN on ${videosWithEmbeddings.length} videos with embeddings`);
+  
+  // DBSCAN parameters - tighter clustering for better quality
+  const epsilon = 0.12; // 88% similarity = 0.12 distance - tighter clusters
+  const minPoints = 4; // Minimum cluster size - require more videos
+  
+  // Run DBSCAN
+  const labels = dbscan(videosWithEmbeddings, epsilon, minPoints);
+  
+  // Group videos by cluster
+  const clusterMap = new Map<number, VideoCluster>();
+  
+  videosWithEmbeddings.forEach((video, idx) => {
+    const label = labels[idx];
+    if (label < 0) return; // Skip noise points
+    
+    if (!clusterMap.has(label)) {
+      clusterMap.set(label, {
+        videos: [],
+        thread_sources: new Set(),
+        avg_performance: 0,
+        is_wide: false,
+        centroid_similarity: 0
+      });
+    }
+    
+    const cluster = clusterMap.get(label)!;
+    cluster.videos.push(video);
+    video.found_by_threads.forEach(t => cluster.thread_sources.add(t));
+  });
+  
+  // Calculate cluster metrics and convert to array
+  const clusters = Array.from(clusterMap.values()).map(cluster => {
+    cluster.avg_performance = cluster.videos.reduce((sum, v) => sum + v.performance_ratio, 0) / cluster.videos.length;
+    cluster.is_wide = cluster.thread_sources.size >= 3;
+    cluster.centroid_similarity = cluster.videos.reduce((sum, v) => sum + v.similarity_score, 0) / cluster.videos.length;
+    return cluster;
+  });
+  
+  console.log(`✅ Found ${clusters.length} clusters (${clusters.filter(c => c.is_wide).length} WIDE, ${clusters.filter(c => !c.is_wide).length} DEEP)`);
+  
+  // Sort clusters by wide patterns first, then by performance
+  return clusters.sort((a, b) => {
+    if (a.is_wide !== b.is_wide) return b.is_wide ? 1 : -1;
+    return b.avg_performance - a.avg_performance;
+  });
+}
+
+// Fallback clustering when embeddings are not available
+function fallbackClustering(pooledVideos: PooledVideo[]): VideoCluster[] {
+  console.warn('⚠️ Using fallback title-based clustering');
   const clusters: VideoCluster[] = [];
   const processed = new Set<string>();
   
   for (const video of pooledVideos) {
     if (processed.has(video.video_id)) continue;
     
-    // Create new cluster
     const cluster: VideoCluster = {
       videos: [video],
       thread_sources: new Set(video.found_by_threads),
@@ -1505,22 +1970,18 @@ async function clusterVideosByContent(pooledVideos: PooledVideo[]): Promise<Vide
     
     processed.add(video.video_id);
     
-    // Find similar videos for this cluster
+    // Simple title matching
     const titleWords = video.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
     
     for (const otherVideo of pooledVideos) {
       if (processed.has(otherVideo.video_id)) continue;
       
-      // Check for title similarity
       const otherTitleWords = otherVideo.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
       const commonWords = titleWords.filter(w => otherTitleWords.includes(w));
-      
-      // Check for thread overlap
       const threadOverlap = Array.from(video.found_by_threads).some(t => 
         otherVideo.found_by_threads.has(t)
       );
       
-      // Cluster if similar content or shared threads
       if (commonWords.length >= 2 || threadOverlap) {
         cluster.videos.push(otherVideo);
         otherVideo.found_by_threads.forEach(t => cluster.thread_sources.add(t));
@@ -1528,17 +1989,14 @@ async function clusterVideosByContent(pooledVideos: PooledVideo[]): Promise<Vide
       }
     }
     
-    // Calculate cluster metrics
     if (cluster.videos.length >= 3) {
       cluster.avg_performance = cluster.videos.reduce((sum, v) => sum + v.performance_ratio, 0) / cluster.videos.length;
       cluster.is_wide = cluster.thread_sources.size >= 3;
       cluster.centroid_similarity = cluster.videos.reduce((sum, v) => sum + v.similarity_score, 0) / cluster.videos.length;
-      
       clusters.push(cluster);
     }
   }
   
-  // Sort clusters by wide patterns first, then by performance
   return clusters.sort((a, b) => {
     if (a.is_wide !== b.is_wide) return b.is_wide ? 1 : -1;
     return b.avg_performance - a.avg_performance;

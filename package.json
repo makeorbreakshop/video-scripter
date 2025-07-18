@@ -27,7 +27,13 @@
     "test:patterns:fix": "dotenv -e .env -- node --loader tsx test-and-fix-patterns.js",
     "test:patterns:all": "npm run test:patterns:unit && npm run test:patterns:api && npm run test:patterns:full",
     "test:patterns:quick": "dotenv -e .env -- node --loader tsx quick-pattern-test.js",
-    "analyze-search": "node scripts/analyze-search-log.js"
+    "analyze-search": "node scripts/analyze-search-log.js",
+    "test:pinecone": "dotenv -e .env -- tsx tests/quick-pinecone-test.ts",
+    "test:system": "dotenv -e .env -- tsx tests/run-all-tests.ts",
+    "test:health": "dotenv -e .env -- tsx tests/system-health-check.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
@@ -122,6 +128,11 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.16.3",
     "@types/react": "^19",
@@ -130,9 +141,14 @@
     "concurrently": "^9.2.0",
     "eslint": "^9.29.0",
     "eslint-config-next": "^15.3.4",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
     "kill-port": "^2.0.1",
+    "msw": "^2.10.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.0",
     "tsx": "^4.20.3",
     "typescript": "^5"
   }

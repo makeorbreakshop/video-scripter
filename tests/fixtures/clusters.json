@@ -1,0 +1,100 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "0",
+      "size": 25,
+      "thread_overlap": 3,
+      "avg_performance": 4.2,
+      "is_wide": true,
+      "videos": [
+        {
+          "id": "video_wide_001",
+          "title": "Complete Woodworking Setup: Tools, Safety, and First Projects",
+          "performance_ratio": 4.5,
+          "embedding_similarity": 0.92
+        },
+        {
+          "id": "video_wide_002",
+          "title": "Ultimate Beginner's Guide: Tools, Techniques, and Workshop Setup",
+          "performance_ratio": 4.8,
+          "embedding_similarity": 0.89
+        },
+        {
+          "id": "video_wide_003",
+          "title": "Everything You Need: Tools, Materials, and Project Ideas",
+          "performance_ratio": 4.2,
+          "embedding_similarity": 0.87
+        }
+      ],
+      "dominant_themes": ["comprehensive", "all-in-one", "complete guide"],
+      "thread_sources": ["beginner tools", "workshop setup", "getting started"]
+    },
+    {
+      "cluster_id": "1",
+      "size": 18,
+      "thread_overlap": 1,
+      "avg_performance": 3.8,
+      "is_wide": false,
+      "videos": [
+        {
+          "id": "video_deep_001",
+          "title": "5 Essential Hand Tools Every Beginner Needs",
+          "performance_ratio": 4.1,
+          "embedding_similarity": 0.94
+        },
+        {
+          "id": "video_deep_002",
+          "title": "7 Must-Have Power Tools for Your First Workshop",
+          "performance_ratio": 3.9,
+          "embedding_similarity": 0.91
+        },
+        {
+          "id": "video_deep_003",
+          "title": "The 3 Tools I Use Every Single Day",
+          "performance_ratio": 3.5,
+          "embedding_similarity": 0.88
+        }
+      ],
+      "dominant_themes": ["specific number", "essential tools", "must-have"],
+      "thread_sources": ["essential tools"]
+    },
+    {
+      "cluster_id": "2",
+      "size": 12,
+      "thread_overlap": 2,
+      "avg_performance": 3.6,
+      "is_wide": false,
+      "videos": [
+        {
+          "id": "video_comp_001",
+          "title": "Router vs. Jigsaw: Which Should You Buy First?",
+          "performance_ratio": 3.8,
+          "embedding_similarity": 0.90
+        },
+        {
+          "id": "video_comp_002",
+          "title": "Hand Tools vs. Power Tools for Beginners",
+          "performance_ratio": 3.5,
+          "embedding_similarity": 0.88
+        },
+        {
+          "id": "video_comp_003",
+          "title": "Cheap vs. Expensive Tools: Is It Worth It?",
+          "performance_ratio": 3.4,
+          "embedding_similarity": 0.85
+        }
+      ],
+      "dominant_themes": ["comparison", "versus", "decision making"],
+      "thread_sources": ["tool comparisons", "buying decisions"]
+    }
+  ],
+  "clusteringMetrics": {
+    "epsilon": 0.15,
+    "minSamples": 3,
+    "totalVideos": 78,
+    "clusteredVideos": 55,
+    "noisePoints": 23,
+    "averageClusterSize": 18.3,
+    "silhouetteScore": 0.72
+  }
+}

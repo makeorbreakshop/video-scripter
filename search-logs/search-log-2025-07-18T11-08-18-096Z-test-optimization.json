@@ -1,0 +1,3194 @@
+{
+  "timestamp": "2025-07-18T11:08:18.096Z",
+  "concept": "test optimization",
+  "expandedQueries": [],
+  "expandedQueriesByThread": [
+    {
+      "threadName": "direct",
+      "queries": [
+        "test optimization"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "zjX2iLeC8Hg",
+      "title": "Test Barrel Proof Testing",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.501191139,
+      "performanceRatio": 0.709351864356837,
+      "viewCount": 6256,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "fc9Y2BHbos8",
+      "title": "Multi-Armed Bandits and A/B Testing",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.495500118,
+      "performanceRatio": 0.411866252093606,
+      "viewCount": 6373,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "S2PQK63fvHA",
+      "title": "Signal R2 - User Error Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.493226647,
+      "performanceRatio": 0.0451897865608838,
+      "viewCount": 11216,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "2sWVLMVQsu0",
+      "title": "A/B Testing Interview with a Google Data Scientist",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.491495252,
+      "performanceRatio": 2.90923759677479,
+      "viewCount": 45016,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "g0VFwuKr4bQ",
+      "title": "Scout V 0.1 - Dynamic Test 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.480482,
+      "performanceRatio": 0.258946824381954,
+      "viewCount": 64270,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "w8pu5PhD2B8",
+      "title": "Rocket Tuning - Build Signal R2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.479467481,
+      "performanceRatio": 0.184969499930779,
+      "viewCount": 45909,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "1gTBZyGJyQc",
+      "title": "oops.. Testing TESLA's PERFORMANCE MODEL 3",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.479044527,
+      "performanceRatio": 0.618484049929261,
+      "viewCount": 2063543,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "pr4DHbE85fM",
+      "title": "Easy Tool Tests and Quick Fixes",
+      "channelName": "April Wilkerson",
+      "similarityScore": 0.476064742,
+      "performanceRatio": 0.175506798138149,
+      "viewCount": 90608,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "OYXxlSmDb9Q",
+      "title": "Testing How to Improve Your Cookie Recipe!",
+      "channelName": "Nate From the Internet",
+      "similarityScore": 0.475896657,
+      "performanceRatio": 0.0429747835670119,
+      "viewCount": 30347,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "O3hlnwi2eE0",
+      "title": "Six-Figure Data Science Job - Mentorship Series - EP.03 - A/B Testing Case Study",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.472981691,
+      "performanceRatio": 0.0677934565269406,
+      "viewCount": 1049,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "LfuK8rHzFMY",
+      "title": "Scout V 0.2 - Dynamic Test 2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.466401607,
+      "performanceRatio": 0.132531458553291,
+      "viewCount": 32894,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "xKaCK1lPJMQ",
+      "title": "The Most Innovative Outlet You've Never Seen | Full Load Testing",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.462929964,
+      "performanceRatio": 0.27815599899619,
+      "viewCount": 137533,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "q3V2FVSTEos",
+      "title": "judge simulator",
+      "channelName": "BENOFTHEWEEK",
+      "similarityScore": 0.462088376,
+      "performanceRatio": 0,
+      "viewCount": 375263,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "FC5X09o85xE",
+      "title": "SQL Take-Home Challenge Tutorial",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.459570974,
+      "performanceRatio": 0.908522794905368,
+      "viewCount": 14058,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "mb9LuI5K7KU",
+      "title": "Scout V 0.3 - Dynamic Test 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.457061797,
+      "performanceRatio": 0.118155820317803,
+      "viewCount": 29326,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Ya3ejsgVjiU",
+      "title": "Testing a HUGE Sample Pack from Ocooch Hardwoods!",
+      "channelName": "Laser Everything",
+      "similarityScore": 0.451659232,
+      "performanceRatio": 0.386773716358837,
+      "viewCount": 1175,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "7Cv4h9bXLxg",
+      "title": "What happened when we A/B tested our Black Friday promotion",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.450916439,
+      "performanceRatio": 0.0690859914464247,
+      "viewCount": 1069,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "agtoHvcpcP4",
+      "title": "Sprint - Test Flight 1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.446635246,
+      "performanceRatio": 0.530851062599483,
+      "viewCount": 131756,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VtywJHjemks",
+      "title": "Testing Ultralumen!",
+      "channelName": "gordontarpley",
+      "similarityScore": 0.444861293,
+      "performanceRatio": 0.468246817274392,
+      "viewCount": 1881,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "UL7fZS304Yw",
+      "title": "Ground Testing - Build Signal R2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.444093734,
+      "performanceRatio": 0.123127663810682,
+      "viewCount": 30560,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "D7UskNM6Lsc",
+      "title": "Google Statistical Coding & Algorithms Mock Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.441640317,
+      "performanceRatio": 1.09180424648821,
+      "viewCount": 16894,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "XwASPWXh0us",
+      "title": "Sprint - Test Flight 4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.438310236,
+      "performanceRatio": 0.345885591715295,
+      "viewCount": 85848,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "QpqoesbnTWo",
+      "title": "Testing my Bandsaw app",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.437371194,
+      "performanceRatio": 0.0859863590790355,
+      "viewCount": 8375,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "C3H4LKmcw1M",
+      "title": "Test Your Prompts with Every ChatBot (for Free)",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.43691963,
+      "performanceRatio": 0.277832089443985,
+      "viewCount": 40026,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "0ykvmCi_UXs",
+      "title": "Build Signal Alpha - Part 4 - Tuning and Flight",
+      "channelName": "BPS.space",
+      "similarityScore": 0.436555862,
+      "performanceRatio": 0.118901193937076,
+      "viewCount": 29511,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "CijwgzDvOj4",
+      "title": "Meta Data Scientist Interview: A/B Test on Facebook's Friend's Features",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.436521649,
+      "performanceRatio": 0.539827209122531,
+      "viewCount": 8353,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "0EyxipDhMXg",
+      "title": "Live RCS Roll Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.436492205,
+      "performanceRatio": 0.0941427026374475,
+      "viewCount": 23366,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "bktLkPzWVoY",
+      "title": "Facebook Product Investigation Mock Interview: Part 1 (Fill Rate)",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.435905635,
+      "performanceRatio": 1.42417960103355,
+      "viewCount": 22037,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "8tkMoZexLFg",
+      "title": "Echo - Drop Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.430670202,
+      "performanceRatio": 0.135106019324725,
+      "viewCount": 33533,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "xUW-zEBpA5M",
+      "title": "I Tested CHEAP vs EXPENSIVE Tracks Saws (Only 1 Winner)",
+      "channelName": "731 Woodworks",
+      "similarityScore": 0.428873122,
+      "performanceRatio": 4.23624995759166,
+      "viewCount": 731093,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "cX9ecrg3ErY",
+      "title": "WeCreat Vision Pro 45  Cut Testing",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.42825678,
+      "performanceRatio": 0.331536492305893,
+      "viewCount": 1345,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "zEA2ENkTAhM",
+      "title": "Test Stream",
+      "channelName": "Make or Break Shop",
+      "similarityScore": 0.427754164,
+      "performanceRatio": -0.999970071076565,
+      "viewCount": 2,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "2dRr8cIFCu4",
+      "title": "Load Testing DIY Wire Connectors |  What Could Go Wrong!",
+      "channelName": "Everyday Home Repairs",
+      "similarityScore": 0.427636504,
+      "performanceRatio": 0.966055788738107,
+      "viewCount": 477662,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "UKJ2pS2ah-s",
+      "title": "Falcon Heavy Model Tuning and Simulation",
+      "channelName": "BPS.space",
+      "similarityScore": 0.427337497,
+      "performanceRatio": 0,
+      "viewCount": 0,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Bxu2_aIEvpo",
+      "title": "Falcon Heavy Model Tuning and Simulation",
+      "channelName": "BPS.space",
+      "similarityScore": 0.427337497,
+      "performanceRatio": 0.194723821726775,
+      "viewCount": 48330,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "tZ2B3itsgUw",
+      "title": "The AI Sandbox - Testing Cool AI Stuff Live",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.426624537,
+      "performanceRatio": 0.112615495406466,
+      "viewCount": 16224,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Q1y8c_MZYvE",
+      "title": "5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.425984263,
+      "performanceRatio": 7.11536861881124,
+      "viewCount": 4695692,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "GBjiEmN5HzA",
+      "title": "The Most Comprehensive Sharpening Test Ever Done",
+      "channelName": "Jonathan Katz-Moses",
+      "similarityScore": 0.425211608,
+      "performanceRatio": 0.483177133298303,
+      "viewCount": 132728,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "CM0TskDKoew",
+      "title": "Echo - Drop Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.424714416,
+      "performanceRatio": 0.295353289375192,
+      "viewCount": 73306,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "u8R6fgN-RsY",
+      "title": "Toolpost Grinder Part 24: First Test Grind",
+      "channelName": "Clough42",
+      "similarityScore": 0.421915263,
+      "performanceRatio": 0.840182114488298,
+      "viewCount": 64931,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "WTQ1Kb1Fvj8",
+      "title": "Sprint - Test Flight 8 and Data Review",
+      "channelName": "BPS.space",
+      "similarityScore": 0.421568751,
+      "performanceRatio": 0.514154693527773,
+      "viewCount": 127612,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "g8AogXYg0No",
+      "title": "Testing MidJourney Hacks From Twitter",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.420652747,
+      "performanceRatio": 1.24423324501384,
+      "viewCount": 179251,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "J2ACQsmkPJs",
+      "title": "Sprint - Test Flight 2 + Q&A",
+      "channelName": "BPS.space",
+      "similarityScore": 0.419443041,
+      "performanceRatio": 0.453356380474658,
+      "viewCount": 112522,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "4R9kaZAtxlE",
+      "title": "The AI Sandbox - Testing All The New AI Tools Live!",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.419351041,
+      "performanceRatio": 0.178883994829884,
+      "viewCount": 25771,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "msG2G0zv0bE",
+      "title": "String Spacer Prototype (and a new Wrench!) - Beta Testers Needed - SqWAYre Tools",
+      "channelName": "tim sway",
+      "similarityScore": 0.419279039,
+      "performanceRatio": 0.0806823691229328,
+      "viewCount": 2786,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Vw6y5kngkHY",
+      "title": "BASIC Optimization for x86 x64 Windows Virtual Machines on UTM",
+      "channelName": "Laser Everything",
+      "similarityScore": 0.418452,
+      "performanceRatio": 1.74327966113736,
+      "viewCount": 5296,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "JiRHgYVFF1k",
+      "title": "Best vise liner testing",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.416206747,
+      "performanceRatio": 0.199745028762106,
+      "viewCount": 19455,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "GOWC5fzv70k",
+      "title": "Sprint - Test Flight 3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.415569901,
+      "performanceRatio": 0.342976620076836,
+      "viewCount": 85126,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "w4sLAQvEH-M",
+      "title": "The Longest-Running Evolution Experiment",
+      "channelName": "Veritasium",
+      "similarityScore": 0.415263861,
+      "performanceRatio": 0.911424129308357,
+      "viewCount": 6653285,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "alOE1acBlxE",
+      "title": "I Tested Online Personal Trainers..",
+      "channelName": "Nicolas Berndt",
+      "similarityScore": 0.414125949,
+      "performanceRatio": 0.0976203005680897,
+      "viewCount": 35315,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "USkDbcGPKP0",
+      "title": "A Brain Hack (of sorts) for Exams and Tests - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.413373232,
+      "performanceRatio": 0.424481700792176,
+      "viewCount": 280131,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "kEsnIVfkRVM",
+      "title": "1000 Out of Spec Parts",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.412999392,
+      "performanceRatio": 0.274930474438019,
+      "viewCount": 26778,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "I3E58_68SD0",
+      "title": "Miter Set Accuracy Test",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.411519736,
+      "performanceRatio": 0.0985326672336124,
+      "viewCount": 9597,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "mn67M1bJyUs",
+      "title": "TVC Model Verification",
+      "channelName": "BPS.space",
+      "similarityScore": 0.410491377,
+      "performanceRatio": 0.293753757878698,
+      "viewCount": 72909,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "At0zKZ0_u2o",
+      "title": "ADIDAS CONEXT 19 | PLAY TEST",
+      "channelName": "DavidMC",
+      "similarityScore": 0.410418361,
+      "performanceRatio": 0,
+      "viewCount": 21353,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "hNksWHJ2rZE",
+      "title": "Review of National Instruments VirtualBench",
+      "channelName": "Applied Science",
+      "similarityScore": 0.410163909,
+      "performanceRatio": 0.270750656172015,
+      "viewCount": 86030,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "EJj2BA1BhNA",
+      "title": "Testing (almost) Every Filament So You Don't Have To!",
+      "channelName": "Frankly Built",
+      "similarityScore": 0.409774095,
+      "performanceRatio": 0.324549302478866,
+      "viewCount": 119274,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "P3LglU8Rnlo",
+      "title": "Testing ALL of the 3D Printed Shoes!",
+      "channelName": "3D Printing Nerd",
+      "similarityScore": 0.409701228,
+      "performanceRatio": 1.58228934778341,
+      "viewCount": 120714,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "JbAzlw49QV4",
+      "title": "LIVE Sprint - Test Flight 10 - 1km",
+      "channelName": "BPS.space",
+      "similarityScore": 0.408884555,
+      "performanceRatio": 0.350877580441128,
+      "viewCount": 87087,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "8_hJ48LCXWs",
+      "title": "Echo - Landing Test #1",
+      "channelName": "BPS.space",
+      "similarityScore": 0.408706695,
+      "performanceRatio": 0.632983364626217,
+      "viewCount": 157105,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "v2v_YvCyxPE",
+      "title": "Amazon SQL Mock Interview Question: Conversation Distribution",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.408051789,
+      "performanceRatio": 1.1416960943803,
+      "viewCount": 17666,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "7lfxKbPu0FA",
+      "title": "Start Making Test Grids in LightBurn TODAY - Material Test Tool",
+      "channelName": "Laser Everything",
+      "similarityScore": 0.407637686,
+      "performanceRatio": 4.33844900562508,
+      "viewCount": 13180,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "eZHTNFHt4zk",
+      "title": "Dropbox Data Scientist Mock Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.406470358,
+      "performanceRatio": 0.529034542544839,
+      "viewCount": 8186,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "whjqHPussEc",
+      "title": "5 Rules for Running Improvement",
+      "channelName": "Gritty Soldier",
+      "similarityScore": 0.406090289,
+      "performanceRatio": 0.718169193191789,
+      "viewCount": 30692,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VlDTMIgGbRo",
+      "title": "I Tested 1-Star Drive Thrus",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.405036062,
+      "performanceRatio": 0,
+      "viewCount": 33444301,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "S4HfGVRU_xY",
+      "title": "Echo - Landing Test #5",
+      "channelName": "BPS.space",
+      "similarityScore": 0.404502779,
+      "performanceRatio": 0.760083668375293,
+      "viewCount": 188651,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "yx5zLykjKy8",
+      "title": "Echo - Landing Test #4",
+      "channelName": "BPS.space",
+      "similarityScore": 0.404287964,
+      "performanceRatio": 0.982579708251514,
+      "viewCount": 243874,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "XcXSmGDxH-4",
+      "title": "The TRAVEL EXPERIMENT",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.403456062,
+      "performanceRatio": 0.873562117891304,
+      "viewCount": 2914599,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Hpaf5nbHV7U",
+      "title": "Scout V 0.7 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.403317809,
+      "performanceRatio": 0.0936995075124745,
+      "viewCount": 23256,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "xCAhy5aCnQc",
+      "title": "Case Hardening, Testing Recipes. Pt 4",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.40265727,
+      "performanceRatio": 0.0393454438829639,
+      "viewCount": 347,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "aZm0GMoOO40",
+      "title": "NordBench Pro vs NordBench:  Side-by-Side Comparison & Preview",
+      "channelName": "Shredded Dad Garage Gym",
+      "similarityScore": 0.401093841,
+      "performanceRatio": 0.0344767928755077,
+      "viewCount": 510,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "NsjrTfA_ysU",
+      "title": "Live RCS Ground Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.400773764,
+      "performanceRatio": 0.0913626604898895,
+      "viewCount": 22676,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "ejALPYa6IeY",
+      "title": "Scout V 0.5 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.400549173,
+      "performanceRatio": 0.0854842815141112,
+      "viewCount": 21217,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "7Qebh2vf888",
+      "title": "Better Tensile Testing Grips | Tensile Tester Part 2",
+      "channelName": "Clough42",
+      "similarityScore": 0.400429308,
+      "performanceRatio": 0.348852009157483,
+      "viewCount": 26960,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "lXy-x6lkQvQ",
+      "title": "Echo - Landing Test #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.399844974,
+      "performanceRatio": 0.693717212933881,
+      "viewCount": 172179,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "hMgFFlDhTbA",
+      "title": "Testing Shaper Origin Handheld CNC Machine",
+      "channelName": "Michael Alm (ALM FAB)",
+      "similarityScore": 0.399290502,
+      "performanceRatio": 1.62536513875227,
+      "viewCount": 582681,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "LcVz8wSM-AM",
+      "title": "Facebook SQL Mock Technical Interview: Part 2",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.398746073,
+      "performanceRatio": 3.37364539334543,
+      "viewCount": 52202,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "EA-CmUvIsjg",
+      "title": "WW Thread Tap - Launch and Testing",
+      "channelName": "Andrew Klein",
+      "similarityScore": 0.398694038,
+      "performanceRatio": 0.300495374032861,
+      "viewCount": 29268,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VcU4B4nAfjg",
+      "title": "How to OPTIMISE your next LEG training day (S&A Ep 11)",
+      "channelName": "TeamRICHEY",
+      "similarityScore": 0.398325235,
+      "performanceRatio": 0.126950574943186,
+      "viewCount": 8166,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "rd6OO5wkI0w",
+      "title": "ACE your Meta (Instagram) Data Science Case Study Interview Question - ULTIMATE GUIDE",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.397761792,
+      "performanceRatio": 0.460400938320234,
+      "viewCount": 7124,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "SxsW-XZ9cQw",
+      "title": "TESTING SEGWAY ELECTRIC SHOES",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.397217244,
+      "performanceRatio": 2.96597549151333,
+      "viewCount": 9895838,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Zp986RMLBD0",
+      "title": "I Tested 1-Star Hotels",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.397126734,
+      "performanceRatio": 0,
+      "viewCount": 32421447,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "BmicBpOXPlc",
+      "title": "I Tested 1-Star Restaurants",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.396583796,
+      "performanceRatio": 1.07477147292343,
+      "viewCount": 17584548,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VIwwE1QrsWw",
+      "title": "I Tested 1-Star Restaurants",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.396583796,
+      "performanceRatio": 0,
+      "viewCount": 28636232,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "qaHNM0k2GhU",
+      "title": "PENGUIN Advanced Method",
+      "channelName": "Puppet Nerd",
+      "similarityScore": 0.396509,
+      "performanceRatio": 0.227943122220865,
+      "viewCount": 12192,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "XDJpuwW1-4k",
+      "title": "Scout V 0.4 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.395251125,
+      "performanceRatio": 0.135162425976994,
+      "viewCount": 33547,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "DdNQEEugiBc",
+      "title": "Ejection Charge Testing",
+      "channelName": "BPS.space",
+      "similarityScore": 0.395201117,
+      "performanceRatio": 0.0591866944168494,
+      "viewCount": 14690,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "2f7_aiK9JI0",
+      "title": "TORTURE TESTING KUKRI FROM KNIVES BY HAND",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.395117253,
+      "performanceRatio": 0.100037230671191,
+      "viewCount": 2439,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "pmDIbiUQGUE",
+      "title": "TESTING The CRAZIEST Football Boot HACKS!!",
+      "channelName": "DavidMC",
+      "similarityScore": 0.393748969,
+      "performanceRatio": 0,
+      "viewCount": 10965,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VzGYYcbVwt4",
+      "title": "How Modern Tools Are Tested for Long-Term Durability!",
+      "channelName": "Adam Savage’s Tested",
+      "similarityScore": 0.392533213,
+      "performanceRatio": 0.225120065591345,
+      "viewCount": 48215,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "WKpqoOe8lws",
+      "title": "Echo - Landing Test #6",
+      "channelName": "BPS.space",
+      "similarityScore": 0.391296387,
+      "performanceRatio": 1.23971749071426,
+      "viewCount": 307695,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "S8XmzcV5DfU",
+      "title": "I TESTED 'Turning A FREE Pallet Into A $600 Table'",
+      "channelName": "John Malecki",
+      "similarityScore": 0.389951468,
+      "performanceRatio": 4.84588400098679,
+      "viewCount": 2768260,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "-JkUD1W5fus",
+      "title": "HGG Performance IsoTib Review (BETTER Than a Tib Bar?)",
+      "channelName": "Shredded Dad Garage Gym",
+      "similarityScore": 0.389703751,
+      "performanceRatio": 0.166232222903674,
+      "viewCount": 2459,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "oi6-D5BnQeA",
+      "title": "Community Question - Lightburn Material Test Setup",
+      "channelName": "Bearded Builds Co",
+      "similarityScore": 0.389648467,
+      "performanceRatio": 1,
+      "viewCount": 465,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "OgzfY4h7OJQ",
+      "title": "Testing the Sawmill Extension with the Longest Log I Have",
+      "channelName": "Matthew Cremona",
+      "similarityScore": 0.389585942,
+      "performanceRatio": 1.79101275533725,
+      "viewCount": 182708,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "OkJOSOFgjKQ",
+      "title": "Testing our 80yr Old Jeep Off-Road",
+      "channelName": "BigTime",
+      "similarityScore": 0.389261425,
+      "performanceRatio": 0.480839043687072,
+      "viewCount": 629150,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "rMuBLgIlIi4",
+      "title": "These 3 Stats Question Types Fail 9 of 10 Candidates—Review Them Before Your Next Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.389064938,
+      "performanceRatio": 0.0512490095575443,
+      "viewCount": 793,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "BoevqNVv4ck",
+      "title": "Sprint - Test Flights 6 and 7",
+      "channelName": "BPS.space",
+      "similarityScore": 0.388497621,
+      "performanceRatio": 0.363629512900578,
+      "viewCount": 90252,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "UEP6KqeMwvk",
+      "title": "How To Practice Efficiently",
+      "channelName": "Charles Cornell",
+      "similarityScore": 0.387848914,
+      "performanceRatio": 0.302039773529311,
+      "viewCount": 166648,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "FRlbNOno5VA",
+      "title": "BEST Guess Who Strategy- 96% WIN record using MATH",
+      "channelName": "Mark Rober",
+      "similarityScore": 0.387537926,
+      "performanceRatio": 0.553368605328147,
+      "viewCount": 29991798,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "14Juc3PAHHk",
+      "title": "Scout V 1.0 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.386949748,
+      "performanceRatio": 0.0886672283207355,
+      "viewCount": 22007,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "HpmTD9Nllfk",
+      "title": "I Build 3 Tables - 5 Min vs. 5 Hour vs. 5 Day Challenge",
+      "channelName": "John Malecki",
+      "similarityScore": 0.386289954,
+      "performanceRatio": 1,
+      "viewCount": 1216984,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "DSShSLqesCU",
+      "title": "Launch Preparation - Build Signal R2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.386152118,
+      "performanceRatio": 0.0791063007610906,
+      "viewCount": 19634,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "F9uLXyT-r8E",
+      "title": "Sprint - Test Flight 10 - Aerotech H13",
+      "channelName": "BPS.space",
+      "similarityScore": 0.38611123,
+      "performanceRatio": 0.682069239240273,
+      "viewCount": 169288,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "uF1V2MqX2U0",
+      "title": "Google Machine Learning System Design Mock Interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.385749131,
+      "performanceRatio": 3.81336577295392,
+      "viewCount": 59006,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "U3mgfZ6lb3c",
+      "title": "New Tool Reviews - Tools Unleashed 02",
+      "channelName": "The Wood Whisperer",
+      "similarityScore": 0.383995146,
+      "performanceRatio": 0.0493072129122434,
+      "viewCount": 9398,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "h3WGLvYlzb8",
+      "title": "Echo - Landing Test #3",
+      "channelName": "BPS.space",
+      "similarityScore": 0.383743435,
+      "performanceRatio": 0.504384255545414,
+      "viewCount": 125187,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "HcTrKOZodRk",
+      "title": "COMPETE WiTH YOURSELF",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.38366431,
+      "performanceRatio": 0.341838167662933,
+      "viewCount": 1140527,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "2m2KtTIgc9s",
+      "title": "Testing Different Materials on the Anet E10 3d printer",
+      "channelName": "gordontarpley",
+      "similarityScore": 0.383477747,
+      "performanceRatio": 0.284781690038227,
+      "viewCount": 1144,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "aMFq_i9h-98",
+      "title": "OLL Challenge (planning system)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.383390576,
+      "performanceRatio": 0.215562997028697,
+      "viewCount": 855,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "HUvz045ZCcw",
+      "title": "20 MIN AB WORKOUT - [ Day 20 ] - Jeremy Sry",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.382815272,
+      "performanceRatio": 0.10087509516957,
+      "viewCount": 1436,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "_S9-2aGrN24",
+      "title": "Testing Project Astra from Google Deepmind in London",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.382627279,
+      "performanceRatio": 0.0630338580982569,
+      "viewCount": 9081,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VzOiD1jTFRI",
+      "title": "Best Ways to Do Concurrent Training",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.382524,
+      "performanceRatio": 1.07199964866801,
+      "viewCount": 13269,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "52uJRJ6TuXA",
+      "title": "Discussing Design for Test with @BrownieBites-EE  | Maker Chat Ep.03",
+      "channelName": "PCBWay",
+      "similarityScore": 0.382311165,
+      "performanceRatio": 0.000281,
+      "viewCount": 281,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "83MqrYM81eQ",
+      "title": "Fake Yeti TESTED! | Part 1",
+      "channelName": "ManCraftingTM",
+      "similarityScore": 0.382275701,
+      "performanceRatio": 2.95497428606231,
+      "viewCount": 72045,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "M7-h3FO-KKo",
+      "title": "Testing If You Can Blow Your Own Sail",
+      "channelName": "Mark Rober",
+      "similarityScore": 0.381126732,
+      "performanceRatio": 1.03417288710366,
+      "viewCount": 56050712,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "q-uZKGlFZ70",
+      "title": "Prototyping a New Product!",
+      "channelName": "I Like To Make Stuff",
+      "similarityScore": 0.381119162,
+      "performanceRatio": 0.32345328023618,
+      "viewCount": 183150,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "uLCFCzVLi4Q",
+      "title": "Three Tricky Analytics Interview Questions with Andrew",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.381088018,
+      "performanceRatio": 5.49062371122245,
+      "viewCount": 84959,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "OdV5ts6D8_4",
+      "title": "Testing the Bambu Lab H2D",
+      "channelName": "3D Printing Nerd",
+      "similarityScore": 0.381061763,
+      "performanceRatio": 3.27949436990465,
+      "viewCount": 250195,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "pzYHxth56oo",
+      "title": "Scout V 0.9 Test Launch",
+      "channelName": "BPS.space",
+      "similarityScore": 0.380657464,
+      "performanceRatio": 0.0684655887151479,
+      "viewCount": 16993,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "fzamIw34ERg",
+      "title": "Increase explosiveness with ONE WEIRD TRICK",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.380576193,
+      "performanceRatio": 0.348203970590033,
+      "viewCount": 4310,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "intFcQuXcyA",
+      "title": "Setting up/Testing the 700 Rocket Mushroom Rig",
+      "channelName": "colinfurze",
+      "similarityScore": 0.379746497,
+      "performanceRatio": 0.35364926962858,
+      "viewCount": 1613104,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "b4cpxoSVXiY",
+      "title": "RCS Roll Axis Testing #2",
+      "channelName": "BPS.space",
+      "similarityScore": 0.379636705,
+      "performanceRatio": 0.128985897553507,
+      "viewCount": 32014,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "jRhfePWJPi4",
+      "title": "Over-engineered Bottle Opener | Upgrades and Testing!",
+      "channelName": "Tyler Bell",
+      "similarityScore": 0.379630446,
+      "performanceRatio": 0.259280505917455,
+      "viewCount": 143324,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "gGWQMPpbzLg",
+      "title": "I Tested Football Hotels",
+      "channelName": "DavidMC",
+      "similarityScore": 0.37915504,
+      "performanceRatio": 0,
+      "viewCount": 12391442,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "CYmvjJm8OIo",
+      "title": "5 Min vs. 50 Min vs. 5 Hour - Box Build",
+      "channelName": "John Malecki",
+      "similarityScore": 0.379045099,
+      "performanceRatio": 1.5853252459905,
+      "viewCount": 905633,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "8Tt5hh7gVVw",
+      "title": "I Tested 1-Star Hotels (again)",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.378731906,
+      "performanceRatio": 0,
+      "viewCount": 37604623,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "uD4RtpT610E",
+      "title": "I Tested 1-Star Hotels (finale)",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.378610462,
+      "performanceRatio": 0,
+      "viewCount": 13136774,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "YdJr1FCB0P4",
+      "title": "Always win at heads/tails- BEST METHOD",
+      "channelName": "Mark Rober",
+      "similarityScore": 0.37780118,
+      "performanceRatio": 0.0618504469909157,
+      "viewCount": 3352207,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "y4xR0Fi53qI",
+      "title": "Sprint - Test Flight 9 - Aerotech G11",
+      "channelName": "BPS.space",
+      "similarityScore": 0.377721041,
+      "performanceRatio": 0.461192876093499,
+      "viewCount": 114467,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "wUp8ZO_D1n0",
+      "title": "Active Stretching For Recovery - Day 21 - Jeremy Sry",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.377519637,
+      "performanceRatio": 0.0942718507782469,
+      "viewCount": 1342,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "WGYLhjqvFus",
+      "title": "I TESTED 'Turning FREE Pallets Into A $600 Table '... Again!",
+      "channelName": "John Malecki",
+      "similarityScore": 0.377384871,
+      "performanceRatio": 1.79088836442442,
+      "viewCount": 1023063,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "RMMn6ZZwx6Q",
+      "title": "Trying Something New!",
+      "channelName": "The Kelley's Country Life",
+      "similarityScore": 0.377039254,
+      "performanceRatio": 1,
+      "viewCount": 12423,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "pdFBrJN51TA",
+      "title": "Testosterone Boosters, Sticking Points, and Bar Velocity Technology (Episode 56)",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.376406401,
+      "performanceRatio": 0.399182324520963,
+      "viewCount": 4941,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "O0wUmPonkrA",
+      "title": "Hammer-in Ladder Steps Test",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.37610817,
+      "performanceRatio": 0.00884422081519074,
+      "viewCount": 78,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "oHBNqtIfbT0",
+      "title": "OLL Challenge (October overview)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.375793695,
+      "performanceRatio": 0.155306206046407,
+      "viewCount": 616,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "LHt0EFIGZNs",
+      "title": "Walmart Data Science Case Study Mock Interview: Underpricing Algorithm",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.375663906,
+      "performanceRatio": 4.53582816619955,
+      "viewCount": 70185,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "YEU7jh2szDQ",
+      "title": "Testing Command Picture Hangers - Do They Really Work?",
+      "channelName": "Proper DIY",
+      "similarityScore": 0.375368059,
+      "performanceRatio": 0.304249033800275,
+      "viewCount": 76964,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "XoOlkHhuDb8",
+      "title": "Homemade CNC Belt Tensioner and Inlay Testing",
+      "channelName": "DIY Builds",
+      "similarityScore": 0.374637,
+      "performanceRatio": 0.200404942586778,
+      "viewCount": 18080,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "XbPuCvZspag",
+      "title": "Testing the Revopoint Range 3D Scanner and Revoscan 5.0",
+      "channelName": "jasperjanderson",
+      "similarityScore": 0.374580741,
+      "performanceRatio": 0.595424778923146,
+      "viewCount": 7298,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "8Id38p0MbDw",
+      "title": "Watch a Data Scientist Ace the DoorDash Case Study Interview Question: Minimize Wrong Orders!",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.374426454,
+      "performanceRatio": 0.479595081874572,
+      "viewCount": 7421,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "12Ry6kGPQVs",
+      "title": "Netflix Machine Learning Mock Interview: Type-ahead Search",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.374389917,
+      "performanceRatio": 2.36243069908705,
+      "viewCount": 36555,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "4uxpXnJQqA4",
+      "title": "On the Level-  Leveling Your Machine!",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.37384969,
+      "performanceRatio": 0.118317855990207,
+      "viewCount": 480,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "ykJnjtBbbRo",
+      "title": "I Tested Ronaldo VS Messi Life Hacks",
+      "channelName": "DavidMC",
+      "similarityScore": 0.373220146,
+      "performanceRatio": 1,
+      "viewCount": 2540526,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "g9W_vE396bQ",
+      "title": "I Tested 1 Star Football Hotels",
+      "channelName": "DavidMC",
+      "similarityScore": 0.372909,
+      "performanceRatio": 1,
+      "viewCount": 2511849,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "F_9PnhbCcUM",
+      "title": "Testing 100 Viral Food Hacks",
+      "channelName": "Nick DiGiovanni",
+      "similarityScore": 0.372845918,
+      "performanceRatio": 1.35334986469797,
+      "viewCount": 22142424,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "hitKNI8fTds",
+      "title": "Xtool D1 Pro- Best Maintenance Checks",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.372028798,
+      "performanceRatio": 0.605393029816559,
+      "viewCount": 2456,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "PZYvopHgaTU",
+      "title": "Testing The FUTURE of FITNESS Equipment at IHRSA!",
+      "channelName": "Garage Gym Reviews",
+      "similarityScore": 0.371963471,
+      "performanceRatio": 3.43151909524739,
+      "viewCount": 655932,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "um2Ltfg6N8k",
+      "title": "Xtool  Perfect Graduate Project!",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.37180829,
+      "performanceRatio": 0.172053882252426,
+      "viewCount": 698,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "cWOpM89Wnpo",
+      "title": "Hands on Tool Test of the Bora Router Dado Jig",
+      "channelName": "Lazy Guy DIY",
+      "similarityScore": 0.371434689,
+      "performanceRatio": 0.8260133877408,
+      "viewCount": 13471,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "vWIzeSA4l-0",
+      "title": "I Tested 1-Star Camping",
+      "channelName": "Ryan Trahan",
+      "similarityScore": 0.371286213,
+      "performanceRatio": 0,
+      "viewCount": 27926547,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "AYizjsL3OU0",
+      "title": "XTool D1- 3 Easy Maintenance Checks!",
+      "channelName": "The Laser Channel",
+      "similarityScore": 0.371245384,
+      "performanceRatio": 2.51031051125889,
+      "viewCount": 10184,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "PSe_JCepQCQ",
+      "title": "Rank #1 Best SEO Keywords with This 14-day Try SEMRUSH Pro trial.",
+      "channelName": "AI Andy",
+      "similarityScore": 0.370695651,
+      "performanceRatio": 1,
+      "viewCount": 1577,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "fHrz08YG6xY",
+      "title": "Rex Krueger Live Rig Test",
+      "channelName": "Rex Krueger",
+      "similarityScore": 0.370592743,
+      "performanceRatio": 0.0729626498725616,
+      "viewCount": 13274,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "l9SfHH8ZbdY",
+      "title": "Torture Toaster on the Palette 3 Pro // Can YOU Do Better?",
+      "channelName": "3D Printing Nerd",
+      "similarityScore": 0.370479345,
+      "performanceRatio": 2.06042086972035,
+      "viewCount": 157191,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Gg8NhB91kIE",
+      "title": "Drill Doctor: Unboxing, Set-Up, & Test",
+      "channelName": "The Art of Craftsmanship",
+      "similarityScore": 0.370465189,
+      "performanceRatio": 0.0614954911346194,
+      "viewCount": 6968,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "fivIyj_ON-s",
+      "title": "BONE TEST      |     #woodworking #drumbuilding",
+      "channelName": "Joseph Center",
+      "similarityScore": 0.370207042,
+      "performanceRatio": 0.0722427468939206,
+      "viewCount": 653,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "ANdPTXbNUa0",
+      "title": "The AI Sandbox - OpenAI o1, NotebookLM, Testing Veo, Autonomous Browsers and more!",
+      "channelName": "Matt Wolfe",
+      "similarityScore": 0.370188326,
+      "performanceRatio": 0.170714096032214,
+      "viewCount": 24594,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "H30iM6RKQHk",
+      "title": "Forge Weld Strength Experiment",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.369356453,
+      "performanceRatio": 0.0425202923807247,
+      "viewCount": 375,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "xRV9GGL0SYk",
+      "title": "The xTool S1 Review (First Look / My settings + Hack!) ✅",
+      "channelName": "Justin Laser",
+      "similarityScore": 0.369095474,
+      "performanceRatio": 0.676588118992132,
+      "viewCount": 43668,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "s8UzG9-qvNU",
+      "title": "15 Tape Measure Pro Tips",
+      "channelName": "Make Build Modify",
+      "similarityScore": 0.368966043,
+      "performanceRatio": 0.263333302998265,
+      "viewCount": 94398,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "UuAhXrHAfZg",
+      "title": "I Tested 100 Fake Football Products",
+      "channelName": "DavidMC",
+      "similarityScore": 0.368434578,
+      "performanceRatio": 0,
+      "viewCount": 5398015,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "FNlUkOn_nRg",
+      "title": "Mock Interview Practice with AI?! | Data Analyst Interview Questions",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.368196905,
+      "performanceRatio": 0.13280796297699,
+      "viewCount": 2055,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "RSEFZY325Zw",
+      "title": "I Tested 100 Football Myths",
+      "channelName": "DavidMC",
+      "similarityScore": 0.36783582,
+      "performanceRatio": 0,
+      "viewCount": 8667531,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "p11SIEjCgEE",
+      "title": "Testing a Cheap MINI Circular Saw (Worth It?",
+      "channelName": "DIY MAN",
+      "similarityScore": 0.367634386,
+      "performanceRatio": 0.274899291858815,
+      "viewCount": 24482,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "CBcaPkNIn-s",
+      "title": "I Tested Building the Viral Rock Bench",
+      "channelName": "John Malecki",
+      "similarityScore": 0.367390245,
+      "performanceRatio": 1,
+      "viewCount": 939742,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "AJtY6ku_8BU",
+      "title": "Build Logistic Regression Interview Question SOLVED - Step by Step!",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.367123,
+      "performanceRatio": 0.186706669119477,
+      "viewCount": 2889,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "82HUX0h9INg",
+      "title": "I Tested the World's Strangest Apps",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.367091715,
+      "performanceRatio": 0.201814959338555,
+      "viewCount": 1385220,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "743suYvYdSQ",
+      "title": "I Tested Limited Edition Food Products",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.366781086,
+      "performanceRatio": 0.776116066124373,
+      "viewCount": 5327115,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "LL0h6l_BL-0",
+      "title": "We Took On a Tough SQL Interview Question! | Data Scientist Prep (Intermediate Level)",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.366572738,
+      "performanceRatio": 0.126991555839312,
+      "viewCount": 1965,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Nl61Y8yznms",
+      "title": "I Tested Every Youtuber Product!",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.365928948,
+      "performanceRatio": 0,
+      "viewCount": 3585118,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "xcFC1jdMXQM",
+      "title": "Console Table Build With TOOTHBRUSH!",
+      "channelName": "DIY With Greg",
+      "similarityScore": 0.365600407,
+      "performanceRatio": 0.0839770474294692,
+      "viewCount": 5708,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "qk5c98W1CNk",
+      "title": "I Tested Amazon Products for Lazy People!",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.365319759,
+      "performanceRatio": 0,
+      "viewCount": 5072542,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "CX9nGSpoi8E",
+      "title": "Testing the Sawstop, WITH MY HAND!!",
+      "channelName": "Make Everything",
+      "similarityScore": 0.365158975,
+      "performanceRatio": 1.27698440658479,
+      "viewCount": 151307,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "qC_7H1ZHAXg",
+      "title": "Tips and Trick for finding Non-Proofgrade Settings for your Glowforge",
+      "channelName": "Fresh Start Customs",
+      "similarityScore": 0.36509639,
+      "performanceRatio": 2.18107161722822,
+      "viewCount": 5352,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "tXR7lOJ1K_s",
+      "title": "Getting to the bottom of why TPU for AMS performs so poorly",
+      "channelName": "Functional Print Friday",
+      "similarityScore": 0.365049779,
+      "performanceRatio": 1.26755257562562,
+      "viewCount": 16233,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Xpo8Sjuod1E",
+      "title": "20 Drilling Tips for Beginners",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.364134729,
+      "performanceRatio": 0.100668949146038,
+      "viewCount": 24863,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "n8zKCqcjB5s",
+      "title": "Cookie Machine Project Update 2",
+      "channelName": "Applied Science",
+      "similarityScore": 0.363968372,
+      "performanceRatio": 0.0633209717793901,
+      "viewCount": 20120,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "fb5TOolGRmM",
+      "title": "Bench Angles, Appetitive Traits, and Mesocycle Progression (Episode 47)",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.363628536,
+      "performanceRatio": 0.555187398119421,
+      "viewCount": 6872,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "q49zEoj_76Q",
+      "title": "Putting Carbide Create Build 300 to the Test - CNC Project #92",
+      "channelName": "Winston Moy",
+      "similarityScore": 0.363341898,
+      "performanceRatio": 0.2410135349742,
+      "viewCount": 12873,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "EdBgC6aHu6Y",
+      "title": "Meta Product Manager Interview Question Solved | Improving Search Feature | MAANG Interview Prep",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.363306642,
+      "performanceRatio": 0.225741223687897,
+      "viewCount": 3493,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "n3XoUfMcGXQ",
+      "title": "Meta SQL Data Scientist Interview: Calculate Notification Conversion Rates",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.362712234,
+      "performanceRatio": 0.285908724189881,
+      "viewCount": 4424,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "1xh1Uj22YOU",
+      "title": "Tricky TikTok Data Science Case Study Interview Question - Best DAU",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.362646669,
+      "performanceRatio": 0.266649953889568,
+      "viewCount": 4126,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "oPaiztSg6dY",
+      "title": "So You're Afraid To Fail? (Try This...)",
+      "channelName": "Conner John",
+      "similarityScore": 0.362467706,
+      "performanceRatio": 1,
+      "viewCount": 1152,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "-mwuc7fRLB0",
+      "title": "I Tested 1000 Years of Pizza",
+      "channelName": "Joshua Weissman",
+      "similarityScore": 0.362393081,
+      "performanceRatio": 0,
+      "viewCount": 1839924,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "RX-UY29AxMc",
+      "title": "FIVE steps to ace your next data science interview",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.362059593,
+      "performanceRatio": 0.206870213863429,
+      "viewCount": 3201,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "onHkUHXz4sw",
+      "title": "Franklin Stud Finder Review and Testing.  This thing is AMAZING",
+      "channelName": "That Kilted Guy DIY Home Improvement",
+      "similarityScore": 0.362018675,
+      "performanceRatio": 0.454364948516131,
+      "viewCount": 57050,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "_iaFt8NqfN4",
+      "title": "Cracking SQL Interview Questions: User System Response Times Explained",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.361898929,
+      "performanceRatio": 0.198210229902886,
+      "viewCount": 3067,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "tINfpf1Hssc",
+      "title": "Behavioral Interview Questions EXPLAINED by a Tech Lead",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.361831754,
+      "performanceRatio": 0.190261140148058,
+      "viewCount": 2944,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "o7h530-IizU",
+      "title": "Making/Testing the Thermite Kettle",
+      "channelName": "colinfurze",
+      "similarityScore": 0.361307234,
+      "performanceRatio": 0.154067357456317,
+      "viewCount": 702749,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Hz6bhsq9J9Y",
+      "title": "Reviewing EVERY Major Fitness Squat Rack: Budget Meets Versatility!",
+      "channelName": "Garage Gym Reviews",
+      "similarityScore": 0.361115575,
+      "performanceRatio": 0.495911145661115,
+      "viewCount": 94793,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "sSyRVCHXnuo",
+      "title": "What to do about below-average gains",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.36108157,
+      "performanceRatio": 0.640420620618837,
+      "viewCount": 7927,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "oSMlu121IEE",
+      "title": "Proof Test Pistol Barrel and New Breech Plug",
+      "channelName": "Veteran Iron&Outdoors",
+      "similarityScore": 0.361011803,
+      "performanceRatio": 0.172689080788917,
+      "viewCount": 1523,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "jYWfiP7w5w0",
+      "title": "10 Study Tips for Earning an A on Your Next Exam - College Info Geek",
+      "channelName": "Thomas Frank",
+      "similarityScore": 0.360738784,
+      "performanceRatio": 1.41898333068502,
+      "viewCount": 936439,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "4mG7morAasw",
+      "title": "LinkedIn Machine Learning Mock Interview - Design a recommendation engine",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.360322207,
+      "performanceRatio": 2.62223021790335,
+      "viewCount": 40575,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "o5vQlE7689U",
+      "title": "SQL Interview Questions: Calculate Percentage of Revoked Job Postings | Advanced SQL Concepts",
+      "channelName": "Jay Feng",
+      "similarityScore": 0.360013872,
+      "performanceRatio": 0.100494589989888,
+      "viewCount": 1555,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "ASd6mjBj6Q4",
+      "title": "I Tested Weird Company Slogans…",
+      "channelName": "Addie Bowley",
+      "similarityScore": 0.359589219,
+      "performanceRatio": 0.21786230958711,
+      "viewCount": 1495366,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "WLs1ADzPiXc",
+      "title": "Statistics Project Ideas For School",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.35933277,
+      "performanceRatio": 0.0668196726758908,
+      "viewCount": 5863,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "vxFG6j8ftwI",
+      "title": "ACTIVE STRETCHING FOR RECOVERY - DAY 7 - 2021 Workout Challenge - Jeremy Sry",
+      "channelName": "Jeremy Sry",
+      "similarityScore": 0.359135956,
+      "performanceRatio": 0.109375016141379,
+      "viewCount": 1557,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "e_gc64MlYzE",
+      "title": "#18.4 - Festool Domino Review - Part 4 - Strength Test and Review",
+      "channelName": "Half-Inch Shy",
+      "similarityScore": 0.359043509,
+      "performanceRatio": 1.2103921203872,
+      "viewCount": 39430,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "tZFW_VBtYuw",
+      "title": "RUN FASTER: Running Program Basics",
+      "channelName": "Gritty Soldier",
+      "similarityScore": 0.358753264,
+      "performanceRatio": 0.250980150077386,
+      "viewCount": 10726,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "KyAyu_PLh8I",
+      "title": "REP QuickDraw Adjustable Dumbbells Review + DROP TEST!",
+      "channelName": "Garage Gym Reviews",
+      "similarityScore": 0.358278096,
+      "performanceRatio": 1.4292398507519,
+      "viewCount": 273198,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "MiOWqjewYxw",
+      "title": "Workshop Tips - Measuring, Marking & Math",
+      "channelName": "Laura Kampf",
+      "similarityScore": 0.357733101,
+      "performanceRatio": 0.519879845304719,
+      "viewCount": 113101,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "vE-mcsfxLhg",
+      "title": "learning the prognosis",
+      "channelName": "CaseyNeistat",
+      "similarityScore": 0.357611984,
+      "performanceRatio": 0.868665600627698,
+      "viewCount": 2898262,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "ehzVzre2nxQ",
+      "title": "Technical Farming Project Models",
+      "channelName": "DIY Projects",
+      "similarityScore": 0.35737741,
+      "performanceRatio": 0.0366066499462666,
+      "viewCount": 3212,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "P9mCb4793z4",
+      "title": "Exercise Technique and Minimum Effective Dose Training with Dr. Pak (Episode 124)",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.357298702,
+      "performanceRatio": 0.323078347654186,
+      "viewCount": 3999,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "edO_yhJ7bUc",
+      "title": "Create A Material Test on WeCreat (So Easy!)",
+      "channelName": "Fresh Start Customs",
+      "similarityScore": 0.357221156,
+      "performanceRatio": 2.02743484598475,
+      "viewCount": 4975,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "4l9OAccaJdA",
+      "title": "Cookie Machine Project Update 3",
+      "channelName": "Applied Science",
+      "similarityScore": 0.356984138,
+      "performanceRatio": 0.110046939374251,
+      "viewCount": 34967,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "VdsjK_tMzHw",
+      "title": "20 Workshop Tips and Tricks",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.356959611,
+      "performanceRatio": 0.579019550039383,
+      "viewCount": 143005,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "Ti14pPDmZA4",
+      "title": "I Tested the Laziest Temu Products!",
+      "channelName": "Drew Dirksen",
+      "similarityScore": 0.356866479,
+      "performanceRatio": 1,
+      "viewCount": 1414884,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "FMHyR7jynNM",
+      "title": "20 Workshop Tips and Tricks #2",
+      "channelName": "Specific Love Creations",
+      "similarityScore": 0.356568813,
+      "performanceRatio": 0.736057928056078,
+      "viewCount": 181790,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "LN0a99STVfs",
+      "title": "Why you should replace \"cheat meals\" with the \"slack with a cost\" strategy",
+      "channelName": "Stronger By Science",
+      "similarityScore": 0.355987042,
+      "performanceRatio": 0.163922472465702,
+      "viewCount": 2029,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "d8t2vT9BBCw",
+      "title": "OLL Challenge Week 2 (Home Base Routine)",
+      "channelName": "OrganizedLittleLady",
+      "similarityScore": 0.355761051,
+      "performanceRatio": 0.403896983906401,
+      "viewCount": 1602,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "HF5Qv7Xfh3I",
+      "title": "4 Layers is Better than Two: Another ELS Control Panel Prototype",
+      "channelName": "Clough42",
+      "similarityScore": 0.35566932,
+      "performanceRatio": 0.559107806516531,
+      "viewCount": 43209,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "0h0BlXlpeTA",
+      "title": "Best Functional Trainers After Testing and Reviewing All of Them!",
+      "channelName": "Garage Gym Reviews",
+      "similarityScore": 0.355317652,
+      "performanceRatio": 2.68133532055552,
+      "viewCount": 512535,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "2RNt_BKGwjE",
+      "title": "Blazing Fast but Frustrating - Bambu Lab P1P Review",
+      "channelName": "Uncle Jessy",
+      "similarityScore": 0.354853928,
+      "performanceRatio": 2.54576155098427,
+      "viewCount": 272079,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "A11y6FW0-oI",
+      "title": "3 Tables in 2 Days – A Project on Productivity - 350",
+      "channelName": "Jay Bates",
+      "similarityScore": 0.354290724,
+      "performanceRatio": 0.448097402862632,
+      "viewCount": 81082,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "vrbYwG2aCIs",
+      "title": "Testing the Limits of Patterned Plywood (Featuring Tyler Bell)",
+      "channelName": "Michael Alm (ALM FAB)",
+      "similarityScore": 0.353896648,
+      "performanceRatio": 0.284033939476851,
+      "viewCount": 101824,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    },
+    {
+      "videoId": "dX-yAozCH74",
+      "title": "Testing 7 Viral Tools From Instagram - why are they so popular?!",
+      "channelName": "Evan and Katelyn",
+      "similarityScore": 0.353887647,
+      "performanceRatio": 1,
+      "viewCount": 788844,
+      "foundVia": {
+        "thread": "direct",
+        "query": "test optimization",
+        "threadPurpose": "baseline search"
+      }
+    }
+  ],
+  "performanceDistribution": {},
+  "claudePrompts": {
+    "cluster_0": "Analyze these high-performing YouTube video titles about \"test optimization\" and identify actionable title patterns.\n\nAnalysis Context: DEEP cluster from threads: direct\n\n\nPerformance Tiers:\n- 🌟 SUPERSTAR (10x+): Videos that massively outperformed their channel average\n- 💪 STRONG (3-10x): Proven high performers\n- ✅ ABOVE AVG (1.5-3x): Solid performers\n\nVideos (sorted by performance):\n1. 💪 [ID: Q1y8c_MZYvE] \"5 Rules (and One Secret Weapon) for Acing Multiple Choice Tests\" - 7.1x avg (4,695,692 views | Engagement: 2.19%)\n2. 💪 [ID: uLCFCzVLi4Q] \"Three Tricky Analytics Interview Questions with Andrew\" - 5.5x avg (84,959 views | Engagement: 2.46%)\n3. 💪 [ID: S8XmzcV5DfU] \"I TESTED 'Turning A FREE Pallet Into A $600 Table'\" - 4.8x avg (2,768,260 views | Engagement: 1.34%)\n4. 💪 [ID: LHt0EFIGZNs] \"Walmart Data Science Case Study Mock Interview: Underpricing Algorithm\" - 4.5x avg (70,185 views | Engagement: 1.66%)\n5. 💪 [ID: 7lfxKbPu0FA] \"Start Making Test Grids in LightBurn TODAY - Material Test Tool\" - 4.3x avg (13,180 views | Engagement: 2.73%)\n6. 💪 [ID: xUW-zEBpA5M] \"I Tested CHEAP vs EXPENSIVE Tracks Saws (Only 1 Winner)\" - 4.2x avg (731,093 views | Engagement: 1.55%)\n7. 💪 [ID: uF1V2MqX2U0] \"Google Machine Learning System Design Mock Interview\" - 3.8x avg (59,006 views | Engagement: 1.30%)\n8. 💪 [ID: PZYvopHgaTU] \"Testing The FUTURE of FITNESS Equipment at IHRSA!\" - 3.4x avg (655,932 views | Engagement: 1.79%)\n9. 💪 [ID: LcVz8wSM-AM] \"Facebook SQL Mock Technical Interview: Part 2\" - 3.4x avg (52,202 views | Engagement: 1.31%)\n10. 💪 [ID: OdV5ts6D8_4] \"Testing the Bambu Lab H2D\" - 3.3x avg (250,195 views | Engagement: 3.27%)\n11. ✅ [ID: SxsW-XZ9cQw] \"TESTING SEGWAY ELECTRIC SHOES\" - 3.0x avg (9,895,838 views | Engagement: 1.67%)\n12. ✅ [ID: 83MqrYM81eQ] \"Fake Yeti TESTED! | Part 1\" - 3.0x avg (72,045 views | Engagement: 0.55%)\n13. ✅ [ID: 2sWVLMVQsu0] \"A/B Testing Interview with a Google Data Scientist\" - 2.9x avg (45,016 views | Engagement: 1.84%)\n14. ✅ [ID: 0h0BlXlpeTA] \"Best Functional Trainers After Testing and Reviewing All of Them!\" - 2.7x avg (512,535 views | Engagement: 1.53%)\n15. ✅ [ID: 4mG7morAasw] \"LinkedIn Machine Learning Mock Interview - Design a recommendation engine\" - 2.6x avg (40,575 views | Engagement: 1.67%)\n16. ✅ [ID: 2RNt_BKGwjE] \"Blazing Fast but Frustrating - Bambu Lab P1P Review\" - 2.5x avg (272,079 views | Engagement: 1.44%)\n17. ✅ [ID: AYizjsL3OU0] \"XTool D1- 3 Easy Maintenance Checks!\" - 2.5x avg (10,184 views | Engagement: 4.32%)\n18. ✅ [ID: 12Ry6kGPQVs] \"Netflix Machine Learning Mock Interview: Type-ahead Search\" - 2.4x avg (36,555 views | Engagement: 1.29%)\n19. ✅ [ID: qC_7H1ZHAXg] \"Tips and Trick for finding Non-Proofgrade Settings for your Glowforge\" - 2.2x avg (5,352 views | Engagement: 2.35%)\n20. ✅ [ID: l9SfHH8ZbdY] \"Torture Toaster on the Palette 3 Pro // Can YOU Do Better?\" - 2.1x avg (157,191 views | Engagement: 2.95%)\n21. ✅ [ID: edO_yhJ7bUc] \"Create A Material Test on WeCreat (So Easy!)\" - 2.0x avg (4,975 views | Engagement: 2.41%)\n22. ✅ [ID: OgzfY4h7OJQ] \"Testing the Sawmill Extension with the Longest Log I Have\" - 1.8x avg (182,708 views | Engagement: 3.87%)\n23. ✅ [ID: WGYLhjqvFus] \"I TESTED 'Turning FREE Pallets Into A $600 Table '... Again!\" - 1.8x avg (1,023,063 views | Engagement: 1.93%)\n24. ✅ [ID: Vw6y5kngkHY] \"BASIC Optimization for x86 x64 Windows Virtual Machines on UTM\" - 1.7x avg (5,296 views | Engagement: 0.68%)\n25. ✅ [ID: hMgFFlDhTbA] \"Testing Shaper Origin Handheld CNC Machine\" - 1.6x avg (582,681 views | Engagement: 1.54%)\n26. ✅ [ID: CYmvjJm8OIo] \"5 Min vs. 50 Min vs. 5 Hour - Box Build\" - 1.6x avg (905,633 views | Engagement: 1.75%)\n27. ✅ [ID: P3LglU8Rnlo] \"Testing ALL of the 3D Printed Shoes!\" - 1.6x avg (120,714 views | Engagement: 2.81%)\n28. ✅ [ID: KyAyu_PLh8I] \"REP QuickDraw Adjustable Dumbbells Review + DROP TEST!\" - 1.4x avg (273,198 views | Engagement: 1.73%)\n29. ✅ [ID: bktLkPzWVoY] \"Facebook Product Investigation Mock Interview: Part 1 (Fill Rate)\" - 1.4x avg (22,037 views | Engagement: 1.07%)\n30. ✅ [ID: jYWfiP7w5w0] \"10 Study Tips for Earning an A on Your Next Exam - College Info Geek\" - 1.4x avg (936,439 views | Engagement: 3.06%)\n31. ✅ [ID: F_9PnhbCcUM] \"Testing 100 Viral Food Hacks\" - 1.4x avg (22,142,424 views | Engagement: 1.56%)\n32. ✅ [ID: CX9nGSpoi8E] \"Testing the Sawstop, WITH MY HAND!!\" - 1.3x avg (151,307 views | Engagement: 2.66%)\n33. ✅ [ID: tXR7lOJ1K_s] \"Getting to the bottom of why TPU for AMS performs so poorly\" - 1.3x avg (16,233 views | Engagement: 6.70%)\n34. ✅ [ID: g8AogXYg0No] \"Testing MidJourney Hacks From Twitter\" - 1.2x avg (179,251 views | Engagement: 4.67%)\n35. ✅ [ID: WKpqoOe8lws] \"Echo - Landing Test #6\" - 1.2x avg (307,695 views | Engagement: 3.43%)\n36. ✅ [ID: e_gc64MlYzE] \"#18.4 - Festool Domino Review - Part 4 - Strength Test and Review\" - 1.2x avg (39,430 views | Engagement: 0.55%)\n37. ✅ [ID: v2v_YvCyxPE] \"Amazon SQL Mock Interview Question: Conversation Distribution\" - 1.1x avg (17,666 views | Engagement: 1.40%)\n38. ✅ [ID: D7UskNM6Lsc] \"Google Statistical Coding & Algorithms Mock Interview\" - 1.1x avg (16,894 views | Engagement: 1.58%)\n39. ✅ [ID: BmicBpOXPlc] \"I Tested 1-Star Restaurants\" - 1.1x avg (17,584,548 views | Engagement: 1.20%)\n40. ✅ [ID: VzOiD1jTFRI] \"Best Ways to Do Concurrent Training\" - 1.1x avg (13,269 views | Engagement: 2.65%)\n41. ✅ [ID: M7-h3FO-KKo] \"Testing If You Can Blow Your Own Sail\" - 1.0x avg (56,050,712 views | Engagement: 2.20%)\n42. ✅ [ID: oi6-D5BnQeA] \"Community Question - Lightburn Material Test Setup\" - 1.0x avg (465 views | Engagement: 4.95%)\n43. ✅ [ID: HpmTD9Nllfk] \"I Build 3 Tables - 5 Min vs. 5 Hour vs. 5 Day Challenge\" - 1.0x avg (1,216,984 views | Engagement: 2.06%)\n44. ✅ [ID: RMMn6ZZwx6Q] \"Trying Something New!\" - 1.0x avg (12,423 views | Engagement: 7.53%)\n45. ✅ [ID: ykJnjtBbbRo] \"I Tested Ronaldo VS Messi Life Hacks\" - 1.0x avg (2,540,526 views | Engagement: 0.87%)\n46. ✅ [ID: g9W_vE396bQ] \"I Tested 1 Star Football Hotels\" - 1.0x avg (2,511,849 views | Engagement: 0.97%)\n47. ✅ [ID: PSe_JCepQCQ] \"Rank #1 Best SEO Keywords with This 14-day Try SEMRUSH Pro trial.\" - 1.0x avg (1,577 views | Engagement: 3.36%)\n48. ✅ [ID: CBcaPkNIn-s] \"I Tested Building the Viral Rock Bench\" - 1.0x avg (939,742 views | Engagement: 2.22%)\n49. ✅ [ID: oPaiztSg6dY] \"So You're Afraid To Fail? (Try This...)\" - 1.0x avg (1,152 views | Engagement: 10.50%)\n50. ✅ [ID: Ti14pPDmZA4] \"I Tested the Laziest Temu Products!\" - 1.0x avg (1,414,884 views | Engagement: 1.03%)\n51. ✅ [ID: dX-yAozCH74] \"Testing 7 Viral Tools From Instagram - why are they so popular?!\" - 1.0x avg (788,844 views | Engagement: 5.21%)\n52. ✅ [ID: UKJ2pS2ah-s] \"Falcon Heavy Model Tuning and Simulation\" - 0.0x avg (0 views | Engagement: 0.00%)\n\nYour task:\n1. Identify 3-4 specific, actionable title patterns that appear in MANY videos (at least 10-15 examples each)\n2. PRIORITIZE patterns from 🌟 SUPERSTAR videos (10x+ performance) as these represent breakout successes\n3. For each pattern, identify ALL video IDs from the list that demonstrate that pattern (more examples = better pattern)\n4. Create a template that can be applied to new videos about \"test optimization\"\n\nReturn a JSON object with a \"patterns\" array:\n{\n  \"patterns\": [\n    {\n      \"pattern\": \"Short descriptive name\",\n      \"explanation\": \"Why this pattern works\",\n      \"template\": \"Template with [VARIABLES] that can be filled in\",\n      \"examples\": [\"Exact title from list\", \"Another exact title\", \"Third example\", \"Fourth example\", \"Fifth example\", \"etc... include 10-15 examples\"],\n      \"video_ids\": [\"video_id_1\", \"video_id_2\", \"video_id_3\", \"etc... include ALL videos that match this pattern (10-15+ preferred)\"],\n      \"confidence\": 0.8,\n      \"performance_multiplier\": 3.5\n    }\n  ]\n}\n\nIMPORTANT: \n- Weight patterns based on performance tier - patterns found in 🌟 SUPERSTAR videos should have higher confidence/multiplier\n- In the video_ids array, use the exact IDs shown in brackets above\n- Only include video IDs from the provided list that actually demonstrate the pattern\n- Examples should be exact titles from the videos you reference\n- The performance_multiplier should reflect the average performance of videos using this pattern\n\nFocus on:\n- Specific words/phrases that appear frequently in top performers\n- Title structures that correlate with 10x+ performance\n- Emotional hooks or curiosity gaps that drive clicks\n- Numbers, lists, or quantifiable elements\n- Question formats that create urgency\n- Skill level indicators when relevant"
+  },
+  "discoveredPatterns": [],
+  "threadAnalysis": [
+    {
+      "thread": "direct",
+      "videosAnalyzed": 0,
+      "patternsFound": 0
+    }
+  ],
+  "processingSteps": [
+    {
+      "step": "LLM Thread Expansion",
+      "duration_ms": 580,
+      "details": {
+        "originalQuery": "test optimization",
+        "threads": [
+          {
+            "query": "test optimization",
+            "angle": "direct",
+            "intent": "baseline search"
+          }
+        ],
+        "totalQueries": 1
+      }
+    },
+    {
+      "step": "Multi-Query Embedding",
+      "duration_ms": 389,
+      "details": {
+        "embeddingModel": "text-embedding-3-small",
+        "queriesEmbedded": 1,
+        "totalTokens": 2,
+        "totalCost": 4e-8
+      }
+    },
+    {
+      "step": "Multi-Query Pinecone Search",
+      "duration_ms": 3086,
+      "details": {
+        "threshold": 0.35,
+        "videosPerQuery": 500,
+        "totalQueriesSearched": 1,
+        "totalResultsBeforeDedupe": 219,
+        "uniqueVideosFound": 219,
+        "scoreDistribution": {
+          "0.5": 1,
+          "0.4": 73,
+          "0.3": 145
+        }
+      }
+    },
+    {
+      "step": "Fetch Video Details",
+      "duration_ms": 107,
+      "details": {
+        "videosFetched": 219,
+        "totalVideosProcessed": 219
+      }
+    },
+    {
+      "step": "Multi-Threaded Pattern Discovery",
+      "duration_ms": 312,
+      "details": {
+        "threadsAnalyzed": 1,
+        "threadBreakdown": [
+          {
+            "thread": "direct",
+            "videosAnalyzed": 0,
+            "patternsFound": 0
+          }
+        ],
+        "totalVideosFound": 0,
+        "performanceDistribution": {},
+        "totalPatternsFound": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cost": 0
+      }
+    },
+    {
+      "step": "Phase 2: Pattern Example Enrichment",
+      "duration_ms": 0,
+      "details": {
+        "patternsEnriched": 0,
+        "totalAdditionalExamples": 0
+      }
+    },
+    {
+      "step": "Pattern Verification",
+      "duration_ms": 0,
+      "details": {
+        "patternsAnalyzed": 0,
+        "patternsVerified": 0,
+        "patternsFiltered": 0
+      }
+    },
+    {
+      "step": "Title Generation",
+      "duration_ms": 0,
+      "details": {
+        "titlesGenerated": 0
+      }
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "tokens": 2,
+      "cost": 4e-8
+    },
+    "claude": {
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "inputCost": 0,
+      "outputCost": 0,
+      "totalCost": 0
+    },
+    "totalCost": 4e-8
+  },
+  "totalProcessingTime": 4474,
+  "analysis": {
+    "totalVideos": 219,
+    "relevantVideos": 130,
+    "relevancePercentage": 59.3607305936073,
+    "topChannels": [
+      {
+        "channel": "BPS.space",
+        "count": 37
+      },
+      {
+        "channel": "Jay Feng",
+        "count": 29
+      },
+      {
+        "channel": "DavidMC",
+        "count": 7
+      },
+      {
+        "channel": "Stronger By Science",
+        "count": 7
+      },
+      {
+        "channel": "Matt Wolfe",
+        "count": 6
+      },
+      {
+        "channel": "Ryan Trahan",
+        "count": 6
+      },
+      {
+        "channel": "Veteran Iron&Outdoors",
+        "count": 5
+      },
+      {
+        "channel": "CaseyNeistat",
+        "count": 5
+      },
+      {
+        "channel": "Andrew Klein",
+        "count": 5
+      },
+      {
+        "channel": "The Laser Channel",
+        "count": 5
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 0.7069858881015113,
+      "highPerformers": 10,
+      "superStars": 0
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.393443864438356,
+      "highSimilarity": 0,
+      "lowSimilarity": 218
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "testing",
+          "count": 48,
+          "percentage": 21.91780821917808
+        },
+        {
+          "topic": "test",
+          "count": 46,
+          "percentage": 21.00456621004566
+        },
+        {
+          "topic": "tested",
+          "count": 26,
+          "percentage": 11.87214611872146
+        },
+        {
+          "topic": "interview",
+          "count": 21,
+          "percentage": 9.58904109589041
+        },
+        {
+          "topic": "data",
+          "count": 13,
+          "percentage": 5.93607305936073
+        },
+        {
+          "topic": "mock",
+          "count": 10,
+          "percentage": 4.5662100456621
+        },
+        {
+          "topic": "build",
+          "count": 9,
+          "percentage": 4.10958904109589
+        },
+        {
+          "topic": "sprint",
+          "count": 9,
+          "percentage": 4.10958904109589
+        },
+        {
+          "topic": "flight",
+          "count": 9,
+          "percentage": 4.10958904109589
+        },
+        {
+          "topic": "review",
+          "count": 9,
+          "percentage": 4.10958904109589
+        },
+        {
+          "topic": "scout",
+          "count": 8,
+          "percentage": 3.65296803652968
+        },
+        {
+          "topic": "echo",
+          "count": 8,
+          "percentage": 3.65296803652968
+        },
+        {
+          "topic": "part",
+          "count": 7,
+          "percentage": 3.1963470319634704
+        },
+        {
+          "topic": "1-star",
+          "count": 7,
+          "percentage": 3.1963470319634704
+        },
+        {
+          "topic": "launch",
+          "count": 7,
+          "percentage": 3.1963470319634704
+        },
+        {
+          "topic": "project",
+          "count": 7,
+          "percentage": 3.1963470319634704
+        },
+        {
+          "topic": "tips",
+          "count": 7,
+          "percentage": 3.1963470319634704
+        },
+        {
+          "topic": "scientist",
+          "count": 6,
+          "percentage": 2.73972602739726
+        },
+        {
+          "topic": "case",
+          "count": 6,
+          "percentage": 2.73972602739726
+        },
+        {
+          "topic": "study",
+          "count": 6,
+          "percentage": 2.73972602739726
+        }
+      ],
+      "conceptWordsFound": [
+        "test",
+        "optimization"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "testing",
+          "count": 48,
+          "percentage": 21.91780821917808
+        },
+        {
+          "topic": "tested",
+          "count": 26,
+          "percentage": 11.87214611872146
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 1,
+      "threadStats": [
+        {
+          "thread": "direct",
+          "purpose": "baseline search",
+          "videoCount": 219,
+          "queryCount": 1,
+          "avgPerformance": 0.7069858881015113,
+          "avgSimilarity": 0.393443864438356,
+          "superstarCount": 0,
+          "strongCount": 10,
+          "coverage": 100,
+          "qualityScore": 0.27815925991804175
+        }
+      ],
+      "bestPerformingThread": "direct",
+      "mostProductiveThread": "direct"
+    },
+    "potentialIssues": [
+      {
+        "type": "TOPIC_DRIFT",
+        "message": "89 videos don't match concept keywords",
+        "severity": "medium",
+        "examples": [
+          "Rocket Tuning - Build Signal R2",
+          "judge simulator",
+          "SQL Take-Home Challenge Tutorial",
+          "Google Statistical Coding & Algorithms Mock Interview",
+          "Build Signal Alpha - Part 4 - Tuning and Flight"
+        ]
+      }
+    ]
+  }
+}

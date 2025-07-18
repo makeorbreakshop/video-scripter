@@ -26,9 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { DebugPanel } from '@/components/debug-panel';
-import { SearchProgress } from '@/components/search-progress';
-import { SearchStats } from '@/components/search-stats';
-import { ResultsShimmer } from '@/components/results-shimmer';
+import { StreamingStatus } from '@/components/streaming-status';
 
 interface TitleSuggestion {
   title: string;
@@ -153,9 +151,14 @@ export default function TitleGeneratorPage() {
         body: JSON.stringify({
           concept: concept.trim(),
           options: {
-            maxSuggestions: 8,
+            // Quality-based filtering
+            minPerformance: 2.5,     // Show patterns with 2.5x+ performance
+            minConfidence: 0.6,      // Show patterns with 60%+ confidence
+            minSampleSize: 5,        // Require at least 5 examples
+            maxSuggestions: 50,      // Safety limit
+            balanceTypes: true,      // Ensure mix of WIDE and DEEP
             includeExamples: true,
-            timestamp: Date.now() // Cache buster
+            timestamp: Date.now()    // Cache buster
           }
         }),
       });
@@ -370,19 +373,13 @@ export default function TitleGeneratorPage() {
           </CardContent>
         </Card>
 
-        {/* Progress Indicator */}
-        <SearchProgress 
+        {/* Streaming Status */}
+        <StreamingStatus 
           isActive={isLoading}
           concept={concept}
         />
 
 
-        {/* Results Shimmer */}
-        {isLoading && (
-          <div className="max-w-4xl mx-auto">
-            <ResultsShimmer />
-          </div>
-        )}
 
         {/* Error State */}
         {error && (

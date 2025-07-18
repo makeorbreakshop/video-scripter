@@ -1,0 +1,83 @@
+{
+  "widePatterns": [
+    {
+      "pattern": "Comprehensive Beginner's Guide",
+      "pattern_type": "WIDE",
+      "explanation": "Covers multiple aspects of a topic in one comprehensive video",
+      "template": "[Ultimate/Complete] [Topic] Guide: [Aspect1], [Aspect2], and [Aspect3]",
+      "examples": [
+        "Ultimate Woodworking Guide: Tools, Safety, and First Projects",
+        "Complete Beginner's Guide: Tools, Techniques, and Workshop Setup",
+        "Everything You Need: Tools, Materials, and Project Ideas"
+      ],
+      "video_ids": ["video_wide_001", "video_wide_002", "video_wide_003"],
+      "confidence": 0.85,
+      "performance_multiplier": 4.5,
+      "sample_size": 15
+    },
+    {
+      "pattern": "All-in-One Resource",
+      "pattern_type": "WIDE",
+      "explanation": "Positions the video as the only resource viewers need",
+      "template": "The ONLY [Resource] You Need for [Topic] ([Qualifier])",
+      "examples": [
+        "The ONLY Guide You Need for Woodworking Tools (2024 Edition)",
+        "The ONLY Video You Need to Start Woodworking",
+        "The ONLY Tool List You Need (Under $500)"
+      ],
+      "video_ids": ["video_hp_002", "video_wide_004", "video_wide_005"],
+      "confidence": 0.82,
+      "performance_multiplier": 4.2,
+      "sample_size": 12
+    }
+  ],
+  "deepPatterns": [
+    {
+      "pattern": "Specific Number Focus",
+      "pattern_type": "DEEP",
+      "explanation": "Focuses on a specific number of items for clarity and digestibility",
+      "template": "[Number] [Specific Items] for [Audience] ([Qualifier])",
+      "examples": [
+        "5 Essential Tools Every Beginner Needs",
+        "7 Must-Have Tools for New Woodworkers",
+        "3 Power Tools That Changed My Woodworking"
+      ],
+      "video_ids": ["video_hp_001", "video_hp_002", "video_deep_001"],
+      "confidence": 0.88,
+      "performance_multiplier": 3.8,
+      "sample_size": 25
+    },
+    {
+      "pattern": "Comparison Deep Dive",
+      "pattern_type": "DEEP",
+      "explanation": "Compares two specific items to help viewers make a decision",
+      "template": "[Item1] vs. [Item2]: Which [Decision] for [Audience]?",
+      "examples": [
+        "Router vs. Jigsaw: Which Should Beginners Buy First?",
+        "Miter Saw vs. Circular Saw: Best First Purchase?",
+        "Hand Tools vs. Power Tools: Where to Start?"
+      ],
+      "video_ids": ["video_deep_003", "video_deep_004", "video_deep_005"],
+      "confidence": 0.79,
+      "performance_multiplier": 3.5,
+      "sample_size": 18
+    }
+  ],
+  "lowPerformers": [
+    {
+      "pattern": "Generic Overview",
+      "pattern_type": "AVOID",
+      "explanation": "Too generic and doesn't promise specific value",
+      "template": "[Basic/Simple] [Topic] [Overview/Introduction]",
+      "examples": [
+        "Basic Woodworking Tools Overview",
+        "Simple Introduction to Tools",
+        "Woodworking Tools Introduction"
+      ],
+      "video_ids": ["video_ap_001", "video_ap_003", "video_ap_004"],
+      "confidence": 0.75,
+      "performance_multiplier": 0.8,
+      "sample_size": 30
+    }
+  ]
+}

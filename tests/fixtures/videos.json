@@ -1,0 +1,116 @@
+{
+  "highPerformers": [
+    {
+      "id": "video_hp_001",
+      "title": "5 Essential Woodworking Tools Every Beginner NEEDS to Start",
+      "channel_id": "channel_001",
+      "channel_name": "Woodworking Mastery",
+      "view_count": 850000,
+      "published_at": "2024-01-15T10:00:00Z",
+      "performance_ratio": 4.2,
+      "thumbnail_url": "https://example.com/thumb_hp_001.jpg",
+      "duration": "PT12M30S",
+      "description": "In this video, I'll show you the 5 must-have woodworking tools that every beginner needs to start their journey."
+    },
+    {
+      "id": "video_hp_002",
+      "title": "The ONLY 7 Tools You Need to Start Woodworking (Under $500)",
+      "channel_id": "channel_002",
+      "channel_name": "Budget Workshop",
+      "view_count": 1200000,
+      "published_at": "2024-02-20T14:30:00Z",
+      "performance_ratio": 5.1,
+      "thumbnail_url": "https://example.com/thumb_hp_002.jpg",
+      "duration": "PT18M45S",
+      "description": "Start woodworking without breaking the bank! Here are the only 7 tools you need, all under $500 total."
+    },
+    {
+      "id": "video_hp_003",
+      "title": "Beginner's Guide: 10 Woodworking Tools That Changed My Life",
+      "channel_id": "channel_003",
+      "channel_name": "DIY Dave",
+      "view_count": 650000,
+      "published_at": "2024-03-10T09:15:00Z",
+      "performance_ratio": 3.8,
+      "thumbnail_url": "https://example.com/thumb_hp_003.jpg",
+      "duration": "PT22M10S",
+      "description": "These 10 tools completely transformed my woodworking. Perfect for beginners!"
+    }
+  ],
+  "averagePerformers": [
+    {
+      "id": "video_ap_001",
+      "title": "Basic Woodworking Tools Overview",
+      "channel_id": "channel_004",
+      "channel_name": "Workshop Basics",
+      "view_count": 45000,
+      "published_at": "2024-01-20T11:00:00Z",
+      "performance_ratio": 1.2,
+      "thumbnail_url": "https://example.com/thumb_ap_001.jpg",
+      "duration": "PT8M20S",
+      "description": "A quick overview of basic woodworking tools."
+    },
+    {
+      "id": "video_ap_002",
+      "title": "My Woodworking Tool Collection",
+      "channel_id": "channel_005",
+      "channel_name": "Hobby Carpenter",
+      "view_count": 28000,
+      "published_at": "2024-02-15T16:45:00Z",
+      "performance_ratio": 0.9,
+      "thumbnail_url": "https://example.com/thumb_ap_002.jpg",
+      "duration": "PT15M30S",
+      "description": "Showing off my woodworking tool collection."
+    }
+  ],
+  "shorts": [
+    {
+      "id": "video_short_001",
+      "title": "Quick Tool Tip! #shorts",
+      "channel_id": "channel_001",
+      "channel_name": "Woodworking Mastery",
+      "view_count": 150000,
+      "published_at": "2024-03-01T12:00:00Z",
+      "performance_ratio": 2.1,
+      "thumbnail_url": "https://example.com/thumb_short_001.jpg",
+      "duration": "PT45S",
+      "description": "Quick woodworking tool tip! #shorts #woodworking"
+    }
+  ],
+  "clusters": {
+    "wide_pattern_videos": [
+      {
+        "id": "video_wide_001",
+        "title": "Complete Woodworking Setup: Tools, Safety, and First Projects",
+        "performance_ratio": 4.5
+      },
+      {
+        "id": "video_wide_002",
+        "title": "Ultimate Beginner's Guide: Tools, Techniques, and Workshop Setup",
+        "performance_ratio": 4.8
+      },
+      {
+        "id": "video_wide_003",
+        "title": "Everything You Need: Tools, Materials, and Project Ideas for New Woodworkers",
+        "performance_ratio": 4.2
+      }
+    ],
+    "deep_pattern_videos": [
+      {
+        "id": "video_deep_001",
+        "title": "The 5 Best Hand Saws for Beginners (Tested & Reviewed)",
+        "performance_ratio": 3.9
+      },
+      {
+        "id": "video_deep_002",
+        "title": "Why This $30 Chisel Set is Perfect for Beginners",
+        "performance_ratio": 3.7
+      },
+      {
+        "id": "video_deep_003",
+        "title": "Router vs. Jigsaw: Which Should Beginners Buy First?",
+        "performance_ratio": 3.5
+      }
+    ]
+  }
+}

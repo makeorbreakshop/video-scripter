@@ -32,12 +32,14 @@ interface SearchResult {
   performance_ratio: number;
   similarity_score: number;
   thumbnail_url: string;
+  embedding?: number[];  // Add embedding to search results
 }
 
 export class PineconeService {
   private pinecone: Pinecone;
   private indexName: string;
   private initialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor() {
     if (!process.env.PINECONE_API_KEY) {
@@ -60,20 +62,34 @@ export class PineconeService {
    */
   async initializeIndex() {
     if (this.initialized) return;
-
-    try {
-      console.log(`🔌 Connecting to Pinecone index: ${this.indexName}`);
-      
-      // Test the connection by getting index stats
-      const index = this.pinecone.index(this.indexName);
-      const stats = await index.describeIndexStats();
-      
-      console.log(`✅ Connected to Pinecone index with ${stats.totalVectorCount} vectors`);
-      this.initialized = true;
-    } catch (error) {
-      console.error('❌ Failed to connect to Pinecone index:', error);
-      throw error;
+    
+    // If initialization is already in progress, wait for it
+    if (this.initializationPromise) {
+      return this.initializationPromise;
     }
+
+    // Create a new initialization promise
+    this.initializationPromise = (async () => {
+      try {
+        console.log(`🔌 Connecting to Pinecone index: ${this.indexName}`);
+        
+        // Test the connection by getting index stats
+        const index = this.pinecone.index(this.indexName);
+        const stats = await index.describeIndexStats();
+        
+        // Pinecone SDK v3+ uses totalRecordCount instead of totalVectorCount
+        const vectorCount = stats.totalRecordCount || 'unknown';
+        console.log(`✅ Connected to Pinecone index with ${vectorCount} vectors`);
+        this.initialized = true;
+      } catch (error) {
+        console.error('❌ Failed to connect to Pinecone index:', error);
+        // Reset the promise on error so it can be retried
+        this.initializationPromise = null;
+        throw error;
+      }
+    })();
+
+    return this.initializationPromise;
   }
 
   /**
@@ -123,6 +139,7 @@ export class PineconeService {
         vector: queryEmbedding,
         topK: maxResults,
         includeMetadata: true,
+        includeValues: true,  // Include embeddings in response
       });
       
       console.log(`[PineconeService] Raw Pinecone response - matches: ${queryResponse.matches?.length || 0}`);
@@ -135,6 +152,7 @@ export class PineconeService {
         .map(match => ({
           video_id: match.id as string,
           similarity_score: match.score || 0,
+          embedding: match.values,  // Include embedding values
         })) || [];
 
       console.log(`[PineconeService] After filtering by minScore ${minScore}: ${allMatches.length} matches`);
@@ -238,6 +256,7 @@ export class PineconeService {
             performance_ratio: video.performance_ratio,
             similarity_score: match.similarity_score,
             thumbnail_url: video.thumbnail_url,
+            embedding: match.embedding,  // Pass through embedding
           };
           
           return result;
@@ -291,7 +310,8 @@ export class PineconeService {
       const stats = await index.describeIndexStats();
       
       return {
-        totalVectorCount: stats.totalVectorCount,
+        totalVectorCount: stats.totalRecordCount, // Keep the old property name for backward compatibility
+        totalRecordCount: stats.totalRecordCount,
         dimension: stats.dimension,
         indexFullness: stats.indexFullness,
         namespaces: stats.namespaces,

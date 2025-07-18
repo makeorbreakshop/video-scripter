@@ -27,28 +27,51 @@ interface DebugInfo {
     details?: any;
   }>;
   // Pool-and-cluster additions
-  pooledVideos?: Array<{
-    video_id: string;
-    title: string;
-    performance_ratio: number;
-    found_by_threads: string[];
-    thread_purposes: string[];
-  }>;
-  clusters?: Array<{
-    cluster_id: string;
-    videos: Array<{
-      video_id: string;
-      title: string;
-      performance_ratio: number;
-      found_by_threads: string[];
+  poolAndCluster?: {
+    totalPooled: number;
+    performanceFiltered: number;
+    deduplicated: number;
+    clusters: Array<{
+      cluster_id: string;
+      size: number;
+      thread_overlap: number;
+      avg_performance: number;
+      is_wide: boolean;
+      sample_titles: string[];
+      thread_sources: string[];
     }>;
-    thread_overlap: number;
-    avg_performance: number;
-  }>;
+    clusteringMethod: string;
+    epsilon?: number;
+    minPoints?: number;
+    noisePoints?: number;
+  };
   threadExpansions?: Array<{
     angle: string;
     intent: string;
     queries: string[];
+  }>;
+  expandedThreads?: Array<{
+    name: string;
+    angle: string;
+    intent: string;
+    queries: string[];
+    results_count?: number;
+  }>;
+  searchByThread?: Record<string, {
+    queries: number;
+    results: number;
+    unique_videos: number;
+    avg_score: number;
+  }>;
+  patternsByCluster?: Array<{
+    cluster_id: string;
+    patterns: Array<{
+      pattern: string;
+      type: 'WIDE' | 'DEEP';
+      thread_count: number;
+      performance: number;
+      confidence: number;
+    }>;
   }>;
   costs?: {
     embedding: {
@@ -108,7 +131,7 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
       case 'expansion': return expandStep !== undefined;
       case 'embeddings': return multiEmbedStep !== undefined;
       case 'search': return searchStep !== undefined;
-      case 'clustering': return debug.pooledVideos !== undefined || debug.clusters !== undefined;
+      case 'clustering': return debug.poolAndCluster !== undefined;
       case 'performance': return perfDist !== undefined;
       case 'patterns': return debug.claudePatterns && debug.claudePatterns.length > 0;
       case 'costs': return debug.costs !== undefined;
@@ -221,27 +244,41 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
                         </div>
                         
                         {/* Check if we have multi-threaded expansion data */}
-                        {expandStep.details?.threads ? (
+                        {(expandStep.details?.threads || debug.expandedThreads) ? (
                           <div>
                             <h4 className="text-xs font-medium text-gray-400 mb-2">
-                              Multi-Threaded Expansion ({expandStep.details?.totalQueries || 0} queries across {expandStep.details?.threads?.length || 0} threads):
+                              Thread Expansion ({expandStep.details?.totalQueries || 0} queries across {(expandStep.details?.threads || debug.expandedThreads)?.length || 0} threads):
                             </h4>
-                            <div className="space-y-4">
-                              {expandStep.details.threads.map((thread: any, i: number) => (
+                            <div className="space-y-3">
+                              {(expandStep.details?.threads || debug.expandedThreads || []).map((thread: any, i: number) => (
                                 <div key={i} className="border border-gray-700 rounded-lg p-3">
                                   <div className="flex items-start justify-between mb-2">
-                                    <div>
-                                      <h5 className="text-sm font-medium text-gray-200">{thread.name}</h5>
-                                      <p className="text-xs text-gray-400 mt-1">{thread.purpose}</p>
+                                    <div className="flex-1">
+                                      <h5 className="text-sm font-medium text-gray-200">{thread.name || thread.angle}</h5>
+                                      <p className="text-xs text-gray-400 mt-0.5">{thread.purpose || thread.intent}</p>
                                     </div>
-                                    <span className="text-xs text-blue-400">{thread.queryCount} queries</span>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        {thread.queryCount || thread.queries?.length || 0} queries
+                                      </Badge>
+                                      {thread.results_count !== undefined && (
+                                        <Badge variant="outline" className="text-xs text-green-400">
+                                          {thread.results_count} results
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="space-y-1 mt-2">
-                                    {thread.queries.map((query: string, j: number) => (
+                                  <div className="space-y-1">
+                                    {(thread.queries || []).slice(0, 3).map((query: string, j: number) => (
                                       <div key={j} className="text-xs text-gray-300 font-mono bg-gray-700/30 p-1.5 rounded">
                                         {query}
                                       </div>
                                     ))}
+                                    {thread.queries?.length > 3 && (
+                                      <div className="text-xs text-gray-500 pl-2">
+                                        ... and {thread.queries.length - 3} more queries
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -481,82 +518,197 @@ export function DebugPanel({ debug, concept }: DebugPanelProps) {
                         <Target className="h-4 w-4" />
                         <div>
                           <div>Pool & Cluster Analysis (Step 4)</div>
-                          <div className="text-xs font-normal text-gray-400 mt-0.5">Pool videos from all threads and cluster by content similarity</div>
+                          <div className="text-xs font-normal text-gray-400 mt-0.5">DBSCAN clustering on pooled videos using 512D embeddings</div>
                         </div>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {/* Pool Summary */}
-                        {debug.pooledVideos && (
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-400">Total Pooled Videos:</span>
-                              <span className="ml-2 text-gray-100 font-medium">{debug.pooledVideos.length}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400">Performance Filtered:</span>
-                              <span className="ml-2 text-gray-100 font-medium">≥1.0x baseline</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Cluster Summary */}
-                        {debug.clusters && (
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-400">Clusters Found:</span>
-                              <span className="ml-2 text-gray-100 font-medium">{debug.clusters.length}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400">Avg Cluster Size:</span>
-                              <span className="ml-2 text-gray-100 font-medium">
-                                {debug.clusters.length > 0 ? Math.round(debug.clusters.reduce((sum, c) => sum + c.videos.length, 0) / debug.clusters.length) : 0}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Cluster Details */}
-                        {debug.clusters && debug.clusters.length > 0 && (
+                      {debug.poolAndCluster ? (
+                        <div className="space-y-4">
+                          {/* Pooling Stats */}
                           <div>
-                            <h4 className="text-xs font-medium text-gray-400 mb-2">Cluster Breakdown:</h4>
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                              {debug.clusters.map((cluster, i) => (
-                                <div key={i} className="border border-gray-700 rounded p-3 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h5 className="text-sm font-medium text-gray-200">Cluster #{cluster.cluster_id}</h5>
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant="outline" className="text-xs">
-                                        {cluster.videos.length} videos
-                                      </Badge>
-                                      <Badge variant="outline" className="text-xs text-purple-400">
-                                        {cluster.thread_overlap} threads
-                                      </Badge>
-                                      <Badge variant="outline" className="text-xs text-green-400">
-                                        {cluster.avg_performance.toFixed(1)}x avg
-                                      </Badge>
+                            <h4 className="text-xs font-medium text-gray-400 mb-2">Pooling Process:</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-400">Total from all threads:</span>
+                                <span className="ml-2 text-gray-100 font-medium">{debug.poolAndCluster.totalPooled}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">After deduplication:</span>
+                                <span className="ml-2 text-gray-100 font-medium">{debug.poolAndCluster.deduplicated}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">Performance filtered (≥1.0x):</span>
+                                <span className="ml-2 text-gray-100 font-medium">{debug.poolAndCluster.performanceFiltered}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* DBSCAN Parameters */}
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-2">DBSCAN Parameters:</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-400">Method:</span>
+                                <span className="ml-2 text-gray-100">{debug.poolAndCluster.clusteringMethod}</span>
+                              </div>
+                              {debug.poolAndCluster.epsilon !== undefined && (
+                                <div>
+                                  <span className="text-gray-400">Epsilon (similarity):</span>
+                                  <span className="ml-2 text-gray-100">{(1 - debug.poolAndCluster.epsilon) * 100}%</span>
+                                </div>
+                              )}
+                              {debug.poolAndCluster.minPoints !== undefined && (
+                                <div>
+                                  <span className="text-gray-400">Min points:</span>
+                                  <span className="ml-2 text-gray-100">{debug.poolAndCluster.minPoints}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Clustering Results */}
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-2">Clustering Results:</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm mb-2">
+                              <div>
+                                <span className="text-gray-400">Clusters found:</span>
+                                <span className="ml-2 text-gray-100 font-medium">{debug.poolAndCluster.clusters.length}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">WIDE patterns (3+ threads):</span>
+                                <span className="ml-2 text-purple-400 font-medium">
+                                  {debug.poolAndCluster.clusters.filter(c => c.is_wide).length}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">DEEP patterns (1-2 threads):</span>
+                                <span className="ml-2 text-blue-400 font-medium">
+                                  {debug.poolAndCluster.clusters.filter(c => !c.is_wide).length}
+                                </span>
+                              </div>
+                              {debug.poolAndCluster.noisePoints !== undefined && (
+                                <div>
+                                  <span className="text-gray-400">Noise points:</span>
+                                  <span className="ml-2 text-gray-500">{debug.poolAndCluster.noisePoints}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Cluster Details */}
+                          {debug.poolAndCluster.clusters.length > 0 && (
+                            <div>
+                              <h4 className="text-xs font-medium text-gray-400 mb-2">Cluster Details:</h4>
+                              <div className="space-y-2 max-h-96 overflow-y-auto">
+                                {debug.poolAndCluster.clusters.map((cluster, i) => (
+                                  <div key={i} className="border border-gray-700 rounded p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <h5 className="text-sm font-medium text-gray-200">Cluster #{cluster.cluster_id}</h5>
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`text-xs ${cluster.is_wide ? 'text-purple-400 border-purple-400' : 'text-blue-400 border-blue-400'}`}
+                                        >
+                                          {cluster.is_wide ? '🌐 WIDE' : '🎯 DEEP'}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-xs">
+                                          {cluster.size} videos
+                                        </Badge>
+                                        <Badge variant="outline" className="text-xs text-purple-400">
+                                          {cluster.thread_overlap} threads
+                                        </Badge>
+                                        <Badge variant="outline" className="text-xs text-green-400">
+                                          {cluster.avg_performance.toFixed(1)}x avg
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    {cluster.sample_titles.length > 0 && (
+                                      <div className="text-xs text-gray-400">
+                                        <span className="font-medium">Sample titles:</span>
+                                        <div className="mt-1 space-y-0.5">
+                                          {cluster.sample_titles.slice(0, 3).map((title, j) => (
+                                            <div key={j} className="pl-2">• {title}</div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {cluster.thread_sources.length > 0 && (
+                                      <div className="text-xs text-blue-400">
+                                        <span className="font-medium">Found by:</span> {cluster.thread_sources.join(', ')}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Patterns by Cluster */}
+                          {debug.patternsByCluster && debug.patternsByCluster.length > 0 && (
+                            <div>
+                              <h4 className="text-xs font-medium text-gray-400 mb-2">Patterns Found per Cluster:</h4>
+                              <div className="space-y-2">
+                                {debug.patternsByCluster.map((pc, i) => (
+                                  <div key={i} className="text-xs bg-gray-700/50 p-2 rounded">
+                                    <div className="font-medium text-gray-300 mb-1">Cluster #{pc.cluster_id}:</div>
+                                    <div className="pl-2 space-y-0.5">
+                                      {pc.patterns.map((p, j) => (
+                                        <div key={j} className="flex items-center gap-2">
+                                          <Badge variant="outline" className={`text-xs ${p.type === 'WIDE' ? 'text-purple-400' : 'text-blue-400'}`}>
+                                            {p.type}
+                                          </Badge>
+                                          <span className="text-gray-400">{p.pattern}</span>
+                                          <span className="text-green-400">{p.performance.toFixed(1)}x</span>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
-                                  <div className="text-xs text-gray-400">
-                                    Sample Videos: {cluster.videos.slice(0, 3).map(v => v.title).join(' • ')}
-                                    {cluster.videos.length > 3 && ` ... and ${cluster.videos.length - 3} more`}
-                                  </div>
-                                  <div className="text-xs text-blue-400">
-                                    Found by threads: {[...new Set(cluster.videos.flatMap(v => v.found_by_threads))].join(', ')}
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        <div className="text-xs text-gray-500 bg-gray-700/50 p-2 rounded">
-                          💡 Videos are pooled across all threads, deduplicated, and clustered by title similarity and thread overlap
+                          <div className="text-xs text-gray-500 bg-gray-700/50 p-2 rounded">
+                            💡 DBSCAN groups videos by semantic similarity using embeddings. WIDE patterns appear across 3+ search threads.
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">No pool & cluster data available</p>
+                      )}
                     </CardContent>
                   </Card>
+
+                  {/* Search by Thread Breakdown */}
+                  {debug.searchByThread && (
+                    <Card className="bg-gray-800 border-gray-700">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm">Search Results by Thread</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {Object.entries(debug.searchByThread).map(([thread, stats]) => (
+                            <div key={thread} className="flex items-center justify-between text-xs">
+                              <span className="text-gray-300 truncate flex-1 mr-2">{thread}</span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {stats.queries} queries
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {stats.unique_videos} unique
+                                </Badge>
+                                <Badge variant="outline" className="text-xs text-blue-400">
+                                  {(stats.avg_score * 100).toFixed(0)}% avg
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </TabsContent>
 
