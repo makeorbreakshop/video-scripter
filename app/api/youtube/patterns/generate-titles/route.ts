@@ -4,14 +4,19 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { pineconeService } from '@/lib/pinecone-service';
 import { createClient } from '@supabase/supabase-js';
-// import { AnthropicAPI } from '@/lib/anthropic-api'; // No longer needed - using OpenAI
+import Anthropic from '@anthropic-ai/sdk';
 import { searchLogger } from '@/lib/search-logger';
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 // Zod schemas for structured outputs
 const ThreadSchema = z.object({
   angle: z.string(),
   intent: z.string(),
-  queries: z.array(z.string()).min(3).max(3)
+  queries: z.array(z.string()).min(5).max(5)
 });
 
 const ThreadExpansionSchema = z.object({
@@ -427,8 +432,8 @@ export async function POST(req: NextRequest) {
     console.log(`🎯 Selected ${highQualityClusters.length} high-quality clusters from ${clusters.length} total`);
     
     // Batch clusters for efficient API calls
-    const batchSize = 5; // Process 5 clusters per API call
-    const clusterBatches = createSmartBatches(highQualityClusters, batchSize);
+    const clusterBatchSize = 5; // Process 5 clusters per API call
+    const clusterBatches = createSmartBatches(highQualityClusters, clusterBatchSize);
     console.log(`📦 Created ${clusterBatches.length} batches for pattern discovery`);
     
     // Process batches in parallel
@@ -770,7 +775,7 @@ export async function POST(req: NextRequest) {
         // Pool-and-cluster data
         poolAndCluster: {
           totalPooled: pooledVideos.length,
-          performanceFiltered: pooledVideos.filter(v => v.performance_ratio >= 1.0).length,
+          performanceFiltered: pooledVideos.filter(v => v.performance_ratio >= 0.8).length,
           deduplicated: pooledVideos.length,
           clusters: clusters.map((cluster, idx) => ({
             cluster_id: idx.toString(),
@@ -1653,35 +1658,70 @@ async function expandThreadsWithLLM(concept: string): Promise<ThreadExpansion[]>
   try {
     console.log(`🎯 Expanding threads for: "${concept}"`);
     
-    const prompt = `Generate 12 diverse thread categories for: "${concept}"
+    const prompt = `Analyze this concept: "${concept}"
 
-For each thread, create 3 specific search query variations. Each thread should explore a different angle:
-- Direct variations (2 threads)
-- Audience/skill levels (2 threads)  
-- Content formats (tutorials, reviews, comparisons, mistakes) (3 threads)
-- Problems/outcomes/benefits (2 threads)
-- Adjacent/creative angles (3 threads)
+Your task: Create 15 search threads that intelligently explore related content patterns.
 
-Return a JSON object with a "threads" array. Each thread should have:
-{
-  "angle": "brief angle description",
-  "intent": "what videos this will find", 
-  "queries": ["query1", "query2", "query3"]
-}
+First, decompose the concept into abstract components:
+- Core function/purpose (what problem does it solve?)
+- Target audience (who uses this and why?)
+- Category/domain (what broader field does this belong to?)
+- Stage in process (is this a tool, technique, end product?)
 
-Keep queries concise and focused. Total output should be 36 queries (12 threads × 3 queries).`;
+Then create 15 threads following this expansion strategy:
 
-    const response = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini",
+THREADS 1-5: ABSTRACTION & GENERALIZATION
+- Thread 1: Remove ALL brand/product names - search the general category only
+- Thread 2: Search for the PROBLEM being solved, not the solution
+- Thread 3: Look for OTHER solutions to the same problem (no mention of original)
+- Thread 4: Search the broader activity/hobby/profession this relates to
+- Thread 5: Find content about the skills/knowledge needed, not the tools
+
+THREADS 6-10: ADJACENT DOMAINS
+- Thread 6: Related hobbies/activities that share similar audiences
+- Thread 7: Different tools/methods that achieve similar outcomes
+- Thread 8: Educational content about the underlying principles
+- Thread 9: Career/business aspects of the broader field
+- Thread 10: Creative applications across different industries
+
+THREADS 11-15: AUDIENCE EXPANSION
+- Thread 11: Content for complete beginners to the general field
+- Thread 12: Advanced techniques in the broader domain
+- Thread 13: Popular creators/channels in the category (not product-specific)
+- Thread 14: Trending topics in the wider industry
+- Thread 15: Budget/DIY alternatives to professional solutions
+
+CRITICAL RULES:
+1. For Thread 1: If given "xTool F2 fiber laser", search "engraving machines" NOT "fiber laser"
+2. For Thread 2: If it's about cutting metal, search "metal fabrication" NOT "laser cutting"
+3. For Thread 3: Search "CNC routers", "plasma cutters", "waterjet" NOT "laser alternatives"
+4. NEVER include the original product name or specific technology in queries
+5. Think broadly about WHO uses this and WHAT ELSE they might be interested in
+
+Generate 5 queries per thread that explore these angles WITHOUT mentioning the specific product/brand.
+
+Return a JSON object with a "threads" array. Each thread must have exactly 5 queries.`;
+
+    // Use Claude 3.5 Sonnet for better creative expansion
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      temperature: 0.8,
       messages: [{
         role: "user",
-        content: prompt
-      }],
-      response_format: zodResponseFormat(ThreadExpansionSchema, "thread_expansion"),
-      temperature: 0.8,
+        content: prompt + "\n\nReturn ONLY a JSON object with this structure: {\"threads\": [{\"angle\": \"...\", \"intent\": \"...\", \"queries\": [\"...\", \"...\", \"...\", \"...\", \"...\"]}]} with exactly 15 threads and 5 queries each. Each thread should have a clear angle and intent."
+      }]
     });
 
-    const result = response.choices[0].message.parsed;
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+    
+    // Parse JSON from Claude's response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in Claude response');
+    }
+    
+    const result = JSON.parse(jsonMatch[0]) as { threads: any[] };
     const threadData = result?.threads || [];
     
     // Convert to flat array of individual queries with thread info
@@ -1811,7 +1851,7 @@ async function createPooledVideosWithProvenance(
   
   // Filter for performance and return
   return Array.from(videoMap.values())
-    .filter(v => v.performance_ratio >= 1.0) // Only keep videos that performed at or above channel average
+    .filter(v => v.performance_ratio >= 0.8) // Keep videos that performed at 80% or above channel average
     .sort((a, b) => b.performance_ratio - a.performance_ratio);
 }
 
@@ -1905,9 +1945,9 @@ async function clusterVideosByContent(pooledVideos: PooledVideo[]): Promise<Vide
   
   console.log(`🔬 Running DBSCAN on ${videosWithEmbeddings.length} videos with embeddings`);
   
-  // DBSCAN parameters - tighter clustering for better quality
-  const epsilon = 0.12; // 88% similarity = 0.12 distance - tighter clusters
-  const minPoints = 4; // Minimum cluster size - require more videos
+  // DBSCAN parameters - balanced for quality and coverage
+  const epsilon = 0.15; // 85% similarity = 0.15 distance - good balance
+  const minPoints = 3; // Minimum cluster size - reasonable threshold
   
   // Run DBSCAN
   const labels = dbscan(videosWithEmbeddings, epsilon, minPoints);

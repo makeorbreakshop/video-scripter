@@ -50,12 +50,13 @@ export function StreamingStatus({ isActive, concept, onStatusUpdate }: Streaming
     // Simulate status updates for now (we'll implement real SSE later)
     const messages = [
       { message: 'Initializing semantic search engine...', progress: 5 },
-      { message: 'Generating 12 diverse search angles...', progress: 10 },
-      { message: 'Creating 36 search query variations...', progress: 15 },
+      { message: 'Abstracting concept into core components...', progress: 8 },
+      { message: 'Expanding to 15 diverse content domains...', progress: 12 },
+      { message: 'Creating 75 abstract search queries...', progress: 15 },
       { message: 'Converting queries to semantic vectors...', progress: 20 },
       { message: `Searching through ${(134139).toLocaleString()} YouTube titles...`, progress: 30 },
       { message: 'Finding semantically similar videos...', progress: 35 },
-      { message: 'Filtering by performance metrics (3x+ baseline)...', progress: 40 },
+      { message: 'Filtering by performance metrics (0.8x+ baseline)...', progress: 40 },
       { message: 'Deduplicating results across threads...', progress: 45 },
       { message: 'Running DBSCAN clustering algorithm...', progress: 50 },
       { message: 'Identifying cross-thread patterns...', progress: 55 },
