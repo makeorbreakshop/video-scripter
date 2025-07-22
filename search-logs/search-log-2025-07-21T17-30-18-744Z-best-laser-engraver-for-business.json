@@ -1,0 +1,184 @@
+{
+  "summary": {
+    "concept": "best laser engraver for business",
+    "timestamp": "2025-07-21T17:30:18.744Z",
+    "status": {
+      "level": "CAUTION",
+      "color": "🟠",
+      "message": "1 medium issues"
+    },
+    "performance": {
+      "totalVideos": 0,
+      "patternsDiscovered": 0,
+      "relevancePercent": "NaN%",
+      "processingTimeSeconds": "32.7s",
+      "superstarVideos": 0,
+      "strongVideos": 0
+    },
+    "threads": null,
+    "quality": {
+      "avgSimilarity": "NaN%",
+      "avgPerformance": "NaNx",
+      "highSimilarityCount": 0,
+      "lowSimilarityCount": 0
+    },
+    "costs": {
+      "totalCost": "$0.0062",
+      "embedding": "$0.0004",
+      "llmCost": "$0.0000"
+    },
+    "issues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "severity": "medium",
+        "message": "Only 0 high-performing videos found"
+      }
+    ]
+  },
+  "timestamp": "2025-07-21T17:30:18.744Z",
+  "concept": "best laser engraver for business",
+  "expandedQueries": [
+    "What is the best budget laser engraver for small businesses?",
+    "How to calculate the ROI of a laser engraver for my business?",
+    "Affordable laser engravers with high quality for startups",
+    "Comparing cost vs. performance in laser engravers for small businesses",
+    "Best laser engraver for personalized gifts and crafts",
+    "Which laser engraver is ideal for the jewelry industry?",
+    "Top laser engravers for creating promotional products",
+    "Laser engravers for the manufacturing and industrial sectors",
+    "Best entry-level laser engraver for new business owners",
+    "User-friendly laser engravers for those without technical skills",
+    "What features to look for in a beginner laser engraver?",
+    "Laser engravers with guided tutorials for newcomers",
+    "Top laser engraver reviews for business owners in 2023",
+    "Comparing the best laser engravers for small businesses",
+    "Which laser engraver has the best customer reviews?",
+    "In-depth comparison of top-rated laser engravers for entrepreneurs",
+    "What are the latest innovations in laser engraving technology?",
+    "How do new laser engravers improve efficiency for businesses?",
+    "Trends in laser engraving technology for 2023",
+    "Best laser engravers with the newest features for commercial use"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadName": "Cost-Effectiveness of Laser Engravers for Small Businesses",
+      "purpose": "Explore budget-friendly options and ROI for small business owners considering laser engravers.",
+      "queries": [
+        "What is the best budget laser engraver for small businesses?",
+        "How to calculate the ROI of a laser engraver for my business?",
+        "Affordable laser engravers with high quality for startups",
+        "Comparing cost vs. performance in laser engravers for small businesses"
+      ]
+    },
+    {
+      "threadName": "Laser Engravers for Niche Markets",
+      "purpose": "Focus on specific industries or niche markets that benefit from laser engraving.",
+      "queries": [
+        "Best laser engraver for personalized gifts and crafts",
+        "Which laser engraver is ideal for the jewelry industry?",
+        "Top laser engravers for creating promotional products",
+        "Laser engravers for the manufacturing and industrial sectors"
+      ]
+    },
+    {
+      "threadName": "User-Friendly Laser Engravers for Beginners",
+      "purpose": "Target beginners who are new to laser engraving and need easy-to-use machines.",
+      "queries": [
+        "Best entry-level laser engraver for new business owners",
+        "User-friendly laser engravers for those without technical skills",
+        "What features to look for in a beginner laser engraver?",
+        "Laser engravers with guided tutorials for newcomers"
+      ]
+    },
+    {
+      "threadName": "Laser Engraver Reviews and Comparisons",
+      "purpose": "Provide detailed reviews and comparisons of the top models available for businesses.",
+      "queries": [
+        "Top laser engraver reviews for business owners in 2023",
+        "Comparing the best laser engravers for small businesses",
+        "Which laser engraver has the best customer reviews?",
+        "In-depth comparison of top-rated laser engravers for entrepreneurs"
+      ]
+    },
+    {
+      "threadName": "Laser Engraving Technology and Innovations",
+      "purpose": "Discuss the latest technological advancements in laser engraving and their implications for businesses.",
+      "queries": [
+        "What are the latest innovations in laser engraving technology?",
+        "How do new laser engravers improve efficiency for businesses?",
+        "Trends in laser engraving technology for 2023",
+        "Best laser engravers with the newest features for commercial use"
+      ]
+    }
+  ],
+  "searchResults": [],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 0,
+    "above_avg": 0,
+    "normal": 0
+  },
+  "discoveredPatterns": [],
+  "originalPatternsCount": 0,
+  "deduplicatedPatternsCount": 0,
+  "finalSuggestionsCount": 10,
+  "processingSteps": [
+    {
+      "step": "Thread Expansion",
+      "duration": 0
+    },
+    {
+      "step": "Video Search",
+      "duration": 0
+    },
+    {
+      "step": "Pattern Discovery",
+      "duration": 0
+    },
+    {
+      "step": "Title Generation",
+      "duration": 0
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "calls": 20,
+      "cost": 0.0004
+    },
+    "openai": {
+      "calls": 2,
+      "cost": 0.00575
+    },
+    "totalCost": 0.00615
+  },
+  "totalProcessingTime": 32662,
+  "analysis": {
+    "totalVideos": 0,
+    "relevantVideos": 0,
+    "relevancePercentage": null,
+    "topChannels": [],
+    "performanceAnalysis": {
+      "averagePerformance": null,
+      "highPerformers": 0,
+      "superStars": 0
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": null,
+      "highSimilarity": 0,
+      "lowSimilarity": 0
+    },
+    "topicAnalysis": {
+      "topTopics": [],
+      "conceptWordsFound": [],
+      "unexpectedTopics": []
+    },
+    "threadAnalysis": null,
+    "potentialIssues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "message": "Only 0 high-performing videos found",
+        "severity": "medium"
+      }
+    ]
+  }
+}

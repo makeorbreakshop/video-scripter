@@ -21,6 +21,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `npm run worker:format` - Format classification worker
   - `npm run worker:topic` - Topic classification worker
   - `npm run worker:classify` - Video classification worker
+  - `npm run worker:view-tracking` - View tracking worker (tracks video performance over time)
+  - `npm run worker:view-tracking:now` - Run view tracking immediately
+  - `npm run worker:view-tracking:init` - Initialize view tracking priorities
 
 ### Database Scripts
 - **Database Info**: `node scripts/db-info.js` - Check database table structure
@@ -126,6 +129,37 @@ PINECONE_THUMBNAIL_INDEX_NAME=
 - **Adaptive Rate Limiting**: Intelligent throttling for external APIs
 - **Worker Concurrency**: 6 parallel workers for different processing stages
 
+### View Tracking System
+
+#### Overview
+The view tracking system monitors video performance over time to enable age-adjusted performance metrics and detect viral content early. It tracks ~100,000 videos daily within YouTube API quota limits.
+
+#### Database Schema
+- **view_snapshots**: Time-series data for video views, likes, comments
+- **view_tracking_priority**: Priority assignments for tracking frequency
+- **video_performance_trends**: Materialized view with calculated metrics
+
+#### Priority Tiers
+- **Tier 1 (Daily)**: New videos (<30 days) and high performers
+- **Tier 2 (Every 3 days)**: Medium-age videos (30-180 days)
+- **Tier 3 (Weekly)**: Older videos for baseline data
+
+#### Key Features
+- **Batch API Calls**: 50 videos per call (2,000 calls = 100,000 videos)
+- **Self-Managing**: Automatic priority adjustments via database triggers
+- **Historical Preservation**: Initial snapshots use import_date, not current date
+- **Manual Triggering**: Dashboard button for daily runs (no automated cron yet)
+
+#### Usage
+1. **Manual Trigger**: Click "Run Daily Tracking" in worker dashboard
+2. **Monitor Progress**: Check `/api/view-tracking/stats` for real-time updates
+3. **View Data**: Query `view_snapshots` table or `video_performance_trends` view
+
+#### Maintenance
+- **Materialized View Refresh**: pg_cron job runs daily at 2 AM PT
+- **Snapshot Cleanup**: Monthly removal of snapshots >1 year old
+- **Priority Updates**: Automatic via `update_view_tracking_priority_on_video_update` trigger
+
 ### Key Features
 
 #### Skyscraper Analysis Framework
@@ -208,8 +242,10 @@ When making changes to the codebase:
 ### Common Debugging Endpoints
 - `/api/classification/count-low-confidence` - Check videos needing reclassification
 - `/api/youtube/quota/check` - Current YouTube API quota status
+- `/api/view-tracking/stats` - View tracking statistics and tier distribution
+- `/api/view-tracking/run` - Manually trigger view tracking (POST)
 - `/app/dashboard/youtube/categorization` - Visual classification overview
-- Worker dashboards at `/app/dashboard/workers/*`
+- `/app/dashboard/youtube/worker` - Worker dashboard with view tracking controls
 
 ## Important Instruction Reminders
 

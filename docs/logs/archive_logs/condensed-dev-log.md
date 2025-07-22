@@ -499,3 +499,30 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Visual Progress Indicators**: Created engaging search experience with 6-step animated progress, domain-specific icons, real-time statistics
 - **Europe Travel Analysis**: Identified search quality issues with topic drift and poor performance distribution, documented fixes needed
 - **GitHub Integration**: Committed all changes with comprehensive documentation including 56 files changed, 211,781 insertions
+
+### 2025-07-18: Pool-and-Cluster Architecture & Thread Expansion Optimization
+- **Issue**: Title generation finding too few relevant videos, thread expansion too literal with product names, need cross-thread pattern discovery, text visibility issues in UI
+- **Solution**: Implemented pool-and-cluster architecture with DBSCAN clustering, reduced threads from 78 to 36 queries, fixed UI dark mode, created thread expansion tester, integrated Claude 3.5 Sonnet
+- **Impact**: 3.7x more videos discovered (460→1,722), cross-thread pattern validation (WIDE vs DEEP), 48% faster processing, 58% cost reduction, achieved 0% prohibited terms with Claude
+- **Technical**: DBSCAN semantic clustering (85% similarity), batched LLM processing (5 clusters/call), topic→format expansion strategy, 11 prompt strategies tested
+
+**Key Achievements:**
+- **Pool-and-Cluster Architecture**: Replaced isolated thread analysis with pooled approach finding patterns across all threads, WIDE patterns (3+ threads) vs DEEP patterns (1-2 threads)
+- **DBSCAN Implementation**: Proper semantic clustering using 512D embeddings replacing word matching, epsilon=0.15 (85% similarity), minPoints=3
+- **Performance Optimization**: Batched pattern discovery reducing API calls 80% (31→6), smart cluster selection with quality scoring, processing time 77s→40s
+- **Thread Expansion Evolution**: From literal queries to abstract concept expansion, Claude 3.5 Sonnet achieving 0% prohibited terms, topic→format strategy for diverse patterns
+- **UI Enhancements**: Dark theme conversion for main page, thread expansion tester with 9 models, real-time cost tracking, rotating status messages
+- **Testing Infrastructure**: 19 passing tests covering Pinecone service, DBSCAN algorithm, API endpoints, fixed "undefined vectors" error from SDK changes
+- **Critical Fixes**: Pinecone search threshold lowered 0.7→0.3 for cooking queries, white text on white background visibility issues, thread expansion generalization
+
+### 2025-07-19: Pattern Discovery Strategy Analysis & Three-Tier Approach Design
+- **Issue**: System trapped in semantic neighborhoods missing universal patterns, need balance between niche relevance and broad pattern discovery
+- **Solution**: Identified core problem of contextual pattern transfer, designed three-tier approach: Direct Competition, Semantic Expansion, Pure Pattern Mining
+- **Impact**: Clear framework for discovering patterns from current reality (what IS) to adjacent opportunities (what COULD BE) to universal principles (what WORKS)
+- **Technical**: Tier 1 uses semantic search for direct competitors, Tier 2 expands semantically with pattern analysis, Tier 3 mines top 1% performers ignoring topics
+
+**Key Achievements:**
+- **Problem Crystallization**: Thread expansion too semantically narrow, missing YouTube-wide success patterns from 134K video database
+- **Contextual Pattern Transfer**: Balance universal patterns with niche relevance (e.g., "Challenge videos get 7M views" → "Can I engrave 100 items in 24 hours?")
+- **Three-Tier Discovery**: Direct semantic competition (understanding landscape), semantic expansion (adjacent opportunities), pure pattern mining (universal formulas)
+- **Strategic Insight**: Current approach uses semantic search when structural pattern matching needed, must break semantic prison to find viral DNA

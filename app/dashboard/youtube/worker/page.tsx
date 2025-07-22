@@ -67,6 +67,22 @@ interface QuotaCall {
   job_id: string | null
 }
 
+interface ViewTrackingStats {
+  tierDistribution: { tier: number; count: number }[]
+  todayProgress: {
+    videosTracked: number
+    apiCallsUsed: number
+  }
+  quotaUsage: {
+    today: number
+    estimatedDaily: number
+    estimatedDailyCalls: number
+  }
+  recentJobs: any[]
+  topVelocityVideos: any[]
+  lastUpdated: string
+}
+
 export default function WorkerDashboard() {
   const [activeTab, setActiveTab] = useState("queue")
   const [queueStats, setQueueStats] = useState<QueueStats>({
@@ -99,6 +115,10 @@ export default function WorkerDashboard() {
   const [quotaStatus, setQuotaStatus] = useState<QuotaStatus | null>(null)
   const [recentQuotaCalls, setRecentQuotaCalls] = useState<QuotaCall[]>([])
   const [quotaLoading, setQuotaLoading] = useState(true)
+  
+  // View tracking states
+  const [viewTrackingStats, setViewTrackingStats] = useState<ViewTrackingStats | null>(null)
+  const [viewTrackingLoading, setViewTrackingLoading] = useState(false)
 
   const fetchQueueStats = async () => {
     try {
@@ -158,6 +178,43 @@ export default function WorkerDashboard() {
     }
   }
   
+  const fetchViewTrackingStats = async () => {
+    try {
+      setViewTrackingLoading(true)
+      const response = await fetch('/api/view-tracking/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setViewTrackingStats(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch view tracking stats:', error)
+    } finally {
+      setViewTrackingLoading(false)
+    }
+  }
+  
+  const runViewTracking = async () => {
+    try {
+      setViewTrackingLoading(true)
+      const response = await fetch('/api/view-tracking/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxApiCalls: 2000 }) // Use 2000 API calls for 100k videos
+      })
+      if (response.ok) {
+        const data = await response.json()
+        alert(`View tracking started! Job ID: ${data.jobId}`)
+        // Refresh stats after a moment
+        setTimeout(() => fetchViewTrackingStats(), 2000)
+      }
+    } catch (error) {
+      console.error('Failed to run view tracking:', error)
+      alert('Failed to start view tracking')
+    } finally {
+      setViewTrackingLoading(false)
+    }
+  }
+  
   const toggleWorker = async (type: 'title' | 'thumbnail', enable: boolean) => {
     const workerType = type === 'title' ? 'title_vectorization' : 'thumbnail_vectorization';
     setControlsLoading(prev => ({ ...prev, [type]: true }));
@@ -188,11 +245,13 @@ export default function WorkerDashboard() {
     fetchVectorizationProgress()
     fetchWorkerControls()
     fetchQuotaStatus()
+    fetchViewTrackingStats()
     const interval = setInterval(() => {
       fetchQueueStats()
       fetchVectorizationProgress()
       fetchWorkerControls()
       fetchQuotaStatus()
+      fetchViewTrackingStats()
     }, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
   }, [])
@@ -293,6 +352,7 @@ export default function WorkerDashboard() {
                 fetchQueueStats()
                 fetchVectorizationProgress()
                 fetchWorkerControls()
+                fetchViewTrackingStats()
               } else if (activeTab === 'quota') {
                 fetchQuotaStatus()
               } else if (activeTab === 'jobs') {
@@ -529,6 +589,127 @@ export default function WorkerDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* View Tracking */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="w-5 h-5" />
+                <span>View Tracking System</span>
+              </CardTitle>
+              <CardDescription>Track video performance over time</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {viewTrackingStats ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Today's Progress</div>
+                      <div className="text-2xl font-bold">{viewTrackingStats.todayProgress.videosTracked.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Using {viewTrackingStats.todayProgress.apiCallsUsed} API calls
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Daily Estimate</div>
+                      <div className="text-2xl font-bold">{viewTrackingStats.quotaUsage.estimatedDaily.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">
+                        ~{viewTrackingStats.quotaUsage.estimatedDailyCalls} API calls
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Last Updated</div>
+                      <div className="text-sm font-medium" suppressHydrationWarning>
+                        {new Date(viewTrackingStats.lastUpdated).toLocaleTimeString()}
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={runViewTracking}
+                        disabled={viewTrackingLoading}
+                      >
+                        {viewTrackingLoading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                        Run Daily Tracking
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tier Distribution */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Priority Tier Distribution</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                      {viewTrackingStats.tierDistribution.map(tier => (
+                        <div key={tier.tier} className="rounded-lg bg-muted/50 p-3">
+                          <div className="text-xs text-muted-foreground">Tier {tier.tier}</div>
+                          <div className="text-lg font-bold">{tier.count.toLocaleString()}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {tier.tier === 1 ? 'Daily' : 
+                             tier.tier === 2 ? 'Every 2 days' : 
+                             tier.tier === 3 ? 'Every 3 days' : 
+                             tier.tier === 4 ? 'Weekly' : 
+                             tier.tier === 5 ? 'Biweekly' : 
+                             'Monthly'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recent Jobs */}
+                  {viewTrackingStats.recentJobs.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Recent Tracking Jobs</h4>
+                      <div className="space-y-1">
+                        {viewTrackingStats.recentJobs.slice(0, 3).map((job: any) => (
+                          <div key={job.id} className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">
+                              {new Date(job.created_at).toLocaleString()}
+                            </span>
+                            <Badge className={cn(
+                              "text-xs",
+                              job.status === 'completed' ? "bg-green-100 text-green-800" :
+                              job.status === 'running' ? "bg-blue-100 text-blue-800" :
+                              "bg-red-100 text-red-800"
+                            )}>
+                              {job.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top Priority Videos */}
+                  {viewTrackingStats.topVelocityVideos.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Highest Priority Videos</h4>
+                      <div className="text-xs text-muted-foreground">
+                        Top videos by tracking priority score
+                      </div>
+                      <div className="space-y-1">
+                        {viewTrackingStats.topVelocityVideos.slice(0, 5).map((video: any) => (
+                          <div key={video.video_id} className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground truncate max-w-[200px]">
+                              {video.videos?.title || video.video_id}
+                            </span>
+                            <span className="font-medium">
+                              Score: {video.priority_score?.toFixed(1) || 'N/A'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p>Loading view tracking stats...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="quota" className="space-y-6">

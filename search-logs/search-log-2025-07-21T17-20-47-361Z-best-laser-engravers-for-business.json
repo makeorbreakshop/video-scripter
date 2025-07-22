@@ -1,0 +1,184 @@
+{
+  "summary": {
+    "concept": "best laser engravers for business",
+    "timestamp": "2025-07-21T17:20:47.360Z",
+    "status": {
+      "level": "CAUTION",
+      "color": "🟠",
+      "message": "1 medium issues"
+    },
+    "performance": {
+      "totalVideos": 0,
+      "patternsDiscovered": 0,
+      "relevancePercent": "NaN%",
+      "processingTimeSeconds": "42.3s",
+      "superstarVideos": 0,
+      "strongVideos": 0
+    },
+    "threads": null,
+    "quality": {
+      "avgSimilarity": "NaN%",
+      "avgPerformance": "NaNx",
+      "highSimilarityCount": 0,
+      "lowSimilarityCount": 0
+    },
+    "costs": {
+      "totalCost": "$0.0062",
+      "embedding": "$0.0004",
+      "llmCost": "$0.0000"
+    },
+    "issues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "severity": "medium",
+        "message": "Only 0 high-performing videos found"
+      }
+    ]
+  },
+  "timestamp": "2025-07-21T17:20:47.360Z",
+  "concept": "best laser engravers for business",
+  "expandedQueries": [
+    "What are the best budget laser engravers for startups?",
+    "Top laser engravers under $500 for beginners",
+    "Affordable laser engraver reviews for small businesses",
+    "Cost-effective laser engravers with high performance",
+    "Best high-end laser engravers for professional use",
+    "Top-rated industrial laser engraving machines",
+    "Premium laser engravers for large-scale production",
+    "Features to look for in expensive laser engravers",
+    "Best laser engravers for jewelry making",
+    "Top laser engraving machines for woodworking",
+    "Laser engravers for sign-making businesses",
+    "Industry-specific laser engraver recommendations",
+    "Customer reviews of the best laser engravers for business",
+    "User experiences with popular laser engraving machines",
+    "Comparison of laser engraver reviews from small business owners",
+    "Real-world performance of top-rated laser engravers",
+    "Is buying a laser engraver worth it for small businesses?",
+    "Pros and cons of DIY laser engraving vs. hiring professionals",
+    "When to outsource engraving versus investing in a machine",
+    "Benefits of having an in-house laser engraver for small businesses"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadName": "Budget-Friendly Laser Engravers",
+      "purpose": "To highlight affordable options for small businesses looking to enter the laser engraving market without a huge investment.",
+      "queries": [
+        "What are the best budget laser engravers for startups?",
+        "Top laser engravers under $500 for beginners",
+        "Affordable laser engraver reviews for small businesses",
+        "Cost-effective laser engravers with high performance"
+      ]
+    },
+    {
+      "threadName": "High-End Laser Engraving Machines",
+      "purpose": "To showcase premium laser engravers suitable for established businesses that require high-quality output and advanced features.",
+      "queries": [
+        "Best high-end laser engravers for professional use",
+        "Top-rated industrial laser engraving machines",
+        "Premium laser engravers for large-scale production",
+        "Features to look for in expensive laser engravers"
+      ]
+    },
+    {
+      "threadName": "Laser Engravers for Specific Industries",
+      "purpose": "To explore laser engravers tailored for niche markets or specific business sectors, such as jewelry, woodworking, or signage.",
+      "queries": [
+        "Best laser engravers for jewelry making",
+        "Top laser engraving machines for woodworking",
+        "Laser engravers for sign-making businesses",
+        "Industry-specific laser engraver recommendations"
+      ]
+    },
+    {
+      "threadName": "User Experience and Customer Reviews",
+      "purpose": "To focus on real user feedback and reviews of laser engravers, providing insights into reliability and performance from actual business owners.",
+      "queries": [
+        "Customer reviews of the best laser engravers for business",
+        "User experiences with popular laser engraving machines",
+        "Comparison of laser engraver reviews from small business owners",
+        "Real-world performance of top-rated laser engravers"
+      ]
+    },
+    {
+      "threadName": "DIY vs. Professional Laser Engraving",
+      "purpose": "To discuss the pros and cons of investing in a laser engraver for DIY projects compared to outsourcing engraving work to professionals.",
+      "queries": [
+        "Is buying a laser engraver worth it for small businesses?",
+        "Pros and cons of DIY laser engraving vs. hiring professionals",
+        "When to outsource engraving versus investing in a machine",
+        "Benefits of having an in-house laser engraver for small businesses"
+      ]
+    }
+  ],
+  "searchResults": [],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 0,
+    "above_avg": 0,
+    "normal": 0
+  },
+  "discoveredPatterns": [],
+  "originalPatternsCount": 0,
+  "deduplicatedPatternsCount": 0,
+  "finalSuggestionsCount": 10,
+  "processingSteps": [
+    {
+      "step": "Thread Expansion",
+      "duration": 0
+    },
+    {
+      "step": "Video Search",
+      "duration": 0
+    },
+    {
+      "step": "Pattern Discovery",
+      "duration": 0
+    },
+    {
+      "step": "Title Generation",
+      "duration": 0
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "calls": 20,
+      "cost": 0.0004
+    },
+    "openai": {
+      "calls": 2,
+      "cost": 0.00575
+    },
+    "totalCost": 0.00615
+  },
+  "totalProcessingTime": 42284,
+  "analysis": {
+    "totalVideos": 0,
+    "relevantVideos": 0,
+    "relevancePercentage": null,
+    "topChannels": [],
+    "performanceAnalysis": {
+      "averagePerformance": null,
+      "highPerformers": 0,
+      "superStars": 0
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": null,
+      "highSimilarity": 0,
+      "lowSimilarity": 0
+    },
+    "topicAnalysis": {
+      "topTopics": [],
+      "conceptWordsFound": [],
+      "unexpectedTopics": []
+    },
+    "threadAnalysis": null,
+    "potentialIssues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "message": "Only 0 high-performing videos found",
+        "severity": "medium"
+      }
+    ]
+  }
+}

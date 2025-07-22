@@ -28,6 +28,9 @@ interface SearchLogEntry {
   claudePrompt?: string; // Made optional for multi-thread
   claudePrompts?: Record<string, string>; // New: prompts by thread
   discoveredPatterns: any[];
+  originalPatternsCount?: number; // Added: for tracking pattern counts
+  deduplicatedPatternsCount?: number; // Added: for tracking deduplication
+  finalSuggestionsCount?: number; // Added: for tracking final count
   threadAnalysis?: any[]; // New: analysis breakdown by thread
   processingSteps: any[];
   costs: any;
@@ -52,9 +55,15 @@ export class SearchLogger {
     const filepath = path.join(this.logsDir, filename);
 
     // Add analysis to the log
+    const analysis = this.analyzeSearchResults(data);
+    
+    // Create summary for at-a-glance viewing
+    const summary = this.createSummary(data, analysis);
+    
     const logWithAnalysis = {
+      summary, // Add summary at the top
       ...data,
-      analysis: this.analyzeSearchResults(data)
+      analysis
     };
 
     try {
@@ -65,6 +74,69 @@ export class SearchLogger {
       console.error('Error saving search log:', error);
       throw error;
     }
+  }
+
+  private createSummary(data: SearchLogEntry, analysis: any) {
+    const { searchResults, discoveredPatterns, totalProcessingTime, costs } = data;
+    const { threadAnalysis, performanceAnalysis, similarityAnalysis, potentialIssues } = analysis;
+    
+    // Get status based on issues
+    const getStatus = () => {
+      const highIssues = potentialIssues?.filter((i: any) => i.severity === 'high').length || 0;
+      const mediumIssues = potentialIssues?.filter((i: any) => i.severity === 'medium').length || 0;
+      
+      if (highIssues > 0) return { level: 'WARNING', color: '🟡', message: `${highIssues} high, ${mediumIssues} medium issues` };
+      if (mediumIssues > 0) return { level: 'CAUTION', color: '🟠', message: `${mediumIssues} medium issues` };
+      return { level: 'GOOD', color: '🟢', message: 'No major issues detected' };
+    };
+
+    const status = getStatus();
+    
+    return {
+      // Header
+      concept: data.concept,
+      timestamp: data.timestamp,
+      status: status,
+      
+      // Key Metrics
+      performance: {
+        totalVideos: searchResults.length,
+        patternsDiscovered: discoveredPatterns?.length || 0,
+        relevancePercent: analysis.relevancePercentage?.toFixed(1) + '%' || 'N/A',
+        processingTimeSeconds: (totalProcessingTime / 1000).toFixed(1) + 's',
+        superstarVideos: performanceAnalysis?.superStars || 0,
+        strongVideos: performanceAnalysis?.highPerformers || 0
+      },
+      
+      // Thread Analysis Summary
+      threads: threadAnalysis ? {
+        count: threadAnalysis.threadCount || 0,
+        bestPerforming: threadAnalysis.bestPerformingThread || 'N/A',
+        mostProductive: threadAnalysis.mostProductiveThread || 'N/A'
+      } : null,
+      
+      // Quality Indicators
+      quality: {
+        avgSimilarity: (similarityAnalysis?.averageSimilarity * 100)?.toFixed(1) + '%' || 'N/A',
+        avgPerformance: performanceAnalysis?.averagePerformance?.toFixed(1) + 'x' || 'N/A',
+        highSimilarityCount: similarityAnalysis?.highSimilarity || 0,
+        lowSimilarityCount: similarityAnalysis?.lowSimilarity || 0
+      },
+      
+      // Cost Summary
+      costs: costs ? {
+        totalCost: '$' + (costs.totalCost || 0).toFixed(4),
+        embedding: '$' + (costs.embedding?.cost || 0).toFixed(4),
+        llmCost: '$' + ((costs.claude?.totalCost || 0) + (costs.openai?.totalCost || 0)).toFixed(4)
+      } : null,
+      
+      // Issues Summary
+      issues: potentialIssues?.map((issue: any) => ({
+        type: issue.type,
+        severity: issue.severity,
+        message: issue.message
+      })) || []
+    };
   }
 
   private analyzeSearchResults(data: SearchLogEntry) {

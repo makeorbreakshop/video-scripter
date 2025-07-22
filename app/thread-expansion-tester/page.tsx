@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PROMPTS } from './prompts';
+import { evaluateThreadExpansion, type OverallEvaluation } from './evaluation-utils';
 
 // Model pricing per 1M tokens
 const MODEL_PRICING = {
@@ -27,47 +28,7 @@ const MODEL_PRICING = {
 
 type ModelId = keyof typeof MODEL_PRICING;
 
-const DEFAULT_PROMPT = `Analyze this concept: "{concept}"
-
-Your task: Create 15 search threads that intelligently explore related content patterns.
-
-First, decompose the concept into abstract components:
-- Core function/purpose (what problem does it solve?)
-- Target audience (who uses this and why?)
-- Category/domain (what broader field does this belong to?)
-- Stage in process (is this a tool, technique, end product?)
-
-Then create 15 threads following this expansion strategy:
-
-THREADS 1-5: ABSTRACTION & GENERALIZATION
-- Thread 1: Remove ALL brand/product names - search the general category only
-- Thread 2: Search for the PROBLEM being solved, not the solution
-- Thread 3: Look for OTHER solutions to the same problem (no mention of original)
-- Thread 4: Search the broader activity/hobby/profession this relates to
-- Thread 5: Find content about the skills/knowledge needed, not the tools
-
-THREADS 6-10: ADJACENT DOMAINS
-- Thread 6: Related hobbies/activities that share similar audiences
-- Thread 7: Different tools/methods that achieve similar outcomes
-- Thread 8: Educational content about the underlying principles
-- Thread 9: Career/business aspects of the broader field
-- Thread 10: Creative applications across different industries
-
-THREADS 11-15: AUDIENCE EXPANSION
-- Thread 11: Content for complete beginners to the general field
-- Thread 12: Advanced techniques in the broader domain
-- Thread 13: Popular creators/channels in the category (not product-specific)
-- Thread 14: Trending topics in the wider industry
-- Thread 15: Budget/DIY alternatives to professional solutions
-
-CRITICAL RULES:
-1. For Thread 1: If given "xTool F2 fiber laser", search "engraving machines" NOT "fiber laser"
-2. For Thread 2: If it's about cutting metal, search "metal fabrication" NOT "laser cutting"
-3. For Thread 3: Search "CNC routers", "plasma cutters", "waterjet" NOT "laser alternatives"
-4. NEVER include the original product name or specific technology in queries
-5. Think broadly about WHO uses this and WHAT ELSE they might be interested in
-
-Generate 5 queries per thread that explore these angles WITHOUT mentioning the specific product/brand.`;
+// Default prompt removed - using prompts from prompts.ts file
 
 interface TestResult {
   model: string;
@@ -84,18 +45,22 @@ interface TestResult {
     output: number;
   };
   timeMs: number;
+  evaluation?: OverallEvaluation;
   error?: string;
 }
 
 export default function ThreadExpansionTester() {
   const [concept, setConcept] = useState('xTool F2 fiber laser review');
-  const [prompt, setPrompt] = useState(PROMPTS.topicFormatExpansion);
+  const [prompt, setPrompt] = useState(PROMPTS.progressiveTopicExpansion);
   const [selectedModel, setSelectedModel] = useState<ModelId>('claude-3-5-sonnet-20241022');
-  const [selectedPromptStrategy, setSelectedPromptStrategy] = useState<keyof typeof PROMPTS>('topicFormatExpansion');
-  const [temperature, setTemperature] = useState(0.8);
+  const [selectedPromptStrategy, setSelectedPromptStrategy] = useState<keyof typeof PROMPTS>('progressiveTopicExpansion');
+  const [temperature, setTemperature] = useState(0.7);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<TestResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchResults, setBatchResults] = useState<TestResult[]>([]);
+  const [batchProgress, setBatchProgress] = useState(0);
 
   const runTest = async () => {
     setIsLoading(true);
@@ -138,6 +103,9 @@ export default function ThreadExpansionTester() {
           q.toLowerCase().includes(concept.split(' ')[0].toLowerCase())
         ).length;
         
+        // Evaluate thread expansion quality
+        const evaluation = evaluateThreadExpansion(concept, data.threads);
+        
         // Calculate cost
         const pricing = MODEL_PRICING[selectedModel];
         const inputCost = (data.tokensUsed.input / 1_000_000) * pricing.input;
@@ -154,7 +122,8 @@ export default function ThreadExpansionTester() {
             total: inputCost + outputCost
           },
           tokensUsed: data.tokensUsed,
-          timeMs: Date.now() - startTime
+          timeMs: Date.now() - startTime,
+          evaluation
         });
       }
     } catch (error) {
@@ -173,6 +142,105 @@ export default function ThreadExpansionTester() {
     }
   };
 
+  const runBatchTests = async () => {
+    setIsLoading(true);
+    setBatchResults([]);
+    setBatchProgress(0);
+    setBatchMode(true);
+    
+    const strategies = Object.keys(PROMPTS) as (keyof typeof PROMPTS)[];
+    const results: TestResult[] = [];
+    
+    for (let i = 0; i < strategies.length; i++) {
+      const strategy = strategies[i];
+      const strategyPrompt = PROMPTS[strategy];
+      setBatchProgress((i / strategies.length) * 100);
+      
+      const startTime = Date.now();
+      
+      try {
+        const response = await fetch('/api/test-thread-expansion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            concept,
+            prompt: strategyPrompt.replace('{concept}', concept),
+            model: selectedModel,
+            temperature
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+          results.push({
+            model: selectedModel,
+            threads: [],
+            queryCount: 0,
+            prohibitedTerms: 0,
+            cost: { input: 0, output: 0, total: 0 },
+            tokensUsed: { input: 0, output: 0 },
+            timeMs: Date.now() - startTime,
+            error: data.error
+          });
+        } else {
+          // Analyze results
+          const allQueries = data.threads.flatMap((t: any) => t.queries || []);
+          const prohibitedTerms = allQueries.filter((q: string) => 
+            q.toLowerCase().includes('laser') || 
+            q.toLowerCase().includes('xtool') ||
+            q.toLowerCase().includes('fiber') ||
+            q.toLowerCase().includes(concept.split(' ')[0].toLowerCase())
+          ).length;
+          
+          // Evaluate thread expansion quality
+          const evaluation = evaluateThreadExpansion(concept, data.threads);
+          
+          // Calculate cost
+          const pricing = MODEL_PRICING[selectedModel];
+          const inputCost = (data.tokensUsed.input / 1_000_000) * pricing.input;
+          const outputCost = (data.tokensUsed.output / 1_000_000) * pricing.output;
+          
+          results.push({
+            model: MODEL_PRICING[selectedModel].name,
+            threads: data.threads,
+            queryCount: allQueries.length,
+            prohibitedTerms,
+            cost: {
+              input: inputCost,
+              output: outputCost,
+              total: inputCost + outputCost
+            },
+            tokensUsed: data.tokensUsed,
+            timeMs: Date.now() - startTime,
+            evaluation
+          });
+        }
+      } catch (error) {
+        results.push({
+          model: selectedModel,
+          threads: [],
+          queryCount: 0,
+          prohibitedTerms: 0,
+          cost: { input: 0, output: 0, total: 0 },
+          tokensUsed: { input: 0, output: 0 },
+          timeMs: Date.now() - startTime,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+      
+      setBatchResults([...results]);
+      
+      // Wait a bit between requests to avoid rate limiting
+      if (i < strategies.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    setBatchProgress(100);
+    setIsLoading(false);
+  };
+
   const copyResults = () => {
     if (results && !results.error) {
       const text = JSON.stringify(results.threads, null, 2);
@@ -180,6 +248,38 @@ export default function ThreadExpansionTester() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+  
+  const copyBatchResults = () => {
+    const strategies = Object.keys(PROMPTS) as (keyof typeof PROMPTS)[];
+    const summary = {
+      concept,
+      model: selectedModel,
+      temperature,
+      timestamp: new Date().toISOString(),
+      results: batchResults.map((result, i) => ({
+        strategy: strategies[i],
+        overallScore: result.evaluation?.overallScore || 0,
+        sweetSpotPercentage: result.evaluation ? 
+          (result.evaluation.topicDistance.level3_sweetSpot / result.queryCount * 100) : 0,
+        categoryCount: result.evaluation?.categoryCount || 0,
+        semanticDiversity: result.evaluation?.semanticDiversity || 0,
+        estimatedVideoPool: result.evaluation?.estimatedVideoPool || 0,
+        cost: result.cost.total,
+        timeMs: result.timeMs,
+        error: result.error,
+        // Include sample queries for analysis
+        sampleQueries: result.threads.slice(0, 2).map(t => ({
+          angle: t.angle || t.threadName,
+          queries: t.queries
+        })),
+        topicDistribution: result.evaluation?.topicDistance
+      }))
+    };
+    
+    navigator.clipboard.writeText(JSON.stringify(summary, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -252,17 +352,11 @@ export default function ThreadExpansionTester() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="topicFormatExpansion">Topic→Format Expansion (NEW)</SelectItem>
-                    <SelectItem value="formatFirstApproach">Format-First Approach</SelectItem>
-                    <SelectItem value="audiencePsychologyApproach">Audience Psychology</SelectItem>
-                    <SelectItem value="viralPatternMining">Viral Pattern Mining</SelectItem>
-                    <SelectItem value="humanCentered">Human-Centered</SelectItem>
-                    <SelectItem value="stepByStep">Step-by-Step Analysis</SelectItem>
-                    <SelectItem value="fewShot">Few-Shot Learning</SelectItem>
-                    <SelectItem value="chainOfThought">Chain of Thought</SelectItem>
-                    <SelectItem value="personaBased">Persona-Based</SelectItem>
-                    <SelectItem value="abstract">Ultra-Abstract</SelectItem>
-                    <SelectItem value="metaphorical">Metaphorical Thinking</SelectItem>
+                    <SelectItem value="progressiveTopicExpansion">Progressive Topic Expansion</SelectItem>
+                    <SelectItem value="categoricalHierarchyExpansion">Categorical Hierarchy Expansion</SelectItem>
+                    <SelectItem value="purposeBasedExpansion">Purpose-Based Expansion</SelectItem>
+                    <SelectItem value="audienceInterestExpansion">Audience-Interest Expansion</SelectItem>
+                    <SelectItem value="industryVerticalExpansion">Industry-Vertical Expansion</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,26 +371,118 @@ export default function ThreadExpansionTester() {
                 />
               </div>
               
-              <Button 
-                onClick={runTest} 
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  'Run Test'
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={runTest} 
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  {isLoading && !batchMode ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    'Run Single Test'
+                  )}
+                </Button>
+                
+                <Button 
+                  onClick={runBatchTests} 
+                  disabled={isLoading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isLoading && batchMode ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {Math.round(batchProgress)}%
+                    </>
+                  ) : (
+                    'Test All Strategies'
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
         
         {/* Results Panel */}
         <div className="space-y-6">
+          {/* Batch Results */}
+          {batchResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Batch Test Results</CardTitle>
+                <CardDescription>
+                  Comparison of all strategies for: {concept}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Summary Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Strategy</th>
+                          <th className="text-center p-2">Score</th>
+                          <th className="text-center p-2">Sweet Spot</th>
+                          <th className="text-center p-2">Categories</th>
+                          <th className="text-center p-2">Diversity</th>
+                          <th className="text-center p-2">Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(Object.keys(PROMPTS) as (keyof typeof PROMPTS)[]).map((strategy, i) => {
+                          const result = batchResults[i];
+                          if (!result) return null;
+                          
+                          const sweetSpot = result.evaluation ? 
+                            (result.evaluation.topicDistance.level3_sweetSpot / result.queryCount * 100) : 0;
+                          
+                          return (
+                            <tr key={strategy} className="border-b">
+                              <td className="p-2">{strategy}</td>
+                              <td className="text-center p-2 font-bold">
+                                {result.error ? '❌' : `${result.evaluation?.overallScore || 0}`}
+                              </td>
+                              <td className="text-center p-2">
+                                {result.error ? '-' : `${sweetSpot.toFixed(0)}%`}
+                              </td>
+                              <td className="text-center p-2">
+                                {result.error ? '-' : result.evaluation?.categoryCount || 0}
+                              </td>
+                              <td className="text-center p-2">
+                                {result.error ? '-' : (result.evaluation?.semanticDiversity || 0).toFixed(2)}
+                              </td>
+                              <td className="text-center p-2">
+                                ${result.cost.total.toFixed(4)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Copy Results Button */}
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyBatchResults}
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      <span className="ml-2">Copy Results for Analysis</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Single Test Results */}
           {results && (
             <>
               <Card>
@@ -313,18 +499,132 @@ export default function ThreadExpansionTester() {
                     </Alert>
                   ) : (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-muted rounded">
-                          <div className="text-sm text-muted-foreground">Total Queries</div>
-                          <div className="text-2xl font-bold">{results.queryCount}</div>
-                        </div>
-                        <div className="p-3 bg-muted rounded">
-                          <div className="text-sm text-muted-foreground">Prohibited Terms</div>
-                          <div className="text-2xl font-bold text-red-500">
-                            {results.prohibitedTerms} ({Math.round(results.prohibitedTerms / results.queryCount * 100)}%)
+                      {/* Overall Score */}
+                      {results.evaluation && (
+                        <div className="p-4 bg-primary/10 rounded-lg">
+                          <div className="text-sm text-muted-foreground mb-2">Overall Expansion Score</div>
+                          <div className="text-4xl font-bold text-primary">
+                            {results.evaluation.overallScore}/100
                           </div>
                         </div>
-                      </div>
+                      )}
+                      
+                      {/* Topic Expansion Distribution */}
+                      {results.evaluation && (
+                        <div className="p-3 bg-muted rounded">
+                          <div className="text-sm text-muted-foreground mb-2">Topic Expansion Quality</div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs w-24">Too Close:</span>
+                              <div className="flex-1 bg-background rounded-full h-4">
+                                <div 
+                                  className="bg-red-500 h-full rounded-full"
+                                  style={{width: `${(results.evaluation.topicDistance.level1_tooClose / results.queryCount) * 100}%`}}
+                                />
+                              </div>
+                              <span className="text-xs w-12 text-right">{Math.round((results.evaluation.topicDistance.level1_tooClose / results.queryCount) * 100)}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs w-24">Good Start:</span>
+                              <div className="flex-1 bg-background rounded-full h-4">
+                                <div 
+                                  className="bg-yellow-500 h-full rounded-full"
+                                  style={{width: `${(results.evaluation.topicDistance.level2_goodStart / results.queryCount) * 100}%`}}
+                                />
+                              </div>
+                              <span className="text-xs w-12 text-right">{Math.round((results.evaluation.topicDistance.level2_goodStart / results.queryCount) * 100)}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs w-24">Sweet Spot:</span>
+                              <div className="flex-1 bg-background rounded-full h-4">
+                                <div 
+                                  className="bg-green-500 h-full rounded-full"
+                                  style={{width: `${(results.evaluation.topicDistance.level3_sweetSpot / results.queryCount) * 100}%`}}
+                                />
+                              </div>
+                              <span className="text-xs w-12 text-right">{Math.round((results.evaluation.topicDistance.level3_sweetSpot / results.queryCount) * 100)}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs w-24">Wide Net:</span>
+                              <div className="flex-1 bg-background rounded-full h-4">
+                                <div 
+                                  className="bg-blue-500 h-full rounded-full"
+                                  style={{width: `${(results.evaluation.topicDistance.level4_wideNet / results.queryCount) * 100}%`}}
+                                />
+                              </div>
+                              <span className="text-xs w-12 text-right">{Math.round((results.evaluation.topicDistance.level4_wideNet / results.queryCount) * 100)}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs w-24">Too Broad:</span>
+                              <div className="flex-1 bg-background rounded-full h-4">
+                                <div 
+                                  className="bg-purple-500 h-full rounded-full"
+                                  style={{width: `${(results.evaluation.topicDistance.level5_tooBroad / results.queryCount) * 100}%`}}
+                                />
+                              </div>
+                              <span className="text-xs w-12 text-right">{Math.round((results.evaluation.topicDistance.level5_tooBroad / results.queryCount) * 100)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Key Metrics */}
+                      {results.evaluation && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 bg-muted rounded">
+                            <div className="text-sm text-muted-foreground">Category Coverage</div>
+                            <div className="text-2xl font-bold">{results.evaluation.categoryCount}</div>
+                            <div className="text-xs text-muted-foreground">unique categories</div>
+                          </div>
+                          <div className="p-3 bg-muted rounded">
+                            <div className="text-sm text-muted-foreground">Semantic Diversity</div>
+                            <div className="text-2xl font-bold">{results.evaluation.semanticDiversity.toFixed(2)}</div>
+                            <div className="text-xs text-muted-foreground">0-1 scale</div>
+                          </div>
+                          <div className="p-3 bg-muted rounded">
+                            <div className="text-sm text-muted-foreground">Est. Video Pool</div>
+                            <div className="text-2xl font-bold">{results.evaluation.estimatedVideoPool.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground">videos</div>
+                          </div>
+                          <div className="p-3 bg-muted rounded">
+                            <div className="text-sm text-muted-foreground">Total Queries</div>
+                            <div className="text-2xl font-bold">{results.queryCount}</div>
+                            <div className="text-xs text-muted-foreground">across {results.threads.length} threads</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Quality Indicators */}
+                      {results.evaluation && (
+                        <div className="p-3 bg-muted rounded">
+                          <div className="text-sm text-muted-foreground mb-2">Quality Indicators</div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${results.evaluation.expansionQuality.progressiveWidening ? 'bg-green-500' : 'bg-red-500'}`} />
+                              Progressive Widening
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${results.evaluation.expansionQuality.maintainsRelevance ? 'bg-green-500' : 'bg-red-500'}`} />
+                              Maintains Relevance
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${results.evaluation.expansionQuality.exploresNewAudiences ? 'bg-green-500' : 'bg-red-500'}`} />
+                              Explores New Audiences
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${results.evaluation.expansionQuality.smoothTransitions ? 'bg-green-500' : 'bg-red-500'}`} />
+                              Smooth Transitions
+                            </div>
+                          </div>
+                          {(results.evaluation.expansionQuality.tooLiteral > 0 || 
+                            results.evaluation.expansionQuality.repetitiveQueries > 0) && (
+                            <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                              Issues: {results.evaluation.expansionQuality.tooLiteral} too literal, 
+                              {results.evaluation.expansionQuality.repetitiveQueries} repetitive queries
+                            </div>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="p-3 bg-muted rounded">
                         <div className="text-sm text-muted-foreground mb-2">Cost Breakdown</div>
@@ -347,22 +647,30 @@ export default function ThreadExpansionTester() {
                         </div>
                       </div>
                       
-                      <div className="p-3 bg-muted rounded">
-                        <div className="text-sm text-muted-foreground mb-2">Sample Diverse Queries</div>
-                        <div className="space-y-1">
-                          {results.threads.slice(0, 5).map((thread: any, i: number) => {
-                            const query = thread.queries[0];
-                            const hasProhibited = query.toLowerCase().includes('laser') || 
-                              query.toLowerCase().includes('xtool') ||
-                              query.toLowerCase().includes('fiber');
-                            return (
-                              <div key={i} className={`text-xs ${hasProhibited ? 'text-red-500' : 'text-green-600'}`}>
-                                Thread {i + 1}: {query}
+                      {/* Thread Analysis */}
+                      {results.evaluation && (
+                        <div className="p-3 bg-muted rounded">
+                          <div className="text-sm text-muted-foreground mb-2">Thread Progression Analysis</div>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {results.evaluation.threadEvaluations.slice(0, 5).map((threadEval, i) => (
+                              <div key={i} className="text-xs flex items-center justify-between">
+                                <span className="truncate flex-1">{threadEval.threadName}</span>
+                                <div className="flex items-center gap-2 ml-2">
+                                  <span className="text-muted-foreground">D:</span>
+                                  <span>{threadEval.startingDistance.toFixed(1)}→{threadEval.endingDistance.toFixed(1)}</span>
+                                  <span className="text-muted-foreground">P:</span>
+                                  <span className={threadEval.progressionScore > 0.5 ? 'text-green-600' : 'text-yellow-600'}>
+                                    {(threadEval.progressionScore * 100).toFixed(0)}%
+                                  </span>
+                                </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            D: Distance (1-5), P: Progression Score
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
                       <div className="flex justify-between items-center">
                         <h3 className="text-sm font-medium">Generated Threads</h3>

@@ -1,0 +1,363 @@
+{
+  "summary": {
+    "concept": "best laser engravers for business",
+    "timestamp": "2025-07-21T17:38:23.655Z",
+    "status": {
+      "level": "CAUTION",
+      "color": "🟠",
+      "message": "1 medium issues"
+    },
+    "performance": {
+      "totalVideos": 2,
+      "patternsDiscovered": 0,
+      "relevancePercent": "100.0%",
+      "processingTimeSeconds": "47.2s",
+      "superstarVideos": 0,
+      "strongVideos": 0
+    },
+    "threads": {
+      "count": 2,
+      "bestPerforming": "User Experience and Ease of Use",
+      "mostProductive": "User Experience and Ease of Use"
+    },
+    "quality": {
+      "avgSimilarity": "71.7%",
+      "avgPerformance": "1.0x",
+      "highSimilarityCount": 2,
+      "lowSimilarityCount": 0
+    },
+    "costs": {
+      "totalCost": "$0.0062",
+      "embedding": "$0.0004",
+      "llmCost": "$0.0000"
+    },
+    "issues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "severity": "medium",
+        "message": "Only 0 high-performing videos found"
+      }
+    ]
+  },
+  "timestamp": "2025-07-21T17:38:23.655Z",
+  "concept": "best laser engravers for business",
+  "expandedQueries": [
+    "What is the best budget laser engraver for small businesses?",
+    "How to choose a cost-effective laser engraver for startup businesses?",
+    "Are high-end laser engravers worth the investment for small businesses?",
+    "How much can small businesses earn with laser engraving services?",
+    "What are the best laser engravers for personalized gifts businesses?",
+    "Which laser engravers are ideal for creating custom signage?",
+    "How can laser engraving serve the wedding industry?",
+    "What niche markets can profit from laser engravers?",
+    "What are the easiest laser engravers for beginners?",
+    "How to set up a laser engraver for first-time users?",
+    "Which laser engraving machines have the best user reviews?",
+    "Are there laser engravers that require no prior experience?",
+    "What are the latest features in laser engravers for commercial use?",
+    "How has laser engraving technology evolved in recent years?",
+    "What innovations are making laser engraving more efficient?",
+    "Which new laser engravers are setting industry standards?",
+    "Are there eco-friendly laser engravers available for businesses?",
+    "What is the environmental impact of laser engraving materials?",
+    "How can businesses minimize waste when using laser engravers?",
+    "Are sustainable practices possible in the laser engraving industry?"
+  ],
+  "expandedQueriesByThread": [
+    {
+      "threadName": "Cost-Effectiveness of Laser Engravers for Small Businesses",
+      "purpose": "To explore the financial aspects of investing in laser engravers for small business owners, focusing on ROI, budget options, and long-term savings.",
+      "queries": [
+        "What is the best budget laser engraver for small businesses?",
+        "How to choose a cost-effective laser engraver for startup businesses?",
+        "Are high-end laser engravers worth the investment for small businesses?",
+        "How much can small businesses earn with laser engraving services?"
+      ]
+    },
+    {
+      "threadName": "Laser Engraving for Niche Markets",
+      "purpose": "To identify specific niche markets that benefit from laser engraving services and the best engravers suited for these niches.",
+      "queries": [
+        "What are the best laser engravers for personalized gifts businesses?",
+        "Which laser engravers are ideal for creating custom signage?",
+        "How can laser engraving serve the wedding industry?",
+        "What niche markets can profit from laser engravers?"
+      ]
+    },
+    {
+      "threadName": "User Experience and Ease of Use",
+      "purpose": "To evaluate laser engravers based on user-friendliness, setup time, and software compatibility, targeting beginners and non-tech-savvy users.",
+      "queries": [
+        "What are the easiest laser engravers for beginners?",
+        "How to set up a laser engraver for first-time users?",
+        "Which laser engraving machines have the best user reviews?",
+        "Are there laser engravers that require no prior experience?"
+      ]
+    },
+    {
+      "threadName": "Innovations in Laser Engraving Technology",
+      "purpose": "To discuss the latest technological advancements in laser engraving and how they affect business practices and productivity.",
+      "queries": [
+        "What are the latest features in laser engravers for commercial use?",
+        "How has laser engraving technology evolved in recent years?",
+        "What innovations are making laser engraving more efficient?",
+        "Which new laser engravers are setting industry standards?"
+      ]
+    },
+    {
+      "threadName": "Environmental Impact and Sustainability",
+      "purpose": "To address the environmental considerations of using laser engravers and highlight eco-friendly options for businesses.",
+      "queries": [
+        "Are there eco-friendly laser engravers available for businesses?",
+        "What is the environmental impact of laser engraving materials?",
+        "How can businesses minimize waste when using laser engravers?",
+        "Are sustainable practices possible in the laser engraving industry?"
+      ]
+    }
+  ],
+  "searchResults": [
+    {
+      "videoId": "FZAG6CvfHmg",
+      "title": "xTool F1 in 2025: Still the Best Laser for Small Business?",
+      "channelName": "Samcraft",
+      "similarityScore": 0.705108821,
+      "performanceRatio": 1,
+      "viewCount": 19271,
+      "foundVia": {
+        "thread": "Cost-Effectiveness of Laser Engravers for Small Businesses",
+        "query": "What is the best budget laser engraver for small businesses?",
+        "threadPurpose": "To explore the financial aspects of investing in laser engravers for small business owners, focusing on ROI, budget options, and long-term savings."
+      }
+    },
+    {
+      "videoId": "tgw9SFfJ78c",
+      "title": "loklik iengrave diode laser | Best Beginner Laser Engraver?",
+      "channelName": "Rise N Grind Workshop",
+      "similarityScore": 0.729225695,
+      "performanceRatio": 1,
+      "viewCount": 1042,
+      "foundVia": {
+        "thread": "User Experience and Ease of Use",
+        "query": "What are the easiest laser engravers for beginners?",
+        "threadPurpose": "To evaluate laser engravers based on user-friendliness, setup time, and software compatibility, targeting beginners and non-tech-savvy users."
+      }
+    }
+  ],
+  "performanceDistribution": {
+    "superstar": 0,
+    "strong": 0,
+    "above_avg": 0,
+    "normal": 2
+  },
+  "discoveredPatterns": [],
+  "originalPatternsCount": 0,
+  "deduplicatedPatternsCount": 0,
+  "finalSuggestionsCount": 10,
+  "processingSteps": [
+    {
+      "step": "Thread Expansion",
+      "duration": 0
+    },
+    {
+      "step": "Video Search",
+      "duration": 0
+    },
+    {
+      "step": "Pattern Discovery",
+      "duration": 0
+    },
+    {
+      "step": "Title Generation",
+      "duration": 0
+    }
+  ],
+  "costs": {
+    "embedding": {
+      "calls": 20,
+      "cost": 0.0004
+    },
+    "openai": {
+      "calls": 2,
+      "cost": 0.00575
+    },
+    "totalCost": 0.00615
+  },
+  "totalProcessingTime": 47160,
+  "analysis": {
+    "totalVideos": 2,
+    "relevantVideos": 2,
+    "relevancePercentage": 100,
+    "topChannels": [
+      {
+        "channel": "Samcraft",
+        "count": 1
+      },
+      {
+        "channel": "Rise N Grind Workshop",
+        "count": 1
+      }
+    ],
+    "performanceAnalysis": {
+      "averagePerformance": 1,
+      "highPerformers": 0,
+      "superStars": 0
+    },
+    "similarityAnalysis": {
+      "averageSimilarity": 0.717167258,
+      "highSimilarity": 2,
+      "lowSimilarity": 0
+    },
+    "topicAnalysis": {
+      "topTopics": [
+        {
+          "topic": "laser",
+          "count": 3,
+          "percentage": 150
+        },
+        {
+          "topic": "xtool",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "2025:",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "still",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "small",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "business?",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "loklik",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "iengrave",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "diode",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "beginner",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "engraver?",
+          "count": 1,
+          "percentage": 50
+        }
+      ],
+      "conceptWordsFound": [
+        "laser"
+      ],
+      "unexpectedTopics": [
+        {
+          "topic": "xtool",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "2025:",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "still",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "small",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "business?",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "loklik",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "iengrave",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "diode",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "beginner",
+          "count": 1,
+          "percentage": 50
+        },
+        {
+          "topic": "engraver?",
+          "count": 1,
+          "percentage": 50
+        }
+      ]
+    },
+    "threadAnalysis": {
+      "threadCount": 2,
+      "threadStats": [
+        {
+          "thread": "User Experience and Ease of Use",
+          "purpose": "To evaluate laser engravers based on user-friendliness, setup time, and software compatibility, targeting beginners and non-tech-savvy users.",
+          "videoCount": 1,
+          "queryCount": 1,
+          "avgPerformance": 1,
+          "avgSimilarity": 0.729225695,
+          "superstarCount": 0,
+          "strongCount": 0,
+          "coverage": 50,
+          "qualityScore": 0.729225695
+        },
+        {
+          "thread": "Cost-Effectiveness of Laser Engravers for Small Businesses",
+          "purpose": "To explore the financial aspects of investing in laser engravers for small business owners, focusing on ROI, budget options, and long-term savings.",
+          "videoCount": 1,
+          "queryCount": 1,
+          "avgPerformance": 1,
+          "avgSimilarity": 0.705108821,
+          "superstarCount": 0,
+          "strongCount": 0,
+          "coverage": 50,
+          "qualityScore": 0.705108821
+        }
+      ],
+      "bestPerformingThread": "User Experience and Ease of Use",
+      "mostProductiveThread": "User Experience and Ease of Use"
+    },
+    "potentialIssues": [
+      {
+        "type": "LOW_PERFORMANCE",
+        "message": "Only 0 high-performing videos found",
+        "severity": "medium"
+      }
+    ]
+  }
+}

@@ -1,403 +1,250 @@
-// Thread Expansion Prompts based on LLM best practices
+// Thread Expansion Prompts - Tier 2 Topic Expansion Strategies
+// Goal: Find videos in progressively wider topic categories
+// Focused purely on topic expansion without format variations
 
 export const PROMPTS = {
-  // Topic → Format expansion approach
-  topicFormatExpansion: `Analyze this concept: "{concept}"
-
-Your task: Create search queries that explore both TOPIC layers and FORMAT variations to find diverse high-performing patterns.
-
-Step 1: Extract the core elements
-- Product/Service: (e.g., "xTool F2")
-- Category: (e.g., "fiber laser") 
-- Broader category: (e.g., "laser engraver")
-- General field: (e.g., "workshop tools")
-- Human activity: (e.g., "making things")
-
-Step 2: Identify the content format
-- Is this a review? Tutorial? Unboxing? Comparison?
-- What's the viewer's intent?
-
-Step 3: Create 15 search threads
-
-THREADS 1-3: Same topic, same format (but variations)
-- Direct competitors in same format
-- Similar products in same format  
-- Broader category in same format
-
-THREADS 4-6: Same topic, different formats
-- If it's a review → find tutorials, vlogs, challenges with same tool
-- If it's a tutorial → find reviews, comparisons, projects
-- Mix entertainment formats: challenges, experiments, transformations
-
-THREADS 7-9: Adjacent topics, same format
-- Workshop tools → kitchen gadgets → tech gadgets (all reviews)
-- Find what else this audience watches in same format
-- Cross-pollinate from related hobbies/interests
-
-THREADS 10-12: High-performing formats, any topic
-- Challenge videos (any topic) - these get millions of views
-- Story/transformation videos - personal journeys
-- Versus/comparison videos - decision-making content
-- List videos - "Top 10" anything
-
-THREADS 13-15: Wild card patterns
-- Viral video formats from completely different topics
-- Trending formats on YouTube right now
-- Entertainment formats that could work for products
-
-Each thread: 5 specific search queries
-Format: JSON with threads array containing angle, intent, and queries.`,
-
-  formatFirstApproach: `Analyze this concept: "{concept}"
-
-Your task: Start with the FORMAT and expand outward to find transferable patterns.
-
-Step 1: Identify the video format
-What type of video is this?
-- Review → evaluating products
-- Tutorial → teaching skills
-- Vlog → lifestyle/journey
-- Challenge → entertainment/achievement
-- Comparison → decision-making
-- Unboxing → first impressions
-- Build/DIY → project completion
-
-Step 2: Create 15 search threads exploring successful patterns
-
-THREADS 1-3: Same format, related topics
-Example: If it's a "laser engraver review"
-- "3D printer review"
-- "CNC machine review"  
-- "Vinyl cutter review"
-
-THREADS 4-6: Same format, adjacent audiences
-Think: Who else watches tool reviews?
-- "Camera gear review" (creators)
-- "Gaming laptop review" (tech enthusiasts)
-- "Kitchen appliance review" (DIYers)
-
-THREADS 7-9: Same format, top performers
-Find the most viral examples of this format:
-- "iPhone review" (tech)
-- "Car review" (automotive)
-- "Makeup review" (beauty)
-
-THREADS 10-12: Format variations, same intent
-If people want reviews, what else satisfies that need?
-- "vs" comparisons
-- "buyer's guide"
-- "6 months later"
-- "watch before you buy"
-
-THREADS 13-15: High-engagement formats
-Pull from YouTube's most successful formats:
-- Challenge videos
-- Story time videos
-- Day in the life vlogs
-- Transformation videos
-- Reaction videos
-
-Generate 5 queries per thread focusing on finding patterns, not specific products.
-Return as JSON with threads array.`,
-
-  audiencePsychologyApproach: `Analyze this concept: "{concept}"
-
-Your task: Think about the PERSON watching this video and what else they watch.
-
-Step 1: Profile the viewer
-- What are they trying to achieve?
-- What stage of their journey are they in?
-- What other interests do they have?
-- What problems do they face?
-
-Step 2: Map their YouTube consumption
-
-THREADS 1-3: Same goal, different approaches
-If they're watching "laser engraver review" they want to:
-- Start a business → "Etsy shop tour", "side hustle ideas"
-- Make things → "woodworking projects", "craft room tour"
-- Buy equipment → "workshop setup", "tool organization"
-
-THREADS 4-6: Same audience, different life areas
-This person probably also watches:
-- Business/entrepreneur content
-- Home improvement videos
-- Creative hobby channels
-- Tech reviews
-- Productivity content
-
-THREADS 7-9: Entertainment they enjoy
-What do makers/entrepreneurs watch for fun?
-- Maker challenge videos
-- Restoration videos
-- "How it's made" content
-- Success story interviews
-- Behind the scenes vlogs
-
-THREADS 10-12: Their learning journey
-- Beginner: "getting started" content
-- Intermediate: "tips and tricks"
-- Advanced: "scaling up", "efficiency hacks"
-- Business: "pricing strategies", "customer acquisition"
-
-THREADS 13-15: Aspirational content
-What do they dream about?
-- "Tour of million dollar workshop"
-- "Quit my job" success stories
-- "From hobby to business" transformations
-- "Day in the life" of successful creators
-
-Each thread: 5 queries that this audience would search for.
-Return as JSON with threads array.`,
-
-  viralPatternMining: `Analyze this concept: "{concept}"
-
-Your task: Find viral video patterns that could be adapted to this topic.
-
-Step 1: Identify transferable elements
-- What's the core story? (transformation, achievement, learning)
-- What emotion does it target? (curiosity, desire, fear, joy)
-- What's the value proposition? (save money, make money, save time, entertainment)
-
-Step 2: Mine high-performing patterns
-
-THREADS 1-3: Proven title formulas (any topic)
-- "I tried X for 30 days"
-- "X things I wish I knew before Y"
-- "Why X is harder than you think"
-- "$10 vs $1000 comparison"
-- "Beginner vs Pro"
-
-THREADS 4-6: Story-driven patterns
-- "How I went from X to Y"
-- "The truth about X"
-- "What they don't tell you about X"
-- "I was wrong about X"
-- "X changed my life"
-
-THREADS 7-9: Challenge/experiment patterns
-- "24 hours using only X"
-- "Making X until I'm successful"
-- "Can X really do Y?"
-- "Testing viral X hacks"
-- "X myths busted"
-
-THREADS 10-12: Educational entertainment
-- "X explained in 5 levels of difficulty"
-- "Expert reacts to X"
-- "X tips pros don't want you to know"
-- "Common X mistakes"
-- "X tier list"
-
-THREADS 13-15: Trending formats
-- "POV: You're starting X"
-- "Rating subscriber X"
-- "X setup tour"
-- "Day in the life with X"
-- "X routines of successful people"
-
-Focus on PATTERNS not specific products. Each pattern should work across many topics.
-5 queries per thread. Return as JSON.`,
-
-  // Based on Anthropic's "thinking step-by-step" and "role-playing" techniques
-  stepByStep: `I need you to help me find YouTube content patterns by thinking step-by-step.
-
-Input concept: "{concept}"
-
-Step 1: Identify the abstract human need
-- What fundamental human desire or problem is at the core?
-- Ignore the specific tool/product/brand completely
-- Think: What would someone want to achieve?
-
-Step 2: Map the user journey backwards
-- End goal: What transformation does the user seek?
-- Middle: What skills/knowledge do they need?
-- Beginning: What sparked their interest initially?
-
-Step 3: Identify parallel journeys
-- What other paths lead to the same transformation?
-- What adjacent hobbies share the same satisfaction?
-- What completely different tools achieve similar outcomes?
-
-Step 4: Create 15 search threads
-Each thread should progressively move from specific to broad, exploring different angles of the human journey.
-
-Format your response as JSON with 15 threads, each containing:
-- angle: The perspective being explored
-- intent: What the searcher wants to learn
-- queries: 5 search queries (progressively broader)
-
-Critical: Start with the END RESULT the person wants, not the tool they're considering.`,
-
-  // Based on OpenAI's "few-shot learning" approach
-  fewShot: `Generate YouTube search queries that explore content patterns around a concept.
-
-Example transformations:
-- "DSLR camera" → photography journey, visual storytelling, memory preservation
-- "Kitchen mixer" → baking passion, food creativity, home business
-- "Gaming PC" → competitive gaming, content creation, digital experiences
-
-Concept: "{concept}"
-
-Transform this into 15 threads exploring:
-1. The human story (not the product)
-2. The lifestyle it represents
-3. The community it connects to
-4. The skills it develops
-5. The dreams it enables
-
-Rules:
-- NEVER mention the specific product/brand
-- Focus on human motivations and desires
-- Each thread should have 5 queries
-- Queries should get progressively broader
-- Think about the person's entire journey
-
-Return as JSON with 'threads' array containing objects with 'angle', 'intent', and 'queries'.`,
-
-  // Based on "Chain of Thought" prompting
-  chainOfThought: `Let's explore content patterns for: "{concept}"
-
-First, let me think about what this really represents...
-
-If someone is searching for this, they're probably:
-- Trying to solve a problem (what problem?)
-- Pursuing a passion (what passion?)
-- Building something (what are they building?)
-- Learning a skill (what skill?)
-- Joining a community (what community?)
-
-Now, let's forget the specific product and think about:
-- What does this person do for fun?
-- What are their aspirations?
-- What other interests might they have?
-- What stage of their journey are they in?
-- What content helps them succeed?
-
-Based on this analysis, create 15 search threads that explore:
-1-3: Core human needs being met
-4-6: Alternative paths to the same goal
-7-9: Related interests and hobbies
-10-12: Community and learning resources
-13-15: Broader lifestyle and aspirations
-
-Each thread needs 5 queries that avoid product-specific terms.
-Return as JSON with threads array.`,
-
-  // Based on "Persona-based" prompting
-  personaBased: `Imagine three different people interested in "{concept}":
-
-Person A: Complete beginner
-- Doesn't know technical terms
-- Motivated by a dream or goal
-- Searches for inspiration and basics
-
-Person B: Enthusiast
-- Has some experience
-- Wants to level up
-- Searches for techniques and community
-
-Person C: Professional
-- Makes money from this
-- Needs efficiency and quality
-- Searches for business and advanced tips
-
-Create 15 search threads (5 for each persona) that explore their journey WITHOUT mentioning specific products.
-
-Focus on:
-- Their motivations and dreams
-- Problems they're solving
-- Communities they're joining
-- Skills they're developing
-- Transformations they're seeking
-
-Format: JSON with threads array, each having angle, intent, and 5 queries.`,
-
-  // Ultra-abstract approach
-  abstract: `Task: Discover YouTube content patterns through abstract exploration.
-
-Starting point: "{concept}"
-
-Instructions:
-1. Extract the deepest human motivation (creativity? connection? achievement?)
-2. Identify the transformation sought (amateur → expert? dreamer → doer?)
-3. Map the ecosystem of related activities
-4. Find parallel universes (different tools, same outcome)
-5. Explore the full journey (inspiration → mastery)
-
-Create 15 threads that spiral outward:
-- Inner ring (1-5): Core human needs and motivations
-- Middle ring (6-10): Methods, communities, and skills
-- Outer ring (11-15): Lifestyle, culture, and broader interests
-
-Important: Think like an anthropologist studying human behavior, not a marketer selling products.
-
-Each thread: 5 queries exploring that angle.
-Format: JSON structure with threads array.`,
-
-  // Metaphorical thinking approach
-  metaphorical: `Let's use metaphorical thinking to explore "{concept}".
-
-Think of this as:
-- A journey (where does it lead?)
-- A tool in a toolkit (what's the full toolkit?)
-- A skill tree in a game (what are the branches?)
-- A ingredient in a recipe (what's the full meal?)
-- A chapter in a story (what's the full narrative?)
-
-Now create 15 threads that explore:
-1-3: The destination, not the vehicle
-4-6: The toolkit, not just one tool
-7-9: The skill tree branches
-10-12: The complete recipe
-13-15: The full story arc
-
-Never mention specific products. Focus on:
-- What people create
-- How they grow
-- Who they become
-- What they achieve
-- Why they care
-
-Return 15 threads with angle, intent, and 5 queries each as JSON.`,
-
-  // Opus-optimized approach based on your feedback
-  humanCentered: `I need help finding YouTube content patterns by understanding human behavior and motivations.
-
-Starting point: "{concept}"
-
-Your task: Completely ignore what this product IS and focus on WHO uses it and WHY.
-
-Step 1: Decode the human story
-- What life change is this person seeking?
-- What problem keeps them up at night?
-- What future are they trying to create?
-- What identity are they building?
-
-Step 2: Map their entire world
-Think beyond the purchase moment:
-- What did they search for BEFORE knowing this product existed?
-- What will they search for AFTER mastering this tool?
-- What ELSE is in their garage/office/workshop?
-- What do their friends ask them for help with?
-- What do they watch for entertainment (not education)?
-
-Step 3: Find parallel universes
-- Who else has these same desires but uses completely different tools?
-- What hobbies have similar creative satisfaction?
-- What professions solve similar problems?
-- What communities share these values?
-
-Create 15 search threads:
-1-3: The person's broader identity and lifestyle
-4-6: Problems they face across their whole life
-7-9: Other tools in their workshop/interests
-10-12: Communities and content they enjoy
-13-15: Dreams and aspirations beyond this tool
-
-Each thread needs 5 queries that explore human behavior, not product features.
-
-Critical: If you mention any specific product, tool type, or technical category, you've failed. Think like an anthropologist studying a tribe, not a marketer selling gear.
-
-Return as JSON with threads array containing angle, intent, and queries.`
+  progressiveTopicExpansion: `<context>
+You are a semantic expansion expert specialized in progressively widening search queries from specific topics to broader categories.
+</context>
+
+<concept>{concept}</concept>
+
+<task>
+Generate 5 threads of search queries that progressively expand from the specific concept to broader topic categories. Each thread should follow a different expansion path, moving from narrow to wide scope.
+</task>
+
+<thinking_process>
+1. Identify the core topic/product/concept
+2. Determine its immediate category
+3. Find the parent category
+4. Identify the broader field
+5. Connect to universal human interests
+</thinking_process>
+
+<examples>
+Example 1 - Input: "sourdough starter maintenance"
+Thread: ["sourdough starter maintenance", "bread making techniques", "artisan baking", "home cooking skills", "self-sufficiency lifestyle"]
+
+Example 2 - Input: "Python async programming"  
+Thread: ["Python async programming", "concurrent programming patterns", "software architecture", "computer science concepts", "problem-solving methodologies"]
+
+Example 3 - Input: "minimalist interior design"
+Thread: ["minimalist interior design", "home decoration styles", "living space optimization", "lifestyle philosophies", "personal well-being"]
+</examples>
+
+<constraints>
+- Each thread must have exactly 5 queries
+- Queries must progressively expand in scope
+- Maintain logical connections between steps
+- Avoid format/content-type variations
+- Focus only on topic expansion
+</constraints>
+
+<output_format>
+{
+  "threads": [
+    {
+      "angle": "Category Ladder",
+      "intent": "Climb from specific to general categories",
+      "queries": ["specific topic", "subcategory", "category", "parent category", "field"]
+    }
+  ]
+}
+</output_format>`,
+
+  categoricalHierarchyExpansion: `<context>
+You are a taxonomy expert who understands how topics relate within categorical hierarchies.
+</context>
+
+<concept>{concept}</concept>
+
+<task>
+Create 5 threads that explore different branches of the topic's categorical hierarchy. Think of categories like nested folders - find parallel folders, parent folders, and cousin categories.
+</task>
+
+<thinking_process>
+1. Place the concept in its immediate category
+2. Identify sibling topics in the same category
+3. Move up to parent categories
+4. Explore parallel branches in the hierarchy
+5. Find related but distinct category trees
+</thinking_process>
+
+<examples>
+Example 1 - Input: "watercolor painting"
+Thread: ["watercolor painting", "acrylic painting techniques", "visual arts fundamentals", "creative hobbies", "artistic expression methods"]
+
+Example 2 - Input: "CrossFit training"
+Thread: ["CrossFit training", "HIIT workouts", "strength conditioning", "fitness methodologies", "health optimization"]
+
+Example 3 - Input: "permaculture gardening"
+Thread: ["permaculture gardening", "organic farming methods", "sustainable agriculture", "environmental practices", "ecological living"]
+</examples>
+
+<constraints>
+- Explore categorical relationships, not formats
+- Each thread should take a different hierarchical path
+- Maintain topical relevance throughout
+- 5 queries per thread
+- Focus on knowledge domains, not content types
+</constraints>
+
+<output_format>
+{
+  "threads": [
+    {
+      "angle": "Hierarchical Navigation", 
+      "intent": "Explore categorical relationships",
+      "queries": ["starting point", "sibling topic", "parent category", "cousin category", "related field"]
+    }
+  ]
+}
+</output_format>`,
+
+  purposeBasedExpansion: `<context>
+You are a purpose-mapping expert who understands why people seek information and how different topics serve similar purposes.
+</context>
+
+<concept>{concept}</concept>
+
+<task>
+Generate 5 threads that expand based on the underlying purposes and goals people have when searching for this topic. Focus on what people are trying to achieve, learn, or solve.
+</task>
+
+<thinking_process>
+1. Identify the core purpose/problem being addressed
+2. Find other topics that serve the same purpose
+3. Explore broader goals this purpose supports
+4. Connect to fundamental human needs
+5. Identify alternative approaches to the same goals
+</thinking_process>
+
+<examples>
+Example 1 - Input: "meal prep containers"
+Thread: ["meal prep containers", "batch cooking strategies", "time-saving kitchen tips", "lifestyle optimization", "work-life balance solutions"]
+
+Example 2 - Input: "JavaScript debugging"
+Thread: ["JavaScript debugging", "code troubleshooting methods", "software quality practices", "professional development", "problem-solving skills"]
+
+Example 3 - Input: "backyard chicken coop"
+Thread: ["backyard chicken coop", "urban homesteading", "food self-sufficiency", "sustainable living practices", "community resilience"]
+</examples>
+
+<constraints>
+- Focus on purposes and goals, not product features
+- Each thread should address different user needs
+- Maintain logical purpose-based connections
+- Avoid content format variations
+- 5 queries per thread
+</constraints>
+
+<output_format>
+{
+  "threads": [
+    {
+      "angle": "Purpose Evolution",
+      "intent": "Track from specific solution to broader life goals", 
+      "queries": ["specific solution", "general method", "broader strategy", "life area", "human need"]
+    }
+  ]
+}
+</output_format>`,
+
+  audienceInterestExpansion: `<context>
+You are an audience psychology expert who understands how interests cluster and what else people interested in one topic typically explore.
+</context>
+
+<concept>{concept}</concept>
+
+<task>
+Create 5 threads that follow natural audience interest patterns. Think about what else the same audience would search for based on their demonstrated interests, values, and lifestyle.
+</task>
+
+<thinking_process>
+1. Profile the typical audience for this concept
+2. Identify their core values and interests
+3. Find adjacent interests this audience has
+4. Explore their broader lifestyle choices
+5. Connect to their aspirational content
+</thinking_process>
+
+<examples>
+Example 1 - Input: "bulletproof coffee"
+Thread: ["bulletproof coffee", "intermittent fasting", "biohacking techniques", "peak performance", "longevity science"]
+
+Example 2 - Input: "van life setup"
+Thread: ["van life setup", "remote work tips", "minimalist lifestyle", "adventure travel", "financial independence"]
+
+Example 3 - Input: "succulent care"
+Thread: ["succulent care", "indoor gardening", "home aesthetics", "mindful living", "stress reduction hobbies"]
+</examples>
+
+<constraints>
+- Follow genuine audience interest patterns
+- Each thread represents different audience segments
+- Maintain psychological coherence
+- Focus on topics, not content formats
+- 5 queries per thread
+</constraints>
+
+<output_format>
+{
+  "threads": [
+    {
+      "angle": "Interest Journey",
+      "intent": "Follow natural audience progression",
+      "queries": ["entry interest", "related hobby", "lifestyle choice", "value system", "aspirational goal"]
+    }
+  ]
+}
+</output_format>`,
+
+  industryVerticalExpansion: `<context>
+You are an industry analyst who understands how similar concepts manifest across different industries and professional contexts.
+</context>
+
+<concept>{concept}</concept>
+
+<task>
+Generate 5 threads that show how this concept or similar concepts appear in different industries, professions, or fields of study. Explore cross-industry applications and parallel concepts.
+</task>
+
+<thinking_process>
+1. Identify the core principle or function
+2. Find how this appears in different industries
+3. Explore professional applications
+4. Connect to academic disciplines
+5. Identify universal business/life applications
+</thinking_process>
+
+<examples>
+Example 1 - Input: "A/B testing"
+Thread: ["A/B testing", "clinical trial design", "educational assessment methods", "manufacturing quality control", "decision science"]
+
+Example 2 - Input: "inventory management"
+Thread: ["inventory management", "digital asset organization", "time management systems", "resource allocation", "operational efficiency"]
+
+Example 3 - Input: "user onboarding"
+Thread: ["user onboarding", "employee training programs", "student orientation", "patient intake processes", "change management"]
+</examples>
+
+<constraints>
+- Focus on cross-industry concept transfer
+- Each thread explores different verticals
+- Maintain functional similarity
+- Avoid content format variations
+- 5 queries per thread
+</constraints>
+
+<output_format>
+{
+  "threads": [
+    {
+      "angle": "Cross-Industry Application",
+      "intent": "Show concept across different fields",
+      "queries": ["original context", "industry variant 1", "industry variant 2", "professional practice", "universal principle"]
+    }
+  ]
+}
+</output_format>`
 };

@@ -15,7 +15,7 @@ const ThreadExpansionSchema = z.object({
     angle: z.string(),
     intent: z.string(),
     queries: z.array(z.string()).min(5).max(5)
-  })).length(15)
+  })).min(5).max(15) // Allow 5-15 threads for flexibility
 });
 
 export async function POST(request: NextRequest) {
@@ -43,11 +43,37 @@ export async function POST(request: NextRequest) {
           max_tokens: 4000
         });
         
+        // Log the full response for debugging
+        console.log('OpenAI response:', JSON.stringify({
+          parsed: response.parsed,
+          choices: response.choices?.[0]?.message?.content,
+          refusal: response.choices?.[0]?.message?.refusal,
+        }, null, 2));
+        
         if (!response.parsed) {
-          throw new Error('Failed to parse response');
+          // Try to get the raw content if parsing failed
+          const rawContent = response.choices?.[0]?.message?.content;
+          if (rawContent) {
+            console.log('Raw content:', rawContent);
+            try {
+              const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                result = parsed.threads;
+              } else {
+                throw new Error('No JSON found in raw response');
+              }
+            } catch (parseError) {
+              console.error('Manual parse error:', parseError);
+              throw new Error('Failed to parse response');
+            }
+          } else {
+            throw new Error('Failed to parse response - no content');
+          }
+        } else {
+          result = response.parsed.threads;
         }
         
-        result = response.parsed.threads;
         tokensUsed = {
           input: response.usage?.prompt_tokens || 0,
           output: response.usage?.completion_tokens || 0
@@ -66,7 +92,7 @@ export async function POST(request: NextRequest) {
           temperature,
           messages: [{
             role: "user",
-            content: prompt + "\n\nReturn ONLY a JSON object with this structure: {\"threads\": [{\"angle\": \"...\", \"intent\": \"...\", \"queries\": [\"...\", \"...\", \"...\", \"...\", \"...\"]}]} with exactly 15 threads and 5 queries each."
+            content: prompt + "\n\nReturn ONLY a JSON object with this structure: {\"threads\": [{\"angle\": \"...\", \"intent\": \"...\", \"queries\": [\"...\", \"...\", \"...\", \"...\", \"...\"]}]} with 5 queries per thread."
           }]
         });
         
