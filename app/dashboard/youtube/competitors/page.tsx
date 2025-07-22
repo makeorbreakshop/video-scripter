@@ -43,6 +43,7 @@ export default function CompetitorsPage() {
   const [channelInput, setChannelInput] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [importMessage, setImportMessage] = useState('');
   const [competitorChannels, setCompetitorChannels] = useState<CompetitorChannel[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -301,6 +302,7 @@ export default function CompetitorsPage() {
 
     setIsImporting(true);
     setImportProgress(10);
+    setImportMessage('Extracting channel information...');
 
     try {
       // Step 1: Extract channel ID from URL
@@ -322,44 +324,56 @@ export default function CompetitorsPage() {
       }
 
       setImportProgress(30);
+      setImportMessage('Checking if channel already exists...');
+
+      // Force a small delay to ensure UI updates
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check if channel is already imported (returned by scrape endpoint)
       if (scrapeResult.isAlreadyImported) {
-        const sourceMessage = scrapeResult.importSource === 'competitor' 
-          ? 'This channel is already imported as a competitor'
-          : scrapeResult.importSource === 'discovery'
-          ? 'This channel is already in your discovery system'
-          : 'This channel is already in your system';
+        console.log('Channel is already imported, source:', scrapeResult.importSource);
         
-        toast({
-          title: 'Channel Already Imported',
-          description: sourceMessage,
-          variant: 'destructive'
-        });
-        setIsImporting(false);
-        setImportProgress(0);
+        const displaySource = scrapeResult.importSource === 'competitor' 
+          ? 'Competitor System'
+          : scrapeResult.importSource === 'discovery'
+          ? 'Discovery System'
+          : 'System';
+        
+        // Update UI to show the channel exists
+        setImportMessage(`⚠️ Channel already exists in ${displaySource}`);
+        setImportProgress(100);
+        setIsImporting(false); // Allow button to be clickable again
+        
+        // Don't use toast, just show in the progress bar
+        console.log('UI updated with exists message');
+        
+        // Don't reset immediately - let user see the message
+        // They can clear it by typing a new URL
         return;
       }
 
       setImportProgress(50);
+      setImportMessage('Starting import process...');
 
-      // Step 3: Import using the competitor import endpoint (supports all videos, not just 50)
-      const importResponse = await fetch('/api/youtube/import-competitor', {
+      // Step 3: Import using the unified import endpoint with duplicate checking
+      const importResponse = await fetch('/api/video-import/unified', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          channelId: scrapeResult.channelId,
-          channelName: '', // Will be fetched by the endpoint
-          timePeriod: 'all',
-          maxVideos: 'all',
-          excludeShorts: true,
-          userId: '00000000-0000-0000-0000-000000000000'
+          source: 'competitor',
+          channelIds: [scrapeResult.channelId],
+          options: {
+            timePeriod: 'all',
+            excludeShorts: true,
+            batchSize: 50
+          }
         }),
       });
 
       setImportProgress(90);
+      setImportMessage('Finalizing import...');
 
       const importResult = await importResponse.json();
 
@@ -367,6 +381,19 @@ export default function CompetitorsPage() {
         throw new Error(importResult.error || 'Failed to import channel');
       }
 
+      // Check if channel was skipped
+      if (importResult.status === 'skipped') {
+        toast({
+          title: 'Channel Already Imported',
+          description: 'This channel has already been fully imported',
+          variant: 'destructive'
+        });
+        setImportProgress(0);
+        setChannelInput('');
+        setImportMessage('');
+        return;
+      }
+      
       // Check if it's a queued job response
       if (importResult.jobId || importResult.status === 'queued') {
         toast({
@@ -403,6 +430,7 @@ export default function CompetitorsPage() {
       // Only reset if not handled by async response
       setIsImporting(false);
       setImportProgress(0);
+      setImportMessage('');
     }
   };
 
@@ -710,7 +738,14 @@ export default function CompetitorsPage() {
                     id="channel-url"
                     placeholder="https://www.youtube.com/@channelname or search term"
                     value={channelInput}
-                    onChange={(e) => setChannelInput(e.target.value)}
+                    onChange={(e) => {
+                      setChannelInput(e.target.value);
+                      // Clear any existing error messages when user types
+                      if (importMessage?.includes('⚠️')) {
+                        setImportProgress(0);
+                        setImportMessage('');
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !isImporting) {
                         if (channelInput.includes('youtube.com/')) {
@@ -766,10 +801,17 @@ export default function CompetitorsPage() {
               {importProgress > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span>Import Progress</span>
-                    <span>{importProgress}%</span>
+                    <span className={importMessage?.includes('⚠️') ? 'text-orange-500 font-medium' : ''}>
+                      {importMessage || 'Import Progress'}
+                    </span>
+                    <span className={importMessage?.includes('⚠️') ? 'text-orange-500' : ''}>
+                      {importProgress}%
+                    </span>
                   </div>
-                  <Progress value={importProgress} />
+                  <Progress 
+                    value={importProgress} 
+                    className={importMessage?.includes('⚠️') ? '[&>div]:bg-orange-500' : ''}
+                  />
                 </div>
               )}
 

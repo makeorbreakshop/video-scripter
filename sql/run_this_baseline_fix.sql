@@ -16,7 +16,7 @@ RETURNS INTEGER AS $$
 DECLARE
   processed INTEGER;
 BEGIN
-  WITH batch AS (
+  WITH batch AS (coo
     SELECT v1.id
     FROM videos v1
     WHERE v1.rolling_baseline_views IS NULL

@@ -105,7 +105,6 @@ Backend query combines:
 - Format filter (if selected)
 - Performance threshold filter
 - Results sorted by relevance × performance
-```
 
 ### User Workflow
 1. Search for topic (e.g., "iPhone 16")

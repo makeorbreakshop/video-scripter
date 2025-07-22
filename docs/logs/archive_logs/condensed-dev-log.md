@@ -526,3 +526,20 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Contextual Pattern Transfer**: Balance universal patterns with niche relevance (e.g., "Challenge videos get 7M views" → "Can I engrave 100 items in 24 hours?")
 - **Three-Tier Discovery**: Direct semantic competition (understanding landscape), semantic expansion (adjacent opportunities), pure pattern mining (universal formulas)
 - **Strategic Insight**: Current approach uses semantic search when structural pattern matching needed, must break semantic prison to find viral DNA
+
+### 2025-07-21: Complete Pattern Discovery System Overhaul & View Tracking Implementation
+- **Issue**: Pattern discovery trapped in semantic neighborhoods, performance scores inaccurate for new videos, need complete strategic pivot from patterns to specific outlier videos
+- **Solution**: Built three-tier pattern discovery framework, implemented view tracking system with 6-tier age-based priorities, pivoted to outlier discovery, then to comprehensive video explorer
+- **Impact**: View tracking system monitoring 8,620 videos daily across age tiers, video explorer showing ALL semantically related videos with user-controlled filtering, fixed critical pipeline bugs
+- **Technical**: Age-based tier system (< 7 days to > 365 days), batch YouTube API optimization (50 videos/call), time-series snapshots, progressive UI filtering
+
+**Key Achievements:**
+- **Three-Tier Pattern Framework**: Designed Direct Semantic Competition (what IS), Semantic Expansion (what COULD BE), Pure Pattern Mining (what WORKS) - later pivoted away from this approach
+- **Thread Expansion Testing**: Tested 5 strategies × 3 models, discovered GPT-4o-mini performs within 2% of premium models at 14-25x lower cost, selected Audience-Interest strategy
+- **Pipeline Bug Fixes**: Fixed 72% video loss from aggressive filtering, relaxed DBSCAN clustering, fixed missing video IDs in pattern display, removed pooling causing homogenization
+- **Thread-Based Processing**: Maintained semantic integrity with individual thread pattern discovery, literal pattern matching, comprehensive search logging with summaries
+- **View Tracking System**: Built complete infrastructure for 137K+ videos with 3→6 tier evolution, age-based priorities, 2,000 API calls tracking 100,000 videos daily
+- **Strategic Pivot to Outliers**: Recognized pattern discovery wasn't yielding actionable insights, pivoted to finding specific outlier videos (3x-470x performance ratios)
+- **Video Explorer Evolution**: Final pivot from pre-filtered outliers to showing ALL videos with user-controlled filtering - performance slider, query filter, sort options, semantic expansion
+- **Critical Infrastructure**: Materialized view for performance trends, pg_cron automation, proper historical baseline calculations, eliminated integer overflows with BIGINT migration
+- **System Architecture**: Successfully tracking 8,620 videos daily across 6 age-based tiers, building time-series data for accurate new video performance analysis

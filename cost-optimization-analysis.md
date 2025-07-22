@@ -43,7 +43,8 @@ Calculation:
 - Total: ~$0.0054
 
 ### 2. Reduce Thread Expansion
-**Current**: 78 queries generating ~4K tokens
+**Current**: 78 queries generating ~4K to
+kens
 **Proposed**: 36 queries generating ~2K tokens
 **Savings**: 50% reduction (~$0.0006 saved)
 

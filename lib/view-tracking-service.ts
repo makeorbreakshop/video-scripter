@@ -285,6 +285,110 @@ export class ViewTrackingService {
   }
 
   /**
+   * Update all videos that haven't been tracked in the last 24 hours
+   * This is for bootstrapping or catching up on tracking
+   */
+  async updateAllStaleVideos(hoursThreshold: number = 24) {
+    console.log(`Starting update for all videos not tracked in the last ${hoursThreshold} hours...`);
+    
+    try {
+      // Get count of videos needing update
+      const cutoffDate = new Date();
+      cutoffDate.setHours(cutoffDate.getHours() - hoursThreshold);
+      const cutoffDateStr = cutoffDate.toISOString();
+      
+      // Get total count of videos
+      const { count: totalVideos } = await this.supabase
+        .from('videos')
+        .select('*', { count: 'exact', head: true });
+      
+      // Get count of videos with recent snapshots
+      const { count: recentCount } = await this.supabase
+        .from('view_snapshots')
+        .select('video_id', { count: 'exact', head: true })
+        .gt('snapshot_date', cutoffDateStr);
+      
+      const totalCount = (totalVideos || 0) - (recentCount || 0);
+      
+      console.log(`Found ${totalCount} videos needing updates`);
+      
+      // Process in batches of 50 (API limit)
+      const batchSize = 50;
+      let offset = 0;
+      let totalProcessed = 0;
+      
+      // Get recent video IDs to exclude
+      const { data: recentSnapshots } = await this.supabase
+        .from('view_snapshots')
+        .select('video_id')
+        .gte('snapshot_date', cutoffDateStr);
+      
+      const recentVideoIds = new Set(recentSnapshots?.map(s => s.video_id) || []);
+      
+      while (offset < (totalVideos || 0)) {
+        // Fetch batch of all videos
+        const { data: videos, error } = await this.supabase
+          .from('videos')
+          .select(`
+            id,
+            published_at,
+            view_count
+          `)
+          .range(offset, offset + batchSize - 1)
+          .order('published_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching videos:', error);
+          break;
+        }
+        
+        if (!videos || videos.length === 0) {
+          break;
+        }
+        
+        // Filter out videos with recent snapshots
+        const videosToProcess = videos.filter(v => !recentVideoIds.has(v.id));
+        
+        if (videosToProcess.length === 0) {
+          offset += batchSize;
+          continue;
+        }
+        
+        // Transform to match expected format for processBatch
+        const videosToTrack = videosToProcess.map(v => ({
+          video_id: v.id,
+          priority_tier: 1, // Doesn't matter for update-all
+          days_since_published: Math.floor(
+            (Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)
+          )
+        }));
+        
+        await this.processBatch(videosToTrack);
+        totalProcessed += videosToProcess.length;
+        offset += batchSize;
+        
+        // Progress update
+        if (totalProcessed % 1000 === 0) {
+          console.log(`Processed ${totalProcessed}/${totalCount} videos...`);
+        }
+        
+        // Rate limiting pause every 5000 videos
+        if (totalProcessed > 0 && totalProcessed % 5000 === 0) {
+          console.log('Pausing for 1 second to avoid rate limits...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      console.log(`Update complete! Processed ${totalProcessed} videos`);
+      return totalProcessed;
+      
+    } catch (error) {
+      console.error('Error in updateAllStaleVideos:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Initialize tracking priorities for all videos
    * Run this once to set up the system
    */

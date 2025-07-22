@@ -80,6 +80,8 @@ interface ViewTrackingStats {
   }
   recentJobs: any[]
   topVelocityVideos: any[]
+  willTrackByTier: Record<number, number>
+  totalWillTrack: number
   lastUpdated: string
 }
 
@@ -119,6 +121,8 @@ export default function WorkerDashboard() {
   // View tracking states
   const [viewTrackingStats, setViewTrackingStats] = useState<ViewTrackingStats | null>(null)
   const [viewTrackingLoading, setViewTrackingLoading] = useState(false)
+  const [updateAllLoading, setUpdateAllLoading] = useState(false)
+  const [updateAllStats, setUpdateAllStats] = useState<{videosNeedingUpdate: number, estimatedApiCalls: number} | null>(null)
 
   const fetchQueueStats = async () => {
     try {
@@ -215,6 +219,55 @@ export default function WorkerDashboard() {
     }
   }
   
+  const fetchUpdateAllStats = async () => {
+    try {
+      const response = await fetch('/api/view-tracking/update-all?hours=24')
+      if (response.ok) {
+        const data = await response.json()
+        setUpdateAllStats(data)
+      } else {
+        console.error('Failed to fetch update-all stats:', response.status)
+        // Set a default value to show something
+        setUpdateAllStats({
+          videosNeedingUpdate: 0,
+          estimatedApiCalls: 0
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch update-all stats:', error)
+      // Set a default value to show something
+      setUpdateAllStats({
+        videosNeedingUpdate: 0,
+        estimatedApiCalls: 0
+      })
+    }
+  }
+  
+  const runUpdateAll = async () => {
+    try {
+      setUpdateAllLoading(true)
+      const response = await fetch('/api/view-tracking/update-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hoursThreshold: 24 })
+      })
+      if (response.ok) {
+        const data = await response.json()
+        alert(`Update all started! Tracking ${data.videosToUpdate} videos. Job ID: ${data.jobId}`)
+        // Refresh stats after a moment
+        setTimeout(() => {
+          fetchViewTrackingStats()
+          fetchUpdateAllStats()
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Failed to run update all:', error)
+      alert('Failed to start update all')
+    } finally {
+      setUpdateAllLoading(false)
+    }
+  }
+  
   const toggleWorker = async (type: 'title' | 'thumbnail', enable: boolean) => {
     const workerType = type === 'title' ? 'title_vectorization' : 'thumbnail_vectorization';
     setControlsLoading(prev => ({ ...prev, [type]: true }));
@@ -246,6 +299,7 @@ export default function WorkerDashboard() {
     fetchWorkerControls()
     fetchQuotaStatus()
     fetchViewTrackingStats()
+    fetchUpdateAllStats()
     const interval = setInterval(() => {
       fetchQueueStats()
       fetchVectorizationProgress()
@@ -624,7 +678,14 @@ export default function WorkerDashboard() {
                       <div className="text-sm font-medium" suppressHydrationWarning>
                         {new Date(viewTrackingStats.lastUpdated).toLocaleTimeString()}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid gap-4 md:grid-cols-2 mt-6">
+                    <div className="space-y-2">
                       <Button
+                        className="w-full"
                         size="sm"
                         onClick={runViewTracking}
                         disabled={viewTrackingLoading}
@@ -632,27 +693,77 @@ export default function WorkerDashboard() {
                         {viewTrackingLoading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
                         Run Daily Tracking
                       </Button>
+                      <div className="text-xs text-muted-foreground text-center">
+                        {viewTrackingStats?.totalWillTrack > 0 ? (
+                          <>
+                            Will track: <span className="font-semibold">{viewTrackingStats.totalWillTrack.toLocaleString()}</span> videos
+                            <br />
+                            API calls: ~{Math.ceil(viewTrackingStats.totalWillTrack / 50).toLocaleString()}
+                          </>
+                        ) : (
+                          'Calculating...'
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        variant="outline"
+                        onClick={runUpdateAll}
+                        disabled={updateAllLoading}
+                      >
+                        {updateAllLoading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                        Update All Stale
+                      </Button>
+                      <div className="text-xs text-muted-foreground text-center">
+                        {updateAllStats && updateAllStats.videosNeedingUpdate !== null ? (
+                          <>
+                            Will track: <span className="font-semibold">{updateAllStats.videosNeedingUpdate.toLocaleString()}</span> videos
+                            <br />
+                            API calls: ~{updateAllStats.estimatedApiCalls.toLocaleString()}
+                          </>
+                        ) : (
+                          'Calculating...'
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Tier Distribution */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Priority Tier Distribution</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                      {viewTrackingStats.tierDistribution.map(tier => (
-                        <div key={tier.tier} className="rounded-lg bg-muted/50 p-3">
-                          <div className="text-xs text-muted-foreground">Tier {tier.tier}</div>
-                          <div className="text-lg font-bold">{tier.count.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {tier.tier === 1 ? 'Daily' : 
-                             tier.tier === 2 ? 'Every 2 days' : 
-                             tier.tier === 3 ? 'Every 3 days' : 
-                             tier.tier === 4 ? 'Weekly' : 
-                             tier.tier === 5 ? 'Biweekly' : 
-                             'Monthly'}
-                          </div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">Priority Tier Distribution</h4>
+                      {viewTrackingStats.totalWillTrack > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          <span className="text-green-500">→</span> videos to track
                         </div>
-                      ))}
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                      {viewTrackingStats.tierDistribution.map(tier => {
+                        const willTrack = viewTrackingStats.willTrackByTier?.[tier.tier] || 0;
+                        return (
+                          <div key={tier.tier} className="rounded-lg bg-muted/50 p-3">
+                            <div className="text-xs text-muted-foreground">Tier {tier.tier}</div>
+                            <div className="text-lg font-bold">{tier.count.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {tier.tier === 1 ? 'Daily' : 
+                               tier.tier === 2 ? 'Every 2 days' : 
+                               tier.tier === 3 ? 'Every 3 days' : 
+                               tier.tier === 4 ? 'Weekly' : 
+                               tier.tier === 5 ? 'Biweekly' : 
+                               'Monthly'}
+                            </div>
+                            {willTrack > 0 && (
+                              <div className="text-xs text-green-500 mt-1">
+                                → {willTrack.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

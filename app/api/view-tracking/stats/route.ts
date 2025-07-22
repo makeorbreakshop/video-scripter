@@ -96,6 +96,38 @@ export async function GET(request: NextRequest) {
     // Calculate estimated API calls
     quotaUsage.estimatedDailyCalls = Math.ceil(quotaUsage.estimatedDaily / 50);
 
+    // Calculate what will be tracked if run now
+    const willTrackByTier: Record<number, number> = {};
+    const totalBatchSize = 2000 * 50; // 2000 API calls * 50 videos per call
+    
+    // Same distribution as ViewTrackingService
+    const tierPercentages = {
+      1: 0.25,
+      2: 0.20,
+      3: 0.20,
+      4: 0.15,
+      5: 0.15,
+      6: 0.05
+    };
+    
+    // Calculate how many from each tier will be tracked
+    for (const [tier, percentage] of Object.entries(tierPercentages)) {
+      const tierNum = parseInt(tier);
+      const tierLimit = Math.floor(totalBatchSize * percentage);
+      
+      // Get count of videos in this tier that need tracking
+      const { count: eligibleCount } = await supabase
+        .from('view_tracking_priority')
+        .select('*', { count: 'exact', head: true })
+        .eq('priority_tier', tierNum)
+        .or('next_track_date.is.null,next_track_date.lte.today()');
+      
+      // Will track minimum of eligible or tier limit
+      willTrackByTier[tierNum] = Math.min(eligibleCount || 0, tierLimit);
+    }
+    
+    const totalWillTrack = Object.values(willTrackByTier).reduce((sum, count) => sum + count, 0);
+
     // Get performance trends summary
     const { data: performanceTrends, error: trendsError } = await supabase
       .from('video_performance_trends')
@@ -119,6 +151,8 @@ export async function GET(request: NextRequest) {
       recentJobs: recentJobs || [],
       topVelocityVideos: topVelocity || [],
       performanceTrends: performanceTrends || [],
+      willTrackByTier: willTrackByTier || {},
+      totalWillTrack: totalWillTrack || 0,
       lastUpdated: new Date().toISOString()
     });
 

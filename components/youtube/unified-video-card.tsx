@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Users, Target, TrendingUp, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PerformanceBadge } from './performance-badge';
-import { VideoModal } from './video-modal';
+import { VideoDetailModal } from '@/components/video-detail-modal';
 import { formatViewCount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -85,11 +85,10 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     if (onClick) {
       onClick();
     } else {
-      // Open YouTube video in new tab
-      const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
-      window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
+      // Open our video detail modal
+      setIsModalOpen(true);
     }
-  }, [onClick, video.id]);
+  }, [onClick]);
 
   const handleImageLoad = useCallback(() => {
     setImageLoading(false);
@@ -230,9 +229,8 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
       </Card>
 
       {/* Modal */}
-      <VideoModal
-        video={video}
-        context={context}
+      <VideoDetailModal
+        videoId={video.id}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
