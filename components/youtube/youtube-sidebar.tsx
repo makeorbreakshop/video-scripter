@@ -28,6 +28,11 @@ const navigation = [
     icon: BarChart3,
   },
   {
+    name: 'Channel Analytics',
+    href: '/dashboard/channel-analytics',
+    icon: TrendingUp,
+  },
+  {
     name: 'Patterns',
     href: '/dashboard/youtube/patterns',
     icon: Sparkles,
@@ -61,6 +66,16 @@ const navigation = [
     name: 'Worker',
     href: '/dashboard/youtube/worker',
     icon: Activity,
+  },
+  {
+    name: 'Age-Adjusted Demo',
+    href: '/dashboard/age-adjusted-demo',
+    icon: BarChart3,
+  },
+  {
+    name: 'Debug View',
+    href: '/dashboard/age-adjusted-debug',
+    icon: BarChart3,
   },
 ];
 

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           average_view_percentage
         )
       `)
-      .eq('channel_id', 'Make or Break Shop')
+      .eq('channel_name', 'Make or Break Shop')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

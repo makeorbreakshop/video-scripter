@@ -29,26 +29,21 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // Get count of videos needing update
-    const cutoffDate = new Date();
-    cutoffDate.setHours(cutoffDate.getHours() - hoursThreshold);
-    const cutoffDateStr = cutoffDate.toISOString();
+    // Get count of videos needing update (filter by current date only)
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     
-    // Get distinct count of videos with recent snapshots
-    const { data: recentVideoIds } = await supabase
+    // Get count of distinct videos with snapshots from today
+    const { count: trackedTodayCount } = await supabase
       .from('view_snapshots')
-      .select('video_id')
-      .gte('snapshot_date', cutoffDateStr);
-    
-    // Get unique video IDs
-    const uniqueRecentIds = new Set(recentVideoIds?.map(r => r.video_id) || []);
+      .select('video_id', { count: 'exact', head: true })
+      .eq('snapshot_date', today);
     
     // Get total count of videos
     const { count: totalVideos } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true });
     
-    const videosNeedingUpdate = (totalVideos || 0) - uniqueRecentIds.size;
+    const videosNeedingUpdate = (totalVideos || 0) - (trackedTodayCount || 0);
 
     // Create job record
     const jobId = crypto.randomUUID();
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest) {
         status: 'processing',
         data: {
           mode: 'update_all',
-          hoursThreshold,
+          dateFilter: today,
           videosToUpdate: videosNeedingUpdate,
           triggeredBy: 'manual_api'
         }
@@ -79,7 +74,7 @@ export async function POST(request: NextRequest) {
     const viewTrackingService = new ViewTrackingService();
     
     // Don't await - let it run in background
-    viewTrackingService.updateAllStaleVideos(hoursThreshold)
+    viewTrackingService.updateAllStaleVideos(0, job.id) // Pass 0 to bypass time filtering
       .then(async (totalProcessed) => {
         // Update job status
         await supabase
@@ -88,7 +83,8 @@ export async function POST(request: NextRequest) {
             status: 'completed',
             data: {
               ...job.data,
-              videosProcessed: totalProcessed
+              videosProcessed: totalProcessed,
+              progress: 100
             },
             updated_at: new Date().toISOString()
           })
@@ -96,11 +92,21 @@ export async function POST(request: NextRequest) {
       })
       .catch(async (error) => {
         console.error('View tracking error:', error);
+        
+        // Check if it was cancelled
+        const { data: jobCheck } = await supabase
+          .from('jobs')
+          .select('status')
+          .eq('id', job.id)
+          .single();
+        
+        const finalStatus = 'failed';
+        
         // Update job status
         await supabase
           .from('jobs')
           .update({ 
-            status: 'failed',
+            status: finalStatus,
             error: error.message,
             updated_at: new Date().toISOString()
           })
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Update all tracking started',
       jobId: job.id,
-      hoursThreshold,
+      dateFilter: today,
       videosToUpdate: videosNeedingUpdate,
       estimatedApiCalls: Math.ceil((videosNeedingUpdate || 0) / 50)
     });
@@ -126,37 +132,29 @@ export async function POST(request: NextRequest) {
 // Get stats for update-all
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const hoursThreshold = parseInt(searchParams.get('hours') || '24');
-
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get count of videos needing update
-    const cutoffDate = new Date();
-    cutoffDate.setHours(cutoffDate.getHours() - hoursThreshold);
-    const cutoffDateStr = cutoffDate.toISOString();
+    // Get count of videos needing update (filter by current date only)
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     
-    // Get distinct count of videos with recent snapshots
-    const { data: recentVideoIds, error: recentError } = await supabase
+    // Get count of distinct videos with snapshots from today
+    const { count: trackedTodayCount } = await supabase
       .from('view_snapshots')
-      .select('video_id')
-      .gte('snapshot_date', cutoffDateStr);
-    
-    // Get unique video IDs
-    const uniqueRecentIds = new Set(recentVideoIds?.map(r => r.video_id) || []);
+      .select('video_id', { count: 'exact', head: true })
+      .eq('snapshot_date', today);
     
     // Get total count of videos
     const { count: totalVideos } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true });
     
-    const videosNeedingUpdate = (totalVideos || 0) - uniqueRecentIds.size;
+    const videosNeedingUpdate = (totalVideos || 0) - (trackedTodayCount || 0);
 
     return NextResponse.json({
-      hoursThreshold,
+      dateFilter: today,
       videosNeedingUpdate,
       estimatedApiCalls: Math.ceil((videosNeedingUpdate || 0) / 50),
       estimatedTime: Math.ceil((videosNeedingUpdate || 0) / 50 / 60) + ' minutes'

@@ -49,30 +49,52 @@ export class ViewTrackingService {
     
     for (const [tier, limit] of Object.entries(tierLimits)) {
       const tierNum = parseInt(tier);
+      const tierVideos = [];
+      let offset = 0;
+      const chunkSize = 1000; // Supabase max limit per query
       
-      const { data: tierVideos, error } = await this.supabase
-        .from('view_tracking_priority')
-        .select(`
-          video_id,
-          priority_tier,
-          videos!inner(
-            published_at,
-            view_count
-          )
-        `)
-        .eq('priority_tier', tierNum)
-        .or('next_track_date.is.null,next_track_date.lte.today()')
-        .order('videos(published_at)', { ascending: false })
-        .limit(limit);
-      
-      if (error) {
-        console.error(`Error fetching tier ${tier} videos:`, error);
-        continue;
+      // Fetch in chunks until we reach the tier limit
+      while (tierVideos.length < limit) {
+        const remainingNeeded = limit - tierVideos.length;
+        const currentLimit = Math.min(chunkSize, remainingNeeded);
+        
+        const { data: chunk, error } = await this.supabase
+          .from('view_tracking_priority')
+          .select(`
+            video_id,
+            priority_tier,
+            videos!inner(
+              published_at,
+              view_count
+            )
+          `)
+          .eq('priority_tier', tierNum)
+          .or('next_track_date.is.null,next_track_date.lte.today()')
+          .order('videos(published_at)', { ascending: false })
+          .range(offset, offset + currentLimit - 1);
+        
+        if (error) {
+          console.error(`Error fetching tier ${tier} videos (offset ${offset}):`, error);
+          break;
+        }
+        
+        if (!chunk || chunk.length === 0) {
+          // No more videos available for this tier
+          break;
+        }
+        
+        tierVideos.push(...chunk);
+        offset += chunk.length;
+        
+        // If we got less than requested, we've exhausted this tier
+        if (chunk.length < currentLimit) {
+          break;
+        }
       }
       
-      if (tierVideos) {
+      if (tierVideos.length > 0) {
         // Transform the data to match expected format
-        const transformedVideos = tierVideos.map(v => ({
+        const transformedVideos = tierVideos.slice(0, limit).map(v => ({
           video_id: v.video_id,
           priority_tier: v.priority_tier,
           days_since_published: Math.floor(
@@ -81,7 +103,7 @@ export class ViewTrackingService {
         }));
         
         allVideosToTrack.push(...transformedVideos);
-        console.log(`Tier ${tier}: fetched ${tierVideos.length} videos`);
+        console.log(`Tier ${tier}: fetched ${transformedVideos.length} videos (requested ${limit})`);
       }
     }
     
@@ -243,6 +265,8 @@ export class ViewTrackingService {
           console.error('Error inserting snapshots:', insertError);
         }
 
+        // REMOVED: Update videos table - just track snapshots for now
+
         // Update tracking dates
         const videoIds = snapshots.map(s => s.video_id);
         const { error: updateError } = await this.supabase
@@ -288,14 +312,25 @@ export class ViewTrackingService {
    * Update all videos that haven't been tracked in the last 24 hours
    * This is for bootstrapping or catching up on tracking
    */
-  async updateAllStaleVideos(hoursThreshold: number = 24) {
-    console.log(`Starting update for all videos not tracked in the last ${hoursThreshold} hours...`);
+  async updateAllStaleVideos(hoursThreshold: number = 24, jobId?: string) {
+    // If hoursThreshold is 0, filter by current date only (no time-based filtering)
+    const useCurrentDateOnly = hoursThreshold === 0;
+    const filterDescription = useCurrentDateOnly ? 'today' : `the last ${hoursThreshold} hours`;
+    
+    console.log(`Starting update for all videos not tracked ${filterDescription}...`);
     
     try {
-      // Get count of videos needing update
-      const cutoffDate = new Date();
-      cutoffDate.setHours(cutoffDate.getHours() - hoursThreshold);
-      const cutoffDateStr = cutoffDate.toISOString();
+      let cutoffDateStr: string;
+      
+      if (useCurrentDateOnly) {
+        // Filter by current date only (YYYY-MM-DD format)
+        cutoffDateStr = new Date().toISOString().split('T')[0];
+      } else {
+        // Use time-based filtering (original behavior)
+        const cutoffDate = new Date();
+        cutoffDate.setHours(cutoffDate.getHours() - hoursThreshold);
+        cutoffDateStr = cutoffDate.toISOString();
+      }
       
       // Get total count of videos
       const { count: totalVideos } = await this.supabase
@@ -303,10 +338,17 @@ export class ViewTrackingService {
         .select('*', { count: 'exact', head: true });
       
       // Get count of videos with recent snapshots
-      const { count: recentCount } = await this.supabase
+      const snapshotQuery = this.supabase
         .from('view_snapshots')
-        .select('video_id', { count: 'exact', head: true })
-        .gt('snapshot_date', cutoffDateStr);
+        .select('video_id', { count: 'exact', head: true });
+      
+      if (useCurrentDateOnly) {
+        snapshotQuery.eq('snapshot_date', cutoffDateStr);
+      } else {
+        snapshotQuery.gte('snapshot_date', cutoffDateStr);
+      }
+      
+      const { count: recentCount } = await snapshotQuery;
       
       const totalCount = (totalVideos || 0) - (recentCount || 0);
       
@@ -314,73 +356,131 @@ export class ViewTrackingService {
       
       // Process in batches of 50 (API limit)
       const batchSize = 50;
-      let offset = 0;
+      const CONCURRENT_BATCHES = 5; // Process 5 batches in parallel
       let totalProcessed = 0;
       
-      // Get recent video IDs to exclude
-      const { data: recentSnapshots } = await this.supabase
-        .from('view_snapshots')
-        .select('video_id')
-        .gte('snapshot_date', cutoffDateStr);
+      // Get all videos that need updates (in chunks to avoid memory issues)
+      const allVideosToProcess = [];
+      const chunkSize = 5000;
       
-      const recentVideoIds = new Set(recentSnapshots?.map(s => s.video_id) || []);
-      
-      while (offset < (totalVideos || 0)) {
-        // Fetch batch of all videos
-        const { data: videos, error } = await this.supabase
+      for (let offset = 0; offset < (totalVideos || 0); offset += chunkSize) {
+        // Check if job was cancelled
+        if (jobId) {
+          const { data: job } = await this.supabase
+            .from('jobs')
+            .select('status')
+            .eq('id', jobId)
+            .single();
+          
+          if (job?.status === 'failed') {
+            console.log('Job cancellation requested, stopping...');
+            throw new Error('Job cancelled by user');
+          }
+        }
+        
+        const { data: videos } = await this.supabase
           .from('videos')
           .select(`
             id,
             published_at,
             view_count
           `)
-          .range(offset, offset + batchSize - 1)
+          .range(offset, Math.min(offset + chunkSize - 1, (totalVideos || 0) - 1))
           .order('published_at', { ascending: false });
         
-        if (error) {
-          console.error('Error fetching videos:', error);
-          break;
+        if (videos) {
+          allVideosToProcess.push(...videos);
         }
-        
-        if (!videos || videos.length === 0) {
-          break;
-        }
-        
-        // Filter out videos with recent snapshots
-        const videosToProcess = videos.filter(v => !recentVideoIds.has(v.id));
-        
-        if (videosToProcess.length === 0) {
-          offset += batchSize;
-          continue;
-        }
-        
-        // Transform to match expected format for processBatch
-        const videosToTrack = videosToProcess.map(v => ({
+      }
+      
+      // Get recent snapshots to filter out
+      const recentSnapshotsQuery = this.supabase
+        .from('view_snapshots')
+        .select('video_id');
+      
+      if (useCurrentDateOnly) {
+        recentSnapshotsQuery.eq('snapshot_date', cutoffDateStr);
+      } else {
+        recentSnapshotsQuery.gte('snapshot_date', cutoffDateStr);
+      }
+      
+      const { data: recentSnapshots } = await recentSnapshotsQuery;
+      
+      const recentVideoIds = new Set(recentSnapshots?.map(s => s.video_id) || []);
+      
+      // Filter videos that need processing
+      const videosToTrack = allVideosToProcess
+        .filter(v => !recentVideoIds.has(v.id))
+        .map(v => ({
           video_id: v.id,
-          priority_tier: 1, // Doesn't matter for update-all
+          priority_tier: 1,
           days_since_published: Math.floor(
             (Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)
           )
         }));
-        
-        await this.processBatch(videosToTrack);
-        totalProcessed += videosToProcess.length;
-        offset += batchSize;
-        
-        // Progress update
-        if (totalProcessed % 1000 === 0) {
-          console.log(`Processed ${totalProcessed}/${totalCount} videos...`);
+      
+      console.log(`Processing ${videosToTrack.length} videos in parallel batches of ${CONCURRENT_BATCHES}...`);
+      
+      // Process in parallel batches
+      for (let i = 0; i < videosToTrack.length; i += batchSize * CONCURRENT_BATCHES) {
+        // Check if job was cancelled
+        if (jobId) {
+          const { data: job } = await this.supabase
+            .from('jobs')
+            .select('status')
+            .eq('id', jobId)
+            .single();
+          
+          if (job?.status === 'failed') {
+            console.log('Job cancellation requested, stopping...');
+            throw new Error('Job cancelled by user');
+          }
         }
         
-        // Rate limiting pause every 5000 videos
-        if (totalProcessed > 0 && totalProcessed % 5000 === 0) {
-          console.log('Pausing for 1 second to avoid rate limits...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        // Create concurrent batch promises
+        const batchPromises = [];
+        
+        for (let j = 0; j < CONCURRENT_BATCHES; j++) {
+          const start = i + j * batchSize;
+          const end = Math.min(start + batchSize, videosToTrack.length);
+          
+          if (start < videosToTrack.length) {
+            const batch = videosToTrack.slice(start, end);
+            if (batch.length > 0) {
+              batchPromises.push(this.processBatch(batch));
+            }
+          }
+        }
+        
+        // Process all batches in parallel
+        await Promise.all(batchPromises);
+        
+        totalProcessed += batchPromises.length * batchSize;
+        const actualProcessed = Math.min(totalProcessed, videosToTrack.length);
+        
+        // Update job progress
+        if (jobId) {
+          await this.supabase
+            .from('jobs')
+            .update({
+              data: {
+                progress: Math.round((actualProcessed / videosToTrack.length) * 100),
+                videosProcessed: actualProcessed,
+                totalVideos: videosToTrack.length
+              },
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', jobId);
+        }
+        
+        // Progress update
+        if (actualProcessed % 1000 === 0 || actualProcessed === videosToTrack.length) {
+          console.log(`Processed ${actualProcessed}/${videosToTrack.length} videos (${Math.round((actualProcessed / videosToTrack.length) * 100)}%)...`);
         }
       }
       
-      console.log(`Update complete! Processed ${totalProcessed} videos`);
-      return totalProcessed;
+      console.log(`Update complete! Processed ${videosToTrack.length} videos`);
+      return videosToTrack.length;
       
     } catch (error) {
       console.error('Error in updateAllStaleVideos:', error);

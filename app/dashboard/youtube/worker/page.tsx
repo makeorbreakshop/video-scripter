@@ -123,6 +123,7 @@ export default function WorkerDashboard() {
   const [viewTrackingLoading, setViewTrackingLoading] = useState(false)
   const [updateAllLoading, setUpdateAllLoading] = useState(false)
   const [updateAllStats, setUpdateAllStats] = useState<{videosNeedingUpdate: number, estimatedApiCalls: number} | null>(null)
+  const [runningJobId, setRunningJobId] = useState<string | null>(null)
 
   const fetchQueueStats = async () => {
     try {
@@ -221,7 +222,7 @@ export default function WorkerDashboard() {
   
   const fetchUpdateAllStats = async () => {
     try {
-      const response = await fetch('/api/view-tracking/update-all?hours=24')
+      const response = await fetch('/api/view-tracking/update-all')
       if (response.ok) {
         const data = await response.json()
         setUpdateAllStats(data)
@@ -249,10 +250,11 @@ export default function WorkerDashboard() {
       const response = await fetch('/api/view-tracking/update-all', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hoursThreshold: 24 })
+        body: JSON.stringify({})
       })
       if (response.ok) {
         const data = await response.json()
+        setRunningJobId(data.jobId)
         alert(`Update all started! Tracking ${data.videosToUpdate} videos. Job ID: ${data.jobId}`)
         // Refresh stats after a moment
         setTimeout(() => {
@@ -265,6 +267,69 @@ export default function WorkerDashboard() {
       alert('Failed to start update all')
     } finally {
       setUpdateAllLoading(false)
+    }
+  }
+  
+  const cancelJob = async () => {
+    if (!runningJobId) return
+    
+    try {
+      const response = await fetch('/api/view-tracking/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: runningJobId })
+      })
+      
+      if (response.ok) {
+        alert('Job cancellation requested')
+        setRunningJobId(null)
+        // Refresh stats
+        setTimeout(() => {
+          fetchViewTrackingStats()
+        }, 1000)
+      } else {
+        const error = await response.json()
+        alert(`Failed to cancel job: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to cancel job:', error)
+      alert('Failed to cancel job')
+    }
+  }
+  
+  const cancelAllStuckJobs = async () => {
+    try {
+      const response = await fetch('/api/view-tracking/cancel', {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        alert(`Cancelled ${data.count} stuck jobs`)
+        // Refresh stats
+        fetchViewTrackingStats()
+      }
+    } catch (error) {
+      console.error('Failed to cancel stuck jobs:', error)
+    }
+  }
+  
+  const runDebug = async () => {
+    try {
+      console.log('🔍 Running view tracking debug...')
+      const response = await fetch('/api/view-tracking/debug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await response.json()
+      if (response.ok) {
+        console.log('✅ Debug complete. Check console for detailed logs.')
+        console.log('Debug stats:', data.stats)
+      } else {
+        console.error('❌ Debug failed:', data.error)
+      }
+    } catch (error) {
+      console.error('❌ Failed to run debug:', error)
     }
   }
   
@@ -306,6 +371,7 @@ export default function WorkerDashboard() {
       fetchWorkerControls()
       fetchQuotaStatus()
       fetchViewTrackingStats()
+      fetchUpdateAllStats()
     }, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
   }, [])
@@ -407,6 +473,7 @@ export default function WorkerDashboard() {
                 fetchVectorizationProgress()
                 fetchWorkerControls()
                 fetchViewTrackingStats()
+                fetchUpdateAllStats()
               } else if (activeTab === 'quota') {
                 fetchQuotaStatus()
               } else if (activeTab === 'jobs') {
@@ -682,7 +749,7 @@ export default function WorkerDashboard() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="grid gap-4 md:grid-cols-2 mt-6">
+                  <div className="grid gap-4 md:grid-cols-3 mt-6">
                     <div className="space-y-2">
                       <Button
                         className="w-full"
@@ -729,6 +796,21 @@ export default function WorkerDashboard() {
                         )}
                       </div>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        variant="destructive"
+                        onClick={runDebug}
+                      >
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        Debug (Console)
+                      </Button>
+                      <div className="text-xs text-muted-foreground text-center">
+                        Check browser console for<br />detailed debug logs
+                      </div>
+                    </div>
                   </div>
 
                   {/* Tier Distribution */}
@@ -770,21 +852,52 @@ export default function WorkerDashboard() {
                   {/* Recent Jobs */}
                   {viewTrackingStats.recentJobs.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Recent Tracking Jobs</h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium">Recent Tracking Jobs</h4>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={cancelAllStuckJobs}
+                          className="text-xs"
+                        >
+                          Cancel Stuck Jobs
+                        </Button>
+                      </div>
                       <div className="space-y-1">
                         {viewTrackingStats.recentJobs.slice(0, 3).map((job: any) => (
                           <div key={job.id} className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">
                               {new Date(job.created_at).toLocaleString()}
                             </span>
-                            <Badge className={cn(
-                              "text-xs",
-                              job.status === 'completed' ? "bg-green-100 text-green-800" :
-                              job.status === 'running' ? "bg-blue-100 text-blue-800" :
-                              "bg-red-100 text-red-800"
-                            )}>
-                              {job.status}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {job.status === 'processing' && job.data?.progress && (
+                                <span className="text-xs text-muted-foreground">
+                                  {job.data.progress}%
+                                </span>
+                              )}
+                              <Badge className={cn(
+                                "text-xs",
+                                job.status === 'completed' ? "bg-green-100 text-green-800" :
+                                job.status === 'processing' ? "bg-blue-100 text-blue-800" :
+                                job.status === 'cancelled' ? "bg-gray-100 text-gray-800" :
+                                "bg-red-100 text-red-800"
+                              )}>
+                                {job.status}
+                              </Badge>
+                              {job.status === 'processing' && job.id === runningJobId && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setRunningJobId(job.id)
+                                    cancelJob()
+                                  }}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

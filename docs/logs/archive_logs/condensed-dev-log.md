@@ -543,3 +543,34 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Video Explorer Evolution**: Final pivot from pre-filtered outliers to showing ALL videos with user-controlled filtering - performance slider, query filter, sort options, semantic expansion
 - **Critical Infrastructure**: Materialized view for performance trends, pg_cron automation, proper historical baseline calculations, eliminated integer overflows with BIGINT migration
 - **System Architecture**: Successfully tracking 8,620 videos daily across 6 age-based tiers, building time-series data for accurate new video performance analysis
+
+### 2025-07-22: Performance Scoring Revolution & Database Optimization
+- **Issue**: Performance scoring fundamentally broken (showing -0.86 for top videos), view tracking enhancements needed, channel analytics missing, multiple performance bottlenecks
+- **Solution**: Built comprehensive channel analytics dashboard, implemented hybrid performance scoring, created cached performance metrics system, discovered true age-matched scoring requirements
+- **Impact**: Channel growth visualization (5x over 2 years), accurate performance detection (viral videos now show 3-14x instead of negative), dashboard loads in <100ms vs 5-10s
+- **Technical**: Hybrid scoring combining VPD/indexed/velocity, pre-calculated metrics table with daily cron, discovered need for day-specific comparisons (Day 4 vs Day 4, not 30-day averages)
+
+**Key Achievements:**
+- **View Tracking Enhancements**: Added preview stats showing which videos will be tracked, implemented "Update All" button for 86K video bootstrap, fixed SQL performance issues
+- **Channel Analytics Dashboard**: 5-tab system with performance/velocity/distribution analysis, age-adjusted scoring replacing broken performance_ratio, comprehensive visualizations
+- **Hybrid Performance Scoring**: Three metrics (Current VPD, Indexed Score vs baseline, Velocity Trend), accounts for channel growth and YouTube's non-linear view patterns
+- **Database Optimization**: Created `video_performance_metrics` cached table, reduced queries from 100+ to 1, daily cron job automation, <100ms load times
+- **Critical Discovery**: Current system uses 30-day averages when it should compare day-specific performance (Bambu video showing 0.0x is actually 5.82x on Day 4)
+- **Data Infrastructure**: Discovered `daily_analytics` has 2+ years history vs `view_snapshots` only from June 2025, enabling true historical analysis
+- **UI/UX Improvements**: Fixed missing xTool F2 video, null handling, date filtering defaults, persistent warning messages, video detail modal with graphs
+
+### 2025-07-23: Content Intelligence System & YouTube Performance Envelope Analysis
+- **Issue**: Leverage growing video database for content creation, implement video grouping system, fix view tracking limits, build YouTube-style performance envelope charts
+- **Solution**: Designed multi-purpose video grouping MVP (saved searches), fixed view tracking pagination (6K→100K videos), built performance envelope prototype with percentile-based analysis
+- **Impact**: View tracking now properly handles full tier quotas (2,000 API calls), 84.66% of videos have 3+ snapshots, working Python prototype for age-adjusted performance curves
+- **Technical**: Supabase pagination with .range() chunks, logarithmic growth curve fitting, percentile-based envelope calculation, pytest validation suite
+
+**Key Achievements:**
+- **Content Intelligence Strategy**: Analyzed Poppy AI's persistent memory approach, designed video grouping system evolution from saved searches to AI synthesis
+- **View Tracking Fix**: Discovered Supabase 1,000 row limit causing 94% data loss, implemented chunked fetching to handle 100,000 videos daily across 6 tiers
+- **Performance Envelope Prototype**: Built Python system calculating 10th-90th percentile ranges by days_since_published, enabling outlier detection for viral/underperforming videos
+- **Data Coverage Success**: 135,569 videos (84.66%) have 3 snapshots, 158,117 total snapshots on July 23, sufficient for channel growth modeling
+- **Age-Adjusted Scoring Design**: Conceptualized channel-specific growth curves accounting for non-linear view accumulation, weight recent videos more heavily
+- **Testing Infrastructure**: Comprehensive pytest suite validating duration parsing, YouTube Shorts detection, envelope calculations, edge cases
+- **Real Data Integration**: Successfully tested with "3x3Custom - Tamar" channel showing 219 snapshots from 73 videos, revealing sparse early-day data challenges
+- **Critical Realization**: Must start curves at 0 views on day 0, not arbitrary snapshots - led to proper growth curve generation from mathematical models

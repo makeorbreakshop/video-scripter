@@ -1034,6 +1034,7 @@ export class VideoImportService {
                       snippet.thumbnails?.medium?.url || 
                       snippet.thumbnails?.default?.url || '',
         description: snippet.description || '',
+        duration: video.contentDetails?.duration || null, // Extract duration to dedicated column
         data_source: source === 'owner' ? 'owner' : 'competitor',
         is_competitor: source !== 'owner',
         import_date: new Date().toISOString(),
