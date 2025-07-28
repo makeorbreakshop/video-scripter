@@ -63,4 +63,5 @@ clustering_*.json
 improved_prompt_*.json
 
 # classification progress files
-.classification-progress.json
+.classification-progress.json# Large batch files
+batch-jobs/*.jsonl
