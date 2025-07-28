@@ -79,7 +79,7 @@ export async function generateVideoSummaries(
             },
             {
               role: 'user',
-              content: `Title: ${video.title}\nChannel: ${video.channel_name}\nDescription: ${video.description?.substring(0, 1000) || 'No description'}`
+              content: `Title: ${video.title}\nChannel: ${video.channel_name}\nDescription: ${video.description?.substring(0, 2000) || 'No description'}`
             }
           ],
           temperature: 0.3,

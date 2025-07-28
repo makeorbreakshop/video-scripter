@@ -1,0 +1,9 @@
+{
+  "batchNumber": 5,
+  "offset": 120000,
+  "limit": 30000,
+  "videoCount": 28646,
+  "filename": "llm-summaries-batch-5.jsonl",
+  "createdAt": "2025-07-28T17:38:00.149Z",
+  "estimatedCost": 1.66504875
+}

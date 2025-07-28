@@ -1,0 +1,10 @@
+{
+  "videos": 50000,
+  "umap_time": 37.165570974349976,
+  "hdbscan_time": 9.713263988494873,
+  "bertopic_time": 32.788480043411255,
+  "total_time": 79.67393898963928,
+  "topics_found": 292,
+  "clusters_found": 452,
+  "noise_ratio": 0.22648
+}

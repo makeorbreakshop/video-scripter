@@ -1,0 +1,19 @@
+{
+  "analysis_date": "2025-07-25T16:11:23.583318",
+  "sample_size": 1000,
+  "topic_levels": {
+    "level_1": 6,
+    "level_2": 107,
+    "level_3": 286
+  },
+  "level_3_stats": {
+    "avg_size": 3.437062937062937,
+    "median_size": 1.0,
+    "min_size": 1,
+    "max_size": 291,
+    "small_topics": 275,
+    "large_topics": 1
+  },
+  "estimated_natural_clusters": 198,
+  "recommendation": "HDBSCAN would likely find 198 natural clusters, compared to current 777 BERT topics"
+}

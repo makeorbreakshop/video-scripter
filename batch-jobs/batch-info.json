@@ -1,0 +1,48 @@
+{
+  "batches": [
+    {
+      "batchId": "batch_6887b02210dc8190ab0b9aca65c753bf",
+      "fileId": "file-SBVhpC7nDteWqrbHiRfHLT",
+      "filename": "llm-summaries-batch-1.jsonl",
+      "videoCount": 29754,
+      "submittedAt": "2025-07-28T17:15:14.233Z"
+    },
+    {
+      "batchId": "batch_6887b49c90808190a0bf916f64809139",
+      "fileId": "file-VaAngd9DEp46vDfpvqS54P",
+      "filename": "llm-summaries-batch-2.jsonl",
+      "videoCount": 29627,
+      "submittedAt": "2025-07-28T17:34:20.609Z"
+    },
+    {
+      "batchId": "batch_6887b4efcaf081909314499264030b09",
+      "fileId": "file-12oqChsg6uhPEwnBEw5QzL",
+      "filename": "llm-summaries-batch-3.jsonl",
+      "videoCount": 29610,
+      "submittedAt": "2025-07-28T17:35:43.893Z"
+    },
+    {
+      "batchId": "batch_6887b553a4488190884a4959cb99138e",
+      "fileId": "file-SZEsqnft7EzMHabj4diWrx",
+      "filename": "llm-summaries-batch-4.jsonl",
+      "videoCount": 29661,
+      "submittedAt": "2025-07-28T17:37:23.873Z"
+    },
+    {
+      "batchId": "batch_6887b5bd65c881909756f50b1932de51",
+      "fileId": "file-9azwVamDugaKNXNB4zMNA6",
+      "filename": "llm-summaries-batch-5.jsonl",
+      "videoCount": 29481,
+      "submittedAt": "2025-07-28T17:39:09.524Z"
+    },
+    {
+      "batchId": "batch_6887b61929a48190b165670837b7a15f",
+      "fileId": "file-U88BFMJfyPmT318ys8uL3E",
+      "filename": "llm-summaries-batch-6.jsonl",
+      "videoCount": 27356,
+      "submittedAt": "2025-07-28T17:40:41.246Z"
+    }
+  ],
+  "totalVideos": 175489,
+  "lastUpdated": "2025-07-28T17:40:41.248Z"
+}
