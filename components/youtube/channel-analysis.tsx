@@ -24,6 +24,7 @@ import {
   Clock
 } from 'lucide-react';
 import Image from 'next/image';
+import { VideoDetailModal } from '@/components/video-detail-modal';
 
 interface Video {
   id: string;
@@ -83,6 +84,10 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
   const [sortField, setSortField] = useState<SortField>('performance_ratio');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal state
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchChannelData() {
@@ -274,7 +279,14 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {channel_overview.top_performers.map((video) => (
-              <div key={video.id} className="border rounded-lg overflow-hidden">
+              <div 
+                key={video.id} 
+                className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => {
+                  setSelectedVideoId(video.id);
+                  setModalOpen(true);
+                }}
+              >
                 <div className="relative aspect-video">
                   <Image
                     src={video.thumbnail_url}
@@ -348,7 +360,13 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                 {sortedVideos.map((video) => (
                   <TableRow key={video.id}>
                     <TableCell>
-                      <div className="relative w-16 h-9">
+                      <div 
+                        className="relative w-16 h-9 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => {
+                          setSelectedVideoId(video.id);
+                          setModalOpen(true);
+                        }}
+                      >
                         <Image
                           src={video.thumbnail_url}
                           alt={video.title}
@@ -378,6 +396,18 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Video Detail Modal */}
+      {selectedVideoId && (
+        <VideoDetailModal
+          videoId={selectedVideoId}
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedVideoId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

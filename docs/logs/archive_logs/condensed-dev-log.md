@@ -574,3 +574,49 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Testing Infrastructure**: Comprehensive pytest suite validating duration parsing, YouTube Shorts detection, envelope calculations, edge cases
 - **Real Data Integration**: Successfully tested with "3x3Custom - Tamar" channel showing 219 snapshots from 73 videos, revealing sparse early-day data challenges
 - **Critical Realization**: Must start curves at 0 views on day 0, not arbitrary snapshots - led to proper growth curve generation from mathematical models
+
+### 2025-07-24: YouTube Performance Envelope Complete Implementation
+- **Issue**: Transform performance envelope concept into production system with global curves, channel normalization, API endpoints, and accurate outlier detection
+- **Solution**: Built complete performance envelope infrastructure processing 480K+ snapshots, implemented channel-specific scaling, fixed critical bugs across 13 sessions
+- **Impact**: System identifies viral/underperforming videos with proper age adjustment, processes 88K+ non-Short snapshots, extends to 10-year curves (3,650 days)
+- **Technical**: Removed artificial plateau constraints, implemented simple plateau scaling (3.63x for Matt Mitchell), created API endpoints, extended curves to full dataset range
+
+**Key Achievements:**
+- **Duration Data Fix**: Discovered 68% of videos missing duration data, migrated 107,881 videos achieving 97.1% coverage, fixed import pipeline for future videos
+- **Monotonic Constraint Removal**: Fixed artificial plateaus in curves by removing forced growth constraint, allowing natural variations in median values
+- **Channel Normalization**: Solved over-scaling issue using plateau values instead of sparse early data (3.63x vs 18.7x scale factor)
+- **Full Dataset Processing**: Successfully processed 88,122 non-Short snapshots creating natural growth curves from Day 1 to Day 3,650
+- **API Implementation**: Created /api/performance endpoints for curve calculation, video classification, and channel baseline determination
+- **10-Year Extension**: Extended curves from 365 days to 3,650 days capturing full video lifecycle patterns
+- **Performance Scripts**: Built check_video_performance.py and check_channel_performance.py for easy performance analysis
+- **Visualization Attempts**: Created multiple chart styles culminating in clean envelope bands (25th-75th percentile) with median line
+
+### 2025-07-26: BERTopic Clustering Implementation for 173K Videos
+- **Issue**: Need natural topic discovery for 173K videos, existing predefined categories insufficient, HDBSCAN failing on raw OpenAI embeddings
+- **Solution**: Discovered OpenAI embeddings too sparse (0.17 similarity), switched to SBERT + BERTopic, successfully found 1,084 natural topics with 3-tier hierarchy
+- **Impact**: Replaced predefined categories with data-driven clusters, 75% coverage (25% outliers), fast processing (<10 minutes), but poor naming without transcripts
+- **Technical**: UMAP dimensionality reduction key to success (512D→5D), min_cluster_size=30 optimal, dual embedding strategy (OpenAI for search, SBERT for clustering)
+
+**Key Achievements:**
+- **Embedding Analysis**: Discovered OpenAI embeddings too sparse for clustering (mean similarity 0.17), missing UMAP reduction was why HDBSCAN failed
+- **BERTopic Success**: Generated SBERT embeddings for 173K videos in 4.8 minutes, found 1,084 topics in 2.5 minutes with proper parameters
+- **3-Tier Hierarchy**: Created Domain/Niche/Topic structure (30/220/834 topics) based on cluster sizes, replacing flat categorization
+- **Improved Categorization**: Reduced generic "Lifestyle" from 70% to 47.6% "Entertainment", created 32 distinct categories vs single catch-all
+- **Critical Limitation**: Topic names poor quality (e.g., "Codys Cody", "Hifi Futurefi") due to keywords-only naming without video transcripts
+- **Architecture Decision**: Dual embedding system - keep OpenAI for search precision, add SBERT for topic clustering
+- **Metadata Discovery**: Found Pinecone embeddings missing titles (only 31% had metadata), not clustering issue but interpretation problem
+- **Performance Optimization**: Fixed HDBSCAN hanging with approximations and larger min_cluster_size, added monitoring for long-running processes
+
+### 2025-07-27: Transcript Acquisition Strategy & Multimodal Embedding Analysis
+- **Issue**: Only 128/175K videos have transcripts (0.07%), need cost-effective solution for better BERTopic clustering, explore alternative data sources
+- **Solution**: Evaluated transcript services (Supadata $158 vs others $1,700-3,400), tested multimodal embeddings (title+thumbnail), discovered YouTube chapters in descriptions
+- **Impact**: Supadata viable but expensive at scale, thumbnail embeddings reduced clustering quality (28→16 topics), discovered ~60K+ videos have timestamp data for free categorization
+- **Technical**: Created dedicated transcripts table, proved title+transcript improves BERTopic (1→4 topics), implemented chapter detection finding various formats beyond YouTube's strict requirements
+
+**Key Achievements:**
+- **Transcript Economics**: Supadata cheapest at $158 for 170K videos but $1M+/month at scale, DIY proxies cost more ($225-338) than service
+- **API Testing**: Successfully integrated Supadata, discovered 41 test transcripts were from old free scraping endpoint, not actual API usage
+- **Multimodal Analysis**: Title-only embeddings outperformed title+thumbnail (0.063 vs 0.041 silhouette score), visual features add noise not semantic value
+- **Chapter Discovery**: Found ~60K videos with timestamps (36% recent, 36% tutorials), only ~18K meet YouTube's strict requirements, but all valuable for categorization
+- **Alternative Strategies**: Identified free enrichment sources - descriptions (with cleaning), channel patterns, view velocity curves, YouTube Topic API categories
+- **Combined Embeddings**: Proved transcript+title embeddings worth $3.40 vs $1,700+ for LLM summaries, 4x topic granularity improvement

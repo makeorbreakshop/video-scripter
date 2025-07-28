@@ -72,11 +72,11 @@ export async function GET(request: NextRequest) {
       baselineData.baseline = globalEnvelope?.p50_views || 8478; // Day 1 median from our data
     }
 
-    // Get envelope data for current age and day 1
+    // Get envelope data for current age and day 1 (up to 10 years)
     const { data: envelopeData, error: envelopeError } = await supabase
       .from('performance_envelopes')
       .select('day_since_published, p50_views')
-      .in('day_since_published', [1, Math.min(daysSincePublished, 365)])
+      .in('day_since_published', [1, Math.min(daysSincePublished, 3650)])
       .order('day_since_published');
 
     if (envelopeError || !envelopeData || envelopeData.length === 0) {
@@ -86,9 +86,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Extract day 1 and current day values
+    // Extract day 1 and current day values (up to 10 years)
     const day1Data = envelopeData.find(d => d.day_since_published === 1);
-    const currentDayData = envelopeData.find(d => d.day_since_published === Math.min(daysSincePublished, 365));
+    const currentDayData = envelopeData.find(d => d.day_since_published === Math.min(daysSincePublished, 3650));
 
     if (!day1Data || !currentDayData) {
       return NextResponse.json(
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       );
       
       const channelBaseline = channelBaselines.get(video.channel_id) || baselineData.global_baseline;
-      const currentDayViews = envelopeLookup.get(Math.min(daysSincePublished, 365)) || envelopeLookup.get(365)!;
+      const currentDayViews = envelopeLookup.get(Math.min(daysSincePublished, 3650)) || envelopeLookup.get(3650)!;
       
       const globalShapeMultiplier = currentDayViews / day1Views;
       const expectedViews = channelBaseline * globalShapeMultiplier;

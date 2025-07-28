@@ -47,5 +47,20 @@ title-embeddings-*.json
 thumbnail-embeddings-*.csv
 thumbnail-embeddings-*.json
 
+# Large embedding and clustering files
+scripts/clustering/embeddings-part-*.json
+scripts/clustering/all-title-embeddings-*.json
+scripts/clustering/sbert_embeddings/
+scripts/clustering/bertopic_model*
+outputs/
+*.png
+bertopic_*.json
+llm_*.json
+multimodal_*.json
+real_videos_*.json
+chapter_enhanced_*.json
+clustering_*.json
+improved_prompt_*.json
+
 # classification progress files
 .classification-progress.json

@@ -17,7 +17,8 @@ import {
   Activity,
   Tags,
   Lightbulb,
-  Sparkles
+  Sparkles,
+  Compass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -26,6 +27,11 @@ const navigation = [
     name: 'Analytics',
     href: '/dashboard/youtube',
     icon: BarChart3,
+  },
+  {
+    name: 'Discovery',
+    href: '/dashboard/youtube/discovery',
+    icon: Compass,
   },
   {
     name: 'Channel Analytics',

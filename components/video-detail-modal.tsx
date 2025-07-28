@@ -34,6 +34,9 @@ interface VideoDetails {
   topic_niche?: string;
   topic_micro?: string;
   topic_confidence?: number;
+  llm_summary?: string;
+  llm_summary_generated_at?: string;
+  llm_summary_model?: string;
   metadata?: {
     tags?: string[];
     duration?: string;
@@ -253,6 +256,24 @@ export function VideoDetailModal({ videoId, isOpen, onClose }: VideoDetailModalP
                 </p>
               )}
             </div>
+
+            {/* LLM Summary */}
+            {video.llm_summary && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">AI Summary</h3>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm">{video.llm_summary}</p>
+                  {video.llm_summary_model && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Generated with {video.llm_summary_model}
+                      {video.llm_summary_generated_at && (
+                        <span> • {formatDistanceToNow(new Date(video.llm_summary_generated_at), { addSuffix: true })}</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* YouTube Tags */}
             {video.metadata?.tags && video.metadata.tags.length > 0 && (

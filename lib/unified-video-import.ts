@@ -12,6 +12,7 @@ import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
 import { llmFormatClassificationService } from './llm-format-classification-service.ts';
 import { topicDetectionService } from './topic-detection-service.ts';
+import { generateVideoSummaries, generateSummaryEmbeddings } from './unified-import-summary-integration.ts';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -33,6 +34,8 @@ export interface VideoImportRequest {
     skipThumbnailEmbeddings?: boolean;
     skipTitleEmbeddings?: boolean;
     skipClassification?: boolean;
+    skipSummaries?: boolean;
+    summaryModel?: string;
     batchSize?: number;
     forceReEmbed?: boolean;
     maxVideosPerChannel?: number;
@@ -52,6 +55,8 @@ export interface VideoImportResult {
     thumbnails: number;
   };
   classificationsGenerated: number;
+  summariesGenerated: number;
+  summaryEmbeddingsGenerated: number;
   exportFiles: string[];
   errors: string[];
   processedVideoIds: string[];
@@ -138,6 +143,8 @@ export class VideoImportService {
       videosProcessed: 0,
       embeddingsGenerated: { titles: 0, thumbnails: 0 },
       classificationsGenerated: 0,
+      summariesGenerated: 0,
+      summaryEmbeddingsGenerated: 0,
       exportFiles: [],
       errors: [],
       processedVideoIds: []
@@ -159,12 +166,37 @@ export class VideoImportService {
       // Step 2: Store video data in Supabase
       await this.storeVideoData(videoMetadata);
 
-      // Step 3: Generate embeddings (if not skipped)
+      // Prepare parallel operations
+      const parallelOperations: Promise<any>[] = [];
+      
+      // Step 3a: Generate LLM summaries (new)
+      let summaryResults: Array<{videoId: string; summary: string | null; success: boolean; error?: string}> = [];
+      if (!request.options?.skipSummaries) {
+        const summaryPromise = (async () => {
+          summaryResults = await generateVideoSummaries(videoMetadata, {
+            skipSummaries: request.options?.skipSummaries,
+            summaryModel: request.options?.summaryModel
+          });
+          result.summariesGenerated = summaryResults.filter(r => r.success).length;
+        })();
+        parallelOperations.push(summaryPromise);
+      }
+      
+      // Step 3b: Generate embeddings (existing, but now in parallel)
       let embeddingResults: EmbeddingResults | null = null;
       if (!request.options?.skipEmbeddings) {
-        embeddingResults = await this.processVideoEmbeddings(videoMetadata, request.options);
-        result.embeddingsGenerated.titles = embeddingResults.titleEmbeddings.filter(e => e.success).length;
-        result.embeddingsGenerated.thumbnails = embeddingResults.thumbnailEmbeddings.filter(e => e.success).length;
+        const embeddingPromise = (async () => {
+          embeddingResults = await this.processVideoEmbeddings(videoMetadata, request.options);
+          result.embeddingsGenerated.titles = embeddingResults.titleEmbeddings.filter(e => e.success).length;
+          result.embeddingsGenerated.thumbnails = embeddingResults.thumbnailEmbeddings.filter(e => e.success).length;
+        })();
+        parallelOperations.push(embeddingPromise);
+      }
+      
+      // Run summaries and embeddings in parallel
+      if (parallelOperations.length > 0) {
+        console.log(`⚡ Running ${parallelOperations.length} operations in parallel (summaries + embeddings)...`);
+        await Promise.all(parallelOperations);
       }
 
       // Step 4: Classify videos (if embeddings were generated and not skipped)
@@ -201,6 +233,16 @@ export class VideoImportService {
         console.log(`⚡ Running post-processing in parallel (${postProcessingPromises.length} operations)...`);
         await Promise.all(postProcessingPromises);
       }
+      
+      // Step 3c: Generate summary embeddings (after summaries complete)
+      if (summaryResults.length > 0 && !request.options?.skipEmbeddings) {
+        console.log(`🔄 Generating embeddings for ${summaryResults.filter(r => r.success).length} summaries...`);
+        const summaryEmbeddings = await generateSummaryEmbeddings(summaryResults);
+        result.summaryEmbeddingsGenerated = summaryEmbeddings.filter(e => e.success).length;
+        
+        // TODO: Upload summary embeddings to Pinecone
+        // This will be handled by the separate sync script for now
+      }
 
       result.success = true;
       result.message = `Successfully processed ${videoMetadata.length} videos`;
@@ -208,6 +250,9 @@ export class VideoImportService {
       console.log(`\n✅ IMPORT COMPLETE: ${result.videosProcessed} videos processed successfully`);
       if (result.embeddingsGenerated.titles > 0) {
         console.log(`📊 Generated ${result.embeddingsGenerated.titles} title embeddings, ${result.embeddingsGenerated.thumbnails} thumbnail embeddings`);
+      }
+      if (result.summariesGenerated > 0) {
+        console.log(`📝 Generated ${result.summariesGenerated} summaries, ${result.summaryEmbeddingsGenerated} summary embeddings`);
       }
       if (result.exportFiles.length > 0) {
         console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);

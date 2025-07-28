@@ -37,7 +37,10 @@ export async function GET(
         rolling_baseline_views,
         is_competitor,
         created_at,
-        description
+        description,
+        llm_summary,
+        llm_summary_generated_at,
+        llm_summary_model
       `)
       .eq('channel_id', decodedChannelId)
       .order('published_at', { ascending: false });
