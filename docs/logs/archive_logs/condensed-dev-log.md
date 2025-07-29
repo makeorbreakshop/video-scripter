@@ -620,3 +620,18 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Chapter Discovery**: Found ~60K videos with timestamps (36% recent, 36% tutorials), only ~18K meet YouTube's strict requirements, but all valuable for categorization
 - **Alternative Strategies**: Identified free enrichment sources - descriptions (with cleaning), channel patterns, view velocity curves, YouTube Topic API categories
 - **Combined Embeddings**: Proved transcript+title embeddings worth $3.40 vs $1,700+ for LLM summaries, 4x topic granularity improvement
+
+### 2025-07-28: LLM-Based Video Summarization & View Tracking System Enhancement
+- **Issue**: Need cost-effective alternative to transcripts for 178K videos, fix "Update All Stale" button tracking only 32K videos, integrate summaries into video modal
+- **Solution**: Implemented GPT-4o-mini description summarization ($3.24 total with Batch API), fixed parallel processing bug and Supabase 1000-row limit, enhanced video modal with AI summaries
+- **Impact**: Achieved 99.7% summary quality, fixed view tracking to process all 178K videos making actual YouTube API calls, created unified import pipeline with LLM summaries
+- **Technical**: Action-first prompts eliminating "video/tutorial" bias, OpenAI Batch API for 50% discount, text-embedding-3-small for summary embeddings, fixed counting logic in updateAllStaleVideos
+
+**Key Achievements:**
+- **Chapter Analysis**: Found 60K+ videos (34%) have timestamp data but chapters reduce clustering granularity, pivoted to LLM summarization approach
+- **LLM Implementation**: Integrated summary generation into unified import pipeline at ~$3.24 for 178K videos using GPT-4o-mini with action-first prompts
+- **View Tracking Fix**: Resolved 32K limit bug (incorrect parallel counting), Supabase 1000-row pagination, removed date filtering to track ALL videos
+- **Batch Processing**: Submitted 6 batches totaling 175,489 videos for $9.90, discovered 95% of videos have sufficient descriptions for summarization
+- **UI Enhancement**: Added LLM summary display to video modal with model info and generation timestamps, integrated with channel page thumbnails
+- **Critical Fixes**: updateAllStaleVideos now processes all 178K videos with proper YouTube API calls, fixed progress counting and quota tracking
+- **Project Cleanup**: Organized 70+ root files into structured directories, removed 316MB of JSONL files from git, created comprehensive directory structure

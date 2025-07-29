@@ -35,6 +35,19 @@ export async function GET() {
         .not('thumbnail_url', 'is', null)
     ]);
     
+    // Get LLM summary vectorization progress
+    const [llmSummaryTotal, llmSummaryDone] = await Promise.all([
+      supabase
+        .from('videos')
+        .select('*', { count: 'exact', head: true })
+        .not('llm_summary', 'is', null),
+      supabase
+        .from('videos')
+        .select('*', { count: 'exact', head: true })
+        .eq('llm_summary_embedding_synced', true)
+        .not('llm_summary', 'is', null)
+    ]);
+    
     const titleProgress = {
       total: titleTotal.count || 0,
       completed: titleDone.count || 0,
@@ -49,11 +62,19 @@ export async function GET() {
       percentage: thumbnailTotal.count ? Math.round(((thumbnailDone.count || 0) / thumbnailTotal.count) * 100) : 0
     };
     
+    const llmSummaryProgress = {
+      total: llmSummaryTotal.count || 0,
+      completed: llmSummaryDone.count || 0,
+      remaining: (llmSummaryTotal.count || 0) - (llmSummaryDone.count || 0),
+      percentage: llmSummaryTotal.count ? Math.round(((llmSummaryDone.count || 0) / llmSummaryTotal.count) * 100) : 0
+    };
+    
     return NextResponse.json({
       success: true,
       progress: {
         title: titleProgress,
-        thumbnail: thumbnailProgress
+        thumbnail: thumbnailProgress,
+        llmSummary: llmSummaryProgress
       }
     });
   } catch (error) {

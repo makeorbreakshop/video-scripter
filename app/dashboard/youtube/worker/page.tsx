@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap, Database, Image, Play, Square, TrendingUp, AlertTriangle, Info } from "lucide-react"
+import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap, Database, Image, Play, Square, TrendingUp, AlertTriangle, Info, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface QueueStats {
@@ -124,6 +124,27 @@ export default function WorkerDashboard() {
   const [updateAllLoading, setUpdateAllLoading] = useState(false)
   const [updateAllStats, setUpdateAllStats] = useState<{videosNeedingUpdate: number, estimatedApiCalls: number} | null>(null)
   const [runningJobId, setRunningJobId] = useState<string | null>(null)
+  
+  // LLM Summary states
+  const [llmSummaryProgress, setLlmSummaryProgress] = useState<{
+    total: number
+    completed: number
+    remaining: number
+    percentage: number
+    isEnabled: boolean
+    currentJob?: {
+      id: string
+      startedAt: string
+      processed: number
+      failed: number
+      rate: number
+    }
+    estimatedCost: {
+      completed: number
+      total: number
+    }
+  } | null>(null)
+  const [llmSummaryLoading, setLlmSummaryLoading] = useState(false)
 
   const fetchQueueStats = async () => {
     try {
@@ -357,6 +378,86 @@ export default function WorkerDashboard() {
     }
   }
   
+  const fetchLlmSummaryProgress = async () => {
+    try {
+      const response = await fetch('/api/workers/llm-summary/progress')
+      if (response.ok) {
+        const data = await response.json()
+        setLlmSummaryProgress(data.progress)
+      }
+    } catch (error) {
+      console.error('Failed to fetch LLM summary progress:', error)
+    }
+  }
+  
+  const toggleLlmSummaryWorker = async (enable: boolean) => {
+    setLlmSummaryLoading(true)
+    try {
+      const response = await fetch('/api/workers/llm-summary/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: enable })
+      })
+      
+      if (response.ok) {
+        await fetchLlmSummaryProgress()
+      }
+    } catch (error) {
+      console.error('Failed to toggle LLM summary worker:', error)
+    } finally {
+      setLlmSummaryLoading(false)
+    }
+  }
+
+  const toggleLlmSummaryVectorizationWorker = async (enable: boolean) => {
+    setControlsLoading(prev => ({ ...prev, llm_summary_vectorization: true }))
+    try {
+      const response = await fetch('/api/workers/vectorization/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerType: 'llm_summary_vectorization', enabled: enable })
+      })
+      
+      if (response.ok) {
+        await fetchWorkerControls()
+        await fetchVectorizationProgress()
+      }
+    } catch (error) {
+      console.error('Failed to toggle LLM summary vectorization worker:', error)
+    } finally {
+      setControlsLoading(prev => ({ ...prev, llm_summary_vectorization: false }))
+    }
+  }
+  
+  const runLlmSummaryBackfill = async () => {
+    if (!confirm('This will start processing ~177K videos. Estimated cost: $20.68. Continue?')) {
+      return
+    }
+    
+    setLlmSummaryLoading(true)
+    try {
+      const response = await fetch('/api/workers/llm-summary/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        alert(`LLM summary backfill started! Job ID: ${data.jobId}\n\nMake sure the worker is running:\nnpm run worker:llm-summary`)
+        await fetchLlmSummaryProgress()
+      } else {
+        const error = await response.json()
+        alert(`Failed to start backfill: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to start LLM summary backfill:', error)
+      alert('Failed to start backfill')
+    } finally {
+      setLlmSummaryLoading(false)
+    }
+  }
+  
 
   useEffect(() => {
     fetchQueueStats()
@@ -365,6 +466,7 @@ export default function WorkerDashboard() {
     fetchQuotaStatus()
     fetchViewTrackingStats()
     fetchUpdateAllStats()
+    fetchLlmSummaryProgress()
     const interval = setInterval(() => {
       fetchQueueStats()
       fetchVectorizationProgress()
@@ -372,6 +474,7 @@ export default function WorkerDashboard() {
       fetchQuotaStatus()
       fetchViewTrackingStats()
       fetchUpdateAllStats()
+      fetchLlmSummaryProgress()
     }, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
   }, [])
@@ -870,6 +973,11 @@ export default function WorkerDashboard() {
                               {new Date(job.created_at).toLocaleString()}
                             </span>
                             <div className="flex items-center gap-2">
+                              {job.status === 'completed' && job.videosWithViews > 0 && (
+                                <span className="text-xs font-medium text-green-600">
+                                  {job.videosWithViews.toLocaleString()} videos
+                                </span>
+                              )}
                               {job.status === 'processing' && job.data?.progress && (
                                 <span className="text-xs text-muted-foreground">
                                   {job.data.progress}%
@@ -930,6 +1038,229 @@ export default function WorkerDashboard() {
                 <div className="text-center py-8 text-muted-foreground">
                   <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-20" />
                   <p>Loading view tracking stats...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* LLM Summary Backfill */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="w-5 h-5" />
+                <span>LLM Summary Backfill</span>
+              </CardTitle>
+              <CardDescription>Generate concise AI summaries for video descriptions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {llmSummaryProgress ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Progress</div>
+                      <div className="text-2xl font-bold">{llmSummaryProgress.completed.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">
+                        of {llmSummaryProgress.total.toLocaleString()} videos
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Remaining</div>
+                      <div className="text-2xl font-bold">{llmSummaryProgress.remaining.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {llmSummaryProgress.percentage.toFixed(1)}% complete
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Estimated Cost</div>
+                      <div className="text-2xl font-bold">${llmSummaryProgress.estimatedCost.total.toFixed(2)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        ${llmSummaryProgress.estimatedCost.completed.toFixed(2)} spent
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Overall Progress</span>
+                      <span className="font-medium">{llmSummaryProgress.percentage.toFixed(1)}%</span>
+                    </div>
+                    <Progress value={llmSummaryProgress.percentage} className="h-3" />
+                  </div>
+
+                  {/* Current Job Status */}
+                  {llmSummaryProgress.currentJob && (
+                    <Alert>
+                      <Activity className="h-4 w-4" />
+                      <AlertTitle>Processing Active</AlertTitle>
+                      <AlertDescription className="space-y-1">
+                        <div>Processed: {llmSummaryProgress.currentJob.processed.toLocaleString()} videos</div>
+                        <div>Failed: {llmSummaryProgress.currentJob.failed}</div>
+                        <div>Rate: ~{llmSummaryProgress.currentJob.rate} videos/minute</div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Started {formatTimeAgo(llmSummaryProgress.currentJob.startedAt)}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Controls */}
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="flex items-center space-x-2">
+                      {llmSummaryProgress.isEnabled ? (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                          <span className="text-sm font-medium">Worker Enabled</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                          <span className="text-sm font-medium">Worker Disabled</span>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {!llmSummaryProgress.currentJob && llmSummaryProgress.remaining > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={runLlmSummaryBackfill}
+                          disabled={llmSummaryLoading}
+                        >
+                          {llmSummaryLoading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                          Start Backfill
+                        </Button>
+                      )}
+                      
+                      <Button
+                        size="sm"
+                        variant={llmSummaryProgress.isEnabled ? "destructive" : "default"}
+                        onClick={() => toggleLlmSummaryWorker(!llmSummaryProgress.isEnabled)}
+                        disabled={llmSummaryLoading}
+                      >
+                        {llmSummaryLoading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                        {llmSummaryProgress.isEnabled ? 'Disable' : 'Enable'} Worker
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-muted/50 p-3 mt-4">
+                    <p className="text-xs text-muted-foreground">Worker must be running:</p>
+                    <code className="text-xs font-mono">npm run worker:llm-summary</code>
+                  </div>
+
+                  {/* Info Alert */}
+                  <Alert className="mt-4">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>About LLM Summaries</AlertTitle>
+                    <AlertDescription>
+                      Uses GPT-4o-mini to generate 1-2 sentence summaries of video content,
+                      focusing on what's demonstrated or taught. Processes at ~400 videos/minute
+                      with automatic rate limiting. Total processing time: ~7.5 hours.
+                    </AlertDescription>
+                  </Alert>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p>Loading LLM summary progress...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* LLM Summary Vectorization */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Database className="w-5 h-5" />
+                <span>LLM Summary Vectorization</span>
+              </CardTitle>
+              <CardDescription>Generate embeddings for AI summaries to enable semantic search</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {vectorizationProgress && workerControls ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Summaries to Process</div>
+                      <div className="text-2xl font-bold">{vectorizationProgress.llmSummary?.remaining.toLocaleString() || '0'}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {vectorizationProgress.llmSummary?.completed.toLocaleString() || '0'} already embedded
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Progress</div>
+                      <div className="text-2xl font-bold">{vectorizationProgress.llmSummary?.percentage.toFixed(1) || '0'}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {vectorizationProgress.llmSummary?.total.toLocaleString() || '0'} total summaries
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">Worker Status</div>
+                      <div className="flex items-center space-x-2">
+                        {workerControls.llm_summary_vectorization?.isEnabled ? (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-sm font-medium">Enabled</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-red-500" />
+                            <span className="text-sm text-muted-foreground">Disabled</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  {vectorizationProgress.llmSummary && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Vectorization Progress</span>
+                        <span className="font-medium">{vectorizationProgress.llmSummary.percentage.toFixed(1)}%</span>
+                      </div>
+                      <Progress value={vectorizationProgress.llmSummary.percentage} className="h-3" />
+                    </div>
+                  )}
+
+                  {/* Controls */}
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      variant={workerControls.llm_summary_vectorization?.isEnabled ? "destructive" : "default"}
+                      onClick={() => toggleLlmSummaryVectorizationWorker(!workerControls.llm_summary_vectorization?.isEnabled)}
+                      disabled={controlsLoading.llm_summary_vectorization}
+                    >
+                      {controlsLoading.llm_summary_vectorization && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                      {workerControls.llm_summary_vectorization?.isEnabled ? 'Disable' : 'Enable'} Worker
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Worker must be running:</p>
+                    <code className="text-xs font-mono">npm run worker:llm-summary-vectorization</code>
+                  </div>
+
+                  {/* Info Alert */}
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>About Summary Embeddings</AlertTitle>
+                    <AlertDescription>
+                      Creates searchable embeddings from LLM summaries, enabling semantic search across actual video content. 
+                      Stored in Pinecone's 'llm-summaries' namespace for efficient retrieval.
+                    </AlertDescription>
+                  </Alert>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Database className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p>Loading summary vectorization status...</p>
                 </div>
               )}
             </CardContent>

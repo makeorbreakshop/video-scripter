@@ -12,7 +12,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('worker_control')
       .select('*')
-      .in('worker_type', ['title_vectorization', 'thumbnail_vectorization']);
+      .in('worker_type', ['title_vectorization', 'thumbnail_vectorization', 'llm_summary_vectorization']);
     
     if (error) {
       console.error('Error fetching worker control:', error);
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
     
     // Validate worker type
-    if (!['title_vectorization', 'thumbnail_vectorization'].includes(workerType)) {
+    if (!['title_vectorization', 'thumbnail_vectorization', 'llm_summary_vectorization'].includes(workerType)) {
       return NextResponse.json(
         { error: 'Invalid worker type' },
         { status: 400 }

@@ -1,0 +1,19 @@
+{
+  "totalVideos": 18230,
+  "numBatches": 1,
+  "batches": [
+    {
+      "batchNumber": 1,
+      "startIndex": 0,
+      "endIndex": 18230,
+      "videoCount": 18230,
+      "filename": "llm-summaries-batch-1-clean.jsonl",
+      "createdAt": "2025-07-29T11:17:01.113Z",
+      "estimatedCost": 1.0596187499999998,
+      "firstVideoId": "0011zK1luOg",
+      "lastVideoId": "6owNBI-y4sE"
+    }
+  ],
+  "totalEstimatedCost": 1.0596187499999998,
+  "createdAt": "2025-07-29T11:17:01.117Z"
+}

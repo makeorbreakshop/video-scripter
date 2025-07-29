@@ -63,6 +63,20 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching recent jobs:', jobsError);
     }
 
+    // For each job, count how many snapshots were created
+    const jobsWithCounts = await Promise.all((recentJobs || []).map(async (job) => {
+      const { count: snapshotCount } = await supabase
+        .from('view_snapshots')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', job.created_at)
+        .lte('created_at', job.updated_at);
+      
+      return {
+        ...job,
+        videosWithViews: snapshotCount || 0
+      };
+    }));
+
     // Get videos with highest view velocity - join with videos table to get view counts
     const { data: topVelocity, error: velocityError } = await supabase
       .from('view_tracking_priority')
@@ -148,7 +162,7 @@ export async function GET(request: NextRequest) {
         apiCallsUsed: quotaUsage.today
       },
       quotaUsage,
-      recentJobs: recentJobs || [],
+      recentJobs: jobsWithCounts || [],
       topVelocityVideos: topVelocity || [],
       performanceTrends: performanceTrends || [],
       willTrackByTier: willTrackByTier || {},

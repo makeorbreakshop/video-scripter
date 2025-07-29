@@ -29,21 +29,12 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // Get count of videos needing update (filter by current date only)
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    
-    // Get count of distinct videos with snapshots from today
-    const { count: trackedTodayCount } = await supabase
-      .from('view_snapshots')
-      .select('video_id', { count: 'exact', head: true })
-      .eq('snapshot_date', today);
-    
-    // Get total count of videos
+    // Get total count of ALL videos - we're tracking everything
     const { count: totalVideos } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true });
     
-    const videosNeedingUpdate = (totalVideos || 0) - (trackedTodayCount || 0);
+    const videosNeedingUpdate = totalVideos || 0;
 
     // Create job record
     const jobId = crypto.randomUUID();
@@ -55,7 +46,6 @@ export async function POST(request: NextRequest) {
         status: 'processing',
         data: {
           mode: 'update_all',
-          dateFilter: today,
           videosToUpdate: videosNeedingUpdate,
           triggeredBy: 'manual_api'
         }
@@ -116,7 +106,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Update all tracking started',
       jobId: job.id,
-      dateFilter: today,
       videosToUpdate: videosNeedingUpdate,
       estimatedApiCalls: Math.ceil((videosNeedingUpdate || 0) / 50)
     });
@@ -137,24 +126,14 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get count of videos needing update (filter by current date only)
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    
-    // Get count of distinct videos with snapshots from today
-    const { count: trackedTodayCount } = await supabase
-      .from('view_snapshots')
-      .select('video_id', { count: 'exact', head: true })
-      .eq('snapshot_date', today);
-    
-    // Get total count of videos
+    // Get total count of ALL videos - we're tracking everything
     const { count: totalVideos } = await supabase
       .from('videos')
       .select('*', { count: 'exact', head: true });
     
-    const videosNeedingUpdate = (totalVideos || 0) - (trackedTodayCount || 0);
+    const videosNeedingUpdate = totalVideos || 0;
 
     return NextResponse.json({
-      dateFilter: today,
       videosNeedingUpdate,
       estimatedApiCalls: Math.ceil((videosNeedingUpdate || 0) / 50),
       estimatedTime: Math.ceil((videosNeedingUpdate || 0) / 50 / 60) + ' minutes'
