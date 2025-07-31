@@ -14,48 +14,22 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Fetching YouTube channels from database...');
     
-    // Get all unique YouTube channel IDs from metadata using direct SQL for efficiency
-    const { data: channels, error } = await supabase
-      .rpc('get_youtube_channel_ids');
+    // Get all unique YouTube channel IDs from competitor videos
+    // Using raw SQL for better performance and to handle JSON properly
+    const { data: channelData, error } = await supabase
+      .rpc('get_competitor_youtube_channels');
 
     if (error) {
       console.error('Error fetching channels via RPC:', error);
-      // Fallback to direct query if RPC doesn't exist
-      const { data: fallbackChannels, error: fallbackError } = await supabase
-        .from('videos')
-        .select('metadata')
-        .not('metadata->youtube_channel_id', 'is', null);
-
-      if (fallbackError) {
-        console.error('Error fetching channels:', fallbackError);
-        return NextResponse.json(
-          { error: 'Failed to fetch channels' },
-          { status: 500 }
-        );
-      }
-
-      // Extract unique channel IDs from metadata
-      const uniqueChannels = new Set<string>();
-      fallbackChannels?.forEach(video => {
-        const youtubeChannelId = video.metadata?.youtube_channel_id;
-        if (youtubeChannelId && youtubeChannelId.startsWith('UC')) {
-          uniqueChannels.add(youtubeChannelId);
-        }
-      });
-
-      const channelIds = Array.from(uniqueChannels);
-      console.log(`📺 Found ${channelIds.length} unique YouTube channels (fallback method)`);
-
-      return NextResponse.json({
-        success: true,
-        channels: channelIds,
-        count: channelIds.length
-      });
+      return NextResponse.json(
+        { error: 'Failed to fetch channels' },
+        { status: 500 }
+      );
     }
 
-    // RPC function worked, use its results
-    const channelIds = channels?.map((row: any) => row.youtube_channel_id).filter(Boolean) || [];
-    console.log(`📺 Found ${channelIds.length} unique YouTube channels (RPC method)`);
+    // RPC function returns array of objects with youtube_channel_id
+    const channelIds = channelData?.map((row: any) => row.youtube_channel_id).filter(Boolean) || [];
+    console.log(`📺 Found ${channelIds.length} unique YouTube channels for RSS monitoring`);
 
     return NextResponse.json({
       success: true,

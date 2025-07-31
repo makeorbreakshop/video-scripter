@@ -24,12 +24,24 @@ const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY,
 });
 
-// Worker configuration
-const BATCH_SIZE = 200; // Fetch 200 videos at a time
-const CONCURRENT_REQUESTS = 20; // Process 20 embeddings in parallel
-const EMBEDDING_BATCH_SIZE = 50; // OpenAI embedding batch size
-const PINECONE_BATCH_SIZE = 100; // Pinecone upsert batch size
-const NAMESPACE = 'llm-summaries'; // Different namespace for summaries
+// Worker configuration - Dynamic IOPS optimization
+const INITIAL_BATCH_SIZE = 10; // Very small batch to minimize IOPS spikes
+const CONCURRENT_REQUESTS = 2;  // Minimal concurrent requests
+const EMBEDDING_BATCH_SIZE = 10; // Small embedding batches to spread out operations
+const PINECONE_BATCH_SIZE = 100;
+const NAMESPACE = 'llm-summaries';
+
+// Dynamic IOPS control
+const TARGET_IOPS = 50; // Target 50 IOPS (well under any limit)
+const MIN_DELAY_MS = 5000; // Minimum delay between batches (5 seconds)
+const MAX_DELAY_MS = 30000; // Maximum delay between batches
+let currentDelayMs = 10000; // Start with 10 second delay
+let batchSize = 10; // Start with tiny batch size
+
+// IOPS tracking
+let iopsHistory = [];
+let lastIOPSCheck = Date.now();
+let operationsInWindow = 0;
 
 // Create limiters
 const limit = pLimit(CONCURRENT_REQUESTS);
@@ -57,6 +69,42 @@ async function generateBatchEmbeddings(summaries) {
     console.error('Error generating embeddings:', error);
     throw error;
   }
+}
+
+/**
+ * Track IOPS usage
+ */
+function trackIOPS(operations = 1) {
+  operationsInWindow += operations;
+  const now = Date.now();
+  
+  // Add to history with timestamp
+  iopsHistory.push({ time: now, ops: operations });
+  
+  // Remove entries older than 1 second
+  iopsHistory = iopsHistory.filter(entry => now - entry.time < 1000);
+  
+  // Calculate current IOPS
+  const currentIOPS = iopsHistory.reduce((sum, entry) => sum + entry.ops, 0);
+  
+  return currentIOPS;
+}
+
+/**
+ * Adjust delay based on current IOPS
+ */
+function adjustDelay() {
+  const currentIOPS = iopsHistory.reduce((sum, entry) => sum + entry.ops, 0);
+  
+  if (currentIOPS < TARGET_IOPS * 0.7) {
+    // We're under 70% of target, speed up
+    currentDelayMs = Math.max(MIN_DELAY_MS, currentDelayMs * 0.8);
+  } else if (currentIOPS > TARGET_IOPS * 0.9) {
+    // We're over 90% of target, slow down
+    currentDelayMs = Math.min(MAX_DELAY_MS, currentDelayMs * 1.2);
+  }
+  
+  return currentDelayMs;
 }
 
 /**
@@ -100,7 +148,7 @@ async function updateJobProgress() {
 async function runWorker() {
   console.log('🚀 LLM Summary Vectorization Worker started');
   console.log(`📍 Using namespace: ${NAMESPACE} in index: ${process.env.PINECONE_INDEX_NAME}`);
-  console.log(`⚡ Config: ${CONCURRENT_REQUESTS} parallel, batch size ${BATCH_SIZE}`);
+  console.log(`⚡ Config: ${CONCURRENT_REQUESTS} parallel, embedding batch ${EMBEDDING_BATCH_SIZE}, initial DB batch ${batchSize}`);
   
   isRunning = true;
   startTime = Date.now();
@@ -138,7 +186,7 @@ async function runWorker() {
       .from('videos')
       .select('*', { count: 'exact', head: true })
       .not('llm_summary', 'is', null)
-      .or('llm_summary_embedding_synced.is.null,llm_summary_embedding_synced.eq.false');
+      .eq('llm_summary_embedding_synced', false);
     
     console.log(`📊 Found ${totalCount} summaries needing embeddings`);
     
@@ -154,15 +202,18 @@ async function runWorker() {
     let lastId = '';
     
     while (await shouldContinue()) {
+      // Track read operation
+      const readIOPS = trackIOPS(1);
+      
       // Fetch next batch of videos with summaries
       const { data: videos, error } = await supabase
         .from('videos')
         .select('id, title, channel_name, llm_summary, view_count, published_at')
         .not('llm_summary', 'is', null)
-        .or('llm_summary_embedding_synced.is.null,llm_summary_embedding_synced.eq.false')
+        .eq('llm_summary_embedding_synced', false)
         .gt('id', lastId)
         .order('id')
-        .limit(BATCH_SIZE);
+        .limit(batchSize);
       
       if (error) {
         console.error('Error fetching videos:', error);
@@ -205,6 +256,8 @@ async function runWorker() {
           
           // Update database to mark summaries as embedded
           const videoIds = batch.map(v => v.id);
+          trackIOPS(1); // Track write operation
+          
           const { error: updateError } = await supabase
             .from('videos')
             .update({ 
@@ -217,7 +270,8 @@ async function runWorker() {
             failedCount += batch.length;
           } else {
             processedCount += batch.length;
-            console.log(`✅ Embedded ${batch.length} summaries (${processedCount} total)`);
+            const currentIOPS = trackIOPS(0); // Just get current IOPS
+            console.log(`✅ Embedded ${batch.length} summaries (${processedCount} total) | IOPS: ${currentIOPS}/s`);
           }
           
         } catch (error) {
@@ -235,15 +289,33 @@ async function runWorker() {
       // Update lastId for pagination
       lastId = videos[videos.length - 1].id;
       
-      // Log progress
+      // Log comprehensive progress with IOPS
       const elapsed = (Date.now() - startTime) / 1000;
       const rate = processedCount / (elapsed / 60);
       const remaining = totalCount - processedCount;
       const eta = remaining / rate;
+      const currentIOPS = trackIOPS(0);
       
-      console.log(`\n📊 Progress: ${processedCount}/${totalCount} (${(processedCount/totalCount*100).toFixed(1)}%)`);
-      console.log(`⚡ Rate: ${rate.toFixed(0)} summaries/minute`);
-      console.log(`⏱️  ETA: ${Math.ceil(eta)} minutes (${(eta/60).toFixed(1)} hours)`);
+      console.log(`\n📊 Dynamic IOPS Status:`);
+      console.log(`  Progress: ${processedCount}/${totalCount} (${(processedCount/totalCount*100).toFixed(1)}%)`);
+      console.log(`  Speed: ${rate.toFixed(0)} videos/min | Batch size: ${batchSize}`);
+      console.log(`  🔥 IOPS: ${currentIOPS}/${TARGET_IOPS} (${(currentIOPS/TARGET_IOPS*100).toFixed(0)}% of target)`);
+      console.log(`  ⚡ Delay: ${currentDelayMs}ms | ETA: ${Math.ceil(eta)} minutes (${(eta/60).toFixed(1)} hours)`);
+      
+      // Adjust delay based on IOPS usage
+      currentDelayMs = adjustDelay();
+      
+      // Dynamic batch size adjustment based on IOPS headroom
+      if (currentIOPS < TARGET_IOPS * 0.5 && batchSize < 500) {
+        batchSize = Math.min(500, batchSize + 50);
+        console.log(`  📈 Increasing batch size to ${batchSize} (IOPS headroom available)`);
+      } else if (currentIOPS > TARGET_IOPS * 0.95 && batchSize > 100) {
+        batchSize = Math.max(100, batchSize - 50);
+        console.log(`  📉 Decreasing batch size to ${batchSize} (approaching IOPS limit)`);
+      }
+      
+      // Dynamic delay between batches
+      await new Promise(resolve => setTimeout(resolve, currentDelayMs));
     }
     
   } catch (error) {
@@ -288,5 +360,8 @@ process.on('SIGINT', async () => {
 });
 
 // Start the worker
-console.log('Starting LLM Summary Vectorization Worker...');
+console.log('🚀 Starting LLM Summary Vectorization Worker...');
+console.log('⚡ Dynamic IOPS Optimization Enabled (Conservative Mode)');
+console.log(`🎯 Target: ${TARGET_IOPS} IOPS (20% of 500 limit for Micro plan)`);
+console.log(`📊 Will adjust speed to avoid resource exhaustion\n`);
 runWorker().catch(console.error);

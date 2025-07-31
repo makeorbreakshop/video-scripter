@@ -29,6 +29,11 @@ const navigation = [
     icon: BarChart3,
   },
   {
+    name: 'Search & Analytics',
+    href: '/dashboard/youtube/analytics',
+    icon: Search,
+  },
+  {
     name: 'Discovery',
     href: '/dashboard/youtube/discovery',
     icon: Compass,
@@ -49,19 +54,9 @@ const navigation = [
     icon: Lightbulb,
   },
   {
-    name: 'Packaging',
-    href: '/dashboard/youtube/packaging',
-    icon: Package,
-  },
-  {
     name: 'Competitors',
     href: '/dashboard/youtube/competitors',
     icon: Users,
-  },
-  {
-    name: 'Search',
-    href: '/dashboard/youtube/search',
-    icon: Search,
   },
   {
     name: 'Tools',

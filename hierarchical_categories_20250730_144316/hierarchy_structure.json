@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "total_videos": 10000,
+    "timestamp": "2025-07-30T14:43:16.507594",
+    "levels": 3
+  },
+  "hierarchy": {
+    "16": {
+      "id": 16,
+      "name": "Category 16",
+      "level": 1,
+      "keywords": [],
+      "video_count": 0,
+      "subcategories": {
+        "17": {
+          "id": 17,
+          "name": "Subcategory 17",
+          "level": 2,
+          "keywords": [],
+          "video_count": 0,
+          "subcategories": {
+            "25": {
+              "id": 25,
+              "name": "Subcategory 25",
+              "level": 3,
+              "keywords": [],
+              "video_count": 0
+            },
+            "36": {
+              "id": 36,
+              "name": "Subcategory 36",
+              "level": 3,
+              "keywords": [],
+              "video_count": 0
+            }
+          }
+        },
+        "24": {
+          "id": 24,
+          "name": "Subcategory 24",
+          "level": 2,
+          "keywords": [],
+          "video_count": 0,
+          "subcategories": {
+            "25": {
+              "id": 25,
+              "name": "Subcategory 25",
+              "level": 3,
+              "keywords": [],
+              "video_count": 0
+            }
+          }
+        },
+        "9": {
+          "id": 9,
+          "name": "Iphone & Pro",
+          "level": 2,
+          "keywords": [
+            "iphone",
+            "pro",
+            "galaxy",
+            "phone",
+            "features"
+          ],
+          "video_count": 

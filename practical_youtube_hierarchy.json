@@ -1,0 +1,232 @@
+{
+  "\ud83c\udfaf Content & Entertainment": {
+    "description": "Entertainment, gaming, and lifestyle content",
+    "subcategories": {
+      "Gaming & Esports": [
+        "Minecraft",
+        "Gaming Reviews",
+        "Esports",
+        "Game Tutorials"
+      ],
+      "Entertainment & Comedy": [
+        "Challenges",
+        "Pranks",
+        "Reactions",
+        "Comedy Skits"
+      ],
+      "Lifestyle & Personal": [
+        "Daily Vlogs",
+        "Personal Stories",
+        "Life Advice",
+        "Self-Improvement"
+      ]
+    }
+  },
+  "\ud83d\udd27 Makers & DIY": {
+    "description": "Creative building, crafting, and hands-on projects",
+    "subcategories": {
+      "Woodworking & Furniture": [
+        "Table Building",
+        "Chair Making",
+        "Wood Crafts",
+        "Tool Reviews"
+      ],
+      "3D Printing & Tech": [
+        "3D Printing Projects",
+        "Tech Builds",
+        "Electronics",
+        "Prototyping"
+      ],
+      "General DIY & Crafts": [
+        "Home Improvement",
+        "Art Projects",
+        "Cosplay",
+        "Repairs"
+      ]
+    }
+  },
+  "\ud83c\udf73 Food & Cooking": {
+    "description": "Culinary content and food-related videos",
+    "subcategories": {
+      "Recipe & Cooking": [
+        "Recipe Tutorials",
+        "Chef Techniques",
+        "Baking",
+        "International Cuisine"
+      ],
+      "Food Challenges": [
+        "Eating Challenges",
+        "Food Reviews",
+        "Taste Tests",
+        "Food Competition"
+      ],
+      "Restaurant & Travel": [
+        "Restaurant Reviews",
+        "Food Travel",
+        "Street Food",
+        "Food Culture"
+      ]
+    }
+  },
+  "\ud83d\udcaa Health & Fitness": {
+    "description": "Physical health, exercise, and wellness content",
+    "subcategories": {
+      "Workout & Training": [
+        "Gym Workouts",
+        "Home Fitness",
+        "Strength Training",
+        "Cardio"
+      ],
+      "Nutrition & Diet": [
+        "Meal Prep",
+        "Diet Plans",
+        "Nutrition Tips",
+        "Weight Loss"
+      ],
+      "Sports & Athletics": [
+        "Sports Training",
+        "Athletic Performance",
+        "Sports Analysis",
+        "Competitions"
+      ]
+    }
+  },
+  "\ud83d\udcf1 Technology & Reviews": {
+    "description": "Tech products, reviews, and digital content",
+    "subcategories": {
+      "Mobile & Devices": [
+        "iPhone Reviews",
+        "Android Reviews",
+        "Gadget Reviews",
+        "Tech Comparisons"
+      ],
+      "Cameras & Photography": [
+        "Camera Reviews",
+        "Photography Tips",
+        "Video Equipment",
+        "Editing"
+      ],
+      "Computing & Software": [
+        "PC Builds",
+        "Software Reviews",
+        "Programming",
+        "Tech Tutorials"
+      ]
+    }
+  },
+  "\ud83d\ude97 Automotive & Transport": {
+    "description": "Cars, vehicles, and transportation content",
+    "subcategories": {
+      "Electric Vehicles": [
+        "Tesla Reviews",
+        "EV Technology",
+        "Electric Car News",
+        "EV Comparisons"
+      ],
+      "Traditional Automotive": [
+        "Car Reviews",
+        "Auto Repair",
+        "Car Modifications",
+        "Racing"
+      ],
+      "Transportation": [
+        "Trains",
+        "Aviation",
+        "Public Transport",
+        "Travel Methods"
+      ]
+    }
+  },
+  "\ud83d\udcb0 Business & Finance": {
+    "description": "Financial advice, business, and money-related content",
+    "subcategories": {
+      "Personal Finance": [
+        "Investment Tips",
+        "Saving Money",
+        "Financial Planning",
+        "Retirement"
+      ],
+      "Business & Entrepreneurship": [
+        "Startup Advice",
+        "Business Strategy",
+        "Marketing",
+        "Success Stories"
+      ],
+      "Market Analysis": [
+        "Stock Market",
+        "Crypto",
+        "Economic Analysis",
+        "Financial News"
+      ]
+    }
+  },
+  "\ud83c\udfb5 Music & Audio": {
+    "description": "Music creation, performance, and audio content",
+    "subcategories": {
+      "Instruments & Performance": [
+        "Guitar Tutorials",
+        "Music Lessons",
+        "Live Performances",
+        "Music Theory"
+      ],
+      "Audio Production": [
+        "Music Production",
+        "Sound Engineering",
+        "Equipment Reviews",
+        "Recording"
+      ],
+      "Music Analysis": [
+        "Song Breakdowns",
+        "Music History",
+        "Artist Analysis",
+        "Genre Studies"
+      ]
+    }
+  },
+  "\ud83d\ude80 Science & Education": {
+    "description": "Educational content and scientific exploration",
+    "subcategories": {
+      "Space & Physics": [
+        "SpaceX",
+        "Astronomy",
+        "Physics Experiments",
+        "Space News"
+      ],
+      "Engineering & Innovation": [
+        "Engineering Projects",
+        "Inventions",
+        "How Things Work",
+        "Innovation"
+      ],
+      "Educational Content": [
+        "Science Lessons",
+        "Documentaries",
+        "Explainer Videos",
+        "Research"
+      ]
+    }
+  },
+  "\u2708\ufe0f Travel & Lifestyle": {
+    "description": "Travel experiences and luxury lifestyle content",
+    "subcategories": {
+      "Luxury Travel": [
+        "Business Class",
+        "Luxury Hotels",
+        "High-end Experiences",
+        "Premium Transport"
+      ],
+      "Adventure & Exploration": [
+        "Travel Vlogs",
+        "Adventure Sports",
+        "Exploration",
+        "Cultural Experiences"
+      ],
+      "Accommodation & Reviews": [
+        "Hotel Reviews",
+        "Airbnb Tours",
+        "Travel Tips",
+        "Destination Guides"
+      ]
+    }
+  }
+}

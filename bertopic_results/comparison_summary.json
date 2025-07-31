@@ -1,0 +1,23 @@
+{
+  "timestamp": "20250730_143129",
+  "methods": {
+    "Title-Only": {
+      "total_topics": 30,
+      "outliers": 4101,
+      "outlier_percentage": 41.010000000000005,
+      "avg_diversity": 0.320628276252261
+    },
+    "Summary-Only": {
+      "total_topics": 27,
+      "outliers": 2539,
+      "outlier_percentage": 25.39,
+      "avg_diversity": 0.24811440582793992
+    },
+    "Combined": {
+      "total_topics": 31,
+      "outliers": 2716,
+      "outlier_percentage": 27.16,
+      "avg_diversity": 0.2251561112765165
+    }
+  }
+}

@@ -149,7 +149,25 @@ const response = await fetch('/api/video-import/unified', {
 - **Database Tracking**: `thumbnail_embedding_version` field set to 'v1'
 - **Cost**: ~$0.00098 per image
 
-### 3. Content Classification
+### 3. LLM Summary Generation
+
+#### Summary Generation
+- **Method**: GPT-4o-mini with action-focused prompts
+- **Purpose**: Extract core content without promotional material
+- **Storage**: `llm_summary` field in database
+- **Timing**: Runs in parallel with title/thumbnail embeddings
+- **Cost**: ~$0.000116 per video ($0.06 per 1,000 videos)
+- **Processing**: ~10-20 videos concurrently
+
+#### Summary Embeddings
+- **Model**: OpenAI `text-embedding-3-small`
+- **Dimensions**: 512
+- **Purpose**: Semantic search on video content summaries
+- **Storage**: Pinecone main index (`llm-summaries` namespace)
+- **Database Tracking**: `llm_summary_embedding_synced` field set to true
+- **Timing**: After summary generation completes
+
+### 4. Content Classification
 
 #### Topic Classification
 - **Method**: K-nearest neighbor using title embeddings
@@ -205,7 +223,12 @@ CREATE TABLE videos (
   topic_confidence numeric(3,2),
   format_type text,
   format_confidence numeric(3,2),
-  format_reasoning text
+  format_reasoning text,
+  -- LLM Summary fields
+  llm_summary text,
+  llm_summary_generated_at timestamptz,
+  llm_summary_model text DEFAULT 'gpt-4o-mini',
+  llm_summary_embedding_synced boolean DEFAULT false
 );
 ```
 
@@ -265,6 +288,7 @@ REPLICATE_API_TOKEN=your_replicate_token
 PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_INDEX_NAME=youtube-titles-prod
 PINECONE_THUMBNAIL_INDEX_NAME=video-thumbnails
+PINECONE_SUMMARY_INDEX_NAME=video-summaries
 ```
 
 ### Rate Limits

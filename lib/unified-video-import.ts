@@ -9,6 +9,7 @@ import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
+import { PineconeSummaryService } from './pinecone-summary-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
 import { llmFormatClassificationService } from './llm-format-classification-service.ts';
 import { topicDetectionService } from './topic-detection-service.ts';
@@ -240,8 +241,10 @@ export class VideoImportService {
         const summaryEmbeddings = await generateSummaryEmbeddings(summaryResults);
         result.summaryEmbeddingsGenerated = summaryEmbeddings.filter(e => e.success).length;
         
-        // TODO: Upload summary embeddings to Pinecone
-        // This will be handled by the separate sync script for now
+        // Upload summary embeddings to Pinecone
+        if (summaryEmbeddings.filter(e => e.success).length > 0) {
+          await this.uploadSummaryEmbeddingsToPinecone(summaryEmbeddings);
+        }
       }
 
       result.success = true;
@@ -653,6 +656,81 @@ export class VideoImportService {
       
       await pineconeThumbnailService.upsertThumbnailEmbeddings(thumbnailVectors as any);
       console.log(`✅ Uploaded ${thumbnailVectors.length} thumbnail embeddings to Pinecone`);
+    }
+  }
+
+  /**
+   * Upload summary embeddings to Pinecone llm-summaries namespace
+   */
+  async uploadSummaryEmbeddingsToPinecone(
+    summaryEmbeddings: Array<{ videoId: string; embedding: number[]; success: boolean; error?: string }>
+  ): Promise<void> {
+    console.log(`🚀 Uploading summary embeddings to Pinecone`);
+    
+    const successfulEmbeddings = summaryEmbeddings.filter(e => e.success && e.embedding.length > 0);
+    if (successfulEmbeddings.length === 0) {
+      console.log('⚠️ No successful summary embeddings to upload');
+      return;
+    }
+    
+    // Extract video IDs before try block so it's available for the update
+    const videoIds = successfulEmbeddings.map(e => e.videoId);
+
+    try {
+      // Get video metadata for the embeddings
+      const { data: videos } = await supabase
+        .from('videos')
+        .select('id, title, channel_name, llm_summary, view_count')
+        .in('id', videoIds);
+      
+      if (!videos || videos.length === 0) {
+        console.error('❌ Failed to fetch video metadata for embeddings');
+        return;
+      }
+      
+      // Create vectors with metadata
+      const vectors = successfulEmbeddings.map(embedding => {
+        const video = videos.find(v => v.id === embedding.videoId);
+        return {
+          id: embedding.videoId,
+          values: embedding.embedding,
+          metadata: {
+            title: video?.title || '',
+            channel_name: video?.channel_name || '',
+            summary: video?.llm_summary?.substring(0, 200) || '',
+            view_count: video?.view_count || 0,
+            embedding_version: 'v1'
+          }
+        };
+      });
+      
+      // Use the same Pinecone index as titles but with llm-summaries namespace
+      const index = pineconeService.getIndex();
+      const namespace = index.namespace('llm-summaries');
+      const batchSize = 100;
+      
+      // Upload to Pinecone in batches
+      for (let i = 0; i < vectors.length; i += batchSize) {
+        const batch = vectors.slice(i, i + batchSize);
+        await namespace.upsert(batch);
+        console.log(`📦 Uploaded batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(vectors.length / batchSize)}`);
+      }
+      
+      // Update database to mark embeddings as synced
+      const { error } = await supabase
+        .from('videos')
+        .update({ llm_summary_embedding_synced: true })
+        .in('id', videoIds);
+      
+      if (error) {
+        console.error('❌ Failed to update sync status:', error);
+      } else {
+        console.log(`✅ Uploaded ${vectors.length} summary embeddings to Pinecone (llm-summaries namespace) and updated sync status`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error uploading summary embeddings to Pinecone:', error);
+      // Don't throw - we don't want to fail the entire import
     }
   }
 

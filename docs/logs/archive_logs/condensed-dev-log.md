@@ -635,3 +635,31 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **UI Enhancement**: Added LLM summary display to video modal with model info and generation timestamps, integrated with channel page thumbnails
 - **Critical Fixes**: updateAllStaleVideos now processes all 178K videos with proper YouTube API calls, fixed progress counting and quota tracking
 - **Project Cleanup**: Organized 70+ root files into structured directories, removed 316MB of JSONL files from git, created comprehensive directory structure
+
+### 2025-07-29: OpenAI Batch API Migration & LLM Summary Worker System
+- **Issue**: OpenAI batch jobs failed with duplicate IDs, batch API limits (20M tokens), need worker-based system for 177K videos, excessive Supabase I/O (2,800 IOPS)
+- **Solution**: Pivoted from batch API to worker system with dashboard integration, optimized from 28 to 450 videos/min, created speed-optimized version for 500 IOPS limit
+- **Impact**: Built complete LLM summary backfill system processing 450 videos/min, created vectorization worker for semantic search, fixed Supabase I/O with batch upserts
+- **Technical**: Parallel processing with p-limit, batched DB updates, real-time IOPS tracking, SQL batch update function, LLM summary vectorization with Pinecone namespace
+
+**Key Achievements:**
+- **Batch API Discovery**: All 6 batches failed with duplicate custom_id errors, discovered 20M token limit allowing only 1 batch at a time
+- **Worker Implementation**: Built complete worker system with dashboard integration, progress tracking, cost estimation ($20.68 for 177K videos)
+- **Performance Optimization**: Evolved from 28→450 videos/min through parallel processing, batched DB updates, sliding window rate limiting
+- **I/O Optimization**: Fixed 2,800 IOPS spikes with batch upserts, created real-time IOPS tracking showing current/average/total operations
+- **Vectorization System**: Created LLM summary vectorization worker storing embeddings in Pinecone llm-summaries namespace
+- **Dashboard Integration**: Added two worker cards with progress bars, enable/disable controls, real-time statistics
+- **Critical Fixes**: Removed channel filtering to process ALL videos, added channel_id validation, created batch_update_llm_summaries SQL function
+
+### 2025-07-30: Speed-Optimized LLM Worker & Unified Search Implementation
+- **Issue**: LLM worker needed IOPS optimization for Micro plan limits, required unified search experience combining packaging and search functionalities
+- **Solution**: Built speed-optimized worker with real-time IOPS tracking staying under 500 limit, implemented unified search with semantic/keyword/channel search and multi-level caching
+- **Impact**: Worker processes 450 videos/min with <1 IOPS/second usage, unified search achieves sub-second performance with 2-minute result cache and smart query detection
+- **Technical**: Batch processing with 250 videos/3-second intervals, rolling 60-second IOPS window, three-level caching strategy (results/channels/embeddings), smart intent detection for URLs/@mentions/operators
+
+**Key Achievements:**
+- **IOPS Management**: Real-time tracking with enforced batch intervals, optimized from 2,800 IOPS (5.6x over limit) to <1 IOPS/second
+- **Unified Search**: Combined semantic search (Pinecone), keyword search, channel search with avatars, performance optimization via caching
+- **LLM Summary Integration**: Fixed critical scope bug in unified import preventing sync status updates, restored complete pipeline
+- **Database Optimizations**: Created batch update SQL functions, fixed constraint violations, resolved query timeouts with proper indexing
+- **Search Experience**: Smart query detection (YouTube URLs, @channels, operators), 2-minute cache reducing 3-8s queries to sub-second

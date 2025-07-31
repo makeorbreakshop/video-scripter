@@ -63,5 +63,14 @@ clustering_*.json
 improved_prompt_*.json
 
 # classification progress files
-.classification-progress.json# Large batch files
+.classification-progress.json
+
+# Large batch files
 batch-jobs/*.jsonl
+
+# BERTopic output files
+bertopic_classifications_*.json
+bertopic_checkpoint_*.pkl
+bertopic_model_combined/
+topic_info_combined.csv
+topic_keywords.json
