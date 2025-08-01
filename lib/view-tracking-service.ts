@@ -23,6 +23,74 @@ export class ViewTrackingService {
   }
 
   /**
+   * Fetch videos to track using .range() method to bypass 1000 row RPC limit
+   * This is the solution to the 1000 row limit issue discovered through testing
+   */
+  private async fetchVideosToTrackRange(maxVideos: number = 100000) {
+    const today = new Date().toISOString().split('T')[0];
+    const batchSize = 1000;
+    let allVideos = [];
+    let offset = 0;
+    
+    console.log(`Fetching videos to track using range method (max: ${maxVideos})...`);
+    
+    while (allVideos.length < maxVideos) {
+      const endRange = Math.min(offset + batchSize - 1, maxVideos - 1);
+      
+      const { data, error } = await this.supabase
+        .from('view_tracking_priority')
+        .select(`
+          video_id,
+          priority_tier,
+          last_tracked,
+          next_track_date,
+          videos!inner(published_at)
+        `)
+        .not('videos.published_at', 'is', null)
+        .or(`next_track_date.is.null,next_track_date.lte.${today}`)
+        .order('priority_tier', { ascending: true })
+        .order('last_tracked', { ascending: true, nullsFirst: true })
+        .order('videos(published_at)', { ascending: false })
+        .range(offset, endRange);
+      
+      if (error) {
+        console.error(`Error fetching batch at offset ${offset}:`, error);
+        break;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log(`No more data available at offset ${offset}`);
+        break;
+      }
+      
+      // Transform to expected format
+      const transformedBatch = data.map(row => ({
+        video_id: row.video_id,
+        priority_tier: row.priority_tier,
+        days_since_published: Math.floor(
+          (Date.now() - new Date(row.videos.published_at).getTime()) / (1000 * 60 * 60 * 24)
+        )
+      }));
+      
+      allVideos = allVideos.concat(transformedBatch);
+      
+      console.log(`Fetched batch: ${transformedBatch.length} videos (total so far: ${allVideos.length})`);
+      
+      if (data.length < batchSize) {
+        console.log(`Final batch - got ${data.length} rows (less than ${batchSize})`);
+        break;
+      }
+      
+      offset += batchSize;
+      
+      // Small delay to avoid overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    return allVideos.slice(0, maxVideos);
+  }
+
+  /**
    * Main method to track views for prioritized videos
    * Efficiently uses YouTube API batch endpoints
    */
@@ -36,84 +104,117 @@ export class ViewTrackingService {
       return;
     }
 
-    // Get videos to track from the database
-    // Calculate tier limits
-    const totalQuota = maxApiCalls * 50;
-    const tierLimits = {
-      1: Math.floor(totalQuota * 0.25),
-      2: Math.floor(totalQuota * 0.20),
-      3: Math.floor(totalQuota * 0.20),
-      4: Math.floor(totalQuota * 0.15),
-      5: Math.floor(totalQuota * 0.15),
-      6: Math.floor(totalQuota * 0.05)
-    };
+    // Get videos to track based on their tracking schedule
+    const today = new Date().toISOString().split('T')[0];
+    const totalQuotaAvailable = maxApiCalls * 50; // Total videos we can track
     
-    console.log(`Requesting videos with quota: ${totalQuota}`, tierLimits);
+    console.log(`Starting tracking with budget for ${totalQuotaAvailable} videos`);
     
-    // Fetch videos for each tier separately to avoid RPC row limits
-    const allVideosToTrack = [];
+    // Fetch ALL videos that need tracking today, ordered by tier priority
+    // Count videos needing tracking for each tier
+    const videosNeedingTracking = [];
+    let hasError = false;
     
-    for (const [tier, limit] of Object.entries(tierLimits)) {
-      const tierNum = parseInt(tier);
-      const tierVideos = [];
-      let offset = 0;
-      const chunkSize = 1000; // Supabase max limit per query
+    for (let tier = 1; tier <= 6; tier++) {
+      const { count, error: countError } = await this.supabase
+        .from('view_tracking_priority')
+        .select('*', { count: 'exact', head: true })
+        .eq('priority_tier', tier)
+        .or(`next_track_date.is.null,next_track_date.lte.${today}`);
       
-      // Fetch in chunks until we reach the tier limit
-      while (tierVideos.length < limit) {
-        const remainingNeeded = limit - tierVideos.length;
-        const currentLimit = Math.min(chunkSize, remainingNeeded);
-        
-        const { data: chunk, error } = await this.supabase
-          .from('view_tracking_priority')
-          .select(`
-            video_id,
-            priority_tier,
-            videos!inner(
-              published_at,
-              view_count
-            )
-          `)
-          .eq('priority_tier', tierNum)
-          .or('next_track_date.is.null,next_track_date.lte.today()')
-          .order('videos(published_at)', { ascending: false })
-          .range(offset, offset + currentLimit - 1);
-        
-        if (error) {
-          console.error(`Error fetching tier ${tier} videos (offset ${offset}):`, error);
-          break;
-        }
-        
-        if (!chunk || chunk.length === 0) {
-          // No more videos available for this tier
-          break;
-        }
-        
-        tierVideos.push(...chunk);
-        offset += chunk.length;
-        
-        // If we got less than requested, we've exhausted this tier
-        if (chunk.length < currentLimit) {
-          break;
-        }
+      if (countError) {
+        console.error(`Error counting tier ${tier} videos:`, countError);
+        hasError = true;
+        continue;
       }
       
-      if (tierVideos.length > 0) {
-        // Transform the data to match expected format
-        const transformedVideos = tierVideos.slice(0, limit).map(v => ({
-          video_id: v.video_id,
-          priority_tier: v.priority_tier,
-          days_since_published: Math.floor(
-            (Date.now() - new Date(v.videos.published_at).getTime()) / (1000 * 60 * 60 * 24)
-          )
-        }));
-        
-        allVideosToTrack.push(...transformedVideos);
-        console.log(`Tier ${tier}: fetched ${transformedVideos.length} videos (requested ${limit})`);
+      if (count !== null) {
+        videosNeedingTracking.push({ priority_tier: tier, count });
       }
     }
     
-    const videosToTrack = allVideosToTrack;
+    if (hasError) {
+      console.error('Errors occurred while counting videos');
+    }
+    
+    // Log what needs tracking
+    let totalNeeded = 0;
+    console.log('Videos needing tracking by tier:');
+    videosNeedingTracking?.forEach(tier => {
+      console.log(`  Tier ${tier.priority_tier}: ${tier.count} videos`);
+      totalNeeded += parseInt(tier.count);
+    });
+    console.log(`Total needing tracking: ${totalNeeded}`);
+    
+    if (totalNeeded === 0) {
+      console.log('No videos need tracking today');
+      return;
+    }
+    
+    // Use range-based approach to bypass Supabase's 1000 row RPC limit
+    // This method can fetch unlimited rows using native Supabase .range() pagination
+    console.log(`Fetching videos to track with quota limit: ${totalQuotaAvailable}`);
+    
+    const videosToTrack = await this.fetchVideosToTrackRange(totalQuotaAvailable);
+    
+    console.log(`Total videos fetched: ${videosToTrack.length}`)
+    
+    if (!videosToTrack || videosToTrack.length === 0) {
+      console.log('No videos found to track');
+      return;
+    }
+    
+    // Log actual distribution being tracked
+    const tierCounts = videosToTrack.reduce((acc, v) => {
+      acc[v.priority_tier] = (acc[v.priority_tier] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
+    
+    console.log(`Tracking ${videosToTrack.length} videos:`);
+    Object.entries(tierCounts).forEach(([tier, count]) => {
+      console.log(`  Tier ${tier}: ${count} videos`);
+    });
+    
+    // Calculate daily requirements for all tiers
+    const dailyRequirements = {
+      1: videosNeedingTracking?.find(t => t.priority_tier === 1)?.count || 0,
+      2: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 2)?.count || 0) / 2),
+      3: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 3)?.count || 0) / 3),
+      4: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 4)?.count || 0) / 7),
+      5: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 5)?.count || 0) / 14),
+      6: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 6)?.count || 0) / 30)
+    };
+    
+    const totalDailyRequired = Object.values(dailyRequirements).reduce((sum, count) => sum + count, 0);
+    const minApiCallsNeeded = Math.ceil(totalDailyRequired / 50);
+    
+    console.log(`\n📊 Daily Tracking Requirements:`);
+    console.log(`  Tier 1 (daily): ${dailyRequirements[1]} videos`);
+    console.log(`  Tier 2 (every 2 days): ${dailyRequirements[2]} videos/day`);
+    console.log(`  Tier 3 (every 3 days): ${dailyRequirements[3]} videos/day`);
+    console.log(`  Tier 4 (weekly): ${dailyRequirements[4]} videos/day`);
+    console.log(`  Tier 5 (biweekly): ${dailyRequirements[5]} videos/day`);
+    console.log(`  Tier 6 (monthly): ${dailyRequirements[6]} videos/day`);
+    console.log(`  TOTAL: ${totalDailyRequired} videos/day (${minApiCallsNeeded} API calls)\n`);
+    
+    // Warn if we're not meeting daily requirements
+    if (videosToTrack.length < totalDailyRequired) {
+      console.warn(`⚠️  WARNING: Only tracking ${videosToTrack.length} of ${totalDailyRequired} daily required videos`);
+      console.warn(`⚠️  You need ${minApiCallsNeeded} API calls/day to maintain all tracking schedules`);
+      console.warn(`⚠️  This is only ${(minApiCallsNeeded / 100).toFixed(1)}% of your 10,000 daily YouTube quota`);
+      
+      // Show which tiers are affected
+      const unmetTiers = [];
+      Object.entries(tierCounts).forEach(([tier, count]) => {
+        const required = dailyRequirements[parseInt(tier)];
+        if (count < required) {
+          unmetTiers.push(`Tier ${tier}: ${count}/${required} tracked`);
+        }
+      });
+      if (unmetTiers.length > 0) {
+        console.warn(`⚠️  Affected tiers: ${unmetTiers.join(', ')}`);
+      }
+    }
 
     console.log(`Found ${videosToTrack.length} videos to track`);
     console.log(`Requested up to ${maxApiCalls * 50} videos (${maxApiCalls} API calls)`);

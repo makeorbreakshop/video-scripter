@@ -222,16 +222,27 @@ export default function WorkerDashboard() {
   const runViewTracking = async () => {
     try {
       setViewTrackingLoading(true)
+      // Use the daily estimate API calls (285) to meet all tracking requirements
+      const dailyApiCalls = Math.ceil(viewTrackingStats?.quotaUsage?.estimatedDaily / 50) || 285;
       const response = await fetch('/api/view-tracking/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maxApiCalls: 2000 }) // Use 2000 API calls for 100k videos
+        body: JSON.stringify({ maxApiCalls: dailyApiCalls })
       })
       if (response.ok) {
         const data = await response.json()
-        alert(`View tracking started! Job ID: ${data.jobId}`)
-        // Refresh stats after a moment
-        setTimeout(() => fetchViewTrackingStats(), 2000)
+        console.log('View tracking response:', data)
+        alert(`View tracking started! Job ID: ${data.jobId}\nTracking ${data.estimatedVideos} videos with ${data.maxApiCalls} API calls`)
+        
+        // Check job status after a moment
+        setTimeout(async () => {
+          const statusResponse = await fetch(`/api/view-tracking/run?jobId=${data.jobId}`)
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json()
+            console.log('Job status:', statusData.job)
+          }
+          fetchViewTrackingStats()
+        }, 5000)
       }
     } catch (error) {
       console.error('Failed to run view tracking:', error)

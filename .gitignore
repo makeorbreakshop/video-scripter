@@ -74,3 +74,8 @@ bertopic_checkpoint_*.pkl
 bertopic_model_combined/
 topic_info_combined.csv
 topic_keywords.json
+
+# BERTopic data files (added 2025-08-01)
+*.pkl
+bertopic_model_*
+bertopic_checkpoint_*

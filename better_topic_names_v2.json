@@ -1,0 +1,1090 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "created": "2025-08-01T13:58:21.994123",
+    "total_topics": 216,
+    "description": "Improved human-readable topic names based on BERTopic keywords"
+  },
+  "topics": {
+    "0": {
+      "name": "Woodworking Projects & Tool Reviews",
+      "category": "DIY & Crafts",
+      "subcategory": "Woodworking"
+    },
+    "1": {
+      "name": "AI Business & Stock Trading",
+      "category": "Business",
+      "subcategory": "Tech Business"
+    },
+    "2": {
+      "name": "Home Cleaning & Organization Routines",
+      "category": "Lifestyle",
+      "subcategory": "Home Management"
+    },
+    "3": {
+      "name": "Running & Fitness Training",
+      "category": "Health & Fitness",
+      "subcategory": "Athletic Training"
+    },
+    "4": {
+      "name": "Tiny Living & Alternative Housing",
+      "category": "Lifestyle",
+      "subcategory": "Alternative Living"
+    },
+    "5": {
+      "name": "Tesla & Electric Vehicle Reviews",
+      "category": "Technology",
+      "subcategory": "Electric Vehicles"
+    },
+    "6": {
+      "name": "Guitar Tutorials & Music Gear",
+      "category": "Music",
+      "subcategory": "Instruments & Gear"
+    },
+    "7": {
+      "name": "Disney Parks & Travel Vlogs",
+      "category": "Travel",
+      "subcategory": "Theme Parks"
+    },
+    "8": {
+      "name": "Live Streaming & 3D Content",
+      "category": "Technology",
+      "subcategory": "Streaming"
+    },
+    "9": {
+      "name": "Instagram Marketing & E-commerce",
+      "category": "Business",
+      "subcategory": "Social Commerce"
+    },
+    "10": {
+      "name": "Audio Equipment & Music Production",
+      "category": "Technology",
+      "subcategory": "Audio Gear"
+    },
+    "11": {
+      "name": "Stock Market & Real Estate Investing",
+      "category": "Finance",
+      "subcategory": "Investing"
+    },
+    "12": {
+      "name": "Camera Gear & Photography Reviews",
+      "category": "Technology",
+      "subcategory": "Photography"
+    },
+    "13": {
+      "name": "Spanish Language Learning",
+      "category": "Education",
+      "subcategory": "Language Learning"
+    },
+    "14": {
+      "name": "YouTube Channel Growth Strategies",
+      "category": "Business",
+      "subcategory": "Content Creation"
+    },
+    "15": {
+      "name": "Creative Woodworking Ideas",
+      "category": "DIY & Crafts",
+      "subcategory": "Wood Design"
+    },
+    "16": {
+      "name": "Business Scaling & Entrepreneurship",
+      "category": "Business",
+      "subcategory": "Entrepreneurship"
+    },
+    "17": {
+      "name": "AI Tools & Technology News",
+      "category": "Technology",
+      "subcategory": "AI & Innovation"
+    },
+    "18": {
+      "name": "Live Stream Gaming & Tech",
+      "category": "Gaming",
+      "subcategory": "Streaming"
+    },
+    "19": {
+      "name": "Food & Cooking Tutorials",
+      "category": "Food & Cooking",
+      "subcategory": "Recipe Videos"
+    },
+    "20": {
+      "name": "Minecraft Gameplay & Tutorials",
+      "category": "Gaming",
+      "subcategory": "Minecraft"
+    },
+    "21": {
+      "name": "Art History & Cultural Education",
+      "category": "Education",
+      "subcategory": "Arts & Culture"
+    },
+    "22": {
+      "name": "3D Printing Projects & Tutorials",
+      "category": "Technology",
+      "subcategory": "3D Printing"
+    },
+    "23": {
+      "name": "Meal Prep & Healthy Eating",
+      "category": "Food & Cooking",
+      "subcategory": "Healthy Living"
+    },
+    "24": {
+      "name": "LEGO Building & Set Reviews",
+      "category": "Hobbies",
+      "subcategory": "LEGO"
+    },
+    "25": {
+      "name": "Photography Editing & Techniques",
+      "category": "Arts & Media",
+      "subcategory": "Photo Editing"
+    },
+    "26": {
+      "name": "Adventure Travel & Exploration",
+      "category": "Travel",
+      "subcategory": "Adventure"
+    },
+    "27": {
+      "name": "Personal Development & Life Coaching",
+      "category": "Lifestyle",
+      "subcategory": "Self-Improvement"
+    },
+    "28": {
+      "name": "Gaming Hardware & PC Building",
+      "category": "Technology",
+      "subcategory": "PC Gaming"
+    },
+    "29": {
+      "name": "Professional Music Production",
+      "category": "Music",
+      "subcategory": "Production"
+    },
+    "30": {
+      "name": "Study Tips & Academic Success",
+      "category": "Education",
+      "subcategory": "Study Skills"
+    },
+    "31": {
+      "name": "Christian Faith & Bible Study",
+      "category": "Lifestyle",
+      "subcategory": "Faith & Religion"
+    },
+    "32": {
+      "name": "Motivational Speaking & Leadership",
+      "category": "Business",
+      "subcategory": "Leadership"
+    },
+    "33": {
+      "name": "Tech Product Unboxings",
+      "category": "Technology",
+      "subcategory": "Product Reviews"
+    },
+    "34": {
+      "name": "Content Creation Tools & Tips",
+      "category": "Business",
+      "subcategory": "Creator Tools"
+    },
+    "35": {
+      "name": "Laser Cutting & CNC Projects",
+      "category": "DIY & Crafts",
+      "subcategory": "Digital Fabrication"
+    },
+    "36": {
+      "name": "Minimalist Lifestyle & Decluttering",
+      "category": "Lifestyle",
+      "subcategory": "Minimalism"
+    },
+    "37": {
+      "name": "Travel Planning & Destination Guides",
+      "category": "Travel",
+      "subcategory": "Travel Planning"
+    },
+    "38": {
+      "name": "Educational Documentary Content",
+      "category": "Education",
+      "subcategory": "Documentaries"
+    },
+    "39": {
+      "name": "Home Renovation & Improvement",
+      "category": "Home & Garden",
+      "subcategory": "Renovation"
+    },
+    "40": {
+      "name": "Science Experiments & STEM Education",
+      "category": "Education",
+      "subcategory": "Science"
+    },
+    "41": {
+      "name": "Drone Flying & Aerial Photography",
+      "category": "Technology",
+      "subcategory": "Drones"
+    },
+    "42": {
+      "name": "Online Business & Passive Income",
+      "category": "Business",
+      "subcategory": "Online Business"
+    },
+    "43": {
+      "name": "Tech Industry News & Analysis",
+      "category": "Technology",
+      "subcategory": "Tech News"
+    },
+    "44": {
+      "name": "Family Vlogs & Parenting",
+      "category": "Lifestyle",
+      "subcategory": "Family Life"
+    },
+    "45": {
+      "name": "Outdoor Adventure & Camping",
+      "category": "Outdoors",
+      "subcategory": "Camping"
+    },
+    "46": {
+      "name": "History Documentaries & Education",
+      "category": "Education",
+      "subcategory": "History"
+    },
+    "47": {
+      "name": "Historical Analysis & Storytelling",
+      "category": "Education",
+      "subcategory": "Historical Content"
+    },
+    "48": {
+      "name": "Mystery & True Crime Content",
+      "category": "Entertainment",
+      "subcategory": "True Crime"
+    },
+    "49": {
+      "name": "Travel Adventures & Culture",
+      "category": "Travel",
+      "subcategory": "Cultural Travel"
+    },
+    "50": {
+      "name": "Budget Living & Frugal Tips",
+      "category": "Lifestyle",
+      "subcategory": "Budgeting"
+    },
+    "51": {
+      "name": "Furniture Making & Wood Design",
+      "category": "DIY & Crafts",
+      "subcategory": "Furniture"
+    },
+    "52": {
+      "name": "Home Storage & Organization Solutions",
+      "category": "Home & Garden",
+      "subcategory": "Organization"
+    },
+    "53": {
+      "name": "Professional Photography Business",
+      "category": "Business",
+      "subcategory": "Photography Business"
+    },
+    "54": {
+      "name": "Daily Vlogs & Lifestyle Content",
+      "category": "Lifestyle",
+      "subcategory": "Vlogging"
+    },
+    "55": {
+      "name": "Music Performance & Covers",
+      "category": "Music",
+      "subcategory": "Performance"
+    },
+    "56": {
+      "name": "Personal Growth & Mindfulness",
+      "category": "Lifestyle",
+      "subcategory": "Wellness"
+    },
+    "57": {
+      "name": "Metalworking & Knife Making",
+      "category": "DIY & Crafts",
+      "subcategory": "Metalwork"
+    },
+    "58": {
+      "name": "Adventure Sports & Extreme Activities",
+      "category": "Sports",
+      "subcategory": "Extreme Sports"
+    },
+    "59": {
+      "name": "Programming & Coding Tutorials",
+      "category": "Technology",
+      "subcategory": "Programming"
+    },
+    "60": {
+      "name": "Entertainment News & Pop Culture",
+      "category": "Entertainment",
+      "subcategory": "Pop Culture"
+    },
+    "61": {
+      "name": "Restaurant Reviews & Food Tours",
+      "category": "Food & Cooking",
+      "subcategory": "Food Reviews"
+    },
+    "62": {
+      "name": "Morning Routines & Productivity",
+      "category": "Lifestyle",
+      "subcategory": "Productivity"
+    },
+    "63": {
+      "name": "Music Theory & Instrument Lessons",
+      "category": "Music",
+      "subcategory": "Music Education"
+    },
+    "64": {
+      "name": "Cabinet Making & Fine Woodworking",
+      "category": "DIY & Crafts",
+      "subcategory": "Cabinetry"
+    },
+    "65": {
+      "name": "World News & Current Events",
+      "category": "News & Politics",
+      "subcategory": "Current Events"
+    },
+    "66": {
+      "name": "Camping Gear Reviews & Tips",
+      "category": "Outdoors",
+      "subcategory": "Gear Reviews"
+    },
+    "67": {
+      "name": "Inspirational Content & Life Stories",
+      "category": "Lifestyle",
+      "subcategory": "Inspiration"
+    },
+    "68": {
+      "name": "E-commerce & Amazon FBA",
+      "category": "Business",
+      "subcategory": "E-commerce"
+    },
+    "69": {
+      "name": "Painting Techniques & Art Tutorials",
+      "category": "Arts & Media",
+      "subcategory": "Painting"
+    },
+    "70": {
+      "name": "Home Repairs & Maintenance",
+      "category": "Home & Garden",
+      "subcategory": "Home Repair"
+    },
+    "71": {
+      "name": "Real Estate Investment Strategies",
+      "category": "Finance",
+      "subcategory": "Real Estate"
+    },
+    "72": {
+      "name": "Bathroom Renovations & Plumbing",
+      "category": "Home & Garden",
+      "subcategory": "Bathrooms"
+    },
+    "73": {
+      "name": "RV Life & Mobile Living",
+      "category": "Travel",
+      "subcategory": "RV Living"
+    },
+    "74": {
+      "name": "Educational Explainer Videos",
+      "category": "Education",
+      "subcategory": "Explainers"
+    },
+    "75": {
+      "name": "Star Wars Fan Content & Reviews",
+      "category": "Entertainment",
+      "subcategory": "Star Wars"
+    },
+    "76": {
+      "name": "Outdoor Survival & Bushcraft",
+      "category": "Outdoors",
+      "subcategory": "Survival"
+    },
+    "77": {
+      "name": "Music Gear Reviews & Demos",
+      "category": "Music",
+      "subcategory": "Gear Reviews"
+    },
+    "78": {
+      "name": "Kitchen Design & Renovation",
+      "category": "Home & Garden",
+      "subcategory": "Kitchens"
+    },
+    "79": {
+      "name": "Professional Audio Engineering",
+      "category": "Music",
+      "subcategory": "Audio Engineering"
+    },
+    "80": {
+      "name": "Art Techniques & Creative Process",
+      "category": "Arts & Media",
+      "subcategory": "Art Education"
+    },
+    "81": {
+      "name": "Small Space Design Solutions",
+      "category": "Home & Garden",
+      "subcategory": "Small Spaces"
+    },
+    "82": {
+      "name": "Fitness Challenges & Workouts",
+      "category": "Health & Fitness",
+      "subcategory": "Workout Videos"
+    },
+    "83": {
+      "name": "Electronic Music Production",
+      "category": "Music",
+      "subcategory": "Electronic Music"
+    },
+    "84": {
+      "name": "Nutrition & Healthy Recipes",
+      "category": "Food & Cooking",
+      "subcategory": "Nutrition"
+    },
+    "85": {
+      "name": "Guitar Gear & Equipment Reviews",
+      "category": "Music",
+      "subcategory": "Guitar Gear"
+    },
+    "86": {
+      "name": "Political Commentary & Analysis",
+      "category": "News & Politics",
+      "subcategory": "Political Analysis"
+    },
+    "87": {
+      "name": "Winter Camping & Cold Weather Gear",
+      "category": "Outdoors",
+      "subcategory": "Winter Activities"
+    },
+    "88": {
+      "name": "Creative Photography Projects",
+      "category": "Arts & Media",
+      "subcategory": "Photography Projects"
+    },
+    "89": {
+      "name": "Music Recording & Studio Setup",
+      "category": "Music",
+      "subcategory": "Recording"
+    },
+    "90": {
+      "name": "Technology Tutorials & How-To",
+      "category": "Technology",
+      "subcategory": "Tech Tutorials"
+    },
+    "91": {
+      "name": "Musical Instrument Reviews",
+      "category": "Music",
+      "subcategory": "Instrument Reviews"
+    },
+    "92": {
+      "name": "International News & Global Affairs",
+      "category": "News & Politics",
+      "subcategory": "World News"
+    },
+    "93": {
+      "name": "Gaming News & Industry Updates",
+      "category": "Gaming",
+      "subcategory": "Gaming News"
+    },
+    "94": {
+      "name": "Professional Music Equipment",
+      "category": "Music",
+      "subcategory": "Pro Audio"
+    },
+    "95": {
+      "name": "Comedy Sketches & Entertainment",
+      "category": "Entertainment",
+      "subcategory": "Comedy"
+    },
+    "96": {
+      "name": "LEGO Technic & Advanced Builds",
+      "category": "Hobbies",
+      "subcategory": "LEGO Technic"
+    },
+    "97": {
+      "name": "3D Printing Technology & Reviews",
+      "category": "Technology",
+      "subcategory": "3D Print Tech"
+    },
+    "98": {
+      "name": "Sports History & Analysis",
+      "category": "Sports",
+      "subcategory": "Sports History"
+    },
+    "99": {
+      "name": "Gaming Commentary & Let's Plays",
+      "category": "Gaming",
+      "subcategory": "Gaming Content"
+    },
+    "100": {
+      "name": "Scientific Demonstrations & Education",
+      "category": "Education",
+      "subcategory": "Science Demos"
+    },
+    "101": {
+      "name": "Restaurant Business & Food Industry",
+      "category": "Business",
+      "subcategory": "Food Business"
+    },
+    "102": {
+      "name": "Stock Trading Strategies & Tips",
+      "category": "Finance",
+      "subcategory": "Trading"
+    },
+    "103": {
+      "name": "Real Estate Market Analysis",
+      "category": "Finance",
+      "subcategory": "Market Analysis"
+    },
+    "104": {
+      "name": "DIY Home Projects & Repairs",
+      "category": "DIY & Crafts",
+      "subcategory": "Home DIY"
+    },
+    "105": {
+      "name": "Travel Tips & Destination Reviews",
+      "category": "Travel",
+      "subcategory": "Travel Tips"
+    },
+    "106": {
+      "name": "Personal Finance & Money Management",
+      "category": "Finance",
+      "subcategory": "Personal Finance"
+    },
+    "107": {
+      "name": "Outdoor Gear & Equipment Reviews",
+      "category": "Outdoors",
+      "subcategory": "Equipment"
+    },
+    "108": {
+      "name": "Trading Card Games & Collectibles",
+      "category": "Hobbies",
+      "subcategory": "Card Games"
+    },
+    "109": {
+      "name": "Gaming Challenges & Competitions",
+      "category": "Gaming",
+      "subcategory": "Gaming Challenges"
+    },
+    "110": {
+      "name": "Drawing Tutorials & Techniques",
+      "category": "Arts & Media",
+      "subcategory": "Drawing"
+    },
+    "111": {
+      "name": "Esports & Competitive Gaming",
+      "category": "Gaming",
+      "subcategory": "Esports"
+    },
+    "112": {
+      "name": "Robotics Projects & Engineering",
+      "category": "Technology",
+      "subcategory": "Robotics"
+    },
+    "113": {
+      "name": "Auto Repair & Car Maintenance",
+      "category": "Automotive",
+      "subcategory": "Car Repair"
+    },
+    "114": {
+      "name": "Photography Accessories & Gear",
+      "category": "Technology",
+      "subcategory": "Photo Accessories"
+    },
+    "115": {
+      "name": "Drywall & Ceiling Repairs",
+      "category": "Home & Garden",
+      "subcategory": "Wall Repair"
+    },
+    "116": {
+      "name": "Epoxy Resin Art & Tables",
+      "category": "DIY & Crafts",
+      "subcategory": "Resin Art"
+    },
+    "117": {
+      "name": "Extreme Decluttering & Minimalism",
+      "category": "Lifestyle",
+      "subcategory": "Decluttering"
+    },
+    "118": {
+      "name": "Sewing Projects & Fashion DIY",
+      "category": "DIY & Crafts",
+      "subcategory": "Sewing"
+    },
+    "119": {
+      "name": "Star Wars Lore & Deep Dives",
+      "category": "Entertainment",
+      "subcategory": "Star Wars Lore"
+    },
+    "120": {
+      "name": "Educational Series & Crash Courses",
+      "category": "Education",
+      "subcategory": "Educational Series"
+    },
+    "121": {
+      "name": "Micro Living & Tiny Apartments",
+      "category": "Lifestyle",
+      "subcategory": "Micro Living"
+    },
+    "122": {
+      "name": "Tech News & Industry Updates",
+      "category": "Technology",
+      "subcategory": "Tech Industry"
+    },
+    "123": {
+      "name": "Business Strategy & Management",
+      "category": "Business",
+      "subcategory": "Business Strategy"
+    },
+    "124": {
+      "name": "Epoxy River Tables & Furniture",
+      "category": "DIY & Crafts",
+      "subcategory": "Epoxy Furniture"
+    },
+    "125": {
+      "name": "Van Life & Nomadic Living",
+      "category": "Lifestyle",
+      "subcategory": "Van Life"
+    },
+    "126": {
+      "name": "Simple Living & Lifestyle Design",
+      "category": "Lifestyle",
+      "subcategory": "Simple Living"
+    },
+    "127": {
+      "name": "Housing Market Trends & Analysis",
+      "category": "Finance",
+      "subcategory": "Housing Market"
+    },
+    "128": {
+      "name": "Real Estate Agent Training & Tips",
+      "category": "Business",
+      "subcategory": "Real Estate Training"
+    },
+    "129": {
+      "name": "Public Speaking & Communication",
+      "category": "Business",
+      "subcategory": "Communication"
+    },
+    "130": {
+      "name": "YouTube Milestones & Celebrations",
+      "category": "Entertainment",
+      "subcategory": "Creator Content"
+    },
+    "131": {
+      "name": "Eye Health & Vision Care",
+      "category": "Health & Wellness",
+      "subcategory": "Eye Care"
+    },
+    "132": {
+      "name": "Electronics Projects & Arduino",
+      "category": "Technology",
+      "subcategory": "Electronics"
+    },
+    "133": {
+      "name": "Chemistry & Science Experiments",
+      "category": "Education",
+      "subcategory": "Chemistry"
+    },
+    "134": {
+      "name": "Pokemon Card Collecting & Opening",
+      "category": "Hobbies",
+      "subcategory": "Pokemon Cards"
+    },
+    "135": {
+      "name": "Fortnite Gameplay & Strategies",
+      "category": "Gaming",
+      "subcategory": "Fortnite"
+    },
+    "136": {
+      "name": "Mom Life & Family Organization",
+      "category": "Lifestyle",
+      "subcategory": "Parenting"
+    },
+    "137": {
+      "name": "Winter Outdoor Adventures",
+      "category": "Outdoors",
+      "subcategory": "Winter Sports"
+    },
+    "138": {
+      "name": "RV Renovations & Upgrades",
+      "category": "DIY & Crafts",
+      "subcategory": "RV Mods"
+    },
+    "139": {
+      "name": "Art History & Technique Analysis",
+      "category": "Arts & Media",
+      "subcategory": "Art History"
+    },
+    "140": {
+      "name": "Step-by-Step Painting Tutorials",
+      "category": "Arts & Media",
+      "subcategory": "Painting Tutorials"
+    },
+    "141": {
+      "name": "LEGO Star Wars Collections",
+      "category": "Hobbies",
+      "subcategory": "LEGO Collecting"
+    },
+    "142": {
+      "name": "Formula 1 Racing & Analysis",
+      "category": "Sports",
+      "subcategory": "Formula 1"
+    },
+    "143": {
+      "name": "Action Camera Reviews & Tests",
+      "category": "Technology",
+      "subcategory": "Action Cameras"
+    },
+    "144": {
+      "name": "Bodybuilding & Muscle Growth",
+      "category": "Health & Fitness",
+      "subcategory": "Bodybuilding"
+    },
+    "145": {
+      "name": "Passive Income & Side Hustles",
+      "category": "Business",
+      "subcategory": "Income Streams"
+    },
+    "146": {
+      "name": "Martial Arts Training & Techniques",
+      "category": "Sports",
+      "subcategory": "Martial Arts"
+    },
+    "147": {
+      "name": "Medical Education & Health Facts",
+      "category": "Education",
+      "subcategory": "Medical Education"
+    },
+    "148": {
+      "name": "Slow Motion Science & Experiments",
+      "category": "Entertainment",
+      "subcategory": "Slow Motion"
+    },
+    "149": {
+      "name": "Prop Making & 3D Printed Cosplay",
+      "category": "Hobbies",
+      "subcategory": "Cosplay"
+    },
+    "150": {
+      "name": "College Football Coverage & Analysis",
+      "category": "Sports",
+      "subcategory": "College Football"
+    },
+    "151": {
+      "name": "Bathroom Design & Renovation Ideas",
+      "category": "Home & Garden",
+      "subcategory": "Bathroom Design"
+    },
+    "152": {
+      "name": "Music Reaction Videos & Commentary",
+      "category": "Music",
+      "subcategory": "Music Reactions"
+    },
+    "153": {
+      "name": "Handmade Cutting Boards & Crafts",
+      "category": "DIY & Crafts",
+      "subcategory": "Wood Crafts"
+    },
+    "154": {
+      "name": "iOS Tips & Apple Ecosystem",
+      "category": "Technology",
+      "subcategory": "Apple/iOS"
+    },
+    "155": {
+      "name": "Electronics Assembly & Soldering",
+      "category": "Technology",
+      "subcategory": "Electronics Assembly"
+    },
+    "156": {
+      "name": "Kitchen Organization & Storage Hacks",
+      "category": "Home & Garden",
+      "subcategory": "Kitchen Storage"
+    },
+    "157": {
+      "name": "Live Q&A Sessions & Community",
+      "category": "Entertainment",
+      "subcategory": "Live Interaction"
+    },
+    "158": {
+      "name": "Amazon Business & E-commerce Tips",
+      "category": "Business",
+      "subcategory": "Amazon Business"
+    },
+    "159": {
+      "name": "Advanced Electronics & Circuit Design",
+      "category": "Technology",
+      "subcategory": "Circuit Design"
+    },
+    "160": {
+      "name": "Deep Cleaning & Organization Methods",
+      "category": "Lifestyle",
+      "subcategory": "Deep Cleaning"
+    },
+    "161": {
+      "name": "Professional Videography & Filming",
+      "category": "Arts & Media",
+      "subcategory": "Videography"
+    },
+    "162": {
+      "name": "Spiritual Growth & Faith Journey",
+      "category": "Lifestyle",
+      "subcategory": "Spirituality"
+    },
+    "163": {
+      "name": "Gaming Tutorials & Walkthroughs",
+      "category": "Gaming",
+      "subcategory": "Game Guides"
+    },
+    "164": {
+      "name": "Alternative Housing & Off-Grid Living",
+      "category": "Lifestyle",
+      "subcategory": "Off-Grid Living"
+    },
+    "165": {
+      "name": "Python Programming & Data Science",
+      "category": "Technology",
+      "subcategory": "Python/Data Science"
+    },
+    "166": {
+      "name": "Custom Storage Solutions & Built-ins",
+      "category": "Home & Garden",
+      "subcategory": "Custom Storage"
+    },
+    "167": {
+      "name": "Professional Knife Making & Bladesmithing",
+      "category": "DIY & Crafts",
+      "subcategory": "Bladesmithing"
+    },
+    "168": {
+      "name": "Business Growth & Scaling Strategies",
+      "category": "Business",
+      "subcategory": "Business Growth"
+    },
+    "169": {
+      "name": "Digital Art & Illustration Techniques",
+      "category": "Arts & Media",
+      "subcategory": "Digital Art"
+    },
+    "170": {
+      "name": "Advanced Metalworking & Fabrication",
+      "category": "DIY & Crafts",
+      "subcategory": "Metal Fabrication"
+    },
+    "171": {
+      "name": "Coding Bootcamps & Tech Education",
+      "category": "Education",
+      "subcategory": "Tech Education"
+    },
+    "172": {
+      "name": "Language Learning Tips & Resources",
+      "category": "Education",
+      "subcategory": "Language Resources"
+    },
+    "173": {
+      "name": "Precision Woodworking & Joinery",
+      "category": "DIY & Crafts",
+      "subcategory": "Fine Woodworking"
+    },
+    "174": {
+      "name": "Investment Strategies & Wealth Building",
+      "category": "Finance",
+      "subcategory": "Wealth Building"
+    },
+    "175": {
+      "name": "Web Development & JavaScript",
+      "category": "Technology",
+      "subcategory": "Web Development"
+    },
+    "176": {
+      "name": "Workshop Organization & Tool Storage",
+      "category": "DIY & Crafts",
+      "subcategory": "Workshop Setup"
+    },
+    "177": {
+      "name": "Documentary Filmmaking & Storytelling",
+      "category": "Arts & Media",
+      "subcategory": "Documentary"
+    },
+    "178": {
+      "name": "Unique Furniture Designs & Builds",
+      "category": "DIY & Crafts",
+      "subcategory": "Designer Furniture"
+    },
+    "179": {
+      "name": "Professional Tool Reviews & Comparisons",
+      "category": "DIY & Crafts",
+      "subcategory": "Tool Reviews"
+    },
+    "180": {
+      "name": "Space-Saving Furniture & Solutions",
+      "category": "Home & Garden",
+      "subcategory": "Space Saving"
+    },
+    "181": {
+      "name": "Lifestyle Transformation & Habits",
+      "category": "Lifestyle",
+      "subcategory": "Life Changes"
+    },
+    "182": {
+      "name": "Modular Storage Systems & Organization",
+      "category": "Home & Garden",
+      "subcategory": "Modular Storage"
+    },
+    "183": {
+      "name": "Full-Stack Development & Coding",
+      "category": "Technology",
+      "subcategory": "Full-Stack Dev"
+    },
+    "184": {
+      "name": "Professional Music Industry Insights",
+      "category": "Music",
+      "subcategory": "Music Industry"
+    },
+    "185": {
+      "name": "Advanced Woodworking Techniques",
+      "category": "DIY & Crafts",
+      "subcategory": "Advanced Woodwork"
+    },
+    "186": {
+      "name": "Effective Study Methods & Learning",
+      "category": "Education",
+      "subcategory": "Learning Methods"
+    },
+    "187": {
+      "name": "Mixed Media Art & Experimental Techniques",
+      "category": "Arts & Media",
+      "subcategory": "Mixed Media"
+    },
+    "188": {
+      "name": "Music Business & Industry Tips",
+      "category": "Music",
+      "subcategory": "Music Business"
+    },
+    "189": {
+      "name": "Creative Storage & Organization Ideas",
+      "category": "Home & Garden",
+      "subcategory": "Creative Storage"
+    },
+    "190": {
+      "name": "Traditional Art Techniques & Methods",
+      "category": "Arts & Media",
+      "subcategory": "Traditional Art"
+    },
+    "191": {
+      "name": "Specialty Tool Making & Jigs",
+      "category": "DIY & Crafts",
+      "subcategory": "Tool Making"
+    },
+    "192": {
+      "name": "Global Travel & Cultural Experiences",
+      "category": "Travel",
+      "subcategory": "World Travel"
+    },
+    "193": {
+      "name": "E-commerce Strategies & Online Sales",
+      "category": "Business",
+      "subcategory": "E-commerce Strategy"
+    },
+    "194": {
+      "name": "Professional Audio Production Tips",
+      "category": "Music",
+      "subcategory": "Audio Production"
+    },
+    "195": {
+      "name": "Life Philosophy & Deep Thoughts",
+      "category": "Lifestyle",
+      "subcategory": "Philosophy"
+    },
+    "196": {
+      "name": "Custom Jigs & Workshop Solutions",
+      "category": "DIY & Crafts",
+      "subcategory": "Workshop Jigs"
+    },
+    "197": {
+      "name": "Artisan Crafts & Handmade Goods",
+      "category": "DIY & Crafts",
+      "subcategory": "Artisan Crafts"
+    },
+    "198": {
+      "name": "Mobile Home & Tiny House Tours",
+      "category": "Lifestyle",
+      "subcategory": "Mobile Homes"
+    },
+    "199": {
+      "name": "Adventure Planning & Travel Prep",
+      "category": "Travel",
+      "subcategory": "Adventure Planning"
+    },
+    "200": {
+      "name": "Cultural Education & World Awareness",
+      "category": "Education",
+      "subcategory": "Cultural Education"
+    },
+    "201": {
+      "name": "Photography Business & Marketing",
+      "category": "Business",
+      "subcategory": "Photo Business"
+    },
+    "202": {
+      "name": "Future Tech & Innovation Trends",
+      "category": "Technology",
+      "subcategory": "Future Tech"
+    },
+    "203": {
+      "name": "Art Education & Teaching Methods",
+      "category": "Education",
+      "subcategory": "Art Teaching"
+    },
+    "204": {
+      "name": "Tiny House Building & Design",
+      "category": "DIY & Crafts",
+      "subcategory": "Tiny House Build"
+    },
+    "205": {
+      "name": "Lifestyle Optimization & Efficiency",
+      "category": "Lifestyle",
+      "subcategory": "Life Optimization"
+    },
+    "206": {
+      "name": "Custom Shelving & Display Solutions",
+      "category": "Home & Garden",
+      "subcategory": "Custom Shelving"
+    },
+    "207": {
+      "name": "Extreme Weather Camping & Gear",
+      "category": "Outdoors",
+      "subcategory": "Extreme Camping"
+    },
+    "208": {
+      "name": "Polyglot Tips & Multiple Languages",
+      "category": "Education",
+      "subcategory": "Polyglot Learning"
+    },
+    "209": {
+      "name": "Music Theory & Composition",
+      "category": "Music",
+      "subcategory": "Music Theory"
+    },
+    "210": {
+      "name": "Home Workshop Setup & Organization",
+      "category": "DIY & Crafts",
+      "subcategory": "Workshop Design"
+    },
+    "211": {
+      "name": "Live Music & Concert Coverage",
+      "category": "Music",
+      "subcategory": "Live Music"
+    },
+    "212": {
+      "name": "Content Strategy & Channel Growth",
+      "category": "Business",
+      "subcategory": "Content Strategy"
+    },
+    "213": {
+      "name": "Scientific Art & STEAM Projects",
+      "category": "Education",
+      "subcategory": "STEAM Education"
+    },
+    "214": {
+      "name": "Professional Workshop Equipment",
+      "category": "DIY & Crafts",
+      "subcategory": "Pro Equipment"
+    },
+    "215": {
+      "name": "Global Perspectives & World Views",
+      "category": "Education",
+      "subcategory": "Global Education"
+    }
+  }
+}

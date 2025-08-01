@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Users, Target, TrendingUp, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PerformanceBadge } from './performance-badge';
-import { VideoDetailModal } from '@/components/video-detail-modal';
 import { formatViewCount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -49,7 +48,6 @@ interface UnifiedVideoCardProps {
 function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCardProps) {
   const [imageError, setImageError] = useState(!video.thumbnail_url || video.thumbnail_url.trim() === '');
   const [imageLoading, setImageLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Memoized calculations
   const publishedDate = useMemo(() => {
@@ -81,14 +79,6 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     }
   }, [context]);
 
-  const handleCardClick = useCallback(() => {
-    if (onClick) {
-      onClick();
-    } else {
-      // Open our video detail modal
-      setIsModalOpen(true);
-    }
-  }, [onClick]);
 
   const handleImageLoad = useCallback(() => {
     setImageLoading(false);
@@ -162,9 +152,8 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     return baseChannelInfo;
   };
 
-  return (
-    <>
-      <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border-border bg-card" onClick={handleCardClick}>
+  const cardContent = (
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border-border bg-card">
         <div className="relative aspect-video bg-muted">
           {!imageError && video.thumbnail_url && video.thumbnail_url.trim() !== '' ? (
             <>
@@ -226,15 +215,17 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
             <span className="font-medium text-foreground">{formattedViewCount}</span> • <span>{publishedDate}</span>
           </div>
         </CardContent>
-      </Card>
+    </Card>
+  );
 
-      {/* Modal */}
-      <VideoDetailModal
-        videoId={video.id}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </>
+  if (onClick) {
+    return <div onClick={onClick}>{cardContent}</div>;
+  }
+
+  return (
+    <Link href={`/videos/${video.id}`} className="block">
+      {cardContent}
+    </Link>
   );
 }
 

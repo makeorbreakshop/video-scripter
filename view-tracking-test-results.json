@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-08-01T13:23:30.364Z",
+  "tests": {
+    "directTable": {
+      "totalCount": 182004,
+      "maxFetched": 1000
+    },
+    "rangeQueries": 20000,
+    "rpcFunctions": {
+      "original": {
+        "success": true,
+        "rows": 100
+      },
+      "large": {
+        "success": true,
+        "rows": 1000
+      },
+      "paginated": {
+        "error": "column reference \"video_id\" is ambiguous"
+      }
+    },
+    "paginatedFetching": 0,
+    "joinQueries": {
+      "small": 100,
+      "large": 1000
+    },
+    "functionExistence": null,
+    "serviceClass": null
+  }
+}

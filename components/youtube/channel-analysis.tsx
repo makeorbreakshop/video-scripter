@@ -24,7 +24,7 @@ import {
   Clock
 } from 'lucide-react';
 import Image from 'next/image';
-import { VideoDetailModal } from '@/components/video-detail-modal';
+import { useRouter } from 'next/navigation';
 
 interface Video {
   id: string;
@@ -85,9 +85,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Modal state
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchChannelData() {
@@ -282,10 +280,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
               <div 
                 key={video.id} 
                 className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => {
-                  setSelectedVideoId(video.id);
-                  setModalOpen(true);
-                }}
+                onClick={() => router.push(`/videos/${video.id}`)}
               >
                 <div className="relative aspect-video">
                   <Image
@@ -362,9 +357,9 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     <TableCell>
                       <div 
                         className="relative w-16 h-9 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => {
-                          setSelectedVideoId(video.id);
-                          setModalOpen(true);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/videos/${video.id}`);
                         }}
                       >
                         <Image
@@ -396,18 +391,6 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Video Detail Modal */}
-      {selectedVideoId && (
-        <VideoDetailModal
-          videoId={selectedVideoId}
-          isOpen={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedVideoId(null);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -112,32 +112,27 @@ export async function GET(request: NextRequest) {
 
     // Calculate what will be tracked if run now
     const willTrackByTier: Record<number, number> = {};
-    const totalBatchSize = 2000 * 50; // 2000 API calls * 50 videos per call
+    const maxApiCalls = 333; // Default for "Run Daily Tracking" button
+    const totalBatchSize = maxApiCalls * 50; // Total videos we can track
     
-    // Same distribution as ViewTrackingService
-    const tierPercentages = {
-      1: 0.25,
-      2: 0.20,
-      3: 0.20,
-      4: 0.15,
-      5: 0.15,
-      6: 0.05
-    };
+    // Get count of videos needing tracking for ALL tiers
+    let remainingQuota = totalBatchSize;
     
-    // Calculate how many from each tier will be tracked
-    for (const [tier, percentage] of Object.entries(tierPercentages)) {
-      const tierNum = parseInt(tier);
-      const tierLimit = Math.floor(totalBatchSize * percentage);
+    // Process tiers in order of priority (1-6)
+    for (let tier = 1; tier <= 6; tier++) {
+      if (remainingQuota <= 0) break;
       
-      // Get count of videos in this tier that need tracking
+      // Get count of videos in this tier that need tracking today
       const { count: eligibleCount } = await supabase
         .from('view_tracking_priority')
         .select('*', { count: 'exact', head: true })
-        .eq('priority_tier', tierNum)
+        .eq('priority_tier', tier)
         .or('next_track_date.is.null,next_track_date.lte.today()');
       
-      // Will track minimum of eligible or tier limit
-      willTrackByTier[tierNum] = Math.min(eligibleCount || 0, tierLimit);
+      // Will track up to remaining quota for this tier
+      const trackCount = Math.min(eligibleCount || 0, remainingQuota);
+      willTrackByTier[tier] = trackCount;
+      remainingQuota -= trackCount;
     }
     
     const totalWillTrack = Object.values(willTrackByTier).reduce((sum, count) => sum + count, 0);

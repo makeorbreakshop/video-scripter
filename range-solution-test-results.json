@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-01T13:26:06.581Z",
+  "analysis": {
+    "totalVideos": 15000,
+    "tierCounts": {
+      "1": 15,
+      "2": 23,
+      "3": 1316,
+      "4": 12,
+      "5": 4,
+      "6": 13630
+    },
+    "properlyOrdered": true,
+    "targetAchieved": true
+  },
+  "comparison": {
+    "rpcRows": 1000,
+    "rpcSuccess": true
+  },
+  "performance": [
+    {
+      "targetSize": 1000,
+      "actualSize": 1000,
+      "duration": 340,
+      "videosPerSecond": 2941
+    },
+    {
+      "targetSize": 5000,
+      "actualSize": 5000,
+      "duration": 2144,
+      "videosPerSecond": 2332
+    },
+    {
+      "targetSize": 10000,
+      "actualSize": 10000,
+      "duration": 4608,
+      "videosPerSecond": 2170
+    },
+    {
+      "targetSize": 15000,
+      "actualSize": 15000,
+      "duration": 7987,
+      "videosPerSecond": 1878
+    }
+  ],
+  "success": true
+}

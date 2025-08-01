@@ -31,27 +31,30 @@ export async function GET(
     // Get the initial view count from the video's import
     const { data: video } = await supabase
       .from('videos')
-      .select('view_count, import_date, created_at')
+      .select('view_count, import_date, created_at, published_at')
       .eq('id', videoId)
       .single();
 
-    // If we have a video with import data, add it as the first snapshot
+    // Combine snapshots, ensuring we don't duplicate the initial import
     const allSnapshots = [];
     
-    if (video && video.import_date && video.view_count) {
-      // Add initial snapshot from import
+    // Add snapshots, filtering out any that might be duplicates
+    if (snapshots && snapshots.length > 0) {
+      allSnapshots.push(...snapshots);
+    } else if (video) {
+      // If no snapshots exist but we have video data, create a single point
+      const publishedDate = new Date(video.published_at || video.created_at || video.import_date);
+      const daysSincePublished = Math.floor(
+        (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      
       allSnapshots.push({
         video_id: videoId,
-        snapshot_date: video.import_date,
-        view_count: video.view_count,
-        days_since_published: 0,
-        daily_views_rate: 0
+        snapshot_date: new Date().toISOString(),
+        view_count: video.view_count || 0,
+        days_since_published: daysSincePublished,
+        daily_views_rate: video.view_count ? video.view_count / Math.max(daysSincePublished, 1) : 0
       });
-    }
-
-    // Add the rest of the snapshots
-    if (snapshots) {
-      allSnapshots.push(...snapshots);
     }
 
     return NextResponse.json({ 

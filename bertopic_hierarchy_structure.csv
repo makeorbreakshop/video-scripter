@@ -1,0 +1,216 @@
+Parent_ID,Parent_Name,Topics,Child_Left_ID,Child_Left_Name,Child_Right_ID,Child_Right_Name,Distance
+430,new_review_best_10_laser,"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215]",428,review_new_best_laser_lego,429,ideas_wood_woodworking_design_tiny house,1.854846088551536
+429,ideas_wood_woodworking_design_tiny house,"[15, 51, 52, 64, 73, 78, 81, 125, 138, 156, 164, 166, 178, 180, 182, 189, 198, 204, 206]",417,ideas_wood_woodworking_table_unique,383,tiny house_tiny_house_tour_van,1.6757441516021858
+428,review_new_best_laser_lego,"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 74, 75, 76, 77, 79, 80, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 157, 158, 159, 160, 161, 162, 163, 165, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 179, 181, 183, 184, 185, 186, 187, 188, 190, 191, 192, 193, 194, 195, 196, 197, 199, 200, 201, 202, 203, 205, 207, 208, 209, 210, 211, 212, 213, 214, 215]",427,new_best_laser_10_vs,425,lego_3d_wars_3d printer_star wars,1.668528148871303
+427,new_best_laser_10_vs,"[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 23, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 74, 76, 77, 79, 80, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 113, 114, 115, 116, 117, 118, 120, 121, 122, 123, 124, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 139, 140, 142, 143, 144, 145, 146, 147, 148, 150, 151, 152, 153, 154, 155, 157, 158, 159, 160, 161, 162, 163, 165, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 179, 181, 183, 184, 185, 186, 187, 188, 190, 191, 192, 193, 194, 195, 196, 197, 199, 200, 201, 202, 203, 205, 207, 208, 209, 210, 211, 212, 213, 214, 215]",423,day_routine_10_card_world,426,laser_guitar_pro_saw_making,1.5431806794805178
+426,laser_guitar_pro_saw_making,"[1, 2, 4, 6, 10, 12, 29, 35, 41, 53, 55, 57, 63, 69, 70, 72, 77, 79, 80, 83, 85, 89, 91, 94, 100, 104, 110, 115, 116, 118, 124, 131, 133, 139, 140, 143, 151, 152, 153, 154, 155, 159, 161, 167, 169, 170, 173, 176, 179, 184, 185, 187, 188, 190, 191, 194, 196, 197, 203, 209, 210, 211, 213, 214]",424,laser_saw_making_knife_tools,419,guitar_sony_pro_dji_drone,1.5128571117762692
+425,lego_3d_wars_3d printer_star wars,"[22, 24, 28, 75, 96, 97, 112, 119, 141, 149]",349,lego_toys_wars_star wars_star,396,3d_3d printer_printer_printing_3d printing,1.484237485515399
+424,laser_saw_making_knife_tools,"[1, 2, 4, 35, 57, 69, 70, 72, 80, 100, 104, 110, 115, 116, 118, 124, 133, 139, 140, 151, 153, 155, 159, 167, 169, 170, 173, 176, 179, 185, 187, 190, 191, 196, 197, 203, 210, 213, 214]",411,drawing_painting_science_model_models,414,laser_saw_knife_making_jig,1.475811834299844
+423,day_routine_10_card_world,"[0, 3, 5, 7, 8, 9, 11, 13, 14, 16, 17, 18, 19, 20, 21, 23, 25, 26, 27, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 50, 54, 56, 58, 59, 60, 61, 62, 65, 66, 67, 68, 71, 74, 76, 82, 84, 86, 87, 88, 90, 92, 93, 95, 98, 99, 101, 102, 103, 105, 106, 107, 108, 109, 111, 113, 114, 117, 120, 121, 122, 123, 126, 127, 128, 129, 130, 132, 134, 135, 136, 137, 142, 144, 145, 146, 147, 148, 150, 157, 158, 160, 162, 163, 165, 168, 171, 172, 174, 175, 177, 181, 183, 186, 192, 193, 195, 199, 200, 201, 202, 205, 207, 208, 212, 215]",413,instagram_etsy_stock_real estate_estate,422,routine_card_day_world_10,1.470287893315792
+422,routine_card_day_world_10,"[0, 3, 5, 7, 8, 13, 14, 17, 18, 19, 20, 21, 23, 25, 26, 27, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 49, 50, 54, 56, 58, 59, 60, 61, 62, 65, 66, 67, 74, 76, 82, 84, 86, 87, 88, 90, 92, 93, 95, 98, 99, 101, 105, 106, 107, 108, 109, 111, 113, 114, 117, 120, 121, 122, 126, 129, 130, 132, 134, 135, 136, 137, 142, 144, 146, 147, 148, 150, 157, 160, 162, 163, 165, 171, 172, 175, 177, 181, 183, 186, 192, 195, 199, 200, 201, 202, 205, 207, 208, 212, 215]",421,routine_card_day_10_world,256,f1_max_bull_virtual_red bull,1.4523833341588037
+421,routine_card_day_10_world,"[0, 3, 5, 7, 8, 13, 14, 17, 18, 19, 20, 21, 23, 25, 26, 27, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 49, 50, 54, 56, 58, 59, 60, 61, 62, 65, 66, 67, 74, 76, 82, 84, 87, 88, 90, 92, 93, 95, 98, 99, 101, 105, 106, 107, 108, 109, 111, 113, 114, 117, 120, 121, 122, 126, 129, 130, 132, 134, 135, 136, 137, 144, 146, 147, 148, 150, 157, 160, 162, 163, 165, 171, 172, 175, 177, 181, 183, 186, 192, 195, 200, 201, 202, 205, 207, 208, 212, 215]",420,card_routine_ai_clean_world,386,cooking_gym_eat_food_chicken,1.4136781222655683
+420,card_routine_ai_clean_world,"[3, 5, 7, 8, 13, 14, 17, 18, 20, 21, 25, 26, 27, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 49, 50, 54, 56, 58, 59, 60, 62, 65, 66, 67, 74, 76, 87, 88, 90, 92, 93, 95, 98, 99, 105, 106, 107, 108, 109, 111, 113, 114, 117, 120, 121, 122, 126, 129, 130, 132, 134, 135, 136, 137, 146, 147, 148, 150, 157, 160, 162, 163, 165, 171, 172, 175, 177, 181, 183, 186, 192, 195, 200, 201, 202, 205, 207, 208, 212, 215]",418,card_ai_youtube_world_disney,412,routine_clean_cleaning_morning_motivation,1.3945262183504883
+419,guitar_sony_pro_dji_drone,"[6, 10, 12, 29, 41, 53, 55, 63, 77, 79, 83, 85, 89, 91, 94, 131, 143, 152, 154, 161, 184, 188, 194, 209, 211]",416,guitar_dji_pro_drone_iphone,254,sony_canon_lens_camera_nikon,1.3782182356110748
+418,card_ai_youtube_world_disney,"[7, 8, 13, 14, 17, 18, 20, 21, 25, 26, 27, 30, 31, 32, 33, 34, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 54, 56, 58, 59, 60, 65, 67, 74, 88, 90, 92, 93, 95, 98, 99, 105, 106, 108, 109, 111, 113, 120, 121, 122, 129, 130, 132, 134, 135, 146, 147, 148, 150, 157, 162, 163, 165, 171, 172, 175, 177, 183, 186, 192, 195, 200, 201, 202, 208, 212, 215]",415,ai_youtube_world_disney_photography,297,card_magic_cards_credit_trick,1.3696444532852214
+417,ideas_wood_woodworking_table_unique,"[15, 51, 52, 64, 78, 81, 156, 166, 178, 180, 182, 189, 206]",365,wood_ideas_table_woodworking_unique,403,shelves_kitchen_cabinet_shelf_storage,1.3620876637710913
+416,guitar_dji_pro_drone_iphone,"[6, 10, 12, 29, 41, 55, 63, 77, 79, 85, 89, 91, 94, 131, 143, 152, 154, 184, 188, 194, 209, 211]",408,guitar_dji_drone_music_lesson,381,iphone_ipad_gaming_mac_pro,1.3562814909052365
+415,ai_youtube_world_disney_photography,"[7, 13, 14, 17, 18, 20, 21, 25, 26, 27, 30, 31, 32, 34, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 54, 56, 58, 59, 60, 65, 67, 74, 88, 90, 92, 93, 95, 98, 99, 105, 106, 109, 111, 113, 120, 121, 122, 129, 130, 132, 135, 146, 147, 148, 150, 157, 162, 163, 165, 171, 172, 175, 177, 183, 186, 192, 195, 200, 201, 202, 208, 212, 215]",410,ai_world_disney_rings_running,400,youtube_photography_photoshop_photos_channel,1.3325478143837093
+414,laser_saw_knife_making_jig,"[1, 2, 4, 35, 57, 70, 72, 104, 115, 116, 118, 124, 133, 151, 153, 155, 159, 167, 170, 173, 176, 179, 185, 191, 196, 197, 210, 214]",278,bike_powermax_installation_motorcycle_fitness,409,laser_saw_knife_making_jig,1.3244988479682407
+413,instagram_etsy_stock_real estate_estate,"[9, 11, 16, 42, 68, 71, 102, 103, 123, 127, 128, 145, 158, 168, 174, 193]",380,stock_real estate_estate_market_stock market,371,instagram_etsy_fba_amazon fba_amazon,1.3099327914630672
+412,routine_clean_cleaning_morning_motivation,"[3, 5, 36, 39, 50, 62, 66, 76, 87, 107, 114, 117, 126, 136, 137, 160, 181, 205, 207]",398,gear_camping_worst best_porsche_bmw,402,routine_clean_cleaning_morning_motivation,1.3049301945175684
+411,drawing_painting_science_model_models,"[69, 80, 100, 110, 139, 140, 169, 187, 190, 203, 213]",392,painting_science_model_models_projects,320,drawing_pencil_pencils_art_colored,1.296107352109296
+410,ai_world_disney_rings_running,"[7, 13, 17, 20, 21, 26, 27, 30, 31, 32, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 54, 56, 58, 59, 60, 65, 67, 74, 90, 92, 93, 95, 98, 99, 105, 106, 109, 111, 113, 120, 121, 122, 129, 130, 132, 135, 146, 147, 148, 150, 162, 163, 165, 171, 172, 175, 177, 183, 186, 192, 195, 200, 202, 208, 215]",401,spanish_learn_coding_learning_pi,407,disney_ai_world_rings_running,1.295149640840718
+409,laser_saw_knife_making_jig,"[1, 2, 4, 35, 70, 72, 104, 115, 116, 118, 124, 133, 151, 153, 155, 159, 170, 173, 176, 179, 191, 196, 197, 210, 214]",391,install_water_led_door_bathroom,397,laser_saw_knife_making_jig,1.286413054174082
+408,guitar_dji_drone_music_lesson,"[6, 10, 12, 55, 63, 77, 94, 143, 152, 188, 209, 211]",356,dji_drone_fpv_rc_gopro,395,guitar_music_lesson_song_audio,1.2844730599310525
+407,disney_ai_world_rings_running,"[7, 17, 20, 21, 26, 27, 30, 31, 32, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 54, 56, 58, 60, 65, 67, 74, 90, 92, 93, 95, 98, 99, 105, 106, 109, 111, 113, 120, 121, 122, 129, 130, 132, 135, 146, 147, 148, 150, 162, 163, 177, 192, 195, 200, 202, 215]",406,disney_ai_world_rings_running,393,history_crash course_nfl_course_crash,1.2682227907490713
+406,disney_ai_world_rings_running,"[7, 17, 20, 21, 26, 27, 30, 31, 32, 37, 38, 40, 43, 44, 45, 46, 48, 49, 54, 56, 58, 60, 65, 67, 74, 90, 92, 93, 95, 99, 105, 106, 109, 111, 113, 121, 122, 129, 130, 132, 146, 147, 148, 162, 163, 177, 192, 195, 200, 202, 215]",227,rings_lord_middle_earth_power,405,disney_ai_world_running_minecraft,1.2619992964916078
+405,disney_ai_world_running_minecraft,"[7, 17, 20, 26, 27, 30, 31, 32, 37, 38, 40, 43, 44, 45, 46, 48, 49, 54, 56, 58, 60, 65, 67, 74, 90, 92, 93, 95, 99, 105, 106, 109, 111, 113, 121, 122, 129, 130, 132, 146, 147, 148, 162, 163, 177, 195, 200, 202, 215]",404,ai_disney_minecraft_running_4k,377,class_cruise_ship_10_states,1.2521977903915429
+404,ai_disney_minecraft_running_4k,"[7, 17, 20, 26, 30, 31, 32, 37, 40, 43, 45, 48, 49, 56, 58, 67, 74, 90, 93, 95, 99, 105, 109, 111, 121, 122, 129, 130, 132, 146, 147, 148, 162, 163, 195, 202, 215]",387,mike_god_jesus_christian_coaching,399,ai_disney_minecraft_running_4k,1.2198492918248305
+403,shelves_kitchen_cabinet_shelf_storage,"[52, 64, 78, 156, 166, 182, 189, 206]",341,shelves_shelf_floating_storage_tv,384,kitchen_cabinet_ikea_drawers_organization,1.2057998264665266
+402,routine_clean_cleaning_morning_motivation,"[3, 5, 36, 39, 50, 62, 117, 126, 136, 160, 181, 205]",385,routine_morning_garden_christmas_healthy,224,cleaning_clean_motivation_cleaning motivation_extreme,1.2038129472665344
+401,spanish_learn_coding_learning_pi,"[13, 59, 165, 171, 172, 175, 183, 186, 208]",388,coding_pi_python_react_artists,390,spanish_learn_learning_english_study,1.1989053279523902
+400,youtube_photography_photoshop_photos_channel,"[14, 18, 25, 34, 88, 157, 201, 212]",305,stream_live stream_live_ad_3dprinting,369,youtube_photography_photoshop_photos_photoshoot,1.195714593624558
+399,ai_disney_minecraft_running_4k,"[7, 17, 20, 26, 30, 37, 40, 43, 45, 48, 49, 58, 74, 90, 93, 95, 99, 105, 109, 111, 121, 122, 130, 132, 146, 147, 148, 163, 202, 215]",389,ai_tesla_level1_solar_battery,394,disney_minecraft_running_4k_marathon,1.18622469548969
+398,gear_camping_worst best_porsche_bmw,"[66, 76, 87, 107, 114, 137, 207]",374,camping_backpacking_bag_gear_packing,310,worst best_porsche_bmw_audi_worst,1.1824431784956613
+397,laser_saw_knife_making_jig,"[1, 2, 4, 35, 116, 118, 124, 153, 155, 173, 176, 191, 197]",244,epoxy_resin_epoxy resin_bowl_table build,373,laser_saw_knife_making_jig,1.1820501200346396
+396,3d_3d printer_printer_printing_3d printing,"[22, 24, 75, 97, 112, 149]",234,3d_3d printer_printer_printing_3d printing,323,robot_bruton_james bruton_james_odin,1.1548029902777064
+395,guitar_music_lesson_song_audio,"[6, 10, 12, 63, 152, 188, 209, 211]",382,music_audio_beat_wireless_sound,221,guitar_lesson_tab_solo_note,1.1503532313687808
+394,disney_minecraft_running_4k_marathon,"[7, 20, 26, 30, 37, 45, 48, 49, 58, 74, 93, 95, 99, 105, 109, 111, 121, 130, 146, 147, 148, 163, 215]",378,disney_minecraft_4k_swimming_world,268,running_marathon_run_shoes_10k,1.1436900944351474
+393,history_crash course_nfl_course_crash,"[47, 98, 120, 135, 150]",228,crash course_course_crash_history_war,321,nfl_players_history_player_football,1.1408861929429526
+392,painting_science_model_models_projects,"[69, 80, 100, 140, 169, 187, 213]",355,science_model_models_projects_games,288,painting_paint_eggs_flower_canvas,1.1403970999388526
+391,install_water_led_door_bathroom,"[70, 72, 104, 115, 133, 151, 159, 170, 179, 196, 210, 214]",375,install_water_led_door_bathroom,257,patio_backyard_outdoor_oven_garden,1.1381539538459595
+390,spanish_learn_learning_english_study,"[13, 172, 186, 208]",259,study_info geek_college info_geek_info,231,spanish_learn_english_learning_speaking,1.1366517714030848
+389,ai_tesla_level1_solar_battery,"[17, 40, 43, 90, 122, 132, 202]",337,ai_level1_chatgpt_news_2024,357,tesla_solar_battery_generator_power,1.1356830146094443
+388,coding_pi_python_react_artists,"[59, 165, 171, 175, 183]",243,react_artists_bad_effects_great,346,coding_pi_python_learning_machine learning,1.134108594039749
+387,mike_god_jesus_christian_coaching,"[31, 32, 56, 67, 129, 162, 195]",311,mike_god_christian_jesus_questions,328,coaching_goals_howes_lewis howes_lewis,1.130514324863002
+386,cooking_gym_eat_food_chicken,"[0, 19, 23, 61, 82, 84, 101, 144]",313,gym_workout_body_equipment_fitness,352,cooking_eat_food_chicken_chef,1.1175324645021
+385,routine_morning_garden_christmas_healthy,"[3, 5, 36, 50, 62, 126, 136, 160, 181, 205]",379,routine_morning_garden_healthy_habits,236,christmas_dollar_mooregirl_tree_decorate,1.1161879366356608
+384,kitchen_cabinet_ikea_drawers_organization,"[78, 156, 166, 182]",219,cabinet_drawers_doors_cabinets_drawer,253,kitchen_ikea_organization_organization ideas_products,1.1152850347367662
+383,tiny house_tiny_house_tour_van,"[73, 125, 138, 164, 198, 204]",306,tiny house_tiny_house_tour_airbnb,240,van_rv_camper_camper van_van life,1.113864102469976
+382,music_audio_beat_wireless_sound,"[10, 12, 152, 188, 209, 211]",327,music_beat_song_cover_beats,331,audio_wireless_speakers_sound_best budget,1.1115606368031306
+381,iphone_ipad_gaming_mac_pro,"[29, 41, 79, 85, 89, 91, 131, 154, 184, 194]",376,gaming_mac_pc_macbook_chair,362,iphone_ipad_ipad pro_pro_apple,1.1107929608166818
+380,stock_real estate_estate_market_stock market,"[9, 103, 127, 128, 158, 174]",237,real estate_estate_tax_estate agent_real,344,stock_market_stock market_san_investing,1.1028553138435573
+379,routine_morning_garden_healthy_habits,"[3, 5, 62, 126, 136, 160, 181, 205]",353,routine_morning_garden_healthy_habits,289,deals_costco_10 things_prime day_need buy,1.0988043864933192
+378,disney_minecraft_4k_swimming_world,"[7, 26, 30, 37, 45, 48, 49, 58, 74, 93, 95, 99, 105, 109, 111, 121, 130, 146, 147, 148, 215]",335,gun_arts_cannon_web_journey,372,disney_minecraft_4k_swimming_world,1.0959740852807713
+377,class_cruise_ship_10_states,"[27, 38, 44, 46, 54, 60, 65, 92, 106, 113, 177, 200]",370,class_states_10_sailing_train,258,cruise_ship_ships_royal_largest,1.0936309721080113
+376,gaming_mac_pc_macbook_chair,"[41, 79, 91, 184, 194]",330,gaming_pc_chair_amd_cpu,235,mac_macbook_macbook pro_laptop_m1,1.0880426505508363
+375,install_water_led_door_bathroom,"[70, 72, 104, 115, 133, 151, 159, 170, 179, 214]",332,water_heater_liquid_heat_install,367,install_led_door_shed_bathroom,1.0857608393453608
+374,camping_backpacking_bag_gear_packing,"[87, 114, 137, 207]",271,packing_pack_bag_camera_travel,242,camping_backpacking_camp_gear_overnight,1.0852731736605177
+373,laser_saw_knife_making_jig,"[1, 2, 4, 35, 118, 153, 155, 173, 176, 191, 197]",361,laser_saw_knife_jig_making,340,dust_sewing_stitch_collection_tears,1.0849652401212955
+372,disney_minecraft_4k_swimming_world,"[7, 30, 37, 45, 48, 49, 58, 74, 93, 95, 99, 109, 111, 121, 130, 147, 148, 215]",363,disney_4k_pov_world_climbing,368,minecraft_swimming_slow_mo_slow mo,1.0715411285381424
+371,instagram_etsy_fba_amazon fba_amazon,"[11, 16, 42, 68, 71, 102, 123, 145, 168, 193]",304,rich_money_security_retirement_social,360,instagram_etsy_amazon fba_fba_amazon,1.0701841044431113
+370,class_states_10_sailing_train,"[27, 38, 44, 46, 54, 65, 106, 113, 177, 200]",282,class_train_business_delta_flight,366,states_10_sailing_highest_engine,1.0646417823588599
+369,youtube_photography_photoshop_photos_photoshoot,"[14, 18, 34, 212]",238,youtube_channel_youtube channel_views_videos,290,photography_photoshop_photos_photoshoot_edit,1.0635586466917264
+368,minecraft_swimming_slow_mo_slow mo,"[48, 49, 58, 93, 95, 109, 111, 121, 130, 147, 148, 215]",364,minecraft_swimming_slow_mo_slow mo,339,dude perfect_dude_shots_perfect_trick,1.055744324343793
+367,install_led_door_shed_bathroom,"[72, 104, 115, 151, 159, 170, 179]",317,bathroom_shower_vinyl_renovation_remodel,333,led_door_shed_install_electrical,1.0535669774076175
+366,states_10_sailing_highest_engine,"[27, 44, 46, 54, 65, 106, 113, 200]",347,sailing_engine_oil_lets_island,350,states_10_highest_countries_college,1.0476493484673501
+365,wood_ideas_table_woodworking_unique,"[15, 51, 81, 178, 180]",295,table_unique_woodworking_wood_amazing,216,ideas_wood furniture_project ideas_furniture_pieces,1.0475181659245356
+364,minecraft_swimming_slow_mo_slow mo,"[48, 49, 58, 95, 121, 130, 147, 148, 215]",359,minecraft_iq_logo_giveaway_mod,358,swimming_slow_mo_slow mo_apartment,1.0418462905139914
+363,disney_4k_pov_world_climbing,"[7, 30, 37, 45, 74, 99]",300,climbing_strongest_warrior_ninja_hardest,348,disney_4k_pov_kingdom_launch,1.0358986828632013
+362,iphone_ipad_ipad pro_pro_apple,"[29, 85, 89, 131, 154]",301,iphone_ipad_ipad pro_pro_galaxy,308,eye_glasses_switch_vision_eyes,1.029159873996388
+361,laser_saw_knife_jig_making,"[1, 2, 4, 35, 153, 155, 191, 197]",296,knife_making_forge_sword_ring,351,laser_saw_jig_router_tools,1.026645577731755
+360,instagram_etsy_amazon fba_fba_amazon,"[11, 42, 71, 102, 145, 193]",334,etsy_friday bean_bean_friday_meet,345,instagram_fba_amazon fba_amazon_grow,1.0225090665093635
+359,minecraft_iq_logo_giveaway_mod,"[49, 58, 95, 130]",329,minecraft_iq_mod_25_kill,325,logo_giveaway_adobe_graphic_design,1.0164928763512624
+358,swimming_slow_mo_slow mo_apartment,"[48, 121, 147, 148, 215]",354,swimming_apartment_small_doctor_medical,338,mo_slow_slow mo_guys_waterjet,1.0124912282482934
+357,tesla_solar_battery_generator_power,"[40, 43, 90, 132]",283,tesla_model_electric_elon_car,303,solar_battery_power_generator_station,1.011842933814488
+356,dji_drone_fpv_rc_gopro,"[55, 77, 94, 143]",280,drone_rc_fpv_flying_flight,246,dji_gopro_drone_mini_osmo,1.0076124660101473
+355,science_model_models_projects_games,"[69, 80, 100, 169]",292,science_model_projects_school_working,249,models_games_workshop_weekly_army,1.0023045391544432
+354,swimming_apartment_small_doctor_medical,"[48, 121, 147]",121,apartment_small_micro_paris_loft,342,swimming_doctor_medical_reacts_technique,1.002260948270413
+353,routine_morning_garden_healthy_habits,"[3, 5, 62, 126, 136, 160]",315,garden_grow_growing_gardening_plant,336,routine_morning_healthy_habits_hair,1.0012174106560572
+352,cooking_eat_food_chicken_chef,"[0, 82, 84, 101]",261,fat_loss_weight_belly_eat,276,cooking_food_chicken_chef_recipe,0.9992469587003423
+351,laser_saw_jig_router_tools,"[1, 2, 35, 153, 155, 197]",318,laser_saw_jig_router_tools,343,tubalcain_cnc_mystery_lathe_grinder,0.9961421460312944
+350,states_10_highest_countries_college,"[27, 44, 46, 65]",273,states_portugal_countries_visit_americans,324,highest_college_jobs_paying_10,0.9944162244077229
+349,lego_toys_wars_star wars_star,"[28, 96, 119, 141]",223,wars_star wars_star_lego_starwars,218,lego_toys_tutorial_review_set,0.9885466882309076
+348,disney_4k_pov_kingdom_launch,"[7, 30, 37, 45]",319,disney_4k_pov_kingdom_universal,307,launch_rocket_space_universe_watch,0.9877807475896171
+347,sailing_engine_oil_lets_island,"[54, 106, 113, 200]",316,engine_oil_lets_fuel_engines,326,sailing_island_hawaii_boat_bay,0.9870620524402773
+346,coding_pi_python_learning_machine learning,"[59, 165, 171]",263,coding_python_learning_machine learning_train,165,pi_network_arm_64_wifi,0.983701323895541
+345,instagram_fba_amazon fba_amazon_grow,"[11, 42, 102]",299,instagram_grow_niche_tiktok_strategy,102,fba_amazon fba_amazon_results_honest,0.9832425321319015
+344,stock_market_stock market_san_investing,"[9, 127, 158, 174]",281,san_housing_market_homes_crash,262,stock_stock market_market_investing_portfolio,0.9820106013128346
+343,tubalcain_cnc_mystery_lathe_grinder,"[35, 155, 197]",314,tubalcain_cnc_mystery_lathe_grinder,155,knowledge_assembly_soldering_process_place,0.9801332175783484
+342,swimming_doctor_medical_reacts_technique,"[48, 147]",48,swimming_technique_faster_pool_smooth,147,doctor_medical_reacts_ed_scenes,0.9788380743455204
+341,shelves_shelf_floating_storage_tv,"[52, 64, 189, 206]",245,garage_workbench_storage_shop_organization,229,shelves_shelf_floating_tv_diy,0.9713822875568875
+340,dust_sewing_stitch_collection_tears,"[118, 173, 176]",118,sewing_stitch_fabric_laid_chain,309,dust_collection_tears_shop_ep,0.9668668744387253
+339,dude perfect_dude_shots_perfect_trick,"[93, 109, 111]",294,dude perfect_dude_shots_perfect_trick,111,tournament_won_bot_round_champion,0.9652992724480813
+338,mo_slow_slow mo_guys_waterjet,"[148, 215]",148,mo_slow mo_slow_guys_slow motion,215,waterjet_psi waterjet_60000_psi_half,0.9645305011058876
+337,ai_level1_chatgpt_news_2024,"[17, 122, 202]",265,ai_level1_chatgpt_news_2024,202,trump_musk_elon_tom bilyeu_bilyeu,0.9623492490586106
+336,routine_morning_healthy_habits_hair,"[5, 62, 126, 136]",312,routine_morning_healthy_habits_hair,136,planner_plan_mom_meal_monthly,0.9565172118193306
+335,gun_arts_cannon_web_journey,"[26, 105, 146]",146,arts_journey_ft_defense_fight,291,gun_cannon_web_jason_spy,0.95426470356567
+334,etsy_friday bean_bean_friday_meet,"[71, 145, 193]",255,passive income_passive_online_income_businesses,71,etsy_friday bean_bean_friday_meet,0.9541770734630456
+333,led_door_shed_install_electrical,"[72, 104, 159, 170]",322,door_shed_install_electrical_roof,159,led_light_3d printed_printed_weather,0.9535004882615854
+332,water_heater_liquid_heat_install,"[70, 133, 214]",133,liquid_lava_experiment_freezing_water,247,water_heater_heat_install_installing,0.9518012752760797
+331,audio_wireless_speakers_sound_best budget,"[10, 188, 211]",239,wireless_audio_speakers_sound_best budget,211,demo_devices_audio_tone_effects,0.9508097277335925
+330,gaming_pc_chair_amd_cpu,"[41, 79, 184]",184,chair_gravity_atlas_gaming_zero,270,gaming_pc_amd_cpu_keyboard,0.9486681650078581
+329,minecraft_iq_mod_25_kill,"[58, 95]",95,iq_mod_kill_custom_double,58,minecraft_animation_mod_25_block,0.9482777777829957
+328,coaching_goals_howes_lewis howes_lewis,"[31, 67, 129, 162]",129,storytelling_talk_casually_casually explained_audience,302,coaching_goals_howes_lewis_lewis howes,0.9460539258736141
+327,music_beat_song_cover_beats,"[12, 152, 209]",209,cover_rob scallon_scallon_rob_galaxy,266,music_beat_song_beats_studio,0.9415662024577546
+326,sailing_island_hawaii_boat_bay,"[106, 200]",106,sailing_island_hawaii_boat_bay,200,traffic_vancouver_transit_rail_america,0.9354112909689234
+325,logo_giveaway_adobe_graphic_design,"[49, 130]",49,logo_adobe_graphic_design_designers,130,giveaway_thank_subscribers_subscriber_100k,0.9343545005892628
+324,highest_college_jobs_paying_10,"[27, 65]",27,wwii_list_10_combat_fighter,65,highest_college_jobs_paying_remote,0.9332119245797158
+323,robot_bruton_james bruton_james_odin,"[22, 112, 149]",233,bruton_james bruton_odin_odin makes_mask,112,robot_dog_james bruton_bruton_giant,0.9281086125875888
+322,door_shed_install_electrical_roof,"[72, 104, 170]",170,fence_deck_gate_porch_install,284,door_shed_electrical_install_roof,0.9257771858631506
+321,nfl_players_history_player_football,"[47, 135, 150]",264,nfl_history_players_football_player,135,fortnite_player_rivals_twitch_main,0.9182433428963189
+320,drawing_pencil_pencils_art_colored,"[110, 139, 190, 203]",279,drawing_pencil_pencils_colored_draw,248,art_styles_drawing_artist_different,0.9172547423207451
+319,disney_4k_pov_kingdom_universal,"[7, 30]",30,breath_wild_zelda_boss_game,7,disney_4k_pov_universal_kingdom,0.9128646011312973
+318,laser_saw_jig_router_tools,"[1, 2, 153]",2,laser_laser cut_sign_fiber_cut,287,saw_router_jig_tools_drill,0.9127567747089838
+317,bathroom_shower_vinyl_renovation_remodel,"[115, 151, 179]",115,repair_texture_popcorn_ceiling_mud,285,bathroom_shower_vinyl_renovation_year old,0.9100289046537353
+316,engine_oil_lets_fuel_engines,"[54, 113]",113,engine_oil_lets_fuel_engines,54,boom_cat_john_lift_hydraulic,0.9082641893055201
+315,garden_grow_growing_gardening_plant,"[3, 160]",160,grid_homestead_desert_arizona_frugal,3,garden_grow_growing_gardening_plant,0.9046807917877332
+314,tubalcain_cnc_mystery_lathe_grinder,"[35, 197]",197,box_unboxing_mystery box_august_mystery,35,tubalcain_cnc_lathe_grinder_mystery,0.9040905949225496
+313,gym_workout_body_equipment_fitness,"[19, 23, 61, 144]",19,gym_adjustable_equipment_rack_trainer,286,workout_body_exercises_minute_transformation,0.9019498899136803
+312,routine_morning_healthy_habits_hair,"[5, 62, 126]",62,50_style_look_summer_women,298,routine_morning_healthy_habits_hair,0.9015899557736968
+311,mike_god_christian_jesus_questions,"[32, 56, 195]",195,wedding_jesus_sees_dirty_punch,267,mike_god_christian_jesus_questions,0.8993225272540163
+310,worst best_porsche_bmw_audi_worst,"[66, 76, 107]",252,porsche_audi_gear_911_rebuilding,66,worst best_worst_things_bmw_things know,0.8989593724298045
+309,dust_collection_tears_shop_ep,"[173, 176]",173,tears_santa_camp_ep_dan,176,dust_collection_shop_vacuum_automatic,0.8962477684227385
+308,eye_glasses_switch_vision_eyes,"[89, 131]",89,switch_vision_meta_controller_glasses,131,eye_eyes_glasses_dry_lenses,0.8957386553602176
+307,launch_rocket_space_universe_watch,"[37, 45]",37,launch_rocket_watch_falcon_space,45,universe_physics_quantum_sun_office hours,0.8847726823205073
+306,tiny house_tiny_house_tour_airbnb,"[73, 164, 198, 204]",204,villa_luxury_house_house tour_homes,230,tiny house_tiny_house_tour_airbnb,0.8847418488574641
+305,stream_live stream_live_ad_3dprinting,"[25, 88, 157, 201]",250,live stream_ad_stream_3dprinting_homeimprovement,275,live_rachel pizzolato_pizzolato_stream_qa,0.8814233008036279
+304,rich_money_security_retirement_social,"[16, 68, 123, 168]",269,rich_money_security_retirement_social,293,startup_business_creator_billion_entrepreneur,0.8787333520898339
+303,solar_battery_power_generator_station,"[40, 90]",40,solar_battery_generator_power_station,90,chart_data_power_masterclass_advanced,0.8760952230166791
+302,coaching_goals_howes_lewis_lewis howes,"[31, 67, 162]",277,coaching_lewis_howes_lewis howes_goals,162,goodbye_feel_im_dont use_met,0.8707447503516782
+301,iphone_ipad_ipad pro_pro_galaxy,"[29, 85, 154]",272,ipad_ipad pro_apple_pro_keyboard,29,iphone_samsung_galaxy_teardown_pro,0.8689908416166551
+300,climbing_strongest_warrior_ninja_hardest,"[74, 99]",99,climbing_ninja_warrior_hardest_gym,74,strongest_games_ups_record_competition,0.8678070679015788
+299,instagram_grow_niche_tiktok_strategy,"[11, 42]",11,instagram_grow_tiktok_social media_reels,42,niche_website_site_blog_email,0.8676166203685883
+298,routine_morning_healthy_habits_hair,"[5, 126]",5,routine_morning_healthy_habits_hair,126,simplify_minimalist_frugal_things_buy,0.8670769232504207
+297,card_magic_cards_credit_trick,"[8, 33, 108, 134]",274,card_magic_credit_trick_revealed,260,pokemon_cards_opening_card_pack,0.861872634959685
+296,knife_making_forge_sword_ring,"[4, 191]",191,ring_wedding_carbon fiber_making_carbon,4,knife_making_sword_forge_leather,0.8558754833957226
+295,table_unique_woodworking_wood_amazing,"[15, 81, 180]",180,bed_beds_woodworking skills_joints_ingenious,222,table_unique_woodworking_wood_dining,0.8516955096217564
+294,dude perfect_dude_shots_perfect_trick,"[93, 109]",93,dude perfect_dude_shots_perfect_trick,109,wins_friends_10000_guess_drink,0.8508624401284512
+293,startup_business_creator_billion_entrepreneur,"[68, 168]",68,startup_business_company_billion_entrepreneur,168,creator_sales_case study_actually make_quantum,0.8422912341071934
+292,science_model_projects_school_working,"[69, 169]",69,science_projects_model_school_working,169,scale_model_miniature_kit_modeling,0.8419699907876181
+291,gun_cannon_web_jason_spy,"[26, 105]",105,jason_defense_heres_weapon_gun,26,gun_cannon_web_rocket_blaster,0.8385385681131305
+290,photography_photoshop_photos_photoshoot_edit,"[18, 34]",34,photoshop_edit_photos_editing_photo,18,photography_photoshoot_photographer_scenes_landscape,0.8377633954838166
+289,deals_costco_10 things_prime day_need buy,"[181, 205]",205,deals_prime day_prime_black friday_updated,181,costco_10 things_need buy_10 new_buying,0.8350399836589181
+288,painting_paint_eggs_flower_canvas,"[140, 187, 213]",232,painting_paint_eggs_flower_portrait,213,berlin_location_painted_painting_chapter,0.8299676782253028
+287,saw_router_jig_tools_drill,"[1, 153]",1,saw_router_jig_tools_drill,153,cutting_board_finish_finishing_grain,0.8269299546188603
+286,workout_body_exercises_minute_transformation,"[23, 61, 144]",144,muscle_training_gains_fitness_episode,251,workout_body_exercises_minute_transformation,0.8251174764228151
+285,bathroom_shower_vinyl_renovation_year old,"[151, 179]",179,shower_vinyl_install_bathroom_installing,151,bathroom_renovation_year old_120_remodel,0.8203525995925383
+284,door_shed_electrical_install_roof,"[72, 104]",72,door_shed_roof_window_install,104,electrical_wire_switch_install_light,0.8188788842524046
+283,tesla_model_electric_elon_car,"[43, 132]",43,tesla_model_elon_electric_car,132,funny_electronics_magnets_generator_tesla,0.8159538249719303
+282,class_train_business_delta_flight,"[38, 177]",38,class_business_delta_flight_airport,177,train_overnight_nyc_rail_express,0.8145149710309981
+281,san_housing_market_homes_crash,"[127, 158]",158,san_housing_homes_market_coming,127,housing_crash_buy_real estate_estate,0.8126577381750406
+280,drone_rc_fpv_flying_flight,"[55, 94]",55,rc_fpv_plane_flight_helicopter,94,drone_drones_flying_ep_entrepreneurs,0.8120723179923868
+279,drawing_pencil_pencils_colored_draw,"[110, 190]",110,pencil_pencils_drawing_colored_draw,190,pen_drawing_cheapest_review_16,0.8116751104502625
+278,bike_powermax_installation_motorcycle_fitness,"[57, 167, 185]",167,powermax_installation_bike_fitness_motorized,241,bike_motorcycle_snow_bought_electric,0.8102953350296183
+277,coaching_lewis_howes_lewis howes_goals,"[31, 67]",67,coaching_love_person_struggling_people,31,goals_lewis_howes_lewis howes_life,0.8068261484040448
+276,cooking_food_chicken_chef_recipe,"[0, 82]",0,cooking_food_chicken_chef_recipe,82,challenge_eating_championship_matt_calories,0.8005497252799213
+275,live_rachel pizzolato_pizzolato_stream_qa,"[88, 157]",88,friend_going_ill_stream_engineering,157,qa_live_ask_pizzolato_rachel pizzolato,0.8003642182532718
+274,card_magic_credit_trick_revealed,"[8, 33]",8,magic_card_trick_revealed_tricks,33,credit_card_platinum_cards_chase,0.7967390881657181
+273,states_portugal_countries_visit_americans,"[44, 46]",46,travel_italy_visit_places_trip,44,states_countries_americans_portugal_10,0.794272775469415
+272,ipad_ipad pro_apple_pro_keyboard,"[85, 154]",85,ipad_ipad pro_pro_keyboard_apple,154,ios_apple_features_apples_mac,0.7937079089165564
+271,packing_pack_bag_camera_travel,"[114, 207]",207,packing_pack_luggage_minimalist_carry,114,bag_camera_gear_travel_backpack,0.7787496897593889
+270,gaming_pc_amd_cpu_keyboard,"[41, 79]",79,gaming_keyboard_tv_monitor_2025,41,pc_amd_gaming_cpu_5000,0.7786260907178293
+269,rich_money_security_retirement_social,"[16, 123]",16,rich_security_money_retirement_social,123,business_owners_rich_customer_make rich,0.7764300367147254
+268,running_marathon_run_shoes_10k,"[20, 163]",20,marathon_running_run_10k_5k,163,nike_shoes_running_balance_honest review,0.7757701783961245
+267,mike_god_christian_jesus_questions,"[32, 56]",32,mike_jesus_questions_episode_church,56,god_christian_happening_attention_sleep,0.7752479905371188
+266,music_beat_song_beats_studio,"[12, 152]",152,song_reacts_dan_musical_theme,12,music_beat_beats_studio_song,0.7726972697823522
+265,ai_level1_chatgpt_news_2024,"[17, 122]",17,ai_chatgpt_level1_news_intelligence,122,level1_2024_december_february_january,0.7701348657393621
+264,nfl_history_players_football_player,"[47, 150]",47,history_nfl_players_baseball_greatest,150,football_roll_player_college_nfl,0.7688565177132396
+263,coding_python_learning_machine learning_train,"[59, 171]",171,python_coding_learn_data_engineer,59,coding_train_chapter_challenge_machine learning,0.7593546203728665
+262,stock_stock market_market_investing_portfolio,"[9, 174]",9,stock_stock market_market_investing_portfolio,174,rate_crisis_inflation_urgent_reserve,0.7575362039580305
+261,fat_loss_weight_belly_eat,"[84, 101]",84,fat_weight_belly_loss_lose,101,eat_dr_honey_longer_sugar,0.7539129345200724
+260,pokemon_cards_opening_card_pack,"[108, 134]",134,pokemon_card_cards_opening_lose,108,pack_cards_deck_magic_fun,0.7520688606290115
+259,study_info geek_college info_geek_info,"[186, 208]",186,second_brain_digital_college info_info geek,208,study_info geek_college info_remember_geek,0.7516526066530601
+258,cruise_ship_ships_royal_largest,"[60, 92]",92,ship_ships_largest_inside_ocean,60,cruise_royal_ship_line_disney,0.7516497395955247
+257,patio_backyard_outdoor_oven_garden,"[196, 210]",196,oven_brick_build diy_outdoor_patio,210,patio_backyard_garden_outdoor_makeover,0.7503486815709014
+256,f1_max_bull_virtual_red bull,"[86, 142, 199]",220,max_virtual_bull_f1_laps,142,f1_formula_suspension_mercedes_wing,0.748209876397392
+255,passive income_passive_online_income_businesses,"[145, 193]",145,passive income_passive_income_businesses_business,193,online_demand_step_merch_web,0.7477270030520837
+254,sony_canon_lens_camera_nikon,"[53, 83, 161]",83,lens_sony_photo_zoom_lenses,225,sony_canon_camera_nikon_rawtalk,0.7426149897699912
+253,kitchen_ikea_organization_organization ideas_products,"[78, 156]",78,kitchen_ikea_design_decorating_trends,156,organization_organization ideas_organized_products_kitchen,0.7332769707239555
+252,porsche_audi_gear_911_rebuilding,"[76, 107]",107,porsche_gear_911_harris_chris,76,audi_rebuilding_bmw_porsche_car,0.7318782828668393
+251,workout_body_exercises_minute_transformation,"[23, 61]",23,workout_exercises_minute_body_calisthenics,61,transformation_body_shredded_90_kid,0.7316289285760498
+250,live stream_ad_stream_3dprinting_homeimprovement,"[25, 201]",201,ad_australia_homeimprovement_live stream_christmas eve,25,live stream_stream_3dprinting_live_teaching,0.7204121357201637
+249,models_games_workshop_weekly_army,"[80, 100]",80,army_painting_miniature_hobby_models,100,models_games_weekly_workshop_edition,0.7196491574790709
+248,art_styles_drawing_artist_different,"[139, 203]",203,styles_different_drawing_art_character,139,art_artist_artists_addicted_style,0.7195734757282404
+247,water_heater_heat_install_installing,"[70, 214]",214,water_filter_survival_grid_homestead,70,heater_water_heat_install_installing,0.7172613657721624
+246,dji_gopro_drone_mini_osmo,"[77, 143]",77,dji_drone_mini_pro_cinematic,143,gopro_osmo_hero_action_dji,0.7170814520955108
+245,garage_workbench_storage_shop_organization,"[64, 189]",64,workbench_shop_storage_organization_workshop,189,garage_storage_shelf_shelves_gorgeous,0.6953059078091539
+244,epoxy_resin_epoxy resin_bowl_table build,"[116, 124]",124,epoxy_table build_table_totalboat_concrete,116,resin_bowl_epoxy_turning_epoxy resin,0.6925878998692263
+243,react_artists_bad_effects_great,"[175, 183]",183,artists_react_bad_effects_great,175,react_tiktok_hooks_codes_release,0.6909434615386412
+242,camping_backpacking_camp_gear_overnight,"[87, 137]",87,backpacking_gear_camping_camp_warm,137,camping_hot_overnight_forest_winter,0.6847951187454937
+241,bike_motorcycle_snow_bought_electric,"[57, 185]",185,bike_mountain_cargo_frame_motor,57,motorcycle_bike_snow_bought_electric,0.6744401521767115
+240,van_rv_camper_camper van_van life,"[125, 138]",125,van_tiny_tiny house_camper_tiny home,138,rv_van_camper van_van life_camper,0.6715098939059321
+239,wireless_audio_speakers_sound_best budget,"[10, 188]",188,wireless_best budget_dji_vs_complete beginners,10,audio_speakers_wireless_sound_theater,0.6686382538787965
+238,youtube_channel_youtube channel_views_videos,"[14, 212]",14,youtube_channel_youtube channel_views_automation,212,youtube_editing_video_editor_videos,0.663698658205139
+237,real estate_estate_tax_estate agent_real,"[103, 128]",103,tax_rental_estate_real estate_tuesday,128,real estate_estate_estate agent_agent_real,0.6563814330520676
+236,christmas_dollar_mooregirl_tree_decorate,"[36, 50]",36,christmas_mooregirl_dollar_decorate_haul,50,vinyl_christmas_christmas tree_tree_using,0.6561328308100873
+235,mac_macbook_macbook pro_laptop_m1,"[91, 194]",194,mac_apps_productivity_keyboard_workflow,91,macbook_mac_macbook pro_laptop_m1,0.6507219487141549
+234,3d_3d printer_printer_printing_3d printing,"[24, 75, 97]",24,3d printer_printer_3d_bambu_resin,226,3d_3d printing_printing_3d printed_printed,0.6482474440722398
+233,bruton_james bruton_odin_odin makes_mask,"[22, 149]",22,odin makes_odin_iron_helmet_bruton,149,mask_star wars_printed_wars_3dprinting,0.6469572556059142
+232,painting_paint_eggs_flower_portrait,"[140, 187]",140,paint_painting_eggs_flower_step,187,painting_portrait_process_canvas_paint,0.6437263443066992
+231,spanish_learn_english_learning_speaking,"[13, 172]",13,learn_spanish_english_learning_speaking,172,spanish_lesson_phrases_useful_choose,0.6389647036235653
+230,tiny house_tiny_house_tour_airbnb,"[73, 164, 198]",73,airbnb_tiny house_tour_cabin_tiny,217,tiny house_house design_house_tiny_small house,0.5979065115793357
+229,shelves_shelf_floating_tv_diy,"[52, 206]",206,floating_shelf_shelves_hidden_invisible,52,shelves_tv_shelf_decoration_wall,0.5935124607403828
+228,crash course_course_crash_history_war,"[98, 120]",120,crash course_course_crash_tier list_tier,98,crash course_history_course_crash_war,0.5833853006975065
+227,rings_lord_middle_earth_power,"[21, 192]",21,lord_rings_middle_earth_ring,192,rings_power_breakdown_reaction_episode,0.5829678773237839
+226,3d_3d printing_printing_3d printed_printed,"[75, 97]",97,3d printing_printing_3d_filament_ep,75,3d printed_printed_3d_modeling_precision,0.5720042176919122
+225,sony_canon_camera_nikon_rawtalk,"[53, 161]",53,sony_canon_camera_ii_iii,161,rawtalk_nikon_canon_sony_jared,0.5599485230637302
+224,cleaning_clean_motivation_cleaning motivation_extreme,"[39, 117]",39,cleaning_clean_cleaning motivation_motivation_extreme,117,declutter_organizing_organize_clean_extreme,0.5356968606231653
+223,wars_star wars_star_lego_starwars,"[119, 141]",119,starwars_wars_star wars_star_episode,141,lego_wars_star wars_star_brick,0.5300588144634514
+222,table_unique_woodworking_wood_dining,"[15, 81]",15,table_unique_dining_chair_woodworking,81,recycling_woodworking_wood_waste_projects,0.515174518491776
+221,guitar_lesson_tab_solo_note,"[6, 63]",6,guitar_lesson_tab_solo_note,63,guitar_bass_acoustic_custom_episode,0.5150097137169611
+220,max_virtual_bull_f1_laps,"[86, 199]",86,max_virtual_grand_bull_lap,199,f1_bull_takes_laps_talking,0.5105136546844066
+219,cabinet_drawers_doors_cabinets_drawer,"[166, 182]",182,cabinet_doors_modern_wooden_wooden furniture,166,drawers_cabinet_cabinets_doors_drawer,0.4942064730968523
+218,lego_toys_tutorial_review_set,"[28, 96]",28,lego_toys_tutorial_set_brick,96,lego_review_harry potter_potter_harry,0.3371511171891901
+217,tiny house_house design_house_tiny_small house,"[164, 198]",198,tiny house_tiny_house_house design_small house,164,house design_small house_house_tiny house_meter,0.2851586130897973
+216,ideas_wood furniture_project ideas_furniture_pieces,"[51, 178]",51,ideas_profit_project ideas_wood furniture_wood,178,wood furniture_project ideas_ideas home_ideas_furniture,0.23852629168094797

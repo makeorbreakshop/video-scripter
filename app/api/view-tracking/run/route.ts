@@ -3,6 +3,10 @@ import { ViewTrackingService } from '@/lib/view-tracking-service';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 
+// Configure longer timeout for this route
+export const maxDuration = 300; // 5 minutes (Pro/Enterprise tier)
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Optional: Add authentication check here
@@ -14,6 +18,8 @@ export async function POST(request: NextRequest) {
     // Parse request body for optional parameters
     const body = await request.json().catch(() => ({}));
     const maxApiCalls = body.maxApiCalls || 100; // Default to small batch for manual runs
+    
+    console.log(`View tracking API called with maxApiCalls: ${maxApiCalls}`);
 
     // Check if another tracking job is already running
     const supabase = createClient<Database>(
@@ -58,33 +64,58 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Run tracking asynchronously
-    const viewTrackingService = new ViewTrackingService();
-    
-    // Don't await - let it run in background
-    viewTrackingService.trackDailyViews(maxApiCalls)
-      .then(async () => {
-        // Update job status
-        await supabase
-          .from('jobs')
-          .update({ 
-            status: 'completed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', job.id);
-      })
-      .catch(async (error) => {
-        console.error('View tracking error:', error);
-        // Update job status
-        await supabase
-          .from('jobs')
-          .update({ 
-            status: 'failed',
-            error: error.message,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', job.id);
-      });
+    // For immediate execution (small batches), run directly
+    // For larger batches, consider using the worker
+    // Increased threshold to 500 to handle daily tracking (285 calls)
+    if (maxApiCalls <= 500) {
+      // Small batch - run directly with timeout protection
+      const viewTrackingService = new ViewTrackingService();
+      
+      // Set a timeout for the tracking operation
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Operation timeout')), 280000) // 4.6 minutes
+      );
+      
+      // Race between tracking and timeout
+      Promise.race([
+        viewTrackingService.trackDailyViews(maxApiCalls),
+        timeoutPromise
+      ])
+        .then(async () => {
+          // Update job status
+          await supabase
+            .from('jobs')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job.id);
+        })
+        .catch(async (error) => {
+          console.error('View tracking error:', error);
+          // Update job status
+          await supabase
+            .from('jobs')
+            .update({ 
+              status: 'failed',
+              error: error.message,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job.id);
+        });
+    } else {
+      // Large batch - update job to pending for worker to pick up
+      await supabase
+        .from('jobs')
+        .update({ 
+          status: 'pending',
+          data: {
+            ...job.data,
+            note: 'Large batch - queued for worker processing'
+          }
+        })
+        .eq('id', job.id);
+    }
 
     return NextResponse.json({
       message: 'View tracking started',
