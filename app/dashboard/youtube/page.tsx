@@ -13,6 +13,7 @@ import { ChannelOverviewCards } from '@/components/youtube/channel-overview-card
 import { AnalyticsDataTable } from '@/components/youtube/analytics-data-table';
 import { RefreshButton } from '@/components/youtube/refresh-button';
 import { DatabaseStatsCards } from '@/components/youtube/database-stats-cards';
+import { TopicHierarchy } from '@/components/youtube/topic-hierarchy';
 
 export default function YouTubeDashboardPage() {
   return (
@@ -67,6 +68,11 @@ export default function YouTubeDashboardPage() {
               <DatabaseStatsCards />
             </Suspense>
           </div>
+
+          {/* Topic Hierarchy */}
+          <Suspense fallback={<TopicHierarchySkeleton />}>
+            <TopicHierarchy />
+          </Suspense>
         </TabsContent>
 
       </Tabs>
@@ -107,5 +113,23 @@ function DataTableSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+function TopicHierarchySkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-4 w-80 mt-2" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

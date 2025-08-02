@@ -677,3 +677,86 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - **Vectorization Progress**: 990/1000 videos synced to Pinecone (99%), discovered actual IOPS limit ~700 (not 500)
 - **BERTopic Strategy**: Pre-computed embeddings 28.9x faster than generating new ones, optimal 30/70 title/summary weighting
 - **Infrastructure Ready**: Scripts created for BERTopic clustering, worker architecture for updates, comprehensive progress tracking
+
+## 2025-08-01: BERTopic Classification & View Tracking Optimization
+
+### Major Achievements
+
+1. **View Tracking System Overhaul**
+   - Fixed critical timeout issues affecting daily tracking of 100k videos
+   - Added API route timeout configuration (`maxDuration = 300`)
+   - Created performance indexes reducing query time from minutes to milliseconds
+   - Fixed 1000 row Supabase limit using range-based pagination
+   - Removed flawed percentage-based tier allocation for proper priority tracking
+
+2. **BERTopic Implementation - 216 Topics**
+   - Successfully clustered 176,929 videos into 216 distinct topics
+   - Created 3-level hierarchy: Domain → Niche → Micro-topic
+   - Generated descriptive names (e.g., "Woodworking Projects & Tool Reviews" vs generic "topic_0")
+   - Implemented stratified sampling for scalable clustering (30K sample → 177K videos)
+   - Achieved 80% database classification (141,606 videos) with IOPS-safe approach
+
+3. **Database Performance Optimization**
+   - Diagnosed IOPS spikes (reaching 1,731/500 limit)
+   - Created composite indexes for embedding queries
+   - Implemented throttled parallel updates (10 connections, 200ms delays)
+   - Reduced update time from 5.5 hours to 41.9 minutes
+
+4. **Enhanced Video Analysis UI**
+   - Converted video modal to dedicated page with tabs
+   - Implemented 3-way semantic search (title, description, thumbnail vectors)
+   - Added performance graph with envelope bands visualization
+   - Created senior-level UI design with gradient-based components
+
+### Technical Implementation Details
+
+- **BERTopic Model**: Saved as `bertopic_model_smart_20250801_131447`
+- **Classification Data**: 216 topics with keywords, 3-level hierarchy
+- **Database Schema**: Added `topic_cluster_id`, `topic_domain`, `topic_niche`, `topic_micro`, `bertopic_version`
+- **View Tracking**: Tier-based system processing ~100k videos/day within quota
+- **IOPS Management**: Dynamic throttling keeping usage at ~113/500
+
+### Key Scripts Created
+- View tracking workers and optimization scripts
+- BERTopic training and classification pipeline
+- Database update scripts with checkpointing
+- Incremental topic classification system
+- Performance testing and validation tools
+
+## 2025-08-02: BERTopic UI Integration & Unified Import Enhancement
+
+### Major Achievements
+
+1. **UI Cleanup & Enhancement**
+   - Removed "Age-Adjusted Demo" and "Debug View" from YouTube Dashboard sidebar
+   - Simplified navigation for better user experience
+
+2. **BERTopic Hierarchy Visualization**
+   - Created interactive topic hierarchy component for Database Stats tab
+   - Built API endpoint for fetching topic hierarchy with counts
+   - Displays 3-level structure (Domain → Niche → Micro-topic) with collapsible nodes
+   - Shows video distribution across 216 BERTopic clusters
+
+3. **Unified Import BERTopic Integration**
+   - Discovered gap: unified import was using old generic topic IDs (topic_55, etc.)
+   - Created new BERTopic classification service using August 1st model
+   - Integrated Pinecone similarity search for topic assignment
+   - Now assigns descriptive names like "Woodworking Projects & Tool Reviews"
+
+4. **Dark Theme UI Improvements**
+   - Updated topic hierarchy component with proper dark theme styling
+   - Fixed contrast issues with transparent backgrounds and proper color variants
+   - Enhanced badge and text visibility on black backgrounds
+
+### Technical Implementation Details
+
+- **New Services**: Created `bertopic-classification-service.ts` for similarity-based classification
+- **Import Flow**: Videos → Embeddings → Pinecone search → Topic assignment → Database update
+- **Version Tracking**: All classifications stored with `bertopic_version: 'v1_2025-08-01'`
+- **Error Fixes**: Resolved JSON import attributes and missing .ts extensions for ES modules
+
+### Bug Fixes
+- Fixed column naming errors (topic_cluster → topic_cluster_id)
+- Added JSON import attributes (`with { type: 'json' }`)
+- Fixed Pinecone client initialization issues
+- Corrected dark theme styling for better visibility

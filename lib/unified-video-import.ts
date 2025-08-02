@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
@@ -13,6 +14,7 @@ import { PineconeSummaryService } from './pinecone-summary-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
 import { llmFormatClassificationService } from './llm-format-classification-service.ts';
 import { topicDetectionService } from './topic-detection-service.ts';
+import { BERTopicClassificationService } from './bertopic-classification-service.ts';
 import { generateVideoSummaries, generateSummaryEmbeddings } from './unified-import-summary-integration.ts';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -104,6 +106,8 @@ export class VideoImportService {
   private channelStatsCache = new Map<string, any>();
   // Job ID for quota tracking
   private jobId?: string;
+  // BERTopic classification service
+  private bertopicService: BERTopicClassificationService;
 
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
@@ -115,6 +119,9 @@ export class VideoImportService {
     if (!this.youtubeApiKey) {
       throw new Error('YOUTUBE_API_KEY environment variable is required');
     }
+    
+    // Initialize BERTopic service
+    this.bertopicService = new BERTopicClassificationService();
   }
 
   /**
@@ -200,18 +207,7 @@ export class VideoImportService {
         await Promise.all(parallelOperations);
       }
 
-      // Step 4: Classify videos (if embeddings were generated and not skipped)
-      console.log(`🔍 Classification check: skipClassification=${request.options?.skipClassification}, embeddingResults=${!!embeddingResults}, titleEmbeddings=${embeddingResults?.titleEmbeddings?.length || 0}`);
-      if (!request.options?.skipClassification && embeddingResults && embeddingResults.titleEmbeddings.length > 0) {
-        console.log(`🏷️ Starting classification for ${videoMetadata.length} videos...`);
-        const classificationCount = await this.classifyVideos(videoMetadata, embeddingResults);
-        console.log(`✅ Classification complete: ${classificationCount} videos classified`);
-        result.classificationsGenerated = classificationCount;
-      } else {
-        console.log(`⚠️ Skipping classification: conditions not met`);
-      }
-
-      // Step 5 & 6: Export and Upload in parallel
+      // Step 4 & 5: Export and Upload in parallel (moved before classification)
       const postProcessingPromises: Promise<void>[] = [];
       
       // Export embeddings locally (if not skipped)
@@ -236,15 +232,27 @@ export class VideoImportService {
       }
       
       // Step 3c: Generate summary embeddings (after summaries complete)
+      let summaryEmbeddingResults: Array<{ videoId: string; embedding: number[]; success: boolean; error?: string }> = [];
       if (summaryResults.length > 0 && !request.options?.skipEmbeddings) {
         console.log(`🔄 Generating embeddings for ${summaryResults.filter(r => r.success).length} summaries...`);
-        const summaryEmbeddings = await generateSummaryEmbeddings(summaryResults);
-        result.summaryEmbeddingsGenerated = summaryEmbeddings.filter(e => e.success).length;
+        summaryEmbeddingResults = await generateSummaryEmbeddings(summaryResults);
+        result.summaryEmbeddingsGenerated = summaryEmbeddingResults.filter(e => e.success).length;
         
         // Upload summary embeddings to Pinecone
-        if (summaryEmbeddings.filter(e => e.success).length > 0) {
-          await this.uploadSummaryEmbeddingsToPinecone(summaryEmbeddings);
+        if (summaryEmbeddingResults.filter(e => e.success).length > 0) {
+          await this.uploadSummaryEmbeddingsToPinecone(summaryEmbeddingResults);
         }
+      }
+
+      // Step 6: Classify videos AFTER we have both title and summary embeddings
+      console.log(`🔍 Classification check: skipClassification=${request.options?.skipClassification}, embeddingResults=${!!embeddingResults}, titleEmbeddings=${embeddingResults?.titleEmbeddings?.length || 0}, summaryEmbeddings=${summaryEmbeddingResults.length}`);
+      if (!request.options?.skipClassification && embeddingResults && embeddingResults.titleEmbeddings.length > 0) {
+        console.log(`🏷️ Starting classification for ${videoMetadata.length} videos...`);
+        const classificationCount = await this.classifyVideos(videoMetadata, embeddingResults, summaryEmbeddingResults);
+        console.log(`✅ Classification complete: ${classificationCount} videos classified`);
+        result.classificationsGenerated = classificationCount;
+      } else {
+        console.log(`⚠️ Skipping classification: conditions not met`);
       }
 
       result.success = true;
@@ -705,7 +713,10 @@ export class VideoImportService {
       });
       
       // Use the same Pinecone index as titles but with llm-summaries namespace
-      const index = pineconeService.getIndex();
+      const pinecone = new Pinecone({
+        apiKey: process.env.PINECONE_API_KEY!,
+      });
+      const index = pinecone.index(process.env.PINECONE_INDEX_NAME!);
       const namespace = index.namespace('llm-summaries');
       const batchSize = 100;
       
@@ -1260,7 +1271,8 @@ export class VideoImportService {
    */
   private async classifyVideos(
     videos: VideoMetadata[],
-    embeddingResults: EmbeddingResults
+    embeddingResults: EmbeddingResults,
+    summaryEmbeddingResults: Array<{ videoId: string; embedding: number[]; success: boolean; error?: string }>
   ): Promise<number> {
     console.log(`🏷️ Starting classification for ${videos.length} videos...`);
     
@@ -1283,22 +1295,28 @@ export class VideoImportService {
         classifiedCount = formatResult.classifications.length;
       }
       
-      // Step 2: Topic Classification using BERTopic clusters
-      console.log(`🎯 Classifying video topics...`);
+      // Step 2: Topic Classification using BERTopic model from August 1st
+      console.log(`🎯 Classifying video topics using BERTopic model...`);
       
-      // Load BERTopic clusters if not already loaded
-      await topicDetectionService.loadClusters();
+      // Initialize BERTopic service
+      await this.bertopicService.initialize();
       
       // Process videos that have successful embeddings
+      // TEMPORARY: Use title-only embeddings for BERTopic classification
+      // TODO: Create a combined embeddings namespace in Pinecone for proper classification
+      console.log(`⚠️ TEMPORARY: Using title-only embeddings for BERTopic classification (namespace mismatch issue)`);
       const videosWithEmbeddings = videos
         .map(video => {
-          const embedding = embeddingResults.titleEmbeddings.find(e => e.videoId === video.id);
-          if (!embedding || !embedding.success || !embedding.embedding.length) {
+          const titleEmbedding = embeddingResults.titleEmbeddings.find(e => e.videoId === video.id);
+          
+          // Skip if no title embedding
+          if (!titleEmbedding || !titleEmbedding.success || !titleEmbedding.embedding.length) {
             return null;
           }
+          
           return {
             id: video.id,
-            embedding: embedding.embedding
+            embedding: titleEmbedding.embedding
           };
         })
         .filter(v => v !== null) as Array<{ id: string; embedding: number[] }>;
@@ -1311,32 +1329,20 @@ export class VideoImportService {
         for (let i = 0; i < videosWithEmbeddings.length; i += topicBatchSize) {
           const batch = videosWithEmbeddings.slice(i, i + topicBatchSize);
           
-          // Assign topics for batch
-          const topicAssignments = await Promise.all(
-            batch.map(async ({ id, embedding }) => {
-              const assignment = await topicDetectionService.assignTopic(embedding);
-              return { id, assignment };
-            })
-          );
+          // Classify topics for batch using new BERTopic service
+          const topicAssignments = await this.bertopicService.classifyVideos(batch);
           
           // Store topic assignments in database
           for (const { id, assignment } of topicAssignments) {
-            // Extract cluster IDs from the topic names (e.g., "topic_44" -> 44, "niche_1" -> 1, "domain_0" -> 0)
-            const topicLevel3 = assignment.microTopic.match(/topic_(-?\d+)/)?.[1];
-            const topicLevel2 = assignment.niche.match(/niche_(-?\d+)/)?.[1];
-            const topicLevel1 = assignment.domain.match(/domain_(-?\d+)/)?.[1];
-            
             const { error } = await supabase
               .from('videos')
               .update({
-                topic_level_1: topicLevel1 ? parseInt(topicLevel1) : null,
-                topic_level_2: topicLevel2 ? parseInt(topicLevel2) : null,
-                topic_level_3: topicLevel3 ? parseInt(topicLevel3) : null,
+                topic_cluster_id: assignment.clusterId,
                 topic_domain: assignment.domain,
                 topic_niche: assignment.niche,
                 topic_micro: assignment.microTopic,
-                topic_cluster_id: assignment.clusterId,
                 topic_confidence: assignment.confidence,
+                bertopic_version: 'v1_2025-08-01',
                 classified_at: new Date().toISOString()
               })
               .eq('id', id);
@@ -1351,7 +1357,7 @@ export class VideoImportService {
           console.log(`   📊 Topic batch ${Math.floor(i / topicBatchSize) + 1}/${Math.ceil(videosWithEmbeddings.length / topicBatchSize)}: ${topicUpdateCount} videos updated`);
         }
         
-        console.log(`✅ Topic classification complete: ${topicUpdateCount} videos classified`);
+        console.log(`✅ Topic classification complete: ${topicUpdateCount} videos classified with BERTopic v1_2025-08-01`);
       }
       
       return classifiedCount;

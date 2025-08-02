@@ -160,6 +160,7 @@ export async function generateSummaryEmbeddings(
         const response = await openai.embeddings.create({
           model: 'text-embedding-3-small',
           input: result.summary!,
+          dimensions: 512,
         });
         
         return {

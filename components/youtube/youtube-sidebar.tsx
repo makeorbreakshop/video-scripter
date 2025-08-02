@@ -68,16 +68,6 @@ const navigation = [
     href: '/dashboard/youtube/worker',
     icon: Activity,
   },
-  {
-    name: 'Age-Adjusted Demo',
-    href: '/dashboard/age-adjusted-demo',
-    icon: BarChart3,
-  },
-  {
-    name: 'Debug View',
-    href: '/dashboard/age-adjusted-debug',
-    icon: BarChart3,
-  },
 ];
 
 export function YouTubeSidebar() {
