@@ -17,11 +17,21 @@ interface BERTopicInfo {
   subcategory: string;
 }
 
+interface TopicCentroid {
+  cluster_id: number;
+  topic_name: string;
+  parent_topic: string | null;
+  grandparent_topic: string | null;
+  centroid_embedding: number[];
+  video_count: number;
+}
+
 export class BERTopicClassificationService {
   private supabase: any;
   private pinecone: any;
   private topicNames: Record<string, BERTopicInfo>;
   private hierarchyMappings: any;
+  private centroids: Map<number, TopicCentroid> = new Map();
   private initialized: boolean = false;
 
   constructor() {
@@ -42,7 +52,28 @@ export class BERTopicClassificationService {
   async initialize() {
     if (this.initialized) return;
     
-    console.log('🏷️ Initializing BERTopic Classification Service');
+    console.log('🏷️ Initializing BERTopic Classification Service (Centroid-based)');
+    
+    // Load centroids from database
+    const { data: centroidData, error } = await this.supabase
+      .from('bertopic_clusters')
+      .select('*')
+      .gte('cluster_id', 0)
+      .lte('cluster_id', 215);
+      
+    if (error) {
+      throw new Error(`Failed to load centroids: ${error.message}`);
+    }
+    
+    // Parse and store centroids
+    centroidData.forEach((row: any) => {
+      this.centroids.set(row.cluster_id, {
+        ...row,
+        centroid_embedding: JSON.parse(row.centroid_embedding)
+      });
+    });
+    
+    console.log(`   ✅ Loaded ${this.centroids.size} topic centroids`);
     console.log(`   - Total topics: ${Object.keys(this.topicNames).length}`);
     console.log(`   - Hierarchy levels: L1=${hierarchyData.metadata.hierarchy_sizes.level_1}, L2=${hierarchyData.metadata.hierarchy_sizes.level_2}, L3=${hierarchyData.metadata.hierarchy_sizes.level_3}`);
     
@@ -50,22 +81,49 @@ export class BERTopicClassificationService {
   }
 
   /**
-   * Classify videos based on their embeddings using the August 1st BERTopic model
+   * Classify videos based on their embeddings using centroid similarity
+   * Supports both single embeddings and blended embeddings
    */
-  async classifyVideos(videos: Array<{ id: string; embedding?: number[] }>): Promise<Array<{ id: string; assignment: TopicAssignment }>> {
+  async classifyVideos(videos: Array<{ 
+    id: string; 
+    embedding?: number[];
+    titleEmbedding?: number[];
+    summaryEmbedding?: number[];
+    blendWeights?: { title: number; summary: number };
+  }>): Promise<Array<{ id: string; assignment: TopicAssignment }>> {
     await this.initialize();
     
     const assignments: Array<{ id: string; assignment: TopicAssignment }> = [];
     
     // For videos with embeddings, find nearest topic
     for (const video of videos) {
-      if (!video.embedding || video.embedding.length === 0) {
+      let embedding: number[] | null = null;
+      
+      // Support blended embeddings or single embedding
+      if (video.embedding) {
+        embedding = video.embedding;
+      } else if (video.titleEmbedding && video.summaryEmbedding) {
+        // Use provided weights or default to 30/70
+        const weights = video.blendWeights || { title: 0.3, summary: 0.7 };
+        embedding = this.blendEmbeddings(
+          video.titleEmbedding,
+          video.summaryEmbedding,
+          weights.title,
+          weights.summary
+        );
+      } else if (video.titleEmbedding) {
+        embedding = video.titleEmbedding;
+      } else if (video.summaryEmbedding) {
+        embedding = video.summaryEmbedding;
+      }
+      
+      if (!embedding || embedding.length === 0) {
         console.warn(`⚠️ No embedding for video ${video.id}, skipping classification`);
         continue;
       }
       
-      // Find nearest topic using similarity search
-      const assignment = await this.findNearestTopic(video.embedding);
+      // Find nearest topic using centroid similarity
+      const assignment = await this.findNearestTopic(embedding);
       
       if (assignment) {
         assignments.push({
@@ -79,62 +137,33 @@ export class BERTopicClassificationService {
   }
 
   /**
-   * Find the nearest BERTopic cluster for a given embedding
+   * Find the nearest BERTopic cluster for a given embedding using centroid similarity
    */
   private async findNearestTopic(embedding: number[]): Promise<TopicAssignment | null> {
     try {
-      // For the August 1st model, we'll use Pinecone to find similar videos
-      // and then use their topic assignments
-      const pineconeIndex = this.pinecone.index(process.env.PINECONE_INDEX_NAME!);
+      let bestClusterId = -1;
+      let bestSimilarity = -1;
+      let bestCentroid: TopicCentroid | null = null;
       
-      // Query Pinecone for similar videos
-      const queryResponse = await pineconeIndex.query({
-        vector: embedding,
-        topK: 10,
-        includeMetadata: false
-      });
-      
-      if (!queryResponse.matches || queryResponse.matches.length === 0) {
-        return this.getDefaultAssignment(-1, 0);
-      }
-      
-      // Get the video IDs from matches
-      const videoIds = queryResponse.matches.map(match => match.id);
-      
-      // Look up their topic assignments in the database
-      const { data: videos, error } = await this.supabase
-        .from('videos')
-        .select('topic_cluster_id, topic_confidence')
-        .in('id', videoIds)
-        .not('topic_cluster_id', 'is', null)
-        .eq('bertopic_version', 'v1_2025-08-01');
-      
-      if (error || !videos || videos.length === 0) {
-        // Fallback: use the highest similarity match
-        const topMatch = queryResponse.matches[0];
-        return this.getDefaultAssignment(-1, topMatch.score || 0);
-      }
-      
-      // Use the most common topic among similar videos
-      const topicCounts = new Map<number, number>();
-      videos.forEach(v => {
-        const count = topicCounts.get(v.topic_cluster_id) || 0;
-        topicCounts.set(v.topic_cluster_id, count + 1);
-      });
-      
-      // Find the most frequent topic
-      let bestTopic = -1;
-      let maxCount = 0;
-      topicCounts.forEach((count, topicId) => {
-        if (count > maxCount) {
-          maxCount = count;
-          bestTopic = topicId;
+      // Calculate similarity to all centroids
+      for (const [clusterId, centroid] of this.centroids) {
+        const similarity = this.cosineSimilarity(embedding, centroid.centroid_embedding);
+        
+        if (similarity > bestSimilarity) {
+          bestSimilarity = similarity;
+          bestClusterId = clusterId;
+          bestCentroid = centroid;
         }
-      });
+      }
       
-      // Get the assignment for this topic
-      const confidence = queryResponse.matches[0].score || 0.5;
-      return this.getAssignmentForCluster(bestTopic, confidence);
+      // Check if this is an outlier (low similarity to all centroids)
+      const OUTLIER_THRESHOLD = 0.3; // Adjust based on empirical testing
+      if (bestSimilarity < OUTLIER_THRESHOLD) {
+        return this.getDefaultAssignment(-1, bestSimilarity);
+      }
+      
+      // Get the assignment for this cluster
+      return this.getAssignmentForCluster(bestClusterId, bestSimilarity);
       
     } catch (error) {
       console.error('Error finding nearest topic:', error);
@@ -204,15 +233,35 @@ export class BERTopicClassificationService {
   }
 
   /**
+   * Blend two embeddings with specified weights
+   */
+  private blendEmbeddings(
+    embedding1: number[],
+    embedding2: number[],
+    weight1: number,
+    weight2: number
+  ): number[] {
+    if (embedding1.length !== embedding2.length) {
+      throw new Error('Embeddings must have the same dimension');
+    }
+    
+    return embedding1.map((val, idx) => 
+      weight1 * val + weight2 * embedding2[idx]
+    );
+  }
+
+  /**
    * Get all topics with their hierarchy
    */
   getAllTopics(): {
     topics: Record<string, BERTopicInfo>;
     hierarchy: any;
+    centroids: Map<number, TopicCentroid>;
   } {
     return {
       topics: this.topicNames,
-      hierarchy: this.hierarchyMappings
+      hierarchy: this.hierarchyMappings,
+      centroids: this.centroids
     };
   }
 }

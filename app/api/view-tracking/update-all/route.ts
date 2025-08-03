@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ViewTrackingService } from '@/lib/view-tracking-service';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import { updateAllStatsCache } from '@/lib/simple-cache';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('⚠️ UPDATE-ALL endpoint called at:', new Date().toISOString());
     // Parse request body for optional parameters
     const body = await request.json().catch(() => ({}));
     const hoursThreshold = body.hoursThreshold || 24; // Default to 24 hours
@@ -121,23 +123,36 @@ export async function POST(request: NextRequest) {
 // Get stats for update-all
 export async function GET(request: NextRequest) {
   try {
+    // Check cache first
+    const cacheKey = 'update-all-stats';
+    const cached = updateAllStatsCache.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get total count of ALL videos - we're tracking everything
+    // For update-all, we just need the total video count
+    // This is a static number that doesn't change often, so aggressive caching is fine
     const { count: totalVideos } = await supabase
       .from('videos')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true }); // Only select id for faster counting
     
     const videosNeedingUpdate = totalVideos || 0;
 
-    return NextResponse.json({
+    const responseData = {
       videosNeedingUpdate,
       estimatedApiCalls: Math.ceil((videosNeedingUpdate || 0) / 50),
       estimatedTime: Math.ceil((videosNeedingUpdate || 0) / 50 / 60) + ' minutes'
-    });
+    };
+
+    // Cache the response
+    updateAllStatsCache.set(cacheKey, responseData);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ 

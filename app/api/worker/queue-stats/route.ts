@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { queueStatsCache } from '@/lib/simple-cache';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check cache first
+    const cacheKey = 'queue-stats';
+    const cached = queueStatsCache.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get queue statistics
+    // Get queue statistics - limit to recent jobs only
     const { data: jobs, error: jobsError } = await supabase
       .from('video_processing_jobs')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1000); // Only fetch recent 1000 jobs
 
     if (jobsError) {
       throw jobsError;
@@ -109,14 +117,19 @@ export async function GET(request: NextRequest) {
       }).length || 0
     };
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       stats,
       recentJobs,
       activeWorkers,
       metrics,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    // Cache the response
+    queueStatsCache.set(cacheKey, responseData);
+    
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('❌ Queue stats error:', error);

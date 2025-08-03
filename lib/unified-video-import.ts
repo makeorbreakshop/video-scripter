@@ -1302,24 +1302,36 @@ export class VideoImportService {
       await this.bertopicService.initialize();
       
       // Process videos that have successful embeddings
-      // TEMPORARY: Use title-only embeddings for BERTopic classification
-      // TODO: Create a combined embeddings namespace in Pinecone for proper classification
-      console.log(`⚠️ TEMPORARY: Using title-only embeddings for BERTopic classification (namespace mismatch issue)`);
+      // Use blended embeddings when both title and summary are available
+      console.log(`🎯 Using blended embeddings (30% title + 70% summary) for BERTopic classification`);
       const videosWithEmbeddings = videos
         .map(video => {
           const titleEmbedding = embeddingResults.titleEmbeddings.find(e => e.videoId === video.id);
+          const summaryEmbedding = summaryEmbeddingResults.find(e => e.videoId === video.id);
           
-          // Skip if no title embedding
+          // Skip if no title embedding (minimum requirement)
           if (!titleEmbedding || !titleEmbedding.success || !titleEmbedding.embedding.length) {
             return null;
           }
           
-          return {
-            id: video.id,
-            embedding: titleEmbedding.embedding
+          // Prepare classification input with support for blended embeddings
+          const classificationInput: any = {
+            id: video.id
           };
+          
+          if (summaryEmbedding && summaryEmbedding.success && summaryEmbedding.embedding.length) {
+            // Use blended embeddings when both are available
+            classificationInput.titleEmbedding = titleEmbedding.embedding;
+            classificationInput.summaryEmbedding = summaryEmbedding.embedding;
+            classificationInput.blendWeights = { title: 0.3, summary: 0.7 };
+          } else {
+            // Fall back to title-only
+            classificationInput.embedding = titleEmbedding.embedding;
+          }
+          
+          return classificationInput;
         })
-        .filter(v => v !== null) as Array<{ id: string; embedding: number[] }>;
+        .filter(v => v !== null);
       
       if (videosWithEmbeddings.length > 0) {
         // Process in batches to avoid memory issues

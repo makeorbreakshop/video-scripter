@@ -75,25 +75,23 @@ export async function DELETE(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Cancel all processing jobs older than 1 hour
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
+    // Cancel ALL running/pending view_tracking jobs
     const { data: stuckJobs, error: updateError } = await supabase
       .from('jobs')
       .update({ 
         status: 'failed',
-        error: 'Job cancelled - stuck in processing state',
+        error: 'Job cancelled by user - emergency stop',
         updated_at: new Date().toISOString()
       })
       .eq('type', 'view_tracking')
-      .eq('status', 'processing')
-      .lt('created_at', oneHourAgo.toISOString())
+      .in('status', ['processing', 'pending'])
       .select();
 
     if (updateError) {
+      console.error('Failed to cancel jobs:', updateError);
       return NextResponse.json({ 
-        error: 'Failed to cancel stuck jobs' 
+        error: 'Failed to cancel stuck jobs',
+        details: updateError.message 
       }, { status: 500 });
     }
 

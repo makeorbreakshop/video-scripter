@@ -29,29 +29,20 @@ export class ViewTrackingService {
   private async fetchVideosToTrackRange(maxVideos: number = 100000) {
     const today = new Date().toISOString().split('T')[0];
     const batchSize = 1000;
-    let allVideos = [];
+    let allVideoIds = [];
     let offset = 0;
     
     console.log(`Fetching videos to track using range method (max: ${maxVideos})...`);
     
-    while (allVideos.length < maxVideos) {
-      const endRange = Math.min(offset + batchSize - 1, maxVideos - 1);
-      
-      const { data, error } = await this.supabase
+    // First, get all video IDs that need tracking
+    while (allVideoIds.length < maxVideos) {
+      const { data, error, count } = await this.supabase
         .from('view_tracking_priority')
-        .select(`
-          video_id,
-          priority_tier,
-          last_tracked,
-          next_track_date,
-          videos!inner(published_at)
-        `)
-        .not('videos.published_at', 'is', null)
+        .select('video_id, priority_tier', { count: 'exact' })
         .or(`next_track_date.is.null,next_track_date.lte.${today}`)
         .order('priority_tier', { ascending: true })
         .order('last_tracked', { ascending: true, nullsFirst: true })
-        .order('videos(published_at)', { ascending: false })
-        .range(offset, endRange);
+        .range(offset, offset + batchSize - 1);
       
       if (error) {
         console.error(`Error fetching batch at offset ${offset}:`, error);
@@ -63,30 +54,64 @@ export class ViewTrackingService {
         break;
       }
       
-      // Transform to expected format
-      const transformedBatch = data.map(row => ({
-        video_id: row.video_id,
-        priority_tier: row.priority_tier,
-        days_since_published: Math.floor(
-          (Date.now() - new Date(row.videos.published_at).getTime()) / (1000 * 60 * 60 * 24)
-        )
-      }));
+      // Log total count if available
+      if (count !== null && offset === 0) {
+        console.log(`Total videos needing tracking in database: ${count}`);
+      }
       
-      allVideos = allVideos.concat(transformedBatch);
+      allVideoIds = allVideoIds.concat(data);
       
-      console.log(`Fetched batch: ${transformedBatch.length} videos (total so far: ${allVideos.length})`);
+      console.log(`Fetched batch at offset ${offset}: ${data.length} rows, total so far: ${allVideoIds.length}`);
       
+      // If we got less than batchSize, we've reached the end
       if (data.length < batchSize) {
-        console.log(`Final batch - got ${data.length} rows (less than ${batchSize})`);
+        console.log(`Final batch - got ${data.length} rows`);
         break;
       }
       
       offset += batchSize;
-      
-      // Small delay to avoid overwhelming the server
-      await new Promise(resolve => setTimeout(resolve, 50));
     }
     
+    // Now fetch the published_at dates for these videos in batches
+    const allVideos = [];
+    for (let i = 0; i < allVideoIds.length; i += 1000) {
+      const batch = allVideoIds.slice(i, i + 1000);
+      const videoIds = batch.map(v => v.video_id);
+      
+      const { data: videoData, error } = await this.supabase
+        .from('videos')
+        .select('id, published_at')
+        .in('id', videoIds);
+      
+      if (error) {
+        console.error(`Error fetching video data:`, error);
+        continue;
+      }
+      
+      // Create a map for quick lookup
+      const videoMap = new Map(videoData.map(v => [v.id, v]));
+      
+      // Transform to expected format
+      const transformedBatch = batch
+        .filter(row => {
+          const video = videoMap.get(row.video_id);
+          return video && video.published_at;
+        })
+        .map(row => {
+          const video = videoMap.get(row.video_id);
+          return {
+            video_id: row.video_id,
+            priority_tier: row.priority_tier,
+            days_since_published: Math.floor(
+              (Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24)
+            )
+          };
+        });
+      
+      allVideos.push(...transformedBatch);
+    }
+    
+    console.log(`Total videos ready to track: ${allVideos.length}`);
     return allVideos.slice(0, maxVideos);
   }
 

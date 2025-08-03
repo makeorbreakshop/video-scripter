@@ -760,3 +760,46 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Added JSON import attributes (`with { type: 'json' }`)
 - Fixed Pinecone client initialization issues
 - Corrected dark theme styling for better visibility
+
+## 2025-08-02: BERTopic Integration, View Tracking Fix & Performance Crisis Resolution
+
+### Major Achievements
+
+1. **BERTopic Integration Issues & Resolution**
+   - Discovered unified import using old generic topic IDs instead of descriptive names
+   - Fixed multiple ES module import errors (missing .ts extensions, JSON attributes)
+   - Reordered classification to use combined embeddings (30% title + 70% summary)
+   - Diagnosed vector space mismatch causing severe misclassification
+   - Implemented temporary title-only solution pending proper combined namespace
+
+2. **View Tracking 1000 Row Limit Fix**
+   - Fixed critical bug limiting view tracking to 951 videos instead of 16,650
+   - Separated complex join queries into simpler paginated fetches
+   - Eliminated Supabase query complexity limits by splitting operations
+   - Achieved 100% video tracking coverage across all priority tiers
+
+3. **Dashboard IOPS Crisis & Resolution**
+   - Diagnosed extreme IOPS spikes (900-975 reaching 2x limit)
+   - Found root cause: pg_cron jobs running every 30 seconds
+   - Fixed missing `extract_duration_seconds` function causing constant errors
+   - Optimized dashboard polling with extended caching (60s → 300s)
+   - Eliminated expensive loop queries (6 queries → 0) using existing data
+
+4. **Critical Infrastructure Fixes**
+   - Created extract_duration_seconds for YouTube ISO 8601 durations
+   - Fixed baseline processing calculating rolling year averages
+   - Resolved 14,253 video mass update triggered accidentally
+   - Added emergency stop mechanisms for dangerous operations
+
+### Technical Implementation Details
+
+- **Vector Space Fix**: Title-only embeddings for classification (temporary)
+- **View Tracking**: Split queries avoiding complex joins, proper pagination
+- **IOPS Optimization**: Caching layers, query reduction, cron job management
+- **Baseline Processing**: 167,900/168,619 videos with baselines (99.6%)
+
+### Performance Improvements
+- Dashboard IOPS: 975 → ~50 (95% reduction)
+- View tracking: 951 → 16,650 videos (17x increase)
+- Query optimization: 6 queries → 0 (100% reduction)
+- Cache duration: 60s → 300s (5x increase)

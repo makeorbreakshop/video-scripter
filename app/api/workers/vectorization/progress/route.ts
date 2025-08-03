@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import { vectorizationProgressCache } from '@/lib/simple-cache';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,41 +10,47 @@ const supabase = createClient<Database>(
 
 export async function GET() {
   try {
-    // Get title vectorization progress
+    // Check cache first
+    const cacheKey = 'vectorization-progress';
+    const cached = vectorizationProgressCache.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+    // Get title vectorization progress - optimize by selecting only id
     const [titleTotal, titleDone] = await Promise.all([
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .not('title', 'is', null),
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('pinecone_embedded', true)
         .not('title', 'is', null)
     ]);
     
-    // Get thumbnail vectorization progress
+    // Get thumbnail vectorization progress - optimize by selecting only id
     const [thumbnailTotal, thumbnailDone] = await Promise.all([
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .not('thumbnail_url', 'is', null),
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('embedding_thumbnail_synced', true)
         .not('thumbnail_url', 'is', null)
     ]);
     
-    // Get LLM summary vectorization progress
+    // Get LLM summary vectorization progress - optimize by selecting only id
     const [llmSummaryTotal, llmSummaryDone] = await Promise.all([
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .not('llm_summary', 'is', null),
       supabase
         .from('videos')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('llm_summary_embedding_synced', true)
         .not('llm_summary', 'is', null)
     ]);
@@ -69,14 +76,19 @@ export async function GET() {
       percentage: llmSummaryTotal.count ? Math.round(((llmSummaryDone.count || 0) / llmSummaryTotal.count) * 100) : 0
     };
     
-    return NextResponse.json({
+    const responseData = {
       success: true,
       progress: {
         title: titleProgress,
         thumbnail: thumbnailProgress,
         llmSummary: llmSummaryProgress
       }
-    });
+    };
+    
+    // Cache the response
+    vectorizationProgressCache.set(cacheKey, responseData);
+    
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error getting vectorization progress:', error);
     return NextResponse.json(

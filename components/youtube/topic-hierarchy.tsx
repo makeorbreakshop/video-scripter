@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Tag, Layers, Hash } from 'lucide-react';
+import { ChevronDown, ChevronRight, Tag, Layers, Hash, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TopicNode {
   name: string;
@@ -23,7 +25,9 @@ interface TopicHierarchyData {
 export function TopicHierarchy() {
   const [data, setData] = useState<TopicHierarchyData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchTopicHierarchy();
@@ -40,8 +44,41 @@ export function TopicHierarchy() {
       }
     } catch (error) {
       console.error('Error fetching topic hierarchy:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load topic hierarchy',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const response = await fetch('/api/topics/refresh', {
+        method: 'POST'
+      });
+      
+      if (!response.ok) throw new Error('Failed to refresh');
+      
+      toast({
+        title: 'Success',
+        description: 'Topic statistics refreshed successfully'
+      });
+      
+      // Reload the data
+      await fetchTopicHierarchy();
+    } catch (error) {
+      console.error('Error refreshing topics:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh topic statistics',
+        variant: 'destructive'
+      });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -161,19 +198,31 @@ export function TopicHierarchy() {
               BERTopic classification with {data.totalClusters} clusters across {data.totalVideos.toLocaleString()} videos
             </CardDescription>
           </div>
-          <div className="flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-              <span className="text-gray-600 dark:text-gray-400">Domain</span>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                <span className="text-gray-600 dark:text-gray-400">Domain</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+                <span className="text-gray-600 dark:text-gray-400">Niche</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-green-500 dark:text-green-400" />
+                <span className="text-gray-600 dark:text-gray-400">Micro-topic</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-              <span className="text-gray-600 dark:text-gray-400">Niche</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4 text-green-500 dark:text-green-400" />
-              <span className="text-gray-600 dark:text-gray-400">Micro-topic</span>
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="ml-2"
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
+              Refresh
+            </Button>
           </div>
         </div>
       </CardHeader>
