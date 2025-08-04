@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Pinecone } from '@pinecone-database/pinecone';
-import topicData from '../better_topic_names_v2.json' with { type: 'json' };
-import hierarchyData from '../bertopic_smart_hierarchy_20250801_131446.json' with { type: 'json' };
+import topicData from '../data/bertopic/better_topic_names_v2.json' with { type: 'json' };
+import hierarchyData from '../data/bertopic/bertopic_smart_hierarchy_20250801_131446.json' with { type: 'json' };
 
 interface TopicAssignment {
   clusterId: number;

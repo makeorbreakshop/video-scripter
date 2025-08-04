@@ -29,6 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Database Info**: `node scripts/db-info.js` - Check database table structure
 - **Setup Skyscraper Schema**: `node setup-skyscraper-schema-simple.js` - Initialize Skyscraper analysis schema
 - **Check Supabase**: Open `check-supabase.html` in browser to test database connection
+- **Direct Database Updates**: `node scripts/direct-db-update.js` - Perform bulk updates via direct connection (bypasses timeouts)
 
 ### MCP Tools Available
 - **Supabase MCP**: Direct database access via MCP tools including:
@@ -98,6 +99,17 @@ The application uses Supabase with 17 core tables and 7 materialized views:
 ### Environment Variables Required
 ```
 NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL= # Direct database connection for bulk operations
+YOUTUBE_API_KEY=
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+REPLICATE_API_TOKEN=
+PINCONE_API_KEY=
+PINCONE_INDEX_NAME=
+PINCONE_THUMBNAIL_INDEX_NAME=
+PINCONE_SUMMARY_INDEX_NAME=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 YOUTUBE_API_KEY=
@@ -188,6 +200,19 @@ The view tracking system monitors video performance over time to enable age-adju
 - **Dual Embeddings**: Title embeddings (OpenAI 512D) and thumbnail embeddings (Replicate CLIP 768D)
 - **Local Exports**: Automatic generation of JSON/CSV exports in `/exports/` directory
 - **Backward Compatibility**: Legacy endpoints updated to use unified system with fallback support
+
+### Direct Database Connection
+
+#### Setup
+1. Get connection string from Supabase Dashboard > Settings > Database > Connection String (URI)
+2. Use the pooler connection (port 6543) for better handling of bulk operations
+3. Add to .env as: `DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`
+
+#### Usage for Bulk Operations
+- **Generate SQL**: `node scripts/direct-db-update.js --generate-sql`
+- **Execute directly**: `node scripts/direct-db-update.js`
+- Bypasses all Supabase timeouts (SQL Editor: 15s, API: 8s-2min)
+- Essential for operations affecting thousands of rows
 
 ## Development Notes
 

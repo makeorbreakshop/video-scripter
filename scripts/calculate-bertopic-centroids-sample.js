@@ -19,7 +19,7 @@ async function calculateCentroids() {
   
   // Load the BERTopic hierarchy data
   const bertopicData = JSON.parse(
-    await fs.readFile('./bertopic_smart_hierarchy_20250801_131446.json', 'utf-8')
+    await fs.readFile('../data/bertopic/bertopic_smart_hierarchy_20250801_131446.json', 'utf-8')
   );
   
   // Get topic statistics first

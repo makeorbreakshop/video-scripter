@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import topicData from '../better_topic_names_v2.json';
-import hierarchyData from '../bertopic_smart_hierarchy_20250801_131446.json';
+import topicData from '../data/bertopic/better_topic_names_v2.json';
+import hierarchyData from '../data/bertopic/bertopic_smart_hierarchy_20250801_131446.json';
 
 interface TopicAssignment {
   clusterId: number;
