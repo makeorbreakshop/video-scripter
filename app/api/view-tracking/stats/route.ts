@@ -5,38 +5,49 @@ import { viewTrackingStatsCache } from '@/lib/simple-cache';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check cache first
+    // Check cache first - DISABLED temporarily to ensure fresh data
     const cacheKey = 'view-tracking-stats';
-    const cached = viewTrackingStatsCache.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
-    }
+    // const cached = viewTrackingStatsCache.get(cacheKey);
+    // if (cached) {
+    //   return NextResponse.json(cached);
+    // }
 
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get tracking statistics by tier using a more efficient query
-    const { data: tierStats, error: tierError } = await supabase
-      .from('view_tracking_priority')
-      .select('priority_tier')
-      .gte('priority_tier', 1)
-      .lte('priority_tier', 6);
+    // Get tracking statistics by tier using raw SQL for efficiency
+    const { data: tierStats, error: tierError } = await supabase.rpc('get_tier_distribution');
     
-    // Count tiers in memory to avoid multiple queries
-    const tierCounts: Record<number, number> = {};
-    if (tierStats) {
-      tierStats.forEach(row => {
-        const tier = row.priority_tier;
-        tierCounts[tier] = (tierCounts[tier] || 0) + 1;
-      });
+    let tierStatsArray = [];
+    
+    if (!tierError && tierStats) {
+      tierStatsArray = tierStats.map((row: any) => ({
+        tier: row.priority_tier,
+        count: parseInt(row.count)
+      })).sort((a: any, b: any) => a.tier - b.tier);
+    } else {
+      // Fallback to manual query if RPC doesn't exist
+      const { data: tierStatsManual, error: tierErrorManual } = await supabase
+        .from('view_tracking_priority')
+        .select('priority_tier')
+        .gte('priority_tier', 1)
+        .lte('priority_tier', 6);
+      
+      if (tierStatsManual) {
+        const tierCounts: Record<number, number> = {};
+        tierStatsManual.forEach(row => {
+          const tier = row.priority_tier;
+          tierCounts[tier] = (tierCounts[tier] || 0) + 1;
+        });
+        
+        tierStatsArray = Object.entries(tierCounts).map(([tier, count]) => ({
+          tier: parseInt(tier),
+          count: count
+        })).sort((a, b) => a.tier - b.tier);
+      }
     }
-    
-    const tierStatsArray = Object.entries(tierCounts).map(([tier, count]) => ({
-      tier: parseInt(tier),
-      count: count
-    })).sort((a, b) => a.tier - b.tier);
 
     if (tierError) {
       console.error('Error fetching tier stats:', tierError);
@@ -117,33 +128,27 @@ export async function GET(request: NextRequest) {
     // Calculate estimated API calls
     quotaUsage.estimatedDailyCalls = Math.ceil(quotaUsage.estimatedDaily / 50);
 
-    // Calculate what will be tracked if run now - use cached tier stats
+    // Get actual counts of videos due for tracking today first
+    // Use count to get the total without row limit
+    const { count: totalDueCount, error: countError } = await supabase
+      .from('view_tracking_priority')
+      .select('priority_tier', { count: 'exact', head: true })
+      .or(`next_track_date.is.null,next_track_date.lte.${today}`);
+    
+    // Get the actual data for tier distribution (limited to 1000 for performance)
+    const { data: allDueData, error: allDueError } = await supabase
+      .from('view_tracking_priority')
+      .select('priority_tier')
+      .or(`next_track_date.is.null,next_track_date.lte.${today}`)
+      .limit(50000); // Increase limit to get all tiers properly
+    
+    // Count total videos due
+    const totalVideosDue = totalDueCount || 0;
+    
+    // Calculate what will be tracked if run now
+    // SIMPLIFIED: Just use the total count, don't bother with tier breakdown for display
     const willTrackByTier: Record<number, number> = {};
-    const maxApiCalls = 333; // Default for "Run Daily Tracking" button
-    const totalBatchSize = maxApiCalls * 50; // Total videos we can track
-    
-    // Use the tier stats we already fetched instead of making 6 more queries
-    let remainingQuota = totalBatchSize;
-    
-    // Process tiers in order of priority (1-6) using existing tier counts
-    for (const tierStat of tierStatsArray || []) {
-      if (remainingQuota <= 0) break;
-      
-      // Estimate eligible videos as a percentage of total in tier
-      // Tier 1 (daily) - assume all need tracking
-      // Tier 2 (every 2 days) - assume 50% need tracking
-      // Tier 3 (every 3 days) - assume 33% need tracking
-      // etc.
-      const eligiblePercentage = tierStat.tier === 1 ? 1 : 1 / tierStat.tier;
-      const eligibleCount = Math.floor(tierStat.count * eligiblePercentage);
-      
-      // Will track up to remaining quota for this tier
-      const trackCount = Math.min(eligibleCount, remainingQuota);
-      willTrackByTier[tierStat.tier] = trackCount;
-      remainingQuota -= trackCount;
-    }
-    
-    const totalWillTrack = Object.values(willTrackByTier).reduce((sum, count) => sum + count, 0);
+    const totalWillTrack = totalVideosDue; // This is what we'll actually track!
 
     // Get performance trends summary
     const { data: performanceTrends, error: trendsError } = await supabase
@@ -156,6 +161,14 @@ export async function GET(request: NextRequest) {
     if (trendsError) {
       console.error('Error fetching performance trends:', trendsError);
     }
+
+    // Debug logging
+    console.log('Tier Distribution Debug:', {
+      tierStatsArray,
+      totalWillTrack,
+      totalVideosDue,
+      dueCounts: totalDueCount || 0
+    });
 
     const responseData = {
       tierDistribution: tierStatsArray || [],

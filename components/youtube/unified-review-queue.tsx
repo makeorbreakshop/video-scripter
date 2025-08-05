@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Users, 
   Play, 
@@ -16,7 +17,9 @@ import {
   RefreshCw,
   Search,
   Filter,
-  Upload
+  Upload,
+  Square,
+  CheckSquare
 } from 'lucide-react';
 
 interface DiscoveredChannel {
@@ -44,10 +47,38 @@ export function UnifiedReviewQueue() {
   const [methodFilter, setMethodFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('pending');
   const [sortBy, setSortBy] = useState('relevance_score');
+  const [selectedChannelIds, setSelectedChannelIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadChannels();
   }, [methodFilter, statusFilter, sortBy]);
+
+  // Clear selections when filters change
+  useEffect(() => {
+    setSelectedChannelIds(new Set());
+  }, [methodFilter, statusFilter]);
+
+  const handleSelectChannel = (channelId: string) => {
+    const newSelection = new Set(selectedChannelIds);
+    if (newSelection.has(channelId)) {
+      newSelection.delete(channelId);
+    } else {
+      newSelection.add(channelId);
+    }
+    setSelectedChannelIds(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    const pendingChannels = filteredChannels.filter(ch => ch.validation_status === 'pending');
+    if (selectedChannelIds.size === pendingChannels.length) {
+      // All selected, so deselect all
+      setSelectedChannelIds(new Set());
+    } else {
+      // Select all pending channels
+      const allIds = new Set(pendingChannels.map(ch => ch.discovered_channel_id));
+      setSelectedChannelIds(allIds);
+    }
+  };
 
   const loadChannels = async () => {
     setLoading(true);
@@ -131,6 +162,9 @@ export function UnifiedReviewQueue() {
             // Could show an error notification here
           }
         }
+        
+        // Clear selections after successful bulk action
+        setSelectedChannelIds(new Set());
         loadChannels();
       }
     } catch (error) {
@@ -179,9 +213,8 @@ export function UnifiedReviewQueue() {
     return matchesSearch;
   });
 
-  const selectedChannels = filteredChannels.filter(ch => 
-    statusFilter === 'pending' && ch.validation_status === 'pending'
-  );
+  const pendingChannels = filteredChannels.filter(ch => ch.validation_status === 'pending');
+  const hasSelectedChannels = selectedChannelIds.size > 0;
 
   if (loading) {
     return (
@@ -270,35 +303,52 @@ export function UnifiedReviewQueue() {
             </div>
           </div>
 
-          {statusFilter === 'pending' && selectedChannels.length > 0 && (
-            <div className="flex gap-2 mt-4 pt-4 border-t">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => bulkAction('approve', selectedChannels.map(ch => ch.discovered_channel_id))}
-                className="text-green-600"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Approve ({selectedChannels.length})
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => bulkAction('approve', selectedChannels.map(ch => ch.discovered_channel_id), true)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                Approve & Import ({selectedChannels.length})
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => bulkAction('reject', selectedChannels.map(ch => ch.discovered_channel_id))}
-                className="text-red-600"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Reject ({selectedChannels.length})
-              </Button>
+          {statusFilter === 'pending' && pendingChannels.length > 0 && (
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+              {/* Select All Checkbox */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedChannelIds.size === pendingChannels.length && pendingChannels.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                  Select All ({pendingChannels.length} channels)
+                </label>
+              </div>
+
+              {/* Batch Action Buttons */}
+              {hasSelectedChannels && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => bulkAction('approve', Array.from(selectedChannelIds))}
+                    className="text-green-600"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Approve Selected ({selectedChannelIds.size})
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => bulkAction('approve', Array.from(selectedChannelIds), true)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Batch Import Selected ({selectedChannelIds.size})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => bulkAction('reject', Array.from(selectedChannelIds))}
+                    className="text-red-600"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Reject Selected ({selectedChannelIds.size})
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -324,6 +374,16 @@ export function UnifiedReviewQueue() {
                   key={channel.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
+                  {/* Checkbox for pending channels or spacer for others */}
+                  <div className="mr-3 w-5 flex justify-center">
+                    {channel.validation_status === 'pending' && (
+                      <Checkbox
+                        checked={selectedChannelIds.has(channel.discovered_channel_id)}
+                        onCheckedChange={() => handleSelectChannel(channel.discovered_channel_id)}
+                      />
+                    )}
+                  </div>
+                  
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold">{channel.channel_metadata?.title || 'Unknown Channel'}</h3>

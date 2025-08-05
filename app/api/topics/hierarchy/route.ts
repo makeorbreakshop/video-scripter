@@ -22,6 +22,10 @@ export async function GET() {
     // Get total videos from first row
     const totalVideos = topics?.[0]?.total_count || 0;
     
+    // For now, use the known count of channels with topics
+    // This should be added to the materialized view in the future
+    const totalChannels = 874;
+    
     topics?.forEach(topic => {
       const level1 = topic.domain;
       const level2 = topic.niche;
@@ -62,7 +66,8 @@ export async function GET() {
     return NextResponse.json({
       hierarchy: hierarchyArray.sort((a, b) => b.count - a.count),
       totalClusters: 216,
-      totalVideos: totalVideos
+      totalVideos: totalVideos,
+      totalChannels: totalChannels
     });
 
   } catch (error) {

@@ -803,3 +803,60 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - View tracking: 951 → 16,650 videos (17x increase)
 - Query optimization: 6 queries → 0 (100% reduction)
 - Cache duration: 60s → 300s (5x increase)
+
+## 2025-08-03: IOPS Crisis Resolution & BERTopic Centroid Classification
+
+### Major Achievements
+
+1. **IOPS Crisis Investigation & Resolution**
+   - Fixed extreme IOPS issues (761-975) consuming 2x database limit
+   - Root cause: pg_cron jobs calling missing `extract_duration_seconds` function repeatedly
+   - Created missing function to parse YouTube ISO 8601 durations (PT4M13S format)
+   - IOPS reduced from 975 to ~50 (95% reduction)
+   - Baseline processing now operational with 99.6% videos having baselines
+
+2. **BERTopic Centroid-Based Classification**
+   - Implemented "Flexible Video Categorization Strategy" using centroid approach
+   - Calculated centroids from 116,762 classified videos (216 topics)
+   - Achieved 99.2% title embedding coverage, 98.5% summary embedding coverage
+   - Direct centroid comparison 28.9x faster than Pinecone lookups
+   - Integrated blended embeddings (30% title + 70% summary) for optimal accuracy
+
+3. **Topic Analytics Dashboard Fix**
+   - Fixed dashboard showing only 1000 videos due to Supabase query limit
+   - Created materialized view `topic_distribution_stats` for complete data
+   - Dashboard now shows accurate distribution for all 180,402 classified videos
+   - Added manual refresh capability for on-demand statistics updates
+
+4. **View Tracking System Enhancement**
+   - Fixed tracking frequencies defaulting to 30 days for all tiers
+   - Corrected tier-based frequencies: Tier 1 (1 day) → Tier 6 (30 days)
+   - System now identifies 19,070 videos needing daily updates
+   - Properly calculating ~303 API calls needed daily
+
+5. **Age-Adjusted Performance Scoring**
+   - Established proper methodology for identifying video outliers
+   - Replaced broken VPD-based scoring with age-adjusted approach
+   - Example: TRON room video shows 2.08x performance (not 0.66x)
+   - Validated across multiple channel types (growth, stable, declining)
+
+6. **Performance Band Scaling Revolution**
+   - Fixed unrealistic expectations for growing channels (27x scale factor issue)
+   - Implemented backfill methodology using global growth curves
+   - Performance bands now show realistic ±25% range around median
+   - Wittworks example: 24-day video expects ~150K views (not 670K)
+
+### Technical Implementation Details
+
+- **Database Functions**: Created `extract_duration_seconds`, `refresh_topic_distribution_stats`
+- **Centroid Storage**: 216 topic centroids in `bertopic_clusters` table
+- **Classification Service**: Updated to use direct centroid comparison
+- **View Tracking**: Fixed `tracking_frequency_days` and `next_track_date` calculations
+- **Performance API**: Implemented backfill calculation for 8 key checkpoints
+
+### Performance Improvements
+- IOPS: 975 → 50 (95% reduction)
+- BERTopic classification: 28.9x faster with centroids
+- Topic dashboard: 1000 rows → 180,402 rows (complete data)
+- View tracking: 136 → 19,070 videos daily
+- Performance scoring: Fixed negative scores for top performers

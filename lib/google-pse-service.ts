@@ -126,12 +126,52 @@ export class GooglePSEService {
     return this.dailyQuotaUsed < this.maxDailyQuota;
   }
 
-  private incrementQuota() {
+  private async incrementQuota() {
+    // Update in-memory counter
     this.dailyQuotaUsed++;
     console.log(`Google PSE quota used: ${this.dailyQuotaUsed}/${this.maxDailyQuota}`);
+    
+    // Also update in database if available
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data, error } = await supabase.rpc('increment_google_pse_quota');
+      if (!error && data) {
+        this.dailyQuotaUsed = data;
+      }
+    } catch (error) {
+      console.warn('Could not update Google PSE quota in database:', error);
+    }
   }
 
-  getQuotaStatus() {
+  async getQuotaStatus() {
+    // Try to get from database first
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data, error } = await supabase.rpc('get_google_pse_quota_status');
+      if (!error && data && data.length > 0) {
+        const status = data[0];
+        this.dailyQuotaUsed = status.used;
+        return {
+          used: status.used,
+          remaining: status.remaining,
+          total: status.total
+        };
+      }
+    } catch (error) {
+      console.warn('Could not get Google PSE quota from database:', error);
+    }
+    
+    // Fallback to in-memory
     this.loadQuotaFromStorage();
     return {
       used: this.dailyQuotaUsed,
@@ -149,8 +189,9 @@ export class GooglePSEService {
       num?: number; // Results per page (max 10)
       start?: number; // Starting index
       type?: 'video' | 'channel' | 'any';
+      includeRaw?: boolean; // Include raw PSE results
     } = {}
-  ): Promise<{ results: ExtractedChannel[]; totalResults: number; error?: string }> {
+  ): Promise<{ results: ExtractedChannel[]; totalResults: number; rawResults?: PSESearchResult[]; error?: string }> {
     if (!this.apiKey || !this.searchEngineId) {
       return { 
         results: [], 
@@ -189,15 +230,22 @@ export class GooglePSEService {
       const data: PSEResponse = await response.json();
       
       // Increment quota after successful API call
-      this.incrementQuota();
+      await this.incrementQuota();
       
       // Extract channels from search results
       const channels = this.extractChannelsFromResults(data.items || []);
       
-      return {
+      const result: any = {
         results: channels,
         totalResults: parseInt(data.searchInformation?.totalResults || '0')
       };
+      
+      // Include raw results if requested
+      if (options.includeRaw) {
+        result.rawResults = data.items || [];
+      }
+      
+      return result;
 
     } catch (error) {
       console.error('PSE search error:', error);
@@ -484,27 +532,6 @@ export class GooglePSEService {
     return !!(this.apiKey && this.searchEngineId);
   }
 
-  /**
-   * Get remaining quota for today (rough estimate)
-   */
-  async getQuotaStatus(): Promise<{
-    available: boolean;
-    limit: number;
-    used: number;
-    remaining: number;
-  }> {
-    // Google PSE has a hard limit of 100 queries per day for free tier
-    // This is a simple estimate - you'd want to track actual usage in your database
-    const limit = 100;
-    const used = 0; // TODO: Track in database
-    
-    return {
-      available: used < limit,
-      limit,
-      used,
-      remaining: limit - used
-    };
-  }
 }
 
 // Export singleton instance

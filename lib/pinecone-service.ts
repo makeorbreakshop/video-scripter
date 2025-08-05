@@ -103,10 +103,29 @@ export class PineconeService {
       return;
     }
 
+    const BATCH_SIZE = 1000; // Pinecone limit
+    const index = this.pinecone.index(this.indexName);
+
     try {
-      const index = this.pinecone.index(this.indexName);
-      await index.upsert(vectors);
+      if (vectors.length <= BATCH_SIZE) {
+        // Single batch - no chunking needed
+        console.log(`📤 Upserting ${vectors.length} vectors to Pinecone in single batch`);
+        await index.upsert(vectors);
+      } else {
+        // Multiple batches needed
+        console.log(`📤 Upserting ${vectors.length} vectors to Pinecone in ${Math.ceil(vectors.length / BATCH_SIZE)} batches`);
+        
+        for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
+          const batch = vectors.slice(i, i + BATCH_SIZE);
+          const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+          const totalBatches = Math.ceil(vectors.length / BATCH_SIZE);
+          
+          console.log(`📤 Uploading batch ${batchNum}/${totalBatches} (${batch.length} vectors)`);
+          await index.upsert(batch);
+        }
+      }
       
+      console.log(`✅ Successfully upserted ${vectors.length} vectors to Pinecone`);
     } catch (error) {
       console.error('❌ Failed to upsert vectors:', error);
       throw error;

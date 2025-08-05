@@ -67,6 +67,19 @@ interface VideoDetails {
     p75_views: number;
     p90_views: number;
   }>;
+  channel_scale_factor?: number;
+  // New backfill-based fields
+  channel_adjusted_envelope?: Array<{
+    day_since_published: number;
+    p10_views: number;
+    p25_views: number;
+    p50_views: number;
+    p75_views: number;
+    p90_views: number;
+  }>;
+  backfilled_baseline?: { [key: number]: number };
+  channel_performance_ratio?: number;
+  expected_views_at_current_age?: number;
 }
 
 interface SimilarVideo {
@@ -237,50 +250,64 @@ export default function VideoDetailsPage() {
   // Get latest snapshot data
   const latestSnapshot = snapshots[snapshots.length - 1];
   const dailyVelocity = latestSnapshot?.daily_views_rate;
+  const currentViewCount = latestSnapshot?.view_count || video.view_count;
 
   // Create chart data combining actual snapshots with performance envelope
   const chartData: any[] = [];
   const publishedDate = video.published_at ? new Date(video.published_at) : new Date();
   
-  // Add performance envelope data (expected growth curves)
-  if (video.performance_envelope && video.performance_envelope.length > 0) {
-    const channelBaseline = video.video_performance_metrics?.channel_baseline_vpd || 1397;
-    
-    // Find day 7 reference point for scaling
-    const day7Envelope = video.performance_envelope.find(env => env.day_since_published === 7) || 
-                         video.performance_envelope.find(env => env.day_since_published >= 5 && env.day_since_published <= 10);
-    
-    // Calculate scale factor based on channel baseline
-    const scaleFactor = day7Envelope ? (channelBaseline * 7) / day7Envelope.p50_views : 0.5;
-    
-    video.performance_envelope.forEach(env => {
+  // Calculate scale factor for channel normalization
+  let scaleFactor = 1; // Default to no scaling
+  
+  // Use the new backfilled channel-adjusted envelope if available
+  console.log('Channel-adjusted envelope data:', video.channel_adjusted_envelope?.length || 0, 'points');
+  console.log('Backfilled baseline checkpoints:', video.backfilled_baseline);
+  
+  if (video.channel_adjusted_envelope && video.channel_adjusted_envelope.length > 0) {
+    // Use the pre-calculated channel-adjusted performance bands
+    video.channel_adjusted_envelope.forEach(env => {
       const date = new Date(publishedDate);
       date.setDate(date.getDate() + env.day_since_published);
-      
-      const p10 = Math.round(env.p10_views * scaleFactor);
-      const p25 = Math.round(env.p25_views * scaleFactor);
-      const p50 = Math.round(env.p50_views * scaleFactor);
-      const p75 = Math.round(env.p75_views * scaleFactor);
-      const p90 = Math.round(env.p90_views * scaleFactor);
       
       chartData.push({
         day: env.day_since_published,
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        p10: p10,
-        p25: p25,
-        p50: p50,
-        p75: p75,
-        p90: p90,
-        // Pre-calculated band heights for stacking
-        band1: p10,                    // 0-10%
-        band2: p25 - p10,              // 10-25%
-        band3: p50 - p25,              // 25-50%
-        band4: p75 - p50,              // 50-75%
-        band5: p90 - p75,              // 75-90%
+        p10: Math.round(env.p10_views),
+        p25: Math.round(env.p25_views),
+        p50: Math.round(env.p50_views),
+        p75: Math.round(env.p75_views),
+        p90: Math.round(env.p90_views),
+        // Add true ±25% bands for visualization
+        medianPlus25: Math.round(env.p50_views * 1.25),
+        medianMinus25: Math.round(env.p50_views * 0.75),
+        actualViews: null
+      });
+    });
+  } else if (video.performance_envelope && video.performance_envelope.length > 0) {
+    // Fallback to global envelope if no channel-adjusted data
+    console.log('No channel-adjusted envelope, using global data');
+    video.performance_envelope.forEach(env => {
+      const date = new Date(publishedDate);
+      date.setDate(date.getDate() + env.day_since_published);
+      
+      chartData.push({
+        day: env.day_since_published,
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        p10: Math.round(env.p10_views),
+        p25: Math.round(env.p25_views),
+        p50: Math.round(env.p50_views),
+        p75: Math.round(env.p75_views),
+        p90: Math.round(env.p90_views),
+        // Add true ±25% bands for visualization
+        medianPlus25: Math.round(env.p50_views * 1.25),
+        medianMinus25: Math.round(env.p50_views * 0.75),
         actualViews: null
       });
     });
   }
+  
+  // Debug first few envelope points
+  console.log('First few envelope data points:', chartData.slice(0, 5));
   
   // Add actual snapshot data
   snapshots.forEach(snapshot => {
@@ -292,22 +319,12 @@ export default function VideoDetailsPage() {
     // Find matching envelope data point or create new one
     let dataPoint = chartData.find(d => d.day === daysSincePublished);
     if (!dataPoint) {
-      dataPoint = {
+      // Only add snapshot data, don't override envelope with nulls
+      chartData.push({
         day: daysSincePublished,
         date: snapshotDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        actualViews: snapshot.view_count,
-        p10: null,
-        p25: null,
-        p50: null,
-        p75: null,
-        p90: null,
-        band1: null,
-        band2: null,
-        band3: null,
-        band4: null,
-        band5: null
-      };
-      chartData.push(dataPoint);
+        actualViews: snapshot.view_count
+      });
     } else {
       dataPoint.actualViews = snapshot.view_count;
     }
@@ -319,6 +336,54 @@ export default function VideoDetailsPage() {
   // Limit chart data to reasonable range
   const maxDay = Math.max(...chartData.filter(d => d.actualViews !== null).map(d => d.day), 30);
   const filteredChartData = chartData.filter(d => d.day <= maxDay * 1.2);
+  
+  // Debug what we're passing to the chart
+  console.log('Filtered chart data sample:', filteredChartData.slice(0, 5));
+  console.log('Has p10 data?', filteredChartData.some(d => d.p10 !== undefined && d.p10 !== null));
+  console.log('Scale factor used:', scaleFactor);
+  
+  // Calculate age-adjusted performance score using backfilled baseline
+  let ageAdjustedScore = null;
+  let ageAdjustedTier = null;
+  const currentAge = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (video.expected_views_at_current_age && currentViewCount) {
+    // Use the pre-calculated expected views from the backfill analysis
+    ageAdjustedScore = currentViewCount / video.expected_views_at_current_age;
+    
+    console.log('Using backfilled performance calculation:', {
+      currentAge,
+      currentViews: currentViewCount,
+      expectedViews: video.expected_views_at_current_age,
+      channelPerformanceRatio: video.channel_performance_ratio,
+      ageAdjustedScore
+    });
+  } else if (video.channel_adjusted_envelope && currentViewCount) {
+    // Fallback: Find the adjusted envelope data for current age
+    const currentEnvelope = video.channel_adjusted_envelope.find(env => env.day_since_published === currentAge) ||
+                           video.channel_adjusted_envelope.find(env => env.day_since_published === Math.min(currentAge, 730)) ||
+                           video.channel_adjusted_envelope[video.channel_adjusted_envelope.length - 1];
+    
+    if (currentEnvelope) {
+      ageAdjustedScore = currentViewCount / currentEnvelope.p50_views;
+      
+      console.log('Using envelope-based calculation:', {
+        currentAge,
+        currentViews: currentViewCount,
+        adjustedP50: currentEnvelope.p50_views,
+        ageAdjustedScore
+      });
+    }
+  }
+  
+  // Calculate performance tier based on age-adjusted score
+  if (ageAdjustedScore) {
+    if (ageAdjustedScore >= 3) ageAdjustedTier = 'Viral';
+    else if (ageAdjustedScore >= 1.5) ageAdjustedTier = 'Outperforming';
+    else if (ageAdjustedScore >= 0.8) ageAdjustedTier = 'On Track';
+    else if (ageAdjustedScore >= 0.5) ageAdjustedTier = 'Underperforming';
+    else ageAdjustedTier = 'Needs Attention';
+  }
   
   return (
     <div className="p-8">
@@ -404,32 +469,36 @@ export default function VideoDetailsPage() {
                         Your video's growth journey compared to {video.channel_name}'s historical performance baseline
                       </p>
                     </div>
-                    {video.video_performance_metrics?.performance_tier && (
+                    {(ageAdjustedTier || video.video_performance_metrics?.performance_tier) && (
                       <div className="flex flex-col items-end gap-3">
                         <div className={
-                          video.video_performance_metrics.performance_tier === 'Viral' 
+                          (ageAdjustedTier || video.video_performance_metrics.performance_tier) === 'Viral' 
                             ? 'px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25' :
-                          video.video_performance_metrics.performance_tier === 'Outperforming' 
+                          (ageAdjustedTier || video.video_performance_metrics.performance_tier) === 'Outperforming' 
                             ? 'px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25' :
-                          video.video_performance_metrics.performance_tier === 'On Track' 
+                          (ageAdjustedTier || video.video_performance_metrics.performance_tier) === 'On Track' 
                             ? 'px-6 py-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' :
                             'px-6 py-3 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/25'
                         }>
                           <div className="flex items-center gap-2">
                             <TrendingUp className="h-5 w-5" />
-                            <span className="font-semibold">{video.video_performance_metrics.performance_tier}</span>
+                            <span className="font-semibold">{ageAdjustedTier || video.video_performance_metrics.performance_tier}</span>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                            {video.video_performance_metrics.indexed_score ? video.video_performance_metrics.indexed_score.toFixed(2) : '0.00'}x
+                            {ageAdjustedScore ? ageAdjustedScore.toFixed(2) : video.video_performance_metrics.indexed_score ? video.video_performance_metrics.indexed_score.toFixed(2) : '0.00'}x
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {video.video_performance_metrics.indexed_score && video.video_performance_metrics.indexed_score > 1 
-                              ? `${((video.video_performance_metrics.indexed_score - 1) * 100).toFixed(0)}% above`
-                              : video.video_performance_metrics.indexed_score 
-                                ? `${((1 - video.video_performance_metrics.indexed_score) * 100).toFixed(0)}% below`
-                                : ''
+                            {ageAdjustedScore 
+                              ? (ageAdjustedScore > 1 
+                                  ? `${((ageAdjustedScore - 1) * 100).toFixed(0)}% above`
+                                  : `${((1 - ageAdjustedScore) * 100).toFixed(0)}% below`)
+                              : (video.video_performance_metrics.indexed_score && video.video_performance_metrics.indexed_score > 1 
+                                  ? `${((video.video_performance_metrics.indexed_score - 1) * 100).toFixed(0)}% above`
+                                  : video.video_performance_metrics.indexed_score 
+                                    ? `${((1 - video.video_performance_metrics.indexed_score) * 100).toFixed(0)}% below`
+                                    : '')
                             } baseline
                           </p>
                         </div>
@@ -447,15 +516,20 @@ export default function VideoDetailsPage() {
                             <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3}/>
                             <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.05}/>
                           </linearGradient>
+                          <linearGradient id="bandFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#4b5563" stopOpacity={0.3}/>
+                            <stop offset="100%" stopColor="#4b5563" stopOpacity={0.3}/>
+                          </linearGradient>
                         </defs>
                         
                         <CartesianGrid strokeDasharray="0" stroke="#e5e7eb" vertical={false} />
                         <XAxis 
-                          dataKey="date" 
+                          dataKey="day" 
                           axisLine={false}
                           tickLine={false}
                           tick={{ fill: '#6b7280', fontSize: 11 }}
                           dy={10}
+                          label={{ value: 'Days Since Release', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: 12 } }}
                         />
                         <YAxis 
                           tickFormatter={(value) => formatNumber(value)} 
@@ -475,7 +549,7 @@ export default function VideoDetailsPage() {
                             
                             return (
                               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{label}</p>
+                                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Day {label}</p>
                                 
                                 {actualViews && (
                                   <div className="mb-3">
@@ -497,24 +571,16 @@ export default function VideoDetailsPage() {
                                 {data.p50 && (
                                   <div className="space-y-1 text-xs">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Top 10%</span>
-                                      <span className="font-semibold">{formatNumber(data.p90)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Top 25%</span>
-                                      <span className="font-semibold">{formatNumber(data.p75)}</span>
+                                      <span className="text-gray-600 dark:text-gray-400">+25% Above</span>
+                                      <span className="font-semibold">{formatNumber(data.medianPlus25)}</span>
                                     </div>
                                     <div className="flex justify-between items-center font-semibold">
-                                      <span>Median</span>
+                                      <span>Expected (Median)</span>
                                       <span>{formatNumber(data.p50)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Bottom 25%</span>
-                                      <span className="font-semibold">{formatNumber(data.p25)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Bottom 10%</span>
-                                      <span className="font-semibold">{formatNumber(data.p10)}</span>
+                                      <span className="text-gray-600 dark:text-gray-400">-25% Below</span>
+                                      <span className="font-semibold">{formatNumber(data.medianMinus25)}</span>
                                     </div>
                                   </div>
                                 )}
@@ -523,70 +589,32 @@ export default function VideoDetailsPage() {
                           }}
                         />
                         
-                        {/* Performance bands - stacked areas */}
-                        {filteredChartData.some(d => d.band1 !== undefined) && (
-                          <>
-                            {/* Bottom 10% band */}
-                            <Area
-                              type="monotone"
-                              dataKey="band1"
-                              stackId="1"
-                              stroke="none"
-                              fill="#fecaca"
-                              fillOpacity={0.6}
-                            />
-                            
-                            {/* 10-25% band */}
-                            <Area
-                              type="monotone"
-                              dataKey="band2"
-                              stackId="1"
-                              stroke="none"
-                              fill="#fed7aa"
-                              fillOpacity={0.6}
-                            />
-                            
-                            {/* 25-50% band */}
-                            <Area
-                              type="monotone"
-                              dataKey="band3"
-                              stackId="1"
-                              stroke="none"
-                              fill="#fef3c7"
-                              fillOpacity={0.6}
-                            />
-                            
-                            {/* 50-75% band */}
-                            <Area
-                              type="monotone"
-                              dataKey="band4"
-                              stackId="1"
-                              stroke="none"
-                              fill="#dbeafe"
-                              fillOpacity={0.6}
-                            />
-                            
-                            {/* 75-90% band */}
-                            <Area
-                              type="monotone"
-                              dataKey="band5"
-                              stackId="1"
-                              stroke="none"
-                              fill="#bbf7d0"
-                              fillOpacity={0.6}
-                            />
-                            
-                            {/* Median line */}
-                            <Line 
-                              type="monotone" 
-                              dataKey="p50" 
-                              stroke="#4b5563" 
-                              strokeWidth={2}
-                              strokeDasharray="5 5"
-                              dot={false}
-                            />
-                          </>
-                        )}
+                        {/* Performance band - showing ±25% range as a single filled area between bounds */}
+                        {/* Fill area between upper and lower bounds */}
+                        <Area
+                          type="monotone"
+                          dataKey="medianMinus25"
+                          stackId="1"
+                          stroke="none"
+                          fill="none"
+                        />
+                        
+                        <Area
+                          type="monotone"
+                          dataKey={(data) => data.medianPlus25 - data.medianMinus25}
+                          stackId="1"
+                          stroke="none"
+                          fill="url(#bandFill)"
+                        />
+                        
+                        {/* Median line */}
+                        <Line 
+                          type="monotone" 
+                          dataKey="p50" 
+                          stroke="#6b7280" 
+                          strokeWidth={2}
+                          dot={false}
+                        />
                         
                         {/* Actual performance with gradient fill */}
                         <Area
@@ -609,7 +637,7 @@ export default function VideoDetailsPage() {
                         {/* Current marker */}
                         {video.video_performance_metrics && chartData.length > 0 && (
                           <ReferenceLine 
-                            x={chartData[chartData.length - 1]?.date} 
+                            x={chartData[chartData.length - 1]?.day} 
                             stroke="#ef4444" 
                             strokeDasharray="3 3"
                             label={{ value: "Current", position: "top", fill: "#ef4444", fontSize: 12 }}
@@ -631,7 +659,7 @@ export default function VideoDetailsPage() {
                       <div className="space-y-3">
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">View Count</p>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatNumber(video.view_count)}</p>
+                          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatNumber(currentViewCount)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">Daily Velocity</p>
@@ -690,32 +718,16 @@ export default function VideoDetailsPage() {
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#bbf7d0' }} />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Top 10% (75-90%)</span>
+                          <div className="w-4 h-4 rounded bg-gray-400/20" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">±25% Performance Range</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#dbeafe' }} />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Above Average (50-75%)</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#fef3c7' }} />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Average (25-50%)</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#fed7aa' }} />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Below Average (10-25%)</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: '#fecaca' }} />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Bottom 10%</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-0.5 bg-gray-600" />
+                          <div className="w-4 h-0.5 bg-gray-600" style={{ borderStyle: 'dashed', borderWidth: '2px 0 0 0', borderColor: '#374151' }} />
                           <span className="text-sm text-gray-700 dark:text-gray-300">Channel Median</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-4 h-1 bg-purple-500 rounded-full" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Your Video</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Your Video Performance</span>
                         </div>
                       </div>
                     </div>
@@ -724,45 +736,19 @@ export default function VideoDetailsPage() {
               )}
 
               {/* Key Performance Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Current Views</p>
-                  <p className="text-2xl font-semibold">{formatNumber(video.view_count)}</p>
+                  <p className="text-2xl font-semibold">{formatNumber(currentViewCount)}</p>
                 </div>
-                {(video.video_performance_metrics?.indexed_score || video.performance_ratio) && (
+                {ageAdjustedScore && (
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Performance Score</p>
+                    <p className="text-sm text-muted-foreground">Age-Adjusted Score</p>
                     <p className="text-2xl font-semibold">
-                      {video.video_performance_metrics?.indexed_score 
-                        ? `${video.video_performance_metrics.indexed_score.toFixed(2)}x`
-                        : `${video.performance_ratio?.toFixed(2)}x`
-                      }
+                      {ageAdjustedScore.toFixed(2)}x
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {video.video_performance_metrics?.indexed_score 
-                        ? "age-adjusted baseline"
-                        : "vs channel avg"
-                      }
-                    </p>
-                  </div>
-                )}
-                {(video.video_performance_metrics?.current_vpd || dailyVelocity) && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Daily Velocity</p>
-                    <p className="text-2xl font-semibold flex items-center gap-1">
-                      {video.video_performance_metrics?.trend_direction && (
-                        <span className="text-lg">{video.video_performance_metrics.trend_direction}</span>
-                      )}
-                      {video.video_performance_metrics?.current_vpd 
-                        ? formatNumber(Math.round(video.video_performance_metrics.current_vpd))
-                        : dailyVelocity ? `+${formatNumber(dailyVelocity)}` : 'N/A'
-                      }
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {video.video_performance_metrics?.velocity_trend 
-                        ? `views/day (${video.video_performance_metrics.velocity_trend > 0 ? '+' : ''}${Math.round(video.video_performance_metrics.velocity_trend)}%)`
-                        : "views/day"
-                      }
+                      vs expected at {currentAge}d
                     </p>
                   </div>
                 )}

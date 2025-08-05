@@ -20,6 +20,7 @@ interface TopicHierarchyData {
   hierarchy: TopicNode[];
   totalClusters: number;
   totalVideos: number;
+  totalChannels: number;
 }
 
 export function TopicHierarchy() {
@@ -195,7 +196,7 @@ export function TopicHierarchy() {
           <div>
             <CardTitle>Topic Hierarchy</CardTitle>
             <CardDescription>
-              BERTopic classification with {data.totalClusters} clusters across {data.totalVideos.toLocaleString()} videos
+              BERTopic classification with {data.totalClusters} clusters across {data.totalVideos.toLocaleString()} videos from {data.totalChannels.toLocaleString()} channels
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">

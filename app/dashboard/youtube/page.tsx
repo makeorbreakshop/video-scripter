@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChannelOverviewCards } from '@/components/youtube/channel-overview-cards';
 import { AnalyticsDataTable } from '@/components/youtube/analytics-data-table';
 import { RefreshButton } from '@/components/youtube/refresh-button';
-import { DatabaseStatsCards } from '@/components/youtube/database-stats-cards';
 import { TopicHierarchy } from '@/components/youtube/topic-hierarchy';
 
 export default function YouTubeDashboardPage() {
@@ -62,13 +61,6 @@ export default function YouTubeDashboardPage() {
 
         {/* Database Stats Tab */}
         <TabsContent value="database" className="space-y-6">
-          {/* Database Stats Cards - Only dynamic data */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Suspense fallback={<OverviewCardsSkeleton />}>
-              <DatabaseStatsCards />
-            </Suspense>
-          </div>
-
           {/* Topic Hierarchy */}
           <Suspense fallback={<TopicHierarchySkeleton />}>
             <TopicHierarchy />

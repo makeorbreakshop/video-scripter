@@ -3,6 +3,7 @@
 import { useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Users, Target, TrendingUp, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PerformanceBadge } from './performance-badge';
@@ -46,6 +47,7 @@ interface UnifiedVideoCardProps {
 }
 
 function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCardProps) {
+  const router = useRouter();
   const [imageError, setImageError] = useState(!video.thumbnail_url || video.thumbnail_url.trim() === '');
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -102,6 +104,15 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     return null;
   };
 
+  // Handle card click
+  const handleCardClick = useCallback(() => {
+    if (!onClick) {
+      router.push(`/videos/${video.id}`);
+    } else {
+      onClick();
+    }
+  }, [onClick, video.id, router]);
+
   // Handle channel name click - prevent event bubbling
   const handleChannelClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from firing
@@ -153,7 +164,10 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
   };
 
   const cardContent = (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border-border bg-card">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border-border bg-card"
+      onClick={handleCardClick}
+    >
         <div className="relative aspect-video bg-muted">
           {!imageError && video.thumbnail_url && video.thumbnail_url.trim() !== '' ? (
             <>
@@ -218,15 +232,7 @@ function UnifiedVideoCardComponent({ video, context, onClick }: UnifiedVideoCard
     </Card>
   );
 
-  if (onClick) {
-    return <div onClick={onClick}>{cardContent}</div>;
-  }
-
-  return (
-    <Link href={`/videos/${video.id}`} className="block">
-      {cardContent}
-    </Link>
-  );
+  return cardContent;
 }
 
 // Memoize the component to prevent unnecessary re-renders

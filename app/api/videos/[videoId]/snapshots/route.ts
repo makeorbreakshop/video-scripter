@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { videoId: string } }
+  { params }: { params: Promise<{ videoId: string }> }
 ) {
   try {
     const supabase = createClient(
@@ -11,7 +11,7 @@ export async function GET(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { videoId } = params;
+    const { videoId } = await params;
 
     // Fetch all view snapshots for this video
     const { data: snapshots, error } = await supabase
