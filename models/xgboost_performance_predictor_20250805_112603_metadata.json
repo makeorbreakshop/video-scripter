@@ -1,0 +1,92 @@
+{
+  "model_id": "xgboost_performance_predictor_20250805_112603",
+  "created_at": "20250805_112603",
+  "model_type": "xgboost",
+  "target": "day_30_log_multiplier",
+  "features": [
+    "topic_cluster_id",
+    "day_of_week",
+    "hour_of_day",
+    "title_word_count",
+    "day_1_log_multiplier",
+    "day_3_log_multiplier",
+    "day_7_log_multiplier",
+    "view_velocity_3_7",
+    "format_case_study",
+    "format_explainer",
+    "format_listicle",
+    "format_news_analysis",
+    "format_product_focus",
+    "format_tutorial"
+  ],
+  "performance": {
+    "train_mae": 0.8993240047989233,
+    "test_mae": 0.3087094228077015,
+    "train_rmse": 1.09000932707572,
+    "test_rmse": 0.3909184152259334,
+    "train_r2": 0.36808196932220594,
+    "test_r2": 0.2894437554901631,
+    "baseline_mae": 1.5422141863447898,
+    "baseline_rmse": 1.6104321181450265,
+    "improvement_mae": 79.98271410410409,
+    "improvement_rmse": 75.72586818026133
+  },
+  "feature_importance": [
+    {
+      "feature": "day_1_log_multiplier",
+      "importance": 0.24344518780708313
+    },
+    {
+      "feature": "day_7_log_multiplier",
+      "importance": 0.03841487318277359
+    },
+    {
+      "feature": "day_3_log_multiplier",
+      "importance": 0.025324800983071327
+    },
+    {
+      "feature": "topic_cluster_id",
+      "importance": 0.0
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.0
+    },
+    {
+      "feature": "hour_of_day",
+      "importance": 0.0
+    },
+    {
+      "feature": "title_word_count",
+      "importance": 0.0
+    },
+    {
+      "feature": "view_velocity_3_7",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_case_study",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_explainer",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_listicle",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_news_analysis",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_product_focus",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_tutorial",
+      "importance": 0.0
+    }
+  ]
+}

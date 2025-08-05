@@ -1,0 +1,16 @@
+{
+  "total_videos": 26,
+  "date_range": {
+    "earliest": "2025-07-03T20:57:27+00:00",
+    "latest": "2025-07-06T13:00:42+00:00"
+  },
+  "topics": 21,
+  "formats": 6,
+  "channels": 23,
+  "log_multiplier_stats": {
+    "day_30_mean": -1.4439677922719434,
+    "day_30_std": 1.248508106000084,
+    "day_30_min": -3.0,
+    "day_30_max": 1.5385740454998054
+  }
+}
