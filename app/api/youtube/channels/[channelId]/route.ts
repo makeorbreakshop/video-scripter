@@ -22,7 +22,7 @@ export async function GET(
 
     const decodedChannelId = decodeURIComponent(channelId);
 
-    // Get all videos for this channel with rolling baseline data
+    // Get all videos for this channel with envelope performance data
     const { data: allVideos, error: videosError } = await supabase
       .from('videos')
       .select(`
@@ -35,6 +35,8 @@ export async function GET(
         channel_id,
         channel_name,
         rolling_baseline_views,
+        envelope_performance_ratio,
+        envelope_performance_category,
         is_competitor,
         created_at,
         description,
@@ -93,15 +95,18 @@ export async function GET(
       );
     }
 
-    // Calculate performance ratios and channel stats
+    // Use envelope performance ratios (new system) with fallback to old system
     const videosWithPerformance = videos.map(video => {
-      const performanceRatio = video.rolling_baseline_views > 0 
-        ? video.view_count / video.rolling_baseline_views 
-        : null;
+      // Prefer new envelope performance ratio over old rolling baseline calculation
+      const performanceRatio = video.envelope_performance_ratio !== null 
+        ? video.envelope_performance_ratio 
+        : (video.rolling_baseline_views > 0 ? video.view_count / video.rolling_baseline_views : null);
       
       return {
         ...video,
         performance_ratio: performanceRatio,
+        envelope_performance_ratio: video.envelope_performance_ratio,
+        envelope_performance_category: video.envelope_performance_category,
         channel_avg_views: video.rolling_baseline_views
       };
     });
