@@ -220,35 +220,6 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
         </CardContent>
       </Card>
 
-      {/* Performance Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Performance Distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-xl font-bold text-red-600">{channel_overview.performance_distribution.under_half}</div>
-              <div className="text-sm text-muted-foreground">Under 0.5x</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-orange-600">{channel_overview.performance_distribution.half_to_one}</div>
-              <div className="text-sm text-muted-foreground">0.5x - 1.0x</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-blue-600">{channel_overview.performance_distribution.one_to_two}</div>
-              <div className="text-sm text-muted-foreground">1.0x - 2.0x</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-green-600">{channel_overview.performance_distribution.over_two}</div>
-              <div className="text-sm text-muted-foreground">Over 2.0x</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Top Performers */}
       <Card>

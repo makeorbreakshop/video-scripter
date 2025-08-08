@@ -273,7 +273,7 @@ export class VideoImportService {
       let baselineProcessingSuccess = false;
       if (result.videosProcessed > 0) {
         try {
-          console.log(`🔄 Triggering baseline processing for ${result.videosProcessed} new videos...`);
+          console.log(`🔄 Triggering temporal baseline processing for ${result.videosProcessed} new videos...`);
           
           // For large batches, use chunked baseline processing to avoid timeouts
           if (result.videosProcessed >= 500) {
@@ -281,7 +281,7 @@ export class VideoImportService {
             await this.triggerBaselineProcessingChunked(result.videosProcessed);
             baselineProcessingSuccess = true;
           } else {
-            const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
+            const { data, error } = await supabase.rpc('trigger_temporal_baseline_processing', { 
               batch_size: Math.min(1000, result.videosProcessed) 
             });
             
@@ -296,7 +296,7 @@ export class VideoImportService {
                 result.errors.push(`Baseline processing trigger failed: ${error.message}`);
               }
             } else {
-              console.log(`✅ Baseline processing triggered, processed ${data || 0} videos`);
+              console.log(`✅ Temporal baseline processing triggered, processed ${data?.videos_updated || data || 0} videos`);
               baselineProcessingSuccess = true;
             }
           }
@@ -723,9 +723,9 @@ export class VideoImportService {
       const currentChunkSize = Math.min(chunkSize, totalVideos - (i * chunkSize));
       
       try {
-        console.log(`📊 Processing baseline chunk ${i + 1}/${totalChunks} (${currentChunkSize} videos)...`);
+        console.log(`📊 Processing temporal baseline chunk ${i + 1}/${totalChunks} (${currentChunkSize} videos)...`);
         
-        const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
+        const { data, error } = await supabase.rpc('trigger_temporal_baseline_processing', { 
           batch_size: currentChunkSize
         });
         
@@ -734,7 +734,7 @@ export class VideoImportService {
           // Continue with remaining chunks instead of failing entirely
         } else {
           processedCount += (data || 0);
-          console.log(`✅ Baseline chunk ${i + 1}/${totalChunks} complete (processed ${data || 0} videos)`);
+          console.log(`✅ Temporal baseline chunk ${i + 1}/${totalChunks} complete (processed ${data || 0} videos`);
         }
         
         // Add delay between chunks to avoid overwhelming the database

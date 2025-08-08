@@ -961,3 +961,61 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Snapshot age more accurate than current age for performance
 - Simple smoothing beats complex ML for YouTube growth curves
 - Channel-specific bands require complete Day 1-30 tracking (wait for data maturity)
+
+## 2025-08-07: Temporal Performance Scoring & YouTube Shorts Filtering
+
+### Major Achievements
+
+1. **YouTube Shorts Detection & Filtering System**
+   - **Problem**: 95% of videos were Shorts contaminating performance calculations
+   - **Solution**: Implemented duration-based detection (≤180 seconds threshold)
+   - **Impact**: Identified and flagged 26,747 Shorts (13.5% of 198K videos)
+   - **Implementation**: Added `is_short` column, detection function, auto-trigger for new imports
+
+2. **Temporal Performance Scoring Pipeline**
+   - **Recalculated global envelopes**: Excluded Shorts, smoothed with 7-day average
+   - **Temporal baselines**: Per-video channel multipliers using "last 10 videos" approach
+   - **Curve-based backfill**: Estimated historical performance for 171,747 regular videos
+   - **Complete scoring**: 127,616 videos (99.92%) with accurate temporal scores
+
+3. **Critical Stale Data Fix (87.7% of Database)**
+   - **Discovery**: View tracking updated snapshots but NOT main videos table
+   - **Impact**: 146,073 videos had stale view counts causing systematic underreporting
+   - **Solution**: Database trigger for automatic sync + bulk sync script
+   - **Result**: Performance scores now match graph tooltips exactly (1.46x = 46% above)
+
+4. **UI Consistency & Optimization**
+   - **Channel pages**: Updated to use temporal_performance_score throughout
+   - **Date filtering**: Added 30d/90d/180d/365d/all filters for top performers
+   - **Channel baseline column**: Shows rolling_baseline_views at publish time
+   - **Graph fixes**: X-axis shows only current video age, not future days
+
+5. **Infrastructure Enhancements**
+   - **Duplicate detection**: Prevents re-importing already imported channels
+   - **Batch import fixes**: Resolved Pinecone batching causing connection overload
+   - **View sync trigger**: Real-time score updates when snapshots arrive
+   - **Performance categories**: Automatic classification (viral/outperforming/standard)
+
+### Technical Implementation Details
+
+- **Shorts Detection**: 180-second threshold + hashtag detection + auto-trigger
+- **Database Trigger**: `sync_video_view_count()` with score recalculation
+- **Temporal Formula**: `Score = Views ÷ (Global P50 × Channel Baseline)`
+- **Batch Processing**: 5,000 video chunks for bulk updates without timeouts
+
+### Performance Improvements
+- Temporal score calculation: 127,616 videos in robust batches
+- View sync: 146K stale videos updated with latest snapshots
+- Channel page: Optimized queries, reduced data transfer
+- Graph display: Consistent calculations between tooltip and score
+
+### Key Learnings
+- Shorts contamination was root cause of inaccurate baselines
+- View tracking workers need explicit main table updates
+- Temporal baselines essential for channel evolution tracking
+- Database triggers ensure real-time consistency
+
+### Remaining Work
+- Implement baseline recalculation when videos pass 30-day mark
+- Set up weekly cron for envelope updates
+- Create daily incremental updates for recent videos

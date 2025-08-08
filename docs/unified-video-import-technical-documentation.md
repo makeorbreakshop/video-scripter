@@ -228,7 +228,10 @@ CREATE TABLE videos (
   llm_summary text,
   llm_summary_generated_at timestamptz,
   llm_summary_model text DEFAULT 'gpt-4o-mini',
-  llm_summary_embedding_synced boolean DEFAULT false
+  llm_summary_embedding_synced boolean DEFAULT false,
+  -- Temporal Performance fields
+  channel_baseline_at_publish numeric,
+  temporal_performance_score numeric
 );
 ```
 
@@ -237,13 +240,52 @@ CREATE TABLE videos (
 - **Pinecone Thumbnail Index**: Thumbnail embeddings (768D)
 - **Local Cache**: Thumbnail embeddings with 24-hour TTL
 
-#### Baseline Analytics Processing
-- **Automatic Trigger**: Baseline processing automatically triggered after successful import
-- **Batch Size**: Processes up to 1,000 videos per trigger
-- **Scheduling**: Hourly cron job as safety net, immediate processing on import
-- **Function**: `trigger_baseline_processing()` called with imported video count
+#### Temporal Baseline Analytics Processing
+- **Automatic Trigger**: Temporal baseline processing automatically triggered after successful import
+- **Batch Size**: Processes up to 1,000 videos per trigger in a single efficient UPDATE
+- **Calculation Method**: Average of last 10 videos from channel within 30 days before publish date
+- **Performance Score**: `temporal_performance_score = view_count / channel_baseline_at_publish`
+- **Function**: `trigger_temporal_baseline_processing()` called with imported video count
+- **Daily Updates**: Automated cron job recalculates baselines for videos reaching 30-day maturity
+- **Efficiency**: Uses single UPDATE statement with correlated subqueries for batch processing
 
-### 5. Export System
+### 5. Temporal Performance Analytics
+
+#### Overview
+The temporal baseline system provides age-adjusted performance metrics by comparing videos to their channel's historical performance at the time of publication.
+
+#### Calculation Method
+- **Temporal Baseline** (`channel_baseline_at_publish`):
+  - Calculates average view count of the last 10 videos from the same channel
+  - Only considers videos published within 30 days before the current video
+  - Excludes YouTube Shorts (videos marked as `is_short = true`)
+  - Defaults to 1.0 if insufficient historical data
+
+- **Temporal Performance Score** (`temporal_performance_score`):
+  - Formula: `video_view_count / channel_baseline_at_publish`
+  - Score > 2.0: Exceptional performance (green)
+  - Score 1.0-2.0: Average to good performance (gray)
+  - Score < 1.0: Below average performance (red)
+
+#### Processing Flow
+1. **On Import**: Videos receive immediate baseline calculation via INSERT trigger
+2. **Batch Processing**: `trigger_temporal_baseline_processing()` handles bulk imports efficiently
+3. **Daily Updates**: Cron job recalculates baselines for videos reaching 30-day maturity
+4. **Performance**: Single UPDATE statement processes up to 1,000 videos without timeouts
+
+#### Database Functions
+- `calculate_baseline_on_insert()`: BEFORE INSERT trigger for new videos
+- `trigger_temporal_baseline_processing(batch_size)`: Batch processing function
+- `daily_baseline_update_smart()`: Daily recalculation for mature videos
+- `calculate_video_channel_baseline(video_id)`: Individual baseline calculation
+
+#### Implementation Details
+- Replaced legacy `rolling_baseline_views` (1-year average) system
+- Uses efficient correlated subqueries instead of loops
+- Processes batches in single UPDATE statement for performance
+- Function-level timeout set to 2 minutes for large batches
+
+### 6. Export System
 
 #### Export Formats
 - **JSON**: Full embeddings with metadata
@@ -370,7 +412,7 @@ The system maintains backward compatibility by:
 - Performance metrics (processing time, throughput)
 - Error tracking with stack traces
 - API usage monitoring
-- **Baseline Processing**: Logs automatic trigger after imports
+- **Temporal Baseline Processing**: Logs automatic trigger after imports with video count
 
 ### Metrics
 - Videos processed per hour
@@ -380,7 +422,8 @@ The system maintains backward compatibility by:
 - Error rates by component
 - **YouTube Quota Usage**: Real-time tracking in worker dashboard
 - **OpenAI Token Usage**: Format classification cost tracking
-- **Baseline Processing**: Videos pending baseline analytics
+- **Temporal Baseline Coverage**: Videos with channel_baseline_at_publish calculated
+- **Temporal Performance Scores**: Distribution of performance ratios across channels
 
 ### Alerting
 - API quota exhaustion warnings
@@ -476,6 +519,11 @@ chmod 755 exports
 2. **Thumbnail Embedding Tracking** (Fixed 2025-07-13)
    - Issue: Thumbnail embeddings generated but `thumbnail_embedding_version` not updated
    - Solution: Added `updateEmbeddingVersions()` method to track both title and thumbnail embeddings
+
+3. **Temporal Baseline Processing Timeout** (Fixed 2025-08-08)
+   - Issue: Batch processing function timing out after 167 seconds with large imports
+   - Solution: Rewrote function to use single UPDATE with correlated subqueries instead of loops
+   - Impact: Successfully processes batches of 100+ videos without timeouts
 
 ### Current Limitations
 - Export files are typically skipped for RSS/competitor imports to prevent duplicates
