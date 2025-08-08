@@ -139,10 +139,11 @@ export class PineconeService {
     queryEmbedding: number[],
     limit: number = 20,
     minScore: number = 0.7,
-    offset: number = 0
+    offset: number = 0,
+    namespace?: string
   ): Promise<{ results: SearchResult[], hasMore: boolean, totalAvailable: number }> {
     await this.initializeIndex();
-    console.log(`[PineconeService] Starting search with embedding length: ${queryEmbedding.length}, minScore: ${minScore}, limit: ${limit}`);
+    console.log(`[PineconeService] Starting search with embedding length: ${queryEmbedding.length}, minScore: ${minScore}, limit: ${limit}, namespace: ${namespace || 'default'}`);
 
     try {
       
@@ -152,14 +153,19 @@ export class PineconeService {
       // We'll fetch up to 100 results initially and paginate client-side
       const maxResults = Math.max(100, offset + limit + 20);
       
-      console.log(`[PineconeService] Querying Pinecone index: ${this.indexName} for top ${maxResults} results`);
+      console.log(`[PineconeService] Querying Pinecone index: ${this.indexName} for top ${maxResults} results in namespace: ${namespace || 'default'}`);
       
-      const queryResponse = await index.query({
+      const queryRequest: any = {
         vector: queryEmbedding,
         topK: maxResults,
         includeMetadata: true,
         includeValues: true,  // Include embeddings in response
-      });
+      };
+      
+      // Use namespace() method for non-default namespaces
+      const queryResponse = namespace 
+        ? await index.namespace(namespace).query(queryRequest)
+        : await index.query(queryRequest);
       
       console.log(`[PineconeService] Raw Pinecone response - matches: ${queryResponse.matches?.length || 0}`);
 
