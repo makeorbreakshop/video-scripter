@@ -79,3 +79,15 @@ topic_keywords.json
 *.pkl
 bertopic_model_*
 bertopic_checkpoint_*
+
+# Large ML training files
+data/ml_training_dataset_clean.json
+data/bertopic/*.pkl
+data/bertopic/bertopic_model_*
+
+
+# ML training data files
+data/ml_training_batch_*.json
+data/ml_training_dataset_*.csv
+data/ml_training_dataset_*.json
+

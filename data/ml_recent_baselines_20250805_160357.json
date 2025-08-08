@@ -1,0 +1,250 @@
+{
+  "generated_at": "20250805_160357",
+  "model_version": "xgboost_baseline_predictor_20250805_160237",
+  "total_channels": 3,
+  "baselines": [
+    {
+      "channel_id": "UCgwaPlarb9k0PS2BQphCLNQ",
+      "channel_name": "Steve Ramsey - WWMM",
+      "method": "ml_backfill",
+      "num_synthetic_videos": 10,
+      "avg_multiplier": 1.2760127544403077,
+      "median_multiplier": 1.2827016711235046,
+      "std_multiplier": 0.08337262808782898,
+      "min_multiplier": 1.144335150718689,
+      "max_multiplier": 1.4196676015853882,
+      "predictions": [
+        {
+          "video_index": 0,
+          "log_multiplier": 0.15080609917640686,
+          "performance_multiplier": 1.162771224975586,
+          "synthetic": true
+        },
+        {
+          "video_index": 1,
+          "log_multiplier": 0.2663143575191498,
+          "performance_multiplier": 1.305145263671875,
+          "synthetic": true
+        },
+        {
+          "video_index": 2,
+          "log_multiplier": 0.350422739982605,
+          "performance_multiplier": 1.4196676015853882,
+          "synthetic": true
+        },
+        {
+          "video_index": 3,
+          "log_multiplier": 0.19248785078525543,
+          "performance_multiplier": 1.2122617959976196,
+          "synthetic": true
+        },
+        {
+          "video_index": 4,
+          "log_multiplier": 0.2725968062877655,
+          "performance_multiplier": 1.3133705854415894,
+          "synthetic": true
+        },
+        {
+          "video_index": 5,
+          "log_multiplier": 0.3185979723930359,
+          "performance_multiplier": 1.3751983642578125,
+          "synthetic": true
+        },
+        {
+          "video_index": 6,
+          "log_multiplier": 0.1348237842321396,
+          "performance_multiplier": 1.144335150718689,
+          "synthetic": true
+        },
+        {
+          "video_index": 7,
+          "log_multiplier": 0.22344502806663513,
+          "performance_multiplier": 1.2503769397735596,
+          "synthetic": true
+        },
+        {
+          "video_index": 8,
+          "log_multiplier": 0.27516090869903564,
+          "performance_multiplier": 1.3167425394058228,
+          "synthetic": true
+        },
+        {
+          "video_index": 9,
+          "log_multiplier": 0.2313164919614792,
+          "performance_multiplier": 1.2602580785751343,
+          "synthetic": true
+        }
+      ],
+      "channel_characteristics": {
+        "subscriber_count": 119000,
+        "channel_tier": "large",
+        "dominant_format": "tutorial",
+        "dominant_topic": 166,
+        "avg_title_length": 9
+      },
+      "generated_at": "2025-08-05T16:03:57.660796"
+    },
+    {
+      "channel_id": "UCEjIjshJ8bvvCkGNk0pkYcA",
+      "channel_name": "Athlean-X",
+      "method": "ml_backfill",
+      "num_synthetic_videos": 10,
+      "avg_multiplier": 1.3099913716316223,
+      "median_multiplier": 1.3153066039085388,
+      "std_multiplier": 0.02270478570337871,
+      "min_multiplier": 1.2729781866073608,
+      "max_multiplier": 1.3531864881515503,
+      "predictions": [
+        {
+          "video_index": 0,
+          "log_multiplier": 0.25626814365386963,
+          "performance_multiplier": 1.292099118232727,
+          "synthetic": true
+        },
+        {
+          "video_index": 1,
+          "log_multiplier": 0.277721643447876,
+          "performance_multiplier": 1.3201186656951904,
+          "synthetic": true
+        },
+        {
+          "video_index": 2,
+          "log_multiplier": 0.28216955065727234,
+          "performance_multiplier": 1.3260035514831543,
+          "synthetic": true
+        },
+        {
+          "video_index": 3,
+          "log_multiplier": 0.2757927477359772,
+          "performance_multiplier": 1.3175747394561768,
+          "synthetic": true
+        },
+        {
+          "video_index": 4,
+          "log_multiplier": 0.2479064166545868,
+          "performance_multiplier": 1.2813400030136108,
+          "synthetic": true
+        },
+        {
+          "video_index": 5,
+          "log_multiplier": 0.2613123953342438,
+          "performance_multiplier": 1.298633337020874,
+          "synthetic": true
+        },
+        {
+          "video_index": 6,
+          "log_multiplier": 0.24135920405387878,
+          "performance_multiplier": 1.2729781866073608,
+          "synthetic": true
+        },
+        {
+          "video_index": 7,
+          "log_multiplier": 0.2723439335823059,
+          "performance_multiplier": 1.3130384683609009,
+          "synthetic": true
+        },
+        {
+          "video_index": 8,
+          "log_multiplier": 0.3024621605873108,
+          "performance_multiplier": 1.3531864881515503,
+          "synthetic": true
+        },
+        {
+          "video_index": 9,
+          "log_multiplier": 0.28136807680130005,
+          "performance_multiplier": 1.3249411582946777,
+          "synthetic": true
+        }
+      ],
+      "channel_characteristics": {
+        "subscriber_count": 7170000,
+        "channel_tier": "mega",
+        "dominant_format": "case_study",
+        "dominant_topic": 23,
+        "avg_title_length": 11
+      },
+      "generated_at": "2025-08-05T16:03:57.669717"
+    },
+    {
+      "channel_id": "UCbRP3c757lWg9M-U7TyEkXA",
+      "channel_name": "Veritasium",
+      "method": "ml_backfill",
+      "num_synthetic_videos": 10,
+      "avg_multiplier": 1.190345299243927,
+      "median_multiplier": 1.1937075853347778,
+      "std_multiplier": 0.03437907471584284,
+      "min_multiplier": 1.1023460626602173,
+      "max_multiplier": 1.2308902740478516,
+      "predictions": [
+        {
+          "video_index": 0,
+          "log_multiplier": 0.09744072705507278,
+          "performance_multiplier": 1.1023460626602173,
+          "synthetic": true
+        },
+        {
+          "video_index": 1,
+          "log_multiplier": 0.20639817416667938,
+          "performance_multiplier": 1.2292425632476807,
+          "synthetic": true
+        },
+        {
+          "video_index": 2,
+          "log_multiplier": 0.20773769915103912,
+          "performance_multiplier": 1.2308902740478516,
+          "synthetic": true
+        },
+        {
+          "video_index": 3,
+          "log_multiplier": 0.17803889513015747,
+          "performance_multiplier": 1.1948717832565308,
+          "synthetic": true
+        },
+        {
+          "video_index": 4,
+          "log_multiplier": 0.1897353082895279,
+          "performance_multiplier": 1.2089295387268066,
+          "synthetic": true
+        },
+        {
+          "video_index": 5,
+          "log_multiplier": 0.1555430144071579,
+          "performance_multiplier": 1.1682921648025513,
+          "synthetic": true
+        },
+        {
+          "video_index": 6,
+          "log_multiplier": 0.17519570887088776,
+          "performance_multiplier": 1.1914793252944946,
+          "synthetic": true
+        },
+        {
+          "video_index": 7,
+          "log_multiplier": 0.1760883629322052,
+          "performance_multiplier": 1.192543387413025,
+          "synthetic": true
+        },
+        {
+          "video_index": 8,
+          "log_multiplier": 0.18023666739463806,
+          "performance_multiplier": 1.1975007057189941,
+          "synthetic": true
+        },
+        {
+          "video_index": 9,
+          "log_multiplier": 0.17172999680042267,
+          "performance_multiplier": 1.1873571872711182,
+          "synthetic": true
+        }
+      ],
+      "channel_characteristics": {
+        "subscriber_count": 460000,
+        "channel_tier": "large",
+        "dominant_format": "explainer",
+        "dominant_topic": 17,
+        "avg_title_length": 7
+      },
+      "generated_at": "2025-08-05T16:03:57.678345"
+    }
+  ]
+}

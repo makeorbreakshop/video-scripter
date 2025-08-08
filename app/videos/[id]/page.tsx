@@ -31,6 +31,10 @@ interface VideoDetails {
   comment_count?: number;
   performance_ratio?: number;
   channel_avg_views?: number;
+  envelope_performance_ratio?: number;
+  envelope_performance_category?: string;
+  temporal_performance_score?: number;
+  channel_baseline_at_publish?: number;
   format_type?: string;
   format_confidence?: number;
   topic_domain?: string;
@@ -333,48 +337,30 @@ export default function VideoDetailsPage() {
   // Sort by day
   chartData.sort((a, b) => a.day - b.day);
   
-  // Limit chart data to reasonable range
-  const maxDay = Math.max(...chartData.filter(d => d.actualViews !== null).map(d => d.day), 30);
-  const filteredChartData = chartData.filter(d => d.day <= maxDay * 1.2);
+  // Limit chart data to reasonable range - only show up to current video age
+  const currentVideoAge = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
+  const maxDataDay = Math.max(...chartData.filter(d => d.actualViews !== null).map(d => d.day), 0);
+  const maxDay = Math.min(Math.max(maxDataDay + 1, currentVideoAge, 7), 365); // Show at least current age, minimum 7 days, max 1 year
+  const filteredChartData = chartData.filter(d => d.day <= maxDay);
   
   // Debug what we're passing to the chart
   console.log('Filtered chart data sample:', filteredChartData.slice(0, 5));
   console.log('Has p10 data?', filteredChartData.some(d => d.p10 !== undefined && d.p10 !== null));
   console.log('Scale factor used:', scaleFactor);
   
-  // Calculate age-adjusted performance score using backfilled baseline
-  let ageAdjustedScore = null;
+  // Use temporal performance score first, fall back to envelope ratio
+  let ageAdjustedScore = video.temporal_performance_score || video.envelope_performance_ratio || null;
   let ageAdjustedTier = null;
   const currentAge = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
   
-  if (video.expected_views_at_current_age && currentViewCount) {
-    // Use the pre-calculated expected views from the backfill analysis
-    ageAdjustedScore = currentViewCount / video.expected_views_at_current_age;
-    
-    console.log('Using backfilled performance calculation:', {
-      currentAge,
-      currentViews: currentViewCount,
-      expectedViews: video.expected_views_at_current_age,
-      channelPerformanceRatio: video.channel_performance_ratio,
-      ageAdjustedScore
-    });
-  } else if (video.channel_adjusted_envelope && currentViewCount) {
-    // Fallback: Find the adjusted envelope data for current age
-    const currentEnvelope = video.channel_adjusted_envelope.find(env => env.day_since_published === currentAge) ||
-                           video.channel_adjusted_envelope.find(env => env.day_since_published === Math.min(currentAge, 730)) ||
-                           video.channel_adjusted_envelope[video.channel_adjusted_envelope.length - 1];
-    
-    if (currentEnvelope) {
-      ageAdjustedScore = currentViewCount / currentEnvelope.p50_views;
-      
-      console.log('Using envelope-based calculation:', {
-        currentAge,
-        currentViews: currentViewCount,
-        adjustedP50: currentEnvelope.p50_views,
-        ageAdjustedScore
-      });
-    }
-  }
+  console.log('Using performance score:', {
+    currentAge,
+    currentViews: currentViewCount,
+    temporal_performance_score: video.temporal_performance_score,
+    envelope_performance_ratio: video.envelope_performance_ratio,
+    envelope_performance_category: video.envelope_performance_category,
+    channel_baseline_at_publish: video.channel_baseline_at_publish
+  });
   
   // Calculate performance tier based on age-adjusted score
   if (ageAdjustedScore) {
@@ -482,23 +468,19 @@ export default function VideoDetailsPage() {
                         }>
                           <div className="flex items-center gap-2">
                             <TrendingUp className="h-5 w-5" />
-                            <span className="font-semibold">{ageAdjustedTier || video.video_performance_metrics.performance_tier}</span>
+                            <span className="font-semibold">{video.video_performance_metrics?.performance_tier || 'Standard'}</span>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                            {ageAdjustedScore ? ageAdjustedScore.toFixed(2) : video.video_performance_metrics.indexed_score ? video.video_performance_metrics.indexed_score.toFixed(2) : '0.00'}x
+                            {ageAdjustedScore ? ageAdjustedScore.toFixed(2) : '0.00'}x
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {ageAdjustedScore 
                               ? (ageAdjustedScore > 1 
                                   ? `${((ageAdjustedScore - 1) * 100).toFixed(0)}% above`
                                   : `${((1 - ageAdjustedScore) * 100).toFixed(0)}% below`)
-                              : (video.video_performance_metrics.indexed_score && video.video_performance_metrics.indexed_score > 1 
-                                  ? `${((video.video_performance_metrics.indexed_score - 1) * 100).toFixed(0)}% above`
-                                  : video.video_performance_metrics.indexed_score 
-                                    ? `${((1 - video.video_performance_metrics.indexed_score) * 100).toFixed(0)}% below`
-                                    : '')
+                              : ''
                             } baseline
                           </p>
                         </div>
@@ -549,14 +531,14 @@ export default function VideoDetailsPage() {
                             
                             return (
                               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Day {label}</p>
+                                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Day {label}</p>
                                 
                                 {actualViews && (
-                                  <div className="mb-3">
-                                    <p className="text-xs text-gray-600 dark:text-gray-400">Actual Performance</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatNumber(actualViews)} views</p>
+                                  <div className="mb-4">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Actual Performance</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{formatNumber(actualViews)} views</p>
                                     {expectedViews && (
-                                      <p className="text-sm mt-1">
+                                      <p className="text-lg font-semibold">
                                         <span className={actualViews > expectedViews ? "text-green-600" : "text-red-600"}>
                                           {actualViews > expectedViews 
                                             ? `+${((actualViews / expectedViews - 1) * 100).toFixed(0)}%`
@@ -569,18 +551,18 @@ export default function VideoDetailsPage() {
                                 )}
                                 
                                 {data.p50 && (
-                                  <div className="space-y-1 text-xs">
+                                  <div className="space-y-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
                                     <div className="flex justify-between items-center">
                                       <span className="text-gray-600 dark:text-gray-400">+25% Above</span>
-                                      <span className="font-semibold">{formatNumber(data.medianPlus25)}</span>
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(data.medianPlus25)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center font-semibold">
-                                      <span>Expected (Median)</span>
-                                      <span>{formatNumber(data.p50)}</span>
+                                    <div className="flex justify-between items-center">
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">Expected (Median)</span>
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(data.p50)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                       <span className="text-gray-600 dark:text-gray-400">-25% Below</span>
-                                      <span className="font-semibold">{formatNumber(data.medianMinus25)}</span>
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(data.medianMinus25)}</span>
                                     </div>
                                   </div>
                                 )}
@@ -680,7 +662,7 @@ export default function VideoDetailsPage() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100">Performance Analysis</h4>
                       </div>
                       <div className="space-y-3">
-                        {video.video_performance_metrics?.indexed_score && video.video_performance_metrics.indexed_score >= 3 && (
+                        {ageAdjustedScore && ageAdjustedScore >= 3 && (
                           <div className="flex items-start gap-2">
                             <div className="mt-1 h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -688,7 +670,7 @@ export default function VideoDetailsPage() {
                             </p>
                           </div>
                         )}
-                        {video.video_performance_metrics?.indexed_score && video.video_performance_metrics.indexed_score >= 1.5 && video.video_performance_metrics.indexed_score < 3 && (
+                        {ageAdjustedScore && ageAdjustedScore >= 1.5 && ageAdjustedScore < 3 && (
                           <div className="flex items-start gap-2">
                             <div className="mt-1 h-2 w-2 rounded-full bg-blue-500" />
                             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -696,7 +678,7 @@ export default function VideoDetailsPage() {
                             </p>
                           </div>
                         )}
-                        {video.video_performance_metrics?.indexed_score && video.video_performance_metrics.indexed_score < 1 && (
+                        {ageAdjustedScore && ageAdjustedScore < 1 && (
                           <div className="flex items-start gap-2">
                             <div className="mt-1 h-2 w-2 rounded-full bg-orange-500" />
                             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -743,12 +725,12 @@ export default function VideoDetailsPage() {
                 </div>
                 {ageAdjustedScore && (
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Age-Adjusted Score</p>
+                    <p className="text-sm text-muted-foreground">Performance Score</p>
                     <p className="text-2xl font-semibold">
                       {ageAdjustedScore.toFixed(2)}x
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      vs expected at {currentAge}d
+                      vs channel baseline
                     </p>
                   </div>
                 )}

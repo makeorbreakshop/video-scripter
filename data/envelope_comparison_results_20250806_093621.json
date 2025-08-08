@@ -1,0 +1,44 @@
+{
+  "test_date": "2025-08-06T09:44:44.857199",
+  "model_timestamp": "20250806_093621",
+  "metrics": {
+    "ml_approach": {
+      "p10_mae": 549752.8920255401,
+      "p50_mae": 562081.2066274297,
+      "p90_mae": 568789.9118735904,
+      "p50_median_pct_error": 63.49847755125842,
+      "p50_mean_pct_error": 135.39720673511061
+    },
+    "current_approach": {
+      "p10_mae": 142816.49705983183,
+      "p50_mae": 137973.163516917,
+      "p90_mae": 137761.46870457203,
+      "p50_median_pct_error": 13.849259954031048,
+      "p50_mean_pct_error": 16.41009324915575
+    },
+    "ml_improvement_pct": -307.38444513415277
+  },
+  "test_cases": [
+    {
+      "case_type": "Best ML Performance",
+      "channel_name": "The Verge",
+      "actual_p50": 21661.999999999996,
+      "ml_pred_p50": 21815.322,
+      "current_pred_p50": 30429.720184539052,
+      "ml_error": 153.32200000000375,
+      "current_error": 8767.720184539055,
+      "improvement": 98.25128999588318
+    },
+    {
+      "case_type": "Largest ML Improvement",
+      "channel_name": "The Verge",
+      "actual_p50": 21661.999999999996,
+      "ml_pred_p50": 21815.322,
+      "current_pred_p50": 30429.720184539052,
+      "ml_error": 153.32200000000375,
+      "current_error": 8767.720184539055,
+      "improvement": 98.25128999588318
+    }
+  ],
+  "sample_size": 1000
+}

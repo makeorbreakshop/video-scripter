@@ -1,0 +1,791 @@
+{
+  "generated_at": "20250805_115136",
+  "total_rules": 18,
+  "rules": [
+    {
+      "rule_id": 8,
+      "cluster_id": 591,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "637.5%",
+      "avg_multiplier": 7.374999968855102,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "x4yF3a3Zn4Y",
+          "log_multiplier": 1.9980958980028465,
+          "multiplier": 7.374999968855102,
+          "title": "Samsung Galaxy Fold Unboxing: Magnets!"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "rule_id": 18,
+      "cluster_id": 956,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "637.5%",
+      "avg_multiplier": 7.374814264487364,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "iMAS4gfsVx0",
+          "log_multiplier": 1.9980707174324597,
+          "multiplier": 7.374814264487364,
+          "title": "Board of Directors |  Definition |  Meaning | Structure |  Functions |   Responsibilities  |  Roles"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "rule_id": 1,
+      "cluster_id": 248,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "96.5%",
+      "avg_multiplier": 1.9652703868749257,
+      "example_count": 2,
+      "examples": [
+        {
+          "video_id": "GuX8DjyjvZg",
+          "log_multiplier": 1.9980593574603691,
+          "multiplier": 7.374730487279001,
+          "title": "Sun Tzu ART OF WAR Applied To BUSINESS ( ANIMATED )"
+        },
+        {
+          "video_id": "DN5Q0eJM7ZQ",
+          "log_multiplier": -0.6467996828242129,
+          "multiplier": 0.5237191650853887,
+          "title": "What is a Dragon? | Meaning Dragon | Definition Dragon | Dragon Startups | Shaf Rasul Dragons Den"
+        }
+      ],
+      "confidence": 0.7895811160624777
+    },
+    {
+      "rule_id": 15,
+      "cluster_id": 826,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.958939974548625,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "zZjB1hEsgcw",
+          "log_multiplier": 0.6724034976295759,
+          "multiplier": 1.958939974548625,
+          "title": "24 HOUR TRAIN INTO NORTH KOREA"
+        }
+      ],
+      "confidence": 0.7876819923645875
+    },
+    {
+      "rule_id": 17,
+      "cluster_id": 866,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589398299516294,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "pHhpXrIOwsY",
+          "log_multiplier": 0.6724034238156751,
+          "multiplier": 1.9589398299516294,
+          "title": "This Monster Samsung Tablet is Awesome!"
+        }
+      ],
+      "confidence": 0.7876819489854888
+    },
+    {
+      "rule_id": 4,
+      "cluster_id": 406,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589397602983951,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "Zp7fSO5j2X8",
+          "log_multiplier": 0.6724033882590774,
+          "multiplier": 1.9589397602983951,
+          "title": "How Zack & Cody Escaped from Disney.. (They Are Never Coming Back)"
+        }
+      ],
+      "confidence": 0.7876819280895185
+    },
+    {
+      "rule_id": 2,
+      "cluster_id": 375,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589397016004446,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "z_R0gEDZhAI",
+          "log_multiplier": 0.6724033582949343,
+          "multiplier": 1.9589397016004446,
+          "title": "Recycled Bedsheets Make The Best Waterproof Tarps"
+        }
+      ],
+      "confidence": 0.7876819104801334
+    },
+    {
+      "rule_id": 10,
+      "cluster_id": 615,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589396650785262,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "ZLiMNwe0JiU",
+          "log_multiplier": 0.6724033396512166,
+          "multiplier": 1.9589396650785262,
+          "title": "Will it work? #lego #legos #legoaddict #toys #afol #legomoc #legoland"
+        }
+      ],
+      "confidence": 0.7876818995235579
+    },
+    {
+      "rule_id": 7,
+      "cluster_id": 567,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.95893965205321,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "mJY-HhPcFhQ",
+          "log_multiplier": 0.67240333300205,
+          "multiplier": 1.95893965205321,
+          "title": "Casey Neistat Studio Tour!"
+        }
+      ],
+      "confidence": 0.787681895615963
+    },
+    {
+      "rule_id": 12,
+      "cluster_id": 688,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589395073094544,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "zxIOyh9sI_U",
+          "log_multiplier": 0.672403259113219,
+          "multiplier": 1.9589395073094544,
+          "title": "My 6-year-old\u2019s thoughts on cancer"
+        }
+      ],
+      "confidence": 0.7876818521928364
+    },
+    {
+      "rule_id": 13,
+      "cluster_id": 726,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589291843038539,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "zvZnFwPcWfM",
+          "log_multiplier": 0.6723979894084824,
+          "multiplier": 1.9589291843038539,
+          "title": "Laying 60\" Pipe with a CAT 390"
+        }
+      ],
+      "confidence": 0.7876787552911562
+    },
+    {
+      "rule_id": 5,
+      "cluster_id": 500,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589253232387784,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "-f0kb7ro0WQ",
+          "log_multiplier": 0.6723960183985493,
+          "multiplier": 1.9589253232387784,
+          "title": "I Swapped Diets With My Brother"
+        }
+      ],
+      "confidence": 0.7876775969716335
+    },
+    {
+      "rule_id": 3,
+      "cluster_id": 401,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9589116341852963,
+      "example_count": 2,
+      "examples": [
+        {
+          "video_id": "zRQrgltq-MU",
+          "log_multiplier": 0.6724034231079017,
+          "multiplier": 1.9589398285651438,
+          "title": "Sound Proof Black Panther Shoes Made From Aerogel! - Retractable Nanotech \"Sneakers\""
+        },
+        {
+          "video_id": "zNc_5xMeBBQ",
+          "log_multiplier": 0.6723746375552935,
+          "multiplier": 1.9588834402112412,
+          "title": "What is BOOTSTRAPPING a startup? | Meaning BOOTSTRAPPING | Definition BOOTSTRAPPING  | Shaf Rasul"
+        }
+      ],
+      "confidence": 0.7876734902555889
+    },
+    {
+      "rule_id": 9,
+      "cluster_id": 597,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9588867074719964,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "CpLNrjKZJ5k",
+          "log_multiplier": 0.6723763054738452,
+          "multiplier": 1.9588867074719964,
+          "title": "UNDERWRITING  Explained, Examples, Meaning  & Definition."
+        }
+      ],
+      "confidence": 0.7876660122415989
+    },
+    {
+      "rule_id": 6,
+      "cluster_id": 546,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.958883004333173,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "-zxWElGh7c8",
+          "log_multiplier": 0.6723744150417392,
+          "multiplier": 1.958883004333173,
+          "title": "Tinkercad Tips & Tricks - Teach Yourself Tinkercad Tutorials"
+        }
+      ],
+      "confidence": 0.7876649012999519
+    },
+    {
+      "rule_id": 14,
+      "cluster_id": 786,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9588516746411495,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "Kqz8-EuIFBY",
+          "log_multiplier": 0.6723584212623788,
+          "multiplier": 1.9588516746411495,
+          "title": "SaaS Business Model Explained Software As A Service"
+        }
+      ],
+      "confidence": 0.7876555023923448
+    },
+    {
+      "rule_id": 11,
+      "cluster_id": 617,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.9588499795612506,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "3sr42wcIaEE",
+          "log_multiplier": 0.6723575559183335,
+          "multiplier": 1.9588499795612506,
+          "title": "What is intellectual property? | Animated |"
+        }
+      ],
+      "confidence": 0.7876549938683752
+    },
+    {
+      "rule_id": 16,
+      "cluster_id": 858,
+      "conditions": [
+        "day_7_log_multiplier > 0.3",
+        "day_1_log_multiplier > 0.3",
+        "early_velocity > 0.5"
+      ],
+      "performance_boost": "95.9%",
+      "avg_multiplier": 1.958826695371366,
+      "example_count": 1,
+      "examples": [
+        {
+          "video_id": "hCvQclgRizg",
+          "log_multiplier": 0.6723456691845282,
+          "multiplier": 1.958826695371366,
+          "title": "What is a Freemium Business Model?"
+        }
+      ],
+      "confidence": 0.7876480086114097
+    }
+  ],
+  "categories": {
+    "title_patterns": [],
+    "timing_patterns": [],
+    "format_topic_combos": [
+      {
+        "rule_id": 9,
+        "cluster_id": 597,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9588867074719964,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "CpLNrjKZJ5k",
+            "log_multiplier": 0.6723763054738452,
+            "multiplier": 1.9588867074719964,
+            "title": "UNDERWRITING  Explained, Examples, Meaning  & Definition."
+          }
+        ],
+        "confidence": 0.7876660122415989
+      },
+      {
+        "rule_id": 6,
+        "cluster_id": 546,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.958883004333173,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "-zxWElGh7c8",
+            "log_multiplier": 0.6723744150417392,
+            "multiplier": 1.958883004333173,
+            "title": "Tinkercad Tips & Tricks - Teach Yourself Tinkercad Tutorials"
+          }
+        ],
+        "confidence": 0.7876649012999519
+      }
+    ],
+    "velocity_patterns": [
+      {
+        "rule_id": 8,
+        "cluster_id": 591,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "637.5%",
+        "avg_multiplier": 7.374999968855102,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "x4yF3a3Zn4Y",
+            "log_multiplier": 1.9980958980028465,
+            "multiplier": 7.374999968855102,
+            "title": "Samsung Galaxy Fold Unboxing: Magnets!"
+          }
+        ],
+        "confidence": 0.95
+      },
+      {
+        "rule_id": 18,
+        "cluster_id": 956,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "637.5%",
+        "avg_multiplier": 7.374814264487364,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "iMAS4gfsVx0",
+            "log_multiplier": 1.9980707174324597,
+            "multiplier": 7.374814264487364,
+            "title": "Board of Directors |  Definition |  Meaning | Structure |  Functions |   Responsibilities  |  Roles"
+          }
+        ],
+        "confidence": 0.95
+      },
+      {
+        "rule_id": 1,
+        "cluster_id": 248,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "96.5%",
+        "avg_multiplier": 1.9652703868749257,
+        "example_count": 2,
+        "examples": [
+          {
+            "video_id": "GuX8DjyjvZg",
+            "log_multiplier": 1.9980593574603691,
+            "multiplier": 7.374730487279001,
+            "title": "Sun Tzu ART OF WAR Applied To BUSINESS ( ANIMATED )"
+          },
+          {
+            "video_id": "DN5Q0eJM7ZQ",
+            "log_multiplier": -0.6467996828242129,
+            "multiplier": 0.5237191650853887,
+            "title": "What is a Dragon? | Meaning Dragon | Definition Dragon | Dragon Startups | Shaf Rasul Dragons Den"
+          }
+        ],
+        "confidence": 0.7895811160624777
+      },
+      {
+        "rule_id": 15,
+        "cluster_id": 826,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.958939974548625,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "zZjB1hEsgcw",
+            "log_multiplier": 0.6724034976295759,
+            "multiplier": 1.958939974548625,
+            "title": "24 HOUR TRAIN INTO NORTH KOREA"
+          }
+        ],
+        "confidence": 0.7876819923645875
+      },
+      {
+        "rule_id": 17,
+        "cluster_id": 866,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589398299516294,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "pHhpXrIOwsY",
+            "log_multiplier": 0.6724034238156751,
+            "multiplier": 1.9589398299516294,
+            "title": "This Monster Samsung Tablet is Awesome!"
+          }
+        ],
+        "confidence": 0.7876819489854888
+      },
+      {
+        "rule_id": 4,
+        "cluster_id": 406,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589397602983951,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "Zp7fSO5j2X8",
+            "log_multiplier": 0.6724033882590774,
+            "multiplier": 1.9589397602983951,
+            "title": "How Zack & Cody Escaped from Disney.. (They Are Never Coming Back)"
+          }
+        ],
+        "confidence": 0.7876819280895185
+      },
+      {
+        "rule_id": 2,
+        "cluster_id": 375,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589397016004446,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "z_R0gEDZhAI",
+            "log_multiplier": 0.6724033582949343,
+            "multiplier": 1.9589397016004446,
+            "title": "Recycled Bedsheets Make The Best Waterproof Tarps"
+          }
+        ],
+        "confidence": 0.7876819104801334
+      },
+      {
+        "rule_id": 10,
+        "cluster_id": 615,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589396650785262,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "ZLiMNwe0JiU",
+            "log_multiplier": 0.6724033396512166,
+            "multiplier": 1.9589396650785262,
+            "title": "Will it work? #lego #legos #legoaddict #toys #afol #legomoc #legoland"
+          }
+        ],
+        "confidence": 0.7876818995235579
+      },
+      {
+        "rule_id": 7,
+        "cluster_id": 567,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.95893965205321,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "mJY-HhPcFhQ",
+            "log_multiplier": 0.67240333300205,
+            "multiplier": 1.95893965205321,
+            "title": "Casey Neistat Studio Tour!"
+          }
+        ],
+        "confidence": 0.787681895615963
+      },
+      {
+        "rule_id": 12,
+        "cluster_id": 688,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589395073094544,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "zxIOyh9sI_U",
+            "log_multiplier": 0.672403259113219,
+            "multiplier": 1.9589395073094544,
+            "title": "My 6-year-old\u2019s thoughts on cancer"
+          }
+        ],
+        "confidence": 0.7876818521928364
+      },
+      {
+        "rule_id": 13,
+        "cluster_id": 726,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589291843038539,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "zvZnFwPcWfM",
+            "log_multiplier": 0.6723979894084824,
+            "multiplier": 1.9589291843038539,
+            "title": "Laying 60\" Pipe with a CAT 390"
+          }
+        ],
+        "confidence": 0.7876787552911562
+      },
+      {
+        "rule_id": 5,
+        "cluster_id": 500,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589253232387784,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "-f0kb7ro0WQ",
+            "log_multiplier": 0.6723960183985493,
+            "multiplier": 1.9589253232387784,
+            "title": "I Swapped Diets With My Brother"
+          }
+        ],
+        "confidence": 0.7876775969716335
+      },
+      {
+        "rule_id": 3,
+        "cluster_id": 401,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9589116341852963,
+        "example_count": 2,
+        "examples": [
+          {
+            "video_id": "zRQrgltq-MU",
+            "log_multiplier": 0.6724034231079017,
+            "multiplier": 1.9589398285651438,
+            "title": "Sound Proof Black Panther Shoes Made From Aerogel! - Retractable Nanotech \"Sneakers\""
+          },
+          {
+            "video_id": "zNc_5xMeBBQ",
+            "log_multiplier": 0.6723746375552935,
+            "multiplier": 1.9588834402112412,
+            "title": "What is BOOTSTRAPPING a startup? | Meaning BOOTSTRAPPING | Definition BOOTSTRAPPING  | Shaf Rasul"
+          }
+        ],
+        "confidence": 0.7876734902555889
+      },
+      {
+        "rule_id": 14,
+        "cluster_id": 786,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9588516746411495,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "Kqz8-EuIFBY",
+            "log_multiplier": 0.6723584212623788,
+            "multiplier": 1.9588516746411495,
+            "title": "SaaS Business Model Explained Software As A Service"
+          }
+        ],
+        "confidence": 0.7876555023923448
+      },
+      {
+        "rule_id": 11,
+        "cluster_id": 617,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.9588499795612506,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "3sr42wcIaEE",
+            "log_multiplier": 0.6723575559183335,
+            "multiplier": 1.9588499795612506,
+            "title": "What is intellectual property? | Animated |"
+          }
+        ],
+        "confidence": 0.7876549938683752
+      },
+      {
+        "rule_id": 16,
+        "cluster_id": 858,
+        "conditions": [
+          "day_7_log_multiplier > 0.3",
+          "day_1_log_multiplier > 0.3",
+          "early_velocity > 0.5"
+        ],
+        "performance_boost": "95.9%",
+        "avg_multiplier": 1.958826695371366,
+        "example_count": 1,
+        "examples": [
+          {
+            "video_id": "hCvQclgRizg",
+            "log_multiplier": 0.6723456691845282,
+            "multiplier": 1.958826695371366,
+            "title": "What is a Freemium Business Model?"
+          }
+        ],
+        "confidence": 0.7876480086114097
+      }
+    ],
+    "channel_tier_patterns": []
+  }
+}

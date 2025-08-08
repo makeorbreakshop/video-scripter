@@ -1,0 +1,443 @@
+{
+  "test_date": "2025-08-05",
+  "total_channels": 5,
+  "successful": 5,
+  "failed": 0,
+  "results": [
+    {
+      "channel": "Marques Brownlee",
+      "success": true,
+      "avg_multiplier": 2.343777084350586,
+      "channel_tier": "medium",
+      "baseline": {
+        "channel_id": null,
+        "channel_name": "Unknown",
+        "method": "ml_backfill",
+        "num_synthetic_videos": 10,
+        "avg_multiplier": 2.343777084350586,
+        "median_multiplier": 2.3510364294052124,
+        "std_multiplier": 0.05030983809663504,
+        "min_multiplier": 2.28802227973938,
+        "max_multiplier": 2.415234088897705,
+        "predictions": [
+          {
+            "video_index": 0,
+            "log_multiplier": 0.8289300799369812,
+            "performance_multiplier": 2.2908663749694824,
+            "synthetic": true
+          },
+          {
+            "video_index": 1,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 2,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 3,
+            "log_multiplier": 0.8817961812019348,
+            "performance_multiplier": 2.415234088897705,
+            "synthetic": true
+          },
+          {
+            "video_index": 4,
+            "log_multiplier": 0.8396254181861877,
+            "performance_multiplier": 2.3154995441436768,
+            "synthetic": true
+          },
+          {
+            "video_index": 5,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 6,
+            "log_multiplier": 0.8289300799369812,
+            "performance_multiplier": 2.2908663749694824,
+            "synthetic": true
+          },
+          {
+            "video_index": 7,
+            "log_multiplier": 0.8711008429527283,
+            "performance_multiplier": 2.389539957046509,
+            "synthetic": true
+          },
+          {
+            "video_index": 8,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 9,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          }
+        ],
+        "channel_characteristics": {
+          "subscriber_count": 10000,
+          "channel_tier": "medium",
+          "dominant_format": "tutorial",
+          "dominant_topic": 50,
+          "avg_title_length": 8
+        },
+        "generated_at": "2025-08-05T14:05:02.462560"
+      }
+    },
+    {
+      "channel": "Stumpy Nubs (James Hamilton)",
+      "success": true,
+      "avg_multiplier": 2.3375822067260743,
+      "channel_tier": "medium",
+      "baseline": {
+        "channel_id": null,
+        "channel_name": "Unknown",
+        "method": "ml_backfill",
+        "num_synthetic_videos": 10,
+        "avg_multiplier": 2.3375822067260743,
+        "median_multiplier": 2.3387198448181152,
+        "std_multiplier": 0.04899771185952448,
+        "min_multiplier": 2.28802227973938,
+        "max_multiplier": 2.386573314666748,
+        "predictions": [
+          {
+            "video_index": 0,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 1,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 2,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 3,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 4,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 5,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 6,
+            "log_multiplier": 0.8289300799369812,
+            "performance_multiplier": 2.2908663749694824,
+            "synthetic": true
+          },
+          {
+            "video_index": 7,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 8,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 9,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          }
+        ],
+        "channel_characteristics": {
+          "subscriber_count": 10000,
+          "channel_tier": "medium",
+          "dominant_format": "tutorial",
+          "dominant_topic": 50,
+          "avg_title_length": 8
+        },
+        "generated_at": "2025-08-05T14:05:03.323788"
+      }
+    },
+    {
+      "channel": "I Will Teach You To Be Rich",
+      "success": true,
+      "avg_multiplier": 2.3614248991012574,
+      "channel_tier": "medium",
+      "baseline": {
+        "channel_id": null,
+        "channel_name": "Unknown",
+        "method": "ml_backfill",
+        "num_synthetic_videos": 10,
+        "avg_multiplier": 2.3614248991012574,
+        "median_multiplier": 2.386573314666748,
+        "std_multiplier": 0.04493773684316217,
+        "min_multiplier": 2.28802227973938,
+        "max_multiplier": 2.415234088897705,
+        "predictions": [
+          {
+            "video_index": 0,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 1,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 2,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 3,
+            "log_multiplier": 0.8817961812019348,
+            "performance_multiplier": 2.415234088897705,
+            "synthetic": true
+          },
+          {
+            "video_index": 4,
+            "log_multiplier": 0.8396254181861877,
+            "performance_multiplier": 2.3154995441436768,
+            "synthetic": true
+          },
+          {
+            "video_index": 5,
+            "log_multiplier": 0.8396254181861877,
+            "performance_multiplier": 2.3154995441436768,
+            "synthetic": true
+          },
+          {
+            "video_index": 6,
+            "log_multiplier": 0.8711008429527283,
+            "performance_multiplier": 2.389539957046509,
+            "synthetic": true
+          },
+          {
+            "video_index": 7,
+            "log_multiplier": 0.8396254181861877,
+            "performance_multiplier": 2.3154995441436768,
+            "synthetic": true
+          },
+          {
+            "video_index": 8,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 9,
+            "log_multiplier": 0.8817961812019348,
+            "performance_multiplier": 2.415234088897705,
+            "synthetic": true
+          }
+        ],
+        "channel_characteristics": {
+          "subscriber_count": 10000,
+          "channel_tier": "medium",
+          "dominant_format": "tutorial",
+          "dominant_topic": 50,
+          "avg_title_length": 8
+        },
+        "generated_at": "2025-08-05T14:05:04.407088"
+      }
+    },
+    {
+      "channel": "Niche Pursuits",
+      "success": true,
+      "avg_multiplier": 2.353063368797302,
+      "channel_tier": "medium",
+      "baseline": {
+        "channel_id": null,
+        "channel_name": "Unknown",
+        "method": "ml_backfill",
+        "num_synthetic_videos": 10,
+        "avg_multiplier": 2.353063368797302,
+        "median_multiplier": 2.386573314666748,
+        "std_multiplier": 0.04877445697998863,
+        "min_multiplier": 2.28802227973938,
+        "max_multiplier": 2.415234088897705,
+        "predictions": [
+          {
+            "video_index": 0,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 1,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 2,
+            "log_multiplier": 0.8711008429527283,
+            "performance_multiplier": 2.389539957046509,
+            "synthetic": true
+          },
+          {
+            "video_index": 3,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 4,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 5,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 6,
+            "log_multiplier": 0.8396254181861877,
+            "performance_multiplier": 2.3154995441436768,
+            "synthetic": true
+          },
+          {
+            "video_index": 7,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 8,
+            "log_multiplier": 0.8817961812019348,
+            "performance_multiplier": 2.415234088897705,
+            "synthetic": true
+          },
+          {
+            "video_index": 9,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          }
+        ],
+        "channel_characteristics": {
+          "subscriber_count": 10000,
+          "channel_tier": "medium",
+          "dominant_format": "tutorial",
+          "dominant_topic": 50,
+          "avg_title_length": 8
+        },
+        "generated_at": "2025-08-05T14:05:05.375229"
+      }
+    },
+    {
+      "channel": "Cruise With Ben and David",
+      "success": true,
+      "avg_multiplier": 2.357589077949524,
+      "channel_tier": "medium",
+      "baseline": {
+        "channel_id": null,
+        "channel_name": "Unknown",
+        "method": "ml_backfill",
+        "num_synthetic_videos": 10,
+        "avg_multiplier": 2.357589077949524,
+        "median_multiplier": 2.386573314666748,
+        "std_multiplier": 0.04493592378368924,
+        "min_multiplier": 2.28802227973938,
+        "max_multiplier": 2.389539957046509,
+        "predictions": [
+          {
+            "video_index": 0,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 1,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 2,
+            "log_multiplier": 0.8289300799369812,
+            "performance_multiplier": 2.2908663749694824,
+            "synthetic": true
+          },
+          {
+            "video_index": 3,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 4,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 5,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          },
+          {
+            "video_index": 6,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 7,
+            "log_multiplier": 0.8711008429527283,
+            "performance_multiplier": 2.389539957046509,
+            "synthetic": true
+          },
+          {
+            "video_index": 8,
+            "log_multiplier": 0.8698585629463196,
+            "performance_multiplier": 2.386573314666748,
+            "synthetic": true
+          },
+          {
+            "video_index": 9,
+            "log_multiplier": 0.8276877999305725,
+            "performance_multiplier": 2.28802227973938,
+            "synthetic": true
+          }
+        ],
+        "channel_characteristics": {
+          "subscriber_count": 10000,
+          "channel_tier": "medium",
+          "dominant_format": "tutorial",
+          "dominant_topic": 50,
+          "avg_title_length": 8
+        },
+        "generated_at": "2025-08-05T14:05:06.289314"
+      }
+    }
+  ]
+}

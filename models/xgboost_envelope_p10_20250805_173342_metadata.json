@@ -1,0 +1,31 @@
+{
+  "model_id": "xgboost_envelope_p10_20250805_173342",
+  "created_at": "20250805_173342",
+  "model_type": "xgboost_performance_envelope",
+  "target": "p10_percentile",
+  "features": [
+    "days_since_published",
+    "days_normalized",
+    "subscriber_count",
+    "topic_cluster_id",
+    "title_word_count",
+    "day_of_week",
+    "hour_of_day",
+    "is_weekend",
+    "is_prime_time",
+    "format_case_study",
+    "format_explainer",
+    "format_listicle",
+    "format_personal_story",
+    "format_product_focus",
+    "format_tutorial",
+    "format_vlog"
+  ],
+  "performance": {
+    "train_mae": 28.133910466140165,
+    "test_mae": 116.46055350753495,
+    "train_r2": 0.9999288561587335,
+    "test_r2": 0.9985985226634512
+  },
+  "description": "Performance envelope p10 percentile model"
+}

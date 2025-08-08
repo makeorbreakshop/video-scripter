@@ -1,0 +1,117 @@
+{
+  "model_id": "xgboost_performance_predictor_20250805_113554",
+  "created_at": "20250805_113554",
+  "model_type": "xgboost",
+  "target": "day_30_log_multiplier",
+  "features": [
+    "topic_cluster_id",
+    "day_of_week",
+    "hour_of_day",
+    "title_word_count",
+    "day_1_log_multiplier",
+    "day_7_log_multiplier",
+    "view_velocity_3_7",
+    "format_case_study",
+    "format_compilation",
+    "format_explainer",
+    "format_listicle",
+    "format_live_stream",
+    "format_news_analysis",
+    "format_personal_story",
+    "format_product_focus",
+    "format_shorts",
+    "format_tutorial",
+    "format_update",
+    "format_vlog"
+  ],
+  "performance": {
+    "train_mae": 0.034857640121880445,
+    "test_mae": 0.03475013083317177,
+    "train_rmse": 0.1836317085833655,
+    "test_rmse": 0.18347673409398765,
+    "train_r2": 0.987365756932159,
+    "test_r2": 0.9875281165386925,
+    "baseline_mae": 2.5534852769090763,
+    "baseline_rmse": 2.8200329865096565,
+    "improvement_mae": 98.63910980229987,
+    "improvement_rmse": 93.49380893870054
+  },
+  "feature_importance": [
+    {
+      "feature": "day_7_log_multiplier",
+      "importance": 0.7355643510818481
+    },
+    {
+      "feature": "day_1_log_multiplier",
+      "importance": 0.4221910834312439
+    },
+    {
+      "feature": "view_velocity_3_7",
+      "importance": 0.12104952335357666
+    },
+    {
+      "feature": "title_word_count",
+      "importance": 0.00289328396320343
+    },
+    {
+      "feature": "topic_cluster_id",
+      "importance": 0.002499137306585908
+    },
+    {
+      "feature": "hour_of_day",
+      "importance": 0.002134075853973627
+    },
+    {
+      "feature": "format_personal_story",
+      "importance": 0.0016805327031761408
+    },
+    {
+      "feature": "format_tutorial",
+      "importance": 0.0005355104221962392
+    },
+    {
+      "feature": "format_news_analysis",
+      "importance": 0.00034069668618030846
+    },
+    {
+      "feature": "format_vlog",
+      "importance": 0.00017753636348061264
+    },
+    {
+      "feature": "format_case_study",
+      "importance": 0.00014398117491509765
+    },
+    {
+      "feature": "format_shorts",
+      "importance": 0.00013876448792871088
+    },
+    {
+      "feature": "format_listicle",
+      "importance": 8.330751006724313e-05
+    },
+    {
+      "feature": "format_product_focus",
+      "importance": 2.8503072826424614e-05
+    },
+    {
+      "feature": "format_live_stream",
+      "importance": 1.436159982404206e-05
+    },
+    {
+      "feature": "format_update",
+      "importance": 1.315829467785079e-05
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 2.4298565222125035e-06
+    },
+    {
+      "feature": "format_compilation",
+      "importance": 0.0
+    },
+    {
+      "feature": "format_explainer",
+      "importance": 0.0
+    }
+  ]
+}

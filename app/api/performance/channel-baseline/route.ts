@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // Get channel_id from query params
     const searchParams = request.nextUrl.searchParams;
@@ -26,8 +28,13 @@ export async function GET(request: NextRequest) {
       // Fallback to manual calculation if RPC doesn't exist
       const { data: snapshots, error: snapshotError } = await supabase
         .from('view_snapshots')
-        .select('view_count')
-        .eq('channel_id', channelId)
+        .select(`
+          view_count,
+          videos!inner (
+            channel_id
+          )
+        `)
+        .eq('videos.channel_id', channelId)
         .lte('days_since_published', 7)
         .not('view_count', 'is', null);
 
@@ -92,7 +99,10 @@ export async function GET(request: NextRequest) {
 // POST endpoint to calculate baselines for multiple channels
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     const { channel_ids } = await request.json();
     
     if (!channel_ids || !Array.isArray(channel_ids)) {
@@ -129,8 +139,14 @@ export async function POST(request: NextRequest) {
       channel_ids.map(async (channelId) => {
         const { data: snapshots } = await supabase
           .from('view_snapshots')
-          .select('view_count, days_since_published')
-          .eq('channel_id', channelId)
+          .select(`
+            view_count, 
+            days_since_published,
+            videos!inner (
+              channel_id
+            )
+          `)
+          .eq('videos.channel_id', channelId)
           .lte('days_since_published', 7)
           .not('view_count', 'is', null);
 

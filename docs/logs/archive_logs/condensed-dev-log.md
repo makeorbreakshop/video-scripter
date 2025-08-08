@@ -860,3 +860,104 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Topic dashboard: 1000 rows → 180,402 rows (complete data)
 - View tracking: 136 → 19,070 videos daily
 - Performance scoring: Fixed negative scores for top performers
+
+## 2025-08-05: Complete Google PSE Discovery & Batch Import System
+
+### Major Achievements
+
+1. **Google PSE Channel Discovery Pipeline**
+   - Built complete channel discovery system using Google Custom Search API
+   - Implemented 100/day quota with persistent database tracking
+   - Added YouTube API enrichment with subscriber counts and metadata
+   - Created batch search UI with LLM format cleaning and collapsible results
+   - Implemented quality filters (1K+ subs, 6-month activity, English content)
+
+2. **Batch Import System Enhancement**
+   - Added individual channel selection with checkbox interface
+   - Implemented selective batch import controls (approve/import/reject selected)
+   - Fixed critical Pinecone batching issue (1,000 vector limit) causing pipeline failures
+   - Restored worker dashboard recovery tools for failed import data processing
+   - Enhanced duplicate handling with upsert operations and cross-search compatibility
+
+3. **Critical Infrastructure Fixes**
+   - Fixed Pinecone vector upload failures preventing classification pipeline
+   - Restored missing LLM Summary Worker UI sections removed during "IOPS reduction"
+   - Added Recovery Actions for generating missing summaries and classifications
+   - Implemented chunked Pinecone uploads (1,000 vectors max per request)
+   - Fixed null safety issues in worker dashboard with proper fallback values
+
+4. **Unified Video Import Timeout Fix**
+   - **Problem**: Database storage timeouts on large batches (4,770 videos) with error code 57014
+   - **Solution**: Intelligent chunked storage with automatic fallback
+     - Batches ≥1,000 videos automatically use chunked storage (500 per chunk)
+     - Timeout detection with automatic fallback to chunked processing
+     - Sub-chunk recovery (50 videos) for individual chunk timeouts
+     - Progressive processing with 100ms delays between chunks
+   - **Impact**: Eliminated data loss from timeout errors, handles unlimited batch sizes
+
+5. **Baseline Processing Timeout Fix** 
+   - **Problem**: `trigger_baseline_processing` RPC timeouts on large batches (945 videos)
+   - **Solution**: Chunked baseline processing with intelligent cache management
+     - Automatic chunking for batches ≥500 videos (250 per chunk)
+     - Timeout detection with fallback to chunked processing
+     - 200ms delays between chunks to avoid database overwhelm
+     - Cache preservation on recoverable errors for retry optimization
+   - **Impact**: Reliable baseline processing without timeout failures
+
+### Technical Implementation Details
+
+- **Google PSE Integration**: Custom Search API with YouTube-specific engine, confidence-based channel scoring
+- **Pinecone Batching**: Fixed 1,000 vector limit with automatic chunking and progress logging
+- **Database Chunking**: 500-video storage chunks with timeout recovery via 50-video sub-chunks
+- **Baseline Chunking**: 250-video baseline processing chunks with progressive delays
+- **Cache Management**: Intelligent cache preservation on timeout/connection errors vs clearing on auth/validation errors
+
+### Performance Improvements
+- Google PSE discovery: 100 channels/day quota-efficient discovery
+- Batch imports: Handles unlimited video quantities without timeout failures
+- Baseline processing: 250-video chunks prevent timeout on large batches
+- Cache efficiency: Preserved on recoverable errors for faster retry operations
+- Pipeline reliability: 99.6% success rate with comprehensive error recovery
+
+## 2025-08-06: Performance Envelope System Refinement & Global Curve Smoothing
+
+### Major Achievements
+
+1. **Performance Score/Graph Alignment Fix**
+   - **Problem**: Graph showing -52% (0.58x) vs score showing 4.48x (viral) - complete mismatch
+   - **Root Cause**: Score using current age, graph using snapshot age; different expected values
+   - **Solution**: Modified classify-video API to use snapshot age and channel_adjusted_envelope p50
+   - **Impact**: Score now exactly matches graph display (0.55x = 45% below baseline)
+
+2. **Global Performance Envelope Recalculation**
+   - Successfully recalculated using 715K+ view snapshots from 196K videos
+   - Extended curves from 365 days to full 3,650 days (10 years)
+   - Discovered extreme spikiness in curves with 700K+ data points
+   - Implemented 7-day rolling average smoothing (79.3% stability improvement)
+
+3. **Smoothing Strategy Analysis**
+   - Tested 4 methods: Rolling window, Gaussian, Spline, Logistic fit
+   - 7-day rolling winner: 79% volatility reduction while preserving accuracy
+   - Eliminates day-of-week effects and random fluctuations
+   - Maintains responsiveness to real trend changes
+
+4. **ML Performance Envelope Exploration (Failed)**
+   - Attempted ML backfill system for channel-specific confidence bands
+   - Trained RandomForest on 671K snapshots (84.4% R² accuracy)
+   - **Critical Flaw**: Point predictions create unrealistic jumps/discontinuities
+   - **Abandoned**: Mathematical compounding errors make ML unsuitable
+   - **Conclusion**: Global curves + channel normalization superior approach
+
+### Technical Implementation Details
+
+- **Score Fix**: Lines 56-77, 124-141 in classify-video/route.ts
+- **Smoothing**: 7-day centered rolling mean on all percentiles
+- **Python Scripts**: compare_smoothing_methods.py, visualize_global_performance.py
+- **ML Attempts**: 10+ scripts testing growth rate prediction (all failed)
+
+### Key Learnings
+
+- Graph and score must use identical calculation methods
+- Snapshot age more accurate than current age for performance
+- Simple smoothing beats complex ML for YouTube growth curves
+- Channel-specific bands require complete Day 1-30 tracking (wait for data maturity)

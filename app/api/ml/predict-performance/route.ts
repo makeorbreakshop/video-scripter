@@ -100,47 +100,64 @@ function calculateFeatures(request: PredictionRequest, channelBaseline: number) 
   return features;
 }
 
-function simulateModelPrediction(features: any, metadata: any): number {
-  // Simple heuristic-based prediction for demo
-  // In production, this would call the actual Python model
+async function callPythonModel(request: PredictionRequest, features: any): Promise<any> {
+  // Call the actual Python XGBoost model
+  const { spawn } = require('child_process');
+  const path = require('path');
   
-  let logMultiplier = 0;
-  
-  // Early performance signals are most important
-  if (features.day_1_log_multiplier !== 0) {
-    logMultiplier += features.day_1_log_multiplier * 0.6;
-  }
-  if (features.day_7_log_multiplier !== 0) {
-    logMultiplier += features.day_7_log_multiplier * 0.3;
-  }
-  
-  // Format adjustments
-  const formatBoosts: { [key: string]: number } = {
-    'tutorial': 0.1,
-    'listicle': 0.05,
-    'case_study': 0.15,
-    'product_focus': 0.08,
-    'explainer': 0.12
-  };
-  
-  logMultiplier += formatBoosts[features.format_type] || 0;
-  
-  // Topic cluster adjustments (simplified)
-  if (features.topic_cluster_id > 0 && features.topic_cluster_id < 50) {
-    logMultiplier += 0.1; // Popular topics get boost
-  }
-  
-  // Title length (sweet spot around 8-12 words)
-  const titleLen = features.title_word_count;
-  if (titleLen >= 8 && titleLen <= 12) {
-    logMultiplier += 0.05;
-  }
-  
-  // Random noise to simulate model uncertainty
-  logMultiplier += (Math.random() - 0.5) * 0.2;
-  
-  // Cap predictions
-  return Math.max(-3, Math.min(3, logMultiplier));
+  return new Promise((resolve, reject) => {
+    // Prepare input data for Python script
+    const inputData = {
+      title: request.title,
+      topic_cluster_id: request.topic_cluster_id,
+      format_type: request.format_type,
+      planned_publish_time: request.planned_publish_time,
+      // Include early performance signals if available
+      day_1_log_multiplier: features.day_1_log_multiplier,
+      day_7_log_multiplier: features.day_7_log_multiplier,
+      view_velocity_3_7: features.view_velocity_3_7
+    };
+    
+    // Spawn Python process
+    const pythonPath = 'python'; // Adjust if needed
+    const scriptPath = path.join(process.cwd(), 'scripts', 'ml_predict.py');
+    const pythonProcess = spawn(pythonPath, [scriptPath]);
+    
+    let output = '';
+    let error = '';
+    
+    // Send input data to Python script
+    pythonProcess.stdin.write(JSON.stringify(inputData));
+    pythonProcess.stdin.end();
+    
+    // Collect output
+    pythonProcess.stdout.on('data', (data: Buffer) => {
+      output += data.toString();
+    });
+    
+    pythonProcess.stderr.on('data', (data: Buffer) => {
+      error += data.toString();
+    });
+    
+    pythonProcess.on('close', (code: number) => {
+      if (code === 0) {
+        try {
+          const result = JSON.parse(output.trim());
+          resolve(result);
+        } catch (parseError) {
+          reject(new Error(`Failed to parse Python output: ${output}`));
+        }
+      } else {
+        reject(new Error(`Python script failed with code ${code}: ${error}`));
+      }
+    });
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      pythonProcess.kill();
+      reject(new Error('Python model prediction timeout'));
+    }, 10000);
+  });
 }
 
 function getTopFactors(features: any, metadata: any) {
@@ -196,19 +213,14 @@ export async function POST(request: NextRequest) {
     // Calculate features
     const features = calculateFeatures(body, channelBaseline);
     
-    // Make prediction
-    const logMultiplier = simulateModelPrediction(features, metadata);
-    const multiplier = Math.exp(logMultiplier);
+    // Make prediction using actual Python model
+    const pythonResult = await callPythonModel(body, features);
     
-    // Calculate confidence interval (±1 standard deviation)
-    const stdDev = 0.5; // From model training
-    const confidenceInterval: [number, number] = [
-      Math.exp(logMultiplier - stdDev),
-      Math.exp(logMultiplier + stdDev)
-    ];
-    
-    // Get top contributing factors
-    const factors = getTopFactors(features, metadata);
+    // Use results from Python model
+    const multiplier = pythonResult.predicted_multiplier;
+    const logMultiplier = pythonResult.log_multiplier;
+    const confidenceInterval = pythonResult.confidence_interval;
+    const factors = pythonResult.factors;
     
     const response: PredictionResponse = {
       predicted_multiplier: Math.round(multiplier * 100) / 100,
@@ -218,7 +230,7 @@ export async function POST(request: NextRequest) {
       ],
       log_multiplier: Math.round(logMultiplier * 1000) / 1000,
       factors,
-      model_version: metadata.model_id
+      model_version: pythonResult.model_version
     };
     
     return NextResponse.json(response);

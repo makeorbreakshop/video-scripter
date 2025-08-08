@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
       const { data: tierStatsManual, error: tierErrorManual } = await supabase
         .from('view_tracking_priority')
         .select('priority_tier')
-        .gte('priority_tier', 1)
-        .lte('priority_tier', 6);
+        .gte('priority_tier', 0)
+        .lte('priority_tier', 4);
       
       if (tierStatsManual) {
         const tierCounts: Record<number, number> = {};
@@ -114,13 +114,12 @@ export async function GET(request: NextRequest) {
     const quotaUsage = {
       today: todayCount ? Math.ceil(todayCount / 50) : 0,
       estimatedDaily: tierStatsArray ? tierStatsArray.reduce((sum, t) => {
-        // Calculate based on tracking frequency for each tier
-        if (t.tier === 1) return sum + t.count;           // Daily
-        if (t.tier === 2) return sum + Math.ceil(t.count / 2);   // Every 2 days
-        if (t.tier === 3) return sum + Math.ceil(t.count / 3);   // Every 3 days
-        if (t.tier === 4) return sum + Math.ceil(t.count / 7);   // Weekly
-        if (t.tier === 5) return sum + Math.ceil(t.count / 14);  // Biweekly
-        if (t.tier === 6) return sum + Math.ceil(t.count / 30);  // Monthly
+        // Calculate based on NEW tracking frequency for each tier (0-4)
+        if (t.tier === 0) return sum + Math.ceil(t.count * 2);    // Every 12 hours = 2x daily
+        if (t.tier === 1) return sum + t.count;                   // Daily
+        if (t.tier === 2) return sum + Math.ceil(t.count / 3);    // Every 3 days
+        if (t.tier === 3) return sum + Math.ceil(t.count / 7);    // Weekly
+        if (t.tier === 4) return sum + Math.ceil(t.count / 30);   // Monthly
         return sum;
       }, 0) : 0
     };

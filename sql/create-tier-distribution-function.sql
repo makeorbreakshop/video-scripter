@@ -10,7 +10,7 @@ BEGIN
         vtp.priority_tier,
         COUNT(*)::BIGINT as count
     FROM view_tracking_priority vtp
-    WHERE vtp.priority_tier BETWEEN 1 AND 6
+    WHERE vtp.priority_tier BETWEEN 0 AND 4
     GROUP BY vtp.priority_tier
     ORDER BY vtp.priority_tier;
 END;

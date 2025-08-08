@@ -18,6 +18,10 @@ export async function GET(
       .from('videos')
       .select(`
         *,
+        temporal_performance_score,
+        channel_baseline_at_publish,
+        envelope_performance_ratio,
+        envelope_performance_category,
         view_tracking_priority (
           priority_tier,
           last_tracked,
@@ -61,58 +65,73 @@ export async function GET(
       video.video_performance_metrics = null;
     }
 
-    // If no performance metrics exist, calculate them on the fly
-    if (!video.video_performance_metrics && video.published_at && video.view_count) {
+    // Use envelope-based performance calculation
+    if (video.published_at && video.view_count) {
       const ageDays = Math.floor(
         (Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24)
       );
       
-      // Get channel baseline
-      const { data: channelVideos } = await supabase
-        .from('videos')
-        .select('view_count, published_at')
-        .eq('channel_name', video.channel_name)
-        .not('id', 'eq', videoId)
-        .gte('published_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(20);
+      // Get proper channel baseline using the same method as classify-video endpoint
+      const baselineResponse = await fetch(
+        `${request.nextUrl.origin}/api/performance/channel-baseline?channel_id=${video.channel_id}`
+      );
+      const baselineData = await baselineResponse.json();
       
-      let channelBaselineVpd = 1000; // Default baseline
-      if (channelVideos && channelVideos.length > 5) {
-        const vpds = channelVideos.map(v => {
-          const vAge = Math.floor(
-            (Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return v.view_count / Math.max(vAge, 1);
-        }).sort((a, b) => a - b);
-        
-        // Use median
-        channelBaselineVpd = vpds[Math.floor(vpds.length / 2)];
+      // Use channel baseline or fall back to global day-1 median
+      let channelBaseline = baselineData.baseline;
+      if (!channelBaseline) {
+        const { data: globalEnvelope } = await supabase
+          .from('performance_envelopes')
+          .select('p50_views')
+          .eq('day_since_published', 1)
+          .single();
+        channelBaseline = globalEnvelope?.p50_views || 8478;
       }
       
-      const currentVpd = video.view_count / Math.max(ageDays, 1);
-      const indexedScore = currentVpd / channelBaselineVpd;
-      
-      // Get performance envelope for comparison
-      const { data: envelope } = await supabase
+      // Get envelope data for performance calculation
+      const { data: envelopeForCalc } = await supabase
         .from('performance_envelopes')
-        .select('p50_views')
-        .eq('day_since_published', Math.min(ageDays, 365))
-        .single();
+        .select('day_since_published, p50_views')
+        .in('day_since_published', [1, Math.min(ageDays, 3650)])
+        .order('day_since_published');
       
+      // Calculate envelope-based performance score
+      let indexedScore = null;
+      if (envelopeForCalc && envelopeForCalc.length >= 2) {
+        const day1Data = envelopeForCalc.find(d => d.day_since_published === 1);
+        const currentDayData = envelopeForCalc.find(d => d.day_since_published === Math.min(ageDays, 3650));
+        
+        if (day1Data && currentDayData) {
+          const globalShapeMultiplier = currentDayData.p50_views / day1Data.p50_views;
+          const expectedViews = channelBaseline * globalShapeMultiplier;
+          indexedScore = video.view_count / expectedViews;
+        }
+      }
+      
+      // Use temporal performance score if available, otherwise fall back to envelope ratio
+      if (indexedScore === null && video.temporal_performance_score) {
+        indexedScore = video.temporal_performance_score;
+      } else if (indexedScore === null && video.envelope_performance_ratio) {
+        indexedScore = video.envelope_performance_ratio;
+      }
+      
+      // Performance tier classification
       let performanceTier = 'Standard';
-      if (indexedScore >= 3) performanceTier = 'Viral';
-      else if (indexedScore >= 1.5) performanceTier = 'Outperforming';
-      else if (indexedScore >= 0.5) performanceTier = 'On Track';
-      else if (indexedScore >= 0.2) performanceTier = 'Underperforming';
-      else performanceTier = 'Needs Attention';
+      if (indexedScore !== null) {
+        if (indexedScore >= 3) performanceTier = 'Viral';
+        else if (indexedScore >= 1.5) performanceTier = 'Outperforming';
+        else if (indexedScore >= 0.5) performanceTier = 'On Track';
+        else if (indexedScore >= 0.2) performanceTier = 'Underperforming';
+        else performanceTier = 'Needs Attention';
+      }
       
       video.video_performance_metrics = {
         age_days: ageDays,
-        current_vpd: currentVpd,
-        initial_vpd: currentVpd, // Simplified for now
-        channel_baseline_vpd: channelBaselineVpd,
+        current_vpd: null, // Not used in envelope system
+        initial_vpd: null, // Not used in envelope system
+        channel_baseline_vpd: null, // Not used in envelope system
         indexed_score: indexedScore,
-        velocity_trend: 0, // Would need historical data
+        velocity_trend: 0,
         trend_direction: '→',
         performance_tier: performanceTier,
         last_calculated_at: new Date().toISOString()
@@ -229,8 +248,9 @@ export async function GET(
                                          ? current : closest
                                      );
             if (globalAtCheckpoint) {
-              // This is the key ratio: how much better/worse this channel performs
-              video.channel_performance_ratio = channelCheckpoints[currentCheckpoint].p50 / globalAtCheckpoint.p50_views;
+              // Use the temporal baseline we calculated, or fall back to the calculated ratio
+              video.channel_performance_ratio = video.channel_baseline_at_publish || 
+                (channelCheckpoints[currentCheckpoint].p50 / globalAtCheckpoint.p50_views);
               
               // Apply this ratio to the current age for accurate comparison
               const currentAgeTarget = Math.min(ageDays, 730);
@@ -241,46 +261,28 @@ export async function GET(
                                   );
               if (currentGlobal) {
                 video.expected_views_at_current_age = currentGlobal.p50_views * video.channel_performance_ratio;
+                
+                // Store expected views for graph visualization
+                console.log(`Channel-adjusted expected views at age ${ageDays}: ${video.expected_views_at_current_age}`);
+                // Note: Performance score already calculated above using envelope system
               }
             }
           }
           
-          // Create age-appropriate performance bands using channel percentiles
+          // Create age-appropriate performance bands using temporal baseline
+          // Use the channel_baseline_at_publish we calculated earlier
+          const channelMultiplier = video.channel_baseline_at_publish || video.channel_performance_ratio || 1;
+          
           video.channel_adjusted_envelope = envelopeData.map(point => {
-            // Find the closest checkpoint we have data for
-            const relevantCheckpoint = Object.keys(channelCheckpoints)
-              .map(k => parseInt(k))
-              .filter(k => k <= point.day_since_published)
-              .sort((a, b) => b - a)[0];
-            
-            if (relevantCheckpoint && channelCheckpoints[relevantCheckpoint]) {
-              const globalAtCheckpoint = envelopeData.find(e => e.day_since_published === relevantCheckpoint) ||
-                                       envelopeData.reduce((closest, current) => 
-                                         Math.abs(current.day_since_published - relevantCheckpoint) < Math.abs(closest.day_since_published - relevantCheckpoint) 
-                                           ? current : closest
-                                       );
-              const channelData = channelCheckpoints[relevantCheckpoint];
-              
-              if (globalAtCheckpoint) {
-                // Calculate individual ratios for each percentile
-                const p10Ratio = channelData.p10 / globalAtCheckpoint.p10_views;
-                const p25Ratio = channelData.p25 / globalAtCheckpoint.p25_views;
-                const p50Ratio = channelData.p50 / globalAtCheckpoint.p50_views;
-                const p75Ratio = channelData.p75 / globalAtCheckpoint.p75_views;
-                const p90Ratio = channelData.p90 / globalAtCheckpoint.p90_views;
-                
-                return {
-                  day_since_published: point.day_since_published,
-                  p10_views: point.p10_views * p10Ratio,
-                  p25_views: point.p25_views * p25Ratio,
-                  p50_views: point.p50_views * p50Ratio,
-                  p75_views: point.p75_views * p75Ratio,
-                  p90_views: point.p90_views * p90Ratio
-                };
-              }
-            }
-            // Fallback to unadjusted if no data
-            return point;
+            // Apply the temporal baseline multiplier to all percentiles
+            return {
+              day_since_published: point.day_since_published,
+              p10_views: point.p10_views * channelMultiplier,
+              p25_views: point.p25_views * channelMultiplier,
+              p50_views: point.p50_views * channelMultiplier,
+              p75_views: point.p75_views * channelMultiplier,
+              p90_views: point.p90_views * channelMultiplier
+            };
           });
           
           console.log(`Created channel-adjusted envelope with ${video.channel_adjusted_envelope.length} points`);

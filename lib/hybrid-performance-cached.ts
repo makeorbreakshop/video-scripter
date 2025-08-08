@@ -22,8 +22,8 @@ export interface CachedHybridPerformance {
 }
 
 /**
- * Get pre-calculated hybrid performance scores from the cache table
- * This is MUCH faster than calculating on the fly
+ * Get temporal performance scores from the videos table
+ * Now using the corrected temporal_performance_score field
  */
 export async function getCachedHybridPerformance(
   channelName: string,
@@ -31,28 +31,22 @@ export async function getCachedHybridPerformance(
   timeframe: string = 'all'
 ): Promise<CachedHybridPerformance[]> {
   
-  // Build query joining videos with performance metrics
+  // Build query directly from videos table with temporal scores
   let query = supabase
-    .from('video_performance_metrics')
+    .from('videos')
     .select(`
-      video_id,
-      age_days,
-      current_vpd,
-      initial_vpd,
-      channel_baseline_vpd,
-      indexed_score,
-      velocity_trend,
-      trend_direction,
-      performance_tier,
-      last_calculated_at,
-      videos!inner (
-        title,
-        view_count,
-        published_at,
-        thumbnail_url
-      )
+      id,
+      title,
+      view_count,
+      published_at,
+      thumbnail_url,
+      temporal_performance_score,
+      envelope_performance_category,
+      channel_baseline_at_publish
     `)
     .eq('channel_name', channelName)
+    .eq('is_short', false)
+    .not('temporal_performance_score', 'is', null)
     .order('published_at', { ascending: false });
 
   // Apply date filter
@@ -73,7 +67,7 @@ export async function getCachedHybridPerformance(
         break;
     }
     
-    query = query.gte('videos.published_at', dateFilter.toISOString());
+    query = query.gte('published_at', dateFilter.toISOString());
   }
 
   if (limit > 0) {
@@ -83,47 +77,68 @@ export async function getCachedHybridPerformance(
   const { data: videos, error } = await query;
 
   if (error || !videos) {
-    console.error('Error fetching cached performance:', error);
+    console.error('Error fetching temporal performance:', error);
     return [];
   }
 
-  // Transform the data
-  return videos.map(record => {
-    const video = record.videos;
+  // Transform the data using temporal scores
+  return videos.map(video => {
+    const ageDays = Math.floor((Date.now() - new Date(video.published_at).getTime()) / (1000 * 60 * 60 * 24));
+    const currentVpd = Math.round(video.view_count / Math.max(ageDays, 1));
+    const temporalScore = Number(video.temporal_performance_score) || 0;
     
-    // Create display score
-    const displayScore = `${Math.round(record.current_vpd).toLocaleString()} vpd • ${record.indexed_score.toFixed(1)}x baseline • ${record.trend_direction} ${Math.round(record.velocity_trend)}%`;
+    // Determine performance tier based on temporal score
+    let performanceTier = 'Average';
+    let trendDirection: '↗️' | '→' | '↘️' = '→';
+    
+    if (temporalScore >= 3.0) {
+      performanceTier = 'Viral Performance (≥3x)';
+      trendDirection = '↗️';
+    } else if (temporalScore >= 2.0) {
+      performanceTier = 'Strong Performance (2-3x)';
+      trendDirection = '↗️';
+    } else if (temporalScore >= 1.5) {
+      performanceTier = 'Above Average (1.5-2x)';
+      trendDirection = '↗️';
+    } else if (temporalScore >= 0.8) {
+      performanceTier = 'Average Performance (0.8-1.5x)';
+      trendDirection = '→';
+    } else if (temporalScore >= 0.5) {
+      performanceTier = 'Below Average (0.5-0.8x)';
+      trendDirection = '↘️';
+    } else {
+      performanceTier = 'Needs Attention (<0.5x)';
+      trendDirection = '↘️';
+    }
+    
+    // Create display score using temporal performance
+    const displayScore = `${currentVpd.toLocaleString()} vpd • ${temporalScore.toFixed(2)}x temporal • ${video.envelope_performance_category || 'unclassified'}`;
     
     return {
-      videoId: record.video_id,
+      videoId: video.id,
       title: video.title,
       viewCount: video.view_count,
       publishedAt: video.published_at,
-      thumbnailUrl: video.thumbnail_url,
-      ageDays: record.age_days,
-      currentVpd: Math.round(record.current_vpd),
-      initialVpd: Math.round(record.initial_vpd),
-      channelBaselineVpd: Math.round(record.channel_baseline_vpd),
-      indexedScore: Number(record.indexed_score),
-      velocityTrend: Math.round(record.velocity_trend),
-      trendDirection: record.trend_direction,
-      performanceTier: record.performance_tier,
+      thumbnailUrl: video.thumbnail_url || '',
+      ageDays,
+      currentVpd,
+      initialVpd: currentVpd, // For compatibility
+      channelBaselineVpd: Math.round((video.channel_baseline_at_publish || 1) * 1000), // Convert from multiplier to approximate vpd
+      indexedScore: temporalScore, // Use temporal score as the new indexed score
+      velocityTrend: 0, // No velocity data available from videos table
+      trendDirection,
+      performanceTier,
       displayScore
     };
   });
 }
 
 /**
- * Trigger a refresh of performance metrics for a channel
+ * Trigger a refresh of temporal performance scores for a channel
+ * This is now handled automatically by database triggers, so this is a no-op
  */
 export async function refreshChannelPerformanceMetrics(channelName: string): Promise<void> {
-  // Call the database function to update all videos for this channel
-  const { error } = await supabase.rpc('update_channel_performance_metrics', {
-    p_channel_name: channelName
-  });
-  
-  if (error) {
-    console.error('Error refreshing performance metrics:', error);
-    throw error;
-  }
+  // Temporal performance scores are now automatically updated via database triggers
+  // when view counts are synced from view_snapshots
+  console.log(`Temporal scores for ${channelName} are automatically maintained via triggers`);
 }

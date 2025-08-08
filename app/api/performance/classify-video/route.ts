@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 interface PerformanceCategory {
   ratio: number;
@@ -24,7 +23,10 @@ function classifyPerformance(ratio: number): PerformanceCategory {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // Get video_id from query params
     const searchParams = request.nextUrl.searchParams;
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get video details including channel
+    // Get video details including channel and latest snapshot
     const { data: video, error: videoError } = await supabase
       .from('videos')
       .select('id, title, channel_id, view_count, published_at')
@@ -51,9 +53,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate days since published
-    const publishedDate = new Date(video.published_at);
-    const daysSincePublished = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Get latest snapshot data to use current view count (same as frontend)
+    const { data: latestSnapshot } = await supabase
+      .from('view_snapshots')
+      .select('view_count, days_since_published')
+      .eq('video_id', videoId)
+      .order('snapshot_date', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Use latest snapshot view count if available, otherwise database view count
+    const currentViewCount = latestSnapshot?.view_count || video.view_count;
+
+    // Use the snapshot's age, not today's age, to match what the graph shows
+    let daysSincePublished;
+    if (latestSnapshot?.days_since_published !== undefined) {
+      daysSincePublished = latestSnapshot.days_since_published;
+      console.log('Using snapshot age:', daysSincePublished);
+    } else {
+      // Fallback to current age if no snapshot
+      const publishedDate = new Date(video.published_at);
+      daysSincePublished = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
 
     // Get channel baseline (using our other endpoint logic)
     const baselineResponse = await fetch(
@@ -97,10 +118,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate expected views using the formula
-    const globalShapeMultiplier = currentDayData.p50_views / day1Data.p50_views;
-    const expectedViews = baselineData.baseline * globalShapeMultiplier;
-    const performanceRatio = video.view_count / expectedViews;
+    // Call the video API to get the exact same calculation
+    const videoApiResponse = await fetch(`${request.nextUrl.origin}/api/videos/${videoId}`);
+    
+    if (!videoApiResponse.ok) {
+      throw new Error(`Video API failed: ${videoApiResponse.status}`);
+    }
+    
+    const videoData = await videoApiResponse.json();
+    
+    // Use the EXACT same value the graph shows - from channel_adjusted_envelope
+    let expectedViews;
+    if (videoData.channel_adjusted_envelope && videoData.channel_adjusted_envelope.length > 0) {
+      // Find the envelope data for the current age
+      const currentEnvelope = videoData.channel_adjusted_envelope.find(
+        e => e.day_since_published === Math.min(daysSincePublished, 3650)
+      );
+      if (currentEnvelope) {
+        expectedViews = currentEnvelope.p50_views; // Use the same p50 the graph shows
+        console.log('Using channel_adjusted_envelope p50:', expectedViews);
+      } else {
+        expectedViews = videoData.expected_views_at_current_age || 
+                       (baselineData.baseline * (currentDayData.p50_views / day1Data.p50_views));
+      }
+    } else {
+      expectedViews = videoData.expected_views_at_current_age || 
+                     (baselineData.baseline * (currentDayData.p50_views / day1Data.p50_views));
+    }
+    const channelPerformanceRatio = videoData.channel_performance_ratio || 1;
+    
+    console.log('Using video API calculation:', {
+      expected_views_at_current_age: videoData.expected_views_at_current_age,
+      currentViewCount,
+      calculatedRatio: currentViewCount / expectedViews
+    });
+
+    const performanceRatio = currentViewCount / expectedViews;
 
     // Classify performance
     const classification = classifyPerformance(performanceRatio);
@@ -119,7 +172,7 @@ export async function GET(request: NextRequest) {
       title: video.title,
       channel_id: video.channel_id,
       days_since_published: daysSincePublished,
-      actual_views: video.view_count,
+      actual_views: currentViewCount,
       expected_views: Math.round(expectedViews),
       performance_ratio: performanceRatio,
       performance_category: classification.category,
@@ -128,7 +181,8 @@ export async function GET(request: NextRequest) {
         channel_baseline: baselineData.baseline,
         confidence: baselineData.confidence,
         method: baselineData.method,
-        global_shape_multiplier: globalShapeMultiplier
+        channel_performance_ratio: channelPerformanceRatio,
+        calculation_method: 'channel_adjusted_envelope'
       }
     });
     
@@ -144,7 +198,10 @@ export async function GET(request: NextRequest) {
 // POST endpoint to classify multiple videos
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     const { video_ids, update_database = false } = await request.json();
     
     if (!video_ids || !Array.isArray(video_ids)) {

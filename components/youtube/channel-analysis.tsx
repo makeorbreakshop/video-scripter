@@ -32,13 +32,11 @@ interface Video {
   view_count: number;
   published_at: string;
   thumbnail_url: string;
-  duration: string;
   channel_id: string;
   channel_name: string;
-  performance_ratio: number | null;
-  channel_avg_views: number;
-  is_competitor: boolean;
-  created_at: string;
+  temporal_performance_score: number | null;
+  channel_baseline_at_publish?: number;
+  rolling_baseline_views?: number;
 }
 
 interface ChannelOverview {
@@ -47,7 +45,7 @@ interface ChannelOverview {
   total_videos: number;
   total_views: number;
   avg_views: number;
-  avg_performance_ratio: number | null;
+  avg_temporal_performance_score: number | null;
   uploads_per_month: number;
   date_range: {
     oldest: string;
@@ -72,16 +70,17 @@ interface ChannelAnalysisProps {
   channelId: string;
 }
 
-type SortField = 'title' | 'view_count' | 'published_at' | 'performance_ratio';
+type SortField = 'title' | 'view_count' | 'published_at' | 'temporal_performance_score';
 type SortDirection = 'asc' | 'desc';
 
 export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
   const [data, setData] = useState<ChannelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState('90d'); // Default to 90 days
   
   // Table state
-  const [sortField, setSortField] = useState<SortField>('performance_ratio');
+  const [sortField, setSortField] = useState<SortField>('temporal_performance_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -91,7 +90,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
     async function fetchChannelData() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/youtube/channels/${encodeURIComponent(channelId)}`);
+        const response = await fetch(`/api/youtube/channels/${encodeURIComponent(channelId)}?dateFilter=${dateFilter}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch channel data');
@@ -107,7 +106,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
     }
 
     fetchChannelData();
-  }, [channelId]);
+  }, [channelId, dateFilter]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -132,24 +131,6 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDuration = (duration: string) => {
-    if (!duration) return '';
-    
-    // Parse ISO 8601 duration format (PT1H2M3S)
-    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-    if (!match) return duration;
-    
-    const hours = parseInt(match[1] || '0');
-    const minutes = parseInt(match[2] || '0');
-    const seconds = parseInt(match[3] || '0');
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    } else {
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
   };
 
   const getPerformanceBadgeVariant = (ratio: number | null) => {
@@ -227,7 +208,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {channel_overview.avg_performance_ratio ? `${channel_overview.avg_performance_ratio}x` : 'N/A'}
+                {channel_overview.avg_temporal_performance_score ? `${channel_overview.avg_temporal_performance_score.toFixed(2)}x` : 'N/A'}
               </div>
               <div className="text-sm text-muted-foreground">Avg Performance</div>
             </div>
@@ -272,7 +253,46 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
       {/* Top Performers */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Performers</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Top Performers</CardTitle>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={dateFilter === '30d' ? 'default' : 'outline'}
+                onClick={() => setDateFilter('30d')}
+              >
+                30 days
+              </Button>
+              <Button
+                size="sm"
+                variant={dateFilter === '90d' ? 'default' : 'outline'}
+                onClick={() => setDateFilter('90d')}
+              >
+                90 days
+              </Button>
+              <Button
+                size="sm"
+                variant={dateFilter === '180d' ? 'default' : 'outline'}
+                onClick={() => setDateFilter('180d')}
+              >
+                6 months
+              </Button>
+              <Button
+                size="sm"
+                variant={dateFilter === '365d' ? 'default' : 'outline'}
+                onClick={() => setDateFilter('365d')}
+              >
+                1 year
+              </Button>
+              <Button
+                size="sm"
+                variant={dateFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setDateFilter('all')}
+              >
+                All time
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -294,8 +314,8 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                   <h4 className="font-medium text-sm line-clamp-2 mb-2">{video.title}</h4>
                   <div className="flex justify-between items-center text-xs text-muted-foreground">
                     <span>{formatNumber(video.view_count)} views</span>
-                    <Badge variant={getPerformanceBadgeVariant(video.performance_ratio)}>
-                      {video.performance_ratio ? `${video.performance_ratio.toFixed(1)}x` : 'N/A'}
+                    <Badge variant={getPerformanceBadgeVariant(video.temporal_performance_score)}>
+                      {video.temporal_performance_score ? `${video.temporal_performance_score.toFixed(2)}x` : 'N/A'}
                     </Badge>
                   </div>
                 </div>
@@ -338,8 +358,8 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     </Button>
                   </TableHead>
                   <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('performance_ratio')}>
-                      Performance {getSortIcon('performance_ratio')}
+                    <Button variant="ghost" onClick={() => handleSort('temporal_performance_score')}>
+                      Performance {getSortIcon('temporal_performance_score')}
                     </Button>
                   </TableHead>
                   <TableHead>
@@ -348,7 +368,6 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     </Button>
                   </TableHead>
                   <TableHead>Channel Avg</TableHead>
-                  <TableHead>Duration</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -377,13 +396,14 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     </TableCell>
                     <TableCell>{formatNumber(video.view_count)}</TableCell>
                     <TableCell>
-                      <Badge variant={getPerformanceBadgeVariant(video.performance_ratio)}>
-                        {video.performance_ratio ? `${video.performance_ratio.toFixed(1)}x` : 'N/A'}
+                      <Badge variant={getPerformanceBadgeVariant(video.temporal_performance_score)}>
+                        {video.temporal_performance_score ? `${video.temporal_performance_score.toFixed(2)}x` : 'N/A'}
                       </Badge>
                     </TableCell>
                     <TableCell>{formatDate(video.published_at)}</TableCell>
-                    <TableCell>{formatNumber(video.channel_avg_views)}</TableCell>
-                    <TableCell>{formatDuration(video.duration)}</TableCell>
+                    <TableCell>
+                      {video.rolling_baseline_views ? formatNumber(video.rolling_baseline_views) : 'N/A'}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,0 +1,74 @@
+{
+  "model_type": "RandomForestRegressor",
+  "feature_columns": [
+    "days_since_published",
+    "log_subscriber_count",
+    "channel_video_count",
+    "log_channel_baseline",
+    "title_length",
+    "title_word_count",
+    "day_of_week",
+    "hour_of_day",
+    "format_type_encoded",
+    "topic_domain_encoded",
+    "days_category_encoded",
+    "subscriber_tier_encoded"
+  ],
+  "training_samples": 496902,
+  "test_samples": 124226,
+  "train_mae": 0.685097976057011,
+  "test_mae": 0.7187977923382028,
+  "train_r2": 0.8569216542983128,
+  "test_r2": 0.843938706852376,
+  "feature_importance": [
+    {
+      "feature": "log_channel_baseline",
+      "importance": 0.8277895453416403
+    },
+    {
+      "feature": "days_since_published",
+      "importance": 0.0655044182240905
+    },
+    {
+      "feature": "log_subscriber_count",
+      "importance": 0.02458790454212626
+    },
+    {
+      "feature": "channel_video_count",
+      "importance": 0.016231856449578558
+    },
+    {
+      "feature": "format_type_encoded",
+      "importance": 0.01555084698973149
+    },
+    {
+      "feature": "hour_of_day",
+      "importance": 0.01499452713074259
+    },
+    {
+      "feature": "title_length",
+      "importance": 0.013409118475112218
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.007765326097741175
+    },
+    {
+      "feature": "title_word_count",
+      "importance": 0.0064381820387883855
+    },
+    {
+      "feature": "topic_domain_encoded",
+      "importance": 0.005938747140549464
+    },
+    {
+      "feature": "subscriber_tier_encoded",
+      "importance": 0.0011782673813664035
+    },
+    {
+      "feature": "days_category_encoded",
+      "importance": 0.0006112601885325893
+    }
+  ],
+  "training_date": "2025-08-06T10:02:39.464801"
+}

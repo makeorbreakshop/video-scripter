@@ -15,7 +15,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import shap
 import os
 
-def load_training_data(file_path="data/ml_training_dataset.csv"):
+def load_training_data(file_path="data/ml_training_dataset_fixed.csv"):
     """Load the prepared training dataset"""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Training dataset not found at {file_path}")
@@ -30,8 +30,8 @@ def prepare_features_and_target(df):
     # Feature columns (using early signals to predict day 30)
     feature_cols = [
         'topic_cluster_id', 'format_type', 'day_of_week', 'hour_of_day', 
-        'title_word_count', 'day_1_log_multiplier', 'day_3_log_multiplier', 
-        'day_7_log_multiplier', 'view_velocity_3_7'
+        'title_word_count', 'day_1_log_multiplier', 'day_7_log_multiplier', 
+        'view_velocity_3_7'
     ]
     
     # Target: Day 30 log multiplier
@@ -49,7 +49,7 @@ def prepare_features_and_target(df):
     # Update feature columns to include encoded categories
     feature_cols_encoded = [col for col in df_encoded.columns if col.startswith('format_') or col in [
         'topic_cluster_id', 'day_of_week', 'hour_of_day', 'title_word_count', 
-        'day_1_log_multiplier', 'day_3_log_multiplier', 'day_7_log_multiplier', 'view_velocity_3_7'
+        'day_1_log_multiplier', 'day_7_log_multiplier', 'view_velocity_3_7'
     ]]
     
     X = df_encoded[feature_cols_encoded]

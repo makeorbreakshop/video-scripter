@@ -136,11 +136,11 @@ export class ViewTrackingService {
     console.log(`Starting tracking with budget for ${totalQuotaAvailable} videos`);
     
     // Fetch ALL videos that need tracking today, ordered by tier priority
-    // Count videos needing tracking for each tier
+    // Count videos needing tracking for each tier (updated for new system)
     const videosNeedingTracking = [];
     let hasError = false;
     
-    for (let tier = 1; tier <= 6; tier++) {
+    for (let tier = 0; tier <= 4; tier++) {
       const { count, error: countError } = await this.supabase
         .from('view_tracking_priority')
         .select('*', { count: 'exact', head: true })
@@ -200,26 +200,24 @@ export class ViewTrackingService {
       console.log(`  Tier ${tier}: ${count} videos`);
     });
     
-    // Calculate daily requirements for all tiers
+    // Calculate daily requirements for new tier system
     const dailyRequirements = {
+      0: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 0)?.count || 0) * 2), // 12-hour intervals = 2x daily
       1: videosNeedingTracking?.find(t => t.priority_tier === 1)?.count || 0,
-      2: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 2)?.count || 0) / 2),
-      3: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 3)?.count || 0) / 3),
-      4: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 4)?.count || 0) / 7),
-      5: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 5)?.count || 0) / 14),
-      6: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 6)?.count || 0) / 30)
+      2: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 2)?.count || 0) / 3),
+      3: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 3)?.count || 0) / 7),
+      4: Math.ceil((videosNeedingTracking?.find(t => t.priority_tier === 4)?.count || 0) / 30)
     };
     
     const totalDailyRequired = Object.values(dailyRequirements).reduce((sum, count) => sum + count, 0);
     const minApiCallsNeeded = Math.ceil(totalDailyRequired / 50);
     
-    console.log(`\n📊 Daily Tracking Requirements:`);
-    console.log(`  Tier 1 (daily): ${dailyRequirements[1]} videos`);
-    console.log(`  Tier 2 (every 2 days): ${dailyRequirements[2]} videos/day`);
-    console.log(`  Tier 3 (every 3 days): ${dailyRequirements[3]} videos/day`);
-    console.log(`  Tier 4 (weekly): ${dailyRequirements[4]} videos/day`);
-    console.log(`  Tier 5 (biweekly): ${dailyRequirements[5]} videos/day`);
-    console.log(`  Tier 6 (monthly): ${dailyRequirements[6]} videos/day`);
+    console.log(`\n📊 Daily Tracking Requirements (NEW TIER SYSTEM):`);
+    console.log(`  Tier 0 (every 12 hours): ${dailyRequirements[0]} videos/day`);
+    console.log(`  Tier 1 (daily): ${dailyRequirements[1]} videos/day`);
+    console.log(`  Tier 2 (every 3 days): ${dailyRequirements[2]} videos/day`);
+    console.log(`  Tier 3 (weekly): ${dailyRequirements[3]} videos/day`);
+    console.log(`  Tier 4 (monthly): ${dailyRequirements[4]} videos/day`);
     console.log(`  TOTAL: ${totalDailyRequired} videos/day (${minApiCallsNeeded} API calls)\n`);
     
     // Warn if we're not meeting daily requirements
@@ -233,7 +231,12 @@ export class ViewTrackingService {
       Object.entries(tierCounts).forEach(([tier, count]) => {
         const required = dailyRequirements[parseInt(tier)];
         if (count < required) {
-          unmetTiers.push(`Tier ${tier}: ${count}/${required} tracked`);
+          const tierName = tier === '0' ? '0 (12h)' : 
+                          tier === '1' ? '1 (daily)' : 
+                          tier === '2' ? '2 (3 days)' : 
+                          tier === '3' ? '3 (weekly)' : 
+                          '4 (monthly)';
+          unmetTiers.push(`Tier ${tierName}: ${count}/${required} tracked`);
         }
       });
       if (unmetTiers.length > 0) {
@@ -401,7 +404,7 @@ export class ViewTrackingService {
           console.error('Error inserting snapshots:', insertError);
         }
 
-        // REMOVED: Update videos table - just track snapshots for now
+        // Database trigger will automatically update videos table
 
         // Update tracking dates
         const videoIds = snapshots.map(s => s.video_id);
@@ -425,22 +428,39 @@ export class ViewTrackingService {
 
   /**
    * Calculate next tracking date based on priority tier
+   * Updated for new front-loaded tier system
    */
   private calculateNextTrackDate(priorityTier: number): string {
-    let daysToAdd: number;
+    const now = new Date();
+    let nextDate = new Date(now);
     
     switch (priorityTier) {
-      case 1: daysToAdd = 1; break;     // Daily
-      case 2: daysToAdd = 2; break;     // Every 2 days
-      case 3: daysToAdd = 3; break;     // Every 3 days
-      case 4: daysToAdd = 7; break;     // Weekly
-      case 5: daysToAdd = 14; break;    // Every 2 weeks
-      case 6: daysToAdd = 30; break;    // Monthly
-      default: daysToAdd = 30; break;   // Default to monthly
+      case 0: 
+        // Tier 0: Every 12 hours for ultra-fresh videos (Days 1-7)
+        nextDate.setHours(now.getHours() + 12);
+        break;
+      case 1: 
+        // Tier 1: Daily tracking (Days 8-30)
+        nextDate.setDate(now.getDate() + 1);
+        break;
+      case 2: 
+        // Tier 2: Every 3 days (Days 31-90)
+        nextDate.setDate(now.getDate() + 3);
+        break;
+      case 3: 
+        // Tier 3: Weekly (Days 91-365)
+        nextDate.setDate(now.getDate() + 7);
+        break;
+      case 4: 
+        // Tier 4: Monthly (365+ days)
+        nextDate.setDate(now.getDate() + 30);
+        break;
+      default: 
+        // Default to monthly
+        nextDate.setDate(now.getDate() + 30);
+        break;
     }
     
-    const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + daysToAdd);
     return nextDate.toISOString().split('T')[0];
   }
 

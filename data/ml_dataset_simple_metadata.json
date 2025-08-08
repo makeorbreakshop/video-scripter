@@ -1,0 +1,7 @@
+{
+  "export_date": "2025-08-06T12:49:38.845Z",
+  "total_records": 671602,
+  "expected_records": 671598,
+  "batch_size": 50000,
+  "export_method": "simple_limit_offset"
+}

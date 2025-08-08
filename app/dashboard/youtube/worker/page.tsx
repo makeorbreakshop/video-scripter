@@ -198,8 +198,9 @@ export default function WorkerDashboard() {
   const runViewTracking = async () => {
     try {
       setViewTrackingLoading(true)
-      // Use the daily estimate API calls (285) to meet all tracking requirements
-      const dailyApiCalls = Math.ceil(viewTrackingStats?.quotaUsage?.estimatedDaily / 50) || 285;
+      // Use a more reasonable API limit based on new tier system
+      // New system needs ~120 API calls for daily requirements (6,000 videos / 50 per call)
+      const dailyApiCalls = Math.ceil(viewTrackingStats?.quotaUsage?.estimatedDailyCalls) || 150;
       const response = await fetch('/api/view-tracking/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -806,7 +807,7 @@ export default function WorkerDashboard() {
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                       {viewTrackingStats.tierDistribution.map(tier => {
                         const willTrack = viewTrackingStats.willTrackByTier?.[tier.tier] || 0;
                         return (
@@ -814,12 +815,12 @@ export default function WorkerDashboard() {
                             <div className="text-xs text-muted-foreground">Tier {tier.tier}</div>
                             <div className="text-lg font-bold">{tier.count.toLocaleString()}</div>
                             <div className="text-xs text-muted-foreground">
-                              {tier.tier === 1 ? 'Daily' : 
-                               tier.tier === 2 ? 'Every 2 days' : 
-                               tier.tier === 3 ? 'Every 3 days' : 
-                               tier.tier === 4 ? 'Weekly' : 
-                               tier.tier === 5 ? 'Biweekly' : 
-                               'Monthly'}
+                              {tier.tier === 0 ? 'Every 12 hours (Days 1-7)' :
+                               tier.tier === 1 ? 'Daily (Days 8-30)' : 
+                               tier.tier === 2 ? 'Every 3 days (Days 31-90)' : 
+                               tier.tier === 3 ? 'Weekly (Days 91-365)' : 
+                               tier.tier === 4 ? 'Monthly (365+ days)' : 
+                               'Unknown'}
                             </div>
                             {willTrack > 0 && (
                               <div className="text-xs text-green-500 mt-1">

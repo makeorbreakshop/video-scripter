@@ -279,3 +279,10 @@ Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+### SQL Delivery Instructions
+When providing SQL to the user for Supabase:
+- ALWAYS provide SQL statements ONE AT A TIME
+- Wait for user confirmation after each SQL statement
+- Never combine multiple SQL operations in a single response
+- User needs to run each statement individually in Supabase SQL Editor

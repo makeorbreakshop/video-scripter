@@ -1,0 +1,283 @@
+{
+  "test_1_coverage": {
+    "Stumpy Nubs (James Hamilton)": {
+      "global": {
+        "p10_coverage": 126,
+        "p90_coverage": 246,
+        "total_tests": 246,
+        "p10_pct": 51.21951219512195,
+        "p90_pct": 100.0
+      },
+      "ml": {
+        "p10_coverage": 244,
+        "p90_coverage": 16,
+        "total_tests": 246,
+        "p10_pct": 99.1869918699187,
+        "p90_pct": 6.504065040650407
+      }
+    },
+    "Grace For Purpose": {
+      "global": {
+        "p10_coverage": 641,
+        "p90_coverage": 1256,
+        "total_tests": 1289,
+        "p10_pct": 49.72847168347556,
+        "p90_pct": 97.43987587276959
+      },
+      "ml": {
+        "p10_coverage": 648,
+        "p90_coverage": 807,
+        "total_tests": 1289,
+        "p10_pct": 50.27152831652444,
+        "p90_pct": 62.6066718386346
+      }
+    },
+    "Thomas DeLauer": {
+      "global": {
+        "p10_coverage": 601,
+        "p90_coverage": 1121,
+        "total_tests": 1131,
+        "p10_pct": 53.13881520778072,
+        "p90_pct": 99.11582670203359
+      },
+      "ml": {
+        "p10_coverage": 658,
+        "p90_coverage": 633,
+        "total_tests": 1131,
+        "p10_pct": 58.17860300618921,
+        "p90_pct": 55.96816976127321
+      }
+    },
+    "Woodworking Projects": {
+      "global": {
+        "p10_coverage": 376,
+        "p90_coverage": 1011,
+        "total_tests": 1031,
+        "p10_pct": 36.46944713870029,
+        "p90_pct": 98.06013579049466
+      },
+      "ml": {
+        "p10_coverage": 450,
+        "p90_coverage": 654,
+        "total_tests": 1031,
+        "p10_pct": 43.64694471387003,
+        "p90_pct": 63.43355965082444
+      }
+    },
+    "DFBGuide": {
+      "global": {
+        "p10_coverage": 408,
+        "p90_coverage": 927,
+        "total_tests": 927,
+        "p10_pct": 44.01294498381877,
+        "p90_pct": 100.0
+      },
+      "ml": {
+        "p10_coverage": 380,
+        "p90_coverage": 599,
+        "total_tests": 927,
+        "p10_pct": 40.99244875943905,
+        "p90_pct": 64.61704422869471
+      }
+    },
+    "Lewis Howes": {
+      "global": {
+        "p10_coverage": 744,
+        "p90_coverage": 1322,
+        "total_tests": 1340,
+        "p10_pct": 55.52238805970149,
+        "p90_pct": 98.65671641791045
+      },
+      "ml": {
+        "p10_coverage": 688,
+        "p90_coverage": 993,
+        "total_tests": 1340,
+        "p10_pct": 51.34328358208955,
+        "p90_pct": 74.1044776119403
+      }
+    },
+    "Adam Savage\u2019s Tested": {
+      "global": {
+        "p10_coverage": 503,
+        "p90_coverage": 816,
+        "total_tests": 828,
+        "p10_pct": 60.7487922705314,
+        "p90_pct": 98.55072463768117
+      },
+      "ml": {
+        "p10_coverage": 606,
+        "p90_coverage": 403,
+        "total_tests": 828,
+        "p10_pct": 73.18840579710145,
+        "p90_pct": 48.671497584541065
+      }
+    },
+    "I Will Teach You To Be Rich": {
+      "global": {
+        "p10_coverage": 225,
+        "p90_coverage": 654,
+        "total_tests": 665,
+        "p10_pct": 33.83458646616541,
+        "p90_pct": 98.34586466165413
+      },
+      "ml": {
+        "p10_coverage": 81,
+        "p90_coverage": 596,
+        "total_tests": 665,
+        "p10_pct": 12.180451127819548,
+        "p90_pct": 89.62406015037594
+      }
+    },
+    "Tom Bilyeu": {
+      "global": {
+        "p10_coverage": 425,
+        "p90_coverage": 855,
+        "total_tests": 860,
+        "p10_pct": 49.41860465116279,
+        "p90_pct": 99.4186046511628
+      },
+      "ml": {
+        "p10_coverage": 240,
+        "p90_coverage": 670,
+        "total_tests": 860,
+        "p10_pct": 27.906976744186046,
+        "p90_pct": 77.90697674418605
+      }
+    },
+    "Alex Hormozi": {
+      "global": {
+        "p10_coverage": 626,
+        "p90_coverage": 727,
+        "total_tests": 762,
+        "p10_pct": 82.1522309711286,
+        "p90_pct": 95.40682414698163
+      },
+      "ml": {
+        "p10_coverage": 444,
+        "p90_coverage": 440,
+        "total_tests": 762,
+        "p10_pct": 58.26771653543307,
+        "p90_pct": 57.74278215223097
+      }
+    }
+  },
+  "test_2_band_width": {
+    "Stumpy Nubs (James Hamilton)": {
+      "global_avg_width": 4052179.538778479,
+      "ml_avg_width": 11687.183672253406,
+      "improvement_pct": 99.71158277760377
+    },
+    "Grace For Purpose": {
+      "global_avg_width": 1667521.0989470338,
+      "ml_avg_width": 9244.047017083149,
+      "improvement_pct": 99.4456413761169
+    },
+    "Thomas DeLauer": {
+      "global_avg_width": 2111960.0172262727,
+      "ml_avg_width": 20280.737266085973,
+      "improvement_pct": 99.039719639545
+    },
+    "Woodworking Projects": {
+      "global_avg_width": 150071.64797283374,
+      "ml_avg_width": 596.1117086339128,
+      "improvement_pct": 99.60278192670889
+    },
+    "DFBGuide": {
+      "global_avg_width": 2573446.962695334,
+      "ml_avg_width": 9004.702285559084,
+      "improvement_pct": 99.65009178677117
+    },
+    "Lewis Howes": {
+      "global_avg_width": 1778840.865812817,
+      "ml_avg_width": 51437.778948576386,
+      "improvement_pct": 97.10835410085586
+    },
+    "Adam Savage\u2019s Tested": {
+      "global_avg_width": 3724311.3197643524,
+      "ml_avg_width": 27794.957909456407,
+      "improvement_pct": 99.25368865481377
+    },
+    "I Will Teach You To Be Rich": {
+      "global_avg_width": 2691943.0038402006,
+      "ml_avg_width": 51909.13966675731,
+      "improvement_pct": 98.07168503966443
+    },
+    "Tom Bilyeu": {
+      "global_avg_width": 1799879.6016261298,
+      "ml_avg_width": 6845.7609562929165,
+      "improvement_pct": 99.61965450632876
+    },
+    "Alex Hormozi": {
+      "global_avg_width": 5456803.955599089,
+      "ml_avg_width": 49570.217607964565,
+      "improvement_pct": 99.09158881258503
+    }
+  },
+  "test_3_early_prediction": {
+    "Stumpy Nubs (James Hamilton)": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Grace For Purpose": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Thomas DeLauer": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Woodworking Projects": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "DFBGuide": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Lewis Howes": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Adam Savage\u2019s Tested": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "I Will Teach You To Be Rich": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Tom Bilyeu": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    },
+    "Alex Hormozi": {
+      "global_error": 0,
+      "ml_error": 0,
+      "tests_completed": 0
+    }
+  },
+  "summary": {
+    "test_1_summary": {
+      "global_avg_coverage": 75.06201832541373,
+      "ml_avg_coverage": 55.81713276079614
+    },
+    "test_2_summary": {
+      "avg_improvement": 99.05947886209935,
+      "channels_tested": 10
+    },
+    "test_3_summary": {
+      "global_median_error": 0,
+      "ml_median_error": 0
+    },
+    "overall_winner": "Global"
+  }
+}

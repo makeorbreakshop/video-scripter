@@ -1,0 +1,42 @@
+{
+  "p10": {
+    "train_mae": 0.7520608951538738,
+    "test_mae": 0.9276921753523438,
+    "train_r2": 0.8267124860206476,
+    "test_r2": 0.748170306242395,
+    "training_samples": 35147,
+    "test_samples": 8787
+  },
+  "p50": {
+    "train_mae": 0.7487781557976306,
+    "test_mae": 0.9218068061206142,
+    "train_r2": 0.8283956407211743,
+    "test_r2": 0.7488895449584014,
+    "training_samples": 35147,
+    "test_samples": 8787
+  },
+  "p90": {
+    "train_mae": 0.7533354835797887,
+    "test_mae": 0.9282336897213559,
+    "train_r2": 0.8253603000803377,
+    "test_r2": 0.7451471022553039,
+    "training_samples": 35147,
+    "test_samples": 8787
+  },
+  "feature_columns": [
+    "log_subscriber_count",
+    "channel_video_count",
+    "title_length",
+    "title_word_count",
+    "title_word_density",
+    "day_of_week",
+    "hour_of_day",
+    "max_days_tracked",
+    "num_snapshots",
+    "format_type_encoded",
+    "topic_domain_encoded",
+    "days_category_encoded",
+    "subscriber_tier_encoded"
+  ],
+  "training_date": "2025-08-06T08:53:30.206393"
+}

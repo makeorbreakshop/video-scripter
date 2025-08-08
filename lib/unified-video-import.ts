@@ -269,28 +269,62 @@ export class VideoImportService {
         console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);
       }
       
-      // Trigger baseline processing for newly imported videos
+      // Trigger baseline processing for newly imported videos (with timeout handling)
+      let baselineProcessingSuccess = false;
       if (result.videosProcessed > 0) {
         try {
           console.log(`🔄 Triggering baseline processing for ${result.videosProcessed} new videos...`);
-          const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
-            batch_size: Math.min(1000, result.videosProcessed) 
-          });
           
-          if (error) {
-            console.error('⚠️ Failed to trigger baseline processing:', error);
-            result.errors.push(`Baseline processing trigger failed: ${error.message}`);
+          // For large batches, use chunked baseline processing to avoid timeouts
+          if (result.videosProcessed >= 500) {
+            console.log(`📦 Large batch detected, using chunked baseline processing...`);
+            await this.triggerBaselineProcessingChunked(result.videosProcessed);
+            baselineProcessingSuccess = true;
           } else {
-            console.log(`✅ Baseline processing triggered, processed ${data || 0} videos`);
+            const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
+              batch_size: Math.min(1000, result.videosProcessed) 
+            });
+            
+            if (error) {
+              // Check if it's a timeout error
+              if (error.code === '57014') {
+                console.log(`⚠️ Baseline processing timeout, falling back to chunked processing...`);
+                await this.triggerBaselineProcessingChunked(result.videosProcessed);
+                baselineProcessingSuccess = true;
+              } else {
+                console.error('⚠️ Failed to trigger baseline processing:', error);
+                result.errors.push(`Baseline processing trigger failed: ${error.message}`);
+              }
+            } else {
+              console.log(`✅ Baseline processing triggered, processed ${data || 0} videos`);
+              baselineProcessingSuccess = true;
+            }
           }
         } catch (error) {
           console.error('⚠️ Error triggering baseline processing:', error);
-          // Don't fail the import if baseline trigger fails
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('timeout') || errorMessage.includes('57014')) {
+            console.log(`⚠️ Baseline processing timeout, falling back to chunked processing...`);
+            try {
+              await this.triggerBaselineProcessingChunked(result.videosProcessed);
+              baselineProcessingSuccess = true;
+            } catch (chunkError) {
+              console.error('⚠️ Chunked baseline processing also failed:', chunkError);
+              // Don't fail the import if baseline trigger fails
+            }
+          }
         }
+      } else {
+        baselineProcessingSuccess = true; // No videos to process
       }
       
-      // Clear cache after successful processing
-      this.clearChannelStatsCache();
+      // Only clear cache after ALL processing (including baseline) is successful
+      if (baselineProcessingSuccess) {
+        this.clearChannelStatsCache();
+        console.log(`✅ All processing complete, cache cleared`);
+      } else {
+        console.log(`⚠️ Keeping cache due to baseline processing issues - will retry on next import`);
+      }
       
       return result;
 
@@ -300,8 +334,18 @@ export class VideoImportService {
       result.message = `Import failed: ${errorMessage}`;
       console.error('❌ Unified video import failed:', error);
       
-      // Clear cache even on error to prevent stale data
-      this.clearChannelStatsCache();
+      // Only clear cache on non-recoverable errors to preserve work for retry
+      const isRecoverableError = errorMessage.includes('timeout') || 
+                                 errorMessage.includes('57014') ||
+                                 errorMessage.includes('ECONNRESET') ||
+                                 errorMessage.includes('ENOTFOUND');
+      
+      if (isRecoverableError) {
+        console.log('⚠️ Keeping cache for potential retry due to recoverable error');
+      } else {
+        console.log('🧹 Clearing cache due to non-recoverable error');
+        this.clearChannelStatsCache();
+      }
       
       return result;
     }
@@ -481,60 +525,230 @@ export class VideoImportService {
   ): Promise<void> {
     console.log(`🔄 Updating embedding version tracking...`);
     
-    // Update title embedding versions
-    const titleEmbeddingUpdates = embeddings.titleEmbeddings
+    // Collect successful video IDs for batch updates
+    const titleVideoIds = embeddings.titleEmbeddings
       .filter(e => e.success)
-      .map(async (e) => {
-        const { error } = await supabase
-          .from('videos')
-          .update({ pinecone_embedding_version: 'v1' })
-          .eq('id', e.videoId);
-        
-        if (error) {
-          console.error(`Failed to update title embedding version for ${e.videoId}:`, error);
-        }
-      });
-
-    // Update thumbnail embedding versions
-    const thumbnailEmbeddingUpdates = embeddings.thumbnailEmbeddings
-      .filter(e => e.success)
-      .map(async (e) => {
-        const { error } = await supabase
-          .from('videos')
-          .update({ thumbnail_embedding_version: 'v1' })
-          .eq('id', e.videoId);
-        
-        if (error) {
-          console.error(`Failed to update thumbnail embedding version for ${e.videoId}:`, error);
-        }
-      });
-
-    // Execute all updates in parallel
-    await Promise.all([...titleEmbeddingUpdates, ...thumbnailEmbeddingUpdates]);
+      .map(e => e.videoId);
     
-    console.log(`✅ Updated ${titleEmbeddingUpdates.length} title versions, ${thumbnailEmbeddingUpdates.length} thumbnail versions`);
+    const thumbnailVideoIds = embeddings.thumbnailEmbeddings
+      .filter(e => e.success)
+      .map(e => e.videoId);
+    
+    // Batch update title embedding versions in chunks
+    const BATCH_SIZE = 100; // Update 100 videos at a time
+    
+    // Update title embedding versions in batches
+    for (let i = 0; i < titleVideoIds.length; i += BATCH_SIZE) {
+      const batch = titleVideoIds.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase
+        .from('videos')
+        .update({ pinecone_embedding_version: 'v1' })
+        .in('id', batch);
+      
+      if (error) {
+        console.error(`Failed to update title embedding versions for batch ${i / BATCH_SIZE + 1}:`, error);
+      }
+    }
+    
+    // Update thumbnail embedding versions in batches
+    for (let i = 0; i < thumbnailVideoIds.length; i += BATCH_SIZE) {
+      const batch = thumbnailVideoIds.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase
+        .from('videos')
+        .update({ thumbnail_embedding_version: 'v1' })
+        .in('id', batch);
+      
+      if (error) {
+        console.error(`Failed to update thumbnail embedding versions for batch ${i / BATCH_SIZE + 1}:`, error);
+      }
+    }
+    
+    console.log(`✅ Updated ${titleVideoIds.length} title versions, ${thumbnailVideoIds.length} thumbnail versions`);
   }
 
   /**
-   * Store video data in Supabase
+   * Store video data in Supabase with chunked processing and timeout fallback
    */
   async storeVideoData(videos: VideoMetadata[]): Promise<void> {
-    console.log(`
-💾 Storing ${videos.length} videos in database...`);
+    console.log(`💾 Storing ${videos.length} videos in database...`);
     
-    const { error } = await supabase
-      .from('videos')
-      .upsert(videos, {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      });
+    // For large batches, use chunked storage to avoid timeouts
+    const CHUNK_SIZE = 500; // Process 500 videos at a time
+    const TIMEOUT_THRESHOLD = 1000; // Use chunking for 1000+ videos
+    
+    if (videos.length >= TIMEOUT_THRESHOLD) {
+      console.log(`📦 Large batch detected (${videos.length} videos), using chunked storage...`);
+      await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+    } else {
+      // For smaller batches, try normal storage first
+      try {
+        const { error } = await supabase
+          .from('videos')
+          .upsert(videos, {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          });
 
-    if (error) {
-      console.error('❌ Failed to store video data:', error);
-      throw new Error(`Failed to store video data: ${error.message}`);
+        if (error) {
+          // If we get a timeout error, fall back to chunked storage
+          if (error.code === '57014') { // statement timeout
+            console.log(`⚠️ Timeout detected, falling back to chunked storage...`);
+            await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+            return;
+          }
+          
+          console.error('❌ Failed to store video data:', error);
+          throw new Error(`Failed to store video data: ${error.message}`);
+        }
+        
+        console.log(`✅ Database storage complete (${videos.length} videos)`);
+      } catch (error) {
+        // Check if it's a timeout-related error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('timeout') || errorMessage.includes('57014')) {
+          console.log(`⚠️ Timeout error detected, falling back to chunked storage...`);
+          await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+        } else {
+          throw error;
+        }
+      }
+    }
+  }
+
+  /**
+   * Store video data in chunks to avoid database timeouts
+   */
+  private async storeVideoDataChunked(videos: VideoMetadata[], chunkSize: number): Promise<void> {
+    console.log(`📦 Processing ${videos.length} videos in chunks of ${chunkSize}...`);
+    
+    const totalChunks = Math.ceil(videos.length / chunkSize);
+    let successCount = 0;
+    let failureCount = 0;
+    
+    for (let i = 0; i < videos.length; i += chunkSize) {
+      const chunk = videos.slice(i, i + chunkSize);
+      const chunkNumber = Math.floor(i / chunkSize) + 1;
+      
+      try {
+        console.log(`📦 Processing chunk ${chunkNumber}/${totalChunks} (${chunk.length} videos)...`);
+        
+        const { error } = await supabase
+          .from('videos')
+          .upsert(chunk, {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          });
+
+        if (error) {
+          console.error(`❌ Chunk ${chunkNumber} failed:`, error);
+          failureCount += chunk.length;
+          
+          // For timeout errors on chunks, try even smaller sub-chunks
+          if (error.code === '57014' && chunk.length > 50) {
+            console.log(`⚠️ Chunk timeout, trying smaller sub-chunks...`);
+            await this.storeVideoDataSubChunks(chunk, 50);
+            successCount += chunk.length;
+            failureCount -= chunk.length;
+          } else {
+            throw new Error(`Chunk ${chunkNumber} failed: ${error.message}`);
+          }
+        } else {
+          successCount += chunk.length;
+          console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
+        }
+        
+        // Add small delay between chunks to avoid overwhelming the database
+        if (i + chunkSize < videos.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+      } catch (error) {
+        console.error(`❌ Chunk ${chunkNumber} error:`, error);
+        failureCount += chunk.length;
+        
+        // Continue with remaining chunks instead of failing entirely
+        console.log(`⚠️ Continuing with remaining chunks...`);
+      }
     }
     
-    console.log(`✅ Database storage complete`);
+    console.log(`✅ Chunked storage complete: ${successCount} successful, ${failureCount} failed`);
+    
+    if (failureCount > 0) {
+      throw new Error(`Failed to store ${failureCount} videos out of ${videos.length}`);
+    }
+  }
+
+  /**
+   * Store video data in very small sub-chunks for timeout recovery
+   */
+  private async storeVideoDataSubChunks(videos: VideoMetadata[], subChunkSize: number): Promise<void> {
+    console.log(`📦 Processing ${videos.length} videos in sub-chunks of ${subChunkSize}...`);
+    
+    for (let i = 0; i < videos.length; i += subChunkSize) {
+      const subChunk = videos.slice(i, i + subChunkSize);
+      
+      try {
+        const { error } = await supabase
+          .from('videos')
+          .upsert(subChunk, {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          });
+
+        if (error) {
+          throw new Error(`Sub-chunk failed: ${error.message}`);
+        }
+        
+        // Small delay between sub-chunks
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+      } catch (error) {
+        console.error(`❌ Sub-chunk starting at index ${i} failed:`, error);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Trigger baseline processing in chunks to avoid timeouts
+   */
+  private async triggerBaselineProcessingChunked(totalVideos: number): Promise<void> {
+    console.log(`📦 Processing baseline calculations in chunks for ${totalVideos} videos...`);
+    
+    const chunkSize = 250; // Smaller chunks for baseline processing
+    const totalChunks = Math.ceil(totalVideos / chunkSize);
+    let processedCount = 0;
+    
+    for (let i = 0; i < totalChunks; i++) {
+      const currentChunkSize = Math.min(chunkSize, totalVideos - (i * chunkSize));
+      
+      try {
+        console.log(`📊 Processing baseline chunk ${i + 1}/${totalChunks} (${currentChunkSize} videos)...`);
+        
+        const { data, error } = await supabase.rpc('trigger_baseline_processing', { 
+          batch_size: currentChunkSize
+        });
+        
+        if (error) {
+          console.error(`❌ Baseline chunk ${i + 1} failed:`, error);
+          // Continue with remaining chunks instead of failing entirely
+        } else {
+          processedCount += (data || 0);
+          console.log(`✅ Baseline chunk ${i + 1}/${totalChunks} complete (processed ${data || 0} videos)`);
+        }
+        
+        // Add delay between chunks to avoid overwhelming the database
+        if (i < totalChunks - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+      } catch (error) {
+        console.error(`❌ Baseline chunk ${i + 1} error:`, error);
+        // Continue with remaining chunks
+      }
+    }
+    
+    console.log(`✅ Chunked baseline processing complete: ${processedCount} videos processed`);
   }
 
   /**

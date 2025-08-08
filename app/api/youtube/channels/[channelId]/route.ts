@@ -12,6 +12,8 @@ export async function GET(
 ) {
   try {
     const { channelId } = await params;
+    const { searchParams } = new URL(request.url);
+    const dateFilter = searchParams.get('dateFilter') || '90d'; // Default to 90 days
     
     if (!channelId) {
       return NextResponse.json(
@@ -22,8 +24,20 @@ export async function GET(
 
     const decodedChannelId = decodeURIComponent(channelId);
 
-    // Get all videos for this channel with envelope performance data
-    const { data: allVideos, error: videosError } = await supabase
+    // Calculate date filter
+    let dateFilterClause = null;
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const daysMatch = dateFilter.match(/^(\d+)d$/);
+      if (daysMatch) {
+        const days = parseInt(daysMatch[1]);
+        const filterDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        dateFilterClause = filterDate.toISOString();
+      }
+    }
+
+    // Build query - optimize by only selecting needed fields
+    let query = supabase
       .from('videos')
       .select(`
         id,
@@ -31,21 +45,23 @@ export async function GET(
         view_count,
         published_at,
         thumbnail_url,
-        duration,
         channel_id,
         channel_name,
-        rolling_baseline_views,
-        envelope_performance_ratio,
+        temporal_performance_score,
         envelope_performance_category,
-        is_competitor,
-        created_at,
-        description,
-        llm_summary,
-        llm_summary_generated_at,
-        llm_summary_model
+        channel_baseline_at_publish,
+        rolling_baseline_views
       `)
       .eq('channel_id', decodedChannelId)
+      .eq('is_short', false)  // Use is_short column instead of checking duration
       .order('published_at', { ascending: false });
+    
+    // Apply date filter for top performers calculation
+    if (dateFilterClause) {
+      // We'll handle this differently for top performers
+    }
+
+    const { data: allVideos, error: videosError } = await query;
 
     if (videosError) {
       console.error('Error fetching channel videos:', videosError);
@@ -62,74 +78,27 @@ export async function GET(
       );
     }
 
-    // Helper function to check if video is a YouTube Short
-    const isYouTubeShort = (video: any): boolean => {
-      // Duration check: <= 2 minutes 1 second (121 seconds)
-      const durationMatch = video.duration?.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
-      if (durationMatch) {
-        const hours = parseInt(durationMatch[1] || '0');
-        const minutes = parseInt(durationMatch[2] || '0');
-        const seconds = parseInt(durationMatch[3] || '0');
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-        if (totalSeconds > 0 && totalSeconds <= 121) {
-          return true;
-        }
-      }
-      
-      // Hashtag check: Look for #shorts, #short, #youtubeshorts (case insensitive)
-      const combinedText = `${video.title || ''} ${video.description || ''}`.toLowerCase();
-      if (combinedText.includes('#shorts') || combinedText.includes('#short') || combinedText.includes('#youtubeshorts')) {
-        return true;
-      }
-      
-      return false;
-    };
-
-    // Filter out YouTube Shorts
-    const videos = allVideos.filter(video => !isYouTubeShort(video));
-
-    if (videos.length === 0) {
-      return NextResponse.json(
-        { error: 'No long-form videos found for this channel' },
-        { status: 404 }
-      );
-    }
-
-    // Use envelope performance ratios (new system) with fallback to old system
-    const videosWithPerformance = videos.map(video => {
-      // Prefer new envelope performance ratio over old rolling baseline calculation
-      const performanceRatio = video.envelope_performance_ratio !== null 
-        ? video.envelope_performance_ratio 
-        : (video.rolling_baseline_views > 0 ? video.view_count / video.rolling_baseline_views : null);
-      
-      return {
-        ...video,
-        performance_ratio: performanceRatio,
-        envelope_performance_ratio: video.envelope_performance_ratio,
-        envelope_performance_category: video.envelope_performance_category,
-        channel_avg_views: video.rolling_baseline_views
-      };
-    });
+    const videos = allVideos;
 
     // Calculate channel overview stats
     const totalVideos = videos.length;
     const totalViews = videos.reduce((sum, v) => sum + (v.view_count || 0), 0);
     const avgViews = totalViews / totalVideos;
     
-    const validPerformanceRatios = videosWithPerformance
-      .map(v => v.performance_ratio)
-      .filter(ratio => ratio !== null && ratio > 0) as number[];
+    const validTemporalScores = videos
+      .map(v => v.temporal_performance_score)
+      .filter(score => score !== null && score > 0) as number[];
     
-    const avgPerformanceRatio = validPerformanceRatios.length > 0
-      ? validPerformanceRatios.reduce((sum, ratio) => sum + ratio, 0) / validPerformanceRatios.length
+    const avgTemporalPerformanceScore = validTemporalScores.length > 0
+      ? validTemporalScores.reduce((sum, score) => sum + score, 0) / validTemporalScores.length
       : null;
 
-    // Performance distribution
+    // Performance distribution using temporal scores
     const performanceDistribution = {
-      under_half: validPerformanceRatios.filter(r => r < 0.5).length,
-      half_to_one: validPerformanceRatios.filter(r => r >= 0.5 && r < 1.0).length,
-      one_to_two: validPerformanceRatios.filter(r => r >= 1.0 && r < 2.0).length,
-      over_two: validPerformanceRatios.filter(r => r >= 2.0).length
+      under_half: validTemporalScores.filter(s => s < 0.5).length,
+      half_to_one: validTemporalScores.filter(s => s >= 0.5 && s < 1.0).length,
+      one_to_two: validTemporalScores.filter(s => s >= 1.0 && s < 2.0).length,
+      over_two: validTemporalScores.filter(s => s >= 2.0).length
     };
 
     // Date range
@@ -146,13 +115,20 @@ export async function GET(
       : 1;
     const uploadsPerMonth = totalVideos / monthsSpanned;
 
-    // Top and bottom performers
-    const sortedByPerformance = videosWithPerformance
-      .filter(v => v.performance_ratio !== null)
-      .sort((a, b) => (b.performance_ratio || 0) - (a.performance_ratio || 0));
+    // Filter videos for top performers based on date filter
+    let videosForTopPerformers = videos;
+    if (dateFilterClause) {
+      videosForTopPerformers = videos.filter(v => 
+        new Date(v.published_at) >= new Date(dateFilterClause)
+      );
+    }
+
+    // Top performers using temporal scores with date filter
+    const sortedByPerformance = videosForTopPerformers
+      .filter(v => v.temporal_performance_score !== null)
+      .sort((a, b) => (b.temporal_performance_score || 0) - (a.temporal_performance_score || 0));
     
     const topPerformers = sortedByPerformance.slice(0, 6);
-    const bottomPerformers = sortedByPerformance.slice(-6).reverse();
 
     const channelOverview = {
       channel_name: videos[0].channel_name || decodedChannelId,
@@ -160,7 +136,7 @@ export async function GET(
       total_videos: totalVideos,
       total_views: totalViews,
       avg_views: Math.round(avgViews),
-      avg_performance_ratio: avgPerformanceRatio ? Math.round(avgPerformanceRatio * 100) / 100 : null,
+      avg_temporal_performance_score: avgTemporalPerformanceScore ? Math.round(avgTemporalPerformanceScore * 100) / 100 : null,
       uploads_per_month: Math.round(uploadsPerMonth * 10) / 10,
       date_range: {
         oldest: oldestDate?.toISOString(),
@@ -168,12 +144,12 @@ export async function GET(
       },
       performance_distribution: performanceDistribution,
       top_performers: topPerformers,
-      bottom_performers: bottomPerformers
+      date_filter: dateFilter
     };
 
     return NextResponse.json({
       channel_overview: channelOverview,
-      videos: videosWithPerformance
+      videos: videos // Only return necessary video data
     });
 
   } catch (error) {

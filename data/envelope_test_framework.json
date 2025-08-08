@@ -1,0 +1,20 @@
+{
+  "test_channels": [
+    "Car Care Clues",
+    "Slant 3D",
+    "Build Dad Build",
+    "Chads Custom Creations",
+    "DIY Home Improvement",
+    "Jered Williams"
+  ],
+  "comparison_metrics": [
+    "confidence_band_accuracy",
+    "over_under_classification_accuracy",
+    "baseline_prediction_error"
+  ],
+  "test_scenarios": [
+    "sparse_data_simulation",
+    "early_prediction",
+    "cross_channel_validation"
+  ]
+}

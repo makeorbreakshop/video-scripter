@@ -1,0 +1,93 @@
+{
+  "model_id": "xgboost_baseline_predictor_20250805_160237",
+  "created_at": "20250805_160237",
+  "model_type": "xgboost_baseline",
+  "target": "log_baseline_multiplier",
+  "features": [
+    "subscriber_count",
+    "channel_tier",
+    "topic_cluster_id",
+    "title_word_count",
+    "day_of_week",
+    "hour_of_day",
+    "format_case_study",
+    "format_explainer",
+    "format_listicle",
+    "format_personal_story",
+    "format_product_focus",
+    "format_shorts",
+    "format_tutorial",
+    "format_vlog"
+  ],
+  "performance": {
+    "train_mae": 0.20845170526683307,
+    "test_mae": 0.2953543304050706,
+    "train_rmse": 0.2674566695109608,
+    "test_rmse": 0.39059830809218493,
+    "train_r2": 0.5198790752993228,
+    "test_r2": 0.043137073791714275,
+    "baseline_mae": 0.30721830289793844,
+    "baseline_rmse": 0.40007873628953056,
+    "improvement_mae": 3.861740131026376,
+    "improvement_rmse": 2.369640607564005,
+    "feature_importance": [
+      {
+        "feature": "format_shorts",
+        "importance": 0.29323115944862366
+      },
+      {
+        "feature": "format_vlog",
+        "importance": 0.14582018554210663
+      },
+      {
+        "feature": "format_personal_story",
+        "importance": 0.12417275458574295
+      },
+      {
+        "feature": "format_product_focus",
+        "importance": 0.07834845781326294
+      },
+      {
+        "feature": "format_case_study",
+        "importance": 0.05356844887137413
+      },
+      {
+        "feature": "format_tutorial",
+        "importance": 0.05156728997826576
+      },
+      {
+        "feature": "format_explainer",
+        "importance": 0.042936377227306366
+      },
+      {
+        "feature": "format_listicle",
+        "importance": 0.0345524437725544
+      },
+      {
+        "feature": "topic_cluster_id",
+        "importance": 0.034141283482313156
+      },
+      {
+        "feature": "subscriber_count",
+        "importance": 0.03182709962129593
+      },
+      {
+        "feature": "day_of_week",
+        "importance": 0.03056281805038452
+      },
+      {
+        "feature": "title_word_count",
+        "importance": 0.026746312156319618
+      },
+      {
+        "feature": "channel_tier",
+        "importance": 0.026333948597311974
+      },
+      {
+        "feature": "hour_of_day",
+        "importance": 0.026191459968686104
+      }
+    ]
+  },
+  "description": "Channel baseline prediction model (not early performance prediction)"
+}

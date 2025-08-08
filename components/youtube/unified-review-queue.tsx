@@ -19,7 +19,9 @@ import {
   Filter,
   Upload,
   Square,
-  CheckSquare
+  CheckSquare,
+  AlertTriangle,
+  Database
 } from 'lucide-react';
 
 interface DiscoveredChannel {
@@ -38,6 +40,11 @@ interface DiscoveredChannel {
   relevance_score: number;
   subscriber_count: number;
   video_count: number;
+  // Duplicate checking fields
+  isImported?: boolean;
+  inQueue?: boolean;
+  importedVideoCount?: number;
+  lastImportDate?: string | null;
 }
 
 export function UnifiedReviewQueue() {
@@ -48,6 +55,13 @@ export function UnifiedReviewQueue() {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [sortBy, setSortBy] = useState('relevance_score');
   const [selectedChannelIds, setSelectedChannelIds] = useState<Set<string>>(new Set());
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [duplicateStats, setDuplicateStats] = useState<{
+    alreadyImported: number;
+    inQueue: number;
+    newChannels: number;
+  } | null>(null);
+  const [duplicateFilter, setDuplicateFilter] = useState<'all' | 'new' | 'imported' | 'queued'>('all');
 
   useEffect(() => {
     loadChannels();
@@ -105,6 +119,52 @@ export function UnifiedReviewQueue() {
       console.error('Error loading channels:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkForDuplicates = async () => {
+    setCheckingDuplicates(true);
+    try {
+      // Get all channel IDs from current view
+      const channelIds = channels.map(ch => ch.discovered_channel_id);
+      
+      if (channelIds.length === 0) {
+        return;
+      }
+
+      const response = await fetch('/api/youtube/discovery/check-duplicates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelIds })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update channels with duplicate info
+        const updatedChannels = channels.map(channel => {
+          const duplicateInfo = data.duplicates[channel.discovered_channel_id];
+          if (duplicateInfo) {
+            return {
+              ...channel,
+              isImported: duplicateInfo.isImported,
+              inQueue: duplicateInfo.inQueue,
+              importedVideoCount: duplicateInfo.videoCount,
+              lastImportDate: duplicateInfo.lastImportDate
+            };
+          }
+          return channel;
+        });
+        
+        setChannels(updatedChannels);
+        setDuplicateStats(data.stats);
+        
+        console.log(`✅ Duplicate check complete: ${data.stats.alreadyImported} imported, ${data.stats.inQueue} in queue, ${data.stats.newChannels} new`);
+      }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+    } finally {
+      setCheckingDuplicates(false);
     }
   };
 
@@ -210,7 +270,24 @@ export function UnifiedReviewQueue() {
   const filteredChannels = channels.filter(channel => {
     const matchesSearch = !searchTerm || 
       channel.channel_metadata?.title?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    
+    // Apply duplicate status filter
+    let matchesDuplicateFilter = true;
+    if (duplicateFilter !== 'all') {
+      switch (duplicateFilter) {
+        case 'new':
+          matchesDuplicateFilter = !channel.isImported && !channel.inQueue;
+          break;
+        case 'imported':
+          matchesDuplicateFilter = channel.isImported === true;
+          break;
+        case 'queued':
+          matchesDuplicateFilter = channel.inQueue === true;
+          break;
+      }
+    }
+    
+    return matchesSearch && matchesDuplicateFilter;
   });
 
   const pendingChannels = filteredChannels.filter(ch => ch.validation_status === 'pending');
@@ -235,10 +312,46 @@ export function UnifiedReviewQueue() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters & Search</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Filters & Search</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={checkForDuplicates}
+              disabled={checkingDuplicates || channels.length === 0}
+            >
+              {checkingDuplicates ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <Database className="h-4 w-4 mr-2" />
+                  Check for Duplicates
+                </>
+              )}
+            </Button>
+          </div>
+          {duplicateStats && (
+            <div className="flex gap-4 mt-2 text-sm">
+              <span className="text-orange-600">
+                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                {duplicateStats.alreadyImported} Already Imported
+              </span>
+              <span className="text-yellow-600">
+                <Clock className="h-4 w-4 inline mr-1" />
+                {duplicateStats.inQueue} In Queue
+              </span>
+              <span className="text-green-600">
+                <CheckCircle className="h-4 w-4 inline mr-1" />
+                {duplicateStats.newChannels} New Channels
+              </span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
@@ -283,6 +396,21 @@ export function UnifiedReviewQueue() {
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
                   <SelectItem value="imported">Imported</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Import Status</label>
+              <Select value={duplicateFilter} onValueChange={(value: 'all' | 'new' | 'imported' | 'queued') => setDuplicateFilter(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Channels</SelectItem>
+                  <SelectItem value="new">New Only</SelectItem>
+                  <SelectItem value="imported">Already Imported</SelectItem>
+                  <SelectItem value="queued">In Queue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -400,6 +528,20 @@ export function UnifiedReviewQueue() {
                       }>
                         {channel.validation_status}
                       </Badge>
+                      
+                      {/* Duplicate status badges */}
+                      {channel.isImported && (
+                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
+                          <Database className="h-3 w-3 mr-1" />
+                          Already Imported ({channel.importedVideoCount || 0} videos)
+                        </Badge>
+                      )}
+                      {channel.inQueue && (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                          <Clock className="h-3 w-3 mr-1" />
+                          In Queue
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -417,6 +559,11 @@ export function UnifiedReviewQueue() {
                       {channel.relevance_score > 0 && (
                         <div className="text-xs">
                           Score: {channel.relevance_score.toFixed(1)}
+                        </div>
+                      )}
+                      {channel.lastImportDate && (
+                        <div className="text-xs text-orange-600">
+                          Last imported: {new Date(channel.lastImportDate).toLocaleDateString()}
                         </div>
                       )}
                     </div>
