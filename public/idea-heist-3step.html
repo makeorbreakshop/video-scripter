@@ -13,32 +13,271 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #fafafa;
             min-height: 100vh;
-            color: #333;
+            color: #1a1a1a;
+            position: relative;
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            transition: margin-right 0.3s ease;
+        }
+        
+        .container.debug-open {
+            margin-right: 500px;
+        }
+        
+        /* Debug Panel Styles */
+        .debug-panel {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 500px;
+            height: 100vh;
+            background: #1a1a1a;
+            color: #e5e7eb;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .debug-panel.open {
+            right: 0;
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a1a1a;
+            color: #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 999;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #374151;
+            transition: all 0.2s;
+        }
+        
+        .debug-toggle:hover {
+            background: #374151;
+            transform: translateY(-2px);
+        }
+        
+        .debug-header {
+            background: #111;
+            padding: 15px;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .debug-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .debug-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .debug-btn {
+            padding: 4px 8px;
+            background: #374151;
+            border: none;
+            border-radius: 4px;
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .debug-btn:hover {
+            background: #4b5563;
+        }
+        
+        .debug-status {
+            background: #111;
+            padding: 10px 15px;
+            border-bottom: 1px solid #374151;
+            font-size: 11px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+        
+        .debug-status-item {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .debug-status-label {
+            color: #9ca3af;
+        }
+        
+        .debug-status-value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        
+        .debug-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .debug-entry {
+            font-size: 11px;
+            line-height: 1.4;
+            padding: 8px;
+            background: #111;
+            border-radius: 4px;
+            border-left: 3px solid #374151;
+        }
+        
+        .debug-entry.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .debug-entry.success {
+            border-left-color: #10b981;
+        }
+        
+        .debug-entry.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .debug-entry.error {
+            border-left-color: #ef4444;
+        }
+        
+        .debug-timestamp {
+            color: #6b7280;
+            margin-right: 8px;
+        }
+        
+        .debug-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #374151;
+        }
+        
+        .debug-section-title {
+            color: #3b82f6;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .debug-data {
+            background: #0a0a0a;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-metrics {
+            background: #111;
+            padding: 15px;
+            border-top: 1px solid #374151;
+            flex-shrink: 0;
+        }
+        
+        .debug-metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        
+        .debug-metric-label {
+            color: #9ca3af;
+        }
+        
+        .debug-metric-value {
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+        
+        .debug-expandable {
+            background: #111;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        .debug-expandable-header {
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        
+        .debug-expandable-header:hover {
+            background: #1f2937;
+        }
+        
+        .debug-expandable-content {
+            display: none;
+            padding: 8px;
+            border-top: 1px solid #374151;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .debug-expandable.expanded .debug-expandable-content {
+            display: block;
+        }
+        
+        .debug-expandable-icon {
+            transition: transform 0.2s;
+        }
+        
+        .debug-expandable.expanded .debug-expandable-icon {
+            transform: rotate(90deg);
         }
         
         .header {
             text-align: center;
-            color: white;
+            color: #1a1a1a;
             padding: 30px 0;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+            margin: -20px -20px 30px -20px;
+            position: relative;
         }
         
         .header h1 {
-            font-size: 42px;
+            font-size: 36px;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         
         .header p {
-            font-size: 18px;
-            opacity: 0.95;
+            font-size: 16px;
+            color: #6b7280;
         }
         
         /* Progress Steps */
@@ -55,21 +294,37 @@
             gap: 10px;
             background: white;
             padding: 12px 24px;
-            border-radius: 30px;
+            border-radius: 8px;
             font-weight: 600;
-            color: #718096;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
             transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .step:hover:not(.disabled):not(.active) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        .step.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .step.active {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: #3b82f6;
             color: white;
-            transform: scale(1.05);
+            border-color: #3b82f6;
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
         }
         
         .step.completed {
-            background: #48bb78;
+            background: #10b981;
             color: white;
+            border-color: #10b981;
         }
         
         .step-number {
@@ -106,10 +361,11 @@
         /* Step 1: Outlier Selection */
         .filters {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .filter-group {
@@ -135,14 +391,14 @@
         }
         
         .filter-group button {
-            background: #667eea;
+            background: #3b82f6;
             color: white;
             border: none;
             font-weight: 600;
         }
         
         .filter-group button:hover {
-            background: #5a67d8;
+            background: #2563eb;
             transform: translateY(-1px);
         }
         
@@ -155,16 +411,18 @@
         
         .outlier-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: all 0.3s;
             cursor: pointer;
         }
         
         .outlier-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-color: #d1d5db;
         }
         
         .outlier-card.selected {
@@ -199,7 +457,7 @@
         }
         
         .score-badge.fire {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%);
+            background: #ef4444;
             animation: pulse 2s infinite;
         }
         
@@ -230,48 +488,55 @@
         /* Step 2: Pattern Analysis */
         .analysis-container {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 30px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .source-video-display {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            color: white;
+            padding: 24px;
+            margin-bottom: 30px;
+            color: #1a1a1a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .source-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 16px;
+            gap: 10px;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 16px;
-            opacity: 0.9;
+            margin-bottom: 20px;
+            color: #111827;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .source-content {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             align-items: flex-start;
         }
         
         .source-thumbnail {
-            width: 160px;
-            height: 90px;
+            width: 320px;
+            height: 180px;
             flex-shrink: 0;
             border-radius: 8px;
             overflow: hidden;
-            background: rgba(255,255,255,0.1);
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
         }
         
         .source-thumbnail img {
             width: 100%;
             height: 100%;
+            object-fit: cover;
             border-radius: 6px;
         }
         
@@ -283,7 +548,7 @@
         .source-title {
             font-size: 18px;
             font-weight: 600;
-            color: white;
+            color: #111827;
             margin-bottom: 12px;
             line-height: 1.3;
         }
@@ -296,15 +561,15 @@
         }
         
         .stat-item {
-            background: rgba(255,255,255,0.15);
+            background: white;
+            border: 1px solid #e5e7eb;
             padding: 8px 12px;
             border-radius: 6px;
-            backdrop-filter: blur(10px);
         }
         
         .stat-label {
             font-size: 11px;
-            opacity: 0.8;
+            color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
@@ -313,6 +578,7 @@
         .stat-value {
             font-size: 14px;
             font-weight: 600;
+            color: #111827;
         }
         
         .performance-badge {
@@ -345,12 +611,13 @@
         .pattern-icon {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            background: #3b82f6;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
+            color: white;
         }
         
         .pattern-name {
@@ -360,7 +627,8 @@
         }
         
         .pattern-details {
-            background: #f7fafc;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
@@ -401,9 +669,9 @@
             gap: 15px;
             margin-bottom: 20px;
             padding: 15px;
-            background: #f0fff4;
+            background: #f0fdf4;
             border-radius: 8px;
-            border: 2px solid #48bb78;
+            border: 1px solid #86efac;
         }
         
         .strength-indicator {
@@ -421,15 +689,16 @@
         }
         
         .validation-niche {
-            background: #f7fafc;
+            background: #f9fafb;
             border-radius: 8px;
             padding: 15px;
-            border: 2px solid transparent;
+            border: 1px solid #e5e7eb;
             transition: all 0.3s;
         }
         
         .validation-niche:hover {
-            border-color: #667eea;
+            border-color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .niche-header {
@@ -446,10 +715,10 @@
         }
         
         .niche-score {
-            background: #48bb78;
+            background: #10b981;
             color: white;
             padding: 4px 10px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
         }
@@ -476,18 +745,80 @@
         /* Step 3: Apply to Channel */
         .apply-container {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 30px;
             margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .pattern-context-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .pattern-context-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .pattern-context-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .pattern-context-description {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .pattern-context-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .pattern-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .pattern-stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .pattern-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
         }
         
         .niche-input-section {
             margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
         .niche-input-label {
             display: block;
             font-weight: 600;
+            white-space: nowrap;
             margin-bottom: 10px;
             color: #4a5568;
             font-size: 16px;
@@ -509,22 +840,25 @@
         }
         
         .topic-card {
-            background: #f7fafc;
+            background: white;
             border-radius: 8px;
             padding: 20px;
             border: 2px solid transparent;
             cursor: pointer;
             transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .topic-card:hover {
-            border-color: #667eea;
-            background: white;
+            border-color: #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
         }
         
         .topic-card.selected {
-            border-color: #48bb78;
-            background: #f0fff4;
+            border-color: #10b981;
+            background: #f0fdf4;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
         
         .topic-header {
@@ -589,7 +923,7 @@
         
         .performance-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #3b82f6;
         }
         
         /* Expanded Topic Section */
@@ -616,12 +950,19 @@
         }
         
         .title-option {
-            background: #f7fafc;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .title-option:hover {
+            background: white;
+            border-color: #d1d5db;
         }
         
         .title-text {
@@ -673,9 +1014,16 @@
         }
         
         .thumbnail-option {
-            background: #f7fafc;
+            background: white;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 15px;
+            transition: all 0.2s;
+        }
+        
+        .thumbnail-option:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .thumbnail-text {
@@ -703,9 +1051,16 @@
         }
         
         .hook-option {
-            background: #f7fafc;
+            background: white;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 15px;
+            transition: all 0.2s;
+        }
+        
+        .hook-option:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .hook-text {
@@ -739,13 +1094,14 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #3b82f6;
             color: white;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .btn-primary:disabled {
@@ -755,17 +1111,17 @@
         
         .btn-secondary {
             background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            color: #3b82f6;
+            border: 1px solid #e5e7eb;
         }
         
         .btn-secondary:hover {
-            background: #667eea;
-            color: white;
+            background: #f9fafb;
+            border-color: #3b82f6;
         }
         
         .copy-btn {
-            background: #4a5568;
+            background: #6b7280;
             color: white;
             border: none;
             padding: 6px 14px;
@@ -776,11 +1132,11 @@
         }
         
         .copy-btn:hover {
-            background: #2d3748;
+            background: #4b5563;
         }
         
         .copy-btn.copied {
-            background: #48bb78;
+            background: #10b981;
         }
         
         /* Loading States */
@@ -795,7 +1151,7 @@
             width: 40px;
             height: 40px;
             border: 4px solid #e2e8f0;
-            border-top-color: #667eea;
+            border-top-color: #3b82f6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -898,10 +1254,14 @@
         
         .validation-video-item {
             display: flex;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
             align-items: flex-start;
+            background: white;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
         }
         
         .validation-video-item:last-child {
@@ -914,11 +1274,12 @@
         }
         
         .video-thumbnail-small {
-            width: 120px;
-            height: 68px;
+            width: 320px;
+            height: 180px;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: 8px;
             background: #f1f5f9;
+            border: 1px solid #e5e7eb;
         }
         
         .video-score-overlay {
@@ -939,10 +1300,11 @@
         }
         
         .video-title-small {
-            font-weight: 500;
-            color: #2d3748;
-            line-height: 1.3;
-            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #111827;
+            line-height: 1.4;
+            margin-bottom: 8px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -950,9 +1312,10 @@
         }
         
         .video-meta-small {
-            font-size: 13px;
-            color: #718096;
-            margin-bottom: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+            line-height: 1.4;
         }
         
         .source-badge {
@@ -964,13 +1327,14 @@
         }
         
         .validation-reason {
-            background: #f0fff4;
-            border: 1px solid #c6f6d5;
-            border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 13px;
-            color: #22543d;
-            line-height: 1.4;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #14532d;
+            line-height: 1.5;
+            margin-top: 12px;
         }
         
         /* Remove the CSS-generated check mark since it's already in the text */
@@ -979,23 +1343,49 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Idea Heist</h1>
-            <p>Find proven patterns → Validate across niches → Apply to your channel</p>
+            <!-- Compact Single Row Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                <!-- AI Agent Toggle -->
+                <div id="agentic-toggle" style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onclick="toggleAgenticMode()">
+                    <span style="font-weight: 600; color: #374151; font-size: 11px;">AI Agent</span>
+                    <div id="toggle-switch" style="width: 28px; height: 14px; background: #cbd5e0; border-radius: 7px; position: relative; transition: background 0.2s;">
+                        <div id="toggle-knob" style="width: 10px; height: 10px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
+                    </div>
+                    <span id="toggle-label" style="font-size: 10px; color: #6b7280;">Classic</span>
+                </div>
+                
+                <!-- Main Title - Centered -->
+                <div style="text-align: center; flex: 1; margin: 0 20px;">
+                    <h1 style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0; line-height: 1;">🎯 Idea Heist</h1>
+                    <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0 0; line-height: 1.2;">Find proven patterns → Validate across niches → Apply to your channel</p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 6px;">
+                    <button onclick="clearCache()" style="padding: 4px 8px; background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white'; this.style.borderColor='#ef4444';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'; this.style.borderColor='#d1d5db';">
+                        Clear Cache
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Progress Indicator -->
         <div class="progress-steps">
-            <div class="step active" id="step-1">
+            <div class="step active" id="step-1" onclick="goToStep(1)">
                 <span class="step-number">1</span>
                 <span>Find Outlier</span>
             </div>
-            <div class="step" id="step-2">
+            <div class="step disabled" id="step-2" onclick="goToStep(2)">
                 <span class="step-number">2</span>
                 <span>Analyze Pattern</span>
             </div>
-            <div class="step" id="step-3">
+            <div class="step disabled" id="step-3" onclick="goToStep(3)">
                 <span class="step-number">3</span>
                 <span>Apply to Channel</span>
+            </div>
+            <div class="step disabled" id="step-4" onclick="goToStep(4)">
+                <span class="step-number">4</span>
+                <span>Generate Titles</span>
             </div>
         </div>
         
@@ -1008,11 +1398,17 @@
                         <option value="day">Last 24 Hours</option>
                         <option value="week">Last Week</option>
                         <option value="month" selected>Last Month</option>
+                        <option value="quarter">Last 3 Months</option>
+                        <option value="halfyear">Last 6 Months</option>
+                        <option value="year">Last Year</option>
+                        <option value="twoyears">Last 2 Years</option>
                     </select>
                     
                     <label style="margin-left: 15px;">Min Score:</label>
                     <select id="minScore">
-                        <option value="3" selected>3x (Good)</option>
+                        <option value="1.5">1.5x (Above Average)</option>
+                        <option value="2">2x (Good)</option>
+                        <option value="3" selected>3x (Very Good)</option>
                         <option value="5">5x (Viral)</option>
                         <option value="10">10x (Mega-viral)</option>
                     </select>
@@ -1048,12 +1444,25 @@
         <!-- Step 3: Apply to Channel -->
         <div id="screen-3" class="screen">
             <div class="apply-container">
+                <!-- Pattern Context -->
+                <div id="pattern-context" class="pattern-context-box" style="display: none;">
+                    <!-- Will be populated when user navigates to this step -->
+                </div>
+                
                 <div class="niche-input-section">
-                    <label class="niche-input-label">Your Niche:</label>
-                    <input type="text" id="targetNiche" class="niche-input" placeholder="e.g., Woodworking, 3D Printing, Gaming..." value="Woodworking">
-                    <button class="btn btn-primary" onclick="generateTopics()" style="margin-left: 10px;">
-                        ✨ Generate Topic Ideas
+                    <label class="niche-input-label">Search YouTube Channel:</label>
+                    <input type="text" id="channelSearch" class="niche-input" placeholder="e.g., @MrBeast, Mark Rober, or channel name..." style="flex: 1;">
+                    <button class="btn btn-primary" onclick="searchChannel()" style="margin-left: 10px;">
+                        🔍 Search Channel
                     </button>
+                </div>
+                
+                <div id="channel-results" style="display: none;">
+                    <!-- Channel search results will appear here -->
+                </div>
+                
+                <div id="selected-channel" style="display: none;">
+                    <!-- Selected channel info will appear here -->
                 </div>
                 
                 <div id="topics-container">
@@ -1069,6 +1478,83 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Step 4: Generate Titles -->
+        <div id="screen-4" class="screen">
+            <div class="apply-container">
+                <!-- Topic Context -->
+                <div id="topic-context" class="pattern-context-box">
+                    <!-- Will be populated when user navigates to this step -->
+                </div>
+                
+                <div id="titles-container">
+                    <!-- Title variations will be populated here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Topics</button>
+                    <button class="btn btn-primary" onclick="regenerateTitles()">🔄 Generate More Titles</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Debug Toggle Button -->
+    <div class="debug-toggle" onclick="toggleDebugPanel()">🔧 Debug</div>
+    
+    <!-- Debug Panel -->
+    <div id="debugPanel" class="debug-panel">
+        <div class="debug-header">
+            <div class="debug-title">Debug Panel</div>
+            <div class="debug-controls">
+                <button class="debug-btn" onclick="clearDebugLog()">Clear</button>
+                <button class="debug-btn" onclick="copyDebugLog()">Copy</button>
+                <button class="debug-btn" onclick="exportDebugLog()">Export</button>
+                <button class="debug-btn" onclick="toggleDebugPanel()">✕</button>
+            </div>
+        </div>
+        
+        <div class="debug-status">
+            <div class="debug-status-item">
+                <span class="debug-status-label">Step:</span>
+                <span class="debug-status-value" id="debugCurrentStep">1</span>
+            </div>
+            <div class="debug-status-item">
+                <span class="debug-status-label">Status:</span>
+                <span class="debug-status-value" id="debugStatus">Idle</span>
+            </div>
+            <div class="debug-status-item">
+                <span class="debug-status-label">Time:</span>
+                <span class="debug-status-value" id="debugTime">0s</span>
+            </div>
+            <div class="debug-status-item">
+                <span class="debug-status-label">Cost:</span>
+                <span class="debug-status-value" id="debugCost">$0.000</span>
+            </div>
+            <div class="debug-status-item">
+                <span class="debug-status-label">Models:</span>
+                <span class="debug-status-value">Claude 3.5 | GPT-3.5</span>
+            </div>
+        </div>
+        
+        <div class="debug-content" id="debugContent">
+            <!-- Debug entries will be added here dynamically -->
+        </div>
+        
+        <div class="debug-metrics">
+            <div class="debug-metric-row">
+                <span class="debug-metric-label">API Calls:</span>
+                <span class="debug-metric-value" id="debugApiCalls">0</span>
+            </div>
+            <div class="debug-metric-row">
+                <span class="debug-metric-label">Total Tokens:</span>
+                <span class="debug-metric-value" id="debugTokens">0</span>
+            </div>
+            <div class="debug-metric-row">
+                <span class="debug-metric-label">Cache Hits:</span>
+                <span class="debug-metric-value" id="debugCacheHits">0/0</span>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -1077,10 +1563,697 @@
         let analyzedPattern = null;
         let validationData = null;
         let selectedTopic = null;
+        let selectedChannel = null;
+        let channelStyle = null;
         let outliers = [];
         let currentPage = 0;
         let isLoading = false;
         let hasMore = true;
+        
+        // Debug Panel State
+        let debugLog = [];
+        let debugStartTime = Date.now();
+        let apiCallCount = 0;
+        let totalTokens = 0;
+        let totalCost = 0;
+        let cacheHits = 0;
+        let cacheMisses = 0;
+        
+        // Debug Panel Functions
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            const container = document.querySelector('.container');
+            panel.classList.toggle('open');
+            container.classList.toggle('debug-open');
+        }
+        
+        function clearDebugLog() {
+            debugLog = [];
+            document.getElementById('debugContent').innerHTML = '';
+            apiCallCount = 0;
+            totalTokens = 0;
+            totalCost = 0;
+            cacheHits = 0;
+            cacheMisses = 0;
+            updateDebugMetrics();
+        }
+        
+        function copyDebugLog() {
+            const logText = debugLog.map(entry => 
+                `[${entry.timestamp}] ${entry.type.toUpperCase()}: ${entry.message}\n${entry.data ? JSON.stringify(entry.data, null, 2) : ''}`
+            ).join('\n\n');
+            
+            navigator.clipboard.writeText(logText).then(() => {
+                addDebugEntry('info', 'Debug log copied to clipboard');
+            });
+        }
+        
+        function exportDebugLog() {
+            const logData = {
+                session: {
+                    startTime: new Date(debugStartTime).toISOString(),
+                    duration: Date.now() - debugStartTime,
+                    apiCalls: apiCallCount,
+                    totalTokens: totalTokens,
+                    totalCost: totalCost,
+                    cacheHits: cacheHits,
+                    cacheMisses: cacheMisses
+                },
+                entries: debugLog
+            };
+            
+            const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `idea-heist-debug-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function addDebugEntry(type, message, data = null) {
+            const timestamp = new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            const entry = { timestamp, type, message, data };
+            debugLog.push(entry);
+            
+            const debugContent = document.getElementById('debugContent');
+            const entryEl = document.createElement('div');
+            entryEl.className = `debug-entry ${type}`;
+            
+            let html = `<span class="debug-timestamp">[${timestamp}]</span>${message}`;
+            
+            if (data) {
+                if (data._expandable) {
+                    html += `
+                        <div class="debug-expandable" onclick="toggleDebugExpandable(this)">
+                            <div class="debug-expandable-header">
+                                <span>${data._title || 'View Data'}</span>
+                                <span class="debug-expandable-icon">▶</span>
+                            </div>
+                            <div class="debug-expandable-content">
+                                <pre>${JSON.stringify(data._content || data, null, 2)}</pre>
+                            </div>
+                        </div>
+                    `;
+                } else if (typeof data === 'object') {
+                    html += `<div class="debug-data">${JSON.stringify(data, null, 2)}</div>`;
+                } else {
+                    html += `<div class="debug-data">${data}</div>`;
+                }
+            }
+            
+            entryEl.innerHTML = html;
+            debugContent.appendChild(entryEl);
+            
+            // Auto-scroll to bottom
+            debugContent.scrollTop = debugContent.scrollHeight;
+        }
+        
+        function toggleDebugExpandable(element) {
+            element.classList.toggle('expanded');
+        }
+        
+        function updateDebugStatus(step, status) {
+            document.getElementById('debugCurrentStep').textContent = step;
+            document.getElementById('debugStatus').textContent = status;
+            document.getElementById('debugTime').textContent = 
+                Math.round((Date.now() - debugStartTime) / 1000) + 's';
+        }
+        
+        // Task board display functions
+        function updateTaskBoard(tasks) {
+            const taskBoardEl = document.getElementById('agenticTaskBoard');
+            if (!taskBoardEl) {
+                // Create task board if it doesn't exist
+                const debugContent = document.getElementById('debugContent');
+                const boardHTML = `
+                    <div id="agenticTaskBoard" style="
+                        background: #f8f9fa;
+                        border: 1px solid #dee2e6;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 12px 0;
+                    ">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Task Progress</h4>
+                        <div id="taskBoardItems"></div>
+                    </div>
+                `;
+                debugContent.insertAdjacentHTML('afterbegin', boardHTML);
+            }
+            
+            const itemsEl = document.getElementById('taskBoardItems');
+            itemsEl.innerHTML = tasks.map(task => `
+                <div class="task-item" data-task-id="${task.id}" style="
+                    display: flex;
+                    align-items: center;
+                    padding: 4px 0;
+                    font-size: 13px;
+                ">
+                    <span class="task-status" style="
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        display: inline-block;
+                        margin-right: 8px;
+                        background: ${task.status === 'complete' ? '#10b981' : 
+                                     task.status === 'running' ? '#3b82f6' : '#cbd5e0'};
+                    ">${task.status === 'complete' ? '✓' : 
+                        task.status === 'running' ? '⋯' : ''}</span>
+                    <span class="task-name" style="flex: 1;">${task.name}</span>
+                    <span class="task-metrics" style="font-size: 11px; color: #6b7280;"></span>
+                </div>
+            `).join('');
+        }
+        
+        function updateTaskStatus(taskId, status, metrics) {
+            const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (taskEl) {
+                const statusEl = taskEl.querySelector('.task-status');
+                const metricsEl = taskEl.querySelector('.task-metrics');
+                
+                statusEl.style.background = status === 'complete' ? '#10b981' : 
+                                           status === 'running' ? '#3b82f6' : '#cbd5e0';
+                statusEl.textContent = status === 'complete' ? '✓' : 
+                                     status === 'running' ? '⋯' : '';
+                
+                if (metrics) {
+                    const parts = [];
+                    if (metrics.tokens) parts.push(`${metrics.tokens} tokens`);
+                    if (metrics.duration) parts.push(`${(metrics.duration/1000).toFixed(1)}s`);
+                    if (metrics.cost) parts.push(`$${metrics.cost.toFixed(4)}`);
+                    metricsEl.textContent = parts.join(' · ');
+                }
+            }
+        }
+        
+        function updateMetricsFooter(metrics) {
+            let footerEl = document.getElementById('agenticMetricsFooter');
+            if (!footerEl) {
+                const debugContent = document.getElementById('debugContent');
+                const footerHTML = `
+                    <div id="agenticMetricsFooter" style="
+                        background: #1f2937;
+                        color: white;
+                        padding: 8px 12px;
+                        margin-top: 12px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-family: monospace;
+                    "></div>
+                `;
+                debugContent.insertAdjacentHTML('beforeend', footerHTML);
+                footerEl = document.getElementById('agenticMetricsFooter');
+            }
+            
+            footerEl.textContent = `${metrics.totalTools} tools · ${metrics.totalTokens.toLocaleString()} tokens · $${metrics.totalCost.toFixed(4)} · ${(metrics.duration/1000).toFixed(1)}s`;
+        }
+        
+        function updateDebugMetrics() {
+            document.getElementById('debugApiCalls').textContent = apiCallCount;
+            document.getElementById('debugTokens').textContent = totalTokens.toLocaleString();
+            document.getElementById('debugCost').textContent = '$' + totalCost.toFixed(3);
+            document.getElementById('debugCacheHits').textContent = 
+                `${cacheHits}/${cacheHits + cacheMisses} (${cacheHits + cacheMisses > 0 ? 
+                    Math.round(cacheHits / (cacheHits + cacheMisses) * 100) : 0}%)`;
+        }
+        
+        function logApiCall(endpoint, method, requestData, responseData, timing) {
+            apiCallCount++;
+            
+            // Estimate token usage based on response size
+            const estimatedTokens = Math.round(JSON.stringify(responseData).length / 4);
+            totalTokens += estimatedTokens;
+            
+            // Estimate cost (rough estimates)
+            if (endpoint.includes('analyze-pattern') || endpoint.includes('generate')) {
+                totalCost += estimatedTokens * 0.000015; // Claude estimate
+            } else if (endpoint.includes('embed')) {
+                totalCost += estimatedTokens * 0.00002; // OpenAI estimate
+            }
+            
+            updateDebugMetrics();
+            
+            const message = `API: ${method} ${endpoint} (${timing}ms)`;
+            addDebugEntry('info', message, {
+                _expandable: true,
+                _title: 'Request/Response Data',
+                _content: {
+                    request: requestData,
+                    response: responseData,
+                    timing: timing + 'ms',
+                    estimatedTokens
+                }
+            });
+        }
+        
+        // Caching utilities
+        function setCachedData(key, data, ttlSeconds = 3600) {
+            const item = {
+                value: data,
+                expiry: Date.now() + (ttlSeconds * 1000)
+            };
+            try {
+                localStorage.setItem(key, JSON.stringify(item));
+            } catch (e) {
+                console.warn('Failed to cache data:', e);
+            }
+        }
+        
+        function getCachedData(key) {
+            try {
+                const itemStr = localStorage.getItem(key);
+                if (!itemStr) return null;
+                
+                const item = JSON.parse(itemStr);
+                if (Date.now() > item.expiry) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                return item.value;
+            } catch (e) {
+                console.warn('Failed to retrieve cached data:', e);
+                return null;
+            }
+        }
+        
+        function clearCache() {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('pattern_') || key.startsWith('topics_') || key.startsWith('outliers_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            alert('Cache cleared! Data will be refreshed on next load.');
+        }
+        
+        // Agentic Mode State
+        let agenticMode = false;
+        let agenticProgress = null;
+        
+        // Debug logging function
+        function addDebugLog(level, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+            console.log(logEntry);
+            
+            // Also add to debug panel if it exists
+            const debugContent = document.querySelector('.debug-content');
+            if (debugContent) {
+                const logDiv = document.createElement('div');
+                logDiv.className = `debug-entry debug-${level}`;
+                logDiv.textContent = logEntry;
+                debugContent.appendChild(logDiv);
+                debugContent.scrollTop = debugContent.scrollHeight;
+            }
+        }
+        
+        function toggleAgenticMode() {
+            agenticMode = !agenticMode;
+            const toggle = document.getElementById('agentic-toggle');
+            const toggleSwitch = document.getElementById('toggle-switch');
+            const toggleKnob = document.getElementById('toggle-knob');
+            const toggleLabel = document.getElementById('toggle-label');
+            
+            if (agenticMode) {
+                // Enable agentic mode
+                toggleSwitch.style.background = '#8b5cf6';
+                toggleKnob.style.transform = 'translateX(20px)';
+                toggleLabel.textContent = 'Autonomous';
+                toggleLabel.style.color = '#8b5cf6';
+                toggle.style.borderColor = '#8b5cf6';
+                toggle.style.background = '#f3f4f6';
+                
+                addDebugLog('info', 'AI Agent mode enabled - autonomous pattern discovery');
+            } else {
+                // Disable agentic mode
+                toggleSwitch.style.background = '#cbd5e0';
+                toggleKnob.style.transform = 'translateX(0px)';
+                toggleLabel.textContent = 'Classic';
+                toggleLabel.style.color = '#6b7280';
+                toggle.style.borderColor = '#e9ecef';
+                toggle.style.background = '#f8f9fa';
+                
+                addDebugLog('info', 'Classic mode enabled - structured analysis pipeline');
+            }
+        }
+        
+        // Agentic Analysis Function
+        async function analyzePatternAgentic(videoId) {
+            console.log('🤖 analyzePatternAgentic called with videoId:', videoId);
+            addDebugLog('info', `Starting AI Agent analysis for video ${videoId}`);
+            
+            if (!videoId) {
+                console.error('❌ No video ID provided to analyzePatternAgentic');
+                addDebugLog('error', 'No video ID provided for agentic analysis');
+                return null;
+            }
+            
+            try {
+                // Show progress in debug panel
+                agenticProgress = {
+                    videoId: videoId,
+                    status: 'processing',
+                    currentTurn: 'initializing',
+                    progress: 0,
+                    toolCalls: [],
+                    hypothesis: null
+                };
+                
+                updateAgenticProgressDisplay();
+                
+                // Show initial UI in the main analysis content area
+                const container = document.getElementById('analysis-content');
+                container.innerHTML = `
+                    <div id="agentic-main-progress" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 24px; margin-bottom: 8px;">🤖 AI Agent Analyzing</div>
+                            <div id="agentic-status-text" style="font-size: 16px; opacity: 0.9;">GPT-5 is autonomously discovering patterns...</div>
+                        </div>
+                        
+                        <div id="agentic-task-list" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                            <div style="margin-bottom: 8px;">⏳ Initializing agent...</div>
+                        </div>
+                        
+                        <div id="agentic-hypothesis" style="display: none; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">💡 Hypothesis:</div>
+                            <div id="agentic-hypothesis-text" style="font-size: 14px; line-height: 1.5;"></div>
+                        </div>
+                        
+                        <div id="agentic-metrics" style="display: flex; justify-content: space-around; font-size: 12px; opacity: 0.8;">
+                            <div>
+                                <span style="font-weight: 600;">Progress:</span>
+                                <span id="agentic-progress-percent">0%</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600;">Tools:</span>
+                                <span id="agentic-tool-count">0</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600;">Tokens:</span>
+                                <span id="agentic-token-count">0</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600;">Cost:</span>
+                                <span id="agentic-cost">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Use v2 streaming endpoint for enhanced real-time updates
+                const response = await fetch('/api/idea-heist/agentic-v2', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        videoId: videoId,
+                        mode: 'agentic',
+                        options: {
+                            maxTokens: 200000,   // Match backend: 200k
+                            maxToolCalls: 100,   // Match backend: 100  
+                            maxFanouts: 5,       // Match backend: 5
+                            timeoutMs: 180000    // Match backend: 3 minutes
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Agentic analysis failed: ${response.statusText}`);
+                }
+                
+                // Process streaming response
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let finalResult = null;
+                
+                if (reader) {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    
+                                    // Handle different message types
+                                    if (data.type === 'reasoning') {
+                                        // Show OpenAI reasoning in debug panel
+                                        addDebugEntry('reasoning', `🧠 ${data.message}`);
+                                        
+                                        // Update main UI with hypothesis if present
+                                        if (data.message && data.message.includes('Hypothesis')) {
+                                            const hypothesisDiv = document.getElementById('agentic-hypothesis');
+                                            const hypothesisText = document.getElementById('agentic-hypothesis-text');
+                                            if (hypothesisDiv && hypothesisText) {
+                                                hypothesisDiv.style.display = 'block';
+                                                // Extract the hypothesis text (between quotes or after colon)
+                                                const match = data.message.match(/["']([^"']+)["']/) || 
+                                                            data.message.match(/:\s*(.+)$/);
+                                                hypothesisText.textContent = match ? match[1] : data.message;
+                                            }
+                                        }
+                                    } else if (data.type === 'tool_call') {
+                                        addDebugEntry('tool', `🔧 Tool: ${data.tool} ${data.success ? '✓' : '✗'}`);
+                                        agenticProgress.toolCalls.push({
+                                            tool: data.tool,
+                                            params: data.params,
+                                            success: data.success
+                                        });
+                                        
+                                        // Update tool count in main UI
+                                        const toolCount = document.getElementById('agentic-tool-count');
+                                        if (toolCount) {
+                                            toolCount.textContent = agenticProgress.toolCalls.length;
+                                        }
+                                    } else if (data.type === 'model_call') {
+                                        addDebugEntry('model', `🤖 ${data.model}: ${data.tokens} tokens, $${data.cost?.toFixed(4) || 0}`);
+                                        
+                                        // Update token count and cost in main UI
+                                        const tokenCount = document.getElementById('agentic-token-count');
+                                        const costDisplay = document.getElementById('agentic-cost');
+                                        if (data.tokens && tokenCount) {
+                                            const currentTokens = parseInt(tokenCount.textContent) || 0;
+                                            tokenCount.textContent = (currentTokens + data.tokens).toLocaleString();
+                                        }
+                                        if (data.cost && costDisplay) {
+                                            const currentCost = parseFloat(costDisplay.textContent.replace('$', '')) || 0;
+                                            costDisplay.textContent = `$${(currentCost + data.cost).toFixed(4)}`;
+                                        }
+                                    } else if (data.type === 'task_board') {
+                                        // Initialize task board display
+                                        if (data.tasks) {
+                                            agenticProgress.tasks = data.tasks;
+                                            updateTaskBoard(data.tasks);
+                                            
+                                            // Update main UI task list
+                                            const taskList = document.getElementById('agentic-task-list');
+                                            if (taskList && data.tasks.length > 0) {
+                                                taskList.innerHTML = data.tasks.map(task => 
+                                                    `<div id="main-task-${task.id}" style="margin-bottom: 8px;">
+                                                        <span style="margin-right: 8px;">⬜</span>
+                                                        <span>${task.name}</span>
+                                                    </div>`
+                                                ).join('');
+                                            }
+                                        }
+                                    } else if (data.type === 'task_update') {
+                                        // Update specific task status
+                                        updateTaskStatus(data.taskId, data.status, data.metrics);
+                                        
+                                        // Update main UI task status
+                                        const mainTask = document.getElementById(`main-task-${data.taskId}`);
+                                        if (mainTask) {
+                                            const icon = data.status === 'complete' ? '✅' : 
+                                                        data.status === 'running' ? '⏳' : '⬜';
+                                            const taskText = mainTask.querySelector('span:last-child')?.textContent || '';
+                                            mainTask.innerHTML = `
+                                                <span style="margin-right: 8px;">${icon}</span>
+                                                <span>${taskText}</span>
+                                            `;
+                                        }
+                                    } else if (data.type === 'progress') {
+                                        addDebugEntry('info', `[Turn ${data.turnNumber}] ${data.message}`);
+                                        agenticProgress.currentTurn = data.turnType;
+                                        agenticProgress.progress = Math.min((data.turnNumber / 6) * 100, 90);
+                                        updateAgenticProgressDisplay();
+                                        
+                                        // Update main UI progress
+                                        const progressPercent = document.getElementById('agentic-progress-percent');
+                                        if (progressPercent) {
+                                            progressPercent.textContent = `${Math.round(agenticProgress.progress)}%`;
+                                        }
+                                    } else if (data.type === 'video_found') {
+                                        addDebugEntry('info', `📺 Video: ${data.video.title} (${data.video.performance}x performance)`);
+                                        
+                                        // Update status text with video info
+                                        const statusText = document.getElementById('agentic-status-text');
+                                        if (statusText) {
+                                            statusText.textContent = `Analyzing: ${data.video.title} (${data.video.performance}x baseline)`;
+                                        }
+                                    } else if (data.type === 'metrics_footer') {
+                                        updateMetricsFooter(data);
+                                        
+                                        // Update main UI metrics
+                                        if (data.totalTokens) {
+                                            const tokenCount = document.getElementById('agentic-token-count');
+                                            if (tokenCount) tokenCount.textContent = data.totalTokens.toLocaleString();
+                                        }
+                                        if (data.totalCost) {
+                                            const costDisplay = document.getElementById('agentic-cost');
+                                            if (costDisplay) costDisplay.textContent = `$${data.totalCost.toFixed(4)}`;
+                                        }
+                                        if (data.totalTools) {
+                                            const toolCount = document.getElementById('agentic-tool-count');
+                                            if (toolCount) toolCount.textContent = data.totalTools;
+                                        }
+                                    } else if (data.type === 'status') {
+                                        addDebugEntry('info', `[STATUS] ${data.message}`);
+                                        
+                                        // Update main UI status
+                                        const statusText = document.getElementById('agentic-status-text');
+                                        if (statusText) {
+                                            statusText.textContent = data.message;
+                                        }
+                                    } else if (data.type === 'warning') {
+                                        addDebugEntry('warning', data.message);
+                                    } else if (data.type === 'error') {
+                                        addDebugEntry('error', data.message);
+                                    } else if (data.type === 'complete') {
+                                        finalResult = data.result;
+                                        agenticProgress.progress = 100;
+                                        agenticProgress.status = 'complete';
+                                        updateAgenticProgressDisplay();
+                                        
+                                        // Log file location if available
+                                        if (data.logFile) {
+                                            addDebugEntry('success', `📝 Logs saved to: ${data.logFile}`);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse streaming data:', e);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Use final result if available
+                const result = finalResult || { success: false, error: 'No result received' };
+                
+                agenticProgress.status = result.success ? 'success' : 'error';
+                agenticProgress.progress = 100;
+                agenticProgress.result = result;
+                
+                updateAgenticProgressDisplay();
+                
+                if (result.success && result.pattern) {
+                    const patternName = result.pattern.pattern_name || result.pattern.statement;
+                    addDebugEntry('success', `AI Agent discovered pattern: "${patternName.substring(0, 80)}..."`);
+                    addDebugEntry('info', `Confidence: ${result.pattern.confidence}% | Cost: $${result.metrics?.totalCost || 'N/A'} | Duration: ${result.metrics?.totalDurationMs ? Math.round(result.metrics.totalDurationMs/1000) : 'N/A'}s`);
+                    
+                    // Detailed cost breakdown
+                    if (result.budgetUsage?.costs) {
+                        addDebugLog('info', `💰 Cost Breakdown: GPT-5: $${result.budgetUsage.costs.gpt5?.toFixed(4) || '0'} | GPT-5-mini: $${result.budgetUsage.costs.gpt5Mini?.toFixed(4) || '0'} | GPT-5-nano: $${result.budgetUsage.costs.gpt5Nano?.toFixed(4) || '0'}`);
+                        addDebugLog('info', `🔧 Usage: ${result.budgetUsage.toolCalls} tool calls | ${result.budgetUsage.tokens} tokens | ${result.budgetUsage.fanouts} fanouts`);
+                    }
+                    
+                    // Display the pattern result
+                    displayAgenticPattern(result.pattern);
+                    return result.pattern;
+                } else {
+                    throw new Error(result.error || 'Pattern discovery failed');
+                }
+                
+            } catch (error) {
+                addDebugLog('error', `AI Agent analysis failed: ${error.message}`);
+                agenticProgress = { ...agenticProgress, status: 'error', error: error.message };
+                updateAgenticProgressDisplay();
+                throw error;
+            }
+        }
+        
+        function updateAgenticProgressDisplay() {
+            if (!agenticProgress) return;
+            
+            // Update debug panel with progress
+            const debugSection = document.createElement('div');
+            debugSection.className = 'debug-section';
+            debugSection.innerHTML = `
+                <div class="debug-section-title">🤖 AI Agent Progress</div>
+                <div style="background: #111; padding: 10px; border-radius: 4px; margin-top: 5px;">
+                    <div style="margin-bottom: 8px;">
+                        <strong>Status:</strong> ${agenticProgress.status} | 
+                        <strong>Progress:</strong> ${agenticProgress.progress}%
+                    </div>
+                    ${agenticProgress.currentTurn ? `<div><strong>Current Turn:</strong> ${agenticProgress.currentTurn}</div>` : ''}
+                    ${agenticProgress.hypothesis ? `<div style="margin-top: 8px;"><strong>Hypothesis:</strong> ${agenticProgress.hypothesis}</div>` : ''}
+                    ${agenticProgress.streamingText ? `<div style="margin-top: 8px; padding: 8px; background: #222; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto;"><strong>🧠 GPT-5 Thinking:</strong><br><span style="color: #90EE90;">${agenticProgress.streamingText}</span></div>` : ''}
+                    ${agenticProgress.result ? `<div style="margin-top: 8px;"><strong>Result:</strong> ${JSON.stringify(agenticProgress.result.pattern || agenticProgress.result, null, 2)}</div>` : ''}
+                </div>
+            `;
+            
+            // Add to debug panel (replace existing progress if present)
+            const debugContent = document.querySelector('.debug-content');
+            const existingProgress = debugContent.querySelector('.debug-section');
+            if (existingProgress && existingProgress.textContent.includes('AI Agent Progress')) {
+                existingProgress.replaceWith(debugSection);
+            } else {
+                debugContent.appendChild(debugSection);
+            }
+        }
+        
+        function displayAgenticPattern(pattern) {
+            // Create a special display for agentic patterns
+            const patternDisplay = document.createElement('div');
+            patternDisplay.className = 'pattern-context';
+            patternDisplay.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            patternDisplay.style.color = 'white';
+            patternDisplay.style.marginBottom = '20px';
+            
+            patternDisplay.innerHTML = `
+                <div class="pattern-context-header">
+                    <span style="font-size: 24px;">🤖</span>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">AI Agent Discovery</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Autonomous Pattern Analysis</div>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px; margin-top: 16px;">
+                    <div style="font-size: 16px; line-height: 1.5; margin-bottom: 12px;">
+                        ${pattern.statement}
+                    </div>
+                    <div style="display: flex; justify-content: between; align-items: center; font-size: 12px; opacity: 0.8;">
+                        <span>Confidence: ${pattern.confidence}%</span>
+                        <span style="margin-left: 16px;">Discovered autonomously by GPT-5 agent</span>
+                    </div>
+                </div>
+            `;
+            
+            // Insert at the top of the pattern extraction section
+            const patternExtraction = document.querySelector('.pattern-extraction');
+            if (patternExtraction) {
+                patternExtraction.insertBefore(patternDisplay, patternExtraction.firstChild);
+            } else {
+                // Fallback: insert into analysis content
+                const analysisContent = document.getElementById('analysis-content');
+                if (analysisContent) {
+                    analysisContent.insertBefore(patternDisplay, analysisContent.firstChild);
+                } else {
+                    console.error('Could not find container for agentic pattern display');
+                }
+            }
+        }
         
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
@@ -1091,12 +2264,38 @@
         
         // Step navigation
         function goToStep(step) {
+            // Check if step is available
+            if (step === 2 && !selectedVideo) {
+                alert('Please select a video first');
+                return;
+            }
+            if (step === 3 && (!analyzedPattern || !validationData)) {
+                alert('Please analyze a pattern first');
+                return;
+            }
+            if (step === 4 && !selectedTopic) {
+                alert('Please select a topic first');
+                return;
+            }
+            
             // Update progress indicators
             document.querySelectorAll('.step').forEach((s, i) => {
-                s.classList.remove('active');
-                if (i < step - 1) s.classList.add('completed');
-                if (i === step - 1) s.classList.add('active');
-                if (i > step - 1) s.classList.remove('completed');
+                s.classList.remove('active', 'completed', 'disabled');
+                
+                if (i < step - 1) {
+                    s.classList.add('completed');
+                } else if (i === step - 1) {
+                    s.classList.add('active');
+                } else {
+                    // Future steps are disabled if prerequisites aren't met
+                    if (i === 1 && !selectedVideo) {
+                        s.classList.add('disabled');
+                    } else if (i === 2 && (!analyzedPattern || !validationData)) {
+                        s.classList.add('disabled');
+                    } else if (i === 3 && !selectedTopic) {
+                        s.classList.add('disabled');
+                    }
+                }
             });
             
             // Show correct screen
@@ -1105,8 +2304,72 @@
             
             // Load data for step
             if (step === 2 && selectedVideo) {
+                // analyzePattern will handle the UI updates
                 analyzePattern();
             }
+            
+            // Show pattern context in Step 3
+            if (step === 3 && analyzedPattern && validationData) {
+                displayPatternContext();
+            }
+            
+            // Show topic context and generate titles in Step 4
+            if (step === 4 && selectedTopic) {
+                displayTopicContext();
+                generateTitles();
+            }
+        }
+        
+        // Display pattern context in Step 3
+        function displayPatternContext() {
+            const contextBox = document.getElementById('pattern-context');
+            if (!analyzedPattern || !validationData) {
+                contextBox.style.display = 'none';
+                return;
+            }
+            
+            contextBox.style.display = 'block';
+            contextBox.innerHTML = `
+                <div class="pattern-context-header">
+                    <span style="font-size: 24px;">🎯</span>
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Working with pattern:</div>
+                        <div class="pattern-context-title">${analyzedPattern.pattern_name}</div>
+                    </div>
+                </div>
+                
+                <div class="pattern-context-description">
+                    <strong>How it works:</strong> ${analyzedPattern.pattern_description}
+                </div>
+                
+                <div class="pattern-context-description">
+                    <strong>Psychological trigger:</strong> ${analyzedPattern.psychological_trigger}
+                </div>
+                
+                <div class="pattern-context-stats">
+                    <div class="pattern-stat">
+                        <div class="pattern-stat-label">Pattern Strength</div>
+                        <div class="pattern-stat-value" style="color: ${
+                            validationData.pattern_strength === 'strong' ? '#10b981' : 
+                            validationData.pattern_strength === 'moderate' ? '#f59e0b' : '#ef4444'
+                        }">
+                            ${validationData.pattern_strength.toUpperCase()}
+                        </div>
+                    </div>
+                    <div class="pattern-stat">
+                        <div class="pattern-stat-label">Validated Across</div>
+                        <div class="pattern-stat-value">${validationData.results.length} niches</div>
+                    </div>
+                    <div class="pattern-stat">
+                        <div class="pattern-stat-label">Total Validations</div>
+                        <div class="pattern-stat-value">${validationData.total_validations} videos</div>
+                    </div>
+                    <div class="pattern-stat">
+                        <div class="pattern-stat-label">Avg Performance</div>
+                        <div class="pattern-stat-value">${validationData.avg_pattern_score.toFixed(1)}x baseline</div>
+                    </div>
+                </div>
+            `;
         }
         
         // Setup infinite scroll
@@ -1181,12 +2444,25 @@
             });
             
             try {
+                // Debug logging
+                updateDebugStatus(1, 'Loading');
+                addDebugEntry('info', '=== FETCHING VIRAL VIDEOS ===');
+                addDebugEntry('info', `Query: timeRange=${params.get('timeRange')}, minScore=${params.get('minScore')}, offset=${offset}`);
+                
+                const startTime = Date.now();
                 const response = await fetch(`/api/idea-radar?${params}`);
                 const data = await response.json();
+                const timing = Date.now() - startTime;
                 
                 if (!response.ok) {
+                    addDebugEntry('error', `Failed to load outliers: ${data.error}`);
                     throw new Error(data.error || 'Failed to load outliers');
                 }
+                
+                // Log API response
+                logApiCall('/api/idea-radar', 'GET', Object.fromEntries(params), data, timing);
+                addDebugEntry('success', `✓ Found ${data.outliers.length} videos from pool of ${data.total}`);
+                addDebugEntry('info', `Displaying videos ${offset + 1}-${offset + data.outliers.length}`)
                 
                 // Append or replace outliers
                 if (append) {
@@ -1293,23 +2569,114 @@
         
         function selectVideo(video) {
             selectedVideo = video;
+            console.log('🎯 Video selected:', video);
+            console.log('🎯 Video ID:', video.video_id);
+            console.log('🎯 Agentic mode:', agenticMode);
+            
             document.querySelectorAll('.outlier-card').forEach(card => {
                 card.classList.remove('selected');
             });
             event.currentTarget.classList.add('selected');
             
+            // Enable step 2 button
+            document.getElementById('step-2').classList.remove('disabled');
+            
             // Go to step 2
             goToStep(2);
+            
+            // If agentic mode is enabled, automatically start analysis
+            if (agenticMode) {
+                addDebugLog('info', `Auto-starting agentic analysis for selected video: ${video.title} (ID: ${video.video_id})`);
+                setTimeout(() => analyzePattern(), 500); // Small delay to let UI update
+            }
         }
         
         // Step 2: Analyze pattern
         async function analyzePattern() {
             if (!selectedVideo) return;
             
+            // Check if agentic mode is enabled
+            if (agenticMode) {
+                try {
+                    const pattern = await analyzePatternAgentic(selectedVideo.video_id);
+                    if (pattern) {
+                        // Store as analyzed pattern for next steps
+                        analyzedPattern = {
+                            statement: pattern.statement,
+                            confidence: pattern.confidence,
+                            type: 'agentic',
+                            evidence: pattern.supportingEvidence || []
+                        };
+                        
+                        // Enable step 3 and complete step 2
+                        document.getElementById('step-3').classList.remove('disabled');
+                        document.getElementById('apply-pattern-btn').disabled = false;
+                        updateDebugStatus(2, 'Complete');
+                        
+                        // Show success in analysis content
+                        const container = document.getElementById('analysis-content');
+                        container.innerHTML = `
+                            <div class="pattern-context" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <div class="pattern-context-header">
+                                    <span style="font-size: 24px;">🤖</span>
+                                    <div>
+                                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">AI Agent Discovery Complete</div>
+                                        <div style="font-size: 14px; opacity: 0.9;">Pattern discovered autonomously</div>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px; margin-top: 16px;">
+                                    <div style="font-size: 16px; line-height: 1.5; margin-bottom: 12px;">
+                                        ${pattern.statement}
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                                        <span>Confidence: ${(pattern.confidence * 100).toFixed(0)}%</span>
+                                        <span>Ready to apply to channel discovery</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Agentic analysis failed, falling back to classic mode:', error);
+                    addDebugLog('warning', 'Falling back to classic analysis mode');
+                }
+            }
+            
+            // Classic analysis mode
             const container = document.getElementById('analysis-content');
+            
+            // Check if we have cached analysis for this video
+            const cacheKey = `pattern_analysis_${selectedVideo.video_id}`;
+            const cachedData = getCachedData(cacheKey);
+            
+            if (cachedData) {
+                // Use cached data
+                cacheHits++;
+                addDebugEntry('info', '✓ Using cached pattern analysis');
+                updateDebugMetrics();
+                analyzedPattern = cachedData.pattern;
+                validationData = cachedData.validation;
+                displayAnalysis(cachedData);
+                document.getElementById('step-3').classList.remove('disabled');
+                document.getElementById('apply-pattern-btn').disabled = false;
+                updateDebugStatus(2, 'Complete');
+                return;
+            }
+            
+            cacheMisses++;
+            updateDebugMetrics();
+            
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Analyzing pattern and validating across niches...</p></div>';
             
             try {
+                // Debug logging for Step 2
+                updateDebugStatus(2, 'Processing');
+                addDebugEntry('info', '=== PATTERN EXTRACTION STARTED ===');
+                addDebugEntry('info', `Video: "${selectedVideo.title}"`);
+                addDebugEntry('info', `Channel: ${selectedVideo.channel_name} (${selectedVideo.score.toFixed(1)}x performance)`);
+                
+                const startTime = Date.now();
                 const response = await fetch('/api/analyze-pattern', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1317,17 +2684,91 @@
                 });
                 
                 const data = await response.json();
+                const timing = Date.now() - startTime;
                 
                 if (!response.ok) {
+                    addDebugEntry('error', `Pattern analysis failed: ${data.error}`);
                     throw new Error(data.error || 'Failed to analyze pattern');
+                }
+                
+                // Log detailed analysis results
+                logApiCall('/api/analyze-pattern', 'POST', 
+                    { video_id: selectedVideo.video_id }, 
+                    data, 
+                    timing
+                );
+                
+                // Log debug info if available
+                if (data.debug) {
+                    addDebugEntry('info', '=== SEMANTIC SEARCH DETAILS ===');
+                    data.debug.searchResults?.forEach(sr => {
+                        addDebugEntry('info', `Query: "${sr.query}"`);
+                        addDebugEntry('info', `  → Title namespace: ${sr.titleSearch.found} videos (avg sim: ${sr.titleSearch.avgSimilarity.toFixed(3)})`);
+                        addDebugEntry('info', `  → Summary namespace: ${sr.summarySearch.found} videos (avg sim: ${sr.summarySearch.avgSimilarity.toFixed(3)})`);
+                    });
+                    
+                    if (data.debug.validation) {
+                        addDebugEntry('info', '=== LLM VALIDATION STATS ===');
+                        addDebugEntry('info', `Total unique videos found: ${data.debug.validation.totalVideosFound}`);
+                        addDebugEntry('info', `After performance filter (>2.5x): ${data.debug.validation.afterPerformanceFilter}`);
+                        addDebugEntry('info', `Validated as matching: ${data.debug.validation.validated} (${data.debug.validation.validationRate})`);
+                    }
+                    
+                    // Show thresholds being used
+                    addDebugEntry('info', 'Current thresholds:', {
+                        _expandable: true,
+                        _title: 'View Configuration',
+                        _content: data.debug.thresholds
+                    });
+                }
+                
+                // Log pattern extraction details
+                if (data.pattern) {
+                    addDebugEntry('success', `✓ Pattern identified: "${data.pattern.pattern_name}"`);
+                    addDebugEntry('info', `Psychological trigger: "${data.pattern.psychological_trigger}"`);
+                    addDebugEntry('info', `Generated ${data.pattern.semantic_queries?.length || 0} semantic queries:`);
+                    data.pattern.semantic_queries?.forEach(q => {
+                        addDebugEntry('info', `  - "${q}"`);
+                    });
+                }
+                
+                // Log validation details
+                if (data.validation) {
+                    addDebugEntry('info', '=== VALIDATION COMPLETE ===');
+                    addDebugEntry('success', `✓ ${data.validation.total_validations} videos validated as matching pattern`);
+                    const niches = data.validation.results?.map(r => r.niche).slice(0, 7).join(', ') || 'None';
+                    addDebugEntry('info', `Niches found: ${niches}`);
+                    addDebugEntry('info', `Pattern strength: ${data.validation.pattern_strength?.toUpperCase()} (${data.validation.avg_pattern_score?.toFixed(1)}x avg)`);
+                    addDebugEntry('info', `Total processing time: ${(timing/1000).toFixed(1)} seconds`);
+                    
+                    // Show detailed validation breakdown in expandable section
+                    const validationDetails = data.validation.results?.map(r => ({
+                        niche: r.niche,
+                        videos: r.videos.length,
+                        avgScore: r.avg_score.toFixed(1) + 'x'
+                    }));
+                    
+                    addDebugEntry('info', 'Validation breakdown by niche:', {
+                        _expandable: true,
+                        _title: 'View Validation Details',
+                        _content: validationDetails
+                    });
                 }
                 
                 analyzedPattern = data.pattern;
                 validationData = data.validation;
                 displayAnalysis(data);
                 
+                // Cache the analysis data
+                setCachedData(cacheKey, data, 3600); // Cache for 1 hour
+                
+                // Enable step 3 button
+                document.getElementById('step-3').classList.remove('disabled');
+                
                 // Enable apply button
                 document.getElementById('apply-pattern-btn').disabled = false;
+                
+                updateDebugStatus(2, 'Complete');
                 
             } catch (error) {
                 container.innerHTML = `<div class="error-message">❌ ${error.message}</div>`;
@@ -1341,21 +2782,23 @@
             // Use actual temporal baseline from the database
             // Note: channel_baseline_at_publish represents the average of the last 10 videos 
             // published within 30 days before this video (temporal context)
-            const channelBaseline = source_video.baseline || Math.round(source_video.views / source_video.score);
-            const percentageAbove = ((source_video.score - 1) * 100).toFixed(0);
-            const performanceTier = source_video.score >= 10 ? 'mega-viral' : 
-                                   source_video.score >= 5 ? 'viral' : 'good';
-            const tierLabel = source_video.score >= 10 ? 'MEGA VIRAL' : 
-                             source_video.score >= 5 ? 'VIRAL' : 'GOOD PERFORMER';
-            const tierIcon = source_video.score >= 10 ? '🔥' : 
-                            source_video.score >= 5 ? '🚀' : '📈';
+            const channelBaseline = source_video.channel_avg_views || source_video.baseline || Math.round(source_video.views / source_video.score);
+            const performanceMultiplier = source_video.performance_multiplier || source_video.score;
+            const percentageAbove = ((performanceMultiplier - 1) * 100).toFixed(0);
+            const percentileRank = source_video.percentile_rank || 95;
+            const performanceTier = performanceMultiplier >= 10 ? 'mega-viral' : 
+                                   performanceMultiplier >= 5 ? 'viral' : 'good';
+            const tierLabel = performanceMultiplier >= 10 ? 'MEGA VIRAL' : 
+                             performanceMultiplier >= 5 ? 'VIRAL' : 'GOOD PERFORMER';
+            const tierIcon = performanceMultiplier >= 10 ? '🔥' : 
+                            performanceMultiplier >= 5 ? '🚀' : '📈';
             
             container.innerHTML = `
                 <!-- Source Video Dashboard -->
                 <div class="source-video-display">
                     <div class="source-header">
-                        <span>📊</span>
-                        <span>VIRAL VIDEO BREAKDOWN</span>
+                        <span>🎯</span>
+                        <span>WHY IS THIS VIDEO AN OUTLIER?</span>
                     </div>
                     <div class="source-content">
                         <div class="source-thumbnail">
@@ -1363,7 +2806,9 @@
                         </div>
                         <div class="source-details">
                             <div class="source-title">${source_video.title}</div>
-                            <div>Channel: ${source_video.channel} (${source_video.niche})</div>
+                            <div style="color: #6b7280; margin-bottom: 16px;">
+                                <strong>${source_video.channel}</strong> • ${source_video.niche}
+                            </div>
                             
                             <div class="source-stats-grid">
                                 <div class="stat-item">
@@ -1371,16 +2816,16 @@
                                     <div class="stat-value">${formatViews(source_video.views)} views</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-label">Channel Baseline</div>
+                                    <div class="stat-label">Channel Average</div>
                                     <div class="stat-value">${formatViews(channelBaseline)} views</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-label">Performance</div>
-                                    <div class="stat-value">${source_video.score.toFixed(1)}x (+${percentageAbove}%)</div>
+                                    <div class="stat-label">Outperformance</div>
+                                    <div class="stat-value" style="color: #10b981; font-weight: 700;">${performanceMultiplier.toFixed(1)}x baseline</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-label">Published</div>
-                                    <div class="stat-value">${getTimeAgo(source_video.published_at || new Date())}</div>
+                                    <div class="stat-label">Channel Rank</div>
+                                    <div class="stat-value">Top ${100 - percentileRank}% video</div>
                                 </div>
                             </div>
                             
@@ -1388,6 +2833,13 @@
                                 <span>${tierIcon}</span>
                                 <span>${tierLabel}</span>
                             </div>
+                            
+                            ${pattern.channel_outlier_explanation ? `
+                                <div style="margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Why this exploded</div>
+                                    <div style="color: #374151; line-height: 1.5;">${pattern.channel_outlier_explanation}</div>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -1395,13 +2847,16 @@
                 <!-- Pattern Extraction -->
                 <div class="pattern-extraction">
                     <div class="pattern-header">
-                        <div class="pattern-icon">🎯</div>
-                        <div class="pattern-name">${pattern.pattern_name}</div>
+                        <div class="pattern-icon">💡</div>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">WHAT PATTERN MADE IT SUCCESSFUL?</div>
+                            <div class="pattern-name" style="color: #3b82f6; font-size: 20px;">${pattern.pattern_name}</div>
+                        </div>
                     </div>
                     
                     <div class="pattern-details">
                         <div class="pattern-detail-item">
-                            <div class="pattern-label">Pattern Description</div>
+                            <div class="pattern-label">How It Works</div>
                             <div class="pattern-value">${pattern.pattern_description}</div>
                         </div>
                         <div class="pattern-detail-item">
@@ -1413,22 +2868,48 @@
                             <div class="pattern-value">${pattern.why_it_works}</div>
                         </div>
                         <div class="pattern-detail-item">
-                            <div class="pattern-label">Key Elements</div>
-                            <div class="pattern-value">${pattern.key_elements.join(' • ')}</div>
+                            <div class="pattern-label">Text Elements</div>
+                            <div class="pattern-value">
+                                <ul style="margin: 0; padding-left: 20px; list-style-type: disc;">
+                                    ${pattern.key_elements.map(el => `<li style="margin: 4px 0;">${el}</li>`).join('')}
+                                </ul>
+                            </div>
                         </div>
+                        ${pattern.visual_elements && pattern.visual_elements.length > 0 ? `
+                        <div class="pattern-detail-item">
+                            <div class="pattern-label">Visual Elements 🎨</div>
+                            <div class="pattern-value">
+                                <ul style="margin: 0; padding-left: 20px; list-style-type: disc;">
+                                    ${pattern.visual_elements.map(el => `<li style="margin: 4px 0;">${el}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${pattern.thumbnail_psychology ? `
+                        <div class="pattern-detail-item">
+                            <div class="pattern-label">Thumbnail Psychology 🖼️</div>
+                            <div class="pattern-value">${pattern.thumbnail_psychology}</div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
                 
                 <!-- Validation Section -->
                 <div class="validation-section">
-                    <div class="validation-header">📊 Cross-Niche Validation</div>
+                    <div class="validation-header">
+                        <span>✅</span>
+                        <span style="font-size: 18px; font-weight: 600;">IS THIS PATTERN PROVEN ACROSS NICHES?</span>
+                    </div>
                     
                     <div class="validation-strength">
                         <span>Pattern Strength:</span>
                         <span class="strength-indicator ${validation.pattern_strength}">
                             ${validation.pattern_strength.toUpperCase()}
                         </span>
-                        <span>${validation.total_validations} similar videos found</span>
+                        <span>${validation.total_validations} videos validate this pattern</span>
+                        ${data.enhanced && validation.visual_validations ? `
+                            <span>🎨 ${validation.visual_validations} with visual matches</span>
+                        ` : ''}
                         <span>Average: ${validation.avg_pattern_score.toFixed(1)}x performance</span>
                     </div>
                     
@@ -1459,10 +2940,23 @@
                                                     <span>${formatViews(v.views)} views</span>
                                                     ${v.source ? `• <span class="source-badge">Found via ${v.source}</span>` : ''}
                                                 </div>
-                                                ${v.validation_reason ? `
-                                                    <div class="validation-reason">
-                                                        <span class="reason-icon">✓</span>
-                                                        <span class="reason-text">${v.validation_reason}</span>
+                                                ${v.summary ? `
+                                                    <div style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 6px;">
+                                                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">What:</div>
+                                                        <div style="font-size: 12px; color: #4b5563; line-height: 1.4; margin-bottom: 6px;">${v.summary.length > 150 ? v.summary.slice(0, 150) + '...' : v.summary}</div>
+                                                        ${v.validation_reason ? `
+                                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Why it fits:</div>
+                                                            <div style="font-size: 12px; color: #059669; font-weight: 500; line-height: 1.4;">${v.validation_reason}</div>
+                                                        ` : ''}
+                                                        ${v.visual_match ? `
+                                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🎨 Visual match:</div>
+                                                            <div style="font-size: 12px; color: #7c3aed; font-weight: 500; line-height: 1.4;">${v.visual_match}</div>
+                                                        ` : ''}
+                                                    </div>
+                                                ` : v.validation_reason ? `
+                                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                                                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 2px; text-transform: uppercase;">Why it fits:</div>
+                                                        <div style="font-size: 13px; color: #374151; line-height: 1.4;">${v.validation_reason}</div>
                                                     </div>
                                                 ` : ''}
                                             </div>
@@ -1476,58 +2970,536 @@
             `;
         }
         
-        // Step 3: Generate topics
+        // Step 3: Channel search functionality
+        async function searchChannel() {
+            const query = document.getElementById('channelSearch').value.trim();
+            if (!query || query.length < 2) {
+                alert('Please enter at least 2 characters to search');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('channel-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Searching channels...</p></div>';
+            
+            try {
+                const response = await fetch(`/api/search-channels?q=${encodeURIComponent(query)}&limit=5`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to search channels');
+                }
+                
+                displayChannelResults(data.channels);
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error-message">❌ ${error.message}</div>`;
+            }
+        }
+        
+        function displayChannelResults(channels) {
+            const resultsDiv = document.getElementById('channel-results');
+            
+            if (channels.length === 0) {
+                resultsDiv.innerHTML = '<div class="info-message">No channels found. Try a different search term.</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = `
+                <div style="margin: 20px 0;">
+                    <h4 style="margin-bottom: 15px;">Select a channel:</h4>
+                    <div class="channel-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        ${channels.map(ch => `
+                            <div class="channel-option" onclick="selectChannel('${ch.channel_id}', '${ch.channel_name.replace(/'/g, "\\'")}')" 
+                                 style="display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #e5e7eb; 
+                                        border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                                <img src="${ch.channel_icon || '/placeholder-channel.png'}" 
+                                     style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">${ch.channel_name}</div>
+                                    <div style="font-size: 14px; color: #6b7280;">
+                                        ${ch.video_count} videos • Avg performance: ${ch.avg_performance?.toFixed(1) || '?'}x
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Add hover effect
+            document.querySelectorAll('.channel-option').forEach(option => {
+                option.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f9fafb';
+                    this.style.borderColor = '#9ca3af';
+                });
+                option.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = 'white';
+                    this.style.borderColor = '#e5e7eb';
+                });
+            });
+        }
+        
+        async function selectChannel(channelId, channelName) {
+            // Ensure channelName is defined
+            if (!channelName) {
+                console.error('Channel name is required');
+                alert('Channel name is missing. Please search and select a channel again.');
+                return;
+            }
+            
+            selectedChannel = { channel_id: channelId, channel_name: channelName };
+            
+            // Hide search results
+            document.getElementById('channel-results').style.display = 'none';
+            
+            // Show selected channel
+            const selectedDiv = document.getElementById('selected-channel');
+            selectedDiv.style.display = 'block';
+            selectedDiv.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; 
+                            padding: 15px; background: #f9fafb; border-radius: 8px; margin: 20px 0;">
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280;">Generating topics for:</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">${channelName}</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetChannelSelection()" style="padding: 8px 16px;">
+                        Change Channel
+                    </button>
+                </div>
+            `;
+            
+            // Analyze channel style and generate topics
+            await analyzeChannelAndGenerateTopics(channelId, channelName);
+        }
+        
+        function resetChannelSelection() {
+            selectedChannel = null;
+            channelStyle = null;
+            document.getElementById('selected-channel').style.display = 'none';
+            document.getElementById('channel-results').style.display = 'none';
+            document.getElementById('topics-container').innerHTML = '';
+            document.getElementById('expanded-container').innerHTML = '';
+            document.getElementById('channelSearch').value = '';
+        }
+        
+        async function analyzeChannelAndGenerateTopics(channelId, channelName) {
+            const container = document.getElementById('topics-container');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Analyzing channel style...</p></div>';
+            
+            try {
+                // Step 1: Analyze channel style
+                updateDebugStatus(3, 'Processing');
+                addDebugEntry('info', '=== CHANNEL ANALYSIS STARTED ===');
+                addDebugEntry('info', `Channel: "${channelName}"`);
+                addDebugEntry('info', 'Fetching channel videos...');
+                
+                const styleStartTime = Date.now();
+                const styleResponse = await fetch('/api/analyze-channel-style', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_id: channelId })
+                });
+                
+                const styleData = await styleResponse.json();
+                const styleTiming = Date.now() - styleStartTime;
+                
+                if (!styleResponse.ok) {
+                    addDebugEntry('error', `Channel analysis failed: ${styleData.error}`);
+                    throw new Error(styleData.error || 'Failed to analyze channel style');
+                }
+                
+                logApiCall('/api/analyze-channel-style', 'POST', 
+                    { channel_id: channelId }, 
+                    styleData, 
+                    styleTiming
+                );
+                
+                channelStyle = styleData.style;
+                
+                // Log channel analysis results
+                if (styleData.style) {
+                    addDebugEntry('success', `✓ Found ${styleData.total_videos || 0} videos`);
+                    addDebugEntry('info', `Top performers: ${styleData.top_performers || 0} videos (3.0x+)`);
+                    addDebugEntry('info', 'Title patterns identified:');
+                    styleData.style.title_patterns?.slice(0, 3).forEach(p => {
+                        addDebugEntry('info', `  - ${p}`);
+                    });
+                }
+                
+                // Update loading message
+                container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Generating personalized topics...</p></div>';
+                
+                // Step 2: Generate channel-specific topics
+                addDebugEntry('info', '=== TOPIC GENERATION STARTED ===');
+                addDebugEntry('info', `Combining pattern "${analyzedPattern.pattern_name}" with channel style...`);
+                
+                const topicsStartTime = Date.now();
+                const topicsResponse = await fetch('/api/generate-channel-topics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pattern: analyzedPattern,
+                        channel_style: channelStyle
+                    })
+                });
+                
+                const topicsData = await topicsResponse.json();
+                const topicsTiming = Date.now() - topicsStartTime;
+                
+                if (!topicsResponse.ok) {
+                    addDebugEntry('error', `Topic generation failed: ${topicsData.error}`);
+                    throw new Error(topicsData.error || 'Failed to generate topics');
+                }
+                
+                logApiCall('/api/generate-channel-topics', 'POST', 
+                    { pattern: analyzedPattern.pattern_name, channel: channelName }, 
+                    topicsData, 
+                    topicsTiming
+                );
+                
+                addDebugEntry('success', `✓ Generated ${topicsData.topics?.length || 0} topic concepts`);
+                if (topicsData.topics) {
+                    const topTopics = topicsData.topics.slice(0, 3);
+                    topTopics.forEach((t, i) => {
+                        addDebugEntry('info', `  ${i+1}. "${t.concept}" (fit: ${t.channel_fit_score}/10)`);
+                    });
+                }
+                
+                displayChannelTopics(topicsData.topics);
+                
+                updateDebugStatus(3, 'Complete');
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error-message">❌ ${error.message}</div>`;
+            }
+        }
+        
+        function displayChannelTopics(topics) {
+            const container = document.getElementById('topics-container');
+            
+            const grid = document.createElement('div');
+            grid.className = 'topics-grid';
+            
+            topics.forEach(topic => {
+                const card = document.createElement('div');
+                card.className = 'topic-card';
+                card.onclick = () => selectChannelTopic(topic);
+                
+                card.innerHTML = `
+                    <div class="topic-header">
+                        <div class="topic-title" style="font-size: 18px; font-weight: 600;">${topic.concept}</div>
+                        <span class="topic-difficulty" style="background: ${
+                            topic.channel_fit_score >= 8 ? '#10b981' :
+                            topic.channel_fit_score >= 6 ? '#f59e0b' : '#ef4444'
+                        }; color: white;">
+                            Fit: ${topic.channel_fit_score}/10
+                        </span>
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 10px 0;">
+                        ${topic.description}
+                    </div>
+                    <div style="background: #f9fafb; border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 3px; text-transform: uppercase; font-weight: 600;">Angle</div>
+                        <div style="color: #374151; font-size: 13px;">${topic.angle}</div>
+                    </div>
+                    ${topic.similar_successes && topic.similar_successes.length > 0 ? `
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                            Similar to: <span style="color: #374151; font-weight: 500;">${topic.similar_successes[0]}</span>
+                        </div>
+                    ` : ''}
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            container.innerHTML = `
+                <h3 style="margin-bottom: 20px;">🎯 Topics Personalized for ${selectedChannel?.channel_name || 'Your Channel'}:</h3>
+                <div style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="color: #065f46; font-weight: 600;">Channel Analysis Complete!</div>
+                    <div style="color: #047857; margin-top: 8px; font-size: 14px;">
+                        Based on ${channelStyle?.title_patterns?.length || 0} title patterns and ${channelStyle?.content_themes?.length || 0} content themes.
+                        Top performers average ${channelStyle?.top_performer_avg?.toFixed(1) || '?'}x baseline.
+                    </div>
+                </div>
+            `;
+            container.appendChild(grid);
+            
+            // Add generate button at bottom
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.cssText = 'margin-top: 30px; text-align: center;';
+            buttonContainer.innerHTML = `
+                <button id="generate-titles-btn" class="btn btn-primary" style="padding: 16px 32px; font-size: 16px;" disabled onclick="proceedToTitleGeneration()">
+                    Select a Topic Above to Generate Titles
+                </button>
+            `;
+            container.appendChild(buttonContainer);
+        }
+        
+        // Topic selection function
+        function selectChannelTopic(topic) {
+            selectedTopic = topic;
+            
+            // Update UI to show selection
+            document.querySelectorAll('.topic-card').forEach(card => {
+                card.style.border = '2px solid transparent';
+                card.style.background = 'white';
+            });
+            event.currentTarget.style.border = '2px solid #3b82f6';
+            event.currentTarget.style.background = '#eff6ff';
+            
+            // Enable the generate button
+            const btn = document.getElementById('generate-titles-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = `Generate Titles for "${topic.concept}" →`;
+                btn.style.background = '#3b82f6';
+            }
+            
+            // Enable Step 4
+            document.getElementById('step-4').classList.remove('disabled');
+        }
+        
+        function proceedToTitleGeneration() {
+            if (!selectedTopic) {
+                alert('Please select a topic first');
+                return;
+            }
+            goToStep(4);
+        }
+        
+        // Step 4 functions
+        function selectTopic(topic) {
+            selectedTopic = topic;
+            document.getElementById('step-4').classList.remove('disabled');
+            goToStep(4);
+        }
+        
+        function displayTopicContext() {
+            const container = document.getElementById('topic-context');
+            if (!selectedTopic || !selectedChannel || !channelStyle) return;
+            
+            // Get the first available thumbnail from channel's videos
+            const channelThumbnail = selectedChannel.videos && selectedChannel.videos.length > 0 
+                ? selectedChannel.videos[0].thumbnail_url 
+                : selectedChannel.thumbnail_url;
+            
+            container.innerHTML = `
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        ${channelThumbnail ? `
+                            <img src="${channelThumbnail}" alt="${selectedChannel.channel_name}" 
+                                 style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                        ` : `
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #6b7280;">
+                                ${selectedChannel.channel_name.charAt(0).toUpperCase()}
+                            </div>
+                        `}
+                        <div>
+                            <div style="font-weight: 600; font-size: 18px;">${selectedChannel.channel_name}</div>
+                            <div style="color: #6b7280; font-size: 14px;">Channel Style Applied</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 12px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">📌 Topic Concept:</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 8px;">${selectedTopic.concept}</div>
+                        <div style="color: #6b7280;">${selectedTopic.description}</div>
+                    </div>
+                    
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 4px; font-size: 13px;">🎯 Angle</div>
+                        <div style="color: #111827; font-size: 14px;">${selectedTopic.angle}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function generateTitles() {
+            if (!selectedTopic || !analyzedPattern || !channelStyle) {
+                alert('Missing required data. Please go back and complete previous steps.');
+                return;
+            }
+            
+            const container = document.getElementById('titles-container');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Generating title variations...</p></div>';
+            
+            try {
+                updateDebugStatus(4, 'Processing');
+                addDebugEntry('info', '=== TITLE GENERATION STARTED ===');
+                addDebugEntry('info', `Topic: "${selectedTopic.concept}"`);
+                addDebugEntry('info', 'Fetching channel\'s top titles for reference...');
+                
+                const startTime = Date.now();
+                const response = await fetch('/api/generate-titles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: selectedTopic,
+                        pattern: analyzedPattern,
+                        channel_style: channelStyle
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    addDebugEntry('error', `Title generation failed: ${error.error}`);
+                    throw new Error(error.error || 'Failed to generate titles');
+                }
+                
+                const data = await response.json();
+                const timing = Date.now() - startTime;
+                
+                logApiCall('/api/generate-titles', 'POST', 
+                    { topic: selectedTopic.concept, channel: channelStyle.channel_name }, 
+                    data, 
+                    timing
+                );
+                
+                addDebugEntry('success', `✓ Generated ${data.titles?.length || 0} title variations`);
+                if (data.titles) {
+                    addDebugEntry('info', 'Matched to channel patterns:');
+                    const patterns = {};
+                    data.titles.forEach(t => {
+                        const pattern = t.style_match || 'Unknown';
+                        patterns[pattern] = (patterns[pattern] || 0) + 1;
+                    });
+                    Object.entries(patterns).forEach(([pattern, count]) => {
+                        addDebugEntry('info', `  - ${count} titles use "${pattern}" format`);
+                    });
+                }
+                
+                displayTitles(data.titles);
+                
+                updateDebugStatus(4, 'Complete');
+                
+            } catch (error) {
+                console.error('Title generation failed:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <p>Failed to generate titles: ${error.message}</p>
+                        <button class="btn btn-secondary" onclick="generateTitles()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayTitles(titles) {
+            const container = document.getElementById('titles-container');
+            
+            const grid = document.createElement('div');
+            grid.style.cssText = 'display: grid; gap: 16px;';
+            
+            titles.forEach((title, index) => {
+                const ctrColor = title.expected_ctr === 'high' ? '#10b981' : 
+                               title.expected_ctr === 'medium' ? '#f59e0b' : '#6b7280';
+                const ctrLabel = title.expected_ctr === 'high' ? 'High CTR' : 
+                                title.expected_ctr === 'medium' ? 'Medium CTR' : 'Low CTR';
+                
+                const card = document.createElement('div');
+                card.style.cssText = 'background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; transition: all 0.2s; cursor: pointer;';
+                card.onmouseover = () => card.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                card.onmouseout = () => card.style.boxShadow = 'none';
+                
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 8px; line-height: 1.4;">
+                                ${title.title}
+                            </div>
+                            <div style="display: inline-block; background: ${ctrColor}20; color: ${ctrColor}; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600;">
+                                ${ctrLabel}
+                            </div>
+                        </div>
+                        <button class="btn btn-ghost" onclick="copyTitle('${title.title.replace(/'/g, "\\'")}'); event.stopPropagation();" 
+                                style="padding: 8px; min-width: auto;">
+                            📋
+                        </button>
+                    </div>
+                    
+                    <div style="display: grid; gap: 12px; margin-top: 16px;">
+                        <div style="background: #f9fafb; border-radius: 6px; padding: 12px; position: relative;" 
+                             onmouseover="showStyleExamples(${index}, true)" 
+                             onmouseout="showStyleExamples(${index}, false)">
+                            <div style="font-weight: 600; color: #6b7280; margin-bottom: 4px; font-size: 12px; text-transform: uppercase;">
+                                Style Match 
+                                ${title.style_examples && title.style_examples.length > 0 ? 
+                                    '<span style="color: #3b82f6; cursor: help;">ⓘ</span>' : ''}
+                            </div>
+                            <div style="color: #374151; font-size: 14px;">${title.style_match}</div>
+                            ${title.style_examples && title.style_examples.length > 0 ? `
+                                <div id="style-examples-${index}" style="display: none; position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10;">
+                                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 6px; font-weight: 600;">SIMILAR TITLES FROM CHANNEL:</div>
+                                    ${title.style_examples.map(ex => `
+                                        <div style="color: #374151; font-size: 13px; margin-bottom: 4px; padding: 4px 0; border-bottom: 1px solid #f3f4f6;">
+                                            "${ex}"
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div style="background: #f9fafb; border-radius: 6px; padding: 12px;">
+                            <div style="font-weight: 600; color: #6b7280; margin-bottom: 4px; font-size: 12px; text-transform: uppercase;">Hook Analysis</div>
+                            <div style="color: #374151; font-size: 14px;">${title.hook_analysis}</div>
+                        </div>
+                        
+                        <div style="background: #f9fafb; border-radius: 6px; padding: 12px;">
+                            <div style="font-weight: 600; color: #6b7280; margin-bottom: 4px; font-size: 12px; text-transform: uppercase;">Why It Works</div>
+                            <div style="color: #374151; font-size: 14px;">${title.reasoning}</div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">🎬 Title Variations</h3>
+                    <button class="btn btn-secondary" onclick="regenerateTitles()">
+                        🔄 Generate More
+                    </button>
+                </div>
+            `;
+            container.appendChild(grid);
+        }
+        
+        function copyTitle(title) {
+            navigator.clipboard.writeText(title).then(() => {
+                // Show brief success message
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 6px; z-index: 1000; animation: slideIn 0.3s ease;';
+                toast.textContent = 'Title copied!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            });
+        }
+        
+        function showStyleExamples(index, show) {
+            const examplesDiv = document.getElementById(`style-examples-${index}`);
+            if (examplesDiv) {
+                examplesDiv.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        async function regenerateTitles() {
+            await generateTitles();
+        }
+        
+        async function expandChannelTopic(topic) {
+            // Deprecated - now we use selectTopic to go to Step 4
+            selectTopic(topic);
+        }
+        
+        // Keep old generateTopics function for backwards compatibility but deprecated
         async function generateTopics() {
             if (!analyzedPattern || !validationData) {
                 alert('Please analyze a pattern first');
                 return;
             }
             
-            const targetNiche = document.getElementById('targetNiche').value;
-            if (!targetNiche) {
-                alert('Please enter your target niche');
-                return;
-            }
-            
-            const container = document.getElementById('topics-container');
-            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Generating topic ideas...</p></div>';
-            
-            // Clear expanded content
-            document.getElementById('expanded-container').innerHTML = '';
-            
-            // Prepare validation examples
-            const validationExamples = validationData.results.slice(0, 3).map(r => ({
-                niche: r.niche,
-                avg_score: r.avg_score,
-                example_titles: r.videos.map(v => v.title)
-            }));
-            
-            try {
-                const response = await fetch('/api/generate-topics', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        pattern: analyzedPattern,
-                        source_video: {
-                            title: selectedVideo.title,
-                            niche: selectedVideo.domain || selectedVideo.niche
-                        },
-                        target_niche: targetNiche,
-                        validation_examples: validationExamples
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to generate topics');
-                }
-                
-                displayTopics(data.topics);
-                
-            } catch (error) {
-                container.innerHTML = `<div class="error-message">❌ ${error.message}</div>`;
-            }
+            alert('Please search for and select a YouTube channel first');
         }
         
         function displayTopics(topics) {
