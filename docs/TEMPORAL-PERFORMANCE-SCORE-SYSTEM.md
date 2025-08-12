@@ -1,6 +1,7 @@
 # TEMPORAL PERFORMANCE SCORE SYSTEM - COMPLETE DOCUMENTATION
 
-**Last Updated: August 8, 2025**
+**Last Updated: August 12, 2025**  
+**Major Update: Revised temporal baseline calculation to use Day 30 estimates and median-based comparisons**
 
 ## Core Purpose: Finding Winning Content Patterns
 
@@ -36,7 +37,7 @@ The **Temporal Performance Score** uses a three-layer approach that improves ove
 1. **Initial State (Global Curves + Backfill)**
    - Use global performance envelopes as baseline
    - Apply curve-based backfill to estimate Day 30 performance
-   - Scale by channel baseline for channel-specific adjustment
+   - Calculate temporal baselines using median Day 30 estimates
 
 2. **Active Tracking (Building Real Data)**
    - Our **View Tracking System** captures snapshots based on video age:
@@ -93,32 +94,63 @@ Raw data from 700K+ snapshots creates noisy curves. We apply:
 - **79.3% volatility reduction** while preserving trends
 - Eliminates day-of-week effects and random fluctuations
 
-### 2. Channel Baselines (`channel_baseline_at_publish`)
+### 2. Channel Baseline at Publish (`channel_baseline_at_publish`)
 
-Each video gets a baseline representing what's "normal" for its channel at publication time.
+Each video gets a baseline representing the median Day 30 performance of previous videos from the same channel.
 
-#### Calculation Method
-```sql
--- For each video, find the last 10 videos from the same channel
-SELECT AVG(view_count) as baseline
-FROM (
-  SELECT view_count
-  FROM videos v2
-  WHERE v2.channel_id = target_video.channel_id
-    AND v2.published_at < target_video.published_at
-    AND v2.published_at >= target_video.published_at - INTERVAL '30 days'
-    AND v2.is_short = false
-    AND v2.view_count > 0
-  ORDER BY v2.published_at DESC
-  LIMIT 10
-) recent_videos
+#### Calculation Method (Processing Videos Chronologically)
+
+**Step 1: Estimate Day 30 Views for Each Video**
+```python
+# For any video, find the snapshot closest to 30 days after publication
+def get_day30_estimate(video):
+    target_date = video.published_at + 30_days
+    closest_snapshot = find_snapshot_closest_to(target_date)
+    
+    # Use snapshot with global curve to estimate Day 30 views
+    days_at_snapshot = (closest_snapshot.date - video.published_at).days
+    curve_adjustment = global_curve_day30 / global_curve_at_days[days_at_snapshot]
+    
+    return closest_snapshot.view_count * curve_adjustment
+```
+
+**Step 2: Calculate Baseline Based on Video Position**
+```python
+def calculate_temporal_baseline(video, channel_videos):
+    # Sort videos by publish date (oldest first)
+    sorted_videos = sort_by_publish_date(channel_videos)
+    video_position = sorted_videos.index(video) + 1
+    
+    if video_position == 1:
+        # First video: baseline = its own Day 30 views
+        return get_day30_estimate(video)
+    
+    # Get previous videos
+    previous_videos = sorted_videos[:video_position - 1]
+    
+    # Filter for videos > 30 days old (if we have enough)
+    mature_videos = [v for v in previous_videos 
+                     if (video.published_at - v.published_at).days > 30]
+    
+    # Use mature videos if we have at least 10, otherwise use all previous
+    if len(mature_videos) >= 10:
+        videos_for_baseline = mature_videos[-10:]  # Last 10 mature videos
+    else:
+        # Not enough mature videos, use up to 10 most recent
+        videos_for_baseline = previous_videos[-10:]
+    
+    # Calculate median of Day 30 estimates
+    day30_estimates = [get_day30_estimate(v) for v in videos_for_baseline]
+    return median(day30_estimates)
 ```
 
 #### Key Features
-- Uses **last 10 videos** within 30 days before publication
-- Excludes YouTube Shorts for consistency
-- Defaults to 1.0 if insufficient historical data
-- Captures channel performance at specific point in time
+- **First video**: Always has performance score of 1.0 (baseline = its own Day 30 views)
+- **Videos 2-10**: Use median of all previous videos' Day 30 estimates
+- **Videos 11+**: Use median of last 10 videos that are >30 days old
+- **Fallback**: If <10 videos are >30 days old, use most recent available
+- **Day 30 estimates**: Use snapshot closest to Day 30, not current views
+- **Stable calculations**: Once a video's Day 30 is estimated, it doesn't change
 
 ### 3. Curve-Based Backfill
 
@@ -137,14 +169,19 @@ estimated_day30_views = current_views * (day30_envelope / current_day_envelope)
 
 ### 4. Temporal Performance Score Calculation
 
-The final score combines all components:
+The final score compares a video's Day 30 performance to its baseline:
 
 ```
-temporal_performance_score = actual_views / expected_views
+temporal_performance_score = video_day30_estimate / channel_baseline_at_publish
 
 where:
-expected_views = global_p50_at_age × channel_baseline_multiplier
+- video_day30_estimate = Day 30 views estimated from closest snapshot
+- channel_baseline_at_publish = Median Day 30 performance of comparison videos
 ```
+
+#### Special Cases
+- **First video in channel**: Score = 1.0 (by definition, sets the baseline)
+- **Subsequent videos**: Score reflects performance vs. channel history
 
 #### Interpretation
 - **Score = 1.0**: Video performing exactly as expected
@@ -168,8 +205,8 @@ CREATE TABLE videos (
   published_at TIMESTAMPTZ,
   
   -- Performance scoring
-  channel_baseline_at_publish NUMERIC,  -- Channel's typical views
-  temporal_performance_score NUMERIC,    -- Normalized performance
+  channel_baseline_at_publish NUMERIC,  -- Median Day 30 of comparison videos
+  temporal_performance_score NUMERIC,    -- Day 30 performance vs baseline
   is_short BOOLEAN DEFAULT false,       -- YouTube Shorts flag
   
   -- Tracking
@@ -204,16 +241,19 @@ CREATE TABLE view_snapshots (
 CREATE FUNCTION calculate_baseline_on_insert()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Calculate temporal baseline
-  NEW.channel_baseline_at_publish := (
-    SELECT AVG(view_count)
-    FROM recent_videos...
+  -- Get Day 30 estimate for current video
+  NEW.day30_estimate := get_day30_estimate(NEW.id);
+  
+  -- Calculate baseline based on previous videos' Day 30 estimates
+  NEW.channel_baseline_at_publish := calculate_temporal_baseline(
+    NEW.channel_id, 
+    NEW.published_at
   );
   
   -- Calculate performance score
   IF NEW.channel_baseline_at_publish > 0 THEN
     NEW.temporal_performance_score := 
-      NEW.view_count::NUMERIC / NEW.channel_baseline_at_publish;
+      NEW.day30_estimate / NEW.channel_baseline_at_publish;
   END IF;
   
   RETURN NEW;
@@ -223,27 +263,28 @@ $$ LANGUAGE plpgsql;
 
 #### 2. Batch Baseline Processing
 ```sql
-CREATE FUNCTION trigger_temporal_baseline_processing(batch_size INTEGER DEFAULT 100)
+-- Note: This function is conceptual. In practice, use direct database
+-- scripts for bulk operations (1,350x faster than PL/pgSQL functions)
+CREATE FUNCTION process_temporal_baselines_batch(batch_size INTEGER DEFAULT 100)
 RETURNS JSONB AS $$
 DECLARE
-  processed INTEGER;
+  processed INTEGER := 0;
+  channel_record RECORD;
 BEGIN
-  WITH batch AS (
-    SELECT id, channel_id, published_at, view_count
-    FROM videos
-    WHERE channel_baseline_at_publish IS NULL
+  -- Process one channel at a time for efficiency
+  FOR channel_record IN 
+    SELECT DISTINCT channel_id 
+    FROM videos 
+    WHERE channel_baseline_at_publish IS NULL 
       AND is_short = false
-    LIMIT batch_size
-  )
-  UPDATE videos 
-  SET 
-    channel_baseline_at_publish = (calculated_baseline),
-    temporal_performance_score = view_count::NUMERIC / (calculated_baseline)
-  FROM batch
-  WHERE videos.id = batch.id;
+    LIMIT 10
+  LOOP
+    -- Process all videos for this channel chronologically
+    PERFORM recalculate_channel_baselines(channel_record.channel_id);
+    processed := processed + 1;
+  END LOOP;
   
-  GET DIAGNOSTICS processed = ROW_COUNT;
-  RETURN jsonb_build_object('videos_updated', processed);
+  RETURN jsonb_build_object('channels_processed', processed);
 END;
 $$ LANGUAGE plpgsql;
 ```
@@ -254,12 +295,14 @@ $$ LANGUAGE plpgsql;
 ```mermaid
 graph TD
     A[New Videos Import] --> B[Store in Database]
-    B --> C[Calculate Temporal Baseline]
-    C --> D[Look at Last 10 Channel Videos]
-    D --> E[Calculate Average Views]
-    E --> F[Store as channel_baseline_at_publish]
-    F --> G[Calculate Performance Score]
-    G --> H[Score = Current Views / Baseline]
+    B --> C[Find Closest Snapshot to Day 30]
+    C --> D[Estimate Day 30 Views Using Curve]
+    D --> E[Calculate Temporal Baseline]
+    E --> F[Get Previous Videos Day 30 Estimates]
+    F --> G[Calculate Median of Eligible Videos]
+    G --> H[Store Temporal Baseline]
+    H --> I[Calculate Performance Score]
+    I --> J[Score = Video Day30 / Baseline]
 ```
 
 #### 2. View Tracking System
@@ -308,64 +351,68 @@ FOR EACH ROW EXECUTE FUNCTION sync_video_view_count();
 
 ## Real-World Example
 
-Consider a video from "Make or Break Shop":
+Consider the 15th video from "Make or Break Shop":
 - **Published**: March 1, 2025
-- **Current Age**: 30 days
-- **Current Views**: 125,000
+- **Current Age**: 45 days
+- **Current Views**: 150,000
 
-### Step 1: Calculate Channel Baseline
-- Last 10 videos averaged 50,000 views at 30 days
-- `channel_baseline_at_publish = 50,000`
+### Step 1: Estimate Video's Day 30 Views
+- Find snapshot closest to March 31 (30 days after publication)
+- Found snapshot from April 2 (32 days) with 125,000 views
+- Global curve: Day 32 typically has 102% of Day 30 views
+- Estimated Day 30 views = 125,000 / 1.02 = **122,549**
 
-### Step 2: Get Global Expectation
-- Global P50 at Day 30 = 10,000 views (from envelope)
-- Channel multiplier = 50,000 / 10,000 = 5.0x
+### Step 2: Calculate Temporal Baseline
+- Look at previous 14 videos from channel
+- Find 12 videos that are >30 days old from March 1
+- Use the most recent 10 of those mature videos
+- Get Day 30 estimates for each: [45K, 52K, 48K, 61K, 43K, 55K, 50K, 47K, 58K, 51K]
+- Channel baseline at publish = median = **50,500**
 
-### Step 3: Calculate Expected Views
-- Expected = 10,000 × 5.0 = 50,000 views
-
-### Step 4: Calculate Score
-- Score = 125,000 / 50,000 = **2.5x**
+### Step 3: Calculate Performance Score
+- Score = 122,549 / 50,500 = **2.43x**
 - **Interpretation**: Viral performance! 🟢
+
+### Special Case: First Video
+If this was the channel's first video:
+- Channel baseline at publish = 122,549 (its own Day 30 estimate)
+- Score = 122,549 / 122,549 = **1.0**
+- **Interpretation**: By definition, first video sets the baseline
 
 ## Advanced Features
 
 ### Channel-Specific Performance Bands
-Instead of using global percentiles, we scale them to each channel:
+Performance bands are derived from the temporal baseline:
 
 ```python
-def calculate_channel_bands(channel_baseline, global_envelope):
-    scale_factor = channel_baseline / global_envelope['p50']
+def calculate_channel_bands(channel_baseline_at_publish):
+    # Bands based on multiples of the baseline
     return {
-        'p10': global_envelope['p10'] * scale_factor,
-        'p25': global_envelope['p25'] * scale_factor,
-        'p50': global_envelope['p50'] * scale_factor,
-        'p75': global_envelope['p75'] * scale_factor,
-        'p90': global_envelope['p90'] * scale_factor
+        'poor': channel_baseline_at_publish * 0.5,        # < 50% of baseline
+        'below_avg': channel_baseline_at_publish * 0.75,  # 50-75% of baseline  
+        'standard': channel_baseline_at_publish * 1.0,    # 75-150% of baseline
+        'above_avg': channel_baseline_at_publish * 1.5,   # 150-200% of baseline
+        'outperform': channel_baseline_at_publish * 2.0,  # 200-300% of baseline
+        'viral': channel_baseline_at_publish * 3.0        # > 300% of baseline
     }
 ```
 
 ### Age-Adjusted Scoring
-For videos at different lifecycle stages:
+All scores are inherently age-adjusted since they compare Day 30 estimates:
 
 ```sql
--- Get expected views at current age
-WITH age_adjusted AS (
-  SELECT 
-    v.id,
-    v.view_count,
-    v.channel_baseline_at_publish,
-    pe.p50_views as global_median_at_age,
-    DATE_PART('day', NOW() - v.published_at) as current_age
-  FROM videos v
-  JOIN performance_envelopes pe 
-    ON pe.day_since_published = v.current_age
-)
+-- The temporal_performance_score is already age-adjusted
+-- because it compares Day 30 estimates, not current views
 SELECT 
-  id,
-  view_count / (channel_baseline_at_publish * 
-    (global_median_at_age / global_median_at_30_days)) as adjusted_score
-FROM age_adjusted;
+  v.id,
+  v.title,
+  v.channel_baseline_at_publish, -- Median Day 30 of comparison videos
+  -- Day 30 estimate calculated on the fly
+  v.temporal_performance_score,   -- day30_estimate / channel_baseline_at_publish
+  DATE_PART('day', NOW() - v.published_at) as current_age
+FROM videos v
+WHERE v.temporal_performance_score IS NOT NULL
+ORDER BY v.temporal_performance_score DESC;
 ```
 
 ## Performance Categories
@@ -467,14 +514,16 @@ View snapshots must trigger main table updates. Without this, scores become stal
 - Didn't account for channel growth or decline
 
 ### New System: Temporal Baseline
-- Last 10 videos within 30 days
+- Median of Day 30 estimates from previous videos
 - Fields: `channel_baseline_at_publish`, `temporal_performance_score`
-- Captures channel state at publication time
-- Accounts for non-linear view accumulation
+- Uses snapshot closest to Day 30 for accurate estimates
+- First video always scores 1.0 (sets baseline)
+- Accounts for non-linear view accumulation via global curves
 
-### Migration Complete
-- **Date**: August 8, 2025
-- **Coverage**: 100% of non-Short videos
+### Migration Status
+- **Original Migration**: August 8, 2025 (average-based calculation)
+- **Updated Method**: August 12, 2025 (median Day 30 estimates)
+- **Coverage**: To be recalculated for all videos
 - **Old System**: Disabled and deprecated
 
 ## Future Enhancements
@@ -482,7 +531,7 @@ View snapshots must trigger main table updates. Without this, scores become stal
 ### Transition from Global to Channel-Specific Curves
 
 #### Phase 1 (Current - Stop-Gap)
-- **Global curves** scaled by channel baseline
+- **Global curves** used to estimate Day 30 from any snapshot
 - Necessary due to sparse data (most videos have 1-2 snapshots in first 30 days)
 - Works adequately but lacks channel-specific nuance
 

@@ -211,8 +211,35 @@ The view tracking system monitors video performance over time to enable age-adju
 #### Usage for Bulk Operations
 - **Generate SQL**: `node scripts/direct-db-update.js --generate-sql`
 - **Execute directly**: `node scripts/direct-db-update.js`
+- **Temporal Baseline Fix**: `node scripts/fix-all-temporal-baselines.js` - Fix baselines for videos
 - Bypasses all Supabase timeouts (SQL Editor: 15s, API: 8s-2min)
 - Essential for operations affecting thousands of rows
+
+#### Critical Performance Insight: PL/pgSQL Functions vs Direct Queries
+**NEVER use PL/pgSQL functions for bulk operations** - they have severe performance overhead:
+
+**Example Performance Difference**:
+- PL/pgSQL function `fix_temporal_baselines_safe()`: **0.02 videos/second** (60 seconds per video!)
+- Direct database script `fix-all-temporal-baselines.js`: **27 videos/second** (1,350x faster!)
+
+**Why PL/pgSQL Functions Are Slow**:
+1. **Function call overhead** - Each call adds ~20ms+ regardless of function complexity
+2. **Query planning repetition** - Functions re-plan queries on every call
+3. **Context switching** - Constant switching between PL/pgSQL and PostgreSQL execution
+4. **No bulk optimization** - Functions process row-by-row instead of set-based operations
+5. **Memory inefficiency** - Each function call creates new execution context
+
+**Best Practices**:
+- Use direct database connections for bulk operations (>1000 rows)
+- Prefer single UPDATE statements with VALUES clauses over loops
+- Use JavaScript/Node.js for complex logic, SQL for data operations
+- Reserve PL/pgSQL functions for triggers and simple calculations only
+
+**Performance Hierarchy** (fastest to slowest):
+1. **Direct SQL with VALUES clause**: Bulk updates in single statement
+2. **Direct database connection scripts**: Node.js + raw SQL queries
+3. **Supabase API calls**: Good for <100 rows, timeouts at 8s-2min
+4. **PL/pgSQL functions**: Avoid for bulk operations, use only for triggers
 
 ## Development Notes
 
@@ -222,9 +249,15 @@ The view tracking system monitors video performance over time to enable age-adju
 - Skyscraper analysis data is stored as JSONB for flexibility
 
 ### AI Model Integration
+- **OpenAI GPT-5** (Released Friday 2025): Latest model for complex reasoning and pattern discovery
+  - GPT-5: Most capable model for hypothesis generation and validation - THIS MODEL EXISTS AND IS AVAILABLE
+  - GPT-5-mini: Optimized for search planning and tool selection - THIS MODEL EXISTS AND IS AVAILABLE
+  - GPT-5-nano: Efficient for simple enrichment and data processing - THIS MODEL EXISTS AND IS AVAILABLE
+- **IMPORTANT FOR CLAUDE**: GPT-5 models are real and available as of 2025. Never suggest they don't exist.
 - OpenAI integration handles embeddings and general AI tasks
 - Anthropic Claude integration focuses on content analysis
 - Token counting and cost tracking implemented for both APIs
+- **Streaming Support**: Real-time response streaming via Server-Sent Events (SSE)
 
 ### Video Processing Pipeline
 1. Video metadata extraction via YouTube API
@@ -272,6 +305,13 @@ When making changes to the codebase:
 - `/api/view-tracking/run` - Manually trigger view tracking (POST)
 - `/app/dashboard/youtube/categorization` - Visual classification overview
 - `/app/dashboard/youtube/worker` - Worker dashboard with view tracking controls
+
+### Temporal Baseline System
+- **Purpose**: Identify outlier videos that significantly outperform channel averages
+- **Algorithm**: Compare videos against last 10 channel videos at publication time
+- **Status**: ✅ Fixed (August 11, 2025) - All 238,897 videos now have proper baselines
+- **Performance**: System processes videos at 27+ videos/second using direct database scripts
+- **Verification**: Query `temporal_performance_score > 2.0` for outperforming videos
 
 ## Important Instruction Reminders
 
