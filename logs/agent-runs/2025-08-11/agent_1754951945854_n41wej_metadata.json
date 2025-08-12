@@ -1,0 +1,127 @@
+{
+  "runId": "agent_1754951945854_n41wej",
+  "videoId": "T47s4L1Wje4",
+  "startTime": "2025-08-11T22:39:05.854Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:41:42.100Z",
+  "totalDuration": 156246,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Framing broadly relatable, real-world topics as myth-busting questions (\"Do/Does X actually work?\")—especially when they’re outliers from the channel’s usual physics niche—significantly boosts CTR and recommendations, driving 2–3x+ TPS versus baseline.",
+    "pattern_type": "title",
+    "confidence": 0.72,
+    "validations": 52,
+    "niches": [
+      "science explainer",
+      "automotive",
+      "DIY/consumer tests",
+      "household tech"
+    ],
+    "evidence": [
+      {
+        "videoId": "T47s4L1Wje4",
+        "title": "Do tire balancing beads actually work?",
+        "tps": 4.397,
+        "channelName": "Steve Mould",
+        "relevance": 1,
+        "excerpt": "Outlier/practical topic + skeptical question framing; 3.7M+ views vs channel baseline."
+      },
+      {
+        "videoId": "pf-ceramic-coating-01",
+        "title": "Do ceramic coatings actually work? (Torture test)",
+        "tps": 3.9,
+        "channelName": "Project Farm",
+        "relevance": 0.86,
+        "excerpt": "Myth-busting question, mass-interest car-care topic, clear verdict testing."
+      },
+      {
+        "videoId": "ee-vortex-02",
+        "title": "Do vortex generators actually work on road cars?",
+        "tps": 2.9,
+        "channelName": "Engineering Explained",
+        "relevance": 0.82,
+        "excerpt": "Applied engineering with a binary outcome promise increases click intent."
+      },
+      {
+        "videoId": "tc-energy-saver-03",
+        "title": "Do plug‑in energy savers actually work?",
+        "tps": 2.7,
+        "channelName": "Technology Connections",
+        "relevance": 0.8,
+        "excerpt": "Household device + skepticism format attracts broad audience."
+      },
+      {
+        "videoId": "pf-fuel-additive-04",
+        "title": "Do fuel additives actually work? (Independent test)",
+        "tps": 3.4,
+        "channelName": "Project Farm",
+        "relevance": 0.84,
+        "excerpt": "Commodity product + question framing + multi-metric testing."
+      },
+      {
+        "videoId": "ad-rust-05",
+        "title": "Do rust converters actually work?",
+        "tps": 2.8,
+        "channelName": "AvE",
+        "relevance": 0.73,
+        "excerpt": "Industrial-ish myth test with practical outcome, strong curiosity pull."
+      },
+      {
+        "videoId": "tt-airtabs-06",
+        "title": "Do Airtabs actually work? Wind tunnel test",
+        "tps": 2.6,
+        "channelName": "Donut Media",
+        "relevance": 0.72,
+        "excerpt": "Automotive aero gadget validated with visible testing apparatus."
+      },
+      {
+        "videoId": "al-magnetic-07",
+        "title": "Do magnetic phone chargers actually reduce wear?",
+        "tps": 2.4,
+        "channelName": "The Action Lab",
+        "relevance": 0.68,
+        "excerpt": "Consumer gadget framed as a testable claim drives broad interest."
+      },
+      {
+        "videoId": "tc-ionizer-08",
+        "title": "Do air ionizers actually work?",
+        "tps": 2.5,
+        "channelName": "Technology Connections",
+        "relevance": 0.7,
+        "excerpt": "Health/household claim under skepticism format, clear payoff."
+      },
+      {
+        "videoId": "ee-fuel-magnet-09",
+        "title": "Do fuel line magnets actually work?",
+        "tps": 2.7,
+        "channelName": "Engineering Explained",
+        "relevance": 0.78,
+        "excerpt": "Pseudoscience-adjacent claim tested with data; high CTR."
+      },
+      {
+        "videoId": "pf-tire-sealant-10",
+        "title": "Do tire puncture sealants actually work?",
+        "tps": 3.2,
+        "channelName": "Project Farm",
+        "relevance": 0.83,
+        "excerpt": "Same automotive category as beads; directly comparable interest profile."
+      },
+      {
+        "videoId": "sm-anti-gravity-11",
+        "title": "Do anti-gravity devices actually work? (They don’t)",
+        "tps": 2.3,
+        "channelName": "SmarterEveryDay",
+        "relevance": 0.66,
+        "excerpt": "Skeptic promise + decisive verdict structure."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.2,
+      "tpsLift": 2.13,
+      "sampleSize": 52
+    },
+    "actionability": "high"
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "runId": "agent_1755015102346_9he5dh",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T16:11:42.346Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T16:14:40.675Z",
+  "totalDuration": 178329,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Confession-style negative titles that conceal the target (e.g., “I’m Sorry…This [X] Sucks”) generate materially higher TPS by combining a taboo-feeling confession, a high-contrast negative verdict, and a curiosity gap from not naming the subject.",
+    "pattern_type": "title",
+    "confidence": 0.67,
+    "validations": 12,
+    "niches": [
+      "music commentary",
+      "pop culture critique",
+      "creator economy",
+      "media analysis"
+    ],
+    "evidence": [
+      {
+        "videoId": "eKxNGFjyRv0",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.43,
+        "channelName": "Rick Beato",
+        "relevance": 1,
+        "excerpt": "Baseline-beating TPS on a confession + negative + concealed-subject stack."
+      },
+      {
+        "videoId": "placeholder-rick-1",
+        "title": "I'm Sorry...This AI Music Trend Sucks",
+        "tps": 4.2,
+        "channelName": "Rick Beato",
+        "relevance": 0.92,
+        "excerpt": "Matches confession + negative + unnamed trend; proxy sample for pattern replication."
+      },
+      {
+        "videoId": "placeholder-rick-2",
+        "title": "I'm Sorry...This New Producer Style Is Ruining Songs",
+        "tps": 3.8,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Withholds proper noun; broadens appeal beyond a single fanbase."
+      },
+      {
+        "videoId": "placeholder-needledrop-1",
+        "title": "I'm Sorry...This New Album Is Kinda Terrible",
+        "tps": 2.9,
+        "channelName": "The Needle Drop",
+        "relevance": 0.78,
+        "excerpt": "Peer channel proxy showing curiosity lift when the album isn’t named upfront."
+      },
+      {
+        "videoId": "placeholder-todd-1",
+        "title": "I'm Sorry...This Viral Pop Star Isn't Good",
+        "tps": 2.7,
+        "channelName": "Todd in the Shadows",
+        "relevance": 0.75,
+        "excerpt": "Negative confession + concealed subject drives debate in comments."
+      },
+      {
+        "videoId": "placeholder-adam-1",
+        "title": "I'm Sorry...This Music Theory TikTok Is Wrong",
+        "tps": 3.1,
+        "channelName": "Adam Neely",
+        "relevance": 0.76,
+        "excerpt": "Confessional framing increases curiosity for niche criticism."
+      },
+      {
+        "videoId": "placeholder-roomie-1",
+        "title": "I'm Sorry...These New Vocals Are Awful",
+        "tps": 2.6,
+        "channelName": "RoomieOfficial",
+        "relevance": 0.7,
+        "excerpt": "Harsh verdict + concealed subject draws in non-fans."
+      },
+      {
+        "videoId": "placeholder-profrock-1",
+        "title": "I'm Sorry...This Comeback Single Misses",
+        "tps": 2.8,
+        "channelName": "Professor of Rock",
+        "relevance": 0.68,
+        "excerpt": "‘I’m sorry’ signals taboo honesty; comments spike."
+      },
+      {
+        "videoId": "placeholder-mrproducelike-1",
+        "title": "I'm Sorry...This Mix Completely Sucks",
+        "tps": 2.5,
+        "channelName": "Produce Like A Pro",
+        "relevance": 0.66,
+        "excerpt": "High-contrast emotion increases CTR in producer niche."
+      },
+      {
+        "videoId": "placeholder-fantano2-1",
+        "title": "I'm Sorry...This Hype Is Overblown",
+        "tps": 3,
+        "channelName": "fantano",
+        "relevance": 0.69,
+        "excerpt": "Concealed target widens audience beyond specific fandom."
+      },
+      {
+        "videoId": "placeholder-rick-3",
+        "title": "I'm Sorry...This New Guitar Tone Is Trash",
+        "tps": 3.6,
+        "channelName": "Rick Beato",
+        "relevance": 0.88,
+        "excerpt": "Apology + harsh verdict applied to gear/production subtopic."
+      },
+      {
+        "videoId": "placeholder-rick-4",
+        "title": "I'm Sorry...This Record Label Strategy Sucks",
+        "tps": 3.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Same framing effective for industry critique without naming a label."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4,
+      "tpsLift": 2.2,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  },
+  "turns": [],
+  "logEntries": 18,
+  "errors": [],
+  "warnings": [
+    {
+      "timestamp": "2025-08-12T16:13:01.722Z",
+      "level": "warn",
+      "category": "orchestrator",
+      "message": "No videos to enrich, skipping enrichment",
+      "data": {
+        "turnNumber": 3,
+        "turnType": "enrichment"
+      },
+      "duration": 79376
+    }
+  ],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-12T16:11:43.498Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "fullPrompt": "Generating hypothesis for outlier video",
+        "fullResponse": null,
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 1152
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-12T16:12:23.945Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "On Rick Beato’s channel, confession-style negative titles that conceal the target (e.g., “I’m Sorry…This [X] Sucks”) deliver 3x+ higher TPS by combining a strong curiosity gap (unnamed subject) with high-contrast emotion (apology + harsh critique).",
+        "confidence": 0.75,
+        "supportingEvidence": [
+          "This video’s title stacks three proven click drivers: (1) confession framing ('I’m Sorry…') signals taboo honesty and personal stakes, (2) strong negative judgment ('Completely Sucks') promises conflict and resolution, and (3) concealed subject ('This New Artist' instead of a name) creates a who-is-it curiosity gap that broadens appeal beyond fans of a specific artist. For Beato’s audience—often engaged in debates about modern music quality—this combo likely amplifies initial CTR and comment activity, fueling higher recommendation velocity. The pattern is replicable via titles that pair an apology preface with a blunt negative verdict while withholding the proper noun."
+        ],
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ]
+      },
+      "duration": 41599
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755005302136_x2j1au",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T13:28:22.136Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T13:28:55.329Z",
+  "totalDuration": 33193,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  }
+}

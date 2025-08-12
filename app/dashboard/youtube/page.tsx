@@ -9,10 +9,9 @@ import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChannelOverviewCards } from '@/components/youtube/channel-overview-cards';
-import { AnalyticsDataTable } from '@/components/youtube/analytics-data-table';
 import { RefreshButton } from '@/components/youtube/refresh-button';
 import { TopicHierarchy } from '@/components/youtube/topic-hierarchy';
+import { DatabaseOverview } from '@/components/youtube/database-overview';
 
 export default function YouTubeDashboardPage() {
   return (
@@ -31,36 +30,21 @@ export default function YouTubeDashboardPage() {
       </div>
 
       {/* Analytics Tabs */}
-      <Tabs defaultValue="channel" className="space-y-6">
+      <Tabs defaultValue="overall" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-          <TabsTrigger value="channel">My Channel</TabsTrigger>
-          <TabsTrigger value="database">Database Stats</TabsTrigger>
+          <TabsTrigger value="overall">Overall Stats</TabsTrigger>
+          <TabsTrigger value="topics">Topic Analysis</TabsTrigger>
         </TabsList>
 
-        {/* My Channel Tab */}
-        <TabsContent value="channel" className="space-y-6">
-          {/* Channel Overview Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Suspense fallback={<OverviewCardsSkeleton />}>
-              <ChannelOverviewCards />
-            </Suspense>
-          </div>
-
-          {/* Performance Data Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Suspense fallback={<DataTableSkeleton />}>
-                <AnalyticsDataTable />
-              </Suspense>
-            </CardContent>
-          </Card>
+        {/* Overall Stats Tab */}
+        <TabsContent value="overall" className="space-y-6">
+          <Suspense fallback={<DatabaseOverviewSkeleton />}>
+            <DatabaseOverview />
+          </Suspense>
         </TabsContent>
 
-        {/* Database Stats Tab */}
-        <TabsContent value="database" className="space-y-6">
+        {/* Topic Analysis Tab (formerly Database Stats) */}
+        <TabsContent value="topics" className="space-y-6">
           {/* Topic Hierarchy */}
           <Suspense fallback={<TopicHierarchySkeleton />}>
             <TopicHierarchy />
@@ -73,22 +57,38 @@ export default function YouTubeDashboardPage() {
 }
 
 // Loading skeleton components
-function OverviewCardsSkeleton() {
+function DatabaseOverviewSkeleton() {
   return (
-    <>
-      {[...Array(4)].map((_, i) => (
-        <Card key={i}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-8 w-24 mb-2" />
-            <Skeleton className="h-3 w-32" />
-          </CardContent>
-        </Card>
-      ))}
-    </>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i}>
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

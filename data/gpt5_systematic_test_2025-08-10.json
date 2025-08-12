@@ -1,0 +1,201 @@
+{
+  "timestamp": "2025-08-10T10:31:17.366Z",
+  "tests": [
+    {
+      "name": "Parameter Combinations",
+      "results": [
+        {
+          "test": "Old style with max_tokens",
+          "success": false,
+          "error": "400 Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead."
+        },
+        {
+          "test": "New style with max_completion_tokens",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        },
+        {
+          "test": "reasoning_effort: undefined (default)",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        },
+        {
+          "test": "reasoning_effort: minimal",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        },
+        {
+          "test": "reasoning_effort: low",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        },
+        {
+          "test": "reasoning_effort: medium",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        },
+        {
+          "test": "reasoning_effort: high",
+          "success": true,
+          "hasContent": false,
+          "content": "(empty)",
+          "totalTokens": 10,
+          "reasoningTokens": 10,
+          "visibleTokens": 0
+        }
+      ]
+    },
+    {
+      "name": "Prompt Types",
+      "results": [
+        {
+          "promptType": "Simple command",
+          "hasContent": true,
+          "content": "Hello! How can I help today?",
+          "tokens": 17
+        },
+        {
+          "promptType": "Direct output",
+          "hasContent": true,
+          "content": "hello",
+          "tokens": 10
+        },
+        {
+          "promptType": "JSON request",
+          "hasContent": true,
+          "content": "Hi there! How can I help today? If you have a question or a task, tell me a bit more and I’ll get started.",
+          "tokens": 38
+        },
+        {
+          "promptType": "Question",
+          "hasContent": true,
+          "content": "4",
+          "tokens": 10
+        },
+        {
+          "promptType": "Completion",
+          "hasContent": true,
+          "content": "The sky is blue.",
+          "tokens": 14
+        },
+        {
+          "promptType": "System + User",
+          "hasContent": true,
+          "content": "Blue",
+          "tokens": 10
+        },
+        {
+          "promptType": "Assistant context",
+          "hasContent": true,
+          "content": "Hello again! How can I help you today?",
+          "tokens": 19
+        }
+      ]
+    },
+    {
+      "name": "Response Formats",
+      "results": [
+        {
+          "format": "Default (no format)",
+          "hasContent": false,
+          "content": "(empty)"
+        },
+        {
+          "format": "JSON mode",
+          "hasContent": true,
+          "content": "{\"greeting\":\"hello\"}"
+        },
+        {
+          "format": "With temperature 0",
+          "error": "400 Unsupported value: 'temperature' does not support 0 with this model. Only the default (1) value is supported."
+        },
+        {
+          "format": "With seed",
+          "hasContent": false,
+          "content": "(empty)"
+        }
+      ]
+    },
+    {
+      "name": "Consistency Check",
+      "results": [
+        {
+          "attempt": 1,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 2,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 3,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 4,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 5,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 6,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 7,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 8,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 9,
+          "hasContent": false,
+          "content": ""
+        },
+        {
+          "attempt": 10,
+          "hasContent": false,
+          "content": ""
+        }
+      ],
+      "summary": {
+        "successCount": 10,
+        "contentCount": 0,
+        "consistencyRate": "0.0"
+      }
+    }
+  ],
+  "summary": {}
+}

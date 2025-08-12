@@ -1,0 +1,72 @@
+{
+  "runId": "agent_1754992835112_fumb2m",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T10:00:35.112Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:01:41.936Z",
+  "totalDuration": 66824,
+  "success": false,
+  "finalPattern": {
+    "statement": "Titles that combine a first-person apology hook with strong negative sentiment toward a contemporary/‘new’ artist (e.g., “I’m Sorry…This New Artist Completely Sucks”) drive higher CTR and above-baseline TPS on Rick Beato’s channel by creating curiosity and polarization versus his usual neutral explainer titles.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 11,
+  "errors": [],
+  "warnings": [
+    {
+      "timestamp": "2025-08-12T10:01:41.934Z",
+      "level": "warn",
+      "category": "orchestrator",
+      "message": "Budget exceeded, moving to finalization",
+      "data": {
+        "turnNumber": 3,
+        "turnType": "enrichment"
+      },
+      "duration": 66822
+    }
+  ],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-12T10:00:35.748Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 636
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-12T10:01:11.212Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "Titles that combine a first-person apology hook with strong negative sentiment toward a contemporary/‘new’ artist (e.g., “I’m Sorry…This New Artist Completely Sucks”) drive higher CTR and above-baseline TPS on Rick Beato’s channel by creating curiosity and polarization versus his usual neutral explainer titles.",
+        "confidence": 0.75,
+        "reasoning": "Rick Beato’s audience is primed for music analysis; a deviation into a direct, opinionated call-out of a ‘new artist’ is novel and provocative. The first-person apology (“I’m Sorry…”) plus ellipsis creates a curiosity gap, while negative valence (“sucks”) signals conflict, both known to increase clicks. This framing likely pulls in non-subscribers searching for the artist and boosts CTR; the controversy sustains watch time as viewers seek the justification. We can test by comparing performance of titles containing apology/negative terms (e.g., “I’m sorry”, “sucks”, “worst”, “hate”, “overrated”, “the problem with”, “ruined”) and “new artist/this artist” against channel baselines and inspecting CTR/retention.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 36100
+    }
+  ]
+}

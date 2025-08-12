@@ -142,6 +142,58 @@ export async function generateThumbnailEmbedding(
 }
 
 /**
+ * Generate CLIP embedding from text query (for visual search)
+ * Uses the same CLIP model to create compatible embeddings
+ */
+export async function generateVisualQueryEmbedding(
+  textQuery: string
+): Promise<number[]> {
+  if (!textQuery || textQuery.trim().length === 0) {
+    throw new Error('Text query cannot be empty');
+  }
+
+  try {
+    const replicate = getReplicateClient();
+    
+    console.log(`🔄 Generating CLIP text embedding for: "${textQuery}"`);
+    
+    // Use the same CLIP model but with text input instead of image
+    const output = await replicate.run(
+      "krthr/clip-embeddings:1c0371070cb827ec3c7f2f28adcdde54b50dcd239aa6faea0bc98b174ef03fb4",
+      {
+        input: {
+          text: textQuery  // Use text instead of image
+        }
+      }
+    );
+    
+    let embedding: number[];
+    
+    // Handle different output formats (same as image version)
+    if (Array.isArray(output)) {
+      embedding = output;
+    } else if (output && typeof output === 'object' && 'embedding' in output) {
+      const embeddingData = (output as any).embedding;
+      embedding = embeddingData as number[];
+    } else {
+      throw new Error(`No valid embedding returned from Replicate. Got: ${typeof output}, Keys: ${Object.keys(output || {}).join(', ')}`);
+    }
+    
+    if (!embedding || embedding.length === 0) {
+      throw new Error('Empty embedding returned from Replicate');
+    }
+    
+    console.log(`✅ Generated visual query embedding: ${embedding.length} dimensions`);
+    
+    return embedding;
+    
+  } catch (error) {
+    console.error('❌ Failed to generate visual query embedding:', error);
+    throw error;
+  }
+}
+
+/**
  * Generate embeddings for multiple thumbnail URLs in batches with caching
  */
 export async function batchGenerateThumbnailEmbeddings(

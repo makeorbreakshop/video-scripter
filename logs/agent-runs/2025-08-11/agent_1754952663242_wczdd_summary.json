@@ -1,0 +1,72 @@
+{
+  "runId": "agent_1754952663242_wczdd",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T22:51:03.242Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:51:38.623Z",
+  "totalDuration": 35381,
+  "success": false,
+  "finalPattern": {
+    "statement": "On Adam Savage’s Tested, build/case-study videos that explicitly frame the story around mistakes or being wrong in the title (e.g., “mistake,” “wrong,” “I messed up,” plus a specific count like “two mistakes”) achieve 3x+ TPS by creating a strong curiosity gap and relatability compared to straightforward build titles.",
+    "confidence": 0.76,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 11,
+  "errors": [],
+  "warnings": [
+    {
+      "timestamp": "2025-08-11T22:51:38.623Z",
+      "level": "warn",
+      "category": "orchestrator",
+      "message": "Timeout reached, moving to finalization",
+      "data": {
+        "turnNumber": 3,
+        "turnType": "enrichment"
+      },
+      "duration": 35381
+    }
+  ],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-11T22:51:04.065Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 823
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-11T22:51:16.791Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "On Adam Savage’s Tested, build/case-study videos that explicitly frame the story around mistakes or being wrong in the title (e.g., “mistake,” “wrong,” “I messed up,” plus a specific count like “two mistakes”) achieve 3x+ TPS by creating a strong curiosity gap and relatability compared to straightforward build titles.",
+        "confidence": 0.76,
+        "reasoning": "This video’s title leverages self-critique (“Has Two Mistakes!”) and specificity (a concrete number) to generate curiosity about what went wrong and how it was resolved. For this channel, many titles are straightforward (e.g., object or technique focus). A deviation that foregrounds failure taps into a powerful narrative arc (setup → error → fix) that increases CTR and retention: viewers click to identify the mistakes and stay to see the resolution. The case-study format is well-suited to this arc, and Adam’s credibility makes the vulnerability feel instructive rather than clickbait. This pattern is testable by comparing TPS of titles containing failure/mistake language (mistake, wrong, failed, messed up, fix) and those with explicit counts (one/two/three mistakes) against the channel’s typical build titles without such framing.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 13550
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1754993123055_y8ybv",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T10:05:23.055Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:06:13.976Z",
+  "totalDuration": 50921,
+  "success": false,
+  "finalPattern": {
+    "statement": "Using an apology-led, strongly negative verdict in the title about a current/new artist (e.g., “I’m Sorry…This New Artist Completely Sucks”) drives a large CTR and comment surge, yielding 3x+ TPS vs the channel’s neutral/educational explainers.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  }
+}

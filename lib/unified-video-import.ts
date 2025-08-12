@@ -12,8 +12,10 @@ import { pineconeService } from './pinecone-service.ts';
 import { pineconeThumbnailService } from './pinecone-thumbnail-service.ts';
 import { PineconeSummaryService } from './pinecone-summary-service.ts';
 import { quotaTracker } from './youtube-quota-tracker.ts';
+import { TemporalBaselineProcessor } from './temporal-baseline-processor.ts';
 import { llmFormatClassificationService } from './llm-format-classification-service.ts';
 import { topicDetectionService } from './topic-detection-service.ts';
+import { retryPineconeOperation, retrySupabaseOperation } from './utils/retry-with-backoff.ts';
 import { BERTopicClassificationService } from './bertopic-classification-service.ts';
 import { generateVideoSummaries, generateSummaryEmbeddings } from './unified-import-summary-integration.ts';
 import * as fs from 'fs';
@@ -46,6 +48,9 @@ export interface VideoImportRequest {
     timePeriod?: string; // 'all' or number of days
     excludeShorts?: boolean;
     userId?: string;
+    // Date filtering options
+    dateFilter?: 'all' | 'recent'; // Filter videos by date
+    dateRange?: number; // Number of days to look back (default: 1095 for 3 years)
   };
 }
 
@@ -102,6 +107,8 @@ export interface EmbeddingResults {
 export class VideoImportService {
   private openaiApiKey: string;
   private youtubeApiKey: string;
+  private youtubeAPIWithFallback: any = null;
+  private fallbackInitialized: boolean = false;
   // Channel stats cache to avoid redundant API calls
   private channelStatsCache = new Map<string, any>();
   // Job ID for quota tracking
@@ -122,6 +129,46 @@ export class VideoImportService {
     
     // Initialize BERTopic service
     this.bertopicService = new BERTopicClassificationService();
+    
+    // Initialize fallback system if backup key exists (async)
+    this.initializeFallbackSystem();
+  }
+
+  private async initializeFallbackSystem(): Promise<void> {
+    if (this.fallbackInitialized) {
+      return; // Already initialized
+    }
+    
+    if (process.env.YOUTUBE_API_KEY_BACKUP) {
+      try {
+        const { youtubeAPIWithFallback } = await import('./youtube-api-with-fallback.ts');
+        this.youtubeAPIWithFallback = youtubeAPIWithFallback;
+        this.youtubeApiKey = youtubeAPIWithFallback.getCurrentKey() || this.youtubeApiKey;
+        const status = youtubeAPIWithFallback.getStatus();
+        if (status.usingBackup) {
+          console.log('🔄 Using BACKUP YouTube API key for import');
+        }
+        this.fallbackInitialized = true;
+      } catch (error) {
+        console.error('Failed to load YouTube API fallback system:', error);
+      }
+    }
+  }
+
+  /**
+   * Make a YouTube API request with automatic failover support
+   */
+  private async makeYouTubeRequest(url: string): Promise<Response> {
+    if (this.youtubeAPIWithFallback) {
+      // Remove any existing key from URL since makeRequest will add it
+      const urlWithoutKey = url.replace(/[?&]key=[^&]*/, '');
+      return this.youtubeAPIWithFallback.makeRequest(urlWithoutKey);
+    } else {
+      // Fallback to direct fetch with single key
+      const urlWithKey = url.includes('key=') ? url : 
+        (url.includes('?') ? `${url}&key=${this.youtubeApiKey}` : `${url}?key=${this.youtubeApiKey}`);
+      return fetch(urlWithKey);
+    }
   }
 
   /**
@@ -144,6 +191,9 @@ export class VideoImportService {
    */
   async processVideos(request: VideoImportRequest): Promise<VideoImportResult> {
     console.log(`🚀 Starting unified video import for source: ${request.source}`);
+    
+    // Ensure fallback system is initialized
+    await this.initializeFallbackSystem();
     
     const result: VideoImportResult = {
       success: false,
@@ -269,50 +319,27 @@ export class VideoImportService {
         console.log(`📁 Exported to: ${result.exportFiles.join(', ')}`);
       }
       
-      // Trigger baseline processing for newly imported videos (with timeout handling)
+      // Trigger baseline processing for newly imported videos using fast direct database approach
       let baselineProcessingSuccess = false;
       if (result.videosProcessed > 0) {
         try {
           console.log(`🔄 Triggering temporal baseline processing for ${result.videosProcessed} new videos...`);
           
-          // For large batches, use chunked baseline processing to avoid timeouts
-          if (result.videosProcessed >= 500) {
-            console.log(`📦 Large batch detected, using chunked baseline processing...`);
-            await this.triggerBaselineProcessingChunked(result.videosProcessed);
+          const baselineProcessor = new TemporalBaselineProcessor();
+          const baselineResult = await baselineProcessor.processRecentVideos(result.videosProcessed);
+          await baselineProcessor.close();
+          
+          if (baselineResult.success) {
+            console.log(`✅ Temporal baseline processing complete: ${baselineResult.processedVideos} videos processed`);
             baselineProcessingSuccess = true;
           } else {
-            const { data, error } = await supabase.rpc('trigger_temporal_baseline_processing', { 
-              batch_size: Math.min(1000, result.videosProcessed) 
-            });
-            
-            if (error) {
-              // Check if it's a timeout error
-              if (error.code === '57014') {
-                console.log(`⚠️ Baseline processing timeout, falling back to chunked processing...`);
-                await this.triggerBaselineProcessingChunked(result.videosProcessed);
-                baselineProcessingSuccess = true;
-              } else {
-                console.error('⚠️ Failed to trigger baseline processing:', error);
-                result.errors.push(`Baseline processing trigger failed: ${error.message}`);
-              }
-            } else {
-              console.log(`✅ Temporal baseline processing triggered, processed ${data?.videos_updated || data || 0} videos`);
-              baselineProcessingSuccess = true;
-            }
+            console.error('⚠️ Baseline processing failed:', baselineResult.error);
+            result.errors.push(`Baseline processing failed: ${baselineResult.error}`);
           }
         } catch (error) {
           console.error('⚠️ Error triggering baseline processing:', error);
           const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('timeout') || errorMessage.includes('57014')) {
-            console.log(`⚠️ Baseline processing timeout, falling back to chunked processing...`);
-            try {
-              await this.triggerBaselineProcessingChunked(result.videosProcessed);
-              baselineProcessingSuccess = true;
-            } catch (chunkError) {
-              console.error('⚠️ Chunked baseline processing also failed:', chunkError);
-              // Don't fail the import if baseline trigger fails
-            }
-          }
+          result.errors.push(`Baseline processing trigger failed: ${errorMessage}`);
         }
       } else {
         baselineProcessingSuccess = true; // No videos to process
@@ -632,20 +659,37 @@ export class VideoImportService {
       try {
         console.log(`📦 Processing chunk ${chunkNumber}/${totalChunks} (${chunk.length} videos)...`);
         
-        const { error } = await supabase
-          .from('videos')
-          .upsert(chunk, {
-            onConflict: 'id',
-            ignoreDuplicates: false
-          });
+        const { error } = await retrySupabaseOperation(
+          async () => {
+            const result = await supabase
+              .from('videos')
+              .upsert(chunk, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+              });
+            
+            if (result.error) {
+              // Check if it's a retryable error
+              if (result.error.code === '57014' || 
+                  result.error.message?.includes('fetch failed') ||
+                  result.error.message?.includes('ETIMEDOUT')) {
+                throw result.error; // This will trigger retry
+              }
+              // Non-retryable errors should be returned
+              return result;
+            }
+            return result;
+          },
+          `store chunk ${chunkNumber}/${totalChunks}`
+        );
 
         if (error) {
-          console.error(`❌ Chunk ${chunkNumber} failed:`, error);
+          console.error(`❌ Chunk ${chunkNumber} failed after retries:`, error);
           failureCount += chunk.length;
           
-          // For timeout errors on chunks, try even smaller sub-chunks
+          // For persistent timeout errors on chunks, try even smaller sub-chunks
           if (error.code === '57014' && chunk.length > 50) {
-            console.log(`⚠️ Chunk timeout, trying smaller sub-chunks...`);
+            console.log(`⚠️ Chunk timeout even after retries, trying smaller sub-chunks...`);
             await this.storeVideoDataSubChunks(chunk, 50);
             successCount += chunk.length;
             failureCount -= chunk.length;
@@ -686,70 +730,48 @@ export class VideoImportService {
     
     for (let i = 0; i < videos.length; i += subChunkSize) {
       const subChunk = videos.slice(i, i + subChunkSize);
+      const subChunkNum = Math.floor(i / subChunkSize) + 1;
+      const totalSubChunks = Math.ceil(videos.length / subChunkSize);
       
       try {
-        const { error } = await supabase
-          .from('videos')
-          .upsert(subChunk, {
-            onConflict: 'id',
-            ignoreDuplicates: false
-          });
+        const { error } = await retrySupabaseOperation(
+          async () => {
+            const result = await supabase
+              .from('videos')
+              .upsert(subChunk, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+              });
+            
+            if (result.error) {
+              // Check if it's a retryable error
+              if (result.error.code === '57014' || 
+                  result.error.message?.includes('fetch failed') ||
+                  result.error.message?.includes('ETIMEDOUT')) {
+                throw result.error; // This will trigger retry
+              }
+              // Non-retryable errors should be returned
+              return result;
+            }
+            return result;
+          },
+          `store sub-chunk ${subChunkNum}/${totalSubChunks}`
+        );
 
         if (error) {
-          throw new Error(`Sub-chunk failed: ${error.message}`);
+          throw new Error(`Sub-chunk failed after retries: ${error.message}`);
         }
         
         // Small delay between sub-chunks
         await new Promise(resolve => setTimeout(resolve, 50));
         
       } catch (error) {
-        console.error(`❌ Sub-chunk starting at index ${i} failed:`, error);
+        console.error(`❌ Sub-chunk starting at index ${i} failed after all retries:`, error);
         throw error;
       }
     }
   }
 
-  /**
-   * Trigger baseline processing in chunks to avoid timeouts
-   */
-  private async triggerBaselineProcessingChunked(totalVideos: number): Promise<void> {
-    console.log(`📦 Processing baseline calculations in chunks for ${totalVideos} videos...`);
-    
-    const chunkSize = 250; // Smaller chunks for baseline processing
-    const totalChunks = Math.ceil(totalVideos / chunkSize);
-    let processedCount = 0;
-    
-    for (let i = 0; i < totalChunks; i++) {
-      const currentChunkSize = Math.min(chunkSize, totalVideos - (i * chunkSize));
-      
-      try {
-        console.log(`📊 Processing temporal baseline chunk ${i + 1}/${totalChunks} (${currentChunkSize} videos)...`);
-        
-        const { data, error } = await supabase.rpc('trigger_temporal_baseline_processing', { 
-          batch_size: currentChunkSize
-        });
-        
-        if (error) {
-          console.error(`❌ Baseline chunk ${i + 1} failed:`, error);
-          // Continue with remaining chunks instead of failing entirely
-        } else {
-          processedCount += (data || 0);
-          console.log(`✅ Temporal baseline chunk ${i + 1}/${totalChunks} complete (processed ${data || 0} videos`);
-        }
-        
-        // Add delay between chunks to avoid overwhelming the database
-        if (i < totalChunks - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-        
-      } catch (error) {
-        console.error(`❌ Baseline chunk ${i + 1} error:`, error);
-        // Continue with remaining chunks
-      }
-    }
-    
-    console.log(`✅ Chunked baseline processing complete: ${processedCount} videos processed`);
-  }
 
   /**
    * Export embeddings to local files
@@ -861,7 +883,10 @@ export class VideoImportService {
         }
       }));
       
-      await pineconeService.upsertEmbeddings(titleVectors as any);
+      await retryPineconeOperation(
+        async () => await pineconeService.upsertEmbeddings(titleVectors as any),
+        `upload ${titleVectors.length} title embeddings`
+      );
       console.log(`✅ Uploaded ${titleVectors.length} title embeddings to Pinecone`);
     }
 
@@ -934,11 +959,17 @@ export class VideoImportService {
       const namespace = index.namespace('llm-summaries');
       const batchSize = 100;
       
-      // Upload to Pinecone in batches
+      // Upload to Pinecone in batches with retry
       for (let i = 0; i < vectors.length; i += batchSize) {
         const batch = vectors.slice(i, i + batchSize);
-        await namespace.upsert(batch);
-        console.log(`📦 Uploaded batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(vectors.length / batchSize)}`);
+        const batchNum = Math.floor(i / batchSize) + 1;
+        const totalBatches = Math.ceil(vectors.length / batchSize);
+        
+        await retryPineconeOperation(
+          async () => await namespace.upsert(batch),
+          `upload summary batch ${batchNum}/${totalBatches}`
+        );
+        console.log(`📦 Uploaded batch ${batchNum}/${totalBatches}`);
       }
       
       // Update database to mark embeddings as synced
@@ -969,16 +1000,28 @@ export class VideoImportService {
       maxVideosPerChannel?: number;
       timePeriod?: string;
       excludeShorts?: boolean;
+      dateFilter?: 'all' | 'recent';
+      dateRange?: number;
     }
   ): Promise<string[]> {
     console.log(`🚀 Starting optimized channel video fetch for ${channelIds.length} channels`);
     
     const allVideoIds: string[] = [];
     
-    // Calculate date filter
-    const isAllTime = !options?.timePeriod || options.timePeriod === 'all';
-    const daysAgo = isAllTime ? 0 : parseInt(options.timePeriod || '3650') || 3650;
-    const publishedAfter = isAllTime ? null : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    // Calculate date filter - prioritize new dateFilter over legacy timePeriod
+    let publishedAfter: Date | null = null;
+    
+    if (options?.dateFilter === 'recent') {
+      // Use new dateFilter approach
+      const daysToLookBack = options.dateRange || 1095; // Default to 3 years (1095 days)
+      publishedAfter = new Date(Date.now() - daysToLookBack * 24 * 60 * 60 * 1000);
+      console.log(`📅 Filtering to videos from last ${daysToLookBack} days (after ${publishedAfter.toISOString().split('T')[0]})`);
+    } else if (options?.timePeriod && options.timePeriod !== 'all') {
+      // Legacy timePeriod support
+      const daysAgo = parseInt(options.timePeriod) || 3650;
+      publishedAfter = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+      console.log(`📅 Legacy filter: videos from last ${daysAgo} days`);
+    }
     
     // Process channels in parallel (but limit concurrency to avoid rate limits)
     const concurrencyLimit = 3;
@@ -1020,6 +1063,8 @@ export class VideoImportService {
       maxVideosPerChannel?: number;
       timePeriod?: string;
       excludeShorts?: boolean;
+      dateFilter?: 'all' | 'recent';
+      dateRange?: number;
     },
     publishedAfter?: Date | null
   ): Promise<string[]> {
@@ -1027,6 +1072,7 @@ export class VideoImportService {
     let nextPageToken: string | undefined;
     const pageSize = 50;
     const maxResults = options?.maxVideosPerChannel || 500; // Default limit
+    const minVideosTarget = 50; // Fallback target if date filtering yields too few videos
     
     console.log(`📺 Fetching videos from channel ${channelId}`);
     
@@ -1034,10 +1080,9 @@ export class VideoImportService {
       // First, get the channel's uploads playlist ID
       const channelUrl = `https://www.googleapis.com/youtube/v3/channels?` +
         `part=contentDetails&` +
-        `id=${channelId}&` +
-        `key=${this.youtubeApiKey}`;
+        `id=${channelId}`;
       
-      const channelResponse = await fetch(channelUrl);
+      const channelResponse = await this.makeYouTubeRequest(channelUrl);
       
       // Track quota usage
       await quotaTracker.trackAPICall('channels.list', {
@@ -1070,9 +1115,7 @@ export class VideoImportService {
           playlistUrl += `&pageToken=${nextPageToken}`;
         }
         
-        playlistUrl += `&key=${this.youtubeApiKey}`;
-        
-        const response = await fetch(playlistUrl);
+        const response = await this.makeYouTubeRequest(playlistUrl);
         
         // Track quota usage
         await quotaTracker.trackAPICall('playlistItems.list', {
@@ -1127,6 +1170,81 @@ export class VideoImportService {
       console.error(`❌ Error fetching videos from channel ${channelId}:`, error);
     }
     
+    // Fallback logic: if we have date filtering and got less than 50 videos, try without date filter
+    if (publishedAfter && videoIds.length < minVideosTarget && videoIds.length > 0) {
+      console.log(`⚠️ Channel ${channelId}: Only found ${videoIds.length} videos in date range. Fetching older videos to reach ${minVideosTarget} minimum...`);
+      
+      try {
+        // Reset and fetch without date filter to get at least 50 total videos
+        const additionalVideoIds: string[] = [];
+        let fallbackNextPageToken: string | undefined;
+        
+        // Get channel uploads playlist ID (we should have it cached from above)
+        const channelResponse = await this.makeYouTubeRequest(
+          `https://www.googleapis.com/youtube/v3/channels?` +
+          `part=contentDetails&` +
+          `id=${channelId}`
+        );
+        
+        if (channelResponse.ok) {
+          const channelData = await channelResponse.json();
+          const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+          
+          if (uploadsPlaylistId) {
+            // Fetch without date filter until we have at least 50 total
+            const targetTotal = Math.max(minVideosTarget, videoIds.length);
+            
+            do {
+              const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?` +
+                `part=snippet&` +
+                `playlistId=${uploadsPlaylistId}&` +
+                `maxResults=${pageSize}` +
+                (fallbackNextPageToken ? `&pageToken=${fallbackNextPageToken}` : '');
+
+              const response = await this.makeYouTubeRequest(playlistUrl);
+              
+              if (!response.ok) break;
+              
+              const data = await response.json();
+              
+              if (data.items && data.items.length > 0) {
+                // Don't re-add videos we already have
+                const existingVideoIds = new Set(videoIds);
+                const newVideoIds = data.items
+                  .map((item: any) => item.snippet.resourceId.videoId)
+                  .filter((id: string) => !existingVideoIds.has(id));
+                
+                // Filter shorts if requested
+                if (options?.excludeShorts && newVideoIds.length > 0) {
+                  const nonShortIds = await this.filterOutShorts(newVideoIds);
+                  additionalVideoIds.push(...nonShortIds);
+                } else {
+                  additionalVideoIds.push(...newVideoIds);
+                }
+                
+                const totalVideos = videoIds.length + additionalVideoIds.length;
+                if (totalVideos >= targetTotal) {
+                  // Trim to exact target
+                  const needed = targetTotal - videoIds.length;
+                  additionalVideoIds.splice(needed);
+                  break;
+                }
+                
+                fallbackNextPageToken = data.nextPageToken;
+              } else {
+                break;
+              }
+            } while (fallbackNextPageToken && (videoIds.length + additionalVideoIds.length) < targetTotal);
+            
+            videoIds.push(...additionalVideoIds);
+            console.log(`✅ Fallback: Added ${additionalVideoIds.length} older videos. Total: ${videoIds.length} videos`);
+          }
+        }
+      } catch (fallbackError) {
+        console.error(`❌ Fallback fetch failed for channel ${channelId}:`, fallbackError);
+      }
+    }
+    
     console.log(`✅ Retrieved ${videoIds.length} videos from channel ${channelId}`);
     return videoIds;
   }
@@ -1138,11 +1256,10 @@ export class VideoImportService {
     if (videoIds.length === 0) return [];
     
     try {
-      const response = await fetch(
+      const response = await this.makeYouTubeRequest(
         `https://www.googleapis.com/youtube/v3/videos?` +
         `part=contentDetails&` +
-        `id=${videoIds.join(',')}&` +
-        `key=${this.youtubeApiKey}`
+        `id=${videoIds.join(',')}`
       );
       
       // Track quota usage
@@ -1314,11 +1431,10 @@ export class VideoImportService {
       try {
         console.log(`📹 Fetching video batch ${Math.floor(i/videoBatchSize) + 1}/${Math.ceil(videoIds.length/videoBatchSize)}`);
         
-        const response = await fetch(
+        const response = await this.makeYouTubeRequest(
           `https://www.googleapis.com/youtube/v3/videos?` +
           `part=snippet,statistics,contentDetails&` +
-          `id=${videoIdsParam}&` +
-          `key=${this.youtubeApiKey}`
+          `id=${videoIdsParam}`
         );
         
         // Track quota usage
@@ -1434,11 +1550,10 @@ export class VideoImportService {
       try {
         console.log(`📊 Fetching channel batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(uniqueChannelIds.length/batchSize)}`);
         
-        const response = await fetch(
+        const response = await this.makeYouTubeRequest(
           `https://www.googleapis.com/youtube/v3/channels?` +
           `part=snippet,statistics&` +
-          `id=${channelIdsParam}&` +
-          `key=${this.youtubeApiKey}`
+          `id=${channelIdsParam}`
         );
         
         // Track quota usage
@@ -1672,8 +1787,8 @@ export class VideoImportService {
    */
   private async _fetchVideoDetails(videoId: string): Promise<Partial<VideoMetadata> | null> {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${this.youtubeApiKey}`
+      const response = await this.makeYouTubeRequest(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}`
       );
       
       // Track quota usage
@@ -1698,8 +1813,8 @@ export class VideoImportService {
       const statistics = video.statistics;
       
       // Now fetch channel statistics
-      const channelResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${snippet.channelId}&key=${this.youtubeApiKey}`
+      const channelResponse = await this.makeYouTubeRequest(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${snippet.channelId}`
       );
       
       // Track quota usage

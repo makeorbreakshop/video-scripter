@@ -5,6 +5,7 @@
 
 import { Pinecone } from '@pinecone-database/pinecone';
 import { createClient } from '@supabase/supabase-js';
+import { retryPineconeOperation } from './utils/retry-with-backoff.ts';
 
 interface VideoMetadata {
   title: string;
@@ -73,16 +74,21 @@ export class PineconeService {
       try {
         console.log(`🔌 Connecting to Pinecone index: ${this.indexName}`);
         
-        // Test the connection by getting index stats
-        const index = this.pinecone.index(this.indexName);
-        const stats = await index.describeIndexStats();
+        // Test the connection by getting index stats with retry
+        const stats = await retryPineconeOperation(
+          async () => {
+            const index = this.pinecone.index(this.indexName);
+            return await index.describeIndexStats();
+          },
+          'Pinecone index connection'
+        );
         
         // Pinecone SDK v3+ uses totalRecordCount instead of totalVectorCount
         const vectorCount = stats.totalRecordCount || 'unknown';
         console.log(`✅ Connected to Pinecone index with ${vectorCount} vectors`);
         this.initialized = true;
       } catch (error) {
-        console.error('❌ Failed to connect to Pinecone index:', error);
+        console.error('❌ Failed to connect to Pinecone index after all retries:', error);
         // Reset the promise on error so it can be retried
         this.initializationPromise = null;
         throw error;
@@ -110,7 +116,10 @@ export class PineconeService {
       if (vectors.length <= BATCH_SIZE) {
         // Single batch - no chunking needed
         console.log(`📤 Upserting ${vectors.length} vectors to Pinecone in single batch`);
-        await index.upsert(vectors);
+        await retryPineconeOperation(
+          async () => await index.upsert(vectors),
+          `upsert ${vectors.length} vectors`
+        );
       } else {
         // Multiple batches needed
         console.log(`📤 Upserting ${vectors.length} vectors to Pinecone in ${Math.ceil(vectors.length / BATCH_SIZE)} batches`);
@@ -121,7 +130,10 @@ export class PineconeService {
           const totalBatches = Math.ceil(vectors.length / BATCH_SIZE);
           
           console.log(`📤 Uploading batch ${batchNum}/${totalBatches} (${batch.length} vectors)`);
-          await index.upsert(batch);
+          await retryPineconeOperation(
+            async () => await index.upsert(batch),
+            `upsert batch ${batchNum}/${totalBatches}`
+          );
         }
       }
       

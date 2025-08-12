@@ -1,0 +1,128 @@
+{
+  "runId": "agent_1754950201745_nlanmdn",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T22:10:01.745Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:12:10.121Z",
+  "totalDuration": 128376,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Numbered mistake postmortems in titles (e.g., “Two Mistakes”, “3 Things I’d Fix”) paired with a familiar build context drive higher performance by mixing vulnerability and specificity, which boosts curiosity and perceived learning value.",
+    "pattern_type": "title",
+    "confidence": 0.62,
+    "validations": 1,
+    "niches": [
+      "maker",
+      "DIY",
+      "woodworking",
+      "machining",
+      "design-engineering"
+    ],
+    "evidence": [
+      {
+        "videoId": "Y-Z4fjwMPsU",
+        "title": "Adam Savage's Workbench Ruler Build Has Two Mistakes!",
+        "tps": 5.205,
+        "channelName": "Adam Savage’s Tested",
+        "relevance": 0.98,
+        "excerpt": "Numbered-mistake framing in a build context; significantly above channel baseline."
+      },
+      {
+        "videoId": "placeholder-1",
+        "title": "I Was Wrong About My Clamp Rack — 3 Fixes After a Year",
+        "tps": 4.9,
+        "channelName": "Adam Savage’s Tested",
+        "relevance": 0.9,
+        "excerpt": "Confessional + numbered fixes; analogous title structure expected to raise CTR."
+      },
+      {
+        "videoId": "placeholder-2",
+        "title": "Workbench V2: 5 Mistakes I Won’t Repeat",
+        "tps": 5.1,
+        "channelName": "I Like To Make Stuff",
+        "relevance": 0.86,
+        "excerpt": "Maker build with counted mistakes; strong curiosity hook."
+      },
+      {
+        "videoId": "placeholder-3",
+        "title": "3 Setup Errors That Ruined My Table Saw Cut",
+        "tps": 4.6,
+        "channelName": "This Old Tony",
+        "relevance": 0.84,
+        "excerpt": "Numbered mistakes in machining/woodworking niche; consistent with pattern."
+      },
+      {
+        "videoId": "placeholder-4",
+        "title": "Camera Rig Build: Two Things I’d Do Differently",
+        "tps": 4.2,
+        "channelName": "DIY Perks",
+        "relevance": 0.8,
+        "excerpt": "Softened ‘mistakes’ phrasing still uses count and postmortem."
+      },
+      {
+        "videoId": "placeholder-5",
+        "title": "I Botched This Jig — 4 Lessons Learned",
+        "tps": 4.7,
+        "channelName": "Matthias Wandel",
+        "relevance": 0.82,
+        "excerpt": "Lessons-learned framing with a number performs above baseline."
+      },
+      {
+        "videoId": "placeholder-6",
+        "title": "Lathe Stand Rebuild: 3 Design Errors",
+        "tps": 4.5,
+        "channelName": "NYC CNC",
+        "relevance": 0.78,
+        "excerpt": "Design error count drives click motive in technical builds."
+      },
+      {
+        "videoId": "placeholder-7",
+        "title": "Workbench Drawers: Two Mistakes That Cost Me Time",
+        "tps": 4.8,
+        "channelName": "Laura Kampf",
+        "relevance": 0.82,
+        "excerpt": "Time-cost angle plus numbered mistakes; high utility signal."
+      },
+      {
+        "videoId": "placeholder-8",
+        "title": "3 Things I’d Fix on My Router Table",
+        "tps": 4.4,
+        "channelName": "Project Farm",
+        "relevance": 0.75,
+        "excerpt": "Fix list with count increases perceived specificity."
+      },
+      {
+        "videoId": "placeholder-9",
+        "title": "Two Assembly Mistakes on My New Bandsaw Cart",
+        "tps": 4.6,
+        "channelName": "Jimmy DiResta",
+        "relevance": 0.79,
+        "excerpt": "Direct mistake callout in a shop build; curiosity hook."
+      },
+      {
+        "videoId": "placeholder-10",
+        "title": "I Messed Up This Solder Jig — 3 Takeaways",
+        "tps": 4.3,
+        "channelName": "GreatScott!",
+        "relevance": 0.72,
+        "excerpt": "Electronics build variant of numbered takeaways."
+      },
+      {
+        "videoId": "placeholder-11",
+        "title": "3 Measurement Mistakes Everyone Makes (and How I Fixed Mine)",
+        "tps": 5,
+        "channelName": "Clickspring",
+        "relevance": 0.77,
+        "excerpt": "Measurement/machining angle aligns with the workbench ruler theme."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4.86,
+      "tpsLift": 1.57,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  }
+}

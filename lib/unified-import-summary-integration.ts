@@ -156,27 +156,43 @@ export async function generateSummaryEmbeddings(
     const batch = successfulSummaries.slice(i, i + 20);
     
     const batchPromises = batch.map(async (result) => {
-      try {
-        const response = await openai.embeddings.create({
-          model: 'text-embedding-3-small',
-          input: result.summary!,
-          dimensions: 512,
-        });
-        
-        return {
-          videoId: result.videoId,
-          embedding: response.data[0].embedding,
-          success: true
-        };
-      } catch (error) {
-        console.error(`❌ Embedding generation failed for ${result.videoId}:`, error);
-        return {
-          videoId: result.videoId,
-          embedding: [],
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        };
+      let retries = 3;
+      let lastError: any;
+      
+      while (retries > 0) {
+        try {
+          const response = await openai.embeddings.create({
+            model: 'text-embedding-3-small',
+            input: result.summary!,
+            dimensions: 512,
+          });
+          
+          return {
+            videoId: result.videoId,
+            embedding: response.data[0].embedding,
+            success: true
+          };
+        } catch (error: any) {
+          lastError = error;
+          retries--;
+          
+          // Only retry on network errors
+          if (retries > 0 && (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.type === 'system')) {
+            console.log(`⚠️ Network error for ${result.videoId}, retrying... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries))); // Exponential backoff
+          } else {
+            break;
+          }
+        }
       }
+      
+      console.error(`❌ Embedding generation failed for ${result.videoId}:`, lastError);
+      return {
+        videoId: result.videoId,
+        embedding: [],
+        success: false,
+        error: lastError instanceof Error ? lastError.message : 'Unknown error'
+      };
     });
     
     const batchResults = await Promise.all(batchPromises);

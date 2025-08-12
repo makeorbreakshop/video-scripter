@@ -391,35 +391,66 @@ export async function POST(request: NextRequest) {
     let existingChannelIds: string[] = [];
     
     if (channelUrls.length > 0 || channelIds.length > 0) {
-      // Check discovered_channels table by URL
+      // MOST IMPORTANT: Check videos table for already imported channels
+      if (channelIds.length > 0) {
+        const { data: existingVideos } = await supabase
+          .from('videos')
+          .select('channel_id')
+          .in('channel_id', channelIds)
+          .limit(channelIds.length);
+        
+        const videoChannelIds = [...new Set((existingVideos || []).map(v => v.channel_id).filter(Boolean))];
+        existingChannelIds.push(...videoChannelIds);
+      }
+      
+      // Check channel_discovery table by channel ID
+      if (channelIds.length > 0) {
+        const { data: existingDiscovery } = await supabase
+          .from('channel_discovery')
+          .select('discovered_channel_id')
+          .in('discovered_channel_id', channelIds);
+        
+        const discoveryIds = (existingDiscovery || []).map(d => d.discovered_channel_id).filter(Boolean);
+        existingChannelIds.push(...discoveryIds);
+      }
+      
+      // Check channel_discovery table by URL
+      if (channelUrls.length > 0) {
+        const { data: existingDiscoveryUrls } = await supabase
+          .from('channel_discovery')
+          .select('channel_metadata')
+          .in('channel_metadata->>url', channelUrls);
+        
+        const urls = (existingDiscoveryUrls || []).map(e => e.channel_metadata?.url).filter(Boolean);
+        existingChannelUrls.push(...urls);
+      }
+      
+      // Check discovered_channels table (legacy) by URL
       if (channelUrls.length > 0) {
         const { data: existing1 } = await supabase
           .from('discovered_channels')
           .select('custom_url')
           .in('custom_url', channelUrls);
         
-        existingChannelUrls = (existing1 || []).map(e => e.custom_url);
+        const legacyUrls = (existing1 || []).map(e => e.custom_url).filter(Boolean);
+        existingChannelUrls.push(...legacyUrls);
       }
       
-      // Check discovered_channels table by ID
+      // Check discovered_channels table (legacy) by ID
       if (channelIds.length > 0) {
         const { data: existing2 } = await supabase
           .from('discovered_channels')
           .select('channel_id')
           .in('channel_id', channelIds);
         
-        existingChannelIds = (existing2 || []).map(e => e.channel_id);
+        const legacyIds = (existing2 || []).map(e => e.channel_id).filter(Boolean);
+        existingChannelIds.push(...legacyIds);
       }
-      
-      // Check channel_discovery table
-      const { data: existing3 } = await supabase
-        .from('channel_discovery')
-        .select('channel_metadata')
-        .in('channel_metadata->>url', channelUrls);
-      
-      const urls3 = (existing3 || []).map(e => e.channel_metadata?.url).filter(Boolean);
-      existingChannelUrls = [...new Set([...existingChannelUrls, ...urls3])];
     }
+    
+    // Deduplicate the arrays
+    existingChannelUrls = [...new Set(existingChannelUrls)];
+    existingChannelIds = [...new Set(existingChannelIds)];
 
     // Separate new vs duplicate channels (check both URL and ID)
     const newChannels = channels.filter(c => {
@@ -514,17 +545,19 @@ export async function POST(request: NextRequest) {
         import_status: 'pending'
       }));
 
-      // Insert discovery records with conflict handling
+      // Insert discovery records - using insert instead of upsert since we have unique constraint
       if (discoveryRecords.length > 0) {
         const { error: discoveryError } = await supabase
           .from('channel_discovery')
-          .upsert(discoveryRecords, {
-            onConflict: 'source_channel_id,discovered_channel_id,discovery_method',
-            ignoreDuplicates: true
-          });
+          .insert(discoveryRecords);
 
-        if (discoveryError && discoveryError.code !== '23505') {
-          console.error('Error inserting into channel_discovery:', discoveryError);
+        if (discoveryError) {
+          // Only log if it's not a duplicate key error
+          if (discoveryError.code !== '23505') {
+            console.error('Error inserting into channel_discovery:', discoveryError);
+          } else {
+            console.log(`Skipped ${discoveryRecords.length} channels already in discovery table`);
+          }
         }
       }
     }

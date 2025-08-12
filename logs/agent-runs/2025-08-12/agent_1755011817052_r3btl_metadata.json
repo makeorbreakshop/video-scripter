@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755011817052_r3btl",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:16:57.053Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:17:12.935Z",
+  "totalDuration": 15883,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  }
+}

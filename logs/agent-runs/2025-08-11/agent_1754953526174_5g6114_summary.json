@@ -1,0 +1,72 @@
+{
+  "runId": "agent_1754953526174_5g6114",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T23:05:26.174Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T23:06:07.909Z",
+  "totalDuration": 41735,
+  "success": false,
+  "finalPattern": {
+    "statement": "Titles that explicitly admit and quantify mistakes in a recent/known build (e.g., “Two Mistakes!”) create a curiosity gap and self-critique framing that increases CTR and retention, leading to above-baseline performance.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 11,
+  "errors": [],
+  "warnings": [
+    {
+      "timestamp": "2025-08-11T23:06:07.907Z",
+      "level": "warn",
+      "category": "orchestrator",
+      "message": "Timeout reached, moving to finalization",
+      "data": {
+        "turnNumber": 3,
+        "turnType": "enrichment"
+      },
+      "duration": 41733
+    }
+  ],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-11T23:05:27.298Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 1124
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-11T23:05:43.471Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "Titles that explicitly admit and quantify mistakes in a recent/known build (e.g., “Two Mistakes!”) create a curiosity gap and self-critique framing that increases CTR and retention, leading to above-baseline performance.",
+        "confidence": 0.75,
+        "reasoning": "This video leverages a numbered, negative framing (“Two Mistakes!”) applied to a familiar in-channel project (“Workbench Ruler Build”), signaling candor and a promised resolution. The combination of (1) specificity (“Two”), (2) admitted fault (“Mistakes”), and (3) reference to an existing, recognized build creates a strong curiosity hook and a clear narrative arc (problem → diagnosis → fix), which typically lifts CTR and mid-video retention. For Adam Savage’s audience, transparency around process and failure aligns with maker culture values, making the content feel both novel and useful (postmortem/teardown), while the case-study format deepens engagement by focusing on applied learning from a recent, salient project.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 17297
+    }
+  ]
+}

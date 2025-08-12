@@ -1,88 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { youtubeAPIWithFallback } from '@/lib/youtube-api-with-fallback';
 import { quotaTracker } from '@/lib/youtube-quota-tracker';
 
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const action = url.searchParams.get('action');
+    // Get current quota usage from tracker
+    const currentUsage = await quotaTracker.getCurrentUsage();
     
-    switch (action) {
-      case 'status':
-        const status = await quotaTracker.getQuotaStatus();
-        return NextResponse.json(status);
-        
-      case 'breakdown':
-        const breakdown = await quotaTracker.getCallBreakdown();
-        return NextResponse.json(breakdown);
-        
-      case 'summary':
-        const days = parseInt(url.searchParams.get('days') || '7');
-        const summary = await quotaTracker.getUsageSummary(days);
-        return NextResponse.json(summary);
-        
-      default:
-        // Return comprehensive quota information
-        const [quotaStatus, callBreakdown, usageSummary] = await Promise.all([
-          quotaTracker.getQuotaStatus(),
-          quotaTracker.getCallBreakdown(),
-          quotaTracker.getUsageSummary(7)
-        ]);
-        
-        return NextResponse.json({
-          status: quotaStatus,
-          todaysCalls: callBreakdown,
-          recentUsage: usageSummary
-        });
-    }
-  } catch (error) {
-    console.error('Error in quota status endpoint:', error);
-    return NextResponse.json(
-      { error: 'Failed to get quota status' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { action, ...params } = body;
+    // Get API key status
+    const apiStatus = youtubeAPIWithFallback.getStatus();
     
-    switch (action) {
-      case 'estimate':
-        const { channelId } = params;
-        if (!channelId) {
-          return NextResponse.json(
-            { error: 'Channel ID required' },
-            { status: 400 }
-          );
+    // Test primary key if not exhausted
+    let primaryWorking = false;
+    let primaryQuotaRemaining = 0;
+    
+    if (apiStatus.hasPrimary && !apiStatus.primaryExhausted) {
+      try {
+        const testUrl = `https://www.googleapis.com/youtube/v3/channels?part=id&id=UCX6OQ3DkcsbYNE6H8uQQuVA&key=${process.env.YOUTUBE_API_KEY}`;
+        const response = await fetch(testUrl);
+        primaryWorking = response.ok;
+        
+        if (!response.ok && response.status === 403) {
+          const text = await response.text();
+          if (text.includes('quotaExceeded')) {
+            primaryWorking = false;
+          }
         }
-        
-        const estimate = await quotaTracker.estimateChannelQuota(channelId);
-        return NextResponse.json(estimate);
-        
-      case 'check':
-        const { estimatedCost } = params;
-        if (!estimatedCost) {
-          return NextResponse.json(
-            { error: 'Estimated cost required' },
-            { status: 400 }
-          );
-        }
-        
-        const available = await quotaTracker.checkQuotaAvailable(estimatedCost);
-        return NextResponse.json({ available });
-        
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
+      } catch (error) {
+        primaryWorking = false;
+      }
     }
+    
+    // Test backup key if available
+    let backupWorking = false;
+    let backupQuotaRemaining = 10000; // Assume full quota for new project
+    
+    if (apiStatus.hasBackup) {
+      try {
+        const testUrl = `https://www.googleapis.com/youtube/v3/channels?part=id&id=UCX6OQ3DkcsbYNE6H8uQQuVA&key=${process.env.YOUTUBE_API_KEY_BACKUP}`;
+        const response = await fetch(testUrl);
+        backupWorking = response.ok;
+        
+        if (!response.ok && response.status === 403) {
+          const text = await response.text();
+          if (text.includes('quotaExceeded')) {
+            backupWorking = false;
+            backupQuotaRemaining = 0;
+          }
+        }
+      } catch (error) {
+        backupWorking = false;
+      }
+    }
+    
+    return NextResponse.json({
+      primary: {
+        configured: apiStatus.hasPrimary,
+        working: primaryWorking,
+        exhausted: apiStatus.primaryExhausted,
+        quotaUsed: currentUsage.used,
+        quotaLimit: currentUsage.limit,
+        quotaRemaining: currentUsage.limit - currentUsage.used
+      },
+      backup: {
+        configured: apiStatus.hasBackup,
+        working: backupWorking,
+        active: apiStatus.usingBackup,
+        quotaRemaining: backupQuotaRemaining
+      },
+      nextReset: apiStatus.nextReset,
+      currentlyUsing: apiStatus.usingBackup ? 'backup' : 'primary'
+    });
+    
   } catch (error) {
-    console.error('Error in quota status POST:', error);
+    console.error('Error checking quota status:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to check quota status' },
       { status: 500 }
     );
   }

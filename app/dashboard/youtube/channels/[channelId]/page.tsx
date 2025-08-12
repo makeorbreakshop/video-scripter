@@ -7,8 +7,8 @@ interface ChannelPageProps {
   };
 }
 
-export default function ChannelPage({ params }: ChannelPageProps) {
-  const { channelId } = params;
+export default async function ChannelPage({ params }: ChannelPageProps) {
+  const { channelId } = await params;
 
   return (
     <div className="container mx-auto py-6 space-y-6">

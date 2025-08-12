@@ -1,0 +1,884 @@
+[2025-08-12T19:42:13.189Z] ================================================================================
+[2025-08-12T19:42:13.189Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T19:42:13.189Z
+[2025-08-12T19:42:13.189Z] Video ID: pjSgFEvOGAY
+[2025-08-12T19:42:13.189Z] ================================================================================
+[2025-08-12T19:42:13.190Z] 
+============================================================
+[2025-08-12T19:42:13.190Z] INITIAL SETUP
+[2025-08-12T19:42:13.190Z] ============================================================
+[2025-08-12T19:42:13.190Z] 🔍 [Enhanced] Analyzing pattern for video: pjSgFEvOGAY
+[2025-08-12T19:42:13.446Z] 📺 Target: "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!" (8.4x TPS)
+[2025-08-12T19:42:13.446Z] 🖼️ Thumbnail: Available
+[2025-08-12T19:42:13.446Z] Target Video Data:
+{
+  "id": "pjSgFEvOGAY",
+  "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+  "channel": "The Fast Lane Car",
+  "views": 123456,
+  "performance_score": 8.446,
+  "baseline": 21070.867,
+  "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+  "niche": "Metalwork"
+}
+
+[2025-08-12T19:42:13.581Z] 📊 Found 1 baseline videos for comparison
+[2025-08-12T19:42:13.581Z] Baseline Videos:
+[
+  {
+    "title": "Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? ",
+    "views": 15815,
+    "score": 0.929
+  }
+]
+
+[2025-08-12T19:42:13.582Z] 
+============================================================
+[2025-08-12T19:42:13.582Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T19:42:13.582Z] ============================================================
+[2025-08-12T19:42:13.595Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T19:42:13.596Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (8.4x performance):\nTitle: \"We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!\"\nViews: 123,456\nChannel: The Fast Lane Car\nNiche: Metalwork\nSummary: Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.\n\nCHANNEL BASELINE (normal performers):\n1. \"Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? \" - 15,815 views (0.9x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T19:42:13.596Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg
+[2025-08-12T19:42:13.596Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T19:42:21.827Z] ✅ Claude response received in 8231ms
+[2025-08-12T19:42:21.828Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Forbidden Content Redemption Story\",\n  \"pattern_description\": \"Content that reveals previously censored or banned material, creating intrigue through the backstory of prohibition\",\n  \"psychological_trigger\": \"Humans are naturally drawn to forbidden content and want to know what was so controversial it got banned\",\n  \"key_elements\": [\n    \"Use of dramatic term 'BLACKLISTED'\",\n    \"Specific timeframe (11 years) adds credibility\",\n    \"Brand conflict narrative (vs Subaru)\",\n    \"Recreation/redemption angle\"\n  ],\n  \"visual_elements\": [\n    \"Dramatic off-road vehicle angle showing challenge\",\n    \"High-contrast yellow text on dark background\",\n    \"Intense reaction expression showing distress/drama\",\n    \"Dirty/muddy vehicle suggesting authentic testing\"\n  ],\n  \"thumbnail_psychology\": \"The combination of distressed reaction and tilted vehicle creates immediate visual drama that validates the 'blacklisted' claim\",\n  \"why_it_works\": \"It combines controversy, redemption, and brand conflict into an irresistible behind-the-scenes expose\",\n  \"semantic_queries\": [\n    \"why was [channel] banned by [brand]\",\n    \"controversial [brand] reviews\",\n    \"banned car reviews revealed\"\n  ],\n  \"visual_queries\": [\n    \"dramatic off-road vehicle angles\",\n    \"shocked/distressed reactions\"\n  ],\n  \"channel_outlier_explanation\": \"While regular reviews perform modestly, this video taps into controversy and forbidden content curiosity, plus has a compelling 11-year backstory that regular car reviews can't match\"\n}",
+  "usage": {
+    "input_tokens": 713,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 389,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T19:42:21.828Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T19:42:21.829Z] Extracted Pattern:
+{
+  "pattern_name": "Forbidden Content Redemption Story",
+  "pattern_description": "Content that reveals previously censored or banned material, creating intrigue through the backstory of prohibition",
+  "psychological_trigger": "Humans are naturally drawn to forbidden content and want to know what was so controversial it got banned",
+  "key_elements": [
+    "Use of dramatic term 'BLACKLISTED'",
+    "Specific timeframe (11 years) adds credibility",
+    "Brand conflict narrative (vs Subaru)",
+    "Recreation/redemption angle"
+  ],
+  "visual_elements": [
+    "Dramatic off-road vehicle angle showing challenge",
+    "High-contrast yellow text on dark background",
+    "Intense reaction expression showing distress/drama",
+    "Dirty/muddy vehicle suggesting authentic testing"
+  ],
+  "thumbnail_psychology": "The combination of distressed reaction and tilted vehicle creates immediate visual drama that validates the 'blacklisted' claim",
+  "why_it_works": "It combines controversy, redemption, and brand conflict into an irresistible behind-the-scenes expose",
+  "semantic_queries": [
+    "why was [channel] banned by [brand]",
+    "controversial [brand] reviews",
+    "banned car reviews revealed"
+  ],
+  "visual_queries": [
+    "dramatic off-road vehicle angles",
+    "shocked/distressed reactions"
+  ],
+  "channel_outlier_explanation": "While regular reviews perform modestly, this video taps into controversy and forbidden content curiosity, plus has a compelling 11-year backstory that regular car reviews can't match"
+}
+
+[2025-08-12T19:42:21.829Z] ✅ Pattern extracted: Forbidden Content Redemption Story
+[2025-08-12T19:42:21.829Z] 📝 Text queries: why was [channel] banned by [brand], controversial [brand] reviews, banned car reviews revealed
+[2025-08-12T19:42:21.829Z] 🎨 Visual queries: dramatic off-road vehicle angles, shocked/distressed reactions
+[2025-08-12T19:42:21.829Z] 
+============================================================
+[2025-08-12T19:42:21.829Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T19:42:21.829Z] ============================================================
+[2025-08-12T19:42:21.829Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T19:42:21.829Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T19:42:21.829Z]   Searching text for: "why was [channel] banned by [brand]"
+[2025-08-12T19:42:21.829Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:42:22.313Z]     Generated embedding in 484ms (512D)
+[2025-08-12T19:42:22.313Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:42:27.534Z]     Parallel search completed in 5221ms
+[2025-08-12T19:42:27.534Z] Title Search Results:
+{
+  "found": 13,
+  "avgSimilarity": "0.529",
+  "topResults": [
+    {
+      "title": "Our channel got shut down.",
+      "score": "0.586",
+      "views": 351149
+    },
+    {
+      "title": "Howdy Folks! Channel was flagged.",
+      "score": "0.567",
+      "views": 946
+    },
+    {
+      "title": "Channel was TERMINATED, we got Hacked (Not Clickbait)",
+      "score": "0.556",
+      "views": 2697562
+    }
+  ]
+}
+
+[2025-08-12T19:42:27.535Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.462",
+  "topResults": [
+    {
+      "title": "Last week I blocked the word \"Instagram\" from my channel - Here's why 😂 - YouTube Shorts",
+      "score": "0.530",
+      "views": 1371
+    },
+    {
+      "title": "the '12' incident",
+      "score": "0.513",
+      "views": 1480239
+    },
+    {
+      "title": "Huge Channel Announcement! New Channel Name HEY BRICKEY",
+      "score": "0.499",
+      "views": 8453
+    }
+  ]
+}
+
+[2025-08-12T19:42:27.535Z]   Searching text for: "controversial [brand] reviews"
+[2025-08-12T19:42:27.535Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:42:28.353Z]     Generated embedding in 818ms (512D)
+[2025-08-12T19:42:28.353Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:42:29.219Z]     Parallel search completed in 866ms
+[2025-08-12T19:42:29.219Z] Title Search Results:
+{
+  "found": 14,
+  "avgSimilarity": "0.535",
+  "topResults": [
+    {
+      "title": "TESTING OVERLY SPONSORED PRODUCTS | Are these brands worth the hype?! (NOT sponsored!)",
+      "score": "0.600",
+      "views": 4306
+    },
+    {
+      "title": "Brand & Products I'll Never Review - Useless, Outdated, Overhyped!",
+      "score": "0.583",
+      "views": 114729
+    },
+    {
+      "title": "The Most Controversial Marketing Campaigns EVER",
+      "score": "0.580",
+      "views": 9402
+    }
+  ]
+}
+
+[2025-08-12T19:42:29.219Z] Summary Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.505",
+  "topResults": [
+    {
+      "title": "The Most Controversial Marketing Campaigns EVER",
+      "score": "0.546",
+      "views": 9402
+    },
+    {
+      "title": "Companies are Suing Honest Reviewers and it’s Going to Get UGLY.",
+      "score": "0.539",
+      "views": 2723083
+    },
+    {
+      "title": "The PROBLEM with PRIME Energy",
+      "score": "0.526",
+      "views": 329661
+    }
+  ]
+}
+
+[2025-08-12T19:42:29.220Z]   Searching text for: "banned car reviews revealed"
+[2025-08-12T19:42:29.220Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:42:29.908Z]     Generated embedding in 688ms (512D)
+[2025-08-12T19:42:29.908Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:42:30.831Z]     Parallel search completed in 923ms
+[2025-08-12T19:42:30.831Z] Title Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.559",
+  "topResults": [
+    {
+      "title": "We Bought the WORST RATED Amazon Car Mods",
+      "score": "0.608",
+      "views": 293913
+    },
+    {
+      "title": "We Drove a Banned Car Across the State!",
+      "score": "0.596",
+      "views": 610444
+    },
+    {
+      "title": "MKBHD Reviews My Cars | Garage Reveal",
+      "score": "0.583",
+      "views": 684827
+    }
+  ]
+}
+
+[2025-08-12T19:42:30.831Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.534",
+  "topResults": [
+    {
+      "title": "I Bought the Most Dangerous Motorcycle banned by U.S. Gov",
+      "score": "0.606",
+      "views": 989771
+    },
+    {
+      "title": "900 BHP Hertz RENTAL Mustang PLUS Toyota GR Corolla vs Subaru BRZ",
+      "score": "0.560",
+      "views": 137541
+    },
+    {
+      "title": "Top Gear Magazine Podcast | Issue 359: Electric Awards feat. Marques Brownlee",
+      "score": "0.560",
+      "views": 15720
+    }
+  ]
+}
+
+[2025-08-12T19:42:30.831Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T19:42:30.832Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T19:42:30.832Z]   Searching thumbnails for: "dramatic off-road vehicle angles"
+[2025-08-12T19:42:30.832Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:42:31.175Z]     Generated CLIP embedding in 343ms (768D)
+[2025-08-12T19:42:31.176Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:42:34.970Z]     Thumbnail search completed in 3794ms
+[2025-08-12T19:42:34.970Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.262",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "SECRET TO STEEP TURNS PERFECTION - How Flying Airplanes Visually Fixes Problems for Pilots",
+      "score": "0.276",
+      "views": 10123,
+      "channel": "The Finer Points"
+    },
+    {
+      "title": "What the Cybertruck dreams of at night...",
+      "score": "0.270",
+      "views": 531326,
+      "channel": "JerryRigEverything"
+    },
+    {
+      "title": "I Tested the Cybertruck Rental Service",
+      "score": "0.270",
+      "views": 920003,
+      "channel": "prestongoes"
+    }
+  ]
+}
+
+[2025-08-12T19:42:34.970Z]   Searching thumbnails for: "shocked/distressed reactions"
+[2025-08-12T19:42:34.970Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:42:35.277Z]     Generated CLIP embedding in 307ms (768D)
+[2025-08-12T19:42:35.277Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:42:35.488Z]     Thumbnail search completed in 211ms
+[2025-08-12T19:42:35.488Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.227",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Obscure ￼Functionality",
+      "score": "0.253",
+      "views": 9644,
+      "channel": "A Glimpse Inside"
+    },
+    {
+      "title": "this artwork is incredible",
+      "score": "0.238",
+      "views": 355206,
+      "channel": "QuarterJade"
+    },
+    {
+      "title": "i caught john with some girl at his house",
+      "score": "0.232",
+      "views": 345835,
+      "channel": "QuarterJade"
+    }
+  ]
+}
+
+[2025-08-12T19:42:35.488Z] 
+============================================================
+[2025-08-12T19:42:35.488Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T19:42:35.489Z] ============================================================
+[2025-08-12T19:42:35.489Z] 📋 Getting full video data for 141 unique videos...
+[2025-08-12T19:42:35.636Z] 📊 Filtered to 20 high performers (2.5x+) for validation
+[2025-08-12T19:42:35.636Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "RAWtalk 098: Should Reviewers NOT Be Honest? Our Take...",
+    "views": 3071,
+    "score": 91.612,
+    "channel": "Jared Polin",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Traxxas E-Revo VXL and Summit VXL Bashing",
+    "views": 705865,
+    "score": 60.305,
+    "channel": "rctestflight",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Mitsubishi Lancer Destruction Review",
+    "views": 1552194,
+    "score": 59.767,
+    "channel": "Aging Wheels",
+    "hasThumbnail": true
+  },
+  {
+    "title": "the '12' incident",
+    "views": 1480239,
+    "score": 17.67,
+    "channel": "Masayoshi",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Tested CONTROVERSIAL Celebrity FOOD Products🍿",
+    "views": 473585,
+    "score": 13.641,
+    "channel": "Honeysuckle",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "views": 123456,
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "hasThumbnail": true
+  },
+  {
+    "title": "This is the Worst Car I've Ever Reviewed",
+    "views": 6510004,
+    "score": 8.369,
+    "channel": "Auto Focus",
+    "hasThumbnail": true
+  },
+  {
+    "title": "A Company Attacked Me Because of a Negative Review... | Office Logix Shop",
+    "views": 154577,
+    "score": 6.776,
+    "channel": "Ahnestly",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Built the Ultimate Red Neck Go Kart! 36 Gears?!?",
+    "views": 2272851,
+    "score": 5.545,
+    "channel": "Grind Hard Plumbing Co",
+    "hasThumbnail": true
+  },
+  {
+    "title": "What Happened When They Banned Cars",
+    "views": 1621048,
+    "score": 5.415,
+    "channel": "City Beautiful",
+    "hasThumbnail": true
+  },
+  {
+    "title": "FULL TOUR OF MY SALVAGE CAR COLLECTION",
+    "views": 1898595,
+    "score": 5.264,
+    "channel": "Mat Armstrong",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Internet Comment Etiquette: \"Reaction Videos\"",
+    "views": 1285836,
+    "score": 4.112,
+    "channel": "Internet Comment Etiquette with Erik",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Can't Believe I Found This Stuff On Amazon..",
+    "views": 31279484,
+    "score": 3.574,
+    "channel": "MrBeast",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Most Controversial Marketing Campaigns EVER",
+    "views": 9402,
+    "score": 3.57,
+    "channel": "MagnatesMedia",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I CANT BELIEVE HER REACTION ON OMEGLE!!! | day 99",
+    "views": 2722,
+    "score": 3.427,
+    "channel": "Jason Maher",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Brand & Products I'll Never Review - Boring, Over Priced, Overhyped!",
+    "views": 418058,
+    "score": 3.113,
+    "channel": "James Welsh",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Can't Keep Up With The Demand For This DIY Project",
+    "views": 50044,
+    "score": 2.97,
+    "channel": "Steve McDonald Arts and Crafts",
+    "hasThumbnail": true
+  },
+  {
+    "title": "VFX Artists React to Bad & Great CGi 146",
+    "views": 2290266,
+    "score": 2.946,
+    "channel": "Corridor Crew",
+    "hasThumbnail": true
+  },
+  {
+    "title": "buying amazon's banned products",
+    "views": 6918266,
+    "score": 2.937,
+    "channel": "BENOFTHEWEEK",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Bought Banned Kid Toys",
+    "views": 19680601,
+    "score": 2.596,
+    "channel": "Ryan Trahan",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T19:42:35.638Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T19:42:35.638Z] 🤖 Starting enhanced LLM validation for 20 videos...
+[2025-08-12T19:44:02.835Z] ✅ Enhanced validation complete: 3 videos confirmed
+[2025-08-12T19:44:02.836Z] Final Validated Videos:
+[
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "reason": "The title perfectly matches the pattern with the dramatic \"BLACKLISTED\" term, specific \"11 years\" timeframe, brand conflict with Subaru, and redemption narrative through recreation",
+    "visualMatch": "The thumbnail strongly aligns with all identified visual elements - shows a dramatically angled Subaru on an off-road trail, features high-contrast yellow text on dark overlay, includes an intense reaction expression showing distress, and the vehicle appears dirty/muddy suggesting authentic testing conditions. The tilted vehicle angle combined with the dramatic reaction creates the exact visual tension described in the thumbnail psychology portion of the pattern.",
+    "source": "summary"
+  },
+  {
+    "title": "buying amazon's banned products",
+    "score": 2.937,
+    "channel": "BENOFTHEWEEK",
+    "reason": "The text elements match the \"forbidden content\" pattern through use of terms like \"banned\" and \"not a gun\" which create a similar forbidden/controversial narrative",
+    "visualMatch": "The thumbnail shows Amazon boxes as backdrop with the creator holding what appears to be a prohibited item, surrounded by Amazon smile logos, creating visual drama and intrigue around accessing restricted products. The lighting and composition emphasize the secretive/forbidden nature of the content.",
+    "source": "summary"
+  },
+  {
+    "title": "I Bought Banned Kid Toys",
+    "score": 2.596,
+    "channel": "Ryan Trahan",
+    "reason": "The text elements match the \"Forbidden Content\" pattern through use of dramatic terms (\"Banned\", \"Illegal\") and implies a redemption/discovery story about prohibited items",
+    "visualMatch": "The thumbnail follows the pattern with a dramatic expression showing concern/intensity, high contrast text on dark background, and the \"illegal\" item prominently featured to validate the claim of banned status. The composition creates immediate visual drama that supports the forbidden narrative.",
+    "source": "summary"
+  }
+]
+
+[2025-08-12T19:44:02.839Z] Pre-Calculation Metrics:
+{
+  "validationResults": 3,
+  "totalValidations": 3,
+  "avgPatternScore": 4.659666666666666,
+  "visualValidations": 3,
+  "resultDetails": [
+    {
+      "niche": "Metalwork",
+      "count": 1,
+      "avg_score": 8.446,
+      "visualMatches": 1
+    },
+    {
+      "niche": "Theme Parks",
+      "count": 1,
+      "avg_score": 2.937,
+      "visualMatches": 1
+    },
+    {
+      "niche": "Recipes",
+      "count": 1,
+      "avg_score": 2.596,
+      "visualMatches": 1
+    }
+  ]
+}
+
+[2025-08-12T19:44:02.839Z] Pattern Strength Calculation:
+{
+  "totalValidations": 3,
+  "avgPatternScore": 4.659666666666666,
+  "visualValidations": 3,
+  "hasVisualValidation": true,
+  "multiModalBonus": 1.5,
+  "adjustedAvgScore": 6.9895,
+  "finalStrength": "moderate"
+}
+
+[2025-08-12T19:44:02.839Z] 
+============================================================
+[2025-08-12T19:44:02.839Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T19:44:02.839Z] ============================================================
+[2025-08-12T19:44:02.839Z] ✅ Enhanced pattern analysis complete in 109652ms
+[2025-08-12T19:44:02.839Z] 📊 Found 3 validations (3 with visual matches) across 3 niches
+[2025-08-12T19:44:02.839Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Forbidden Content Redemption Story",
+    "pattern_description": "Content that reveals previously censored or banned material, creating intrigue through the backstory of prohibition",
+    "psychological_trigger": "Humans are naturally drawn to forbidden content and want to know what was so controversial it got banned",
+    "key_elements": [
+      "Use of dramatic term 'BLACKLISTED'",
+      "Specific timeframe (11 years) adds credibility",
+      "Brand conflict narrative (vs Subaru)",
+      "Recreation/redemption angle"
+    ],
+    "visual_elements": [
+      "Dramatic off-road vehicle angle showing challenge",
+      "High-contrast yellow text on dark background",
+      "Intense reaction expression showing distress/drama",
+      "Dirty/muddy vehicle suggesting authentic testing"
+    ],
+    "thumbnail_psychology": "The combination of distressed reaction and tilted vehicle creates immediate visual drama that validates the 'blacklisted' claim",
+    "why_it_works": "It combines controversy, redemption, and brand conflict into an irresistible behind-the-scenes expose",
+    "semantic_queries": [
+      "why was [channel] banned by [brand]",
+      "controversial [brand] reviews",
+      "banned car reviews revealed"
+    ],
+    "visual_queries": [
+      "dramatic off-road vehicle angles",
+      "shocked/distressed reactions"
+    ],
+    "channel_outlier_explanation": "While regular reviews perform modestly, this video taps into controversy and forbidden content curiosity, plus has a compelling 11-year backstory that regular car reviews can't match"
+  },
+  "source_video": {
+    "id": "pjSgFEvOGAY",
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "channel": "The Fast Lane Car",
+    "score": 8.446,
+    "niche": "Metalwork",
+    "views": 123456,
+    "thumbnail": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+    "baseline": 21070.867,
+    "published_at": "2025-08-07T11:01:34+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Metalwork",
+        "videos": [
+          {
+            "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+            "score": 8.446,
+            "views": 123456,
+            "channel": "The Fast Lane Car",
+            "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+            "validation_reason": "The title perfectly matches the pattern with the dramatic \"BLACKLISTED\" term, specific \"11 years\" timeframe, brand conflict with Subaru, and redemption narrative through recreation",
+            "visual_match": "The thumbnail strongly aligns with all identified visual elements - shows a dramatically angled Subaru on an off-road trail, features high-contrast yellow text on dark overlay, includes an intense reaction expression showing distress, and the vehicle appears dirty/muddy suggesting authentic testing conditions. The tilted vehicle angle combined with the dramatic reaction creates the exact visual tension described in the thumbnail psychology portion of the pattern.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 8.446,
+        "count": 1
+      },
+      {
+        "niche": "Theme Parks",
+        "videos": [
+          {
+            "title": "buying amazon's banned products",
+            "score": 2.937,
+            "views": 6918266,
+            "channel": "BENOFTHEWEEK",
+            "thumbnail_url": "https://i.ytimg.com/vi/O2xmZG0C4Mg/maxresdefault.jpg",
+            "validation_reason": "The text elements match the \"forbidden content\" pattern through use of terms like \"banned\" and \"not a gun\" which create a similar forbidden/controversial narrative",
+            "visual_match": "The thumbnail shows Amazon boxes as backdrop with the creator holding what appears to be a prohibited item, surrounded by Amazon smile logos, creating visual drama and intrigue around accessing restricted products. The lighting and composition emphasize the secretive/forbidden nature of the content.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 2.937,
+        "count": 1
+      },
+      {
+        "niche": "Recipes",
+        "videos": [
+          {
+            "title": "I Bought Banned Kid Toys",
+            "score": 2.596,
+            "views": 19680601,
+            "channel": "Ryan Trahan",
+            "thumbnail_url": "https://i.ytimg.com/vi/vejwjx4V4JY/maxresdefault.jpg",
+            "validation_reason": "The text elements match the \"Forbidden Content\" pattern through use of dramatic terms (\"Banned\", \"Illegal\") and implies a redemption/discovery story about prohibited items",
+            "visual_match": "The thumbnail follows the pattern with a dramatic expression showing concern/intensity, high contrast text on dark background, and the \"illegal\" item prominently featured to validate the claim of banned status. The composition creates immediate visual drama that supports the forbidden narrative.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 2.596,
+        "count": 1
+      }
+    ],
+    "total_validations": 3,
+    "visual_validations": 3,
+    "pattern_strength": "moderate",
+    "avg_pattern_score": 4.659666666666666
+  },
+  "processing_time_ms": 109652,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 141,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"why was [channel] banned by [brand]\"",
+      "    Generated embedding in 484ms",
+      "    Title search: 13 results (avg similarity: 0.529)",
+      "    Summary search: 19 results (avg similarity: 0.462)",
+      "    Parallel search completed in 5221ms",
+      "  Searching text for: \"controversial [brand] reviews\"",
+      "    Generated embedding in 818ms",
+      "    Title search: 14 results (avg similarity: 0.535)",
+      "    Summary search: 17 results (avg similarity: 0.505)",
+      "    Parallel search completed in 866ms",
+      "  Searching text for: \"banned car reviews revealed\"",
+      "    Generated embedding in 688ms",
+      "    Title search: 18 results (avg similarity: 0.559)",
+      "    Summary search: 19 results (avg similarity: 0.534)",
+      "    Parallel search completed in 923ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"dramatic off-road vehicle angles\"",
+      "    Generated CLIP embedding in 343ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.262)",
+      "    Visual search completed in 3794ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"shocked/distressed reactions\"",
+      "    Generated CLIP embedding in 307ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.227)",
+      "    Visual search completed in 211ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 141 across all searches",
+      "📋 Getting full video data for 141 unique videos...",
+      "📊 Filtered to 20 high performers (2.5x+) for validation",
+      "🤖 Starting enhanced LLM validation for 20 videos...",
+      "    ❌ Rejected \"RAWtalk 098: Should Reviewers NOT Be Honest? Our T...\" in 4018ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern. The thumbnail shows",
+      "    ❌ Rejected \"Traxxas E-Revo VXL and Summit VXL Bashing...\" in 4363ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"The Mitsubishi Lancer Destruction Review...\" in 3914ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:",
+      "    ❌ Rejected \"the '12' incident...\" in 4609ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern. The video appears t",
+      "    ❌ Rejected \"I Tested CONTROVERSIAL Celebrity FOOD Products🍿...\" in 4604ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:",
+      "    ✅ Validated \"We Recreate The Off-Road Video Test That Got Us BL...\" in 3076ms (summary source)",
+      "      🎨 Visual match: The thumbnail strongly aligns with all identified visual elements - shows a dramatically angled Subaru on an off-road trail, features high-contrast yellow text on dark overlay, includes an intense reaction expression showing distress, and the vehicle appears dirty/muddy suggesting authentic testing conditions. The tilted vehicle angle combined with the dramatic reaction creates the exact visual tension described in the thumbnail psychology portion of the pattern.",
+      "    ❌ Rejected \"This is the Worst Car I've Ever Reviewed...\" in 2985ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern. The title simply st",
+      "    ❌ Rejected \"A Company Attacked Me Because of a Negative Review...\" in 4212ms - NO\n\nReasoning:\nWhile this video does contain a conflict/attack narrative similar to the pattern, it ",
+      "    ❌ Rejected \"We Built the Ultimate Red Neck Go Kart! 36 Gears?!...\" in 4682ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern. Here's why:\n\nThe vid",
+      "    ❌ Rejected \"What Happened When They Banned Cars...\" in 4197ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"FULL TOUR OF MY SALVAGE CAR COLLECTION...\" in 5874ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"Internet Comment Etiquette: \"Reaction Videos\"...\" in 4104ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern. Here's why:\n\nText El",
+      "    ❌ Rejected \"I Can't Believe I Found This Stuff On Amazon.....\" in 4164ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern. Here's why:\n\nText E",
+      "    ❌ Rejected \"The Most Controversial Marketing Campaigns EVER...\" in 4189ms - NO - While this thumbnail uses high-contrast yellow coloring similar to the pattern, it differs sign",
+      "    ❌ Rejected \"I CANT BELIEVE HER REACTION ON OMEGLE!!! | day 99...\" in 4543ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"Brand & Products I'll Never Review - Boring, Over ...\" in 5182ms - NO - This video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:",
+      "    ❌ Rejected \"I Can't Keep Up With The Demand For This DIY Proje...\" in 5658ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"VFX Artists React to Bad & Great CGi 146...\" in 4700ms - NO\n\nThis video does not match the \"Forbidden Content Redemption Story\" pattern. Here's why:\n\nThe vid",
+      "    ✅ Validated \"buying amazon's banned products...\" in 3774ms (summary source)",
+      "      🎨 Visual match: The thumbnail shows Amazon boxes as backdrop with the creator holding what appears to be a prohibited item, surrounded by Amazon smile logos, creating visual drama and intrigue around accessing restricted products. The lighting and composition emphasize the secretive/forbidden nature of the content.",
+      "    ✅ Validated \"I Bought Banned Kid Toys...\" in 4349ms (summary source)",
+      "      🎨 Visual match: The thumbnail follows the pattern with a dramatic expression showing concern/intensity, high contrast text on dark background, and the \"illegal\" item prominently featured to validate the claim of banned status. The composition creates immediate visual drama that supports the forbidden narrative.",
+      "✅ Enhanced validation complete: 3 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "why was [channel] banned by [brand]",
+          "duration": 5706,
+          "titleResults": 13,
+          "summaryResults": 19
+        },
+        {
+          "query": "controversial [brand] reviews",
+          "duration": 1685,
+          "titleResults": 14,
+          "summaryResults": 17
+        },
+        {
+          "query": "banned car reviews revealed",
+          "duration": 1611,
+          "titleResults": 18,
+          "summaryResults": 19
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "dramatic off-road vehicle angles",
+          "duration": 4138,
+          "results": 25
+        },
+        {
+          "query": "shocked/distressed reactions",
+          "duration": 518,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "why was [channel] banned by [brand]",
+        "duration": 5706,
+        "titleSearch": {
+          "found": 13,
+          "avgSimilarity": 0.5288896815384615,
+          "threshold": 0.5,
+          "topScores": [
+            0.586328447,
+            0.567210257,
+            0.555566847
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.46183005510526326,
+          "threshold": 0.4,
+          "topScores": [
+            0.530010045,
+            0.513354719,
+            0.498675495
+          ]
+        }
+      },
+      {
+        "query": "controversial [brand] reviews",
+        "duration": 1685,
+        "titleSearch": {
+          "found": 14,
+          "avgSimilarity": 0.5351095325,
+          "threshold": 0.5,
+          "topScores": [
+            0.599625826,
+            0.582966328,
+            0.580259323
+          ]
+        },
+        "summarySearch": {
+          "found": 17,
+          "avgSimilarity": 0.5048393520000001,
+          "threshold": 0.4,
+          "topScores": [
+            0.545947969,
+            0.539359093,
+            0.52642715
+          ]
+        }
+      },
+      {
+        "query": "banned car reviews revealed",
+        "duration": 1611,
+        "titleSearch": {
+          "found": 18,
+          "avgSimilarity": 0.5594605572222222,
+          "threshold": 0.5,
+          "topScores": [
+            0.608381689,
+            0.595790386,
+            0.582899809
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.533865163526316,
+          "threshold": 0.4,
+          "topScores": [
+            0.606353104,
+            0.560202,
+            0.559902072
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "dramatic off-road vehicle angles",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 4138,
+        "avgSimilarity": 0.26205958008,
+        "topScores": [
+          0.275802076,
+          0.270311952,
+          0.269684613
+        ]
+      },
+      {
+        "query": "shocked/distressed reactions",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 518,
+        "avgSimilarity": 0.22666837651999994,
+        "topScores": [
+          0.253086776,
+          0.237886295,
+          0.232260108
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 141,
+      "afterPerformanceFilter": 20,
+      "validated": 3,
+      "validationRate": "15.0%",
+      "sourceBreakdown": {
+        "title": 0,
+        "summary": 3,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 438,
+      "responseTokens": 383,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T19:44:02.842Z
+================================================================================

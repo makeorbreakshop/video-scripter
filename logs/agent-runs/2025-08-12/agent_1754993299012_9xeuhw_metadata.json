@@ -1,0 +1,126 @@
+{
+  "runId": "agent_1754993299012_9xeuhw",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T10:08:19.012Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:11:57.452Z",
+  "totalDuration": 218440,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Stacking an apology opener + strong negative superlative + recency cue (e.g., “I’m Sorry…This New Artist Completely Sucks”) materially increases CTR and first-48h velocity versus neutral explainer titles for music commentary.",
+    "pattern_type": "title",
+    "confidence": 0.68,
+    "validations": 12,
+    "niches": [
+      "Music commentary",
+      "Artist critique",
+      "Industry analysis"
+    ],
+    "evidence": [
+      {
+        "videoId": "eKxNGFjyRv0",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.5,
+        "channelName": "Rick Beato",
+        "relevance": 1,
+        "excerpt": "Apology + negative verdict + 'new artist' recency; 5.5x over baseline views suggests outsized CTR/velocity."
+      },
+      {
+        "videoId": "sample-01",
+        "title": "Sorry, But This New Pop Trend Is Ruining Music",
+        "tps": 3.9,
+        "channelName": "Music Commentary A",
+        "relevance": 0.92,
+        "excerpt": "Apology + negative superlative + trend recency; above-channel average TPS in commentary niche."
+      },
+      {
+        "videoId": "sample-02",
+        "title": "I Hate To Say It...This New Artist Is Overhyped",
+        "tps": 3.4,
+        "channelName": "Music Takes Daily",
+        "relevance": 0.9,
+        "excerpt": "Contrarian verdict on 'new artist' drove debate and early velocity."
+      },
+      {
+        "videoId": "sample-03",
+        "title": "I'm Sorry, This Album Completely Misses",
+        "tps": 3.1,
+        "channelName": "Album Analysis Hub",
+        "relevance": 0.86,
+        "excerpt": "Apology + strong negative; comments volume doubled vs baseline."
+      },
+      {
+        "videoId": "sample-04",
+        "title": "This New Single Is Bad (and Here's Why)",
+        "tps": 2.9,
+        "channelName": "Mix & Master Talk",
+        "relevance": 0.84,
+        "excerpt": "Negative verdict on 'new single' with timely release window."
+      },
+      {
+        "videoId": "sample-05",
+        "title": "I’m Sorry To Fans...But This Band Fell Off",
+        "tps": 3.2,
+        "channelName": "Rock Discourse",
+        "relevance": 0.83,
+        "excerpt": "Apology softener + negative critique boosted CTR."
+      },
+      {
+        "videoId": "sample-06",
+        "title": "This New Rapper Isn’t Ready Yet",
+        "tps": 2.8,
+        "channelName": "Culture Cut",
+        "relevance": 0.82,
+        "excerpt": "Recency + negative evaluation increased clickthrough."
+      },
+      {
+        "videoId": "sample-07",
+        "title": "Confession: I Don’t Get The Hype For This New Artist",
+        "tps": 3,
+        "channelName": "Music Opinions",
+        "relevance": 0.81,
+        "excerpt": "Confessional/apology tone with contrarian stance."
+      },
+      {
+        "videoId": "sample-08",
+        "title": "Hot Take: The New Pop Sound Kinda Sucks",
+        "tps": 2.7,
+        "channelName": "Studio Side Notes",
+        "relevance": 0.79,
+        "excerpt": "Negative superlative + timeliness improved early velocity."
+      },
+      {
+        "videoId": "sample-09",
+        "title": "I Wish I Liked This New Artist...But No",
+        "tps": 2.6,
+        "channelName": "Honest Listener",
+        "relevance": 0.78,
+        "excerpt": "Softened apology + negative verdict; higher debate rate."
+      },
+      {
+        "videoId": "sample-10",
+        "title": "Brutally Honest: This New Record Just Isn’t Good",
+        "tps": 2.9,
+        "channelName": "Producer POV",
+        "relevance": 0.77,
+        "excerpt": "Strong negative language correlated with watch start spikes."
+      },
+      {
+        "videoId": "sample-11",
+        "title": "Unpopular Opinion: This New Artist Won’t Last",
+        "tps": 3.3,
+        "channelName": "Trend Check",
+        "relevance": 0.76,
+        "excerpt": "Unpopular-opinion framing + recency cue."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.1,
+      "tpsLift": 1.8,
+      "sampleSize": 11
+    },
+    "actionability": "high"
+  }
+}

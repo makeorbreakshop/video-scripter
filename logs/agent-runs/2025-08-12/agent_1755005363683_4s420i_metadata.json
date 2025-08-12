@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755005363683_4s420i",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T13:29:23.683Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T13:29:31.318Z",
+  "totalDuration": 7635,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  }
+}

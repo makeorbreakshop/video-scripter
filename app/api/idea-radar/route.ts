@@ -56,7 +56,10 @@ export async function GET(request: NextRequest) {
       'day': 1,
       'week': 7,
       'month': 30,
-      'quarter': 90
+      'quarter': 90,
+      'halfyear': 180,
+      'year': 365,
+      'twoyears': 730
     };
     const days = daysMap[timeRange as keyof typeof daysMap] || 7;
 
@@ -68,47 +71,82 @@ export async function GET(request: NextRequest) {
 
     console.log(`🎯 Idea Radar: Finding outliers (${timeRange}, score>${minScore}, domain:${domain || 'all'}, randomize:${randomize})`);
 
+    // Use videos table directly if time range > 30 days (heistable_videos only has 30 days)
+    const useDirectTable = days > 30;
+    const tableName = useDirectTable ? 'videos' : 'heistable_videos';
+    console.log(`Using ${tableName} table (days: ${days})`);
+    
     if (randomize) {
-      // For randomized results, we don't need total count or pagination
-      // Use ORDER BY RANDOM() to get a random sample
-      let query = supabase
-        .from('heistable_videos')
-        .select('*')
-        .gte('temporal_performance_score', minScore)
-        .lte('age_days', days)
-        .limit(limit);
-
-      // Apply domain filter if specified
+      // For random results, we need to get a truly random sample
+      // First, get the total count to know the size of our dataset
+      
+      let countQuery = useDirectTable ?
+        supabase
+          .from('videos')
+          .select('*', { count: 'exact', head: true })
+          .gte('temporal_performance_score', minScore)
+          .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+          .eq('is_short', false)
+          .gt('view_count', 100000) :
+        supabase
+          .from('heistable_videos')
+          .select('*', { count: 'exact', head: true })
+          .gte('temporal_performance_score', minScore)
+          .lte('age_days', days);
+      
       if (domain) {
-        query = query.eq('topic_domain', domain);
+        countQuery = countQuery.eq('topic_domain', domain);
       }
-
-      // For now, use a simple approach: get more results and randomly sample them
-      // This avoids complex SQL random() issues
-      const largerQuery = supabase
-        .from('heistable_videos')
-        .select('*')
-        .gte('temporal_performance_score', minScore)
-        .lte('age_days', days)
-        .order('temporal_performance_score', { ascending: false })
-        .limit(Math.min(limit * 5, 100)); // Get 5x more results to sample from
-
+      
+      const { count: totalCount, error: countError } = await countQuery;
+      
+      if (countError) {
+        console.error('❌ Failed to get count:', countError);
+        throw countError;
+      }
+      
+      const total = totalCount || 0;
+      const poolSize = Math.min(500, total); // Don't try to fetch more than exists
+      
+      // Generate a random offset to start from a different position each time
+      const maxOffset = Math.max(0, total - poolSize);
+      const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
+      
+      // Get a random slice of videos
+      let randomQuery = useDirectTable ?
+        supabase
+          .from('videos')
+          .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
+          .gte('temporal_performance_score', minScore)
+          .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+          .eq('is_short', false)
+          .gt('view_count', 100000)
+          .range(randomOffset, randomOffset + poolSize - 1) :
+        supabase
+          .from('heistable_videos')
+          .select('*')
+          .gte('temporal_performance_score', minScore)
+          .lte('age_days', days)
+          .range(randomOffset, randomOffset + poolSize - 1);
+      
       if (domain) {
-        largerQuery.eq('topic_domain', domain);
+        randomQuery = randomQuery.eq('topic_domain', domain);
       }
-
-      const { data: allVideos, error } = await largerQuery;
+      
+      const { data: poolVideos, error } = await randomQuery;
       
       if (error) {
-        console.error('❌ Failed to fetch outliers for random sampling:', error);
+        console.error('❌ Failed to fetch random pool:', error);
         throw error;
       }
-
-      // Randomly shuffle and take the requested amount
-      const shuffledVideos = (allVideos || []).sort(() => Math.random() - 0.5).slice(0, limit);
+      
+      // Shuffle the pool and take what we need
+      const shuffledVideos = (poolVideos || [])
+        .sort(() => Math.random() - 0.5)
+        .slice(offset, offset + limit);
 
       const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
-        video_id: v.video_id,
+        video_id: useDirectTable ? v.id : v.video_id,
         title: v.title,
         channel_name: v.channel_name,
         thumbnail_url: v.thumbnail_url,
@@ -117,16 +155,16 @@ export async function GET(request: NextRequest) {
         niche: v.topic_niche || 'Unknown',
         micro: v.topic_micro || '',
         views: v.view_count,
-        age_days: v.age_days,
+        age_days: useDirectTable ? Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)) : v.age_days,
         summary: v.llm_summary
       }));
 
-      console.log(`✅ Found ${outliers.length} random outliers (sampled from ${allVideos?.length}) in ${Date.now() - startTime}ms`);
+      console.log(`✅ Found ${outliers.length} random outliers (offset ${randomOffset} from ${total} total, pool of ${poolVideos?.length}) in ${Date.now() - startTime}ms`);
 
       return NextResponse.json({
         outliers,
-        total: outliers.length,
-        hasMore: false, // No pagination for random results
+        total: poolVideos?.length || 0,
+        hasMore: true, // Always show more for random results to encourage exploration
         filters_applied: {
           time_range: timeRange,
           min_score: minScore,
@@ -137,11 +175,19 @@ export async function GET(request: NextRequest) {
     } else {
       // Original pagination-based approach
       // First get the total count
-      let countQuery = supabase
-        .from('heistable_videos')
-        .select('*', { count: 'exact', head: true })
-        .gte('temporal_performance_score', minScore)
-        .lte('age_days', days);
+      let countQuery = useDirectTable ?
+        supabase
+          .from('videos')
+          .select('*', { count: 'exact', head: true })
+          .gte('temporal_performance_score', minScore)
+          .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+          .eq('is_short', false)
+          .gt('view_count', 100000) :
+        supabase
+          .from('heistable_videos')
+          .select('*', { count: 'exact', head: true })
+          .gte('temporal_performance_score', minScore)
+          .lte('age_days', days);
 
       if (domain) {
         countQuery = countQuery.eq('topic_domain', domain);
@@ -158,14 +204,24 @@ export async function GET(request: NextRequest) {
       const maxOffset = Math.max(0, (totalCount || 0) - limit);
       const adjustedOffset = Math.min(offset, maxOffset);
 
-      // Query the materialized view with adjusted offset
-      let query = supabase
-        .from('heistable_videos')
-        .select('*')
-        .gte('temporal_performance_score', minScore)
-        .lte('age_days', days)
-        .order('temporal_performance_score', { ascending: false })
-        .range(adjustedOffset, adjustedOffset + limit - 1);
+      // Query with adjusted offset
+      let query = useDirectTable ?
+        supabase
+          .from('videos')
+          .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
+          .gte('temporal_performance_score', minScore)
+          .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+          .eq('is_short', false)
+          .gt('view_count', 100000)
+          .order('temporal_performance_score', { ascending: false })
+          .range(adjustedOffset, adjustedOffset + limit - 1) :
+        supabase
+          .from('heistable_videos')
+          .select('*')
+          .gte('temporal_performance_score', minScore)
+          .lte('age_days', days)
+          .order('temporal_performance_score', { ascending: false })
+          .range(adjustedOffset, adjustedOffset + limit - 1);
 
       // Apply domain filter if specified
       if (domain) {
@@ -181,7 +237,7 @@ export async function GET(request: NextRequest) {
 
       // Transform to response format
       const outliers: OutlierVideo[] = (videos || []).map(v => ({
-        video_id: v.video_id,
+        video_id: useDirectTable ? v.id : v.video_id,
         title: v.title,
         channel_name: v.channel_name,
         thumbnail_url: v.thumbnail_url,
@@ -190,7 +246,7 @@ export async function GET(request: NextRequest) {
         niche: v.topic_niche || 'Unknown',
         micro: v.topic_micro || '',
         views: v.view_count,
-        age_days: v.age_days,
+        age_days: useDirectTable ? Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)) : v.age_days,
         summary: v.llm_summary
       }));
 

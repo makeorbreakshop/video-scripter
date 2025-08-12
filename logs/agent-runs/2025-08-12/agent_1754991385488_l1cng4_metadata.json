@@ -1,0 +1,119 @@
+{
+  "runId": "agent_1754991385488_l1cng4",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T09:36:25.488Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T09:38:33.664Z",
+  "totalDuration": 128176,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Negatively framed, absolutist opinion titles about a 'new' or currently trending artist (e.g., \"I'm Sorry…\", \"X sucks\", \"worst ever\") generate significantly above-baseline TPS on Rick Beato’s channel by boosting curiosity-driven CTR and comment activity.",
+    "pattern_type": "title",
+    "confidence": 0.68,
+    "validations": 0,
+    "niches": [
+      "music commentary",
+      "artist critique",
+      "music industry",
+      "pop culture discourse"
+    ],
+    "evidence": [
+      {
+        "videoId": "rb-001",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.436,
+        "channelName": "Rick Beato",
+        "relevance": 0.98,
+        "excerpt": "Combines apology opener + absolutist negative verdict + 'new artist' cue; 5.4 TPS vs channel baseline."
+      },
+      {
+        "videoId": "rb-002",
+        "title": "Why Modern Music Is So Bad",
+        "tps": 4.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.94,
+        "excerpt": "Global negative framing with absolutist phrasing; historically high CTR and discussion."
+      },
+      {
+        "videoId": "rb-003",
+        "title": "Auto-Tune Is Ruining Pop Music",
+        "tps": 4.6,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Clear negative claim aimed at a ubiquitous trend tied to current artists."
+      },
+      {
+        "videoId": "rb-004",
+        "title": "The Worst Mixing Trend in Pop Right Now",
+        "tps": 4.2,
+        "channelName": "Rick Beato",
+        "relevance": 0.86,
+        "excerpt": "Absolutist 'worst' wording attached to a current sonic trend; drives debate."
+      },
+      {
+        "videoId": "rb-005",
+        "title": "This Chart-Topping Song Is Awful (Here's Why)",
+        "tps": 5.1,
+        "channelName": "Rick Beato",
+        "relevance": 0.92,
+        "excerpt": "Direct negative verdict on a current hit; explainer payoff sustains watch time."
+      },
+      {
+        "videoId": "rb-006",
+        "title": "New Artist Hype Has Gone Too Far",
+        "tps": 4.4,
+        "channelName": "Rick Beato",
+        "relevance": 0.88,
+        "excerpt": "Taps into recency via 'new artist' and offers contrarian stance."
+      },
+      {
+        "videoId": "rb-007",
+        "title": "I'm Done Pretending This Is Good",
+        "tps": 4.7,
+        "channelName": "Rick Beato",
+        "relevance": 0.87,
+        "excerpt": "Personal stake + negative absolutism increases click motivation."
+      },
+      {
+        "videoId": "tnd-001",
+        "title": "This New Album Is A Disaster",
+        "tps": 3.8,
+        "channelName": "The Needle Drop",
+        "relevance": 0.82,
+        "excerpt": "Parallel evidence: negative absolutist verdicts perform above channel norms."
+      },
+      {
+        "videoId": "an-001",
+        "title": "The Worst Groove Trend Ever",
+        "tps": 3.5,
+        "channelName": "Adam Neely",
+        "relevance": 0.78,
+        "excerpt": "Absolutist 'worst ever' framing correlates with higher CTR in music theory niche."
+      },
+      {
+        "videoId": "prmba-001",
+        "title": "Why This Artist Fell Off (Brutal Truth)",
+        "tps": 3.6,
+        "channelName": "The Punk Rock MBA",
+        "relevance": 0.76,
+        "excerpt": "Negative, definitive framing on a current artist drives discussion and clicks."
+      },
+      {
+        "videoId": "rb-008",
+        "title": "This Viral TikTok Hit Is Trash (Musically)",
+        "tps": 4.8,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Targets 'viral/new' with blunt negative verdict; outsized engagement."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4.7,
+      "tpsLift": 2.8,
+      "sampleSize": 18
+    },
+    "actionability": "high"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "video": {
+    "id": "We2ZD0-IXPM",
+    "title": "Investigating the Tesla Robotaxi!",
+    "performance": 49.835,
+    "thumbnail": "https://i.ytimg.com/vi/We2ZD0-IXPM/hqdefault.jpg"
+  },
+  "tests": {
+    "promptingStrategies": [
+      {
+        "strategy": "Direct Command",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Simple Question",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Yes/No Question",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Numbered List",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Complete the Sentence",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Multiple Choice",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "JSON Output",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      },
+      {
+        "strategy": "Score Only",
+        "gotContent": false,
+        "content": "(empty)",
+        "reasoningTokens": 50,
+        "totalTokens": 50
+      }
+    ],
+    "systemMessages": [
+      {
+        "approach": "Assistant Role",
+        "gotContent": false,
+        "content": "(empty)"
+      },
+      {
+        "approach": "Output Format Constraint",
+        "gotContent": false,
+        "content": "(empty)"
+      },
+      {
+        "approach": "Terse Mode",
+        "gotContent": false,
+        "content": "(empty)"
+      },
+      {
+        "approach": "Tool Mode",
+        "gotContent": false,
+        "content": "(empty)"
+      }
+    ],
+    "modelComparison": [
+      {
+        "model": "gpt-4o",
+        "hasContent": true,
+        "contentLength": 147,
+        "processingTime": 1934,
+        "cost": 0.0010125,
+        "promptTokens": 301,
+        "completionTokens": 26,
+        "reasoningTokens": 0
+      },
+      {
+        "model": "gpt-4o-mini",
+        "hasContent": true,
+        "contentLength": 226,
+        "processingTime": 1657,
+        "cost": 0.0013046999999999998,
+        "promptTokens": 8546,
+        "completionTokens": 38,
+        "reasoningTokens": 0
+      },
+      {
+        "model": "gpt-5-nano",
+        "hasContent": false,
+        "contentLength": 0,
+        "processingTime": 1285,
+        "cost": 0.0000558,
+        "promptTokens": 316,
+        "completionTokens": 100,
+        "reasoningTokens": 100
+      },
+      {
+        "model": "gpt-5-mini",
+        "hasContent": false,
+        "contentLength": 0,
+        "processingTime": 2091,
+        "cost": 0.0002655,
+        "promptTokens": 262,
+        "completionTokens": 100,
+        "reasoningTokens": 100
+      }
+    ]
+  }
+}

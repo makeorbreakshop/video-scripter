@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       `)
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .order(sortBy, { ascending: sortOrder === 'asc', nullsFirst: false })
       .limit(limit);
 
     // Apply filters

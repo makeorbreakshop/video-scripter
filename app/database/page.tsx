@@ -192,6 +192,29 @@ export default function DatabasePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const deferredSearchTerm = useDeferredValue(searchTerm);
   
+  // Add state for agentic mode
+  const [agenticMode, setAgenticMode] = useState(false);
+  const [agenticDebugData, setAgenticDebugData] = useState<any>(null);
+  const [agenticProgress, setAgenticProgress] = useState<{
+    isOpen: boolean;
+    videoId: string;
+    videoTitle: string;
+    status: 'processing' | 'success' | 'error';
+    currentTurn: string;
+    toolCalls: any[];
+    hypothesis: any;
+    progress: number;
+  }>({
+    isOpen: false,
+    videoId: '',
+    videoTitle: '',
+    status: 'processing',
+    currentTurn: '',
+    toolCalls: [],
+    hypothesis: null,
+    progress: 0
+  });
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
@@ -577,7 +600,138 @@ Focus on:
       userPrompt: fullUserPrompt,
     });
     
-    // Show the debug modal without starting analysis
+    // Check if agentic mode is enabled
+    if (agenticMode) {
+      // Start agentic analysis
+      setAgenticProgress({
+        isOpen: true,
+        videoId,
+        videoTitle: video?.title || '',
+        status: 'processing',
+        currentTurn: 'starting',
+        toolCalls: [],
+        hypothesis: null,
+        progress: 0
+      });
+      
+      try {
+        // Use streaming endpoint for real-time debug info
+        const response = await fetch('/api/idea-heist/agentic-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoId,
+            mode: 'agentic',
+            options: {
+              maxTokens: 50000,
+              maxToolCalls: 25,
+              maxFanouts: 2,
+              timeoutMs: 60000
+            }
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Agentic analysis failed: ${response.statusText}`);
+        }
+        
+        // Process streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let finalResult = null;
+        let debugMessages: string[] = [];
+        
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  
+                  // Handle different message types
+                  if (data.type === 'reasoning' || data.type === 'debug') {
+                    // Add to debug messages for display
+                    debugMessages.push(`[${new Date(data.timestamp).toLocaleTimeString()}] ${data.message}`);
+                    
+                    // Update debug data with reasoning
+                    setDebugData(prev => ({
+                      ...prev,
+                      reasoning: debugMessages.join('\n')
+                    }));
+                    
+                    // Update agentic debug data too
+                    setAgenticDebugData(prev => ({
+                      ...prev,
+                      debugMessages,
+                      lastDebugMessage: data.message
+                    }));
+                  } else if (data.type === 'status') {
+                    setAgenticProgress(prev => ({
+                      ...prev,
+                      currentTurn: data.message,
+                      progress: Math.min(prev.progress + 10, 90)
+                    }));
+                  } else if (data.type === 'result') {
+                    finalResult = data;
+                  } else if (data.type === 'error') {
+                    console.error('Stream error:', data);
+                  }
+                } catch (e) {
+                  console.error('Failed to parse streaming data:', e);
+                }
+              }
+            }
+          }
+        }
+        
+        // Use final result if available
+        const result = finalResult || { success: false, error: 'No result received' };
+        
+        // Update progress with results
+        setAgenticProgress(prev => ({
+          ...prev,
+          status: result.success ? 'success' : 'error',
+          progress: 100
+        }));
+        
+        setAgenticDebugData(result);
+        
+        if (result.success && result.pattern) {
+          toast({
+            title: "Agentic Analysis Complete",
+            description: `Pattern discovered: "${result.pattern.statement.substring(0, 50)}..."`,
+          });
+          
+          // Refresh videos list
+          loadVideos();
+        }
+        
+      } catch (error) {
+        console.error('Agentic analysis error:', error);
+        setAgenticProgress(prev => ({
+          ...prev,
+          status: 'error',
+          progress: 0
+        }));
+        
+        toast({
+          title: "Agentic Analysis Failed",
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+    
+    // Show the debug modal for classic Skyscraper analysis
     setDebugModalOpen(true);
   };
   
@@ -2245,6 +2399,22 @@ Focus on:
                 </Button>
               </div>
               
+              {/* Agentic Mode Toggle */}
+              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-md">
+                <Label htmlFor="agentic-mode" className="text-sm text-gray-300 font-medium">
+                  AI Agent
+                </Label>
+                <Checkbox
+                  id="agentic-mode"
+                  checked={agenticMode}
+                  onCheckedChange={setAgenticMode}
+                  className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                />
+                <span className="text-xs text-gray-500">
+                  {agenticMode ? 'Autonomous' : 'Classic'}
+                </span>
+              </div>
+              
               {/* Existing search input */}
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -2343,6 +2513,49 @@ Focus on:
               </div>
             )}
             
+            {/* Agentic Patterns Display */}
+            {agenticDebugData && agenticDebugData.pattern && (
+              <div className="mb-6">
+                <Card className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-purple-700">
+                  <CardHeader>
+                    <CardTitle className="text-purple-300 flex items-center gap-2">
+                      <span className="text-purple-400">🤖</span>
+                      AI Agent Discovery
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-white font-semibold mb-2">Pattern Found</h4>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {agenticDebugData.pattern.statement}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-purple-300">
+                          Confidence: {agenticDebugData.pattern.confidence}%
+                        </span>
+                        <span className="text-gray-400">
+                          Cost: ${agenticDebugData.sessionMetrics?.totalCost || 'N/A'} | 
+                          Duration: {agenticDebugData.sessionMetrics?.totalDuration || 'N/A'}s
+                        </span>
+                      </div>
+                      
+                      {agenticDebugData.pattern.supportingEvidence && (
+                        <div className="mt-3 p-3 bg-black/30 rounded text-xs">
+                          <strong className="text-gray-300">Evidence:</strong>
+                          <p className="text-gray-400 mt-1">
+                            {agenticDebugData.pattern.supportingEvidence.slice(0, 200)}...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="text-center py-8">
                 <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
@@ -2822,6 +3035,143 @@ Focus on:
         parsedStreamData={parsedStreamData}
         setParsedStreamData={setParsedStreamData}
       />
+      
+      {/* Agentic Debug Modal */}
+      {agenticProgress.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg w-[90%] max-w-4xl max-h-[90%] overflow-hidden">
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">AI Agent Analysis</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAgenticProgress(prev => ({ ...prev, isOpen: false }))}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-gray-300 text-sm mt-2">
+                Video: {agenticProgress.videoTitle}
+              </p>
+            </div>
+            
+            <div className="p-6 overflow-auto max-h-[70vh]">
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-gray-300 mb-2">
+                  <span>Progress</span>
+                  <span>{agenticProgress.progress}%</span>
+                </div>
+                <Progress value={agenticProgress.progress} className="h-2" />
+                <p className="text-xs text-gray-500 mt-1">
+                  Status: {agenticProgress.currentTurn}
+                </p>
+              </div>
+              
+              {/* Agent State Display */}
+              {agenticProgress.hypothesis && (
+                <div className="mb-4 p-4 bg-gray-800 rounded border border-gray-700">
+                  <h3 className="text-lg font-semibold text-green-400 mb-2">Current Hypothesis</h3>
+                  <p className="text-gray-300 text-sm mb-2">
+                    <strong>Pattern:</strong> {agenticProgress.hypothesis.pattern}
+                  </p>
+                  <p className="text-gray-300 text-sm mb-2">
+                    <strong>Reasoning:</strong> {agenticProgress.hypothesis.reasoning}
+                  </p>
+                  <p className="text-gray-300 text-sm">
+                    <strong>Confidence:</strong> {agenticProgress.hypothesis.confidence}%
+                  </p>
+                </div>
+              )}
+              
+              {/* Tool Calls Display */}
+              {agenticProgress.toolCalls.length > 0 && (
+                <div className="mb-4 p-4 bg-gray-800 rounded border border-gray-700">
+                  <h3 className="text-lg font-semibold text-blue-400 mb-2">Tool Calls</h3>
+                  <div className="space-y-2 max-h-40 overflow-auto">
+                    {agenticProgress.toolCalls.map((call, index) => (
+                      <div key={index} className="text-xs bg-gray-900 p-2 rounded">
+                        <div className="flex justify-between">
+                          <span className="text-blue-300 font-medium">{call.name}</span>
+                          <span className="text-gray-500">{call.status || 'called'}</span>
+                        </div>
+                        {call.duration && (
+                          <span className="text-gray-500">Duration: {call.duration}ms</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Debug Messages Display */}
+              {agenticDebugData?.debugMessages && agenticDebugData.debugMessages.length > 0 && (
+                <div className="mb-4 p-4 bg-gray-800 rounded border border-gray-700">
+                  <h3 className="text-lg font-semibold text-yellow-400 mb-2">🧠 OpenAI Reasoning</h3>
+                  <div className="text-xs bg-gray-900 p-3 rounded max-h-60 overflow-auto font-mono">
+                    {agenticDebugData.debugMessages.map((msg: string, idx: number) => (
+                      <div key={idx} className={`mb-1 ${
+                        msg.includes('🤖') ? 'text-blue-400' :
+                        msg.includes('🧠') ? 'text-purple-400' :
+                        msg.includes('🔍') ? 'text-yellow-400' :
+                        msg.includes('✅') ? 'text-green-400' :
+                        msg.includes('❌') ? 'text-red-400' :
+                        msg.includes('💡') ? 'text-cyan-400' :
+                        msg.includes('📊') ? 'text-indigo-400' :
+                        msg.includes('🎯') ? 'text-pink-400' :
+                        'text-gray-400'
+                      }`}>
+                        {msg}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Results Display */}
+              {agenticDebugData && (
+                <div className="mb-4 p-4 bg-gray-800 rounded border border-gray-700">
+                  <h3 className="text-lg font-semibold text-purple-400 mb-2">Analysis Results</h3>
+                  <div className="text-sm space-y-2">
+                    {agenticDebugData.pattern && (
+                      <div>
+                        <strong className="text-green-400">Pattern Found:</strong>
+                        <p className="text-gray-300 mt-1">{agenticDebugData.pattern.statement || agenticDebugData.pattern.pattern_name}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          Confidence: {agenticDebugData.pattern.confidence}% | 
+                          Cost: ${agenticDebugData.sessionMetrics?.totalCost || agenticDebugData.metrics?.totalCost || 'N/A'} |
+                          Duration: {agenticDebugData.sessionMetrics?.totalDuration || agenticDebugData.metrics?.totalDuration || 'N/A'}s
+                        </p>
+                      </div>
+                    )}
+                    {agenticDebugData.error && (
+                      <div>
+                        <strong className="text-red-400">Error:</strong>
+                        <p className="text-gray-300 mt-1">{agenticDebugData.error}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Status Messages */}
+              <div className="text-sm text-gray-400">
+                {agenticProgress.status === 'processing' && (
+                  <p>🤖 AI Agent is analyzing the video autonomously...</p>
+                )}
+                {agenticProgress.status === 'success' && (
+                  <p className="text-green-400">✅ Analysis completed successfully!</p>
+                )}
+                {agenticProgress.status === 'error' && (
+                  <p className="text-red-400">❌ Analysis failed. Check the error details above.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Delete confirmation dialogs */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

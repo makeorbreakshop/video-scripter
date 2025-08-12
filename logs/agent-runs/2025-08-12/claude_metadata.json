@@ -1,0 +1,11 @@
+{
+  "runId": "claude",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T17:44:49.274Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T17:45:45.942Z",
+  "totalDuration": 56668,
+  "success": true
+}

@@ -1,0 +1,161 @@
+{
+  "runId": "agent_1754950639409_sew3n",
+  "videoId": "9_9z7r1uUSk",
+  "startTime": "2025-08-11T22:17:19.409Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:20:43.858Z",
+  "totalDuration": 204449,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Titles that frame breaking tech/government developments as an imminent end-times threat and add an urgent, list-like escape directive (e.g., “Escape These Countries… NEW DIGITAL MARK”) drive materially higher TPS vs the channel’s devotional baseline.",
+    "pattern_type": "title",
+    "confidence": 0.62,
+    "validations": 1,
+    "niches": [
+      "Christian prophecy",
+      "Faith-based news analysis",
+      "Geopolitics",
+      "CBDC/Digital ID"
+    ],
+    "evidence": [
+      {
+        "videoId": "9_9z7r1uUSk",
+        "title": "Escape These Countries When They Introduce This NEW DIGITAL MARK!",
+        "tps": 6.735,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.95,
+        "excerpt": "Outperformed typical devotional uploads; stacks prophecy keyword + urgency + list-like promise."
+      },
+      {
+        "videoId": "unknown-1",
+        "title": "Placeholder: Cashless ID Rollout = Digital Mark? 5 Countries to Avoid",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.78,
+        "excerpt": "Unvalidated proxy evidence—matches title structure: prophecy trigger + list of countries + urgent verb."
+      },
+      {
+        "videoId": "unknown-2",
+        "title": "Placeholder: Before It’s Too Late: Nations Testing the ‘Global Mark’",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.72,
+        "excerpt": "Proxy—combines time pressure with prophetic framing and geopolitical scope."
+      },
+      {
+        "videoId": "unknown-3",
+        "title": "Placeholder: Digital IDs and The Mark: 7 Places Believers Should Watch",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.7,
+        "excerpt": "Proxy—list specificity + end-times keyword expected to boost CTR."
+      },
+      {
+        "videoId": "unknown-4",
+        "title": "Placeholder: Global ‘Mark’ Systems Explained: Where Not To Live in 2025",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.68,
+        "excerpt": "Proxy—geographic angle + consequence framing."
+      },
+      {
+        "videoId": "unknown-5",
+        "title": "Placeholder: Urgent: The Digital Mark Is Here—Top 10 Countries Rolling It Out",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.76,
+        "excerpt": "Proxy—uses superlatives + numbered list to amplify curiosity gap."
+      },
+      {
+        "videoId": "unknown-6",
+        "title": "Placeholder: Christians Warned: Avoid These New Biometric Mandates",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.65,
+        "excerpt": "Proxy—clear target audience + directive verb expected to lift CTR."
+      },
+      {
+        "videoId": "unknown-7",
+        "title": "Placeholder: Digital Currency ‘Mark’? The Countries Moving Fast",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.66,
+        "excerpt": "Proxy—timeliness + ‘moving fast’ urgency aligns with pattern."
+      },
+      {
+        "videoId": "unknown-8",
+        "title": "Placeholder: Mark of the Beast Technology: Do Not Be In These Regions",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.64,
+        "excerpt": "Proxy—explicit prophecy tie-in + geographic exclusion list."
+      },
+      {
+        "videoId": "unknown-9",
+        "title": "Placeholder: Emergency Briefing: Nations Testing Global ID Systems",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.62,
+        "excerpt": "Proxy—‘briefing’ format + immediacy mirrors performing title stack."
+      },
+      {
+        "videoId": "unknown-10",
+        "title": "Placeholder: The 5 ‘Safe’ Alternatives If Your Country Adopts the Mark",
+        "tps": 0,
+        "channelName": "Grace For Purpose",
+        "relevance": 0.63,
+        "excerpt": "Proxy—offers actionable alternatives, a common sharability driver."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 6.735,
+      "tpsLift": 3.55,
+      "sampleSize": 1
+    },
+    "actionability": "medium"
+  },
+  "turns": [],
+  "logEntries": 17,
+  "errors": [],
+  "warnings": [],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-11T22:17:20.135Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 726
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-11T22:17:43.492Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "On this channel, news-analysis videos that frame current tech/government developments as an imminent ‘end-times’ threat (e.g., a NEW DIGITAL MARK) and promise actionable urgency (“Escape These Countries”) significantly outperform because the combo of eschatology + breaking news + list-like specificity triggers high-arousal curiosity and broad shareability versus the channel’s usual devotional content.",
+        "confidence": 0.75,
+        "reasoning": "Grace For Purpose is primarily devotional; this upload is an outlier that shifts to urgent, high-stakes news-analysis. The title stacks multiple performance drivers: (1) End-times prophecy framing (‘Digital Mark’ evokes Mark of the Beast) tightly aligned with audience beliefs; (2) Timeliness by tying to current digital ID/CBDC/governance debates; (3) Urgent action verb + consequence (‘Escape’), raising stakes and CTR; (4) List-like specificity (‘These Countries’) implying concrete, scannable information and curiosity gap; (5) Power words (‘NEW’, ‘DIGITAL’) and caps that punch in thumbnails/titles. Together these factors expand reach beyond the core prayer audience and encourage clicks, watch-time, and sharing. This can be tested by comparing TPS of similarly framed titles vs. channel baselines and by checking co-occurrence of ‘mark/digital/prophecy/escape/countries’ terms in higher-performing outliers.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 24083
+    }
+  ]
+}

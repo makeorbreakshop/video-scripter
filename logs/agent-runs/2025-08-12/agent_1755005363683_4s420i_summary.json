@@ -1,0 +1,97 @@
+{
+  "runId": "agent_1755005363683_4s420i",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T13:29:23.683Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T13:29:31.318Z",
+  "totalDuration": 7635,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 15,
+  "errors": [
+    {
+      "timestamp": "2025-08-12T13:29:31.318Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Search planning failed: Error: 400 Invalid value: 'any'. Supported values are: 'none', 'auto', and 'required'.",
+      "data": {
+        "turnNumber": 2,
+        "turnType": "search_planning"
+      },
+      "duration": 7635
+    },
+    {
+      "timestamp": "2025-08-12T13:29:31.318Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Agent failed: 400 Invalid value: 'any'. Supported values are: 'none', 'auto', and 'required'.",
+      "data": {
+        "turnNumber": 2,
+        "turnType": "search_planning"
+      },
+      "duration": 7635
+    },
+    {
+      "timestamp": "2025-08-12T13:29:31.318Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Agent error: 400 Invalid value: 'any'. Supported values are: 'none', 'auto', and 'required'.",
+      "data": {
+        "error": "400 Invalid value: 'any'. Supported values are: 'none', 'auto', and 'required'.",
+        "stack": "Error: 400 Invalid value: 'any'. Supported values are: 'none', 'auto', and 'required'.\n    at APIError.generate (webpack-internal:///(rsc)/./node_modules/openai/error.mjs:60:20)\n    at OpenAI.makeStatusError (webpack-internal:///(rsc)/./node_modules/openai/core.mjs:329:65)\n    at OpenAI.makeRequest (webpack-internal:///(rsc)/./node_modules/openai/core.mjs:373:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async OpenAIIntegration.executeTurn (webpack-internal:///(rsc)/./lib/agentic/openai-integration.ts:110:32)\n    at async IdeaHeistAgent.handleSearchTurn (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:375:34)\n    at async IdeaHeistAgent.executeTurn (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:205:30)\n    at async IdeaHeistAgent.runIdeaHeistAgent (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:116:36)\n    at async POST (webpack-internal:///(rsc)/./app/api/idea-heist/agentic/route.ts:47:24)\n    at async AppRouteRouteModule.do (/Users/brandoncullum/video-scripter/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:10:32804)\n    at async AppRouteRouteModule.handle (/Users/brandoncullum/video-scripter/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:10:39698)\n    at async doRender (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:1452:42)\n    at async responseGenerator (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:1813:28)\n    at async DevServer.renderToResponseWithComponentsImpl (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:1823:28)\n    at async DevServer.renderPageComponent (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:2250:24)\n    at async DevServer.renderToResponseImpl (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:2288:32)\n    at async DevServer.pipeImpl (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:959:25)\n    at async NextNodeServer.handleCatchallRenderRequest (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/next-server.js:281:17)\n    at async DevServer.handleRequestImpl (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/base-server.js:853:17)\n    at async /Users/brandoncullum/video-scripter/node_modules/next/dist/server/dev/next-dev-server.js:371:20\n    at async Span.traceAsyncFn (/Users/brandoncullum/video-scripter/node_modules/next/dist/trace/trace.js:153:20)\n    at async DevServer.handleRequest (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/dev/next-dev-server.js:368:24)\n    at async invokeRender (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/lib/router-server.js:230:21)\n    at async handleRequest (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/lib/router-server.js:408:24)\n    at async requestHandlerImpl (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/lib/router-server.js:432:13)\n    at async Server.requestListener (/Users/brandoncullum/video-scripter/node_modules/next/dist/server/lib/start-server.js:146:13)",
+        "videoId": "U5GHwG3_RAo"
+      },
+      "duration": 7635
+    }
+  ],
+  "warnings": [],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-12T13:29:23.910Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "fullPrompt": "Generating hypothesis for outlier video",
+        "fullResponse": null,
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 227
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-12T13:29:30.982Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "Videos with the hashtag #oddlysatisfying in the title on channels primarily focused on mechanical or technical content significantly outperform other videos without this hashtag due to enhanced viewer engagement driven by the contrasting nature of content and unexpected satisfaction.",
+        "confidence": 0.75,
+        "reasoning": "The use of the hashtag #oddlysatisfying typically attracts viewers who are looking for visually gratifying and calming content. When such a hashtag is used in contexts not typically associated with 'satisfying' content, such as mechanical or technical channels, it may create a novelty effect that intrigues a broader audience. This could lead to higher viewer engagement and sharing, which are critical factors in video performance on platforms like YouTube. The specific combination of an unexpected topic (mechanical issues) with a widely appealing format (satisfying visuals) can catalyze this performance.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 10
+      },
+      "duration": 7299
+    }
+  ]
+}

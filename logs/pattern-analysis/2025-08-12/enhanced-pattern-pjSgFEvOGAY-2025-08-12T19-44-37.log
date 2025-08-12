@@ -1,0 +1,881 @@
+[2025-08-12T19:44:37.874Z] ================================================================================
+[2025-08-12T19:44:37.874Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T19:44:37.874Z
+[2025-08-12T19:44:37.874Z] Video ID: pjSgFEvOGAY
+[2025-08-12T19:44:37.874Z] ================================================================================
+[2025-08-12T19:44:37.874Z] 
+============================================================
+[2025-08-12T19:44:37.874Z] INITIAL SETUP
+[2025-08-12T19:44:37.874Z] ============================================================
+[2025-08-12T19:44:37.874Z] 🔍 [Enhanced] Analyzing pattern for video: pjSgFEvOGAY
+[2025-08-12T19:44:38.091Z] 📺 Target: "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!" (8.4x TPS)
+[2025-08-12T19:44:38.092Z] 🖼️ Thumbnail: Available
+[2025-08-12T19:44:38.092Z] Target Video Data:
+{
+  "id": "pjSgFEvOGAY",
+  "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+  "channel": "The Fast Lane Car",
+  "views": 123456,
+  "performance_score": 8.446,
+  "baseline": 21070.867,
+  "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+  "niche": "Metalwork"
+}
+
+[2025-08-12T19:44:38.239Z] 📊 Found 1 baseline videos for comparison
+[2025-08-12T19:44:38.239Z] Baseline Videos:
+[
+  {
+    "title": "Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? ",
+    "views": 15815,
+    "score": 0.929
+  }
+]
+
+[2025-08-12T19:44:38.239Z] 
+============================================================
+[2025-08-12T19:44:38.239Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T19:44:38.239Z] ============================================================
+[2025-08-12T19:44:38.240Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T19:44:38.240Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (8.4x performance):\nTitle: \"We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!\"\nViews: 123,456\nChannel: The Fast Lane Car\nNiche: Metalwork\nSummary: Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.\n\nCHANNEL BASELINE (normal performers):\n1. \"Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? \" - 15,815 views (0.9x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T19:44:38.240Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg
+[2025-08-12T19:44:38.240Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T19:44:45.680Z] ✅ Claude response received in 7440ms
+[2025-08-12T19:44:45.680Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Controversial Brand Conflict Story\",\n  \"pattern_description\": \"Content that reveals behind-the-scenes drama or conflict with a major brand\",\n  \"psychological_trigger\": \"People are inherently drawn to stories of conflict and forbidden content, especially involving well-known brands\",\n  \"key_elements\": [\n    \"Use of dramatic term 'BLACKLISTED'\",\n    \"Specific timeframe '11 Years'\",\n    \"Brand name 'Subaru' creates authority\",\n    \"Action verb 'Recreate' suggests exclusive content\"\n  ],\n  \"visual_elements\": [\n    \"Dramatic off-road vehicle angle showing capability\",\n    \"Muddy/dusty vehicle suggesting authentic testing\",\n    \"Bold yellow text overlay 'BLACKLISTED!'\",\n    \"Dynamic outdoor setting with trees/dirt road\"\n  ],\n  \"thumbnail_psychology\": \"The combination of dramatic reaction and tilted vehicle creates a sense of intense situation and high stakes\",\n  \"why_it_works\": \"The promise of revealing forbidden content plus conflict with a major brand creates irresistible curiosity\",\n  \"semantic_queries\": [\n    \"why did subaru ban\",\n    \"subaru controversy\",\n    \"banned car reviews\"\n  ],\n  \"visual_queries\": [\n    \"dramatic car angles\",\n    \"off-road action shots\"\n  ],\n  \"channel_outlier_explanation\": \"While baseline videos focus on standard reviews, this video taps into controversy and behind-the-scenes drama with a major manufacturer, creating much higher viewer interest and shareability\"\n}",
+  "usage": {
+    "input_tokens": 713,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 370,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T19:44:45.681Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T19:44:45.681Z] Extracted Pattern:
+{
+  "pattern_name": "Controversial Brand Conflict Story",
+  "pattern_description": "Content that reveals behind-the-scenes drama or conflict with a major brand",
+  "psychological_trigger": "People are inherently drawn to stories of conflict and forbidden content, especially involving well-known brands",
+  "key_elements": [
+    "Use of dramatic term 'BLACKLISTED'",
+    "Specific timeframe '11 Years'",
+    "Brand name 'Subaru' creates authority",
+    "Action verb 'Recreate' suggests exclusive content"
+  ],
+  "visual_elements": [
+    "Dramatic off-road vehicle angle showing capability",
+    "Muddy/dusty vehicle suggesting authentic testing",
+    "Bold yellow text overlay 'BLACKLISTED!'",
+    "Dynamic outdoor setting with trees/dirt road"
+  ],
+  "thumbnail_psychology": "The combination of dramatic reaction and tilted vehicle creates a sense of intense situation and high stakes",
+  "why_it_works": "The promise of revealing forbidden content plus conflict with a major brand creates irresistible curiosity",
+  "semantic_queries": [
+    "why did subaru ban",
+    "subaru controversy",
+    "banned car reviews"
+  ],
+  "visual_queries": [
+    "dramatic car angles",
+    "off-road action shots"
+  ],
+  "channel_outlier_explanation": "While baseline videos focus on standard reviews, this video taps into controversy and behind-the-scenes drama with a major manufacturer, creating much higher viewer interest and shareability"
+}
+
+[2025-08-12T19:44:45.681Z] ✅ Pattern extracted: Controversial Brand Conflict Story
+[2025-08-12T19:44:45.681Z] 📝 Text queries: why did subaru ban, subaru controversy, banned car reviews
+[2025-08-12T19:44:45.682Z] 🎨 Visual queries: dramatic car angles, off-road action shots
+[2025-08-12T19:44:45.682Z] 
+============================================================
+[2025-08-12T19:44:45.682Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T19:44:45.682Z] ============================================================
+[2025-08-12T19:44:45.682Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T19:44:45.682Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T19:44:45.682Z]   Searching text for: "why did subaru ban"
+[2025-08-12T19:44:45.682Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:44:47.431Z]     Generated embedding in 1749ms (512D)
+[2025-08-12T19:44:47.431Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:44:48.385Z]     Parallel search completed in 954ms
+[2025-08-12T19:44:48.385Z] Title Search Results:
+{
+  "found": 15,
+  "avgSimilarity": "0.516",
+  "topResults": [
+    {
+      "title": "8 Reasons to NOT get a Subaru Outback",
+      "score": "0.558",
+      "views": 16081
+    },
+    {
+      "title": "Driving Subaru's Most Popular Car - BIGTIME",
+      "score": "0.551",
+      "views": 910562
+    },
+    {
+      "title": "Subaru's GENIUS ROCKET Exhaust",
+      "score": "0.527",
+      "views": 247584
+    }
+  ]
+}
+
+[2025-08-12T19:44:48.385Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.504",
+  "topResults": [
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.579",
+      "views": 123456
+    },
+    {
+      "title": "The Rarest Subarus - 22B, Colin McRae, Type RA - WBM 2016 - 10 Days of Wicked Big Meet 2017 - Day 5",
+      "score": "0.530",
+      "views": 536
+    },
+    {
+      "title": "Rare Cool Subarus Running - Amazing Noise - WBM 2016 - 10 Days of Wicked Big Meet 2017 - Day 8",
+      "score": "0.524",
+      "views": 94
+    }
+  ]
+}
+
+[2025-08-12T19:44:48.386Z]   Searching text for: "subaru controversy"
+[2025-08-12T19:44:48.386Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:44:50.509Z]     Generated embedding in 2123ms (512D)
+[2025-08-12T19:44:50.509Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:44:50.987Z]     Parallel search completed in 478ms
+[2025-08-12T19:44:50.987Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.551",
+  "topResults": [
+    {
+      "title": "Driving Subaru's Most Popular Car - BIGTIME",
+      "score": "0.609",
+      "views": 910562
+    },
+    {
+      "title": "8 Reasons to NOT get a Subaru Outback",
+      "score": "0.582",
+      "views": 16081
+    },
+    {
+      "title": "4 WORST And 7 BEST Things About The 2024 Subaru WRX TR",
+      "score": "0.572",
+      "views": 13992
+    }
+  ]
+}
+
+[2025-08-12T19:44:50.987Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.565",
+  "topResults": [
+    {
+      "title": "Bugeye WRX Head Gasket Update! 🧐🧐 The Seller Responds",
+      "score": "0.633",
+      "views": 1964
+    },
+    {
+      "title": "4 WORST And 9 BEST Things About The 2024 Subaru Crosstrek",
+      "score": "0.608",
+      "views": 113301
+    },
+    {
+      "title": "4 WORST And 7 BEST Things About The 2024 Subaru WRX TR",
+      "score": "0.596",
+      "views": 13992
+    }
+  ]
+}
+
+[2025-08-12T19:44:50.988Z]   Searching text for: "banned car reviews"
+[2025-08-12T19:44:50.988Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:44:52.578Z]     Generated embedding in 1590ms (512D)
+[2025-08-12T19:44:52.578Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:44:53.405Z]     Parallel search completed in 827ms
+[2025-08-12T19:44:53.406Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.549",
+  "topResults": [
+    {
+      "title": "We Bought the WORST RATED Amazon Car Mods",
+      "score": "0.587",
+      "views": 293913
+    },
+    {
+      "title": "We Drove a Banned Car Across the State!",
+      "score": "0.581",
+      "views": 610444
+    },
+    {
+      "title": "This is the Worst Car I've Ever Reviewed",
+      "score": "0.577",
+      "views": 6510004
+    }
+  ]
+}
+
+[2025-08-12T19:44:53.406Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.517",
+  "topResults": [
+    {
+      "title": "I Bought the Most Dangerous Motorcycle banned by U.S. Gov",
+      "score": "0.594",
+      "views": 989771
+    },
+    {
+      "title": "900 BHP Hertz RENTAL Mustang PLUS Toyota GR Corolla vs Subaru BRZ",
+      "score": "0.553",
+      "views": 137541
+    },
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.538",
+      "views": 123456
+    }
+  ]
+}
+
+[2025-08-12T19:44:53.406Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T19:44:53.406Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T19:44:53.406Z]   Searching thumbnails for: "dramatic car angles"
+[2025-08-12T19:44:53.406Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:44:53.975Z]     Generated CLIP embedding in 569ms (768D)
+[2025-08-12T19:44:53.977Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:44:54.303Z]     Thumbnail search completed in 326ms
+[2025-08-12T19:44:54.303Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.218",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "17 Money Lessons (I Wish Someone Had Told Me)",
+      "score": "0.231",
+      "views": 341242,
+      "channel": "Iman Gadzhi"
+    },
+    {
+      "title": "Driving my dream car for the first time!",
+      "score": "0.227",
+      "views": 301207,
+      "channel": "Corey Funk"
+    },
+    {
+      "title": "My Girlfriend Drives & Rates My Brand New Supercars!",
+      "score": "0.224",
+      "views": 418191,
+      "channel": "Corey Funk"
+    }
+  ]
+}
+
+[2025-08-12T19:44:54.303Z]   Searching thumbnails for: "off-road action shots"
+[2025-08-12T19:44:54.304Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:44:54.481Z]     Generated CLIP embedding in 177ms (768D)
+[2025-08-12T19:44:54.481Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:44:54.666Z]     Thumbnail search completed in 185ms
+[2025-08-12T19:44:54.666Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.241",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "The 4X4 Jeep gets huge upgrades! Rekluse clutch and more.",
+      "score": "0.255",
+      "views": 1014513,
+      "channel": "Grind Hard Plumbing Co"
+    },
+    {
+      "title": "Long Traveled 130HP Odyssey Rips!",
+      "score": "0.251",
+      "views": 378030,
+      "channel": "Grind Hard Plumbing Co"
+    },
+    {
+      "title": "Boosted Legacy Jumps 40 Feet + Welding the Diff and New Clutch",
+      "score": "0.251",
+      "views": 70971,
+      "channel": "Grind Hard Plumbing Co"
+    }
+  ]
+}
+
+[2025-08-12T19:44:54.667Z] 
+============================================================
+[2025-08-12T19:44:54.667Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T19:44:54.667Z] ============================================================
+[2025-08-12T19:44:54.667Z] 📋 Getting full video data for 125 unique videos...
+[2025-08-12T19:44:54.773Z] 📊 Filtered to 16 high performers (2.5x+) for validation
+[2025-08-12T19:44:54.773Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "The Mitsubishi Lancer Destruction Review",
+    "views": 1552194,
+    "score": 59.767,
+    "channel": "Aging Wheels",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Subaru Impreza Radio Removal - 2002, 2003, 2004 - 2.5RS, WRX, STI",
+    "views": 41504,
+    "score": 55.464,
+    "channel": "802 Garage",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "views": 123456,
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "hasThumbnail": true
+  },
+  {
+    "title": "This is the Worst Car I've Ever Reviewed",
+    "views": 6510004,
+    "score": 8.369,
+    "channel": "Auto Focus",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why I Love My GC Subaru Impreza - The Honda Civic of Subarus",
+    "views": 5482,
+    "score": 7.508,
+    "channel": "802 Garage",
+    "hasThumbnail": true
+  },
+  {
+    "title": "What Happened When They Banned Cars",
+    "views": 1621048,
+    "score": 5.415,
+    "channel": "City Beautiful",
+    "hasThumbnail": true
+  },
+  {
+    "title": "4 WORST And 9 BEST Things About The 2024 Subaru Crosstrek",
+    "views": 113301,
+    "score": 5.384,
+    "channel": "Downshift",
+    "hasThumbnail": true
+  },
+  {
+    "title": "FULL TOUR OF MY SALVAGE CAR COLLECTION",
+    "views": 1898595,
+    "score": 5.264,
+    "channel": "Mat Armstrong",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Honda Civic Destruction Review - Aging Reviews",
+    "views": 662715,
+    "score": 4.303,
+    "channel": "Aging Wheels",
+    "hasThumbnail": true
+  },
+  {
+    "title": "8 Reasons you SHOULD get a Subaru Outback",
+    "views": 38067,
+    "score": 3.26,
+    "channel": "Chase Christopher",
+    "hasThumbnail": true
+  },
+  {
+    "title": "130HP Engine Swapped Odyssey Test Drive",
+    "views": 1238858,
+    "score": 3.051,
+    "channel": "Grind Hard Plumbing Co",
+    "hasThumbnail": true
+  },
+  {
+    "title": "buying amazon's banned products",
+    "views": 6918266,
+    "score": 2.937,
+    "channel": "BENOFTHEWEEK",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Bought Banned Kid Toys",
+    "views": 19680601,
+    "score": 2.596,
+    "channel": "Ryan Trahan",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Incredible F1 Suspension So Good It Was Banned",
+    "views": 5274016,
+    "score": 2.594,
+    "channel": "Driver61",
+    "hasThumbnail": true
+  },
+  {
+    "title": "i bought my first car... (manual)",
+    "views": 2365162,
+    "score": 2.554,
+    "channel": "TechJoyce",
+    "hasThumbnail": true
+  },
+  {
+    "title": "My Girlfriend Drives & Rates My Brand New Supercars!",
+    "views": 418191,
+    "score": 2.551,
+    "channel": "Corey Funk",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T19:44:54.773Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T19:44:54.773Z] 🤖 Starting enhanced LLM validation for 16 videos...
+[2025-08-12T19:46:12.021Z] ✅ Enhanced validation complete: 4 videos confirmed
+[2025-08-12T19:46:12.021Z] Final Validated Videos:
+[
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "reason": "The title perfectly matches the pattern with identical key elements: \"BLACKLISTED\", \"11 Years\", \"Subaru\", and \"Recreate\"",
+    "visualMatch": "The thumbnail shows a muddy/dusty Subaru at a dramatic tilted angle on a dirt road with trees in background, plus yellow \"BLACKLISTED!\" text overlay. The person's dramatic reaction pose adds to the sense of high stakes and intense situation. Both text and visual elements align completely with the \"Controversial Brand Conflict Story\" pattern.",
+    "source": "summary"
+  },
+  {
+    "title": "buying amazon's banned products",
+    "score": 2.937,
+    "channel": "BENOFTHEWEEK",
+    "reason": "The text elements match the \"Controversial Brand Conflict\" pattern through use of terms like \"banned\" and featuring a major brand name (Amazon), creating similar authority and controversy as the pattern describes",
+    "visualMatch": "The thumbnail shows a dramatic situation with Amazon boxes as backdrop and a prop that creates tension/controversy, similar to how the pattern uses dramatic vehicle angles and settings to create high stakes\n\nThe key psychological elements align well:\n- Authority brand name (Amazon)\n- Controversial/forbidden theme (\"banned\", \"not a gun\")\n- Visual drama through staging and props\n- Clear conflict narrative (accessing banned items)\n\nWhile the specific visual execution differs from the vehicle-focused pattern, it achieves the same psychological effect of creating intrigue and high stakes around a brand-related controversy.",
+    "source": "summary"
+  },
+  {
+    "title": "I Bought Banned Kid Toys",
+    "score": 2.596,
+    "channel": "Ryan Trahan",
+    "reason": "The text elements match the controversial/conflict pattern through use of dramatic terms \"Banned\" and \"Illegal\" similar to \"BLACKLISTED\", suggesting forbidden/controversial content",
+    "visualMatch": "The thumbnail creates drama through the contrast between the toy and serious expression, with the red arrow and \"illegal\" text creating urgency and high stakes similar to the original pattern's dramatic vehicle positioning and bold text overlay.\n\nWhile the specific subject matter differs (toys vs vehicles), the core psychological elements of controversy, forbidden content, and dramatic presentation align with the original pattern's intent to create intrigue and tension.",
+    "source": "summary"
+  },
+  {
+    "title": "The Incredible F1 Suspension So Good It Was Banned",
+    "score": 2.594,
+    "channel": "Driver61",
+    "reason": "Text Elements: Similar pattern of \"banned/blacklisted\" controversial technology narrative, uses dramatic framing (\"So Good It Was Banned\"), references specific technical innovation that created conflict\n\nVISUAL:\n- Shows technical detail of the controversial component (suspension system)\n- Uses arrows/callouts to highlight the key technical feature\n- Clean studio photography of F1 car model creates authority/expertise\n- Yellow graphic elements match the dramatic highlighting pattern\n- Thumbnail creates intrigue by showing something \"missing\" (no springs)\n\nWhile the specific subject matter differs (F1 vs off-road vehicles), the core storytelling pattern of \"controversial innovation that got banned\" matches the template, both in dramatic framing and visual presentation style. The thumbnail effectively creates the same sense of high stakes and exclusive technical insight.",
+    "source": "title"
+  }
+]
+
+[2025-08-12T19:46:12.023Z] Pre-Calculation Metrics:
+{
+  "validationResults": 4,
+  "totalValidations": 4,
+  "avgPatternScore": 4.14325,
+  "visualValidations": 3,
+  "resultDetails": [
+    {
+      "niche": "Metalwork",
+      "count": 1,
+      "avg_score": 8.446,
+      "visualMatches": 1
+    },
+    {
+      "niche": "Theme Parks",
+      "count": 1,
+      "avg_score": 2.937,
+      "visualMatches": 1
+    },
+    {
+      "niche": "Recipes",
+      "count": 1,
+      "avg_score": 2.596,
+      "visualMatches": 1
+    },
+    {
+      "niche": "Educational Content",
+      "count": 1,
+      "avg_score": 2.594,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-12T19:46:12.023Z] Pattern Strength Calculation:
+{
+  "totalValidations": 4,
+  "avgPatternScore": 4.14325,
+  "visualValidations": 3,
+  "hasVisualValidation": true,
+  "multiModalBonus": 1.5,
+  "adjustedAvgScore": 6.214875,
+  "finalStrength": "moderate"
+}
+
+[2025-08-12T19:46:12.024Z] 
+============================================================
+[2025-08-12T19:46:12.024Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T19:46:12.024Z] ============================================================
+[2025-08-12T19:46:12.024Z] ✅ Enhanced pattern analysis complete in 94152ms
+[2025-08-12T19:46:12.024Z] 📊 Found 4 validations (3 with visual matches) across 4 niches
+[2025-08-12T19:46:12.024Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Controversial Brand Conflict Story",
+    "pattern_description": "Content that reveals behind-the-scenes drama or conflict with a major brand",
+    "psychological_trigger": "People are inherently drawn to stories of conflict and forbidden content, especially involving well-known brands",
+    "key_elements": [
+      "Use of dramatic term 'BLACKLISTED'",
+      "Specific timeframe '11 Years'",
+      "Brand name 'Subaru' creates authority",
+      "Action verb 'Recreate' suggests exclusive content"
+    ],
+    "visual_elements": [
+      "Dramatic off-road vehicle angle showing capability",
+      "Muddy/dusty vehicle suggesting authentic testing",
+      "Bold yellow text overlay 'BLACKLISTED!'",
+      "Dynamic outdoor setting with trees/dirt road"
+    ],
+    "thumbnail_psychology": "The combination of dramatic reaction and tilted vehicle creates a sense of intense situation and high stakes",
+    "why_it_works": "The promise of revealing forbidden content plus conflict with a major brand creates irresistible curiosity",
+    "semantic_queries": [
+      "why did subaru ban",
+      "subaru controversy",
+      "banned car reviews"
+    ],
+    "visual_queries": [
+      "dramatic car angles",
+      "off-road action shots"
+    ],
+    "channel_outlier_explanation": "While baseline videos focus on standard reviews, this video taps into controversy and behind-the-scenes drama with a major manufacturer, creating much higher viewer interest and shareability"
+  },
+  "source_video": {
+    "id": "pjSgFEvOGAY",
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "channel": "The Fast Lane Car",
+    "score": 8.446,
+    "niche": "Metalwork",
+    "views": 123456,
+    "thumbnail": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+    "baseline": 21070.867,
+    "published_at": "2025-08-07T11:01:34+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Metalwork",
+        "videos": [
+          {
+            "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+            "score": 8.446,
+            "views": 123456,
+            "channel": "The Fast Lane Car",
+            "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+            "validation_reason": "The title perfectly matches the pattern with identical key elements: \"BLACKLISTED\", \"11 Years\", \"Subaru\", and \"Recreate\"",
+            "visual_match": "The thumbnail shows a muddy/dusty Subaru at a dramatic tilted angle on a dirt road with trees in background, plus yellow \"BLACKLISTED!\" text overlay. The person's dramatic reaction pose adds to the sense of high stakes and intense situation. Both text and visual elements align completely with the \"Controversial Brand Conflict Story\" pattern.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 8.446,
+        "count": 1
+      },
+      {
+        "niche": "Theme Parks",
+        "videos": [
+          {
+            "title": "buying amazon's banned products",
+            "score": 2.937,
+            "views": 6918266,
+            "channel": "BENOFTHEWEEK",
+            "thumbnail_url": "https://i.ytimg.com/vi/O2xmZG0C4Mg/maxresdefault.jpg",
+            "validation_reason": "The text elements match the \"Controversial Brand Conflict\" pattern through use of terms like \"banned\" and featuring a major brand name (Amazon), creating similar authority and controversy as the pattern describes",
+            "visual_match": "The thumbnail shows a dramatic situation with Amazon boxes as backdrop and a prop that creates tension/controversy, similar to how the pattern uses dramatic vehicle angles and settings to create high stakes\n\nThe key psychological elements align well:\n- Authority brand name (Amazon)\n- Controversial/forbidden theme (\"banned\", \"not a gun\")\n- Visual drama through staging and props\n- Clear conflict narrative (accessing banned items)\n\nWhile the specific visual execution differs from the vehicle-focused pattern, it achieves the same psychological effect of creating intrigue and high stakes around a brand-related controversy.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 2.937,
+        "count": 1
+      },
+      {
+        "niche": "Recipes",
+        "videos": [
+          {
+            "title": "I Bought Banned Kid Toys",
+            "score": 2.596,
+            "views": 19680601,
+            "channel": "Ryan Trahan",
+            "thumbnail_url": "https://i.ytimg.com/vi/vejwjx4V4JY/maxresdefault.jpg",
+            "validation_reason": "The text elements match the controversial/conflict pattern through use of dramatic terms \"Banned\" and \"Illegal\" similar to \"BLACKLISTED\", suggesting forbidden/controversial content",
+            "visual_match": "The thumbnail creates drama through the contrast between the toy and serious expression, with the red arrow and \"illegal\" text creating urgency and high stakes similar to the original pattern's dramatic vehicle positioning and bold text overlay.\n\nWhile the specific subject matter differs (toys vs vehicles), the core psychological elements of controversy, forbidden content, and dramatic presentation align with the original pattern's intent to create intrigue and tension.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 2.596,
+        "count": 1
+      },
+      {
+        "niche": "Educational Content",
+        "videos": [
+          {
+            "title": "The Incredible F1 Suspension So Good It Was Banned",
+            "score": 2.594,
+            "views": 5274016,
+            "channel": "Driver61",
+            "thumbnail_url": "https://i.ytimg.com/vi/sRB9T2ACPRI/hqdefault.jpg",
+            "validation_reason": "Text Elements: Similar pattern of \"banned/blacklisted\" controversial technology narrative, uses dramatic framing (\"So Good It Was Banned\"), references specific technical innovation that created conflict\n\nVISUAL:\n- Shows technical detail of the controversial component (suspension system)\n- Uses arrows/callouts to highlight the key technical feature\n- Clean studio photography of F1 car model creates authority/expertise\n- Yellow graphic elements match the dramatic highlighting pattern\n- Thumbnail creates intrigue by showing something \"missing\" (no springs)\n\nWhile the specific subject matter differs (F1 vs off-road vehicles), the core storytelling pattern of \"controversial innovation that got banned\" matches the template, both in dramatic framing and visual presentation style. The thumbnail effectively creates the same sense of high stakes and exclusive technical insight.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 2.594,
+        "count": 1
+      }
+    ],
+    "total_validations": 4,
+    "visual_validations": 3,
+    "pattern_strength": "moderate",
+    "avg_pattern_score": 4.14325
+  },
+  "processing_time_ms": 94152,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 125,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"why did subaru ban\"",
+      "    Generated embedding in 1749ms",
+      "    Title search: 15 results (avg similarity: 0.516)",
+      "    Summary search: 19 results (avg similarity: 0.504)",
+      "    Parallel search completed in 954ms",
+      "  Searching text for: \"subaru controversy\"",
+      "    Generated embedding in 2123ms",
+      "    Title search: 19 results (avg similarity: 0.551)",
+      "    Summary search: 18 results (avg similarity: 0.565)",
+      "    Parallel search completed in 478ms",
+      "  Searching text for: \"banned car reviews\"",
+      "    Generated embedding in 1590ms",
+      "    Title search: 19 results (avg similarity: 0.549)",
+      "    Summary search: 19 results (avg similarity: 0.517)",
+      "    Parallel search completed in 827ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"dramatic car angles\"",
+      "    Generated CLIP embedding in 569ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.218)",
+      "    Visual search completed in 326ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"off-road action shots\"",
+      "    Generated CLIP embedding in 177ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.241)",
+      "    Visual search completed in 185ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 125 across all searches",
+      "📋 Getting full video data for 125 unique videos...",
+      "📊 Filtered to 16 high performers (2.5x+) for validation",
+      "🤖 Starting enhanced LLM validation for 16 videos...",
+      "    ❌ Rejected \"The Mitsubishi Lancer Destruction Review...\" in 5157ms - NO\n\nReasoning:\n- Text Elements: While it uses a dramatic term \"Destruction/Carnage\", it doesn't matc",
+      "    ❌ Rejected \"Subaru Impreza Radio Removal - 2002, 2003, 2004 - ...\" in 4307ms - NO\n\nThis video does not match the \"Controversial Brand Conflict Story\" pattern for several reasons:\n",
+      "    ✅ Validated \"We Recreate The Off-Road Video Test That Got Us BL...\" in 2980ms (summary source)",
+      "      🎨 Visual match: The thumbnail shows a muddy/dusty Subaru at a dramatic tilted angle on a dirt road with trees in background, plus yellow \"BLACKLISTED!\" text overlay. The person's dramatic reaction pose adds to the sense of high stakes and intense situation. Both text and visual elements align completely with the \"Controversial Brand Conflict Story\" pattern.",
+      "    ❌ Rejected \"This is the Worst Car I've Ever Reviewed...\" in 4299ms - NO - This video does not match the \"Controversial Brand Conflict Story\" pattern. Here's why:\n\nText E",
+      "    ❌ Rejected \"Why I Love My GC Subaru Impreza - The Honda Civic ...\" in 4803ms - NO\n\nReasoning:\n- Text Elements: Does not match pattern\n  - No dramatic terms like \"BLACKLISTED\"\n  - ",
+      "    ❌ Rejected \"What Happened When They Banned Cars...\" in 4705ms - NO - This video does not match the \"Controversial Brand Conflict Story\" pattern for several key reas",
+      "    ❌ Rejected \"4 WORST And 9 BEST Things About The 2024 Subaru Cr...\" in 4507ms - NO\n\nReasoning:\n- Text Elements: Does not match the pattern as it uses a straightforward pros/cons fo",
+      "    ❌ Rejected \"FULL TOUR OF MY SALVAGE CAR COLLECTION...\" in 4898ms - NO\n\nThis video does not match the \"Controversial Brand Conflict Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"Honda Civic Destruction Review - Aging Reviews...\" in 5587ms - NO\n\nReasoning:\n- Text Elements: While \"Destruction\" has dramatic connotation, it doesn't match the s",
+      "    ❌ Rejected \"8 Reasons you SHOULD get a Subaru Outback...\" in 5591ms - NO\n\nThis video does not match the \"Controversial Brand Conflict Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"130HP Engine Swapped Odyssey Test Drive...\" in 5019ms - NO - This video does not match the \"Controversial Brand Conflict Story\" pattern for several key reas",
+      "    ✅ Validated \"buying amazon's banned products...\" in 6030ms (summary source)",
+      "      🎨 Visual match: The thumbnail shows a dramatic situation with Amazon boxes as backdrop and a prop that creates tension/controversy, similar to how the pattern uses dramatic vehicle angles and settings to create high stakes\n\nThe key psychological elements align well:\n- Authority brand name (Amazon)\n- Controversial/forbidden theme (\"banned\", \"not a gun\")\n- Visual drama through staging and props\n- Clear conflict narrative (accessing banned items)\n\nWhile the specific visual execution differs from the vehicle-focused pattern, it achieves the same psychological effect of creating intrigue and high stakes around a brand-related controversy.",
+      "    ✅ Validated \"I Bought Banned Kid Toys...\" in 4526ms (summary source)",
+      "      🎨 Visual match: The thumbnail creates drama through the contrast between the toy and serious expression, with the red arrow and \"illegal\" text creating urgency and high stakes similar to the original pattern's dramatic vehicle positioning and bold text overlay.\n\nWhile the specific subject matter differs (toys vs vehicles), the core psychological elements of controversy, forbidden content, and dramatic presentation align with the original pattern's intent to create intrigue and tension.",
+      "    ✅ Validated \"The Incredible F1 Suspension So Good It Was Banned...\" in 5581ms (title source)",
+      "    ❌ Rejected \"i bought my first car... (manual)...\" in 4729ms - NO\n\nThis video does not match the \"Controversial Brand Conflict Story\" pattern for several reasons:\n",
+      "    ❌ Rejected \"My Girlfriend Drives & Rates My Brand New Supercar...\" in 4528ms - NO\n\nThis video does not match the \"Controversial Brand Conflict Story\" pattern for several reasons:\n",
+      "✅ Enhanced validation complete: 4 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "why did subaru ban",
+          "duration": 2703,
+          "titleResults": 15,
+          "summaryResults": 19
+        },
+        {
+          "query": "subaru controversy",
+          "duration": 2602,
+          "titleResults": 19,
+          "summaryResults": 18
+        },
+        {
+          "query": "banned car reviews",
+          "duration": 2418,
+          "titleResults": 19,
+          "summaryResults": 19
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "dramatic car angles",
+          "duration": 897,
+          "results": 25
+        },
+        {
+          "query": "off-road action shots",
+          "duration": 363,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "why did subaru ban",
+        "duration": 2703,
+        "titleSearch": {
+          "found": 15,
+          "avgSimilarity": 0.515955809,
+          "threshold": 0.5,
+          "topScores": [
+            0.558068335,
+            0.550861239,
+            0.527449191
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.504233010631579,
+          "threshold": 0.4,
+          "topScores": [
+            0.579473436,
+            0.529907286,
+            0.523670614
+          ]
+        }
+      },
+      {
+        "query": "subaru controversy",
+        "duration": 2602,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.5512672693157894,
+          "threshold": 0.5,
+          "topScores": [
+            0.608965218,
+            0.581662357,
+            0.572119355
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.5654633966666666,
+          "threshold": 0.4,
+          "topScores": [
+            0.633437335,
+            0.608169,
+            0.595862329
+          ]
+        }
+      },
+      {
+        "query": "banned car reviews",
+        "duration": 2418,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.5485105752105263,
+          "threshold": 0.5,
+          "topScores": [
+            0.58738178,
+            0.581111908,
+            0.577292144
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.5174561203684211,
+          "threshold": 0.4,
+          "topScores": [
+            0.59366852,
+            0.552619934,
+            0.538126707
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "dramatic car angles",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 897,
+        "avgSimilarity": 0.21771084504000002,
+        "topScores": [
+          0.230811641,
+          0.226766214,
+          0.224374
+        ]
+      },
+      {
+        "query": "off-road action shots",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 363,
+        "avgSimilarity": 0.2407169352,
+        "topScores": [
+          0.25511387,
+          0.251264185,
+          0.250656098
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 125,
+      "afterPerformanceFilter": 16,
+      "validated": 4,
+      "validationRate": "25.0%",
+      "sourceBreakdown": {
+        "title": 1,
+        "summary": 3,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 438,
+      "responseTokens": 358,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T19:46:12.028Z
+================================================================================

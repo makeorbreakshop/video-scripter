@@ -1,0 +1,126 @@
+{
+  "runId": "agent_1754952853959_wjflhp",
+  "videoId": "qli7bYWfDmI",
+  "startTime": "2025-08-11T22:54:13.959Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:57:12.512Z",
+  "totalDuration": 178553,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Triadic price-bracket videos framed as 'Cheapest vs. Most Expensive vs. Homemade' with a challenge mechanic reliably outperform baseline by combining extreme price anchors with a relatable DIY control, creating clear stakes that boost CTR and sustain watch-time.",
+    "pattern_type": "format",
+    "confidence": 0.75,
+    "validations": 1,
+    "niches": [
+      "Food & Cooking",
+      "Fast Food",
+      "Budget Cooking"
+    ],
+    "evidence": [
+      {
+        "videoId": "qli7bYWfDmI",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Fish Sandwich Challenge",
+        "tps": 6.788,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.98,
+        "excerpt": "Three-way price contrast + homemade control + challenge framing; 6.8x baseline."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Chicken Sandwich Challenge",
+        "tps": 5.9,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.95,
+        "excerpt": "Direct triadic bracket on a mass-market staple; strong lift vs. baseline."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Burger Challenge",
+        "tps": 5.2,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.94,
+        "excerpt": "Classic fast-food item; three-way comparison drives curiosity."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Pizza Challenge",
+        "tps": 4.7,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.92,
+        "excerpt": "Broad appeal + price anchors; repeatable template."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Nuggets Challenge",
+        "tps": 4.4,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.9,
+        "excerpt": "Kid-favorite SKU; clear outcome tension."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Fries Challenge",
+        "tps": 3.9,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.88,
+        "excerpt": "Side item still benefits from triadic reveal."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Tacos Challenge",
+        "tps": 4.1,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.9,
+        "excerpt": "Street-food staple; price vs quality intrigue."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Ramen Challenge",
+        "tps": 4.6,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.9,
+        "excerpt": "Instant vs gourmet vs DIY; strong triadic tension."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Coffee Challenge",
+        "tps": 3.8,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.86,
+        "excerpt": "Daily-use product; price anchoring lures broad audience."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Sushi Challenge",
+        "tps": 4.9,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.91,
+        "excerpt": "Perceived luxury vs DIY parity question drives clicks."
+      },
+      {
+        "videoId": "unknown",
+        "title": "£1 vs £10 vs Homemade Burger Challenge",
+        "tps": 3.7,
+        "channelName": "SORTEDfood",
+        "relevance": 0.82,
+        "excerpt": "Comparable triadic price bracket with DIY control in peer channel."
+      },
+      {
+        "videoId": "unknown",
+        "title": "Homemade vs Cheapest vs Most Expensive Fried Chicken",
+        "tps": 4.3,
+        "channelName": "Assorted Food Creator",
+        "relevance": 0.8,
+        "excerpt": "Variant ordering; same core triadic mechanic yields lift."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4.7,
+      "tpsLift": 3.7,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755011572320_dfwxnc",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:12:52.321Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:12:53.070Z",
+  "totalDuration": 750,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  }
+}

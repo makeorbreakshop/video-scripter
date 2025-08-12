@@ -3,6 +3,18 @@ import { getValidAccessToken, isAuthenticated } from './youtube-oauth.ts';
 
 // Helper function to get the API key from localStorage
 const getYouTubeApiKey = (): string | null => {
+  // Check if we should use the fallback system (server-side only)
+  if (typeof window === 'undefined' && process.env.YOUTUBE_API_KEY_BACKUP) {
+    // Use the fallback system if backup key exists
+    const { youtubeAPIWithFallback } = require('./youtube-api-with-fallback');
+    const key = youtubeAPIWithFallback.getCurrentKey();
+    if (key) {
+      const status = youtubeAPIWithFallback.getStatus();
+      console.log(`🔑 Using YouTube API key: ${status.usingBackup ? 'BACKUP' : 'PRIMARY'}`);
+      return key;
+    }
+  }
+  
   // Try environment variable first (server-side)
   if (process.env.YOUTUBE_API_KEY) {
     console.log('🔑 Using YouTube API key from process.env.YOUTUBE_API_KEY');

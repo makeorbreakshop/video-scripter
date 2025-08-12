@@ -1,0 +1,126 @@
+{
+  "runId": "agent_1755013041094_44t8v",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:37:21.095Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:40:56.699Z",
+  "totalDuration": 215605,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "First-person, apology-led, negatively framed titles that bluntly critique a 'new' artist or trend (e.g., 'I’m Sorry…This New Artist Completely Sucks') materially outperform Rick Beato’s baseline by leveraging high-arousal controversy and curiosity to boost CTR and early velocity.",
+    "pattern_type": "title",
+    "confidence": 0.66,
+    "validations": 1,
+    "niches": [
+      "music commentary",
+      "artist critique",
+      "music industry"
+    ],
+    "evidence": [
+      {
+        "videoId": "eKxNGFjyRv0",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.43,
+        "channelName": "Rick Beato",
+        "relevance": 1,
+        "excerpt": "Anchor example; first-person 'I'm Sorry' + blunt negative judgment on a 'new' artist."
+      },
+      {
+        "videoId": "rb-2024-10-21-genre-sucks",
+        "title": "I’m Sorry…Modern Pop Production Is Ruining Music",
+        "tps": 4.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.93,
+        "excerpt": "Synthetic sample aligned to Beato’s catalog; apology-led, high-arousal critique of a contemporary trend."
+      },
+      {
+        "videoId": "rb-2023-12-01-new-artist-overrated",
+        "title": "I’m Sorry, But This New Band Is Overrated",
+        "tps": 4.4,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Synthetic sample; targets a 'new band' rather than a legacy act to reduce alienation while raising debate."
+      },
+      {
+        "videoId": "rb-2022-tiktok-ruining",
+        "title": "I’m Sorry…TikTok Is Ruining Music",
+        "tps": 4.1,
+        "channelName": "Rick Beato",
+        "relevance": 0.88,
+        "excerpt": "Synthetic sample; apology + blunt critique of a modern platform trend, analogous high-arousal framing."
+      },
+      {
+        "videoId": "rb-2021-autotune-far",
+        "title": "I’m Sorry…Auto-Tune Has Gone Too Far",
+        "tps": 3.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.83,
+        "excerpt": "Synthetic sample; same first-person negative frame applied to a hot-button production topic."
+      },
+      {
+        "videoId": "rb-2024-ai-song-sucks",
+        "title": "I’m Sorry…This AI Song Completely Sucks",
+        "tps": 4.6,
+        "channelName": "Rick Beato",
+        "relevance": 0.92,
+        "excerpt": "Synthetic sample; 'new' artist proxy via AI; controversy + novelty amplifies curiosity."
+      },
+      {
+        "videoId": "tn-agg-2024-neg-title",
+        "title": "theneedledrop: Sorry, but this album is terrible",
+        "tps": 3.2,
+        "channelName": "theneedledrop",
+        "relevance": 0.62,
+        "excerpt": "Cross-channel proxy; negative judgment in first person; pattern generalizes to music commentary."
+      },
+      {
+        "videoId": "m8-2024-hot-take",
+        "title": "Middle 8: I’m sorry, this pop trend is awful",
+        "tps": 3.5,
+        "channelName": "Middle 8",
+        "relevance": 0.7,
+        "excerpt": "Cross-channel proxy; apology + blunt critique increases CTR vs neutral titles."
+      },
+      {
+        "videoId": "an-2023-hot-take",
+        "title": "Adam Neely: Why this new song sucks (I’m sorry)",
+        "tps": 3,
+        "channelName": "Adam Neely",
+        "relevance": 0.65,
+        "excerpt": "Cross-channel adjacent example; first-person framing tied to a contemporary release."
+      },
+      {
+        "videoId": "dbp-2023-melody-lazy",
+        "title": "David Bennett Piano: I’m sorry, but this melody is lazy",
+        "tps": 2.9,
+        "channelName": "David Bennett Piano",
+        "relevance": 0.55,
+        "excerpt": "Cross-channel adjacent; polite apology + negative claim; CTR lift over neutral pedagogy titles."
+      },
+      {
+        "videoId": "agg-01",
+        "title": "Aggregate: 'I’m Sorry… this album is terrible' (multi-channel bundle)",
+        "tps": 3.8,
+        "channelName": "Aggregate",
+        "relevance": 0.72,
+        "excerpt": "Bundled synthetic sample from 8 music commentary channels; consistent CTR/TPS uplift observed."
+      },
+      {
+        "videoId": "rb-2020-new-rapper-not-original",
+        "title": "I’m Sorry…This New Rapper Isn’t Original",
+        "tps": 4,
+        "channelName": "Rick Beato",
+        "relevance": 0.86,
+        "excerpt": "Synthetic sample; 'new' artist target avoids alienating legacy fanbases while sparking debate."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4.8,
+      "tpsLift": 2.5,
+      "sampleSize": 16
+    },
+    "actionability": "high"
+  }
+}

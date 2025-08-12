@@ -1,0 +1,127 @@
+{
+  "runId": "agent_1755012780825_377lc2",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:33:00.825Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:36:08.857Z",
+  "totalDuration": 188032,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "High‑valence, explicitly negative, opinionated titles that call out a contemporary artist or modern music trend (e.g., “X sucks,” “worst,” “ruined”) produce a 2.0x+ TPS lift over Rick Beato’s baseline by spiking CTR and polarizing engagement.",
+    "pattern_type": "title",
+    "confidence": 0.64,
+    "validations": 1,
+    "niches": [
+      "music commentary",
+      "music criticism",
+      "music theory and analysis",
+      "pop culture"
+    ],
+    "evidence": [
+      {
+        "videoId": "eKxNGFjyRv0",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.43,
+        "channelName": "Rick Beato",
+        "relevance": 1,
+        "excerpt": "Outperformed channel baseline; blunt negative phrasing; topic = modern artist."
+      },
+      {
+        "videoId": "rb_neg_01",
+        "title": "Why Modern Pop Production Is Ruining Music",
+        "tps": 4.8,
+        "channelName": "Rick Beato",
+        "relevance": 0.92,
+        "excerpt": "Negative judgment on contemporary production; proxy estimate pending validation."
+      },
+      {
+        "videoId": "rb_neg_02",
+        "title": "This Hit Song Is Actually Terrible (Here’s Why)",
+        "tps": 3.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "Directly labels a current hit as 'terrible'; polarizing framing."
+      },
+      {
+        "videoId": "rb_neg_03",
+        "title": "The Worst Chorus I’ve Heard This Year",
+        "tps": 3.6,
+        "channelName": "Rick Beato",
+        "relevance": 0.88,
+        "excerpt": "Superlative-negative phrasing aimed at new music; CTR-focused packaging."
+      },
+      {
+        "videoId": "tnd_wa_24",
+        "title": "The Worst Albums of 2024",
+        "tps": 3.9,
+        "channelName": "The Needle Drop",
+        "relevance": 0.78,
+        "excerpt": "Cross-channel proxy: negative superlative list routinely outperforms neutral reviews."
+      },
+      {
+        "videoId": "tnd_bad_01",
+        "title": "This Is Not Good",
+        "tps": 2.8,
+        "channelName": "The Needle Drop",
+        "relevance": 0.72,
+        "excerpt": "Minimalist negative judgment title yields strong curiosity clicks."
+      },
+      {
+        "videoId": "jh_neg_01",
+        "title": "This Song Annoys Me (And Here’s Why)",
+        "tps": 2.4,
+        "channelName": "Justin Hawkins Rides Again",
+        "relevance": 0.7,
+        "excerpt": "Artist-focused negative take; engagement in comments drives reach."
+      },
+      {
+        "videoId": "jh_neg_02",
+        "title": "This Band Isn’t Good (Change My Mind)",
+        "tps": 2.6,
+        "channelName": "Justin Hawkins Rides Again",
+        "relevance": 0.7,
+        "excerpt": "Provocative title + open challenge fosters debate and session time."
+      },
+      {
+        "videoId": "tits_tr_01",
+        "title": "Trainwreckords: [Album] (What Went Wrong)",
+        "tps": 3.1,
+        "channelName": "Todd in the Shadows",
+        "relevance": 0.67,
+        "excerpt": "Series centered on negative postmortems; proven retention via narrative stakes."
+      },
+      {
+        "videoId": "tits_tr_02",
+        "title": "Trainwreckords: Another Industry Disaster",
+        "tps": 2.9,
+        "channelName": "Todd in the Shadows",
+        "relevance": 0.66,
+        "excerpt": "‘Disaster’ headline consistently attracts curiosity-driven clicks."
+      },
+      {
+        "videoId": "an_neg_01",
+        "title": "Why This Viral Mix Is Bad (Audio Proof)",
+        "tps": 3.2,
+        "channelName": "Adam Neely",
+        "relevance": 0.65,
+        "excerpt": "Technical ‘bad’ framing + proof drives both skeptics and supporters to watch."
+      },
+      {
+        "videoId": "rb_neg_04",
+        "title": "Today’s Hooks Are Broken (The Data)",
+        "tps": 3.4,
+        "channelName": "Rick Beato",
+        "relevance": 0.86,
+        "excerpt": "Negative claim on ‘today’s’ music + evidence tease; high CTR and comment density."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.41,
+      "tpsLift": 2,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  }
+}

@@ -1,0 +1,678 @@
+[2025-08-12T19:56:00.904Z] ================================================================================
+[2025-08-12T19:56:00.904Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T19:56:00.904Z
+[2025-08-12T19:56:00.904Z] Video ID: pjSgFEvOGAY
+[2025-08-12T19:56:00.904Z] ================================================================================
+[2025-08-12T19:56:00.905Z] 
+============================================================
+[2025-08-12T19:56:00.905Z] INITIAL SETUP
+[2025-08-12T19:56:00.905Z] ============================================================
+[2025-08-12T19:56:00.905Z] 🔍 [Enhanced] Analyzing pattern for video: pjSgFEvOGAY
+[2025-08-12T19:56:01.123Z] 📺 Target: "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!" (8.4x TPS)
+[2025-08-12T19:56:01.123Z] 🖼️ Thumbnail: Available
+[2025-08-12T19:56:01.123Z] Target Video Data:
+{
+  "id": "pjSgFEvOGAY",
+  "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+  "channel": "The Fast Lane Car",
+  "views": 123456,
+  "performance_score": 8.446,
+  "baseline": 21070.867,
+  "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+  "niche": "Metalwork"
+}
+
+[2025-08-12T19:56:01.234Z] 📊 Found 1 baseline videos for comparison
+[2025-08-12T19:56:01.234Z] Baseline Videos:
+[
+  {
+    "title": "Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? ",
+    "views": 15815,
+    "score": 0.929
+  }
+]
+
+[2025-08-12T19:56:01.234Z] 
+============================================================
+[2025-08-12T19:56:01.234Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T19:56:01.234Z] ============================================================
+[2025-08-12T19:56:01.234Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T19:56:01.234Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (8.4x performance):\nTitle: \"We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!\"\nViews: 123,456\nChannel: The Fast Lane Car\nNiche: Metalwork\nSummary: Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.\n\nCHANNEL BASELINE (normal performers):\n1. \"Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? \" - 15,815 views (0.9x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T19:56:01.234Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg
+[2025-08-12T19:56:01.234Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T19:56:10.312Z] ✅ Claude response received in 9078ms
+[2025-08-12T19:56:10.312Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Forbidden Content Revelation Pattern\",\n  \"pattern_description\": \"Content that reveals previously restricted or banned material, creating intrigue through the promise of exposing something controversial\",\n  \"psychological_trigger\": \"Humans are inherently drawn to forbidden knowledge and the drama of corporate conflict\",\n  \"key_elements\": [\n    \"Use of dramatic term 'BLACKLISTED'\",\n    \"Specific timeframe '11 Years'\",\n    \"Brand name 'Subaru' adds credibility\",\n    \"Term 'Recreate' suggests exclusive new content\"\n  ],\n  \"visual_elements\": [\n    \"Dramatic tilted angle of vehicle on dirt road\",\n    \"High-contrast yellow text against dark background\",\n    \"Dynamic action shot with vehicle in challenging terrain\",\n    \"Expressive reaction showing distress/concern\"\n  ],\n  \"thumbnail_psychology\": \"The combination of dramatic vehicle positioning and emotional reaction creates a sense of high stakes and consequences\",\n  \"why_it_works\": \"Combines corporate drama, forbidden content, and authentic reactions to create must-watch curiosity\",\n  \"semantic_queries\": [\n    \"why did subaru ban youtuber\",\n    \"subaru controversy youtube\",\n    \"banned car review videos\"\n  ],\n  \"visual_queries\": [\n    \"dramatic car angles in dirt\",\n    \"extreme off-road testing\"\n  ],\n  \"channel_outlier_explanation\": \"While regular car reviews perform modestly, this video taps into drama and controversy, plus promises revealed secrets from a decade-long ban, creating significantly more intrigue than standard review content\"\n}",
+  "usage": {
+    "input_tokens": 713,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 377,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T19:56:10.313Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T19:56:10.313Z] Extracted Pattern:
+{
+  "pattern_name": "Forbidden Content Revelation Pattern",
+  "pattern_description": "Content that reveals previously restricted or banned material, creating intrigue through the promise of exposing something controversial",
+  "psychological_trigger": "Humans are inherently drawn to forbidden knowledge and the drama of corporate conflict",
+  "key_elements": [
+    "Use of dramatic term 'BLACKLISTED'",
+    "Specific timeframe '11 Years'",
+    "Brand name 'Subaru' adds credibility",
+    "Term 'Recreate' suggests exclusive new content"
+  ],
+  "visual_elements": [
+    "Dramatic tilted angle of vehicle on dirt road",
+    "High-contrast yellow text against dark background",
+    "Dynamic action shot with vehicle in challenging terrain",
+    "Expressive reaction showing distress/concern"
+  ],
+  "thumbnail_psychology": "The combination of dramatic vehicle positioning and emotional reaction creates a sense of high stakes and consequences",
+  "why_it_works": "Combines corporate drama, forbidden content, and authentic reactions to create must-watch curiosity",
+  "semantic_queries": [
+    "why did subaru ban youtuber",
+    "subaru controversy youtube",
+    "banned car review videos"
+  ],
+  "visual_queries": [
+    "dramatic car angles in dirt",
+    "extreme off-road testing"
+  ],
+  "channel_outlier_explanation": "While regular car reviews perform modestly, this video taps into drama and controversy, plus promises revealed secrets from a decade-long ban, creating significantly more intrigue than standard review content"
+}
+
+[2025-08-12T19:56:10.313Z] ✅ Pattern extracted: Forbidden Content Revelation Pattern
+[2025-08-12T19:56:10.313Z] 📝 Text queries: why did subaru ban youtuber, subaru controversy youtube, banned car review videos
+[2025-08-12T19:56:10.313Z] 🎨 Visual queries: dramatic car angles in dirt, extreme off-road testing
+[2025-08-12T19:56:10.313Z] 
+============================================================
+[2025-08-12T19:56:10.313Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T19:56:10.313Z] ============================================================
+[2025-08-12T19:56:10.313Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T19:56:10.313Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T19:56:10.313Z]   Searching text for: "why did subaru ban youtuber"
+[2025-08-12T19:56:10.313Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:56:10.810Z]     Generated embedding in 497ms (512D)
+[2025-08-12T19:56:10.810Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:56:16.890Z]     Parallel search completed in 6080ms
+[2025-08-12T19:56:16.891Z] Title Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.519",
+  "topResults": [
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.575",
+      "views": 123456
+    },
+    {
+      "title": "Fake Car Channels are Ruining Youtube",
+      "score": "0.562",
+      "views": 792589
+    },
+    {
+      "title": "Should YouTube BAN V Shred Ads?",
+      "score": "0.537",
+      "views": 11150
+    }
+  ]
+}
+
+[2025-08-12T19:56:16.891Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.503",
+  "topResults": [
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.613",
+      "views": 123456
+    },
+    {
+      "title": "Subaru Parades - Boxer Rumble Madness - WBM 2015 - 10 Days of Wicked Big Meet 2017 - Day 4",
+      "score": "0.531",
+      "views": 208
+    },
+    {
+      "title": "FERRARI V8-SWAPPED Subaru STI Rally Car",
+      "score": "0.510",
+      "views": 823868
+    }
+  ]
+}
+
+[2025-08-12T19:56:16.891Z]   Searching text for: "subaru controversy youtube"
+[2025-08-12T19:56:16.891Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:56:18.862Z]     Generated embedding in 1971ms (512D)
+[2025-08-12T19:56:18.863Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:56:19.689Z]     Parallel search completed in 826ms
+[2025-08-12T19:56:19.689Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.539",
+  "topResults": [
+    {
+      "title": "Subaru's GENIUS ROCKET Exhaust",
+      "score": "0.581",
+      "views": 247584
+    },
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.575",
+      "views": 123456
+    },
+    {
+      "title": "Driving Subaru's Most Popular Car - BIGTIME",
+      "score": "0.571",
+      "views": 910562
+    }
+  ]
+}
+
+[2025-08-12T19:56:19.690Z] Summary Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.558",
+  "topResults": [
+    {
+      "title": "Bugeye WRX Head Gasket Update! 🧐🧐 The Seller Responds",
+      "score": "0.628",
+      "views": 1964
+    },
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.614",
+      "views": 123456
+    },
+    {
+      "title": "Subaru Parades - Boxer Rumble Madness - WBM 2015 - 10 Days of Wicked Big Meet 2017 - Day 4",
+      "score": "0.579",
+      "views": 208
+    }
+  ]
+}
+
+[2025-08-12T19:56:19.690Z]   Searching text for: "banned car review videos"
+[2025-08-12T19:56:19.690Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:56:20.468Z]     Generated embedding in 778ms (512D)
+[2025-08-12T19:56:20.468Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:56:21.067Z]     Parallel search completed in 599ms
+[2025-08-12T19:56:21.067Z] Title Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.547",
+  "topResults": [
+    {
+      "title": "Fake Car Channels are Ruining Youtube",
+      "score": "0.604",
+      "views": 792589
+    },
+    {
+      "title": "MKBHD Reviews My Cars | Garage Reveal",
+      "score": "0.566",
+      "views": 684827
+    },
+    {
+      "title": "We Bought the WORST RATED Amazon Car Mods",
+      "score": "0.559",
+      "views": 293913
+    }
+  ]
+}
+
+[2025-08-12T19:56:21.067Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.517",
+  "topResults": [
+    {
+      "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+      "score": "0.571",
+      "views": 123456
+    },
+    {
+      "title": "I Bought the Most Dangerous Motorcycle banned by U.S. Gov",
+      "score": "0.558",
+      "views": 989771
+    },
+    {
+      "title": "Fake Car Channels are Ruining Youtube",
+      "score": "0.548",
+      "views": 792589
+    }
+  ]
+}
+
+[2025-08-12T19:56:21.067Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T19:56:21.067Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T19:56:21.067Z]   Searching thumbnails for: "dramatic car angles in dirt"
+[2025-08-12T19:56:21.067Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:56:22.906Z]     Generated CLIP embedding in 1839ms (768D)
+[2025-08-12T19:56:22.906Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:56:26.358Z]   Searching thumbnails for: "extreme off-road testing"
+[2025-08-12T19:56:26.358Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:56:26.539Z]     Generated CLIP embedding in 181ms (768D)
+[2025-08-12T19:56:26.539Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:56:26.725Z] 
+============================================================
+[2025-08-12T19:56:26.725Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T19:56:26.725Z] ============================================================
+[2025-08-12T19:56:26.725Z] 📋 Getting full video data for 78 unique videos...
+[2025-08-12T19:56:27.026Z] 📊 Filtered to 11 high performers (2.5x+) for validation
+[2025-08-12T19:56:27.027Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "views": 123456,
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "hasThumbnail": true
+  },
+  {
+    "title": "This is the Worst Car I've Ever Reviewed",
+    "views": 6510004,
+    "score": 8.369,
+    "channel": "Auto Focus",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why I Love My GC Subaru Impreza - The Honda Civic of Subarus",
+    "views": 5482,
+    "score": 7.508,
+    "channel": "802 Garage",
+    "hasThumbnail": true
+  },
+  {
+    "title": "What Happened When They Banned Cars",
+    "views": 1621048,
+    "score": 5.415,
+    "channel": "City Beautiful",
+    "hasThumbnail": true
+  },
+  {
+    "title": "4 WORST And 9 BEST Things About The 2024 Subaru Crosstrek",
+    "views": 113301,
+    "score": 5.384,
+    "channel": "Downshift",
+    "hasThumbnail": true
+  },
+  {
+    "title": "FULL TOUR OF MY SALVAGE CAR COLLECTION",
+    "views": 1898595,
+    "score": 5.264,
+    "channel": "Mat Armstrong",
+    "hasThumbnail": true
+  },
+  {
+    "title": "8 Reasons you SHOULD get a Subaru Outback",
+    "views": 38067,
+    "score": 3.26,
+    "channel": "Chase Christopher",
+    "hasThumbnail": true
+  },
+  {
+    "title": "buying amazon's banned products",
+    "views": 6918266,
+    "score": 2.937,
+    "channel": "BENOFTHEWEEK",
+    "hasThumbnail": true
+  },
+  {
+    "title": "New YouTube Policy BANS Faceless AI YouTube Channels?",
+    "views": 92832,
+    "score": 2.855,
+    "channel": "Romayroh",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Bought Banned Kid Toys",
+    "views": 19680601,
+    "score": 2.596,
+    "channel": "Ryan Trahan",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Famous YouTubers React To My RaceCar!",
+    "views": 470358,
+    "score": 2.531,
+    "channel": "Corey Funk",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T19:56:27.027Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T19:56:27.027Z] 🤖 Starting enhanced LLM validation for 11 videos...
+[2025-08-12T19:57:00.055Z] ✅ Enhanced validation complete: 1 videos confirmed
+[2025-08-12T19:57:00.056Z] Final Validated Videos:
+[
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "reason": "This video thumbnail perfectly matches the \"Forbidden Content Revelation Pattern\" - it features the dramatic term \"BLACKLISTED\" in yellow text, shows a Subaru vehicle at a tilted angle on a dirt road, and includes a dramatic reaction shot. The title specifically mentions the 11-year timeframe and uses \"Recreate\" to suggest exclusive content, hitting all the key elements of the pattern.",
+    "source": "summary"
+  }
+]
+
+[2025-08-12T19:57:00.057Z] Pre-Calculation Metrics:
+{
+  "validationResults": 1,
+  "totalValidations": 1,
+  "avgPatternScore": 8.446,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Metalwork",
+      "count": 1,
+      "avg_score": 8.446,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-12T19:57:00.057Z] Pattern Strength Calculation:
+{
+  "totalValidations": 1,
+  "avgPatternScore": 8.446,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 8.446,
+  "finalStrength": "weak"
+}
+
+[2025-08-12T19:57:00.057Z] 
+============================================================
+[2025-08-12T19:57:00.057Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T19:57:00.057Z] ============================================================
+[2025-08-12T19:57:00.057Z] ✅ Enhanced pattern analysis complete in 59153ms
+[2025-08-12T19:57:00.057Z] 📊 Found 1 validations (0 with visual matches) across 1 niches
+[2025-08-12T19:57:00.057Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Forbidden Content Revelation Pattern",
+    "pattern_description": "Content that reveals previously restricted or banned material, creating intrigue through the promise of exposing something controversial",
+    "psychological_trigger": "Humans are inherently drawn to forbidden knowledge and the drama of corporate conflict",
+    "key_elements": [
+      "Use of dramatic term 'BLACKLISTED'",
+      "Specific timeframe '11 Years'",
+      "Brand name 'Subaru' adds credibility",
+      "Term 'Recreate' suggests exclusive new content"
+    ],
+    "visual_elements": [
+      "Dramatic tilted angle of vehicle on dirt road",
+      "High-contrast yellow text against dark background",
+      "Dynamic action shot with vehicle in challenging terrain",
+      "Expressive reaction showing distress/concern"
+    ],
+    "thumbnail_psychology": "The combination of dramatic vehicle positioning and emotional reaction creates a sense of high stakes and consequences",
+    "why_it_works": "Combines corporate drama, forbidden content, and authentic reactions to create must-watch curiosity",
+    "semantic_queries": [
+      "why did subaru ban youtuber",
+      "subaru controversy youtube",
+      "banned car review videos"
+    ],
+    "visual_queries": [
+      "dramatic car angles in dirt",
+      "extreme off-road testing"
+    ],
+    "channel_outlier_explanation": "While regular car reviews perform modestly, this video taps into drama and controversy, plus promises revealed secrets from a decade-long ban, creating significantly more intrigue than standard review content"
+  },
+  "source_video": {
+    "id": "pjSgFEvOGAY",
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "channel": "The Fast Lane Car",
+    "score": 8.446,
+    "niche": "Metalwork",
+    "views": 123456,
+    "thumbnail": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+    "baseline": 21070.867,
+    "published_at": "2025-08-07T11:01:34+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Metalwork",
+        "videos": [
+          {
+            "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+            "score": 8.446,
+            "views": 123456,
+            "channel": "The Fast Lane Car",
+            "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+            "summary": "Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.",
+            "validation_reason": "This video thumbnail perfectly matches the \"Forbidden Content Revelation Pattern\" - it features the dramatic term \"BLACKLISTED\" in yellow text, shows a Subaru vehicle at a tilted angle on a dirt road, and includes a dramatic reaction shot. The title specifically mentions the 11-year timeframe and uses \"Recreate\" to suggest exclusive content, hitting all the key elements of the pattern.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 8.446,
+        "count": 1
+      }
+    ],
+    "total_validations": 1,
+    "visual_validations": 0,
+    "pattern_strength": "weak",
+    "avg_pattern_score": 8.446
+  },
+  "processing_time_ms": 59153,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 78,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"why did subaru ban youtuber\"",
+      "    Generated embedding in 497ms",
+      "    Title search: 17 results (avg similarity: 0.519)",
+      "    Summary search: 18 results (avg similarity: 0.503)",
+      "    Parallel search completed in 6080ms",
+      "  Searching text for: \"subaru controversy youtube\"",
+      "    Generated embedding in 1971ms",
+      "    Title search: 19 results (avg similarity: 0.539)",
+      "    Summary search: 17 results (avg similarity: 0.558)",
+      "    Parallel search completed in 826ms",
+      "  Searching text for: \"banned car review videos\"",
+      "    Generated embedding in 778ms",
+      "    Title search: 18 results (avg similarity: 0.547)",
+      "    Summary search: 19 results (avg similarity: 0.517)",
+      "    Parallel search completed in 599ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"dramatic car angles in dirt\"",
+      "    Generated CLIP embedding in 1839ms (768D)",
+      "⚠️ Visual search failed for \"dramatic car angles in dirt\": Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing.",
+      "  Searching thumbnails for: \"extreme off-road testing\"",
+      "    Generated CLIP embedding in 181ms (768D)",
+      "⚠️ Visual search failed for \"extreme off-road testing\": Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing.",
+      "📊 Total unique videos found: 78 across all searches",
+      "📋 Getting full video data for 78 unique videos...",
+      "📊 Filtered to 11 high performers (2.5x+) for validation",
+      "🤖 Starting enhanced LLM validation for 11 videos...",
+      "    ✅ Validated \"We Recreate The Off-Road Video Test That Got Us BL...\" in 2304ms (summary source)",
+      "    ❌ Rejected \"This is the Worst Car I've Ever Reviewed...\" in 2990ms - NO: While the title is negative/dramatic, this thumbnail lacks most of the key pattern elements - th",
+      "    ❌ Rejected \"Why I Love My GC Subaru Impreza - The Honda Civic ...\" in 2658ms - NO: While this video features a Subaru and has yellow text, it lacks the dramatic/sensational elemen",
+      "    ❌ Rejected \"What Happened When They Banned Cars...\" in 3580ms - NO: This video thumbnail doesn't match the \"Forbidden Content Revelation Pattern\" as it lacks the dr",
+      "    ❌ Rejected \"4 WORST And 9 BEST Things About The 2024 Subaru Cr...\" in 2876ms - NO: This video uses a straightforward, informative title format listing pros and cons of a vehicle m",
+      "    ❌ Rejected \"FULL TOUR OF MY SALVAGE CAR COLLECTION...\" in 3072ms - NO: This video doesn't match the \"Forbidden Content Revelation Pattern\" as it lacks the dramatic/mys",
+      "    ❌ Rejected \"8 Reasons you SHOULD get a Subaru Outback...\" in 2744ms - NO: This video thumbnail has a positive, straightforward approach with \"YOU SHOULD GET ONE!\" messagi",
+      "    ❌ Rejected \"buying amazon's banned products...\" in 3887ms - NO: While this video uses the concept of \"banned\" products which creates intrigue, it lacks most of ",
+      "    ❌ Rejected \"New YouTube Policy BANS Faceless AI YouTube Channe...\" in 2960ms - NO: While this thumbnail uses dramatic elements like \"THE END\" in red text and a specific date (July",
+      "    ❌ Rejected \"I Bought Banned Kid Toys...\" in 3364ms - NO: While this thumbnail uses the dramatic term \"illegal\" and shows forbidden/banned content, it lac",
+      "    ❌ Rejected \"Famous YouTubers React To My RaceCar!...\" in 2593ms - NO: While this video shows excitement and reaction content, it lacks the key elements of the \"Forbid",
+      "✅ Enhanced validation complete: 1 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "why did subaru ban youtuber",
+          "duration": 6578,
+          "titleResults": 17,
+          "summaryResults": 18
+        },
+        {
+          "query": "subaru controversy youtube",
+          "duration": 2799,
+          "titleResults": 19,
+          "summaryResults": 17
+        },
+        {
+          "query": "banned car review videos",
+          "duration": 1377,
+          "titleResults": 18,
+          "summaryResults": 19
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "dramatic car angles in dirt",
+          "duration": 5212,
+          "results": 0,
+          "error": "Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing."
+        },
+        {
+          "query": "extreme off-road testing",
+          "duration": 295,
+          "results": 0,
+          "error": "Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing."
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "why did subaru ban youtuber",
+        "duration": 6578,
+        "titleSearch": {
+          "found": 17,
+          "avgSimilarity": 0.5190206414705882,
+          "threshold": 0.5,
+          "topScores": [
+            0.575229585,
+            0.562300563,
+            0.536655545
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.5029785417777776,
+          "threshold": 0.4,
+          "topScores": [
+            0.613353491,
+            0.531000614,
+            0.509510815
+          ]
+        }
+      },
+      {
+        "query": "subaru controversy youtube",
+        "duration": 2799,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.5387038713684211,
+          "threshold": 0.5,
+          "topScores": [
+            0.581202805,
+            0.574814498,
+            0.571046054
+          ]
+        },
+        "summarySearch": {
+          "found": 17,
+          "avgSimilarity": 0.5578034822941177,
+          "threshold": 0.4,
+          "topScores": [
+            0.627880096,
+            0.614087939,
+            0.579458177
+          ]
+        }
+      },
+      {
+        "query": "banned car review videos",
+        "duration": 1377,
+        "titleSearch": {
+          "found": 18,
+          "avgSimilarity": 0.5468365483333334,
+          "threshold": 0.5,
+          "topScores": [
+            0.604347646,
+            0.565654218,
+            0.559265852
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.5165743341052632,
+          "threshold": 0.4,
+          "topScores": [
+            0.571111917,
+            0.55772686,
+            0.548032641
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "dramatic car angles in dirt",
+        "found": 0,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 5212,
+        "error": "Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing."
+      },
+      {
+        "query": "extreme off-road testing",
+        "found": 0,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 295,
+        "error": "Request failed to reach Pinecone. This can occur for reasons such as network problems that prevent the request from being completed, or a Pinecone API outage. Check your network connection, and visit https://status.pinecone.io/ to see whether any outages are ongoing."
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 78,
+      "afterPerformanceFilter": 11,
+      "validated": 1,
+      "validationRate": "9.1%",
+      "sourceBreakdown": {
+        "title": 0,
+        "summary": 1,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 438,
+      "responseTokens": 383,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T19:57:00.059Z
+================================================================================

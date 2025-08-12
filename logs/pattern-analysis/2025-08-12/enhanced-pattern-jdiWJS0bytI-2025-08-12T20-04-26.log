@@ -1,0 +1,1034 @@
+[2025-08-12T20:04:26.327Z] ================================================================================
+[2025-08-12T20:04:26.327Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T20:04:26.327Z
+[2025-08-12T20:04:26.327Z] Video ID: jdiWJS0bytI
+[2025-08-12T20:04:26.327Z] ================================================================================
+[2025-08-12T20:04:26.328Z] 
+============================================================
+[2025-08-12T20:04:26.328Z] INITIAL SETUP
+[2025-08-12T20:04:26.328Z] ============================================================
+[2025-08-12T20:04:26.328Z] 🔍 [Enhanced] Analyzing pattern for video: jdiWJS0bytI
+[2025-08-12T20:04:26.571Z] 📺 Target: "I Turned an Old Washing Machine Into a Working Grill Stove!" (91.8x TPS)
+[2025-08-12T20:04:26.571Z] 🖼️ Thumbnail: Available
+[2025-08-12T20:04:26.571Z] Target Video Data:
+{
+  "id": "jdiWJS0bytI",
+  "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+  "channel": "Totally Handy",
+  "views": 914337,
+  "performance_score": 91.84,
+  "baseline": 8434.463,
+  "thumbnail_url": "https://i.ytimg.com/vi/jdiWJS0bytI/maxresdefault.jpg",
+  "niche": "Outlier"
+}
+
+[2025-08-12T20:04:26.729Z] 📊 Found 10 baseline videos for comparison
+[2025-08-12T20:04:26.729Z] Baseline Videos:
+[
+  {
+    "title": "Why I'll Never Buy a Lawn Mower Again - DIY Electric Build!",
+    "views": 6447,
+    "score": 0.851
+  },
+  {
+    "title": "This Homemade Pump Works Better Than Store-Bought",
+    "views": 8302,
+    "score": 1.133
+  },
+  {
+    "title": "No More Mosquitoes! This Simple Fix Works Like a Charm",
+    "views": 7245,
+    "score": 0.871
+  },
+  {
+    "title": "Making DOUBLE BIKE!",
+    "views": 11232,
+    "score": 1.119
+  },
+  {
+    "title": "I Made a FOLDING TRAILER!",
+    "views": 9651,
+    "score": 0.803
+  },
+  {
+    "title": "I Built a Walking Bike… And It’s Weirdly Awesome",
+    "views": 11856,
+    "score": 0.985
+  },
+  {
+    "title": "DIY Hidden Storage, Secret Compartments & More – 1 Hour of Genius Home Builds!",
+    "views": 12084,
+    "score": 1.189
+  },
+  {
+    "title": "DIY Geniuses Turn Bikes, Cars & Hoverboards Into INSANE Creations!",
+    "views": 9664,
+    "score": 1.041
+  },
+  {
+    "title": "I Tried These DIY Electronics Hacks – Here’s What Happened",
+    "views": 8886,
+    "score": 0.853
+  },
+  {
+    "title": "Master Pipe Welding Like a Pro with These Smart Builds!",
+    "views": 11993,
+    "score": 1.141
+  }
+]
+
+[2025-08-12T20:04:26.730Z] 
+============================================================
+[2025-08-12T20:04:26.730Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T20:04:26.730Z] ============================================================
+[2025-08-12T20:04:26.746Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T20:04:26.746Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (91.8x performance):\nTitle: \"I Turned an Old Washing Machine Into a Working Grill Stove!\"\nViews: 914,337\nChannel: Totally Handy\nNiche: Outlier\nSummary: Transforming an old washing machine into a fully functional grill stove, demonstrating a creative recycling project that results in a unique cooking appliance.\n\nCHANNEL BASELINE (normal performers):\n1. \"Why I'll Never Buy a Lawn Mower Again - DIY Electric Build!\" - 6,447 views (0.9x)\n2. \"This Homemade Pump Works Better Than Store-Bought\" - 8,302 views (1.1x)\n3. \"No More Mosquitoes! This Simple Fix Works Like a Charm\" - 7,245 views (0.9x)\n4. \"Making DOUBLE BIKE!\" - 11,232 views (1.1x)\n5. \"I Made a FOLDING TRAILER!\" - 9,651 views (0.8x)\n6. \"I Built a Walking Bike… And It’s Weirdly Awesome\" - 11,856 views (1.0x)\n7. \"DIY Hidden Storage, Secret Compartments & More – 1 Hour of Genius Home Builds!\" - 12,084 views (1.2x)\n8. \"DIY Geniuses Turn Bikes, Cars & Hoverboards Into INSANE Creations!\" - 9,664 views (1.0x)\n9. \"I Tried These DIY Electronics Hacks – Here’s What Happened\" - 8,886 views (0.9x)\n10. \"Master Pipe Welding Like a Pro with These Smart Builds!\" - 11,993 views (1.1x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T20:04:26.747Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/jdiWJS0bytI/maxresdefault.jpg
+[2025-08-12T20:04:26.747Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T20:04:36.927Z] ✅ Claude response received in 10180ms
+[2025-08-12T20:04:36.927Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Extreme Upcycling Transformation\",\n  \"pattern_description\": \"Converting everyday household items into dramatically different, functional objects that serve an unexpected purpose\",\n  \"psychological_trigger\": \"The cognitive dissonance between a washing machine and a grill creates an irresistible curiosity about how this transformation is possible\",\n  \"key_elements\": [\n    \"Unexpected pairing of familiar objects\",\n    \"Practical end result\",\n    \"Sustainability/recycling angle\",\n    \"Clear transformation promise\"\n  ],\n  \"visual_elements\": [\n    \"Brick construction inside washing machine drum\",\n    \"Close-up detail shot showing craftsmanship\",\n    \"Contrast between white machine exterior and terracotta bricks\",\n    \"Hand placement showing scale and human element\"\n  ],\n  \"thumbnail_psychology\": \"The close-up, detailed shot of brick construction inside the familiar washing machine frame creates immediate intrigue and validates the title's bold claim\",\n  \"why_it_works\": \"It combines the satisfaction of recycling with the excitement of creating something completely unexpected and useful\",\n  \"semantic_queries\": [\n    \"washing machine DIY projects\",\n    \"upcycling appliances\",\n    \"homemade grill ideas\"\n  ],\n  \"visual_queries\": [\n    \"appliance transformation before after\",\n    \"DIY brick grill construction\"\n  ],\n  \"channel_outlier_explanation\": \"While the channel typically performs in the 6-12K views range with standard DIY projects, this video's extreme transformation concept and clear utility created a perfect storm of shareability and practical value that resonated far beyond the core audience\"\n}",
+  "usage": {
+    "input_tokens": 1954,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 387,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T20:04:36.928Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T20:04:36.928Z] Extracted Pattern:
+{
+  "pattern_name": "Extreme Upcycling Transformation",
+  "pattern_description": "Converting everyday household items into dramatically different, functional objects that serve an unexpected purpose",
+  "psychological_trigger": "The cognitive dissonance between a washing machine and a grill creates an irresistible curiosity about how this transformation is possible",
+  "key_elements": [
+    "Unexpected pairing of familiar objects",
+    "Practical end result",
+    "Sustainability/recycling angle",
+    "Clear transformation promise"
+  ],
+  "visual_elements": [
+    "Brick construction inside washing machine drum",
+    "Close-up detail shot showing craftsmanship",
+    "Contrast between white machine exterior and terracotta bricks",
+    "Hand placement showing scale and human element"
+  ],
+  "thumbnail_psychology": "The close-up, detailed shot of brick construction inside the familiar washing machine frame creates immediate intrigue and validates the title's bold claim",
+  "why_it_works": "It combines the satisfaction of recycling with the excitement of creating something completely unexpected and useful",
+  "semantic_queries": [
+    "washing machine DIY projects",
+    "upcycling appliances",
+    "homemade grill ideas"
+  ],
+  "visual_queries": [
+    "appliance transformation before after",
+    "DIY brick grill construction"
+  ],
+  "channel_outlier_explanation": "While the channel typically performs in the 6-12K views range with standard DIY projects, this video's extreme transformation concept and clear utility created a perfect storm of shareability and practical value that resonated far beyond the core audience"
+}
+
+[2025-08-12T20:04:36.928Z] ✅ Pattern extracted: Extreme Upcycling Transformation
+[2025-08-12T20:04:36.929Z] 📝 Text queries: washing machine DIY projects, upcycling appliances, homemade grill ideas
+[2025-08-12T20:04:36.929Z] 🎨 Visual queries: appliance transformation before after, DIY brick grill construction
+[2025-08-12T20:04:36.929Z] 
+============================================================
+[2025-08-12T20:04:36.929Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T20:04:36.929Z] ============================================================
+[2025-08-12T20:04:36.929Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T20:04:36.929Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T20:04:36.929Z]   Searching text for: "washing machine DIY projects"
+[2025-08-12T20:04:36.929Z]     Generating OpenAI embedding for query...
+[2025-08-12T20:04:40.666Z]     Generated embedding in 3737ms (512D)
+[2025-08-12T20:04:40.666Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T20:04:47.025Z]     Parallel search completed in 6359ms
+[2025-08-12T20:04:47.026Z] Title Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.640",
+  "topResults": [
+    {
+      "title": "Turn a Washing Machine into a Floor Lamp",
+      "score": "0.703",
+      "views": 22557
+    },
+    {
+      "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+      "score": "0.677",
+      "views": 1583225
+    },
+    {
+      "title": "Baby Washing Machine",
+      "score": "0.666",
+      "views": 1390669
+    }
+  ]
+}
+
+[2025-08-12T20:04:47.026Z] Summary Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.600",
+  "topResults": [
+    {
+      "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+      "score": "0.680",
+      "views": 1583225
+    },
+    {
+      "title": "How to Install a Washing Machine",
+      "score": "0.657",
+      "views": 627765
+    },
+    {
+      "title": "Extreme Cleaning Front Load Washing Machine",
+      "score": "0.634",
+      "views": 19006
+    }
+  ]
+}
+
+[2025-08-12T20:04:47.027Z]   Searching text for: "upcycling appliances"
+[2025-08-12T20:04:47.027Z]     Generating OpenAI embedding for query...
+[2025-08-12T20:04:47.638Z]     Generated embedding in 611ms (512D)
+[2025-08-12T20:04:47.638Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T20:04:48.764Z]     Parallel search completed in 1126ms
+[2025-08-12T20:04:48.764Z] Title Search Results:
+{
+  "found": 15,
+  "avgSimilarity": "0.565",
+  "topResults": [
+    {
+      "title": "Upcycling Small Wood Scraps to projects That SELL FAST",
+      "score": "0.603",
+      "views": 65455
+    },
+    {
+      "title": "The Secret to Sustainable Living /  Upcycling Hacks",
+      "score": "0.599",
+      "views": 733
+    },
+    {
+      "title": "upcycling pinball machines - hero or horrible?",
+      "score": "0.594",
+      "views": 2064
+    }
+  ]
+}
+
+[2025-08-12T20:04:48.764Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.562",
+  "topResults": [
+    {
+      "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+      "score": "0.614",
+      "views": 914337
+    },
+    {
+      "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+      "score": "0.613",
+      "views": 1583225
+    },
+    {
+      "title": "How to Turn a Table into a Pallet",
+      "score": "0.590",
+      "views": 41579
+    }
+  ]
+}
+
+[2025-08-12T20:04:48.764Z]   Searching text for: "homemade grill ideas"
+[2025-08-12T20:04:48.764Z]     Generating OpenAI embedding for query...
+[2025-08-12T20:04:49.099Z]     Generated embedding in 335ms (512D)
+[2025-08-12T20:04:49.100Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T20:04:50.573Z]     Parallel search completed in 1473ms
+[2025-08-12T20:04:50.573Z] Title Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.668",
+  "topResults": [
+    {
+      "title": "How to Make a Cheap Mini Grill",
+      "score": "0.723",
+      "views": 13226
+    },
+    {
+      "title": "DIY Grill Cart",
+      "score": "0.720",
+      "views": 220140
+    },
+    {
+      "title": "DIY Grill Cart ~ Backyard Upgrades #2",
+      "score": "0.684",
+      "views": 23371
+    }
+  ]
+}
+
+[2025-08-12T20:04:50.574Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.641",
+  "topResults": [
+    {
+      "title": "The perfect camping grill made from Fire Extinguisher!!",
+      "score": "0.696",
+      "views": 170888
+    },
+    {
+      "title": "Folding Camp Grill with Griddle",
+      "score": "0.662",
+      "views": 21341
+    },
+    {
+      "title": "How to Make a Cheap Mini Grill",
+      "score": "0.655",
+      "views": 13226
+    }
+  ]
+}
+
+[2025-08-12T20:04:50.574Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T20:04:50.574Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T20:04:50.574Z]   Searching thumbnails for: "appliance transformation before after"
+[2025-08-12T20:04:50.574Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T20:05:06.585Z]     Generated CLIP embedding in 16011ms (768D)
+[2025-08-12T20:05:06.585Z]     Searching dedicated thumbnail index...
+[2025-08-12T20:05:09.510Z]     Thumbnail search completed in 2925ms
+[2025-08-12T20:05:09.510Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.260",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Fast Cabinet Doors, Small Kitchen Remodel, Black Cabinets, Before & After Kitchen #kitchenremodel",
+      "score": "0.293",
+      "views": 151479,
+      "channel": "Melanie | Simple Made Pretty "
+    },
+    {
+      "title": "Welcome To Our Kitchen... Let's Destroy It! Kitchen Part 1",
+      "score": "0.282",
+      "views": 2905,
+      "channel": "Gunflint Designs"
+    },
+    {
+      "title": "How to Remove a 3-Way Fridge from a RV and Replace it with A 12 Volt Compressor Fridge.",
+      "score": "0.276",
+      "views": 45507,
+      "channel": "Different Media."
+    }
+  ]
+}
+
+[2025-08-12T20:05:09.511Z]   Searching thumbnails for: "DIY brick grill construction"
+[2025-08-12T20:05:09.511Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T20:05:09.736Z]     Generated CLIP embedding in 225ms (768D)
+[2025-08-12T20:05:09.736Z]     Searching dedicated thumbnail index...
+[2025-08-12T20:05:10.012Z]     Thumbnail search completed in 276ms
+[2025-08-12T20:05:10.013Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.270",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "We Build a $2500 Outdoor Table for $150",
+      "score": "0.300",
+      "views": 5529,
+      "channel": "Rogue Engineer"
+    },
+    {
+      "title": "Building Outdoor Smoker Grill Station",
+      "score": "0.299",
+      "views": 1630219,
+      "channel": "Mr. Build It"
+    },
+    {
+      "title": "How to Refurbish a BBQ Grill - Rebuild and Save",
+      "score": "0.280",
+      "views": 94251,
+      "channel": "Flannel Guy DIY"
+    }
+  ]
+}
+
+[2025-08-12T20:05:10.013Z] 
+============================================================
+[2025-08-12T20:05:10.013Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T20:05:10.013Z] ============================================================
+[2025-08-12T20:05:10.013Z] 📋 Getting full video data for 135 unique videos...
+[2025-08-12T20:05:10.161Z] 📊 Filtered to 20 high performers (2.5x+) for validation
+[2025-08-12T20:05:10.161Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "We Build a $2500 Outdoor Table for $150",
+    "views": 5529,
+    "score": 11105.796,
+    "channel": "Rogue Engineer",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+    "views": 914337,
+    "score": 91.84,
+    "channel": "Totally Handy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How to Make Lamps from \"Junk\" and other Upcycled Stuff",
+    "views": 254096,
+    "score": 45.962,
+    "channel": "tim sway",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How to Make Portable Grills for Summertime & Other Builds for Cooking Outdoors | Backyard Projects",
+    "views": 3008265,
+    "score": 40.939,
+    "channel": "Totally Handy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Built This DIY Backyard Grill Station For Our Homestead",
+    "views": 735544,
+    "score": 30.719,
+    "channel": "Woodbrew",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Unleashing Creativity in Wood Processing: Transforming Ordinary Resources into Upcycling Projects",
+    "views": 697339,
+    "score": 29.011,
+    "channel": "Woodworking Skill",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Replace Samsung Washing Machine Water Inlet Valve",
+    "views": 22831,
+    "score": 28.603,
+    "channel": "Ken Moon",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+    "views": 1583225,
+    "score": 27.608,
+    "channel": "Jeremy Fielding",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Binge-worthy Upcycling: Transform Your Home With Thrifted Finds!",
+    "views": 500863,
+    "score": 25.859,
+    "channel": "Our Upcycled Life",
+    "hasThumbnail": true
+  },
+  {
+    "title": "VINTAGE HIDDEN CAFÉ IN A HOME | 30 YEAR-OLD HOUSE MAKEOVER |Coffee Lover|Latte Art THE BREAK OF DAWN",
+    "views": 335351,
+    "score": 25.439,
+    "channel": "Design Seed",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Things You Can Make With A Vacuum and Other Salvaged Motors: # 010",
+    "views": 1009890,
+    "score": 24.295,
+    "channel": "Jeremy Fielding",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Motorizing The Leather Sewing Machine, For Under $50",
+    "views": 547077,
+    "score": 13.72,
+    "channel": "Make Everything",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Incredible Construction Techniques & Tools Every Ingenious Construction Worker Should Use",
+    "views": 1998356,
+    "score": 11.658,
+    "channel": "AKLA GELEN",
+    "hasThumbnail": true
+  },
+  {
+    "title": "DIY Laundry Room Makeover From Start to Finish",
+    "views": 252285,
+    "score": 9.552,
+    "channel": "Komar Project",
+    "hasThumbnail": true
+  },
+  {
+    "title": "10 Easy Rules to Own Less \"Stuff\" In Retirement",
+    "views": 263118,
+    "score": 9.122,
+    "channel": "Holy Schmidt!",
+    "hasThumbnail": true
+  },
+  {
+    "title": "What portable grill would you use for your BBQ? | Backyard Project",
+    "views": 415947,
+    "score": 7.756,
+    "channel": "Totally Handy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Affordable Filament Recycling?",
+    "views": 208107,
+    "score": 5.686,
+    "channel": "The Next Layer",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Ancient Art Of Brickmaking - Impervious Building Blocks Handmade From The Earth",
+    "views": 1771492,
+    "score": 5.332,
+    "channel": "Townsends",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Turn The Washing Machine Motor Into A Permanent Water Turbine Generator",
+    "views": 1635739,
+    "score": 5.067,
+    "channel": "Great Inventions",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Clean a Washing Machine Filter",
+    "views": 151662,
+    "score": 4.204,
+    "channel": "HouseImprovements",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T20:05:10.163Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T20:05:10.163Z] 🤖 Starting enhanced LLM validation for 20 videos...
+[2025-08-12T20:06:00.236Z] ✅ Enhanced validation complete: 8 videos confirmed
+[2025-08-12T20:06:00.237Z] Final Validated Videos:
+[
+  {
+    "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+    "score": 91.84,
+    "channel": "Totally Handy",
+    "reason": "The transformation creatively repurposes a discarded washing machine into a functional cooking appliance, combining unexpected items (washing machine + grill) while promoting sustainability through reuse of appliance parts.",
+    "source": "summary"
+  },
+  {
+    "title": "How to Make Lamps from \"Junk\" and other Upcycled Stuff",
+    "score": 45.962,
+    "channel": "tim sway",
+    "reason": "The video shows how to transform discarded items (\"junk\") into functional lighting fixtures, combining unexpected materials with a practical purpose while promoting creative reuse of waste materials.",
+    "source": "title"
+  },
+  {
+    "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+    "score": 27.608,
+    "channel": "Jeremy Fielding",
+    "reason": "The video shows someone creatively repurposing parts from an old washing machine, which combines unexpected reuse of appliance components with sustainable recycling of materials that would otherwise be discarded.",
+    "source": "summary"
+  },
+  {
+    "title": "Things You Can Make With A Vacuum and Other Salvaged Motors: # 010",
+    "score": 24.295,
+    "channel": "Jeremy Fielding",
+    "reason": "The video shows salvaged vacuum motors and other discarded appliance parts being creatively repurposed into new functional items, combining unexpected materials with practical results while promoting sustainability through reuse.",
+    "source": "summary"
+  },
+  {
+    "title": "Motorizing The Leather Sewing Machine, For Under $50",
+    "score": 13.72,
+    "channel": "Make Everything",
+    "reason": "The project creatively combines an old manual leather sewing machine with a modern motor to create a practical, cost-effective powered tool that extends the useful life of vintage equipment.",
+    "source": "summary"
+  },
+  {
+    "title": "What portable grill would you use for your BBQ? | Backyard Project",
+    "score": 7.756,
+    "channel": "Totally Handy",
+    "reason": "This appears to be a portable grill cleverly made from what looks like a repurposed washing machine drum, combining unexpected materials into a functional and sustainable outdoor cooking solution.",
+    "source": "summary"
+  },
+  {
+    "title": "Affordable Filament Recycling?",
+    "score": 5.686,
+    "channel": "The Next Layer",
+    "reason": "The video shows how to transform waste 3D printer filament into new usable filament, combining recycling technology with practical maker materials in an innovative way.",
+    "source": "title"
+  },
+  {
+    "title": "Turn The Washing Machine Motor Into A Permanent Water Turbine Generator",
+    "score": 5.067,
+    "channel": "Great Inventions",
+    "reason": "This project creatively repurposes a washing machine motor and plastic bottles into a functional water-powered generator, combining unexpected household items into a practical renewable energy solution.",
+    "source": "title"
+  }
+]
+
+[2025-08-12T20:06:00.238Z] Pre-Calculation Metrics:
+{
+  "validationResults": 5,
+  "totalValidations": 8,
+  "avgPatternScore": 15.931050000000004,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Outlier",
+      "count": 4,
+      "avg_score": 47.42625000000001,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Woodworking",
+      "count": 1,
+      "avg_score": 13.72,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Workshop",
+      "count": 1,
+      "avg_score": 7.756,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Music Production",
+      "count": 1,
+      "avg_score": 5.686,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Pro Equipment",
+      "count": 1,
+      "avg_score": 5.067,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-12T20:06:00.239Z] Pattern Strength Calculation:
+{
+  "totalValidations": 8,
+  "avgPatternScore": 15.931050000000004,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 15.931050000000004,
+  "finalStrength": "strong"
+}
+
+[2025-08-12T20:06:00.239Z] 
+============================================================
+[2025-08-12T20:06:00.239Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T20:06:00.239Z] ============================================================
+[2025-08-12T20:06:00.239Z] ✅ Enhanced pattern analysis complete in 93913ms
+[2025-08-12T20:06:00.239Z] 📊 Found 8 validations (0 with visual matches) across 5 niches
+[2025-08-12T20:06:00.239Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Extreme Upcycling Transformation",
+    "pattern_description": "Converting everyday household items into dramatically different, functional objects that serve an unexpected purpose",
+    "psychological_trigger": "The cognitive dissonance between a washing machine and a grill creates an irresistible curiosity about how this transformation is possible",
+    "key_elements": [
+      "Unexpected pairing of familiar objects",
+      "Practical end result",
+      "Sustainability/recycling angle",
+      "Clear transformation promise"
+    ],
+    "visual_elements": [
+      "Brick construction inside washing machine drum",
+      "Close-up detail shot showing craftsmanship",
+      "Contrast between white machine exterior and terracotta bricks",
+      "Hand placement showing scale and human element"
+    ],
+    "thumbnail_psychology": "The close-up, detailed shot of brick construction inside the familiar washing machine frame creates immediate intrigue and validates the title's bold claim",
+    "why_it_works": "It combines the satisfaction of recycling with the excitement of creating something completely unexpected and useful",
+    "semantic_queries": [
+      "washing machine DIY projects",
+      "upcycling appliances",
+      "homemade grill ideas"
+    ],
+    "visual_queries": [
+      "appliance transformation before after",
+      "DIY brick grill construction"
+    ],
+    "channel_outlier_explanation": "While the channel typically performs in the 6-12K views range with standard DIY projects, this video's extreme transformation concept and clear utility created a perfect storm of shareability and practical value that resonated far beyond the core audience"
+  },
+  "source_video": {
+    "id": "jdiWJS0bytI",
+    "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+    "channel": "Totally Handy",
+    "score": 91.84,
+    "niche": "Outlier",
+    "views": 914337,
+    "thumbnail": "https://i.ytimg.com/vi/jdiWJS0bytI/maxresdefault.jpg",
+    "baseline": 8434.463,
+    "published_at": "2025-03-06T17:00:53+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "I Turned an Old Washing Machine Into a Working Grill Stove!",
+            "score": 91.84,
+            "views": 914337,
+            "channel": "Totally Handy",
+            "thumbnail_url": "https://i.ytimg.com/vi/jdiWJS0bytI/maxresdefault.jpg",
+            "summary": "Transforming an old washing machine into a fully functional grill stove, demonstrating a creative recycling project that results in a unique cooking appliance.",
+            "validation_reason": "The transformation creatively repurposes a discarded washing machine into a functional cooking appliance, combining unexpected items (washing machine + grill) while promoting sustainability through reuse of appliance parts.",
+            "source": "summary"
+          },
+          {
+            "title": "How to Make Lamps from \"Junk\" and other Upcycled Stuff",
+            "score": 45.962,
+            "views": 254096,
+            "channel": "tim sway",
+            "thumbnail_url": "https://i.ytimg.com/vi/UnI0OqgrmrE/hqdefault.jpg",
+            "summary": "Creating unique lamps using upcycled materials and everyday items, demonstrating various ideas and techniques suitable for all skill levels.",
+            "validation_reason": "The video shows how to transform discarded items (\"junk\") into functional lighting fixtures, combining unexpected materials with a practical purpose while promoting creative reuse of waste materials.",
+            "source": "title"
+          },
+          {
+            "title": "Things You Can Make With A Washing Machine And Other Salvaged Components : 020",
+            "score": 27.608,
+            "views": 1583225,
+            "channel": "Jeremy Fielding",
+            "thumbnail_url": "https://i.ytimg.com/vi/T3dOpzU_p1E/hqdefault.jpg",
+            "summary": "Disassembling a washing machine to salvage useful parts and demonstrating various creative projects made from those components. Showcasing ideas for repurposing materials into functional items.",
+            "validation_reason": "The video shows someone creatively repurposing parts from an old washing machine, which combines unexpected reuse of appliance components with sustainable recycling of materials that would otherwise be discarded.",
+            "source": "summary"
+          },
+          {
+            "title": "Things You Can Make With A Vacuum and Other Salvaged Motors: # 010",
+            "score": 24.295,
+            "views": 1009890,
+            "channel": "Jeremy Fielding",
+            "thumbnail_url": "https://i.ytimg.com/vi/5641H8rgIEA/hqdefault.jpg",
+            "summary": "Disassembling a vacuum to demonstrate how its components can be repurposed for various shop tools, including a scroll saw, belt sander, and disc sander.",
+            "validation_reason": "The video shows salvaged vacuum motors and other discarded appliance parts being creatively repurposed into new functional items, combining unexpected materials with practical results while promoting sustainability through reuse.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 47.42625000000001,
+        "count": 4
+      },
+      {
+        "niche": "Woodworking",
+        "videos": [
+          {
+            "title": "Motorizing The Leather Sewing Machine, For Under $50",
+            "score": 13.72,
+            "views": 547077,
+            "channel": "Make Everything",
+            "thumbnail_url": "https://i.ytimg.com/vi/r5Cq-ZKKoAA/maxresdefault.jpg",
+            "summary": "Motorizing a leather sewing machine using affordable components from Amazon, enabling it to operate autonomously with minimal modifications. This process involves selecting and installing a sewing machine motor, belting, and a pulley system.",
+            "validation_reason": "The project creatively combines an old manual leather sewing machine with a modern motor to create a practical, cost-effective powered tool that extends the useful life of vintage equipment.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 13.72,
+        "count": 1
+      },
+      {
+        "niche": "Workshop",
+        "videos": [
+          {
+            "title": "What portable grill would you use for your BBQ? | Backyard Project",
+            "score": 7.756,
+            "views": 415947,
+            "channel": "Totally Handy",
+            "thumbnail_url": "https://i.ytimg.com/vi/3Q0yXJY9_WE/maxresdefault.jpg",
+            "summary": "Exploring various portable grill options for BBQs, highlighting features and benefits to help choose the best one for outdoor cooking.",
+            "validation_reason": "This appears to be a portable grill cleverly made from what looks like a repurposed washing machine drum, combining unexpected materials into a functional and sustainable outdoor cooking solution.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 7.756,
+        "count": 1
+      },
+      {
+        "niche": "Music Production",
+        "videos": [
+          {
+            "title": "Affordable Filament Recycling?",
+            "score": 5.686,
+            "views": 208107,
+            "channel": "The Next Layer",
+            "thumbnail_url": "https://i.ytimg.com/vi/Hm6KpEajD4o/hqdefault.jpg",
+            "summary": "Building an affordable filament recycling setup to transform wasted 3D printing filament into usable material. This process includes shredding, assembling components, and creating new filament for 3D printing applications.",
+            "validation_reason": "The video shows how to transform waste 3D printer filament into new usable filament, combining recycling technology with practical maker materials in an innovative way.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 5.686,
+        "count": 1
+      },
+      {
+        "niche": "Pro Equipment",
+        "videos": [
+          {
+            "title": "Turn The Washing Machine Motor Into A Permanent Water Turbine Generator",
+            "score": 5.067,
+            "views": 1635739,
+            "channel": "Great Inventions",
+            "thumbnail_url": "https://i.ytimg.com/vi/ExUrX5WUlgY/hqdefault.jpg",
+            "summary": "Transform a washing machine motor into a permanent water turbine generator. This process demonstrates how to repurpose existing materials to create a sustainable energy source.",
+            "validation_reason": "This project creatively repurposes a washing machine motor and plastic bottles into a functional water-powered generator, combining unexpected household items into a practical renewable energy solution.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 5.067,
+        "count": 1
+      }
+    ],
+    "total_validations": 8,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 15.931050000000004
+  },
+  "processing_time_ms": 93913,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 135,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"washing machine DIY projects\"",
+      "    Generated embedding in 3737ms",
+      "    Title search: 17 results (avg similarity: 0.640)",
+      "    Summary search: 17 results (avg similarity: 0.600)",
+      "    Parallel search completed in 6359ms",
+      "  Searching text for: \"upcycling appliances\"",
+      "    Generated embedding in 611ms",
+      "    Title search: 15 results (avg similarity: 0.565)",
+      "    Summary search: 18 results (avg similarity: 0.562)",
+      "    Parallel search completed in 1126ms",
+      "  Searching text for: \"homemade grill ideas\"",
+      "    Generated embedding in 335ms",
+      "    Title search: 18 results (avg similarity: 0.668)",
+      "    Summary search: 20 results (avg similarity: 0.641)",
+      "    Parallel search completed in 1473ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"appliance transformation before after\"",
+      "    Generated CLIP embedding in 16011ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.260)",
+      "    Visual search completed in 2925ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"DIY brick grill construction\"",
+      "    Generated CLIP embedding in 225ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.270)",
+      "    Visual search completed in 276ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 135 across all searches",
+      "📋 Getting full video data for 135 unique videos...",
+      "📊 Filtered to 20 high performers (2.5x+) for validation",
+      "🤖 Starting enhanced LLM validation for 20 videos...",
+      "    ❌ Rejected \"We Build a $2500 Outdoor Table for $150...\" in 1746ms - NO: This appears to be a standard DIY furniture build using new materials rather than upcycling or r",
+      "    ✅ Validated \"I Turned an Old Washing Machine Into a Working Gri...\" in 2259ms (summary source)",
+      "    ✅ Validated \"How to Make Lamps from \"Junk\" and other Upcycled S...\" in 1731ms (title source)",
+      "    ❌ Rejected \"How to Make Portable Grills for Summertime & Other...\" in 2373ms - NO: While this appears to be a practical outdoor cooking project, the materials used (metal grate an",
+      "    ❌ Rejected \"We Built This DIY Backyard Grill Station For Our H...\" in 2607ms - NO: While this appears to be a well-built outdoor grill station, it seems to use new materials rathe",
+      "    ❌ Rejected \"Unleashing Creativity in Wood Processing: Transfor...\" in 2936ms - NO: This appears to be a standard wood processing/cutting image rather than an upcycling transformat",
+      "    ❌ Rejected \"Replace Samsung Washing Machine Water Inlet Valve...\" in 2454ms - NO: This appears to be a standard repair/maintenance tutorial video rather than an upcycling transfo",
+      "    ✅ Validated \"Things You Can Make With A Washing Machine And Oth...\" in 2366ms (summary source)",
+      "    ❌ Rejected \"Binge-worthy Upcycling: Transform Your Home With T...\" in 3343ms - NO: While the video appears to cover upcycling, the title \"68 Upcycling Ideas\" suggests more of a st",
+      "    ❌ Rejected \"VINTAGE HIDDEN CAFÉ IN A HOME | 30 YEAR-OLD HOUSE ...\" in 2764ms - NO: While this is an impressive renovation, it's a standard home-to-café conversion rather than an u",
+      "    ✅ Validated \"Things You Can Make With A Vacuum and Other Salvag...\" in 2859ms (summary source)",
+      "    ✅ Validated \"Motorizing The Leather Sewing Machine, For Under $...\" in 2733ms (summary source)",
+      "    ❌ Rejected \"Incredible Construction Techniques & Tools Every I...\" in 2803ms - NO: This appears to be a demonstration of standard construction techniques and tools for brick layin",
+      "    ❌ Rejected \"DIY Laundry Room Makeover From Start to Finish...\" in 2791ms - NO: While this is a nice laundry room renovation with added storage and counter space, it doesn't in",
+      "    ❌ Rejected \"10 Easy Rules to Own Less \"Stuff\" In Retirement...\" in 2382ms - NO: This appears to be a decluttering/minimalism advice video rather than showing creative upcycling",
+      "    ✅ Validated \"What portable grill would you use for your BBQ? | ...\" in 3224ms (summary source)",
+      "    ✅ Validated \"Affordable Filament Recycling?...\" in 2048ms (title source)",
+      "    ❌ Rejected \"The Ancient Art Of Brickmaking - Impervious Buildi...\" in 1742ms - NO: While sustainable and practical, traditional brickmaking from earth is an ancient established pr",
+      "    ✅ Validated \"Turn The Washing Machine Motor Into A Permanent Wa...\" in 2251ms (title source)",
+      "    ❌ Rejected \"How To Clean a Washing Machine Filter...\" in 2661ms - NO: This appears to be a standard maintenance tutorial rather than an upcycling transformation - it ",
+      "✅ Enhanced validation complete: 8 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "washing machine DIY projects",
+          "duration": 10097,
+          "titleResults": 17,
+          "summaryResults": 17
+        },
+        {
+          "query": "upcycling appliances",
+          "duration": 1737,
+          "titleResults": 15,
+          "summaryResults": 18
+        },
+        {
+          "query": "homemade grill ideas",
+          "duration": 1810,
+          "titleResults": 18,
+          "summaryResults": 20
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "appliance transformation before after",
+          "duration": 18937,
+          "results": 25
+        },
+        {
+          "query": "DIY brick grill construction",
+          "duration": 502,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "washing machine DIY projects",
+        "duration": 10097,
+        "titleSearch": {
+          "found": 17,
+          "avgSimilarity": 0.6400365609411764,
+          "threshold": 0.5,
+          "topScores": [
+            0.702956557,
+            0.676974952,
+            0.666441262
+          ]
+        },
+        "summarySearch": {
+          "found": 17,
+          "avgSimilarity": 0.6002751307647058,
+          "threshold": 0.4,
+          "topScores": [
+            0.680214882,
+            0.656943083,
+            0.634379923
+          ]
+        }
+      },
+      {
+        "query": "upcycling appliances",
+        "duration": 1737,
+        "titleSearch": {
+          "found": 15,
+          "avgSimilarity": 0.5649932067333334,
+          "threshold": 0.5,
+          "topScores": [
+            0.602611244,
+            0.598628938,
+            0.593582451
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.5622708666111111,
+          "threshold": 0.4,
+          "topScores": [
+            0.614109457,
+            0.613188863,
+            0.590334237
+          ]
+        }
+      },
+      {
+        "query": "homemade grill ideas",
+        "duration": 1810,
+        "titleSearch": {
+          "found": 18,
+          "avgSimilarity": 0.6675474600000001,
+          "threshold": 0.5,
+          "topScores": [
+            0.72256887,
+            0.720477104,
+            0.684142768
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.64072774675,
+          "threshold": 0.4,
+          "topScores": [
+            0.69600296,
+            0.66203618,
+            0.655480921
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "appliance transformation before after",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 18937,
+        "avgSimilarity": 0.26028692508,
+        "topScores": [
+          0.292830914,
+          0.282289326,
+          0.27639097
+        ]
+      },
+      {
+        "query": "DIY brick grill construction",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 502,
+        "avgSimilarity": 0.26964038588,
+        "topScores": [
+          0.3004013,
+          0.298685759,
+          0.279985428
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 135,
+      "afterPerformanceFilter": 20,
+      "validated": 8,
+      "validationRate": "40.0%",
+      "sourceBreakdown": {
+        "title": 3,
+        "summary": 5,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 602,
+      "responseTokens": 410,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T20:06:00.244Z
+================================================================================

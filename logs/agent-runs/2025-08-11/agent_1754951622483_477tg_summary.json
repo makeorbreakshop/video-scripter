@@ -1,0 +1,72 @@
+{
+  "runId": "agent_1754951622483_477tg",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T22:33:42.483Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:34:48.722Z",
+  "totalDuration": 66239,
+  "success": false,
+  "finalPattern": {
+    "statement": "On Adam Savage’s Tested, build videos that explicitly admit and quantify errors in the title (e.g., “has two mistakes”) significantly outperform standard build titles because the confession + number framing creates a strong curiosity gap and clear learning payoff.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 11,
+  "errors": [],
+  "warnings": [
+    {
+      "timestamp": "2025-08-11T22:34:48.721Z",
+      "level": "warn",
+      "category": "orchestrator",
+      "message": "Timeout reached, moving to finalization",
+      "data": {
+        "turnNumber": 3,
+        "turnType": "enrichment"
+      },
+      "duration": 66238
+    }
+  ],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-11T22:33:43.011Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 528
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-11T22:34:18.317Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "On Adam Savage’s Tested, build videos that explicitly admit and quantify errors in the title (e.g., “has two mistakes”) significantly outperform standard build titles because the confession + number framing creates a strong curiosity gap and clear learning payoff.",
+        "confidence": 0.75,
+        "reasoning": "The title’s candid admission of mistakes, paired with a concrete count (“Two mistakes”), signals actionable lessons and transparency, which increases click-through and retention versus generic build titles. This framing promises a post‑mortem/what‑went‑wrong narrative that maker audiences value for avoiding pitfalls, and it differentiates from the channel’s typical polished builds. The specificity (two mistakes) implies concise, digestible takeaways, improving perceived utility and sharability. This is testable by comparing TPS of videos with error‑admission/numbered mistake phrasing against otherwise similar build videos on the channel and in the maker niche.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 35834
+    }
+  ]
+}

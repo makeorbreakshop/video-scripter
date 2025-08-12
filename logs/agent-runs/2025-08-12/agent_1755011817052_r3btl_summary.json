@@ -1,0 +1,97 @@
+{
+  "runId": "agent_1755011817052_r3btl",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:16:57.053Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:17:12.935Z",
+  "totalDuration": 15883,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  },
+  "turns": [],
+  "logEntries": 15,
+  "errors": [
+    {
+      "timestamp": "2025-08-12T15:17:12.934Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Search planning failed: Error: 400 Missing required parameter: 'tools[0].name'.",
+      "data": {
+        "turnNumber": 2,
+        "turnType": "search_planning"
+      },
+      "duration": 15882
+    },
+    {
+      "timestamp": "2025-08-12T15:17:12.934Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Agent failed: 400 Missing required parameter: 'tools[0].name'.",
+      "data": {
+        "turnNumber": 2,
+        "turnType": "search_planning"
+      },
+      "duration": 15882
+    },
+    {
+      "timestamp": "2025-08-12T15:17:12.935Z",
+      "level": "error",
+      "category": "orchestrator",
+      "message": "Agent error: 400 Missing required parameter: 'tools[0].name'.",
+      "data": {
+        "error": "400 Missing required parameter: 'tools[0].name'.",
+        "stack": "Error: 400 Missing required parameter: 'tools[0].name'.\n    at APIError.generate (webpack-internal:///(rsc)/./node_modules/openai/core/error.mjs:61:20)\n    at OpenAI.makeStatusError (webpack-internal:///(rsc)/./node_modules/openai/client.mjs:196:71)\n    at OpenAI.makeRequest (webpack-internal:///(rsc)/./node_modules/openai/client.mjs:341:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async OpenAIIntegration.executeTurn (webpack-internal:///(rsc)/./lib/agentic/openai-integration.ts:117:30)\n    at async IdeaHeistAgent.handleSearchTurn (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:375:34)\n    at async IdeaHeistAgent.executeTurn (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:205:30)\n    at async IdeaHeistAgent.runIdeaHeistAgent (webpack-internal:///(rsc)/./lib/agentic/orchestrator/idea-heist-agent.ts:116:36)\n    at async eval (webpack-internal:///(rsc)/./app/api/idea-heist/agentic-v2/route.ts:216:28)",
+        "videoId": "eKxNGFjyRv0"
+      },
+      "duration": 15883
+    }
+  ],
+  "warnings": [],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-12T15:16:57.611Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "fullPrompt": "Generating hypothesis for outlier video",
+        "fullResponse": null,
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 559
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-12T15:17:12.750Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "Titles that pair a first‑person hook (“I’m Sorry…”, “I Can’t Believe…”) with a strong negative verdict about a contemporary artist or trend (e.g., “completely sucks”, “ruined”, “worst”) drive 3x+ TPS on Rick Beato’s channel by spiking curiosity and controversy, lifting CTR and initial watch time compared to neutral/technical titles.",
+        "confidence": 0.75,
+        "reasoning": "Rick Beato’s baseline content skews educational and neutral; when he uses an opinionated, high‑arousal negative frame aimed at current artists/trends, it creates a curiosity gap (“who is he calling out?”) and social controversy that boosts clicks and engagement. The explicit harsh adjective (“completely sucks”) plus the apology-style opener signals drama and stakes, which are known CTR levers. Targeting ‘new’ or ‘today’s’ music broadens relevance beyond niche theory viewers, likely improving session starts and comments that further promote the video.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 15698
+    }
+  ]
+}

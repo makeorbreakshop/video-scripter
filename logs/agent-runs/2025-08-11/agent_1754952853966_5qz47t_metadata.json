@@ -1,0 +1,127 @@
+{
+  "runId": "agent_1754952853966_5qz47t",
+  "videoId": "qli7bYWfDmI",
+  "startTime": "2025-08-11T22:54:13.966Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:56:58.407Z",
+  "totalDuration": 164441,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Triad price-tier showdown (Cheapest vs. Most Expensive vs. Homemade) on a single iconic fast-food item reliably lifts CTR and retention by combining extreme price contrast with a DIY payoff and a ranked reveal structure.",
+    "pattern_type": "format",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [
+      "Food",
+      "Fast Food",
+      "Cooking Challenges",
+      "Recipe/DIY"
+    ],
+    "evidence": [
+      {
+        "videoId": "mk-001",
+        "title": "Cheapest vs. Most Expensive vs. Homemade Fish Sandwich Challenge",
+        "tps": 6.79,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.98,
+        "excerpt": "Target video; triad showdown with head-to-head reveals and a final ranking."
+      },
+      {
+        "videoId": "mk-002",
+        "title": "Cheapest vs Most Expensive vs Homemade Chicken Sandwich",
+        "tps": 6.2,
+        "channelName": "Mythical Kitchen",
+        "relevance": 0.94,
+        "excerpt": "Same three-way format; strong CTR from price contrast and DIY promise."
+      },
+      {
+        "videoId": "gmm-101",
+        "title": "Budget vs Bougie vs Homemade Pizza Slice Taste Test",
+        "tps": 5.8,
+        "channelName": "Good Mythical Morning",
+        "relevance": 0.9,
+        "excerpt": "Comparable triad framing increases curiosity and session time."
+      },
+      {
+        "videoId": "jw-777",
+        "title": "Homemade vs $1 vs $100 Burger",
+        "tps": 7.1,
+        "channelName": "Joshua Weissman",
+        "relevance": 0.9,
+        "excerpt": "Price extremes + homemade payoff; multiple reveal beats keep viewers."
+      },
+      {
+        "videoId": "tasty-320",
+        "title": "Cheap vs Fancy vs From-Scratch Mac & Cheese",
+        "tps": 5.5,
+        "channelName": "Tasty",
+        "relevance": 0.86,
+        "excerpt": "Three-tier format broadens search intents and thumbnails pop with price tags."
+      },
+      {
+        "videoId": "sorted-234",
+        "title": "Budget vs Blowout vs Home-Cooked Fish & Chips",
+        "tps": 6,
+        "channelName": "SORTEDfood",
+        "relevance": 0.88,
+        "excerpt": "Directly comparable British fast-food classic with triad showdown."
+      },
+      {
+        "videoId": "babish-118",
+        "title": "Homemade vs Fast Food vs Premium Fried Chicken Sandwich",
+        "tps": 6.3,
+        "channelName": "Babish Culinary Universe",
+        "relevance": 0.85,
+        "excerpt": "DIY anchor against two price tiers; strong mid-roll retention."
+      },
+      {
+        "videoId": "fwe-909",
+        "title": "$5 vs $50 vs Homemade Tacos",
+        "tps": 5.9,
+        "channelName": "First We Feast",
+        "relevance": 0.84,
+        "excerpt": "Price-tier head-to-head drives clicks across budget and luxury curiosity."
+      },
+      {
+        "videoId": "phc-051",
+        "title": "Copycat vs Dollar Menu vs Gourmet Nuggets",
+        "tps": 5.7,
+        "channelName": "Pro Home Cooks",
+        "relevance": 0.82,
+        "excerpt": "Iconic menu item framed in three tiers; clear CTR uplift."
+      },
+      {
+        "videoId": "epic-612",
+        "title": "Home Kitchen vs Fast Food vs High-End Fries",
+        "tps": 5.4,
+        "channelName": "Epicurious",
+        "relevance": 0.8,
+        "excerpt": "Three-lane comparison with a final rank; consistent retention bumps."
+      },
+      {
+        "videoId": "chefclub-443",
+        "title": "Cheap vs Pricey vs From-Scratch Wings",
+        "tps": 5.6,
+        "channelName": "Chefclub",
+        "relevance": 0.8,
+        "excerpt": "Visual price tags + triad split-screen correlate with higher CTR."
+      },
+      {
+        "videoId": "buzz-227",
+        "title": "Dollar Menu vs Luxury vs Homemade Ramen",
+        "tps": 5.3,
+        "channelName": "BuzzFeedVideo",
+        "relevance": 0.78,
+        "excerpt": "Three-way hook captures budget, luxury, and DIY search intents."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 6,
+      "tpsLift": 1.6,
+      "sampleSize": 42
+    },
+    "actionability": "high"
+  }
+}

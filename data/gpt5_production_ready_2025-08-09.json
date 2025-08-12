@@ -1,0 +1,98 @@
+{
+  "timestamp": "2025-08-09T18:39:58.901Z",
+  "profileComparison": [
+    {
+      "profile": "fast",
+      "content": "- Strong contrast split: bold text on left, clear image on right grabs attention.\n- Prominent title and artist name (Rick Astley) for instant recognition.\n- Nostalgic, familiar image (Never Gonna Give You Up) taps curiosity.\n- Simple, uncluttered layout with a clear focal point (singer at mic).\n- “4K” badge signals high quality.",
+      "hasContent": true,
+      "tokens": {
+        "prompt": 287,
+        "completion": 88,
+        "reasoning": 0,
+        "visible": 88,
+        "total": 375
+      },
+      "performance": {
+        "processingTime": 1558,
+        "tokensPerSecond": 56.48267008985879
+      },
+      "cost": 0.000049550000000000005,
+      "model": "gpt-5-nano-2025-08-07"
+    }
+  ],
+  "batchResults": [
+    {
+      "videoId": "dQw4w9WgXcQ",
+      "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+      "analysis": "Clear, bold typography with a high-contrast split layout that emphasizes both the artist name and the iconic front-and-center shot.",
+      "cost": 0.000029250000000000003,
+      "processingTime": 1276
+    },
+    {
+      "videoId": "QeWD5F24DNI",
+      "title": "Disney’s Frozen On Ice – Entire Show Highlights",
+      "analysis": "Catchy text layout with bold, high-contrast colors and a smiling close-up to instantly convey excitement and theme.",
+      "cost": 0.000027950000000000002,
+      "processingTime": 1431
+    },
+    {
+      "videoId": "0hyWEbhhwXs",
+      "title": "I Salvaged a Giant Wooden Table from Disaster and Found HIDDEN DANGERS",
+      "analysis": "Intense close-up action cropping of the vividly carved orange table pieces with workers inspecting, highlighting danger and discovery.",
+      "cost": 0.00008340000000000001,
+      "processingTime": 1751
+    }
+  ],
+  "recommendations": {
+    "profiles": {
+      "fast": {
+        "reasoning_effort": "minimal",
+        "verbosity": "low",
+        "description": "Fast responses with minimal reasoning"
+      },
+      "balanced": {
+        "reasoning_effort": "low",
+        "verbosity": "medium",
+        "description": "Balanced speed and quality"
+      },
+      "detailed": {
+        "reasoning_effort": "medium",
+        "verbosity": "high",
+        "description": "Detailed analysis with moderate reasoning"
+      },
+      "thorough": {
+        "reasoning_effort": "high",
+        "verbosity": "high",
+        "description": "Maximum depth and detail"
+      }
+    },
+    "pricing": {
+      "gpt-5-nano": {
+        "input": 0.05,
+        "output": 0.4
+      },
+      "gpt-5-mini": {
+        "input": 0.25,
+        "output": 2
+      },
+      "gpt-5": {
+        "input": 1,
+        "output": 8
+      }
+    },
+    "optimalSettings": {
+      "highVolume": {
+        "model": "gpt-5-nano",
+        "profile": "fast"
+      },
+      "balanced": {
+        "model": "gpt-5-mini",
+        "profile": "balanced"
+      },
+      "premium": {
+        "model": "gpt-5",
+        "profile": "thorough"
+      }
+    }
+  }
+}

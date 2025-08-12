@@ -66,21 +66,14 @@ export async function POST(request: NextRequest) {
 
     // For immediate execution (small batches), run directly
     // For larger batches, consider using the worker
-    // Increased threshold to 500 to handle daily tracking (285 calls)
-    if (maxApiCalls <= 500) {
+    // Increased threshold to 800 to handle daily tracking with buffer
+    if (maxApiCalls <= 800) {
       // Small batch - run directly with timeout protection
       const viewTrackingService = new ViewTrackingService();
       
-      // Set a timeout for the tracking operation
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Operation timeout')), 280000) // 4.6 minutes
-      );
-      
-      // Race between tracking and timeout
-      Promise.race([
-        viewTrackingService.trackDailyViews(maxApiCalls),
-        timeoutPromise
-      ])
+      // Run tracking without timeout for immediate execution
+      // The 5-minute maxDuration should be sufficient
+      viewTrackingService.trackDailyViews(maxApiCalls)
         .then(async () => {
           // Update job status
           await supabase

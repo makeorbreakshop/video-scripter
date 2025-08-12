@@ -194,6 +194,16 @@ export class YouTubeDiscoveryAPI {
       this.quotaUsed.channels += quotaUsed;
       this.quotaUsed.total += quotaUsed;
       totalQuotaUsed += quotaUsed;
+      
+      // Track in central quota system
+      if (typeof window === 'undefined') {
+        // Server-side only
+        const { quotaTracker } = await import('./youtube-quota-tracker');
+        await quotaTracker.trackAPICall('channels.list', {
+          description: `Validate ${batch.length} channels`,
+          count: 1
+        });
+      }
 
       const channels: ChannelValidationResult[] = data.items?.map((item: any) => ({
         channelId: item.id,

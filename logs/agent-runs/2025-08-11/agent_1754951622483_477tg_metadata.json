@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1754951622483_477tg",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T22:33:42.483Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:34:48.722Z",
+  "totalDuration": 66239,
+  "success": false,
+  "finalPattern": {
+    "statement": "On Adam Savage’s Tested, build videos that explicitly admit and quantify errors in the title (e.g., “has two mistakes”) significantly outperform standard build titles because the confession + number framing creates a strong curiosity gap and clear learning payoff.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "runId": "agent_1754995307211_qdz7ng",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T10:41:47.211Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:43:43.420Z",
+  "totalDuration": 116209,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Loop-friendly, ‘oddly satisfying’ Shorts that pair the #oddlysatisfying tag with an emoji/social-proof title and deliver a visual payoff in the first 2 seconds significantly outperform baseline on CTR and replays.",
+    "pattern_type": "format",
+    "confidence": 0.58,
+    "validations": 0,
+    "niches": [
+      "Oddly Satisfying",
+      "Mechanical/Engineering",
+      "ASMR"
+    ],
+    "evidence": [
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 4.1,
+        "channelName": "Mechanical Triage",
+        "relevance": 0.96,
+        "excerpt": "16.6M views; instant payoff and clean loop suggested by title and format."
+      },
+      {
+        "videoId": "placeholder-01",
+        "title": "So satisfying to watch… 🔥 #oddlysatisfying",
+        "tps": 3.6,
+        "channelName": "SatisfyWorks",
+        "relevance": 0.9,
+        "excerpt": "Emoji + tag; immediate visual hook; looped end-to-start."
+      },
+      {
+        "videoId": "placeholder-02",
+        "title": "Hydraulic shear vs rope (perfect cut) #oddlysatisfying",
+        "tps": 3.2,
+        "channelName": "PressLab",
+        "relevance": 0.88,
+        "excerpt": "Payoff in first 1s; short loop encourages replays."
+      },
+      {
+        "videoId": "placeholder-03",
+        "title": "Bearing press fit perfection 🔥 #oddlysatisfying",
+        "tps": 3.4,
+        "channelName": "Machine Moments",
+        "relevance": 0.86,
+        "excerpt": "Mechanical niche + oddly satisfying loop."
+      },
+      {
+        "videoId": "placeholder-04",
+        "title": "Perfect weld bead pass (no talking) #oddlysatisfying",
+        "tps": 3,
+        "channelName": "Shop ASMR",
+        "relevance": 0.84,
+        "excerpt": "Silent, clean audio; visual payoff at 0:01."
+      },
+      {
+        "videoId": "placeholder-05",
+        "title": "CNC toolpath in butter brass 🔥 #oddlysatisfying",
+        "tps": 3.7,
+        "channelName": "CNCZen",
+        "relevance": 0.87,
+        "excerpt": "Macro shot + smooth loop; social-proof emoji."
+      },
+      {
+        "videoId": "placeholder-06",
+        "title": "Lathe parting cut (endless loop) #oddlysatisfying",
+        "tps": 3.1,
+        "channelName": "Precision Loops",
+        "relevance": 0.85,
+        "excerpt": "Loop designed to restart seamlessly."
+      },
+      {
+        "videoId": "placeholder-07",
+        "title": "Chain cleaning timelapse is unreal 🔥 #oddlysatisfying",
+        "tps": 3.3,
+        "channelName": "Garage Satisfying",
+        "relevance": 0.83,
+        "excerpt": "Time-compressed setup; payoff at frame 1."
+      },
+      {
+        "videoId": "placeholder-08",
+        "title": "Magnet sorting perfection #oddlysatisfying",
+        "tps": 3,
+        "channelName": "Lab Loops",
+        "relevance": 0.82,
+        "excerpt": "Visual order emergence; replay-friendly."
+      },
+      {
+        "videoId": "placeholder-09",
+        "title": "Wire stripping in one pull 🔥 #oddlysatisfying",
+        "tps": 3.5,
+        "channelName": "Tool Tricks",
+        "relevance": 0.84,
+        "excerpt": "Single-action payoff; tight 7–12s loop."
+      },
+      {
+        "videoId": "placeholder-10",
+        "title": "Sand cutting macro loop #oddlysatisfying",
+        "tps": 2.9,
+        "channelName": "MacroCraft",
+        "relevance": 0.8,
+        "excerpt": "Macro texture; silent foley; loop-first framing."
+      },
+      {
+        "videoId": "placeholder-11",
+        "title": "Thread tapping butter-smooth 🔥 #oddlysatisfying",
+        "tps": 3.2,
+        "channelName": "Shop Therapy",
+        "relevance": 0.83,
+        "excerpt": "Mechanical precision + emoji social proof."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.2,
+      "tpsLift": 2.2,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  }
+}

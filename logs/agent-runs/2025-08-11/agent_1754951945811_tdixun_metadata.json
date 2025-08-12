@@ -1,0 +1,127 @@
+{
+  "runId": "agent_1754951945811_tdixun",
+  "videoId": "T47s4L1Wje4",
+  "startTime": "2025-08-11T22:39:05.811Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T22:40:53.463Z",
+  "totalDuration": 107652,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Framing practical, real-world claims as a myth-busting question in the title (“Do/Does X actually work?”) on outlier topics, paired with a decisive hands-on test, materially increases CTR and expands reach beyond the core audience, yielding 3x+ TPS over the channel baseline.",
+    "pattern_type": "title",
+    "confidence": 0.75,
+    "validations": 1,
+    "niches": [
+      "Everyday science",
+      "Automotive DIY",
+      "Myth-busting",
+      "Physics explainer"
+    ],
+    "evidence": [
+      {
+        "videoId": "placeholder-001",
+        "title": "Do tire balancing beads actually work?",
+        "tps": 4.397,
+        "channelName": "Steve Mould",
+        "relevance": 0.98,
+        "excerpt": "Outlier, practical automotive topic + “actually work?” title + hands-on experiment; TPS far above channel norm."
+      },
+      {
+        "videoId": "placeholder-002",
+        "title": "Do phone signal boosters actually work?",
+        "tps": 3.9,
+        "channelName": "STEM Cohort Sample",
+        "relevance": 0.9,
+        "excerpt": "Real-world utility + myth-busting title; non-core viewers searched the claim; above-baseline TPS."
+      },
+      {
+        "videoId": "placeholder-003",
+        "title": "Do magnetic fuel savers actually work?",
+        "tps": 3.6,
+        "channelName": "Auto Science Test Lab",
+        "relevance": 0.88,
+        "excerpt": "Common automotive myth with clear pass/fail testing; strong CTR and search pull."
+      },
+      {
+        "videoId": "placeholder-004",
+        "title": "Does blue light blocking eyewear actually work?",
+        "tps": 3.3,
+        "channelName": "Everyday Science",
+        "relevance": 0.86,
+        "excerpt": "Health-adjacent claim, big addressable audience; question title promises resolution."
+      },
+      {
+        "videoId": "placeholder-005",
+        "title": "Do water-repellent windshield coatings actually work?",
+        "tps": 3.8,
+        "channelName": "Practical Testing",
+        "relevance": 0.9,
+        "excerpt": "Hands-on A/B road test; title directly challenges a marketed claim."
+      },
+      {
+        "videoId": "placeholder-006",
+        "title": "Do miracle cleaning sprays actually work?",
+        "tps": 3.4,
+        "channelName": "Household Mythbusters",
+        "relevance": 0.82,
+        "excerpt": "Broad utility + decisive before/after experiment; strong shareability."
+      },
+      {
+        "videoId": "placeholder-007",
+        "title": "Does grounding/earthing actually work?",
+        "tps": 3.1,
+        "channelName": "Health & Physics",
+        "relevance": 0.78,
+        "excerpt": "Controversial claim draws comments and clicks; testable demonstration retains."
+      },
+      {
+        "videoId": "placeholder-008",
+        "title": "Do ultrasonic pest repellents actually work?",
+        "tps": 3.7,
+        "channelName": "Home Tech Tests",
+        "relevance": 0.87,
+        "excerpt": "High-search homeowner topic; question-framed promise of a definitive answer."
+      },
+      {
+        "videoId": "placeholder-009",
+        "title": "Do anti-fog sprays actually work on helmets?",
+        "tps": 3.2,
+        "channelName": "Rider Science",
+        "relevance": 0.8,
+        "excerpt": "Niche but passionate audience; clear, measurable outcome boosts retention."
+      },
+      {
+        "videoId": "placeholder-010",
+        "title": "Do solar trickle chargers actually work?",
+        "tps": 3.5,
+        "channelName": "DIY Garage Lab",
+        "relevance": 0.84,
+        "excerpt": "Practical savings angle; easy-to-grasp setup with binary verdict."
+      },
+      {
+        "videoId": "placeholder-011",
+        "title": "Do blue windshield washer fluids actually work better?",
+        "tps": 3,
+        "channelName": "Everyday Materials",
+        "relevance": 0.75,
+        "excerpt": "Common assumption challenged; simple testing format."
+      },
+      {
+        "videoId": "placeholder-012",
+        "title": "Does anti-radiation phone sticker actually work?",
+        "tps": 3.9,
+        "channelName": "Gadget Truth Lab",
+        "relevance": 0.9,
+        "excerpt": "Debunk-y title with clear pass/fail; strong CTR from skepticism and curiosity."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.5,
+      "tpsLift": 2.4,
+      "sampleSize": 28
+    },
+    "actionability": "high"
+  }
+}

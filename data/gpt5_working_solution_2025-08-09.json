@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-08-09T18:36:38.489Z",
+  "solution": "reasoning_effort: minimal",
+  "modelComparison": [
+    {
+      "model": "gpt-5-nano",
+      "hasContent": true,
+      "contentLength": 338,
+      "processingTime": 1636,
+      "cost": 0.00004775000000000001,
+      "tokens": {
+        "prompt": 323,
+        "completion": 79,
+        "reasoning": 0,
+        "total": 402
+      }
+    },
+    {
+      "model": "gpt-5-mini",
+      "hasContent": true,
+      "contentLength": 308,
+      "processingTime": 2418,
+      "cost": 0.00021125,
+      "tokens": {
+        "prompt": 269,
+        "completion": 72,
+        "reasoning": 0,
+        "total": 341
+      }
+    }
+  ],
+  "batchResults": [
+    {
+      "videoId": "0hyWEbhhwXs",
+      "title": "I Salvaged a Giant Wooden Table from Disaster and Found HIDDEN DANGERS",
+      "analysis": "The striking contrast between the vivid, lava-red polished surface and the rough, natural bark textures draws the eye instantly and conveys a dramatic transformation.",
+      "cost": 0.0000861
+    }
+  ],
+  "workingCode": "reasoning_effort: 'minimal'"
+}

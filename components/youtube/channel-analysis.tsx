@@ -36,7 +36,6 @@ interface Video {
   channel_name: string;
   temporal_performance_score: number | null;
   channel_baseline_at_publish?: number;
-  rolling_baseline_views?: number;
 }
 
 interface ChannelOverview {
@@ -373,7 +372,7 @@ export function ChannelAnalysis({ channelId }: ChannelAnalysisProps) {
                     </TableCell>
                     <TableCell>{formatDate(video.published_at)}</TableCell>
                     <TableCell>
-                      {video.rolling_baseline_views ? formatNumber(video.rolling_baseline_views) : 'N/A'}
+                      {video.channel_baseline_at_publish ? formatNumber(Math.round(video.channel_baseline_at_publish)) : 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))}

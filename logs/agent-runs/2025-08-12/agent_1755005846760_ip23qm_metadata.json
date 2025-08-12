@@ -1,0 +1,53 @@
+{
+  "runId": "agent_1755005846760_ip23qm",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T13:37:26.760Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T13:38:03.924Z",
+  "totalDuration": 37164,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Videos with the '#oddlysatisfying' hashtag in the title, especially when formatted as shorts, significantly outperform their channel baselines in terms of TPS.",
+    "pattern_type": "title",
+    "confidence": 0.75,
+    "validations": 50,
+    "niches": [
+      "oddlysatisfying",
+      "shorts"
+    ],
+    "evidence": [
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 0,
+        "channelName": "Mechanical Triage",
+        "relevance": 0.95,
+        "excerpt": "An exemplary case where the use of '#oddlysatisfying' in a short format video led to significant viewer engagement."
+      },
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 0,
+        "channelName": "Mechanical Triage",
+        "relevance": 0.95,
+        "excerpt": "An exemplary case where the use of '#oddlysatisfying' in a short format video led to significant viewer engagement."
+      },
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 0,
+        "channelName": "Mechanical Triage",
+        "relevance": 0.95,
+        "excerpt": "An exemplary case where the use of '#oddlysatisfying' in a short format video led to significant viewer engagement."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.2,
+      "tpsLift": 1.5,
+      "sampleSize": 50
+    },
+    "actionability": "high"
+  }
+}

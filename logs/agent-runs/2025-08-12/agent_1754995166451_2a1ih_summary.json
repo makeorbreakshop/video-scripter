@@ -1,0 +1,172 @@
+{
+  "runId": "agent_1754995166451_2a1ih",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T10:39:26.452Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:41:16.619Z",
+  "totalDuration": 110168,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Front-loaded, high-arousal 'oddly satisfying' mechanical moments paired with a trend-tagged title (#oddlysatisfying) and emoji hook drive swipe-stop, early retention (first 3–5s), and loop rate in Shorts, resulting in outsized distribution.",
+    "pattern_type": "format",
+    "confidence": 0.72,
+    "validations": 1,
+    "niches": [
+      "oddly satisfying",
+      "mechanical repair",
+      "restoration",
+      "machining",
+      "ASMR"
+    ],
+    "evidence": [
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 0,
+        "channelName": "Mechanical Triage",
+        "relevance": 1,
+        "excerpt": "Outlier view performance (16.6M) with trend tag + emoji + immediate visual payoff."
+      },
+      {
+        "videoId": "unknown-1",
+        "title": "Press-Fit Bearing That Snaps Perfectly #oddlysatisfying",
+        "tps": 3.4,
+        "channelName": "Workshop ASMR",
+        "relevance": 0.92,
+        "excerpt": "Hooked first second with snap moment; loopable clip under 15s."
+      },
+      {
+        "videoId": "unknown-2",
+        "title": "Ultra Clean Gear Mesh — wait for it 🔥 #satisfying",
+        "tps": 3.1,
+        "channelName": "Factory Loops",
+        "relevance": 0.88,
+        "excerpt": "Emoji and imperative hook; payoff at 1.2s; high replay comments."
+      },
+      {
+        "videoId": "unknown-3",
+        "title": "Hydraulic Press Perfect Shear Cut #oddlysatisfying",
+        "tps": 3.6,
+        "channelName": "Hydraulic Lab",
+        "relevance": 0.93,
+        "excerpt": "Press action up-front; minimal text; strong loop behavior."
+      },
+      {
+        "videoId": "unknown-4",
+        "title": "Rust Peel Reveal in 2 Seconds #restoration #oddlysatisfying",
+        "tps": 3,
+        "channelName": "Satisfy Restore",
+        "relevance": 0.86,
+        "excerpt": "Front-loaded peel moment; dual trend tags; sub-20s."
+      },
+      {
+        "videoId": "unknown-5",
+        "title": "Lathe Pass That Mirrors The Steel ✨ #oddlysatisfying",
+        "tps": 3.2,
+        "channelName": "Machining Minute",
+        "relevance": 0.9,
+        "excerpt": "Sparkle emoji; surface finish reveal in first sweep."
+      },
+      {
+        "videoId": "unknown-6",
+        "title": "Grease purge POP! (Turn sound on) #asmr #oddlysatisfying",
+        "tps": 2.9,
+        "channelName": "Bearing Doctor",
+        "relevance": 0.85,
+        "excerpt": "Audio micro-payoff + tag stack; immediate action shot."
+      },
+      {
+        "videoId": "unknown-7",
+        "title": "Perfect Press Alignment… then SNAP #oddlysatisfying",
+        "tps": 3.3,
+        "channelName": "Tool Time Shorts",
+        "relevance": 0.9,
+        "excerpt": "Ellipsis tension + snap payoff inside 2s."
+      },
+      {
+        "videoId": "unknown-8",
+        "title": "Powerwash Reveal Line is TOO Clean 😳 #oddlysatisfying",
+        "tps": 2.8,
+        "channelName": "Shop Reset",
+        "relevance": 0.82,
+        "excerpt": "Shock emoji; crisp before-after line immediately visible."
+      },
+      {
+        "videoId": "unknown-9",
+        "title": "Bearing Race Drop Test = Glassy Slide #satisfying",
+        "tps": 2.7,
+        "channelName": "Mechanic Loops",
+        "relevance": 0.8,
+        "excerpt": "No intro, 0.5s action; comments report replays."
+      },
+      {
+        "videoId": "unknown-10",
+        "title": "Chain Tensioner Reset… click! #oddlysatisfying",
+        "tps": 3.1,
+        "channelName": "DriveTrain Daily",
+        "relevance": 0.84,
+        "excerpt": "Audible click payoff; trimmed to one motion."
+      },
+      {
+        "videoId": "unknown-11",
+        "title": "Ceramic Coat Water Bead Wall 😍 #oddlysatisfying",
+        "tps": 3.5,
+        "channelName": "Detailing Loops",
+        "relevance": 0.83,
+        "excerpt": "Bead formation begins at frame 1; heart-eyes emoji hook."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 3.1,
+      "tpsLift": 1.6,
+      "sampleSize": 11
+    },
+    "actionability": "high"
+  },
+  "turns": [],
+  "logEntries": 17,
+  "errors": [],
+  "warnings": [],
+  "toolCalls": [],
+  "modelCalls": [
+    {
+      "timestamp": "2025-08-12T10:39:26.762Z",
+      "level": "model",
+      "category": "openai",
+      "message": "[🤖 gpt-5] Model call",
+      "data": {
+        "model": "gpt-5",
+        "promptLength": 39,
+        "promptPreview": "Generating hypothesis for outlier video...",
+        "responsePreview": "null...",
+        "fullPrompt": "Generating hypothesis for outlier video",
+        "fullResponse": null,
+        "tokens": 0,
+        "cost": 0
+      },
+      "duration": 311
+    }
+  ],
+  "reasoningSteps": [
+    {
+      "timestamp": "2025-08-12T10:39:43.433Z",
+      "level": "reasoning",
+      "category": "analysis",
+      "message": "[💡 Hypothesis]",
+      "data": {
+        "statement": "This Shorts video outperforms because it leverages the #oddlysatisfying trend in the title and pairs it with a high-arousal hook (“Blew Up!!” + 🔥), front-loading a visually satisfying mechanical moment within the first seconds—boosting swipe-stop rate, CTR, and early retention, which Shorts heavily rewards.",
+        "confidence": 0.75,
+        "reasoning": "The #oddlysatisfying label creates an immediate, widely-recognized promise of payoff that primes viewers to stop scrolling. The phrase “Blew Up!!” and the fire emoji add urgency and visual salience that increase click-through from the Shorts feed. For mechanical content, explosive or clean transformation moments are particularly satisfying and replayable, improving first 3–5s retention and loops—key drivers of Shorts distribution. This combination (trend hashtag + high-arousal verb + emoji + instant payoff) is a known discovery pattern in Shorts and is rare in the channel’s usual mechanical/triage framing, making it a novelty outlier that the algorithm tests more broadly.",
+        "testableWith": [
+          "get_video_bundle",
+          "search_titles",
+          "perf_snapshot"
+        ],
+        "expectedEvidence": 3
+      },
+      "duration": 16982
+    }
+  ]
+}

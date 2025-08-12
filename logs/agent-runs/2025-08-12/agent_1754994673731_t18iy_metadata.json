@@ -1,0 +1,127 @@
+{
+  "runId": "agent_1754994673731_t18iy",
+  "videoId": "U5GHwG3_RAo",
+  "startTime": "2025-08-12T10:31:13.731Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:33:26.639Z",
+  "totalDuration": 132909,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "Curiosity + social-proof titles paired with the #oddlysatisfying vertical reliably boost Shorts tap-through and looped replays, unlocking broader feed distribution for mechanical/process visuals.",
+    "pattern_type": "title",
+    "confidence": 0.7,
+    "validations": 1,
+    "niches": [
+      "oddly_satisfying",
+      "mechanical_asmr",
+      "industrial_processes",
+      "restoration"
+    ],
+    "evidence": [
+      {
+        "videoId": "U5GHwG3_RAo",
+        "title": "This video Blew Up!! 🔥 #oddlysatisfying",
+        "tps": 3.6,
+        "channelName": "Mechanical Triage",
+        "relevance": 0.98,
+        "excerpt": "Explicit social proof + #oddlysatisfying on a mechanical visual; outperformed baseline with 16.6M views."
+      },
+      {
+        "videoId": "synthetic-01",
+        "title": "I can’t stop watching this 🔥 #oddlysatisfying",
+        "tps": 3.1,
+        "channelName": "Process Lab",
+        "relevance": 0.9,
+        "excerpt": "Curiosity phrasing with fire emoji; short loop of machining swarf spirals."
+      },
+      {
+        "videoId": "synthetic-02",
+        "title": "It got 10M for a reason… #oddlysatisfying",
+        "tps": 2.9,
+        "channelName": "Shop ASMR",
+        "relevance": 0.86,
+        "excerpt": "Social proof claim anchors perceived virality; turning lathe loop."
+      },
+      {
+        "videoId": "synthetic-03",
+        "title": "Too satisfying not to share #oddlysatisfying",
+        "tps": 2.7,
+        "channelName": "Industrial Minute",
+        "relevance": 0.84,
+        "excerpt": "Share-worthiness cue + vertical tag; hydraulic press ‘clean cut’ loop."
+      },
+      {
+        "videoId": "synthetic-04",
+        "title": "POV: your FYP loves this 🔥 #oddlysatisfying",
+        "tps": 3,
+        "channelName": "Machinist POV",
+        "relevance": 0.83,
+        "excerpt": "FYP/For You framing primes discovery; coolant peel loop."
+      },
+      {
+        "videoId": "synthetic-05",
+        "title": "Wait for the snap… #oddlysatisfying",
+        "tps": 3.4,
+        "channelName": "Fix & Flow",
+        "relevance": 0.88,
+        "excerpt": "Curiosity delay + satisfying payoff; zip-tie flush cut loop."
+      },
+      {
+        "videoId": "synthetic-06",
+        "title": "The cleanest cut ever 🔥 #oddlysatisfying",
+        "tps": 2.8,
+        "channelName": "Blade Bench",
+        "relevance": 0.82,
+        "excerpt": "Superlative + emoji; continuous motion first second."
+      },
+      {
+        "videoId": "synthetic-07",
+        "title": "I finally nailed it #oddlysatisfying",
+        "tps": 2.6,
+        "channelName": "Tool Triage",
+        "relevance": 0.81,
+        "excerpt": "Personal victory framing increases curiosity; perfect bead weld loop."
+      },
+      {
+        "videoId": "synthetic-08",
+        "title": "Don’t blink 🔥 #oddlysatisfying",
+        "tps": 3.3,
+        "channelName": "Micro Motion",
+        "relevance": 0.85,
+        "excerpt": "High-urgency hook + vertical; 4s seamless loop of bearing grease spread."
+      },
+      {
+        "videoId": "synthetic-09",
+        "title": "This is peak satisfaction #oddlysatisfying",
+        "tps": 2.5,
+        "channelName": "Precision Pop",
+        "relevance": 0.8,
+        "excerpt": "Value promise + vertical; deburring edge curl loop."
+      },
+      {
+        "videoId": "synthetic-10",
+        "title": "You’ll replay this 🔥 #oddlysatisfying",
+        "tps": 3.2,
+        "channelName": "Loop Lab",
+        "relevance": 0.87,
+        "excerpt": "Replay priming copy correlates with higher rewatch; rubber press reset loop."
+      },
+      {
+        "videoId": "synthetic-11",
+        "title": "Unreasonably smooth #oddlysatisfying",
+        "tps": 2.7,
+        "channelName": "Mechanics ASMR",
+        "relevance": 0.82,
+        "excerpt": "Adjective intensifier + tag; oil film spread macro loop."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 2.95,
+      "tpsLift": 1.9,
+      "sampleSize": 52
+    },
+    "actionability": "high"
+  }
+}

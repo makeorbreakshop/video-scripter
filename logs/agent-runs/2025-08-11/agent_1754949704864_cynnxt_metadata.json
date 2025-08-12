@@ -1,0 +1,13 @@
+{
+  "runId": "agent_1754949704864_cynnxt",
+  "videoId": "test_video_123",
+  "startTime": "2025-08-11T22:01:44.864Z",
+  "endTime": "2025-08-11T22:01:44.865Z",
+  "totalDuration": 1,
+  "success": true,
+  "totalEntries": 8,
+  "errors": 1,
+  "warnings": 0,
+  "toolCalls": 1,
+  "modelCalls": 2
+}

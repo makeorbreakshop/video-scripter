@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755015185592_livioa",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T16:13:05.593Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T16:13:55.528Z",
+  "totalDuration": 49936,
+  "success": false,
+  "finalPattern": {
+    "statement": "For Rick Beato, titles that combine a strong negative judgment ('sucks/ruined/worst'), an apology-led drama hook ('I'm Sorry...'), and a withheld/ambiguous target ('new artist' vs naming) drive significantly higher CTR and 3x+ TPS by exploiting negativity bias and a curiosity gap.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  }
+}

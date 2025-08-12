@@ -1,0 +1,264 @@
+{
+  "summary": {
+    "totalVideos": 10,
+    "successfulAnalyses": 10,
+    "errors": 0,
+    "totalCost": 0.022161,
+    "avgProcessingTime": 3243.7,
+    "modelUsed": "gpt-4o-mini",
+    "timestamp": "2025-08-09T17:52:53.631Z"
+  },
+  "results": [
+    {
+      "videoId": "dQw4w9WgXcQ",
+      "videoTitle": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+      "channel": "Rick Astley",
+      "performance": 9625.588,
+      "thumbnailUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The nostalgic image of Rick Astley performing captures immediate attention.",
+        "informationGap": "** What makes this classic song special in a modern 4K remaster?",
+        "patternFormula": "** [Title evokes nostalgia] + [Thumbnail features a recognizable artist performing] = [Viewer feels curiosity and excitement].",
+        "replicability": 4,
+        "keyInsight": "** Use nostalgic elements combined with modern enhancements to engage a wider audience."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 3024,
+        "cost": 0.0013609499999999999,
+        "tokens": {
+          "prompt": 8657,
+          "completion": 104,
+          "total": 8761
+        },
+        "timestamp": "2025-08-09T17:52:39.088Z"
+      }
+    },
+    {
+      "videoId": "QeWD5F24DNI",
+      "videoTitle": "Disney’s Frozen On Ice – Entire Show Highlights",
+      "channel": "Carlos Gil",
+      "performance": 8553.177,
+      "thumbnailUrl": "https://i.ytimg.com/vi/QeWD5F24DNI/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "",
+        "informationGap": "",
+        "patternFormula": "",
+        "replicability": 0,
+        "keyInsight": ""
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 3473,
+        "cost": 0.0013629,
+        "tokens": {
+          "prompt": 8646,
+          "completion": 110,
+          "total": 8756
+        },
+        "timestamp": "2025-08-09T17:52:39.536Z"
+      }
+    },
+    {
+      "videoId": "0hyWEbhhwXs",
+      "videoTitle": "I Salvaged a Giant Wooden Table from Disaster and Found HIDDEN DANGERS",
+      "channel": "Woodworking Projects ideas",
+      "performance": 6089.327,
+      "thumbnailUrl": "https://i.ytimg.com/vi/0hyWEbhhwXs/maxresdefault.jpg",
+      "analysis": {
+        "visualHook": "** The striking colors and patterns of the giant wooden table.",
+        "informationGap": "** What hidden dangers could be lurking within this salvaged table?",
+        "patternFormula": "** [Title reveals an unexpected danger] + [Thumbnail shows an appealing yet mysterious wooden table] = [Viewer feels intrigued and concerned].",
+        "replicability": 4,
+        "keyInsight": "** Use visually striking elements in your thumbnails to create intrigue and highlight potential conflicts or surprises in your content."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 4145,
+        "cost": 0.0056151,
+        "tokens": {
+          "prompt": 36990,
+          "completion": 111,
+          "total": 37101
+        },
+        "timestamp": "2025-08-09T17:52:40.208Z"
+      }
+    },
+    {
+      "videoId": "G2proZn9lZA",
+      "videoTitle": "Chef Nick Digiovanni turns Chick Fil A… CHINESE?! 😳🇨🇳",
+      "channel": "Danny Kim",
+      "performance": 5430.281,
+      "thumbnailUrl": "https://i.ytimg.com/vi/G2proZn9lZA/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The unexpected transformation of a popular fast-food item into a Chinese-style dish.",
+        "informationGap": "** How does Chef Nick Digiovanni make Chick-fil-A Chinese?",
+        "patternFormula": "** [Title suggests a surprising culinary twist] + [Thumbnail shows an engaging food preparation scenario] = [Viewer feels curious and intrigued].",
+        "replicability": 4,
+        "keyInsight": "** Use unexpected food combinations in titles and visuals to generate curiosity and engagement."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 2796,
+        "cost": 0.0013739999999999998,
+        "tokens": {
+          "prompt": 8656,
+          "completion": 126,
+          "total": 8782
+        },
+        "timestamp": "2025-08-09T17:52:44.005Z"
+      }
+    },
+    {
+      "videoId": "m5nvrX5oPt8",
+      "videoTitle": "GOT & HOTD - Which Dragon Is The Biggest?",
+      "channel": "Rocket Riley",
+      "performance": 5489.195,
+      "thumbnailUrl": "https://i.ytimg.com/vi/m5nvrX5oPt8/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The striking silhouette of an unknown, larger dragon.",
+        "informationGap": "** Which dragon is the biggest and what is the mystery behind it?",
+        "patternFormula": "** [Title compares dragon sizes] + [Thumbnail features prominent dragons with a mystery silhouette] = [Viewer feels curiosity and excitement].",
+        "replicability": 4,
+        "keyInsight": "** Create compelling visual contrasts and unanswered questions to boost viewer engagement."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 2796,
+        "cost": 0.0013572,
+        "tokens": {
+          "prompt": 8648,
+          "completion": 100,
+          "total": 8748
+        },
+        "timestamp": "2025-08-09T17:52:44.005Z"
+      }
+    },
+    {
+      "videoId": "KEclYKQ9GAM",
+      "videoTitle": "PSone slim with lcd review + how to use the lcd with other systems -TECH",
+      "channel": "Quiet Nerd",
+      "performance": 3462.981,
+      "thumbnailUrl": "https://i.ytimg.com/vi/KEclYKQ9GAM/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The retro appeal of the PSone slim combined with the LCD screen.",
+        "informationGap": "** How can the PSone slim be used effectively with other gaming systems?",
+        "patternFormula": "** [Title reviews a nostalgic gaming console] + [Thumbnail shows the console in use with a game disc] = [Viewer feels curious about retro gaming possibilities].",
+        "replicability": 4,
+        "keyInsight": "** Utilize nostalgic elements and practical usage scenarios in titles and thumbnails to attract viewers."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 3085,
+        "cost": 0.0013664999999999999,
+        "tokens": {
+          "prompt": 8654,
+          "completion": 114,
+          "total": 8768
+        },
+        "timestamp": "2025-08-09T17:52:44.295Z"
+      }
+    },
+    {
+      "videoId": "RcYlwZAepZ8",
+      "videoTitle": "Chef turns my favorite snacks gourmet😳",
+      "channel": "Danny Kim",
+      "performance": 3269.364,
+      "thumbnailUrl": "https://i.ytimg.com/vi/RcYlwZAepZ8/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The contrast between ordinary snacks and gourmet presentation.",
+        "informationGap": "** How can everyday snacks be transformed into gourmet dishes?",
+        "patternFormula": "** [Title does a surprising transformation] + [Thumbnail shows a chef with gourmet food] = [Viewer feels intrigued and excited].",
+        "replicability": 4,
+        "keyInsight": "** Highlight unexpected transformations to pique curiosity and drive engagement."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 2774,
+        "cost": 0.00135435,
+        "tokens": {
+          "prompt": 8645,
+          "completion": 96,
+          "total": 8741
+        },
+        "timestamp": "2025-08-09T17:52:48.071Z"
+      }
+    },
+    {
+      "videoId": "BFwMRVwrKcA",
+      "videoTitle": "Film Making Basics: Everything you need to know in 8 minutes!",
+      "channel": "Alfie Vaughan",
+      "performance": 2710.528,
+      "thumbnailUrl": "https://i.ytimg.com/vi/BFwMRVwrKcA/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The bold, iconic clapperboard immediately signals filmmaking.",
+        "informationGap": "** What essential filmmaking knowledge can be covered in just 8 minutes?",
+        "patternFormula": "** [Title promises comprehensive guidance] + [Thumbnail features a recognizable clapperboard] = [Viewer feels intrigued and eager to learn quickly.]",
+        "replicability": 4,
+        "keyInsight": "** Utilize strong visual symbols and create a curiosity-driven title to attract viewers quickly."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 3013,
+        "cost": 0.0013726499999999998,
+        "tokens": {
+          "prompt": 8651,
+          "completion": 125,
+          "total": 8776
+        },
+        "timestamp": "2025-08-09T17:52:48.310Z"
+      }
+    },
+    {
+      "videoId": "4086mTH8DsI",
+      "videoTitle": "Top 100 Wall Shelves Design for 2023/Ideas/tips",
+      "channel": "HANDICRAFT WOODWORKING PROJECT",
+      "performance": 2806.115,
+      "thumbnailUrl": "https://i.ytimg.com/vi/4086mTH8DsI/maxresdefault.jpg",
+      "analysis": {
+        "visualHook": "** The diverse array of unique wall shelf designs instantly captivates the viewer’s eye.",
+        "informationGap": "** What are the best wall shelf designs for 2023 that can enhance my home decor?",
+        "patternFormula": "** [Title showcases trendy shelf ideas] + [Thumbnail displays an engaging collage of designs] = [Viewer feels inspired and curious about home decorating options].",
+        "replicability": 4,
+        "keyInsight": "** Use visually appealing collages in thumbnails to showcase diverse options that spark curiosity in viewers."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 4093,
+        "cost": 0.005628749999999999,
+        "tokens": {
+          "prompt": 36993,
+          "completion": 133,
+          "total": 37126
+        },
+        "timestamp": "2025-08-09T17:52:49.391Z"
+      }
+    },
+    {
+      "videoId": "lpAq-jpWV6I",
+      "videoTitle": "Pro chef turns my McDonalds into TWO gourmet meals🤯✌️",
+      "channel": "Danny Kim",
+      "performance": 2688.587,
+      "thumbnailUrl": "https://i.ytimg.com/vi/lpAq-jpWV6I/hqdefault.jpg",
+      "analysis": {
+        "visualHook": "** The transformation of fast food into gourmet meals.",
+        "informationGap": "** How can McDonald's food be elevated to gourmet status?",
+        "patternFormula": "** [Pro chef turns fast food into gourmet meals] + [Thumbnail shows chef in action with quality ingredients] = [Viewer feels intrigued and hungry].",
+        "replicability": 4,
+        "keyInsight": "** Highlighting unexpected transformations can effectively engage viewers and drive curiosity."
+      },
+      "metadata": {
+        "model": "gpt-4o-mini",
+        "processingTime": 3238,
+        "cost": 0.0013686,
+        "tokens": {
+          "prompt": 8652,
+          "completion": 118,
+          "total": 8770
+        },
+        "timestamp": "2025-08-09T17:52:53.630Z"
+      }
+    }
+  ],
+  "errors": []
+}

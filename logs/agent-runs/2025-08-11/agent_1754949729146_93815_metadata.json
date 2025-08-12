@@ -1,0 +1,13 @@
+{
+  "runId": "agent_1754949729146_93815",
+  "videoId": "test_video_123",
+  "startTime": "2025-08-11T22:02:09.146Z",
+  "endTime": "2025-08-11T22:02:09.147Z",
+  "totalDuration": 1,
+  "success": true,
+  "totalEntries": 8,
+  "errors": 1,
+  "warnings": 0,
+  "toolCalls": 1,
+  "modelCalls": 2
+}

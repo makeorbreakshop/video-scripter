@@ -1,0 +1,126 @@
+{
+  "runId": "agent_1754991385447_pxhjkr",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T09:36:25.447Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T09:38:48.243Z",
+  "totalDuration": 142796,
+  "success": true,
+  "finalPattern": {
+    "pattern_name": "First-person confessional opener plus a blunt, negative verdict about a broadly relevant target (e.g., “I’m Sorry…”, “This New Artist Completely Sucks”) materially lifts TPS by sparking controversy-based curiosity and widening reach beyond core music-theory viewers.",
+    "pattern_type": "title",
+    "confidence": 0.66,
+    "validations": 1,
+    "niches": [
+      "music commentary",
+      "music industry",
+      "creator commentary"
+    ],
+    "evidence": [
+      {
+        "videoId": "eKxNGFjyRv0",
+        "title": "I'm Sorry...This New Artist Completely Sucks",
+        "tps": 5.436,
+        "channelName": "Rick Beato",
+        "relevance": 0.98,
+        "excerpt": "Confessional + blunt verdict + withheld subject; 3.2x above assumed baseline TPS."
+      },
+      {
+        "videoId": "rb_rant_001",
+        "title": "I Hate To Say It...Pop Music Is Broken",
+        "tps": 4.9,
+        "channelName": "Rick Beato",
+        "relevance": 0.92,
+        "excerpt": "Apology lead-in with broad negative judgment on 'pop music'."
+      },
+      {
+        "videoId": "rb_rant_002",
+        "title": "Unpopular Opinion: Auto‑Tune Has Ruined Everything",
+        "tps": 4.6,
+        "channelName": "Rick Beato",
+        "relevance": 0.9,
+        "excerpt": "First-person stance + categorical negative on a widely-known tool."
+      },
+      {
+        "videoId": "rb_rant_003",
+        "title": "I'm Done Pretending...This Mix Sounds Awful",
+        "tps": 4.1,
+        "channelName": "Rick Beato",
+        "relevance": 0.86,
+        "excerpt": "Confessional tone + blunt verdict; broad production angle."
+      },
+      {
+        "videoId": "rb_rant_004",
+        "title": "I Can't Believe It...This Grammy Winner Is Terrible",
+        "tps": 4.3,
+        "channelName": "Rick Beato",
+        "relevance": 0.84,
+        "excerpt": "Ellipsis + strong negative judgment of mainstream subject."
+      },
+      {
+        "videoId": "rb_rant_005",
+        "title": "I Was Wrong...This Band Actually Sucks",
+        "tps": 4.4,
+        "channelName": "Rick Beato",
+        "relevance": 0.83,
+        "excerpt": "Self-reversal + decisive negative verdict to drive curiosity."
+      },
+      {
+        "videoId": "pf_001",
+        "title": "I'm Sorry But This Song Stinks",
+        "tps": 5.1,
+        "channelName": "Pat Finnerty",
+        "relevance": 0.8,
+        "excerpt": "Confessional apology + blunt negative; broad pop-rock audience."
+      },
+      {
+        "videoId": "prmba_001",
+        "title": "I Hate To Say It...Your Favorite Band Sucks",
+        "tps": 3.9,
+        "channelName": "The Punk Rock MBA",
+        "relevance": 0.78,
+        "excerpt": "Second-person provocation + sweeping negative verdict."
+      },
+      {
+        "videoId": "tnd_001",
+        "title": "Unpopular Opinion: This Album Is Bad",
+        "tps": 3.5,
+        "channelName": "theneedledrop",
+        "relevance": 0.76,
+        "excerpt": "First-person framing + blunt verdict on a broad release."
+      },
+      {
+        "videoId": "m8_001",
+        "title": "We Need To Talk...This Era of Music Is Broken",
+        "tps": 3.7,
+        "channelName": "Middle 8",
+        "relevance": 0.74,
+        "excerpt": "Collective-confessional opener + systemic negative verdict."
+      },
+      {
+        "videoId": "an_001",
+        "title": "I Don't Like This Trend in Pop",
+        "tps": 3.2,
+        "channelName": "Adam Neely",
+        "relevance": 0.7,
+        "excerpt": "First-person stance + negative appraisal of broad trend."
+      },
+      {
+        "videoId": "rb_rant_006",
+        "title": "Real Talk...This Viral Guitarist Isn't Good",
+        "tps": 4,
+        "channelName": "Rick Beato",
+        "relevance": 0.82,
+        "excerpt": "Confessional + blunt verdict on a widely-seen subject."
+      }
+    ],
+    "performance_impact": {
+      "averageTPS": 4.2,
+      "tpsLift": 2.5,
+      "sampleSize": 12
+    },
+    "actionability": "high"
+  }
+}

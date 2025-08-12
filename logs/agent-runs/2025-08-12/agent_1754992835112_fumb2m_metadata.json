@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1754992835112_fumb2m",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T10:00:35.112Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T10:01:41.936Z",
+  "totalDuration": 66824,
+  "success": false,
+  "finalPattern": {
+    "statement": "Titles that combine a first-person apology hook with strong negative sentiment toward a contemporary/‘new’ artist (e.g., “I’m Sorry…This New Artist Completely Sucks”) drive higher CTR and above-baseline TPS on Rick Beato’s channel by creating curiosity and polarization versus his usual neutral explainer titles.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  }
+}

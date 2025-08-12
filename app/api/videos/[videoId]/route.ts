@@ -271,7 +271,24 @@ export async function GET(
           
           // Create age-appropriate performance bands using temporal baseline
           // Use the channel_baseline_at_publish we calculated earlier
-          const channelMultiplier = video.channel_baseline_at_publish || video.channel_performance_ratio || 1;
+          
+          // Get the global P50 at Day 30 to calculate the scale factor
+          const day30Envelope = envelopeData.find(e => e.day_since_published === 30) || 
+                               envelopeData.find(e => e.day_since_published === 28) ||
+                               envelopeData.find(e => e.day_since_published === 31) ||
+                               { p50_views: 29742 }; // fallback to known value
+          
+          // Calculate the channel multiplier
+          // If we have channel_baseline_at_publish (raw views), convert to scale factor
+          // Otherwise use the already-calculated channel_performance_ratio
+          let channelMultiplier;
+          if (video.channel_baseline_at_publish && video.channel_baseline_at_publish > 0) {
+            // Convert raw baseline views to scale factor
+            channelMultiplier = video.channel_baseline_at_publish / day30Envelope.p50_views;
+          } else {
+            // Fall back to calculated ratio or 1
+            channelMultiplier = video.channel_performance_ratio || 1;
+          }
           
           video.channel_adjusted_envelope = envelopeData.map(point => {
             // Apply the temporal baseline multiplier to all percentiles

@@ -1,0 +1,786 @@
+[2025-08-12T19:57:29.741Z] ================================================================================
+[2025-08-12T19:57:29.741Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T19:57:29.741Z
+[2025-08-12T19:57:29.741Z] Video ID: pjSgFEvOGAY
+[2025-08-12T19:57:29.741Z] ================================================================================
+[2025-08-12T19:57:29.742Z] 
+============================================================
+[2025-08-12T19:57:29.742Z] INITIAL SETUP
+[2025-08-12T19:57:29.742Z] ============================================================
+[2025-08-12T19:57:29.742Z] 🔍 [Enhanced] Analyzing pattern for video: pjSgFEvOGAY
+[2025-08-12T19:57:30.026Z] 📺 Target: "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!" (8.4x TPS)
+[2025-08-12T19:57:30.026Z] 🖼️ Thumbnail: Available
+[2025-08-12T19:57:30.026Z] Target Video Data:
+{
+  "id": "pjSgFEvOGAY",
+  "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+  "channel": "The Fast Lane Car",
+  "views": 123456,
+  "performance_score": 8.446,
+  "baseline": 21070.867,
+  "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+  "niche": "Metalwork"
+}
+
+[2025-08-12T19:57:30.141Z] 📊 Found 1 baseline videos for comparison
+[2025-08-12T19:57:30.142Z] Baseline Videos:
+[
+  {
+    "title": "Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? ",
+    "views": 15815,
+    "score": 0.929
+  }
+]
+
+[2025-08-12T19:57:30.142Z] 
+============================================================
+[2025-08-12T19:57:30.142Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T19:57:30.142Z] ============================================================
+[2025-08-12T19:57:30.142Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T19:57:30.142Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (8.4x performance):\nTitle: \"We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!\"\nViews: 123,456\nChannel: The Fast Lane Car\nNiche: Metalwork\nSummary: Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.\n\nCHANNEL BASELINE (normal performers):\n1. \"Let’s Be Real: Should You Buy This New Kia Sorento Over a Honda or Toyota? \" - 15,815 views (0.9x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T19:57:30.144Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg
+[2025-08-12T19:57:30.144Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T19:57:37.649Z] ✅ Claude response received in 7505ms
+[2025-08-12T19:57:37.649Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Forbidden Drama Reveal Pattern\",\n  \"pattern_description\": \"Content that reveals previously hidden or forbidden industry conflict/drama with major brands\",\n  \"psychological_trigger\": \"Humans are inherently drawn to exclusive 'behind-the-scenes' drama and forbidden content involving major brands\",\n  \"key_elements\": [\n    \"Use of dramatic term 'BLACKLISTED'\",\n    \"Specific timeframe '11 Years'\",\n    \"Major brand name 'Subaru'\",\n    \"Term 'Recreate' suggesting exclusive replay\"\n  ],\n  \"visual_elements\": [\n    \"Dramatic diagonal composition with tilted vehicle\",\n    \"High contrast yellow text on dark background\",\n    \"Off-road dirt/terrain setting\",\n    \"Dynamic action shot of vehicle at angle\"\n  ],\n  \"thumbnail_psychology\": \"The combination of dramatic text with action-oriented imagery creates a sense of rebellious authenticity\",\n  \"why_it_works\": \"It promises both drama and exclusive content while featuring a major brand name that viewers recognize and trust\",\n  \"semantic_queries\": [\n    \"subaru controversy\",\n    \"car company blacklist\",\n    \"automotive industry drama\"\n  ],\n  \"visual_queries\": [\n    \"dramatic off-road vehicle shots\",\n    \"high-contrast text overlays\"\n  ],\n  \"channel_outlier_explanation\": \"While baseline videos focus on standard review content, this video taps into forbidden/controversial content involving a major brand, plus promises to reveal something previously hidden from viewers\"\n}",
+  "usage": {
+    "input_tokens": 713,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 362,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T19:57:37.650Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T19:57:37.650Z] Extracted Pattern:
+{
+  "pattern_name": "Forbidden Drama Reveal Pattern",
+  "pattern_description": "Content that reveals previously hidden or forbidden industry conflict/drama with major brands",
+  "psychological_trigger": "Humans are inherently drawn to exclusive 'behind-the-scenes' drama and forbidden content involving major brands",
+  "key_elements": [
+    "Use of dramatic term 'BLACKLISTED'",
+    "Specific timeframe '11 Years'",
+    "Major brand name 'Subaru'",
+    "Term 'Recreate' suggesting exclusive replay"
+  ],
+  "visual_elements": [
+    "Dramatic diagonal composition with tilted vehicle",
+    "High contrast yellow text on dark background",
+    "Off-road dirt/terrain setting",
+    "Dynamic action shot of vehicle at angle"
+  ],
+  "thumbnail_psychology": "The combination of dramatic text with action-oriented imagery creates a sense of rebellious authenticity",
+  "why_it_works": "It promises both drama and exclusive content while featuring a major brand name that viewers recognize and trust",
+  "semantic_queries": [
+    "subaru controversy",
+    "car company blacklist",
+    "automotive industry drama"
+  ],
+  "visual_queries": [
+    "dramatic off-road vehicle shots",
+    "high-contrast text overlays"
+  ],
+  "channel_outlier_explanation": "While baseline videos focus on standard review content, this video taps into forbidden/controversial content involving a major brand, plus promises to reveal something previously hidden from viewers"
+}
+
+[2025-08-12T19:57:37.650Z] ✅ Pattern extracted: Forbidden Drama Reveal Pattern
+[2025-08-12T19:57:37.650Z] 📝 Text queries: subaru controversy, car company blacklist, automotive industry drama
+[2025-08-12T19:57:37.650Z] 🎨 Visual queries: dramatic off-road vehicle shots, high-contrast text overlays
+[2025-08-12T19:57:37.650Z] 
+============================================================
+[2025-08-12T19:57:37.650Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T19:57:37.650Z] ============================================================
+[2025-08-12T19:57:37.650Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T19:57:37.651Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T19:57:37.651Z]   Searching text for: "subaru controversy"
+[2025-08-12T19:57:37.651Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:57:38.530Z]     Generated embedding in 879ms (512D)
+[2025-08-12T19:57:38.530Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:57:42.398Z]     Parallel search completed in 3868ms
+[2025-08-12T19:57:42.398Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.551",
+  "topResults": [
+    {
+      "title": "Driving Subaru's Most Popular Car - BIGTIME",
+      "score": "0.609",
+      "views": 910562
+    },
+    {
+      "title": "8 Reasons to NOT get a Subaru Outback",
+      "score": "0.582",
+      "views": 16081
+    },
+    {
+      "title": "4 WORST And 7 BEST Things About The 2024 Subaru WRX TR",
+      "score": "0.572",
+      "views": 13992
+    }
+  ]
+}
+
+[2025-08-12T19:57:42.399Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.565",
+  "topResults": [
+    {
+      "title": "Bugeye WRX Head Gasket Update! 🧐🧐 The Seller Responds",
+      "score": "0.633",
+      "views": 1964
+    },
+    {
+      "title": "4 WORST And 9 BEST Things About The 2024 Subaru Crosstrek",
+      "score": "0.608",
+      "views": 113301
+    },
+    {
+      "title": "4 WORST And 7 BEST Things About The 2024 Subaru WRX TR",
+      "score": "0.596",
+      "views": 13992
+    }
+  ]
+}
+
+[2025-08-12T19:57:42.399Z]   Searching text for: "car company blacklist"
+[2025-08-12T19:57:42.399Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:57:42.711Z]     Generated embedding in 312ms (512D)
+[2025-08-12T19:57:42.711Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:57:43.498Z]     Parallel search completed in 787ms
+[2025-08-12T19:57:43.498Z] Title Search Results:
+{
+  "found": 4,
+  "avgSimilarity": "0.510",
+  "topResults": [
+    {
+      "title": "Car Scam",
+      "score": "0.518",
+      "views": 16638
+    },
+    {
+      "title": "Smart car",
+      "score": "0.513",
+      "views": 151
+    },
+    {
+      "title": "Have Car Companies \"Innovated\" Themselves Out of Business",
+      "score": "0.510",
+      "views": 1470426
+    }
+  ]
+}
+
+[2025-08-12T19:57:43.498Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.458",
+  "topResults": [
+    {
+      "title": "These 13 Cars Will BLEED You Dry (Every BRAND Screwed Up)",
+      "score": "0.567",
+      "views": 10822
+    },
+    {
+      "title": "Can New EV Companies Succeed?",
+      "score": "0.485",
+      "views": 325949
+    },
+    {
+      "title": "13 Worst Car Brands Only Stupid People Buy (Don't Buy)",
+      "score": "0.478",
+      "views": 56477
+    }
+  ]
+}
+
+[2025-08-12T19:57:43.498Z]   Searching text for: "automotive industry drama"
+[2025-08-12T19:57:43.498Z]     Generating OpenAI embedding for query...
+[2025-08-12T19:57:43.786Z]     Generated embedding in 288ms (512D)
+[2025-08-12T19:57:43.786Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T19:57:44.466Z]     Parallel search completed in 680ms
+[2025-08-12T19:57:44.466Z] Title Search Results:
+{
+  "found": 14,
+  "avgSimilarity": "0.519",
+  "topResults": [
+    {
+      "title": "What is The Future Of The Automotive Industry? Featuring Savagegeese",
+      "score": "0.570",
+      "views": 318967
+    },
+    {
+      "title": "Tesla Blindsided the Auto Industry With One Move",
+      "score": "0.531",
+      "views": 40332
+    },
+    {
+      "title": "Have Car Companies \"Innovated\" Themselves Out of Business",
+      "score": "0.530",
+      "views": 1470426
+    }
+  ]
+}
+
+[2025-08-12T19:57:44.467Z] Summary Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.524",
+  "topResults": [
+    {
+      "title": "The Cover-Up that Cost Volkswagen $30 Billion",
+      "score": "0.583",
+      "views": 16776
+    },
+    {
+      "title": "Has The Car Market Ruined Itself?",
+      "score": "0.567",
+      "views": 820236
+    },
+    {
+      "title": "Koenigsegg vs Rimac vs Murray vs Hennessey: The Ultimate Car Boss Chat | Top Gear",
+      "score": "0.559",
+      "views": 2226687
+    }
+  ]
+}
+
+[2025-08-12T19:57:44.467Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T19:57:44.467Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T19:57:44.467Z]   Searching thumbnails for: "dramatic off-road vehicle shots"
+[2025-08-12T19:57:44.467Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:57:44.810Z]     Generated CLIP embedding in 343ms (768D)
+[2025-08-12T19:57:44.810Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:57:47.349Z]     Thumbnail search completed in 2539ms
+[2025-08-12T19:57:47.349Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.266",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Ad Feature: What Audi Learned At Last Year’s Dakar Rally",
+      "score": "0.286",
+      "views": 39361,
+      "channel": "Top Gear"
+    },
+    {
+      "title": "3x3 Monster Trike First Start?",
+      "score": "0.285",
+      "views": 832565,
+      "channel": "Grind Hard Plumbing Co"
+    },
+    {
+      "title": "ONLY A ROADTRIP AWAY",
+      "score": "0.273",
+      "views": 25528,
+      "channel": "Only A Roadtrip Away"
+    }
+  ]
+}
+
+[2025-08-12T19:57:47.349Z]   Searching thumbnails for: "high-contrast text overlays"
+[2025-08-12T19:57:47.349Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T19:57:47.718Z]     Generated CLIP embedding in 369ms (768D)
+[2025-08-12T19:57:47.718Z]     Searching dedicated thumbnail index...
+[2025-08-12T19:57:47.907Z]     Thumbnail search completed in 189ms
+[2025-08-12T19:57:47.907Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.251",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "AutoCAD Convert Text to MTEXT & How to Curve Text! Quick Tips | 2 Minute Tuesday",
+      "score": "0.265",
+      "views": 12905,
+      "channel": "CAD Intentions"
+    },
+    {
+      "title": "YouTube Researching with AI",
+      "score": "0.262",
+      "views": 2746,
+      "channel": "AI Guy"
+    },
+    {
+      "title": "Upgrade your screenshot game with this Mac app",
+      "score": "0.258",
+      "views": 4782,
+      "channel": "A Better Computer"
+    }
+  ]
+}
+
+[2025-08-12T19:57:47.907Z] 
+============================================================
+[2025-08-12T19:57:47.907Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T19:57:47.907Z] ============================================================
+[2025-08-12T19:57:47.907Z] 📋 Getting full video data for 125 unique videos...
+[2025-08-12T19:57:48.023Z] 📊 Filtered to 16 high performers (2.5x+) for validation
+[2025-08-12T19:57:48.023Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "Best resource for animation: GSAP",
+    "views": 118573,
+    "score": 58571.635,
+    "channel": "Flux Academy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Webflow Components BG",
+    "views": 5167,
+    "score": 2552.349,
+    "channel": "Flux Academy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Range Rover Classic - Overland Vanlife Build Tour",
+    "views": 221552,
+    "score": 32.784,
+    "channel": "Only A Roadtrip Away",
+    "hasThumbnail": true
+  },
+  {
+    "title": "F1 Car Inside Casino?! | ¡Vamos, Vegas! feat. Checo Perez & Christian Horner",
+    "views": 1945262,
+    "score": 14.167,
+    "channel": "Oracle Red Bull Racing",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "views": 123456,
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why I Love My GC Subaru Impreza - The Honda Civic of Subarus",
+    "views": 5482,
+    "score": 7.508,
+    "channel": "802 Garage",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Koenigsegg vs Rimac vs Murray vs Hennessey: The Ultimate Car Boss Chat | Top Gear",
+    "views": 2226687,
+    "score": 6.562,
+    "channel": "Top Gear",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why Gas Engines Are Far From Dead - Biggest EV Problems",
+    "views": 4413283,
+    "score": 5.447,
+    "channel": "Engineering Explained",
+    "hasThumbnail": true
+  },
+  {
+    "title": "4 WORST And 9 BEST Things About The 2024 Subaru Crosstrek",
+    "views": 113301,
+    "score": 5.384,
+    "channel": "Downshift",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Do Thin Oils Destroy Engines? Lessons From GM’s Massive Recall",
+    "views": 1537115,
+    "score": 4.584,
+    "channel": "Engineering Explained",
+    "hasThumbnail": true
+  },
+  {
+    "title": "7 Car Dealership Rip Offs You Should NEVER Pay For!",
+    "views": 1842990,
+    "score": 4.272,
+    "channel": "Marko - WhiteBoard Finance",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Van Life in Iceland in a 4x4 G Wagon Overlanding BEAST",
+    "views": 203042,
+    "score": 4.123,
+    "channel": "Wild We Roam",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Is Toyota Quality Going Down? Here's the Truth.",
+    "views": 856546,
+    "score": 3.421,
+    "channel": "The Car Care Nut",
+    "hasThumbnail": true
+  },
+  {
+    "title": "8 Reasons you SHOULD get a Subaru Outback",
+    "views": 38067,
+    "score": 3.26,
+    "channel": "Chase Christopher",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The worst bike we ever sold",
+    "views": 617738,
+    "score": 2.968,
+    "channel": "Bikes and Beards",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I Went to China to see How FAR Ahead Their Cars Are",
+    "views": 186576,
+    "score": 2.508,
+    "channel": "Kim Java",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T19:57:48.024Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T19:57:48.024Z] 🤖 Starting enhanced LLM validation for 16 videos...
+[2025-08-12T19:58:16.912Z] ✅ Enhanced validation complete: 1 videos confirmed
+[2025-08-12T19:58:16.913Z] Final Validated Videos:
+[
+  {
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "score": 8.446,
+    "channel": "The Fast Lane Car",
+    "reason": "The video title perfectly matches the pattern by using the dramatic term \"BLACKLISTED,\" specifying \"11 Years\" as the timeframe, and featuring \"Subaru\" as the major brand name.",
+    "source": "summary"
+  }
+]
+
+[2025-08-12T19:58:16.913Z] Pre-Calculation Metrics:
+{
+  "validationResults": 1,
+  "totalValidations": 1,
+  "avgPatternScore": 8.446,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Metalwork",
+      "count": 1,
+      "avg_score": 8.446,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-12T19:58:16.913Z] Pattern Strength Calculation:
+{
+  "totalValidations": 1,
+  "avgPatternScore": 8.446,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 8.446,
+  "finalStrength": "weak"
+}
+
+[2025-08-12T19:58:16.913Z] 
+============================================================
+[2025-08-12T19:58:16.913Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T19:58:16.913Z] ============================================================
+[2025-08-12T19:58:16.913Z] ✅ Enhanced pattern analysis complete in 47172ms
+[2025-08-12T19:58:16.913Z] 📊 Found 1 validations (0 with visual matches) across 1 niches
+[2025-08-12T19:58:16.913Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Forbidden Drama Reveal Pattern",
+    "pattern_description": "Content that reveals previously hidden or forbidden industry conflict/drama with major brands",
+    "psychological_trigger": "Humans are inherently drawn to exclusive 'behind-the-scenes' drama and forbidden content involving major brands",
+    "key_elements": [
+      "Use of dramatic term 'BLACKLISTED'",
+      "Specific timeframe '11 Years'",
+      "Major brand name 'Subaru'",
+      "Term 'Recreate' suggesting exclusive replay"
+    ],
+    "visual_elements": [
+      "Dramatic diagonal composition with tilted vehicle",
+      "High contrast yellow text on dark background",
+      "Off-road dirt/terrain setting",
+      "Dynamic action shot of vehicle at angle"
+    ],
+    "thumbnail_psychology": "The combination of dramatic text with action-oriented imagery creates a sense of rebellious authenticity",
+    "why_it_works": "It promises both drama and exclusive content while featuring a major brand name that viewers recognize and trust",
+    "semantic_queries": [
+      "subaru controversy",
+      "car company blacklist",
+      "automotive industry drama"
+    ],
+    "visual_queries": [
+      "dramatic off-road vehicle shots",
+      "high-contrast text overlays"
+    ],
+    "channel_outlier_explanation": "While baseline videos focus on standard review content, this video taps into forbidden/controversial content involving a major brand, plus promises to reveal something previously hidden from viewers"
+  },
+  "source_video": {
+    "id": "pjSgFEvOGAY",
+    "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+    "channel": "The Fast Lane Car",
+    "score": 8.446,
+    "niche": "Metalwork",
+    "views": 123456,
+    "thumbnail": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+    "baseline": 21070.867,
+    "published_at": "2025-08-07T11:01:34+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Metalwork",
+        "videos": [
+          {
+            "title": "We Recreate The Off-Road Video Test That Got Us BLACKLISTED By Subaru for 11 Years!",
+            "score": 8.446,
+            "views": 123456,
+            "channel": "The Fast Lane Car",
+            "thumbnail_url": "https://i.ytimg.com/vi/pjSgFEvOGAY/hqdefault.jpg",
+            "summary": "Recreating an off-road video test that led to a long-standing ban from Subaru, showcasing the vehicle's performance and capabilities in challenging terrains.",
+            "validation_reason": "The video title perfectly matches the pattern by using the dramatic term \"BLACKLISTED,\" specifying \"11 Years\" as the timeframe, and featuring \"Subaru\" as the major brand name.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 8.446,
+        "count": 1
+      }
+    ],
+    "total_validations": 1,
+    "visual_validations": 0,
+    "pattern_strength": "weak",
+    "avg_pattern_score": 8.446
+  },
+  "processing_time_ms": 47172,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 125,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"subaru controversy\"",
+      "    Generated embedding in 879ms",
+      "    Title search: 19 results (avg similarity: 0.551)",
+      "    Summary search: 18 results (avg similarity: 0.565)",
+      "    Parallel search completed in 3868ms",
+      "  Searching text for: \"car company blacklist\"",
+      "    Generated embedding in 312ms",
+      "    Title search: 4 results (avg similarity: 0.510)",
+      "    Summary search: 18 results (avg similarity: 0.458)",
+      "    Parallel search completed in 787ms",
+      "  Searching text for: \"automotive industry drama\"",
+      "    Generated embedding in 288ms",
+      "    Title search: 14 results (avg similarity: 0.519)",
+      "    Summary search: 17 results (avg similarity: 0.524)",
+      "    Parallel search completed in 680ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"dramatic off-road vehicle shots\"",
+      "    Generated CLIP embedding in 343ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.266)",
+      "    Visual search completed in 2539ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"high-contrast text overlays\"",
+      "    Generated CLIP embedding in 369ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.251)",
+      "    Visual search completed in 189ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 125 across all searches",
+      "📋 Getting full video data for 125 unique videos...",
+      "📊 Filtered to 16 high performers (2.5x+) for validation",
+      "🤖 Starting enhanced LLM validation for 16 videos...",
+      "    ❌ Rejected \"Best resource for animation: GSAP...\" in 1616ms - NO: The video appears to be a straightforward educational content about GSAP animation library witho",
+      "    ❌ Rejected \"Webflow Components BG...\" in 1585ms - NO: This appears to be an instructional video about Webflow components and custom attributes, with n",
+      "    ❌ Rejected \"Range Rover Classic - Overland Vanlife Build Tour...\" in 1792ms - NO: While this video features a major brand (Range Rover), it lacks the dramatic \"BLACKLISTED\" term ",
+      "    ❌ Rejected \"F1 Car Inside Casino?! | ¡Vamos, Vegas! feat. Chec...\" in 1740ms - NO: This video title and thumbnail focus on exciting F1 content in Las Vegas without using dramatic ",
+      "    ✅ Validated \"We Recreate The Off-Road Video Test That Got Us BL...\" in 1331ms (summary source)",
+      "    ❌ Rejected \"Why I Love My GC Subaru Impreza - The Honda Civic ...\" in 1843ms - NO: While the video includes the Subaru brand name, it lacks the dramatic \"BLACKLISTED\" term and spe",
+      "    ❌ Rejected \"Koenigsegg vs Rimac vs Murray vs Hennessey: The Ul...\" in 1741ms - NO: This appears to be a straightforward interview/discussion video featuring automotive company lea",
+      "    ❌ Rejected \"Why Gas Engines Are Far From Dead - Biggest EV Pro...\" in 1766ms - NO: The thumbnail and title \"BIG PROBLEM\" uses simpler, more direct language rather than dramatic te",
+      "    ❌ Rejected \"4 WORST And 9 BEST Things About The 2024 Subaru Cr...\" in 1611ms - NO: While this video mentions Subaru, it lacks dramatic terms like \"BLACKLISTED\" or specific timefra",
+      "    ❌ Rejected \"Do Thin Oils Destroy Engines? Lessons From GM’s Ma...\" in 1847ms - NO: While the video discusses engine oil issues and mentions GM, it lacks the specific dramatic elem",
+      "    ❌ Rejected \"7 Car Dealership Rip Offs You Should NEVER Pay For...\" in 1631ms - NO: The video title focuses on practical advice about dealer fees without using dramatic terms, spec",
+      "    ❌ Rejected \"Van Life in Iceland in a 4x4 G Wagon Overlanding B...\" in 1849ms - NO: The video title is descriptive and factual about overlanding in Iceland with a Mercedes G-Wagon,",
+      "    ❌ Rejected \"Is Toyota Quality Going Down? Here's the Truth....\" in 3263ms - NO: While the title poses a dramatic question about Toyota's quality and uses \"THE TRUTH!\" with flam",
+      "    ❌ Rejected \"8 Reasons you SHOULD get a Subaru Outback...\" in 1446ms - NO: The video title and thumbnail use positive, straightforward messaging without dramatic terms, sp",
+      "    ❌ Rejected \"The worst bike we ever sold...\" in 1863ms - NO: While the title uses dramatic language (\"Catastrophic\"), it lacks the specific pattern elements ",
+      "    ❌ Rejected \"I Went to China to see How FAR Ahead Their Cars Ar...\" in 1963ms - NO: While the thumbnail uses dramatic text \"Game Over,\" it doesn't match the specific pattern elemen",
+      "✅ Enhanced validation complete: 1 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "subaru controversy",
+          "duration": 4748,
+          "titleResults": 19,
+          "summaryResults": 18
+        },
+        {
+          "query": "car company blacklist",
+          "duration": 1099,
+          "titleResults": 4,
+          "summaryResults": 18
+        },
+        {
+          "query": "automotive industry drama",
+          "duration": 969,
+          "titleResults": 14,
+          "summaryResults": 17
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "dramatic off-road vehicle shots",
+          "duration": 2882,
+          "results": 25
+        },
+        {
+          "query": "high-contrast text overlays",
+          "duration": 558,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "subaru controversy",
+        "duration": 4748,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.5512672693157894,
+          "threshold": 0.5,
+          "topScores": [
+            0.608965218,
+            0.581662357,
+            0.572119355
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.5654633966666666,
+          "threshold": 0.4,
+          "topScores": [
+            0.633437335,
+            0.608169,
+            0.595862329
+          ]
+        }
+      },
+      {
+        "query": "car company blacklist",
+        "duration": 1099,
+        "titleSearch": {
+          "found": 4,
+          "avgSimilarity": 0.5104337335,
+          "threshold": 0.5,
+          "topScores": [
+            0.518032372,
+            0.513375044,
+            0.510263801
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.4578521169444444,
+          "threshold": 0.4,
+          "topScores": [
+            0.566897571,
+            0.485348642,
+            0.477881223
+          ]
+        }
+      },
+      {
+        "query": "automotive industry drama",
+        "duration": 969,
+        "titleSearch": {
+          "found": 14,
+          "avgSimilarity": 0.5192981533571428,
+          "threshold": 0.5,
+          "topScores": [
+            0.569622636,
+            0.530581355,
+            0.530263841
+          ]
+        },
+        "summarySearch": {
+          "found": 17,
+          "avgSimilarity": 0.5236346162352942,
+          "threshold": 0.4,
+          "topScores": [
+            0.583227098,
+            0.566893578,
+            0.558711708
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "dramatic off-road vehicle shots",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 2882,
+        "avgSimilarity": 0.26585067624000003,
+        "topScores": [
+          0.285906762,
+          0.285067588,
+          0.27344197
+        ]
+      },
+      {
+        "query": "high-contrast text overlays",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 558,
+        "avgSimilarity": 0.25090020544,
+        "topScores": [
+          0.264946103,
+          0.262249351,
+          0.258255363
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 125,
+      "afterPerformanceFilter": 16,
+      "validated": 1,
+      "validationRate": "6.3%",
+      "sourceBreakdown": {
+        "title": 0,
+        "summary": 1,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 438,
+      "responseTokens": 361,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T19:58:16.914Z
+================================================================================

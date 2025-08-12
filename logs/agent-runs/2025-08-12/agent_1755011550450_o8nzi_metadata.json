@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1755011550450_o8nzi",
+  "videoId": "eKxNGFjyRv0",
+  "startTime": "2025-08-12T15:12:30.450Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-12T15:12:31.425Z",
+  "totalDuration": 975,
+  "success": true,
+  "finalPattern": {
+    "statement": "Classic analysis pattern",
+    "confidence": 0.6,
+    "validations": 10,
+    "niches": [],
+    "evidence": []
+  }
+}

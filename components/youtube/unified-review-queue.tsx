@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ImportModal } from './import-modal';
 import { 
   Users, 
   Play, 
@@ -56,12 +57,16 @@ export function UnifiedReviewQueue() {
   const [sortBy, setSortBy] = useState('relevance_score');
   const [selectedChannelIds, setSelectedChannelIds] = useState<Set<string>>(new Set());
   const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [subscriberRange, setSubscriberRange] = useState({ min: '', max: '' });
+  const [videoCountRange, setVideoCountRange] = useState({ min: '', max: '' });
   const [duplicateStats, setDuplicateStats] = useState<{
     alreadyImported: number;
     inQueue: number;
     newChannels: number;
   } | null>(null);
   const [duplicateFilter, setDuplicateFilter] = useState<'all' | 'new' | 'imported' | 'queued'>('all');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [channelsForImport, setChannelsForImport] = useState<DiscoveredChannel[]>([]);
 
   useEffect(() => {
     loadChannels();
@@ -200,6 +205,14 @@ export function UnifiedReviewQueue() {
   };
 
   const bulkAction = async (action: 'approve' | 'reject', channelIds: string[], autoImport: boolean = false) => {
+    if (action === 'approve' && autoImport) {
+      // Open import modal instead of directly importing
+      const selectedChannels = channels.filter(ch => channelIds.includes(ch.discovered_channel_id));
+      setChannelsForImport(selectedChannels);
+      setShowImportModal(true);
+      return;
+    }
+
     try {
       const response = await fetch('/api/youtube/discovery/bulk-validate', {
         method: 'POST',
@@ -207,28 +220,62 @@ export function UnifiedReviewQueue() {
         body: JSON.stringify({
           channelIds,
           action,
-          autoImport
+          autoImport: false // Never auto-import here since we use the modal
         })
       });
 
       if (response.ok) {
-        const result = await response.json();
-        if (autoImport && result.importResults) {
-          if (result.importResults.success) {
-            console.log(`✅ Bulk import job created: ${result.importResults.jobId} for ${channelIds.length} channels`);
-            // Could show a toast notification here
-          } else {
-            console.error('Bulk import failed:', result.importResults.error);
-            // Could show an error notification here
-          }
-        }
-        
         // Clear selections after successful bulk action
         setSelectedChannelIds(new Set());
         loadChannels();
       }
     } catch (error) {
       console.error('Error performing bulk action:', error);
+    }
+  };
+
+  const handleImportWithFilter = async (settings: { 
+    channelIds: string[], 
+    dateFilter: 'all' | 'recent',
+    dateRange: number 
+  }) => {
+    try {
+      // First approve the channels
+      await fetch('/api/youtube/discovery/bulk-validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelIds: settings.channelIds,
+          action: 'approve',
+          autoImport: false
+        })
+      });
+
+      // Then import with filters using unified import
+      const response = await fetch('/api/video-import/unified', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'discovery',
+          channelIds: settings.channelIds,
+          options: {
+            dateFilter: settings.dateFilter,
+            dateRange: settings.dateRange,
+            batchSize: 50
+          }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ Import job created for ${settings.channelIds.length} channels with ${settings.dateFilter} filter`);
+        
+        // Clear selections and reload
+        setSelectedChannelIds(new Set());
+        loadChannels();
+      }
+    } catch (error) {
+      console.error('Error importing channels:', error);
     }
   };
 
@@ -287,7 +334,39 @@ export function UnifiedReviewQueue() {
       }
     }
     
-    return matchesSearch && matchesDuplicateFilter;
+    // Apply subscriber range filter
+    let matchesSubscriberRange = true;
+    const subscriberCount = channel.subscriber_count || 0;
+    if (subscriberRange.min !== '') {
+      const minSubs = parseInt(subscriberRange.min);
+      if (!isNaN(minSubs) && subscriberCount < minSubs) {
+        matchesSubscriberRange = false;
+      }
+    }
+    if (subscriberRange.max !== '') {
+      const maxSubs = parseInt(subscriberRange.max);
+      if (!isNaN(maxSubs) && subscriberCount > maxSubs) {
+        matchesSubscriberRange = false;
+      }
+    }
+    
+    // Apply video count range filter
+    let matchesVideoRange = true;
+    const videoCount = channel.video_count || 0;
+    if (videoCountRange.min !== '') {
+      const minVideos = parseInt(videoCountRange.min);
+      if (!isNaN(minVideos) && videoCount < minVideos) {
+        matchesVideoRange = false;
+      }
+    }
+    if (videoCountRange.max !== '') {
+      const maxVideos = parseInt(videoCountRange.max);
+      if (!isNaN(maxVideos) && videoCount > maxVideos) {
+        matchesVideoRange = false;
+      }
+    }
+    
+    return matchesSearch && matchesDuplicateFilter && matchesSubscriberRange && matchesVideoRange;
   });
 
   const pendingChannels = filteredChannels.filter(ch => ch.validation_status === 'pending');
@@ -431,6 +510,51 @@ export function UnifiedReviewQueue() {
             </div>
           </div>
 
+          {/* New row for subscriber and video count filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subscriber Range</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={subscriberRange.min}
+                  onChange={(e) => setSubscriberRange({ ...subscriberRange, min: e.target.value })}
+                  className="w-full"
+                />
+                <span className="text-muted-foreground">to</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={subscriberRange.max}
+                  onChange={(e) => setSubscriberRange({ ...subscriberRange, max: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Video Count Range</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={videoCountRange.min}
+                  onChange={(e) => setVideoCountRange({ ...videoCountRange, min: e.target.value })}
+                  className="w-full"
+                />
+                <span className="text-muted-foreground">to</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={videoCountRange.max}
+                  onChange={(e) => setVideoCountRange({ ...videoCountRange, max: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+
           {statusFilter === 'pending' && pendingChannels.length > 0 && (
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
               {/* Select All Checkbox */}
@@ -551,6 +675,9 @@ export function UnifiedReviewQueue() {
                       <div className="flex items-center gap-1">
                         <Play className="h-4 w-4" />
                         {formatNumber(channel.video_count || 0)} videos
+                        <span className="text-xs text-muted-foreground ml-1">
+                          (filter available)
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -616,6 +743,14 @@ export function UnifiedReviewQueue() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        channels={channelsForImport}
+        onImport={handleImportWithFilter}
+      />
     </div>
   );
 }

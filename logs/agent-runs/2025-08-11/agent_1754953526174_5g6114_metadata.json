@@ -1,0 +1,18 @@
+{
+  "runId": "agent_1754953526174_5g6114",
+  "videoId": "Y-Z4fjwMPsU",
+  "startTime": "2025-08-11T23:05:26.174Z",
+  "totalTokens": 0,
+  "totalCost": 0,
+  "totalToolCalls": 0,
+  "endTime": "2025-08-11T23:06:07.909Z",
+  "totalDuration": 41735,
+  "success": false,
+  "finalPattern": {
+    "statement": "Titles that explicitly admit and quantify mistakes in a recent/known build (e.g., “Two Mistakes!”) create a curiosity gap and self-critique framing that increases CTR and retention, leading to above-baseline performance.",
+    "confidence": 0.75,
+    "validations": 0,
+    "niches": [],
+    "evidence": []
+  }
+}
