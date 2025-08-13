@@ -398,7 +398,9 @@ export class VideoImportService {
         {
           maxVideosPerChannel: request.options?.maxVideosPerChannel,
           timePeriod: request.options?.timePeriod,
-          excludeShorts: request.options?.excludeShorts
+          excludeShorts: request.options?.excludeShorts,
+          dateFilter: request.options?.dateFilter,
+          dateRange: request.options?.dateRange
         }
       );
       videoIds.push(...channelVideoIds);

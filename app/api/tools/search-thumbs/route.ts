@@ -87,7 +87,7 @@ async function searchThumbsHandler(
     query_type = 'text',
     filters = {},
     top_k = 10,
-    min_score = 0.6
+    min_score = 0.2
   } = params;
 
   // Validate inputs
@@ -339,7 +339,7 @@ const wrappedHandler = wrapTool({
       min_score: {
         type: 'number',
         description: 'Minimum similarity score (0-1)',
-        default: 0.6,
+        default: 0.2,
         minimum: 0,
         maximum: 1
       }

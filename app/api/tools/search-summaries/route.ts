@@ -48,7 +48,7 @@ async function searchSummariesHandler(
   const {
     query,
     filters = {},
-    top_k = 10,
+    top_k = 30,
     min_score = 0.4  // Lower threshold for summaries (more abstract)
   } = params;
 
@@ -271,7 +271,7 @@ const wrappedHandler = wrapTool({
       top_k: {
         type: 'number',
         description: 'Number of results to return (1-100)',
-        default: 10,
+        default: 30,
         minimum: 1,
         maximum: 100
       },

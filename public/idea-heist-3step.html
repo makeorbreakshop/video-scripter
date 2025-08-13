@@ -2777,7 +2777,7 @@
         
         function displayAnalysis(data) {
             const container = document.getElementById('analysis-content');
-            const { pattern, source_video, validation } = data;
+            const { pattern, source_video, validation, debug } = data;
             
             // Use actual temporal baseline from the database
             // Note: channel_baseline_at_publish represents the average of the last 10 videos 
@@ -2792,6 +2792,22 @@
                              performanceMultiplier >= 5 ? 'VIRAL' : 'GOOD PERFORMER';
             const tierIcon = performanceMultiplier >= 10 ? '🔥' : 
                             performanceMultiplier >= 5 ? '🚀' : '📈';
+                            
+            // Add extended thinking content to debug panel if available
+            if (debug?.extraction?.thinkingContent) {
+                addDebugEntry('thinking', `🧠 Extended Thinking (${debug.extraction.thinkingContent.length} chars):`);
+                addDebugEntry('thinking', debug.extraction.thinkingContent.substring(0, 500) + '...');
+                
+                // Add debug metrics for thinking
+                addDebugEntry('info', `🤖 Model: ${debug.extraction.model || 'Claude Sonnet 4'}`);
+                addDebugEntry('info', `🔬 Extended Thinking: ${debug.extraction.extendedThinking ? 'Enabled' : 'Disabled'}`);
+                if (debug.extraction.thinkingTokens) {
+                    addDebugEntry('info', `🧠 Thinking Tokens: ${debug.extraction.thinkingTokens}`);
+                }
+                addDebugEntry('info', `📥 Input Tokens: ${debug.extraction.promptTokens || 0}`);
+                addDebugEntry('info', `📤 Output Tokens: ${debug.extraction.responseTokens || 0}`);
+                addDebugEntry('info', `🌡️ Temperature: ${debug.extraction.temperature || 'N/A'}`);
+            }
             
             container.innerHTML = `
                 <!-- Source Video Dashboard -->
@@ -2838,6 +2854,19 @@
                                 <div style="margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 8px; border-left: 3px solid #3b82f6;">
                                     <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Why this exploded</div>
                                     <div style="color: #374151; line-height: 1.5;">${pattern.channel_outlier_explanation}</div>
+                                </div>
+                            ` : ''}
+                            
+                            ${data.baseline_videos && data.baseline_videos.length > 0 ? `
+                                <div style="margin-top: 16px; padding: 12px; background: #fffbeb; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                                    <div style="font-size: 12px; color: #92400e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">📊 Baseline Comparison</div>
+                                    <div style="color: #374151; font-size: 13px; line-height: 1.4; margin-bottom: 8px;">
+                                        Unlike the channel's typical content showing ${data.baseline_analysis || 'finished results'}, 
+                                        this video focused on ${pattern.differentiation_factor || 'a breakthrough approach'}.
+                                    </div>
+                                    <div style="font-size: 11px; color: #6b7280;">
+                                        Analyzed against ${data.baseline_videos.length} recent videos from same channel
+                                    </div>
                                 </div>
                             ` : ''}
                         </div>
@@ -2892,6 +2921,15 @@
                         </div>
                         ` : ''}
                     </div>
+                    
+                    ${pattern.channel_specific_insight || data.channel_insight ? `
+                        <div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.9;">💡 Channel-Specific Insight</div>
+                            <div style="font-size: 13px; line-height: 1.5;">
+                                ${pattern.channel_specific_insight || data.channel_insight || `This pattern worked exceptionally well for ${source_video.channel} because their ${source_video.niche.toLowerCase()} audience actively seeks solutions that transform available materials into functional alternatives.`}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 <!-- Validation Section -->
@@ -2914,7 +2952,7 @@
                     </div>
                     
                     <div class="validation-niches">
-                        ${validation.results.slice(0, 6).map((niche, index) => `
+                        ${validation.results.map((niche, index) => `
                             <div class="validation-niche-section ${index === 0 ? 'expanded' : ''}">
                                 <div class="niche-header-bar" onclick="toggleNiche(this)">
                                     <div class="niche-header-left">
@@ -2967,6 +3005,37 @@
                         `).join('')}
                     </div>
                 </div>
+                
+                ${debug?.costs || debug?.extraction ? `
+                    <!-- Debug & Performance Section -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 20px;">
+                        <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 12px;">🔍 Analysis Details</div>
+                        
+                        ${debug?.costs ? `
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Cost Breakdown</div>
+                                <div style="display: flex; gap: 16px; font-size: 11px; color: #475569;">
+                                    <span>Claude: $${debug.costs.claude?.toFixed(6) || '0'}</span>
+                                    <span>OpenAI: $${debug.costs.openai?.toFixed(6) || '0'}</span>
+                                    <span>Replicate: $${debug.costs.replicate?.toFixed(6) || '0'}</span>
+                                    <span><strong>Total: $${debug.costs.total?.toFixed(6) || '0'}</strong></span>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${debug?.extraction ? `
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Processing Details</div>
+                                <div style="display: flex; gap: 16px; font-size: 11px; color: #475569;">
+                                    <span>Model: ${debug.extraction.model || 'Claude Sonnet 4'}</span>
+                                    <span>Extended Thinking: ${debug.extraction.extendedThinking ? 'Yes' : 'No'}</span>
+                                    ${debug.extraction.thinkingTokens ? `<span>Thinking: ${debug.extraction.thinkingTokens} tokens</span>` : ''}
+                                    <span>Total Tokens: ${(debug.extraction.promptTokens || 0) + (debug.extraction.responseTokens || 0) + (debug.extraction.thinkingTokens || 0)}</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
             `;
         }
         

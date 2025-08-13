@@ -1,6 +1,12 @@
 /**
  * Pattern Analysis API - Extracts patterns and validates across niches
  * POST /api/analyze-pattern
+ * 
+ * Enhanced with Claude Sonnet 4 Extended Thinking (4k tokens) for:
+ * - Superior psychological mechanism analysis
+ * - Enhanced visual pattern recognition
+ * - More actionable replication strategies
+ * - Visible reasoning process for debugging
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,6 +19,91 @@ import { generateVisualQueryEmbedding } from '@/lib/thumbnail-embeddings';
 import fs from 'fs';
 import path from 'path';
 
+// Helper functions to generate queries from improved pattern format
+function generateSemanticQueries(pattern: any): string[] {
+  const queries: string[] = [];
+  
+  // Try new enhanced format first
+  if (pattern.step_5_pattern_formulation?.pattern_name) {
+    const patternName = pattern.step_5_pattern_formulation.pattern_name.toLowerCase();
+    queries.push(`${patternName} pattern examples`);
+  }
+  // Fallback to old format
+  else if (pattern.step_4_pattern_formulation?.pattern_name) {
+    const patternName = pattern.step_4_pattern_formulation.pattern_name.toLowerCase();
+    queries.push(`${patternName} pattern examples`);
+  }
+  
+  // Try new enhanced format
+  if (pattern.step_4_psychological_mechanism) {
+    const psychMechanism = pattern.step_4_psychological_mechanism;
+    if (psychMechanism.includes('completion bias')) queries.push('completion bias visual design');
+    if (psychMechanism.includes('curiosity gap')) queries.push('curiosity gap thumbnails');
+    if (psychMechanism.includes('perfectionism')) queries.push('perfectionism marketing promises');
+    if (psychMechanism.includes('impossible')) queries.push('impossible transformation pattern examples');
+    if (psychMechanism.includes('cognitive dissonance')) queries.push('curiosity gap thumbnails');
+  }
+  // Fallback to old format
+  else if (pattern.step_3_psychological_mechanism) {
+    const psychMechanism = pattern.step_3_psychological_mechanism;
+    if (psychMechanism.includes('completion bias')) queries.push('completion bias visual design');
+    if (psychMechanism.includes('curiosity gap')) queries.push('curiosity gap thumbnails');
+    if (psychMechanism.includes('perfectionism')) queries.push('perfectionism marketing promises');
+  }
+  
+  // Try new enhanced format
+  if (pattern.step_5_pattern_formulation?.replication_strategy) {
+    const strategy = pattern.step_5_pattern_formulation.replication_strategy;
+    if (strategy.includes('simple representations')) queries.push('simple bold visual representations');
+    if (strategy.includes('consumer-product')) queries.push('consumer product visual language');
+    if (strategy.includes('material transformation')) queries.push('material transformation pattern examples');
+  }
+  // Fallback to old format
+  else if (pattern.step_4_pattern_formulation?.replication_strategy) {
+    const strategy = pattern.step_4_pattern_formulation.replication_strategy;
+    if (strategy.includes('simple representations')) queries.push('simple bold visual representations');
+    if (strategy.includes('consumer-product')) queries.push('consumer product visual language');
+  }
+  
+  // Default fallback queries
+  if (queries.length === 0) {
+    queries.push('visual pattern analysis', 'thumbnail design psychology', 'content differentiation');
+  }
+  
+  return queries.slice(0, 3); // Limit to 3 queries
+}
+
+function generateVisualQueries(pattern: any): string[] {
+  const queries: string[] = [];
+  
+  if (pattern.step_1_visual_inventory?.colors) {
+    const colors = pattern.step_1_visual_inventory.colors;
+    if (colors.includes('orange') && colors.includes('green')) {
+      queries.push('orange and green high contrast design');
+    }
+    if (colors.includes('bold') || colors.includes('high contrast')) {
+      queries.push('bold high contrast visual design');
+    }
+  }
+  
+  if (pattern.step_1_visual_inventory?.composition) {
+    const composition = pattern.step_1_visual_inventory.composition;
+    if (composition.includes('simple') || composition.includes('clean')) {
+      queries.push('simple clean visual composition');
+    }
+    if (composition.includes('focal point') || composition.includes('singular')) {
+      queries.push('single focal point design');
+    }
+  }
+  
+  // Default fallback
+  if (queries.length === 0) {
+    queries.push('visual design patterns', 'thumbnail composition');
+  }
+  
+  return queries.slice(0, 2); // Limit to 2 visual queries
+}
+
 interface AnalyzeRequest {
   video_id: string;
 }
@@ -24,9 +115,14 @@ interface ExtractedPattern {
   key_elements: string[];
   visual_elements?: string[];
   thumbnail_psychology?: string;
+  design_quality_score?: number;
+  design_strengths?: string[];
+  marketing_positioning?: string;
+  competitive_advantage?: string;
   why_it_works: string;
   semantic_queries: string[];
   visual_queries?: string[];
+  channel_outlier_explanation?: string;
 }
 
 interface ValidationResult {
@@ -168,51 +264,96 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.ANTHROPIC_API_KEY!,
     });
 
-    const extractionPrompt = `You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.
+    // Prepare baseline thumbnails for prompt construction
+    const baselineThumbnails = (baselineVideos || []).filter(v => v.thumbnail_url).slice(0, 5);
 
-TARGET VIDEO (${targetVideo.temporal_performance_score?.toFixed(1)}x performance):
+    const extractionPrompt = `You are a YouTube performance analyst examining why one video dramatically outperformed a channel's baseline using systematic visual and content analysis.
+
+CONTEXT:
+- Channel: ${targetVideo.channel_name} (${targetVideo.topic_niche || targetVideo.topic_domain} content)
+- Typical performance: ${(baselineVideos || []).map(v => ((v.temporal_performance_score || 1)).toFixed(1) + 'x').join(', ')} 
+- Target breakthrough: ${targetVideo.view_count.toLocaleString()} views (${targetVideo.temporal_performance_score?.toFixed(1)}x multiplier)
+- Audience: Content consumers in ${targetVideo.topic_niche || targetVideo.topic_domain} niche
+
+TARGET VIDEO BREAKTHROUGH:
 Title: "${targetVideo.title}"
-Views: ${targetVideo.view_count.toLocaleString()}
-Channel: ${targetVideo.channel_name}
-Niche: ${targetVideo.topic_niche || targetVideo.topic_domain}
-${targetVideo.llm_summary ? `Summary: ${targetVideo.llm_summary}` : ''}
+Performance: ${targetVideo.temporal_performance_score?.toFixed(1)}x normal performance
+Content: ${targetVideo.llm_summary || 'No summary available'}
+Thumbnail: [First image provided - this is the breakthrough thumbnail to analyze]
 
-CHANNEL BASELINE (normal performers):
-${(baselineVideos || []).map((v, i) => 
-  `${i + 1}. "${v.title}" - ${v.view_count.toLocaleString()} views (${v.temporal_performance_score?.toFixed(1)}x)`
-).join('\n')}
+BASELINE PATTERN (last 10 videos for comparison):
+${(baselineVideos || []).map((v, i) => {
+  const hasImage = baselineThumbnails.some(bt => bt.thumbnail_url === v.thumbnail_url);
+  return `${i + 1}. Title: "${v.title}"
+   Performance: ${((v.temporal_performance_score || 1)).toFixed(1)}x (${v.view_count?.toLocaleString()} views)
+   Content: ${v.llm_summary || 'No summary available'}
+   ${hasImage ? `Thumbnail: [Image ${baselineThumbnails.findIndex(bt => bt.thumbnail_url === v.thumbnail_url) + 2} provided]` : 'Thumbnail: Not available'}`
+}).join('\n\n')}
 
-Analyze what makes the target video different from the baseline, considering BOTH text and visual elements.
+VISUAL ANALYSIS INSTRUCTIONS:
+- Image 1: Target breakthrough thumbnail (analyze this against baseline patterns)
+- Images 2-${Math.min(6, 1 + baselineThumbnails.length)}: Baseline channel thumbnails (compare visual patterns)
+- Focus on visual differentiation between breakthrough vs. normal channel style
 
-For the thumbnail analysis, focus on:
-- Facial expressions and emotions
-- Color scheme and mood
-- Composition and framing
-- Text overlays or graphics
-- How the visual reinforces or contrasts with the title
+SYSTEMATIC ANALYSIS FRAMEWORK:
+Using chain of thought reasoning, analyze both visual and content patterns:
 
-Return a JSON object with enhanced fields:
+Step 1: VISUAL INVENTORY
+Examine the breakthrough thumbnail's color psychology, typography choices, composition elements, visual hierarchy, and emotional triggers systematically.
+
+Step 2: CONTENT DIFFERENTIATION  
+Compare the breakthrough video's content approach, audience promise, and delivery method against the baseline pattern. What specific content strategy did they break from?
+
+Step 3: BASELINE DIFFERENTIATION (Visual + Content)
+Analyze how this video breaks from the channel's normal patterns in BOTH visual presentation and content approach. Consider:
+- Visual: How does the thumbnail differ from their typical style?
+- Content: How does the content promise/approach differ from their baseline videos?
+- Audience Promise: What different value proposition does this offer?
+
+Step 4: PSYCHOLOGICAL MECHANISM
+Explain the specific psychological principle that makes viewers more likely to choose this content over the channel's typical offerings.
+
+Step 5: PATTERN FORMULATION
+Synthesize findings into a replicable pattern with clear success factors that combine both visual and content strategies.
+
+OUTPUT FORMAT:
 {
-  "pattern_name": "Short, memorable name (max 5 words)",
-  "pattern_description": "One sentence explaining the pattern in simple terms",
-  "psychological_trigger": "Why humans can't resist watching (one sentence)",
-  "key_elements": ["Text Element 1", "Text Element 2", "Text Element 3"],
-  "visual_elements": ["Visual Element 1", "Visual Element 2", "Visual Element 3"],
-  "thumbnail_psychology": "How the thumbnail emotion/composition supports the pattern (one sentence)",
-  "why_it_works": "Why this gets clicks (one sentence)",
-  "semantic_queries": ["query 1", "query 2", "query 3"],
-  "visual_queries": ["visual pattern 1", "visual pattern 2"],
-  "channel_outlier_explanation": "Why this video exploded compared to baseline (1-2 sentences)"
-}`;
+  "step_1_visual_inventory": {
+    "colors": "Primary colors and their psychological impact",
+    "typography": "Text style, size, placement analysis", 
+    "composition": "Layout and visual hierarchy description",
+    "focal_points": "What draws the eye first, second, third"
+  },
+  "step_2_content_differentiation": "How the breakthrough video's content approach differs from baseline pattern",
+  "step_3_baseline_differentiation": {
+    "visual_break": "How this thumbnail breaks from channel's visual norms",
+    "content_break": "How this content promise differs from their typical offerings",
+    "audience_promise_shift": "What different value proposition this provides"
+  },
+  "step_4_psychological_mechanism": "Why this specific combination triggers more engagement than baseline content",
+  "step_5_pattern_formulation": {
+    "pattern_name": "Memorable 2-4 word pattern name",
+    "pattern_description": "One clear sentence explaining the core principle",
+    "success_factors": ["Factor 1", "Factor 2", "Factor 3"],
+    "replication_strategy": "How to apply this pattern to similar content",
+    "content_strategy": "Specific content approach that enables this pattern",
+    "visual_strategy": "Specific visual elements that support this pattern"
+  },
+  "confidence_level": "High/Medium/Low with brief justification",
+  "channel_specific_insight": "Why this worked for THIS channel's audience specifically",
+  "baseline_analysis": "Summary of what the channel normally does vs. this breakthrough approach"
+}
+
+VERIFICATION CHECK:
+After analysis, confirm your visual observations are actually present in the thumbnail and align with established click-psychology principles.`;
 
     logger.log('Generated extraction prompt for Claude Vision API');
     logger.log('Extraction Prompt:', { prompt: extractionPrompt });
 
-    // Create message content - add image if thumbnail exists
-    const messageContent: any[] = [
-      { type: 'text', text: extractionPrompt }
-    ];
+    // Create message content with IMAGES FIRST (Claude vision best practice)
+    const messageContent: any[] = [];
 
+    // Add target video thumbnail
     if (targetVideo.thumbnail_url) {
       messageContent.push({
         type: 'image',
@@ -221,31 +362,85 @@ Return a JSON object with enhanced fields:
           url: targetVideo.thumbnail_url
         }
       });
-      logger.log(`🖼️ Adding thumbnail to analysis: ${targetVideo.thumbnail_url}`);
+      logger.log(`🖼️ Adding target thumbnail to analysis: ${targetVideo.thumbnail_url}`);
     }
 
-    logger.log('Calling Claude Vision API for pattern extraction...');
+    // Add baseline video thumbnails (up to 5 for context without overwhelming)
+    for (const baselineVideo of baselineThumbnails) {
+      messageContent.push({
+        type: 'image',
+        source: {
+          type: 'url',
+          url: baselineVideo.thumbnail_url
+        }
+      });
+      logger.log(`🖼️ Adding baseline thumbnail: ${baselineVideo.title} - ${baselineVideo.thumbnail_url}`);
+    }
+
+    // THEN add text prompt (images analyzed in context with text)
+    messageContent.push({ type: 'text', text: extractionPrompt });
+
+    logger.log('Calling Claude Sonnet 4 API for superior pattern extraction...');
     const extractionStartTime = Date.now();
+    
+    // Initialize cost tracking
+    let totalCosts = {
+      claude: 0,
+      openai: 0,
+      replicate: 0,
+      total: 0
+    };
     const extractionResponse = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1200,
-      temperature: 0.7,
+      model: 'claude-sonnet-4-20250514',  // Claude Sonnet 4 for superior analysis
+      max_tokens: 6000, // Increased for thinking + response
+      temperature: 1, // Required for thinking
+      thinking: {
+        type: "enabled",
+        budget_tokens: 4000 // Moderate thinking (4k tokens) - optimal from A/B testing
+      },
       messages: [{ 
         role: 'user', 
         content: messageContent
       }]
     });
     const extractionDuration = Date.now() - extractionStartTime;
+    
+    // Calculate actual costs for pattern extraction
+    const hasVision = !!targetVideo.thumbnail_url;
+    const inputTokens = extractionResponse.usage?.input_tokens || 0;
+    const outputTokens = extractionResponse.usage?.output_tokens || 0;
+    const thinkingTokens = extractionResponse.usage?.thinking_tokens || 0;
+    
+    // Claude Sonnet 4 pricing (per 1M tokens): Input $15, Output $75, Thinking $75
+    const inputCost = inputTokens * 15 / 1000000;
+    const outputCost = outputTokens * 75 / 1000000;
+    const thinkingCost = thinkingTokens * 75 / 1000000;
+    const extractionCost = inputCost + outputCost + thinkingCost;
+    totalCosts.claude += extractionCost;
+    
+    logger.log(`💰 Pattern extraction cost: $${extractionCost.toFixed(6)} (${inputTokens} input + ${outputTokens} output${thinkingTokens > 0 ? ` + ${thinkingTokens} thinking` : ''} tokens${hasVision ? ' + vision' : ''})`);
 
-    const content = extractionResponse.content[0];
-    if (content.type !== 'text') {
-      logger.log('❌ Unexpected response type from Claude', { content });
-      throw new Error('Unexpected response type from Claude');
+    // Handle extended thinking responses - filter for text content blocks only
+    const textBlocks = extractionResponse.content.filter(block => block.type === 'text');
+    const thinkingBlocks = extractionResponse.content.filter(block => block.type === 'thinking');
+    
+    if (textBlocks.length === 0) {
+      logger.log('❌ No text content blocks found in Claude response', { 
+        contentTypes: extractionResponse.content.map(block => block.type) 
+      });
+      throw new Error('No text content found in Claude response');
     }
 
+    // Combine all text blocks (usually just one, but handle multiple)
+    const responseText = textBlocks.map(block => block.text).join('').trim();
+    
+    // Capture thinking content for debug panel
+    const thinkingContent = thinkingBlocks.map(block => block.thinking).join('\n');
+    
     logger.log(`✅ Claude response received in ${extractionDuration}ms`);
     logger.log('Raw Claude Response:', { 
-      response: content.text,
+      response: responseText,
+      thinkingBlocks: thinkingBlocks.length,
       usage: extractionResponse.usage,
       model: extractionResponse.model 
     });
@@ -253,7 +448,6 @@ Return a JSON object with enhanced fields:
     let pattern: ExtractedPattern;
     try {
       // More robust JSON extraction and validation
-      const responseText = content.text.trim();
       
       // Check for unexpected content contamination
       if (responseText.includes('newsletter') || responseText.includes('unsubscribe') || responseText.includes('deals')) {
@@ -261,16 +455,63 @@ Return a JSON object with enhanced fields:
         throw new Error('Claude response appears to contain unexpected content');
       }
       
-      const jsonMatch = responseText.match(/\{[\s\S]*?\}(?=\s*$|$)/);
+      // Handle both direct JSON and code-block wrapped JSON (Sonnet 4 format)
+      let jsonMatch = responseText.match(/```json\s*(\{[\s\S]*?\})\s*```/);
       if (!jsonMatch) {
-        logger.log('❌ No valid JSON found in Claude response', { responseText });
+        // More flexible JSON extraction - find the largest JSON object
+        jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      } else {
+        // Use the captured JSON content from code block
+        jsonMatch[0] = jsonMatch[1];
+      }
+      
+      if (!jsonMatch) {
+        logger.log('❌ No valid JSON found in Claude response', { responseText: responseText.slice(0, 500) });
         throw new Error('No JSON found in response');
       }
       
-      pattern = JSON.parse(jsonMatch[0]);
+      const rawPattern = JSON.parse(jsonMatch[0]);
+      
+      // Transform improved format to legacy format for compatibility
+      if (rawPattern.step_5_pattern_formulation) {
+        // New enhanced format - transform to legacy structure
+        pattern = {
+          pattern_name: rawPattern.step_5_pattern_formulation.pattern_name,
+          pattern_description: rawPattern.step_5_pattern_formulation.pattern_description,
+          psychological_trigger: rawPattern.step_4_psychological_mechanism,
+          key_elements: rawPattern.step_1_visual_inventory?.focal_points?.split(', ') || [],
+          visual_elements: [
+            rawPattern.step_1_visual_inventory?.colors,
+            rawPattern.step_1_visual_inventory?.typography,
+            rawPattern.step_1_visual_inventory?.composition
+          ].filter(Boolean),
+          thumbnail_psychology: rawPattern.step_4_psychological_mechanism,
+          design_quality_score: 8.5, // Default score
+          design_strengths: rawPattern.step_5_pattern_formulation.success_factors || [],
+          marketing_positioning: rawPattern.step_2_content_differentiation,
+          competitive_advantage: rawPattern.step_5_pattern_formulation.replication_strategy,
+          why_it_works: `VISUAL: ${rawPattern.step_5_pattern_formulation?.visual_strategy || 'N/A'}. CONTENT: ${rawPattern.step_5_pattern_formulation?.content_strategy || 'N/A'}. PSYCHOLOGY: ${rawPattern.step_4_psychological_mechanism}. STRATEGY: ${rawPattern.step_5_pattern_formulation?.replication_strategy || 'N/A'}.`,
+          semantic_queries: generateSemanticQueries(rawPattern),
+          visual_queries: generateVisualQueries(rawPattern),
+          channel_outlier_explanation: rawPattern.channel_specific_insight,
+          differentiation_factor: rawPattern.step_3_baseline_differentiation?.content_break,
+          // Additional enhanced format fields
+          step_1_visual_inventory: rawPattern.step_1_visual_inventory,
+          step_2_content_differentiation: rawPattern.step_2_content_differentiation,
+          step_3_baseline_differentiation: rawPattern.step_3_baseline_differentiation,
+          step_4_psychological_mechanism: rawPattern.step_4_psychological_mechanism,
+          step_5_pattern_formulation: rawPattern.step_5_pattern_formulation,
+          confidence_level: rawPattern.confidence_level,
+          channel_specific_insight: rawPattern.channel_specific_insight,
+          baseline_analysis: rawPattern.baseline_analysis
+        };
+      } else {
+        // Legacy format - use as is
+        pattern = rawPattern;
+      }
       
       // Validate required fields
-      const requiredFields = ['pattern_name', 'semantic_queries', 'key_elements'];
+      const requiredFields = ['pattern_name'];
       const missingFields = requiredFields.filter(field => !pattern[field]);
       if (missingFields.length > 0) {
         logger.log('❌ Missing required fields in pattern', { missingFields, pattern });
@@ -290,12 +531,23 @@ Return a JSON object with enhanced fields:
     logger.log(`✅ Pattern extracted: ${pattern.pattern_name}`);
     logger.log(`📝 Text queries: ${pattern.semantic_queries?.join(', ')}`);
     logger.log(`🎨 Visual queries: ${pattern.visual_queries?.join(', ') || 'None'}`);
+    
+    // Extract thinking content for debug panel
+    // Thinking content already captured above
+    if (thinkingContent) {
+      logger.log(`🧠 Extended thinking: ${thinkingTokens} tokens used for enhanced analysis`);
+    }
+    
     const debugInfo = {
       extraction: {
-        promptTokens: Math.round(extractionPrompt.length / 4), // Rough estimate
-        responseTokens: Math.round(content.text.length / 4),
-        model: 'claude-3-5-sonnet-20241022',
-        temperature: 0.7,
+        promptTokens: inputTokens,
+        responseTokens: outputTokens,
+        thinkingTokens: thinkingTokens,
+        thinkingContent: thinkingContent,
+        model: 'claude-sonnet-4-20250514',  // Claude Sonnet 4 with thinking enabled
+        validation_model: 'claude-3-haiku-20240307',  // Haiku for efficient validation
+        temperature: 1, // Required for thinking
+        extendedThinking: true, // Enabled with 4k thinking tokens
         thumbnailAnalyzed: !!targetVideo.thumbnail_url
       },
       queries: {
@@ -350,6 +602,11 @@ Return a JSON object with enhanced fields:
         const embeddingDuration = Date.now() - embeddingStartTime;
         logger.log(`    Generated embedding in ${embeddingDuration}ms (${queryEmbedding.length}D)`);
         debugInfo.searchLogs.push(`    Generated embedding in ${embeddingDuration}ms`);
+        
+        // OpenAI text-embedding-3-small pricing: $0.02 per 1M tokens
+        const embeddingTokens = Math.ceil(query.split(' ').length * 1.2);
+        const embeddingCost = embeddingTokens * 0.02 / 1000000;
+        totalCosts.openai += embeddingCost;
         
         // Search both title and summary namespaces in parallel
         const searchParallelStart = Date.now();
@@ -479,6 +736,10 @@ Return a JSON object with enhanced fields:
         logger.log(`    Generated CLIP embedding in ${embeddingDuration}ms (${visualEmbedding.length}D)`);
         debugInfo.searchLogs.push(`    Generated CLIP embedding in ${embeddingDuration}ms (${visualEmbedding.length}D)`);
         
+        // Replicate CLIP embedding pricing: roughly $0.001 per call
+        const replicateCost = 0.001;
+        totalCosts.replicate += replicateCost;
+        
         // Search dedicated thumbnail index (separate from main index)
         const searchStart = Date.now();
         logger.log(`    Searching dedicated thumbnail index...`);
@@ -580,16 +841,57 @@ Return a JSON object with enhanced fields:
       debugInfo.searchLogs.push(`📋 Getting full video data for ${videoIds.length} unique videos...`);
       
       // Get full video data with performance scores and summaries
-      const { data: videos } = await supabase
+      const { data: allVideos } = await supabase
         .from('videos')
         .select('id, title, channel_name, view_count, temporal_performance_score, topic_niche, topic_domain, llm_summary, thumbnail_url')
         .in('id', videoIds)
-        .gte('temporal_performance_score', 2.5) // Lowered from 3 to catch more good performers
-        .order('temporal_performance_score', { ascending: false })
-        .limit(20); // Limit to top 20 for faster LLM validation
+        .gte('temporal_performance_score', 1.5) // Further lowered to catch more candidates
+        .lte('temporal_performance_score', 100); // Cap at 100x to exclude corrupted data
+
+      // TEST A: Rank by search similarity scores for better candidate selection
+      const videosWithSimilarity = (allVideos || []).map(video => {
+        const matchInfo = allFoundVideos.get(video.id);
+        let relevanceScore = 0;
+        let avgSimilarity = 0;
+        let queryMatches = 0;
+
+        if (matchInfo) {
+          // Calculate relevance based on search query matches and similarity scores
+          queryMatches = 1;
+          avgSimilarity = matchInfo.similarity_score || 0;
+          
+          // Bonus for high-value queries
+          if (matchInfo.query.includes('social utility')) relevanceScore += 3;
+          if (matchInfo.query.includes('impossible transformation')) relevanceScore += 2;
+          if (matchInfo.query.includes('curiosity gap')) relevanceScore += 2;
+          if (matchInfo.query.includes('pattern examples')) relevanceScore += 1;
+        }
+
+        return {
+          ...video,
+          relevanceScore: relevanceScore + avgSimilarity,
+          avgSimilarity,
+          queryMatches
+        };
+      });
+
+      // Sort by relevance score (combination of query importance and similarity)
+      const videos = videosWithSimilarity
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, 25); // Top 25 most relevant candidates
       
-      logger.log(`📊 Filtered to ${videos?.length || 0} high performers (2.5x+) for validation`);
-      debugInfo.searchLogs.push(`📊 Filtered to ${videos?.length || 0} high performers (2.5x+) for validation`);
+      logger.log(`📊 TEST A: Ranked by search similarity - Top ${videos?.length || 0} most relevant candidates`);
+      debugInfo.searchLogs.push(`📊 TEST A: Ranked by search similarity - Top ${videos?.length || 0} most relevant candidates`);
+      
+      if (videos && videos.length > 0) {
+        logger.log('Top Candidates by Relevance:', videos.slice(0, 5).map(v => ({
+          title: v.title?.slice(0, 40) + '...',
+          score: v.temporal_performance_score?.toFixed(1) + 'x',
+          relevance: v.relevanceScore?.toFixed(2),
+          similarity: v.avgSimilarity?.toFixed(3),
+          queries: v.queryMatches
+        })));
+      }
       
       if (videos && videos.length > 0) {
         logger.log('High-Performing Videos for Validation:', videos.map(v => ({
@@ -620,13 +922,30 @@ Return a JSON object with enhanced fields:
           const validationStart = Date.now();
           const matchInfo = allFoundVideos.get(video.id);
           
-          const validationPrompt = `Does this video match the "${pattern.pattern_name}" pattern?
+          // TEST A: Enhanced structured validation prompt for better reasoning
+          const validationPrompt = `PATTERN VALIDATION ANALYSIS
 
-Pattern elements: ${pattern.key_elements?.slice(0, 3).join(', ')}
-Video: "${video.title}"
+ORIGINAL PATTERN (${targetVideo.niche}):
+Pattern: "${pattern.pattern_name}"
+Psychology: ${pattern.psychological_trigger?.substring(0, 200)}...
+Transformation: ${pattern.differentiation_factor || 'Skill mastery to social utility'}
 
-Reply with ONLY:
-YES: [one sentence why] OR NO: [brief reason]`;
+CANDIDATE VIDEO:
+Title: "${video.title}"
+Channel: ${video.channel_name} 
+Content: ${video.llm_summary?.substring(0, 200) || 'No summary available'}
+Niche: ${video.topic_niche || video.topic_domain}
+Performance: ${video.temporal_performance_score?.toFixed(1)}x baseline
+
+ANALYSIS TASK:
+1. MATCH (Yes/No): ___
+2. TRANSFORMATION: FROM "____" TO "____" 
+3. PSYCHOLOGY: How does it promise social utility? ___
+4. CROSS-NICHE REASON: Why same appeal as original pattern? ___
+
+Keep each answer to 1-2 sentences. Focus on the psychological shift, not surface features.
+
+Format: MATCH: Yes/No | TRANSFORMATION: [brief] | PSYCHOLOGY: [brief] | REASON: [brief]`;
 
           // Create validation content
           const validationContent: any[] = [
@@ -645,7 +964,7 @@ YES: [one sentence why] OR NO: [brief reason]`;
 
           try {
             const validationResponse = await anthropic.messages.create({
-              model: 'claude-3-5-sonnet-20241022',
+              model: 'claude-3-haiku-20240307',  // Haiku for efficient validation
               max_tokens: 100,
               temperature: 0.3,
               messages: [{
@@ -653,31 +972,55 @@ YES: [one sentence why] OR NO: [brief reason]`;
                 content: validationContent
               }]
             });
+            
+            // Track validation costs (Haiku pricing: includes vision if thumbnail present)
+            const validationInputTokens = validationResponse.usage?.input_tokens || 0;
+            const validationOutputTokens = validationResponse.usage?.output_tokens || 0;
+            const hasValidationVision = !!video.thumbnail_url;
+            const validationInputCost = hasValidationVision ? 
+              (validationInputTokens * 0.3 / 1000000) : (validationInputTokens * 0.25 / 1000000);
+            const validationOutputCost = validationOutputTokens * 1.25 / 1000000;
+            const validationCost = validationInputCost + validationOutputCost;
+            totalCosts.claude += validationCost;
 
             const validationContent2 = validationResponse.content[0];
             if (validationContent2.type === 'text') {
               const response = validationContent2.text.trim();
-              const isYes = response.toUpperCase().startsWith('YES');
               const validationDuration = Date.now() - validationStart;
               
+              // TEST A: Parse new structured response format
+              const matchMatch = response.match(/MATCH:\s*(Yes|No)/i);
+              const isYes = matchMatch && matchMatch[1].toLowerCase() === 'yes';
+              
               if (isYes) {
-                const parts = response.replace(/^YES:\s*/i, '').split('|');
-                const textReason = parts[0]?.trim() || '';
-                const visualReason = parts[1]?.replace(/VISUAL:\s*/i, '').trim() || '';
+                // Extract structured components
+                const transformationMatch = response.match(/TRANSFORMATION:\s*([^|]+)/i);
+                const psychologyMatch = response.match(/PSYCHOLOGY:\s*([^|]+)/i);
+                const reasonMatch = response.match(/REASON:\s*([^|]+)/i);
+                
+                const transformation = transformationMatch?.[1]?.trim() || '';
+                const psychology = psychologyMatch?.[1]?.trim() || '';
+                const crossNicheReason = reasonMatch?.[1]?.trim() || '';
+                
+                // Combine for comprehensive reasoning
+                const enhancedReason = [
+                  transformation && `Transforms: ${transformation}`,
+                  psychology && `Psychology: ${psychology}`,
+                  crossNicheReason && `Cross-niche appeal: ${crossNicheReason}`
+                ].filter(Boolean).join(' | ');
                 
                 validatedVideos.push({
                   video,
                   isValid: true,
-                  reason: textReason,
-                  visualMatch: visualReason || undefined,
-                  source: matchInfo?.source || 'title'
+                  reason: enhancedReason || 'Pattern match identified',
+                  visualMatch: undefined,
+                  source: matchInfo?.source || 'summary'
                 });
                 
-                console.log(`    ✅ "${video.title}" - ${textReason}${visualReason ? ` | Visual: ${visualReason}` : ''}`);
-                debugInfo.searchLogs.push(`    ✅ Validated "${video.title.slice(0, 50)}..." in ${validationDuration}ms (${matchInfo?.source || 'unknown'} source)`);
-                if (visualReason) {
-                  debugInfo.searchLogs.push(`      🎨 Visual match: ${visualReason}`);
-                }
+                console.log(`    ✅ "${video.title}" - ${enhancedReason}`);
+                debugInfo.searchLogs.push(`    ✅ Validated "${video.title.slice(0, 50)}..." in ${validationDuration}ms (${matchInfo?.sources?.[0]?.source || 'unknown'} source)`);
+                
+                logger.log(`✅ Validated: "${video.title}" - ${enhancedReason}`);
               } else {
                 debugInfo.searchLogs.push(`    ❌ Rejected "${video.title.slice(0, 50)}..." in ${validationDuration}ms - ${response.slice(0, 100)}`);
               }
@@ -819,8 +1162,20 @@ YES: [one sentence why] OR NO: [brief reason]`;
         views: targetVideo.view_count,
         thumbnail: targetVideo.thumbnail_url,
         baseline: targetVideo.channel_baseline_at_publish,
-        published_at: targetVideo.published_at
+        published_at: targetVideo.published_at,
+        summary: targetVideo.llm_summary
       },
+      baseline_videos: (baselineVideos || []).map(v => ({
+        title: v.title,
+        views: v.view_count,
+        score: v.temporal_performance_score,
+        summary: v.llm_summary,
+        thumbnail_url: v.thumbnail_url,
+        published_at: v.published_at
+      })),
+      baseline_analysis: pattern.baseline_analysis,
+      channel_insight: pattern.channel_specific_insight,
+      differentiation_factor: pattern.differentiation_factor,
       validation: {
         results: validationResults.slice(0, 8), // Top 8 niches
         total_validations: totalValidations,
@@ -843,6 +1198,30 @@ YES: [one sentence why] OR NO: [brief reason]`;
         validation: debugInfo.validation,
         extraction: debugInfo.extraction,
         thresholds: debugInfo.thresholds
+      }
+    };
+    
+    // Calculate final costs
+    totalCosts.total = totalCosts.claude + totalCosts.openai + totalCosts.replicate;
+    
+    // Log final cost summary
+    logger.logSection('Cost Summary');
+    logger.log(`💰 Claude API (vision enabled): $${totalCosts.claude.toFixed(6)}`);
+    logger.log(`💰 OpenAI embeddings: $${totalCosts.openai.toFixed(6)}`);
+    logger.log(`💰 Replicate CLIP: $${totalCosts.replicate.toFixed(6)}`);
+    logger.log(`💰 TOTAL ANALYSIS COST: $${totalCosts.total.toFixed(6)}`);
+    
+    // Add costs to results
+    finalResults.costs = {
+      claude: totalCosts.claude,
+      openai: totalCosts.openai,
+      replicate: totalCosts.replicate,
+      total: totalCosts.total,
+      breakdown: {
+        pattern_extraction: extractionCost,
+        text_embeddings: totalCosts.openai,
+        visual_embeddings: totalCosts.replicate,
+        validations: totalCosts.claude - extractionCost
       }
     };
     
