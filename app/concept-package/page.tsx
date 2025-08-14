@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,7 +61,9 @@ interface DiscoveredFrame {
     confidence: number;
   };
   your_channel_fit: 'proven' | 'untested' | 'gap';
+  channel_fit_reasoning?: string;
   recommendation: 'leverage_strength' | 'fill_gap' | 'improve_existing';
+  your_proven_examples?: string[];
 }
 
 interface FrameAnalysis {
@@ -69,6 +71,192 @@ interface FrameAnalysis {
   cross_frame_insights: string;
   strategic_summary: string;
 }
+
+// Add interface for selected concepts
+interface SelectedConcept {
+  id: string;
+  frameIndex: number;
+  frameName: string;
+  concept: any;
+  context: {
+    frame: DiscoveredFrame;
+    transcript: string;
+    userConcept: MultiDimensionalConcept;
+    searchResults: SearchResult[];
+  };
+  variations?: {
+    titles?: Array<{ id: string; text: string; created_at: string; score?: number }>;
+    hooks?: Array<{ id: string; text: string; created_at: string; type?: string }>;
+    thumbnails?: Array<{ id: string; text_overlay: string; visual_description: string; created_at: string }>;
+  };
+}
+
+// IterationCard component for the iteration step
+const IterationCard = ({ 
+  selected, 
+  onUpdateVariations 
+}: { 
+  selected: SelectedConcept;
+  onUpdateVariations: (type: 'titles' | 'hooks' | 'thumbnails', newVariations: any[]) => void;
+}) => {
+  const [generatingType, setGeneratingType] = useState<'titles' | 'hooks' | 'thumbnails' | null>(null);
+
+  const generateVariations = async (type: 'titles' | 'hooks' | 'thumbnails') => {
+    setGeneratingType(type);
+    
+    try {
+      const endpoint = `/api/iterate-${type}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          concept_id: selected.id,
+          original_concept: selected.concept,
+          frame_context: selected.context.frame,
+          user_concept: selected.context.userConcept,
+          previous_variations: selected.variations?.[type] || []
+        })
+      });
+
+      if (!response.ok) throw new Error(`Failed to generate ${type}`);
+      
+      const data = await response.json();
+      onUpdateVariations(type, data.new_variations);
+    } catch (error) {
+      console.error(`Error generating ${type}:`, error);
+    } finally {
+      setGeneratingType(null);
+    }
+  };
+
+  return (
+    <Card className="bg-zinc-900/50 border-zinc-800">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-lg">{selected.concept.title}</CardTitle>
+            <CardDescription className="mt-1">
+              Based on: {selected.frameName} • {selected.concept.why_it_works}
+            </CardDescription>
+          </div>
+          <Badge className="bg-blue-600/20 text-blue-400 border-blue-600/50">
+            {Math.round((selected.concept.confidence || 0.8) * 100)}% match
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Titles Column */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-zinc-300">Titles</h4>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => generateVariations('titles')}
+                disabled={generatingType === 'titles'}
+                className="text-xs"
+              >
+                {generatingType === 'titles' ? (
+                  <>Generating...</>
+                ) : (
+                  <>+ Generate More</>
+                )}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {/* Original */}
+              <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                <p className="text-sm text-zinc-300">{selected.concept.title}</p>
+                <p className="text-xs text-zinc-500 mt-1">Original</p>
+              </div>
+              {/* Variations */}
+              {selected.variations?.titles?.map((title) => (
+                <div key={title.id} className="p-3 bg-zinc-800/30 rounded-lg border border-zinc-700 hover:border-zinc-600 cursor-pointer transition-colors">
+                  <p className="text-sm text-zinc-300">{title.text}</p>
+                  {title.score && (
+                    <p className="text-xs text-zinc-500 mt-1">Score: {title.score}/10</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hooks Column */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-zinc-300">Hooks</h4>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => generateVariations('hooks')}
+                disabled={generatingType === 'hooks'}
+                className="text-xs"
+              >
+                {generatingType === 'hooks' ? (
+                  <>Generating...</>
+                ) : (
+                  <>+ Generate More</>
+                )}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {/* Original */}
+              <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                <p className="text-sm text-zinc-300 italic">"{selected.concept.hook}"</p>
+                <p className="text-xs text-zinc-500 mt-1">Original</p>
+              </div>
+              {/* Variations */}
+              {selected.variations?.hooks?.map((hook) => (
+                <div key={hook.id} className="p-3 bg-zinc-800/30 rounded-lg border border-zinc-700 hover:border-zinc-600 cursor-pointer transition-colors">
+                  <p className="text-sm text-zinc-300 italic">"{hook.text}"</p>
+                  {hook.type && (
+                    <p className="text-xs text-zinc-500 mt-1">{hook.type}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Thumbnails Column */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-zinc-300">Thumbnails</h4>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => generateVariations('thumbnails')}
+                disabled={generatingType === 'thumbnails'}
+                className="text-xs"
+              >
+                {generatingType === 'thumbnails' ? (
+                  <>Generating...</>
+                ) : (
+                  <>+ Generate More</>
+                )}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {/* Original */}
+              <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                <p className="text-sm text-zinc-300 font-medium">{selected.concept.thumbnail_text}</p>
+                <p className="text-xs text-zinc-400 mt-1">{selected.concept.thumbnail_visual}</p>
+                <p className="text-xs text-zinc-500 mt-1">Original</p>
+              </div>
+              {/* Variations */}
+              {selected.variations?.thumbnails?.map((thumb) => (
+                <div key={thumb.id} className="p-3 bg-zinc-800/30 rounded-lg border border-zinc-700 hover:border-zinc-600 cursor-pointer transition-colors">
+                  <p className="text-sm text-zinc-300 font-medium">{thumb.text_overlay}</p>
+                  <p className="text-xs text-zinc-400 mt-1">{thumb.visual_description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function ConceptPackagePage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -79,29 +267,77 @@ export default function ConceptPackagePage() {
   const [progressMessage, setProgressMessage] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [frameAnalysis, setFrameAnalysis] = useState<FrameAnalysis | null>(null);
+  const [frameAnalysisMeta, setFrameAnalysisMeta] = useState<any>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [channelSearchQuery, setChannelSearchQuery] = useState('');
   const [channelSearchResults, setChannelSearchResults] = useState<Channel[]>([]);
   const [showChannelDropdown, setShowChannelDropdown] = useState(false);
+  const [selectedFrameIndex, setSelectedFrameIndex] = useState(0);
+  const [generatingForFrame, setGeneratingForFrame] = useState<number | null>(null);
+  const [generatedConceptsPerFrame, setGeneratedConceptsPerFrame] = useState<{[key: number]: any}>({});
+  const [selectedConcepts, setSelectedConcepts] = useState<SelectedConcept[]>([]);
   const channelDropdownRef = useRef<HTMLDivElement>(null);
+  const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Cache keys for localStorage
   const CACHE_KEYS = {
     conceptJson: 'concept-package-json',
     searchResults: 'concept-package-search-results',
     frameAnalysis: 'concept-package-frame-analysis',
+    frameAnalysisMeta: 'concept-package-frame-analysis-meta',
     selectedChannel: 'concept-package-selected-channel',
-    transcript: 'concept-package-transcript'
+    transcript: 'concept-package-transcript',
+    generatedConcepts: 'concept-package-generated-concepts',
+    selectedConcepts: 'concept-package-selected-concepts'
   };
+
+  // Auto-select frame on scroll
+  useEffect(() => {
+    if (!frameAnalysis) return;
+    
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 200; // Offset for better detection
+      
+      frameRefs.current.forEach((ref, index) => {
+        if (ref) {
+          const { top, bottom } = ref.getBoundingClientRect();
+          const absoluteTop = top + window.scrollY;
+          const absoluteBottom = bottom + window.scrollY;
+          
+          if (scrollPosition >= absoluteTop && scrollPosition < absoluteBottom) {
+            setSelectedFrameIndex(index);
+          }
+        }
+      });
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [frameAnalysis]);
 
   // Load cached data on component mount
   useEffect(() => {
     const loadCachedData = () => {
       try {
+        let maxStep = 1;
+        
+        // Load transcript
+        const cachedTranscript = localStorage.getItem(CACHE_KEYS.transcript);
+        if (cachedTranscript) {
+          setTranscript(cachedTranscript);
+          if (cachedTranscript.length > 0) {
+            maxStep = Math.max(maxStep, 2);
+          }
+        }
+        
         // Load concept JSON
         const cachedJson = localStorage.getItem(CACHE_KEYS.conceptJson);
         if (cachedJson) {
           setConceptJson(cachedJson);
+          const parsed = JSON.parse(cachedJson);
+          if (parsed && Object.keys(parsed).length > 0) {
+            maxStep = Math.max(maxStep, 3);
+          }
         }
 
         // Load search results
@@ -110,7 +346,7 @@ export default function ConceptPackagePage() {
           const results = JSON.parse(cachedResults);
           setSearchResults(results);
           if (results.length > 0) {
-            setCurrentStep(Math.max(currentStep, 4));
+            maxStep = Math.max(maxStep, 4);
           }
         }
 
@@ -119,9 +355,23 @@ export default function ConceptPackagePage() {
         if (cachedFrames) {
           const frames = JSON.parse(cachedFrames);
           setFrameAnalysis(frames);
-          if (frames) {
-            setCurrentStep(Math.max(currentStep, 5));
+          if (frames && frames.discovered_frames) {
+            maxStep = Math.max(maxStep, 5);
           }
+        }
+        
+        // Load frame analysis metadata
+        const cachedFramesMeta = localStorage.getItem(CACHE_KEYS.frameAnalysisMeta);
+        if (cachedFramesMeta) {
+          const meta = JSON.parse(cachedFramesMeta);
+          setFrameAnalysisMeta(meta);
+        }
+        
+        // Load generated concepts per frame
+        const cachedConcepts = localStorage.getItem(CACHE_KEYS.generatedConcepts);
+        if (cachedConcepts) {
+          const concepts = JSON.parse(cachedConcepts);
+          setGeneratedConceptsPerFrame(concepts);
         }
 
         // Load selected channel
@@ -131,15 +381,10 @@ export default function ConceptPackagePage() {
           setSelectedChannel(channel);
           setChannelSearchQuery(channel.channel_name);
         }
-
-        // Load transcript
-        const cachedTranscript = localStorage.getItem(CACHE_KEYS.transcript);
-        if (cachedTranscript) {
-          setTranscript(cachedTranscript);
-          if (cachedTranscript.length > 0) {
-            setCurrentStep(Math.max(currentStep, 2));
-          }
-        }
+        
+        // Set the step to the highest completed step
+        setCurrentStep(maxStep);
+        console.log('Loaded cached data, setting step to:', maxStep);
       } catch (error) {
         console.error('Error loading cached data:', error);
       }
@@ -178,6 +423,24 @@ export default function ConceptPackagePage() {
       localStorage.setItem(CACHE_KEYS.transcript, transcript);
     }
   }, [transcript]);
+  
+  useEffect(() => {
+    if (frameAnalysisMeta) {
+      localStorage.setItem(CACHE_KEYS.frameAnalysisMeta, JSON.stringify(frameAnalysisMeta));
+    }
+  }, [frameAnalysisMeta]);
+  
+  useEffect(() => {
+    if (Object.keys(generatedConceptsPerFrame).length > 0) {
+      localStorage.setItem(CACHE_KEYS.generatedConcepts, JSON.stringify(generatedConceptsPerFrame));
+    }
+  }, [generatedConceptsPerFrame]);
+
+  useEffect(() => {
+    if (selectedConcepts.length > 0) {
+      localStorage.setItem(CACHE_KEYS.selectedConcepts, JSON.stringify(selectedConcepts));
+    }
+  }, [selectedConcepts]);
 
   // Clear cache function
   const clearCache = () => {
@@ -206,6 +469,9 @@ export default function ConceptPackagePage() {
     setConceptJson('');
     setSearchResults([]);
     setFrameAnalysis(null);
+    setFrameAnalysisMeta(null);
+    setGeneratedConceptsPerFrame({});
+    setSelectedConcepts([]);
     setSelectedChannel(null);
     setChannelSearchQuery('');
     setChannelSearchResults([]);
@@ -231,7 +497,8 @@ export default function ConceptPackagePage() {
     { number: 2, title: 'Transcribe', icon: FileAudio, description: 'Convert audio to text' },
     { number: 3, title: 'Extract Concept', icon: Brain, description: 'Analyze content concept' },
     { number: 4, title: 'Find Outliers', icon: Search, description: 'Search matching videos' },
-    { number: 5, title: 'Extract Frames', icon: Package, description: 'Discover successful patterns' }
+    { number: 5, title: 'Extract Frames', icon: Package, description: 'Discover successful patterns' },
+    { number: 6, title: 'Iterate', icon: Lightbulb, description: 'Refine titles & thumbnails' }
   ];
 
   // File upload and compression
@@ -497,6 +764,7 @@ export default function ConceptPackagePage() {
 
       const data = await response.json();
       setFrameAnalysis(data.frame_analysis);
+      setFrameAnalysisMeta(data.analysis_meta); // Save the channel analysis metadata
       setCurrentStep(5);
 
     } catch (error: any) {
@@ -509,60 +777,52 @@ export default function ConceptPackagePage() {
   };
 
   const renderStepIndicator = () => (
-    <div className="mb-8">
-      <div className="flex items-center justify-center space-x-4 mb-3">
-        {steps.map((step, index) => {
-          const Icon = step.icon;
-          const isActive = step.number === currentStep;
-          const isComplete = step.number < currentStep;
-          const isClickable = step.number <= currentStep || step.number === 3;
-          
-          return (
-            <div key={step.number} className="flex items-center">
-              <div 
-                className={`
-                  flex items-center justify-center w-10 h-10 rounded-full border-2 cursor-pointer transition-all
-                  ${isActive ? 'border-primary bg-primary text-primary-foreground' : 
-                    isComplete ? 'border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600' : 
-                    isClickable ? 'border-muted-foreground text-muted-foreground hover:border-primary hover:text-primary' :
-                    'border-muted text-muted cursor-not-allowed'}
-                `}
-                onClick={() => isClickable && setCurrentStep(step.number)}
-                title={isClickable ? `Go to ${step.title}` : step.description}
-              >
-                <Icon size={16} />
-              </div>
-              {index < steps.length - 1 && (
-                <div className={`w-16 h-0.5 ${isComplete ? 'bg-emerald-500' : 'bg-border'}`} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className="flex items-center justify-center space-x-4">
-        {steps.map((step, index) => {
-          const isActive = step.number === currentStep;
-          const isClickable = step.number <= currentStep || step.number === 3;
-          
-          return (
-            <div key={`label-${step.number}`} className="flex items-center">
-              <div className="w-10 text-center">
-                <span 
-                  className={`text-xs font-medium cursor-pointer ${
-                    isActive ? 'text-primary' : 
-                    isClickable ? 'text-foreground hover:text-primary' : 'text-muted-foreground'
-                  }`}
-                  onClick={() => isClickable && setCurrentStep(step.number)}
-                >
-                  {step.title}
-                </span>
-              </div>
-              {index < steps.length - 1 && <div className="w-16" />}
-            </div>
-          );
-        })}
-      </div>
+    <div className="flex items-center gap-3">
+      {steps.map((step, index) => {
+        const Icon = step.icon;
+        const isActive = step.number === currentStep;
+        const isComplete = step.number < currentStep;
+        
+        // Determine if step is accessible based on what data we have
+        const isClickable = (() => {
+          switch(step.number) {
+            case 1: return true; // Always can go back to upload
+            case 2: return true; // Always can access transcript step
+            case 3: return transcript && transcript.length > 0; // Need transcript
+            case 4: return conceptJson && conceptJson.length > 0; // Need concept
+            case 5: return searchResults.length > 0; // Need search results
+            default: return false;
+          }
+        })();
+        
+        return (
+          <React.Fragment key={step.number}>
+            <button
+              onClick={() => isClickable && setCurrentStep(step.number)}
+              disabled={!isClickable}
+              className={`
+                flex items-center gap-1.5 text-xs transition-colors
+                ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}
+                ${isActive 
+                  ? 'text-zinc-100' 
+                  : isComplete 
+                    ? 'text-zinc-400 hover:text-zinc-300' 
+                    : 'text-zinc-600'
+                }
+              `}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{step.title}</span>
+              {isComplete && <Check className="w-3 h-3" />}
+            </button>
+            {index < steps.length - 1 && (
+              <div className={`w-4 h-px ${
+                isComplete ? 'bg-zinc-600' : 'bg-zinc-800'
+              }`} />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 
@@ -572,36 +832,71 @@ export default function ConceptPackagePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Upload MP3 Audio File
+            Upload Audio or Enter Transcript
           </CardTitle>
           <CardDescription>
-            Upload your audio file to start the concept repackaging process
+            Upload your audio file or paste an existing transcript
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!isProcessing ? (
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="audio-upload"
-                />
-                <label htmlFor="audio-upload" className="cursor-pointer">
-                  <FileAudio className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <div className="text-lg font-medium text-foreground mb-2">
-                    Click to upload audio file
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, M4A and other audio formats
-                  </div>
-                </label>
+            <div className="space-y-6">
+              {/* Upload Audio Option */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium text-foreground">Option 1: Upload Audio File</div>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="audio-upload"
+                  />
+                  <label htmlFor="audio-upload" className="cursor-pointer">
+                    <FileAudio className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <div className="text-lg font-medium text-foreground mb-2">
+                      Click to upload audio file
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Supports MP3, WAV, M4A and other audio formats
+                    </div>
+                  </label>
+                </div>
+                <div className="text-xs text-muted-foreground text-center">
+                  Files larger than 25MB will be automatically compressed for faster processing.
+                </div>
               </div>
-              
-              <div className="text-xs text-muted-foreground text-center">
-                Files larger than 25MB will be automatically compressed for faster processing.
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+
+              {/* Paste Transcript Option */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium text-foreground">Option 2: Paste Existing Transcript</div>
+                <textarea
+                  placeholder="Paste your transcript here..."
+                  className="w-full h-32 p-4 border rounded-lg bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                />
+                <Button 
+                  onClick={() => {
+                    if (transcript.trim()) {
+                      setCurrentStep(2);
+                    }
+                  }}
+                  disabled={!transcript.trim()}
+                  className="w-full"
+                >
+                  Continue with Transcript
+                </Button>
               </div>
             </div>
           ) : (
@@ -629,21 +924,47 @@ export default function ConceptPackagePage() {
             Audio Transcript
           </CardTitle>
           <CardDescription>
-            Your audio has been successfully transcribed. Review and continue to concept extraction.
+            {transcript ? 'Your transcript is ready. Review and continue to concept extraction.' : 'Enter or paste your transcript to continue.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="max-h-60 overflow-y-auto p-4 bg-muted/30 rounded-lg border">
-              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                {transcript}
-              </p>
-            </div>
+            {transcript ? (
+              <>
+                <div className="max-h-60 overflow-y-auto p-4 bg-muted/30 rounded-lg border">
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {transcript}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTranscript('')}
+                  className="w-full"
+                >
+                  Edit Transcript
+                </Button>
+              </>
+            ) : (
+              <>
+                <textarea
+                  placeholder="Paste your transcript here..."
+                  className="w-full h-48 p-4 border rounded-lg bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                  autoFocus
+                />
+                <div className="text-xs text-muted-foreground">
+                  Enter the transcript of your video idea or concept that you want to transform into YouTube videos.
+                </div>
+              </>
+            )}
             
             <div className="flex justify-center">
               <Button 
                 onClick={() => setCurrentStep(3)}
                 className="px-8 py-2"
+                disabled={!transcript || transcript.trim().length === 0}
               >
                 <Brain className="w-4 h-4 mr-2" />
                 Continue to Concept Extraction
@@ -1018,333 +1339,719 @@ export default function ConceptPackagePage() {
       );
     }
 
-    // Frame analysis results
+    // Helper function to generate concepts for a specific frame
+    const generateConceptsForFrame = async (frameIndex: number) => {
+      const frame = frameAnalysis.discovered_frames[frameIndex];
+      if (!frame) return;
+      
+      setGeneratingForFrame(frameIndex);
+      
+      try {
+        // Get thumbnail URLs for videos that match this frame
+        const matchingVideos = searchResults.filter(video => 
+          frame.example_videos.some(exampleTitle => 
+            video.title.toLowerCase().includes(exampleTitle.toLowerCase().substring(0, 20))
+          )
+        ).slice(0, 3); // Get up to 3 matching thumbnails
+        
+        const response = await fetch('/api/generate-frame-concepts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            frame: frame,
+            frame_index: frameIndex,
+            user_concept: conceptJson ? JSON.parse(conceptJson) : {
+              core_problem: 'Master professional skills',
+              psychological_need: 'Competence and confidence', 
+              status_shift: 'Amateur to professional'
+            },
+            transcript: transcript, // Original transcript for context
+            user_channel: selectedChannel ? {
+              channel_id: selectedChannel.channel_id,
+              channel_name: selectedChannel.channel_name,
+              has_analysis: frameAnalysisMeta?.user_channel_included || false
+            } : null,
+            all_frames_summary: frameAnalysis.strategic_summary, // Overall strategy context
+            example_thumbnails: matchingVideos.map(v => ({
+              title: v.title,
+              thumbnail_url: v.thumbnail_url,
+              view_count: v.view_count,
+              performance_score: v.temporal_performance_score
+            })) // Visual examples for pattern matching
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to generate concepts');
+        
+        const data = await response.json();
+        if (data.success && data.concepts) {
+          setGeneratedConceptsPerFrame(prev => ({
+            ...prev,
+            [frameIndex]: data.concepts
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to generate concepts:', error);
+        alert('Failed to generate concepts for this frame');
+      } finally {
+        setGeneratingForFrame(null);
+      }
+    };
+
+    // Show generated outputs view if requested
+    if (false) {
+      return (
+        <div className="w-full max-w-[1600px] mx-auto px-8 py-6">
+          {/* Header */}
+          <div className="mb-8">
+            <button
+              onClick={() => setShowGeneratedOutputs(false)}
+              className="mb-4 text-sm text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
+            >
+              ← Back to Patterns
+            </button>
+            <h2 className="text-xl font-normal text-zinc-100">
+              Generated Video Concepts
+            </h2>
+            <p className="text-sm text-zinc-500 mt-2">
+              {generatedConcepts.reduce((acc: number, c: any) => acc + c.concepts.length, 0)} video ideas from {frameAnalysis.discovered_frames.length} patterns
+            </p>
+          </div>
+
+          {/* Generated Concepts Grid */}
+          <div className="space-y-12">
+            {generatedConcepts.map((conceptGroup: any, groupIndex: number) => (
+              <div key={groupIndex}>
+                <h3 className="text-lg font-medium text-zinc-100 mb-6">
+                  {conceptGroup.pattern_name} Concepts
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {conceptGroup.concepts.map((concept: any, conceptIndex: number) => (
+                    <div
+                      key={conceptIndex}
+                      className="p-6 bg-zinc-800/20 border border-zinc-700 rounded-xl hover:bg-zinc-800/30 transition-all"
+                    >
+                      <div className="mb-4">
+                        <h4 className="text-base font-medium text-zinc-100 mb-2">
+                          {concept.title}
+                        </h4>
+                        <div className="text-sm text-zinc-400 mb-3">
+                          Confidence: {Math.round((concept.estimated_performance?.confidence || 0.8) * 100)}%
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-xs text-zinc-500 uppercase mb-2">Thumbnail Strategy</p>
+                          <div className="text-sm text-zinc-300 space-y-1">
+                            <p>{concept.thumbnail?.visual_approach}</p>
+                            {concept.thumbnail?.text_overlay && (
+                              <p className="font-medium">Text: "{concept.thumbnail.text_overlay}"</p>
+                            )}
+                            {concept.thumbnail?.color_scheme && (
+                              <p className="text-xs text-zinc-400">Colors: {concept.thumbnail.color_scheme}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs text-zinc-500 uppercase mb-2">Opening Hook</p>
+                          <p className="text-sm text-zinc-300 italic">"{concept.hook}"</p>
+                        </div>
+
+                        {concept.production_notes && (
+                          <div>
+                            <p className="text-xs text-zinc-500 uppercase mb-2">Production Notes</p>
+                            <p className="text-sm text-zinc-400">{concept.production_notes}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-6 flex gap-2">
+                        <button 
+                          className="flex-1 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-sm rounded-lg transition-colors"
+                          onClick={() => navigator.clipboard.writeText(concept.title)}
+                        >
+                          Copy Title
+                        </button>
+                        <button className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-sm rounded-lg transition-colors">
+                          Create Script
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Frame analysis results - Magazine layout with cleaner styling
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header Card */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-3 text-2xl">
-                  <Package className="w-6 h-6 text-muted-foreground" />
-                  Frame Extraction Complete
-                </CardTitle>
-                <CardDescription className="text-base mt-2">
-                  Discovered {frameAnalysis.discovered_frames.length} successful patterns across {searchResults.length} videos
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="px-3 py-1">
-                  {frameAnalysis.discovered_frames.length} Frames
-                </Badge>
-                <Badge variant="outline" className="px-3 py-1">
-                  {searchResults.length} Videos
-                </Badge>
-              </div>
+      <div className="w-full max-w-[1600px] mx-auto px-8 py-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-normal text-zinc-100">
+                {frameAnalysis.discovered_frames.length} Patterns Discovered
+              </h2>
+              <p className="text-sm text-zinc-500 mt-2">
+                From {searchResults.length} high-performing videos
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="p-4 bg-muted/30 border border-border rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Strategic Summary</h4>
-                  <p className="text-muted-foreground leading-relaxed">{frameAnalysis.strategic_summary}</p>
-                </div>
-              </div>
+          </div>
+          
+          {/* Strategic Summary */}
+          {frameAnalysis.strategic_summary && (
+            <div className="mt-6 p-5 border-l-2 border-zinc-700 bg-zinc-800/20 rounded-r-lg">
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                {frameAnalysis.strategic_summary}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Cross-Frame Insights */}
-        {frameAnalysis.cross_frame_insights && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-muted-foreground" />
-                Cross-Frame Insights
-              </CardTitle>
-              <CardDescription>
-                Patterns and connections across all discovered frames
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Lightbulb className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <p className="text-foreground leading-relaxed">{frameAnalysis.cross_frame_insights}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Discovered Frames */}
-        <div className="space-y-4">
-          {frameAnalysis.discovered_frames.map((frame, index) => (
-            <FrameCard key={index} frame={frame} searchResults={searchResults} />
-          ))}
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Analysis complete • {frameAnalysis.discovered_frames.length} frames discovered
-              </div>
-              
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(4)}
-                >
-                  Back to Search
-                </Button>
-                <Button 
-                  className="px-6 py-2"
-                  onClick={() => {
-                    alert('Next: Generate creative outputs from frames (coming soon!)');
-                  }}
-                >
-                  Generate Creative Outputs
-                </Button>
-              </div>
+        {/* Magazine Layout - Left sidebar + Right content */}
+        <div className="flex gap-10">
+          {/* Left Sidebar - Frame Navigator */}
+          <div className="w-80 flex-shrink-0">
+            <div className="sticky top-8 space-y-3">
+              {frameAnalysis.discovered_frames.map((frame, index) => {
+                const isActive = selectedFrameIndex === index;
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setSelectedFrameIndex(index);
+                      document.getElementById(`frame-${index}`)?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                      });
+                    }}
+                    className={`w-full text-left p-5 rounded-lg transition-all ${
+                      isActive ? 'bg-zinc-800/40 border border-zinc-700' : 'hover:bg-zinc-800/20 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl font-light text-zinc-600">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-zinc-100 mb-2">
+                          {frame.frame_name}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <span>{Math.round(frame.confidence_score * 100)}% match</span>
+                          <span>•</span>
+                          <span>{frame.frequency} videos</span>
+                          <span>•</span>
+                          <span className={`${
+                            frame.your_channel_fit === 'proven' ? 'text-blue-400' :
+                            frame.your_channel_fit === 'gap' ? 'text-zinc-400' :
+                            'text-zinc-500'
+                          }`}>
+                            {frame.your_channel_fit === 'proven' ? 'Proven' : 
+                             frame.your_channel_fit === 'gap' ? 'Opportunity' : 
+                             'Untested'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Right Content - Frame Details */}
+          <div className="flex-1 space-y-10 pb-16">
+            {frameAnalysis.discovered_frames.map((frame, index) => (
+              <div 
+                key={index} 
+                id={`frame-${index}`}
+                ref={(el) => frameRefs.current[index] = el}
+                className="scroll-mt-8"
+              >
+                <FrameCard 
+                  frame={frame} 
+                  searchResults={searchResults} 
+                  frameIndex={index}
+                  isActive={selectedFrameIndex === index}
+                  generatedConceptsPerFrame={generatedConceptsPerFrame}
+                  generatingForFrame={generatingForFrame}
+                  generateConceptsForFrame={generateConceptsForFrame}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
 
-  // Separate component for frame cards to handle state properly
-  const FrameCard = ({ frame, searchResults }: { frame: DiscoveredFrame; searchResults: SearchResult[] }) => {
+  // Clean frame card component
+  const FrameCard = ({ 
+    frame, 
+    searchResults,
+    frameIndex,
+    isActive,
+    generatedConceptsPerFrame,
+    generatingForFrame,
+    generateConceptsForFrame
+  }: { 
+    frame: DiscoveredFrame; 
+    searchResults: SearchResult[];
+    frameIndex: number;
+    isActive: boolean;
+    generatedConceptsPerFrame: {[key: number]: any};
+    generatingForFrame: number | null;
+    generateConceptsForFrame: (index: number) => Promise<void>;
+  }) => {
     const [showAllRecs, setShowAllRecs] = useState(false);
-    
-    // Get user-friendly action label
-    const getActionLabel = () => {
-      if (frame.your_channel_fit === 'gap') return 'fill gap';
-      if (frame.your_channel_fit === 'proven') return 'leverage strength';
-      return frame.your_channel_fit;
-    };
+    const [showConcepts, setShowConcepts] = useState(false);
+    const concepts = generatedConceptsPerFrame[frameIndex];
     
     return (
-      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-200">
-        <div className="">
-          {/* Clean Header with Better Hierarchy */}
-          <div className="px-8 pt-8 pb-6 bg-gradient-to-b from-muted/30 to-background">
-            <div className="flex items-start justify-between">
+      <div className={`p-8 ${isActive ? 'ring-2 ring-zinc-600 bg-zinc-800/30 shadow-xl' : 'bg-zinc-800/20 ring-1 ring-zinc-700'} rounded-xl transition-all`}>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-medium text-zinc-100 mb-3">{frame.frame_name}</h3>
+              <div className="flex items-center gap-4 text-sm text-zinc-500">
+            <span>{Math.round(frame.confidence_score * 100)}% match</span>
+            <span>•</span>
+            <span>{frame.frequency} videos</span>
+            <span>•</span>
+            <span className={`${
+              frame.your_channel_fit === 'proven' ? 'text-blue-400' :
+              frame.your_channel_fit === 'gap' ? 'text-zinc-400' :
+              'text-zinc-500'
+            }`}>
+              {frame.your_channel_fit === 'proven' ? 'Proven' : 
+               frame.your_channel_fit === 'gap' ? 'Opportunity' : 
+               'Untested'}
+            </span>
+              </div>
+            </div>
+            {!concepts ? (
+              <button
+                onClick={() => generateConceptsForFrame(frameIndex)}
+                disabled={generatingForFrame === frameIndex}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                {generatingForFrame === frameIndex ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating Concepts...
+                  </>
+                ) : (
+                  <>
+                    <Package className="w-4 h-4" />
+                    Generate Packaging
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowConcepts(!showConcepts)}
+                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+              >
+                {showConcepts ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    Hide Concepts
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Show Concepts ({concepts.concepts?.length || 0})
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {/* Channel Fit Analysis - Show WHY this matters for your channel */}
+        {frame.channel_fit_reasoning && (
+          <div className={`mb-8 p-4 rounded-lg border ${
+            frame.your_channel_fit === 'proven' 
+              ? 'bg-blue-900/20 border-blue-800' 
+              : frame.your_channel_fit === 'gap'
+              ? 'bg-amber-900/20 border-amber-800'
+              : 'bg-zinc-800/30 border-zinc-700'
+          }`}>
+            <div className="flex items-start gap-3">
               <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-3">{frame.frame_name}</h3>
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="px-3 py-1">
-                    {Math.round(frame.confidence_score * 100)}% confidence
-                  </Badge>
-                  <Badge variant="outline" className="px-3 py-1">
-                    {frame.frequency} videos
-                  </Badge>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">Your fit</span>
-                <Badge 
-                  variant={
-                    frame.your_channel_fit === 'proven' ? 'default' :
-                    frame.your_channel_fit === 'gap' ? 'destructive' :
-                    'secondary'
-                  }
-                  className="block mt-1 px-4 py-1.5 font-medium"
-                >
-                  {getActionLabel()}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Pattern Evidence Cards - Primary Information */}
-          <div className="px-8 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <Camera className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thumbnail Pattern</span>
-                </div>
-                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.thumbnail_pattern}</p>
-              </div>
-              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title Pattern</span>
-                </div>
-                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.title_pattern}</p>
-              </div>
-              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <PlayCircle className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content Pattern</span>
-                </div>
-                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.content_pattern}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Application to Concept - Prominent Section */}
-          <div className="px-8 pb-6">
-            <div className="bg-primary/5 rounded-xl p-6 border border-primary/10">
-              <div className="flex items-start gap-3">
-                <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-base">Application to Your Concept</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {Math.round(frame.application_to_your_concept.confidence * 100)}% confidence
-                    </Badge>
+                <p className="text-sm font-medium text-zinc-200 mb-2">
+                  Why this {frame.your_channel_fit === 'proven' ? 'works for you' : frame.your_channel_fit === 'gap' ? 'is an opportunity' : 'could work'}:
+                </p>
+                <p className="text-sm text-zinc-400">{frame.channel_fit_reasoning}</p>
+                {frame.your_proven_examples && frame.your_proven_examples.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-zinc-500 mb-1">Your videos using this:</p>
+                    {frame.your_proven_examples.map((example, i) => (
+                      <p key={i} className="text-sm text-blue-400">• {example}</p>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {frame.application_to_your_concept.adaptation_strategy}
-                  </p>
-                  
-                  {/* Show first 3 recommendations always */}
-                  {frame.application_to_your_concept.specific_recommendations.length > 0 && (
-                    <div className="space-y-2">
-                      {frame.application_to_your_concept.specific_recommendations
-                        .slice(0, showAllRecs ? undefined : 3)
-                        .map((rec, recIndex) => (
-                          <div key={recIndex} className="flex items-start gap-2">
-                            <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{rec}</span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                  
-                  {/* Show more button if there are more than 3 recommendations */}
-                  {frame.application_to_your_concept.specific_recommendations.length > 3 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAllRecs(!showAllRecs)}
-                      className="mt-3 text-primary hover:text-primary/80 p-0 h-auto font-medium"
-                    >
-                      {showAllRecs ? (
-                        <>
-                          Show less
-                          <ChevronUp className="w-4 h-4 ml-1" />
-                        </>
-                      ) : (
-                        <>
-                          Show {frame.application_to_your_concept.specific_recommendations.length - 3} more
-                          <ChevronDown className="w-4 h-4 ml-1" />
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
+        )}
+        
+        {/* Pattern Analysis Grid - No black backgrounds */}
+        <div className="grid grid-cols-3 gap-6 mb-10">
+          <div className={`p-5 border rounded-lg ${
+            isActive ? 'border-zinc-600 bg-zinc-800/40' : 'border-zinc-700 bg-zinc-800/30'
+          }`}>
+            <p className="text-xs text-zinc-500 mb-3 uppercase tracking-wide font-medium">Thumbnail Pattern</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">{frame.multi_modal_evidence.thumbnail_pattern}</p>
+          </div>
+          <div className={`p-5 border rounded-lg ${
+            isActive ? 'border-zinc-600 bg-zinc-800/40' : 'border-zinc-700 bg-zinc-800/30'
+          }`}>
+            <p className="text-xs text-zinc-500 mb-3 uppercase tracking-wide font-medium">Title Structure</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">{frame.multi_modal_evidence.title_pattern}</p>
+          </div>
+          <div className={`p-5 border rounded-lg ${
+            isActive ? 'border-zinc-600 bg-zinc-800/40' : 'border-zinc-700 bg-zinc-800/30'
+          }`}>
+            <p className="text-xs text-zinc-500 mb-3 uppercase tracking-wide font-medium">Content Approach</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">{frame.multi_modal_evidence.content_pattern}</p>
+          </div>
+        </div>
 
-          {/* Example Videos - At the bottom as supporting evidence */}
-          {frame.example_videos.length > 0 && (
-            <div className="px-8 pb-8">
-              <div className="mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Example Videos</span>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 -mx-8 px-8 scrollbar-hide">
-                {frame.example_videos.slice(0, 6).map((videoTitle, videoIndex) => {
-                  const matchedVideo = searchResults.find(v => v.title === videoTitle);
-                  
-                  return (
-                    <div key={videoIndex} className="flex-shrink-0 w-72 group cursor-pointer">
-                      {matchedVideo ? (
-                        <div className="bg-background rounded-lg overflow-hidden border hover:border-primary/50 transition-colors">
-                          <div className="aspect-video relative overflow-hidden">
-                            <img 
-                              src={matchedVideo.thumbnail_url}
-                              alt={videoTitle}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                          <div className="p-4">
-                            <p className="text-sm font-medium line-clamp-2 mb-2">{videoTitle}</p>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span className="font-semibold">{matchedVideo.temporal_performance_score.toFixed(1)}x</span>
-                              <span>{(matchedVideo.view_count / 1000).toFixed(0)}k views</span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-muted/20 rounded-lg overflow-hidden border border-border">
-                          <div className="aspect-video flex items-center justify-center">
-                            <Video className="w-10 h-10 text-muted-foreground/30" />
-                          </div>
-                          <div className="p-4">
-                            <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Application Section */}
+        <div className="mb-10">
+          <h4 className="text-base font-medium text-zinc-100 mb-4">How to Apply This Pattern</h4>
+          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+            {frame.application_to_your_concept.adaptation_strategy}
+          </p>
+            
+          {frame.application_to_your_concept.specific_recommendations.length > 0 && (
+            <div className="space-y-3">
+              {frame.application_to_your_concept.specific_recommendations
+                .slice(0, showAllRecs ? undefined : 3)
+                .map((rec, recIndex) => (
+                  <div key={recIndex} className="flex items-start gap-3">
+                    <span className="text-blue-400 mt-0.5">→</span>
+                    <span className="text-sm text-zinc-300">{rec}</span>
+                  </div>
+                ))}
             </div>
           )}
+            
+          {frame.application_to_your_concept.specific_recommendations.length > 3 && (
+            <button
+              onClick={() => setShowAllRecs(!showAllRecs)}
+              className="text-sm text-blue-400 hover:text-blue-300 mt-4"
+            >
+              {showAllRecs ? 'Show less' : `Show ${frame.application_to_your_concept.specific_recommendations.length - 3} more`}
+            </button>
+          )}
         </div>
-      </Card>
+
+        {/* Generated Concepts Section */}
+        {concepts && showConcepts && (
+          <div className="mt-8 p-6 bg-gradient-to-b from-blue-900/10 to-zinc-900/50 rounded-xl border border-blue-800/50">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h4 className="text-lg font-medium text-zinc-100">Generated Video Concepts</h4>
+                <p className="text-sm text-zinc-400 mt-1">
+                  {concepts.concepts?.length || 0} video ideas based on {frame.frame_name}
+                </p>
+              </div>
+              {concepts.quick_win && (
+                <div className="text-sm text-blue-400">
+                  ⚡ {typeof concepts.quick_win === 'number' ? `Start with: Concept #${concepts.quick_win}` : concepts.quick_win}
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              {concepts.concepts?.map((concept: any, i: number) => {
+                const conceptId = `${frameIndex}-${i}`;
+                const isSelected = selectedConcepts.some(sc => sc.id === conceptId);
+                
+                return (
+                  <div key={i} className="group relative p-5 bg-zinc-800/40 hover:bg-zinc-800/60 rounded-lg border border-zinc-700 hover:border-zinc-600 transition-all">
+                    {/* Concept Number Badge */}
+                    <div className="absolute -top-2 -left-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {i + 1}
+                    </div>
+                    
+                    {/* Selection Checkbox */}
+                    <input
+                      type="checkbox"
+                      className="absolute top-4 right-4 w-5 h-5 text-blue-600 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const userConcept = JSON.parse(conceptJson) as MultiDimensionalConcept;
+                          setSelectedConcepts(prev => [...prev, {
+                            id: conceptId,
+                            frameIndex,
+                            frameName: frame.frame_name,
+                            concept,
+                            context: {
+                              frame,
+                              transcript,
+                              userConcept,
+                              searchResults
+                            }
+                          }]);
+                        } else {
+                          setSelectedConcepts(prev => prev.filter(sc => sc.id !== conceptId));
+                        }
+                      }}
+                    />
+                    
+                    <div className="mb-4">
+                    <h5 className="font-medium text-zinc-100 text-base mb-2 pr-20">{concept.title}</h5>
+                    <div className="flex items-center gap-3 text-xs text-zinc-400">
+                      <span className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        {Math.round((concept.confidence || 0.8) * 100)}% match
+                      </span>
+                      {concept.why_it_works && (
+                        <span className="text-zinc-500">• {concept.why_it_works}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-zinc-500 uppercase mb-2 font-medium">Thumbnail</p>
+                      <div className="space-y-1">
+                        <p className="text-sm text-zinc-300">{concept.thumbnail_text || concept.thumbnail?.text_overlay}</p>
+                        {concept.thumbnail_visual && (
+                          <p className="text-xs text-zinc-400 italic">{concept.thumbnail_visual}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="lg:col-span-2">
+                      <p className="text-xs text-zinc-500 uppercase mb-2 font-medium">Opening Hook</p>
+                      <p className="text-sm text-zinc-300 italic">"{concept.hook}"</p>
+                    </div>
+                  </div>
+                  
+                  {concept.content_outline && concept.content_outline.length > 0 && (
+                    <div className="mb-4 p-3 bg-zinc-900/50 rounded border border-zinc-800">
+                      <p className="text-xs text-zinc-500 uppercase mb-1 font-medium">Content Structure</p>
+                      <div className="space-y-1">
+                        {concept.content_outline.map((section: string, idx: number) => (
+                          <p key={idx} className="text-sm text-zinc-400">{section}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {concept.production_tip && (
+                    <div className="mb-4 p-3 bg-zinc-900/50 rounded border border-zinc-800">
+                      <p className="text-xs text-zinc-500 uppercase mb-1">Production Tip</p>
+                      <p className="text-sm text-zinc-400">{concept.production_tip}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(concept.title);
+                        // Could add a toast notification here
+                      }}
+                      className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-sm rounded transition-colors flex items-center gap-1"
+                    >
+                      📋 Copy Title
+                    </button>
+                    <button 
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-sm text-white rounded transition-colors"
+                    >
+                      Create Script →
+                    </button>
+                  </div>
+                </div>
+                );
+              })}
+            </div>
+            
+            {concepts.batch_strategy && (
+              <div className="mt-6 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
+                <p className="text-xs text-zinc-500 uppercase mb-2 font-medium">Release Strategy</p>
+                <p className="text-sm text-zinc-300">{concepts.batch_strategy}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Example Videos */}
+        {frame.example_videos.length > 0 && (
+          <div>
+            <h4 className="text-sm text-zinc-400 mb-4 font-medium">Example Videos</h4>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {frame.example_videos.map((videoTitle, videoIndex) => {
+                const matchedVideo = searchResults.find(v => v.title === videoTitle);
+                
+                return (
+                  <div key={videoIndex} className="flex-shrink-0 w-56">
+                    {matchedVideo ? (
+                      <div>
+                        <div className="aspect-video relative overflow-hidden rounded-lg bg-zinc-900">
+                          <img 
+                            src={matchedVideo.thumbnail_url}
+                            alt={videoTitle}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-zinc-100 line-clamp-2 leading-snug">{videoTitle}</p>
+                          <p className="text-xs text-zinc-500 mt-1">
+                            {matchedVideo.temporal_performance_score.toFixed(1)}x • {(matchedVideo.view_count / 1000).toFixed(0)}K views
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="aspect-video flex items-center justify-center bg-zinc-900 rounded-lg">
+                          <Video className="w-6 h-6 text-zinc-600" />
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-zinc-400 line-clamp-2">{videoTitle}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderIterationStep = () => {
+    if (selectedConcepts.length === 0) {
+      return (
+        <div className="max-w-6xl mx-auto px-6">
+          <Card>
+            <CardContent className="pt-12 pb-12 text-center">
+              <Lightbulb className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Concepts Selected</h3>
+              <p className="text-zinc-400 mb-6">Go back to step 5 and select some concepts to iterate on.</p>
+              <Button onClick={() => setCurrentStep(5)} variant="outline">
+                ← Back to Frame Analysis
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">Iterate & Refine</h2>
+          <p className="text-zinc-400">Generate variations for titles, hooks, and thumbnails. Each click generates new options that are added to your collection.</p>
+        </div>
+
+        {/* Selected Concepts Grid */}
+        <div className="space-y-6">
+          {selectedConcepts.map((selected) => (
+            <IterationCard
+              key={selected.id}
+              selected={selected}
+              onUpdateVariations={(type, newVariations) => {
+                // Append new variations to existing ones
+                setSelectedConcepts(prev => prev.map(sc => 
+                  sc.id === selected.id 
+                    ? {
+                        ...sc,
+                        variations: {
+                          ...sc.variations,
+                          [type]: [...(sc.variations?.[type] || []), ...newVariations]
+                        }
+                      }
+                    : sc
+                ));
+              }}
+            />
+          ))}
+        </div>
+      </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-32"></div> {/* Spacer */}
-            <h1 className="text-4xl font-bold">
-              🎧 MP3 → Concept Package Tool
-            </h1>
-            <div className="w-32 flex justify-end">
-              <Button
-                onClick={clearCache}
-                variant="outline"
-                size="sm"
-                title="Clear all cached data and restart"
-              >
-                🔄 Restart
-              </Button>
-            </div>
-          </div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Transform your audio content into viral video concepts by discovering what already works in your niche
-          </p>
-          
-          {/* Cache Status Indicator */}
-          {(conceptJson || searchResults.length > 0 || frameAnalysis || transcript) && (
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-sm text-primary">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <span>Session data cached</span>
-              <span className="text-xs text-primary/80">
-                ({[conceptJson && 'JSON', searchResults.length > 0 && 'Search', frameAnalysis && 'Frames', transcript && 'Transcript'].filter(Boolean).join(', ')})
+    <div className="min-h-screen bg-zinc-950">
+      {/* Compact Header */}
+      <div className="border-b border-zinc-800">
+        <div className="px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <h1 className="text-base font-medium text-zinc-100">
+                Concept Package Tool
+              </h1>
+              <span className="text-sm text-zinc-500">
+                Transform audio into YouTube videos using proven patterns
               </span>
+              {/* Session indicator */}
+              {(conceptJson || searchResults.length > 0 || frameAnalysis || transcript) && (
+                <div className="flex items-center gap-2 text-xs text-zinc-600">
+                  <div className="w-1 h-1 bg-green-500 rounded-full" />
+                  <span>
+                    {[conceptJson && 'Concept', searchResults.length > 0 && `${searchResults.length} videos`, frameAnalysis && 'Frames', transcript && 'Transcript'].filter(Boolean).join(' • ')}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+            <button
+              onClick={clearCache}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              title="Clear session data"
+            >
+              Clear session
+            </button>
+          </div>
         </div>
-
-        {/* Step Indicator */}
-        {renderStepIndicator()}
-
-        {/* Step Content */}
-        <div className="mt-8">
-          {currentStep === 1 && renderUploadStep()}
-          {currentStep === 2 && renderTranscriptStep()}
-          {currentStep === 3 && renderConceptStep()}
-          {currentStep === 4 && renderSearchStep()}
-          {currentStep === 5 && renderFrameAnalysisStep()}
+        
+        {/* Step Indicator - Inline */}
+        <div className="px-6 py-2 bg-zinc-900/50">
+          {renderStepIndicator()}
         </div>
       </div>
+
+      {/* Step Content */}
+      <div className="">
+        {currentStep === 1 && <div className="max-w-6xl mx-auto px-6 py-8">{renderUploadStep()}</div>}
+        {currentStep === 2 && <div className="max-w-6xl mx-auto px-6 py-8">{renderTranscriptStep()}</div>}
+        {currentStep === 3 && <div className="max-w-6xl mx-auto px-6 py-8">{renderConceptStep()}</div>}
+        {currentStep === 4 && <div className="max-w-6xl mx-auto px-6 py-8">{renderSearchStep()}</div>}
+        {currentStep === 5 && <div className="py-8">{renderFrameAnalysisStep()}</div>}
+        {currentStep === 6 && <div className="py-8">{renderIterationStep()}</div>}
+      </div>
+      
+      {/* Floating selection indicator */}
+      {selectedConcepts.length > 0 && currentStep === 5 && (
+        <div className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-xl shadow-2xl p-4 flex items-center gap-4 animate-in slide-in-from-bottom-5">
+          <div>
+            <p className="text-sm font-medium">{selectedConcepts.length} concepts selected</p>
+            <p className="text-xs opacity-80">Ready to iterate on titles & thumbnails</p>
+          </div>
+          <Button
+            onClick={() => setCurrentStep(6)}
+            className="bg-white text-blue-600 hover:bg-zinc-100"
+            size="sm"
+          >
+            Continue to Iterate →
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

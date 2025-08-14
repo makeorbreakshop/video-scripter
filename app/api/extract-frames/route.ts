@@ -228,7 +228,9 @@ Return your analysis as a JSON object with this structure:
         "confidence": 0.0-1.0
       },
       "your_channel_fit": "proven|untested|gap",
-      "recommendation": "leverage_strength|fill_gap|improve_existing"
+      "channel_fit_reasoning": "Explain WHY this is proven/gap/untested based on channel analysis",
+      "recommendation": "leverage_strength|fill_gap|improve_existing",
+      "your_proven_examples": ["List any of user's videos that use this pattern"] // empty if none
     }
   ],
   "cross_frame_insights": "Patterns that span multiple frames",

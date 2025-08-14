@@ -873,15 +873,33 @@ export default function WorkerDashboard() {
                               )}>
                                 {job.status}
                               </Badge>
-                              {job.status === 'processing' && job.id === runningJobId && (
+                              {job.status === 'processing' && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => {
-                                    setRunningJobId(job.id)
-                                    cancelJob()
+                                  onClick={async () => {
+                                    if (confirm('Are you sure you want to cancel this job?')) {
+                                      try {
+                                        const response = await fetch('/api/view-tracking/cancel', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ jobId: job.id })
+                                        })
+                                        
+                                        if (response.ok) {
+                                          alert('Job cancelled successfully')
+                                          // Refresh stats
+                                          fetchViewTrackingStats()
+                                        } else {
+                                          alert('Failed to cancel job')
+                                        }
+                                      } catch (error) {
+                                        console.error('Failed to cancel job:', error)
+                                        alert('Failed to cancel job')
+                                      }
+                                    }
                                   }}
-                                  className="h-6 px-2 text-xs"
+                                  className="h-6 px-2 text-xs text-red-600 hover:text-red-800"
                                 >
                                   Cancel
                                 </Button>
