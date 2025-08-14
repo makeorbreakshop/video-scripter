@@ -290,6 +290,78 @@ const response = await fetch('/api/video-import/unified', {
 - User profiles automatically created on first login
 - Row-level security policies implemented for data isolation
 
+### JSX Rendering Issues & Best Practices
+
+#### Common JSX Parser Errors
+The Next.js/SWC parser is particularly sensitive to JSX syntax and indentation. Here are critical issues to avoid:
+
+**1. Indentation Consistency**
+```typescript
+// ❌ BROKEN - Inconsistent indentation breaks parser
+const Component = () => (
+  <div>
+  {condition ? (    // Missing indentation
+  <Card>            // Missing indentation
+
+// ✅ CORRECT - Proper indentation hierarchy
+const Component = () => {
+  return (
+    <div>
+      {condition ? (    // Proper 2-space indent
+        <Card>          // Proper 4-space indent
+```
+
+**2. React Hooks in Loops/Conditions**
+```typescript
+// ❌ BROKEN - Hooks inside map function
+{items.map(item => {
+  const [expanded, setExpanded] = useState(false);  // Breaks Rules of Hooks
+  return <div>...</div>
+})}
+
+// ✅ CORRECT - Extract to separate component
+const ItemCard = ({ item }) => {
+  const [expanded, setExpanded] = useState(false);  // Hook at component top level
+  return <div>...</div>
+};
+
+{items.map(item => <ItemCard key={item.id} item={item} />)}
+```
+
+**3. Arrow Function Returns**
+```typescript
+// ⚠️ RISKY - Implicit returns with poor indentation can confuse parser
+const Component = () => (
+  <div>
+    Complex JSX...
+  </div>
+);
+
+// ✅ SAFER - Explicit return with clear boundaries
+const Component = () => {
+  return (
+    <div>
+      Complex JSX...
+    </div>
+  );
+};
+```
+
+#### Debugging JSX Errors
+
+When encountering "Unexpected token" errors:
+
+1. **Check Indentation First** - Most JSX parser errors are indentation-related
+2. **Verify Bracket Balance** - Use editor's bracket matching
+3. **Convert to Explicit Returns** - Clearer boundaries help parser
+4. **Extract Complex Components** - Break down large JSX blocks
+5. **Look for Hooks Violations** - useState/useEffect must be at top level
+
+#### Error Messages Decoder
+- `Unexpected token 'div'` → Usually indentation or unclosed JSX tag
+- `React has detected a change in the order of Hooks` → Hooks inside conditions/loops
+- `Expected jsx identifier` → Missing closing tag or malformed JSX structure
+
 ### Testing & Validation
 When making changes to the codebase:
 1. **Run TypeScript checks**: The project uses TypeScript - ensure no type errors
@@ -297,6 +369,7 @@ When making changes to the codebase:
 3. **Check worker logs**: Monitor worker output when testing background processing
 4. **Verify database changes**: Use MCP tools to confirm data integrity
 5. **Check quota usage**: Monitor `youtube_quota_usage` table for API consumption
+6. **Verify JSX Syntax**: Check indentation and component structure for parser errors
 
 ### Common Debugging Endpoints
 - `/api/classification/count-low-confidence` - Check videos needing reclassification

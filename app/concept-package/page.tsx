@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Upload, FileAudio, Brain, Search, Package, ChevronDown, Check,
   AlertCircle, TrendingUp, Lightbulb, CheckCircle, Target, Camera, 
-  FileText, Video
+  FileText, Video, PlayCircle, ChevronUp
 } from 'lucide-react';
 
 interface MultiDimensionalConcept {
@@ -1081,170 +1081,10 @@ export default function ConceptPackagePage() {
         )}
 
         {/* Discovered Frames */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {frameAnalysis.discovered_frames.map((frame, index) => (
-            <Card key={index} className="border-l-4 border-l-primary">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                      <Package className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl leading-tight">
-                        {frame.frame_name}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        Strategic pattern discovered across multiple videos
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <Badge variant="secondary" className="font-medium">
-                        {frame.frequency} videos
-                      </Badge>
-                      <Badge variant="outline" className="font-medium">
-                        {Math.round(frame.confidence_score * 100)}% confidence
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6 pt-0">
-                {/* Channel Fit & Recommendation */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="w-5 h-5 text-muted-foreground" />
-                      <h4 className="font-semibold text-foreground">Your Channel Fit</h4>
-                    </div>
-                    <Badge 
-                      variant={
-                        frame.your_channel_fit === 'proven' ? 'default' :
-                        frame.your_channel_fit === 'gap' ? 'destructive' :
-                        frame.your_channel_fit === 'untested' ? 'secondary' :
-                        'outline'
-                      } 
-                      className="capitalize"
-                    >
-                      {frame.your_channel_fit.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Target className="w-5 h-5 text-muted-foreground" />
-                      <h4 className="font-semibold text-foreground">Recommendation</h4>
-                    </div>
-                    <Badge variant="outline" className="capitalize">
-                      {frame.recommendation.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Multi-Modal Evidence */}
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-muted-foreground" />
-                      Thumbnail Pattern
-                    </h4>
-                    <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.thumbnail_pattern}</p>
-                  </div>
-                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      Title Pattern
-                    </h4>
-                    <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.title_pattern}</p>
-                  </div>
-                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Video className="w-4 h-4 text-muted-foreground" />
-                      Content Pattern
-                    </h4>
-                    <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.content_pattern}</p>
-                  </div>
-                </div>
-
-                {/* Application to Your Concept */}
-                <div className="p-4 bg-muted/30 border border-border rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Lightbulb className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                        Application to Your Concept
-                        <Badge variant="secondary" className="text-xs">
-                          {Math.round(frame.application_to_your_concept.confidence * 100)}% confidence
-                        </Badge>
-                      </h4>
-                      <p className="text-foreground/80 mb-3">{frame.application_to_your_concept.adaptation_strategy}</p>
-                      
-                      <div className="space-y-2">
-                        <h5 className="font-medium text-foreground">Specific Recommendations:</h5>
-                        <ul className="space-y-1">
-                          {frame.application_to_your_concept.specific_recommendations.map((rec, recIndex) => (
-                            <li key={recIndex} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <span className="text-muted-foreground mt-0.5">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Example Videos */}
-                {frame.example_videos.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-foreground flex items-center gap-2">
-                      <Video className="w-4 h-4 text-muted-foreground" />
-                      Example Videos Using This Frame
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {frame.example_videos.slice(0, 3).map((videoTitle, videoIndex) => {
-                        // Try to find the video in searchResults to get the thumbnail
-                        const matchedVideo = searchResults.find(v => v.title === videoTitle);
-                        
-                        return (
-                          <div key={videoIndex} className="bg-muted/30 border border-border rounded-lg overflow-hidden">
-                            {matchedVideo ? (
-                              <>
-                                <div className="aspect-video bg-muted">
-                                  <img 
-                                    src={matchedVideo.thumbnail_url}
-                                    alt={videoTitle}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div className="p-3">
-                                  <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {matchedVideo.view_count.toLocaleString()} views • {matchedVideo.temporal_performance_score.toFixed(1)}x
-                                  </p>
-                                </div>
-                              </>
-                            ) : (
-                              <div className="p-3">
-                                <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {frame.example_videos.length > 3 && (
-                      <p className="text-xs text-muted-foreground">
-                        +{frame.example_videos.length - 3} more videos using this pattern
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <FrameCard key={index} frame={frame} searchResults={searchResults} />
           ))}
-
         </div>
 
         {/* Action Buttons */}
@@ -1275,6 +1115,184 @@ export default function ConceptPackagePage() {
           </CardContent>
         </Card>
       </div>
+    );
+  };
+
+  // Separate component for frame cards to handle state properly
+  const FrameCard = ({ frame, searchResults }: { frame: DiscoveredFrame; searchResults: SearchResult[] }) => {
+    const [showAllRecs, setShowAllRecs] = useState(false);
+    
+    // Get user-friendly action label
+    const getActionLabel = () => {
+      if (frame.your_channel_fit === 'gap') return 'fill gap';
+      if (frame.your_channel_fit === 'proven') return 'leverage strength';
+      return frame.your_channel_fit;
+    };
+    
+    return (
+      <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-200">
+        <div className="">
+          {/* Clean Header with Better Hierarchy */}
+          <div className="px-8 pt-8 pb-6 bg-gradient-to-b from-muted/30 to-background">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold mb-3">{frame.frame_name}</h3>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="px-3 py-1">
+                    {Math.round(frame.confidence_score * 100)}% confidence
+                  </Badge>
+                  <Badge variant="outline" className="px-3 py-1">
+                    {frame.frequency} videos
+                  </Badge>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">Your fit</span>
+                <Badge 
+                  variant={
+                    frame.your_channel_fit === 'proven' ? 'default' :
+                    frame.your_channel_fit === 'gap' ? 'destructive' :
+                    'secondary'
+                  }
+                  className="block mt-1 px-4 py-1.5 font-medium"
+                >
+                  {getActionLabel()}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Pattern Evidence Cards - Primary Information */}
+          <div className="px-8 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <Camera className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thumbnail Pattern</span>
+                </div>
+                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.thumbnail_pattern}</p>
+              </div>
+              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title Pattern</span>
+                </div>
+                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.title_pattern}</p>
+              </div>
+              <div className="bg-muted/20 rounded-xl p-5 border border-border/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <PlayCircle className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content Pattern</span>
+                </div>
+                <p className="text-sm leading-relaxed">{frame.multi_modal_evidence.content_pattern}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Application to Concept - Prominent Section */}
+          <div className="px-8 pb-6">
+            <div className="bg-primary/5 rounded-xl p-6 border border-primary/10">
+              <div className="flex items-start gap-3">
+                <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-base">Application to Your Concept</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {Math.round(frame.application_to_your_concept.confidence * 100)}% confidence
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {frame.application_to_your_concept.adaptation_strategy}
+                  </p>
+                  
+                  {/* Show first 3 recommendations always */}
+                  {frame.application_to_your_concept.specific_recommendations.length > 0 && (
+                    <div className="space-y-2">
+                      {frame.application_to_your_concept.specific_recommendations
+                        .slice(0, showAllRecs ? undefined : 3)
+                        .map((rec, recIndex) => (
+                          <div key={recIndex} className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{rec}</span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  
+                  {/* Show more button if there are more than 3 recommendations */}
+                  {frame.application_to_your_concept.specific_recommendations.length > 3 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllRecs(!showAllRecs)}
+                      className="mt-3 text-primary hover:text-primary/80 p-0 h-auto font-medium"
+                    >
+                      {showAllRecs ? (
+                        <>
+                          Show less
+                          <ChevronUp className="w-4 h-4 ml-1" />
+                        </>
+                      ) : (
+                        <>
+                          Show {frame.application_to_your_concept.specific_recommendations.length - 3} more
+                          <ChevronDown className="w-4 h-4 ml-1" />
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Example Videos - At the bottom as supporting evidence */}
+          {frame.example_videos.length > 0 && (
+            <div className="px-8 pb-8">
+              <div className="mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Example Videos</span>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-8 px-8 scrollbar-hide">
+                {frame.example_videos.slice(0, 6).map((videoTitle, videoIndex) => {
+                  const matchedVideo = searchResults.find(v => v.title === videoTitle);
+                  
+                  return (
+                    <div key={videoIndex} className="flex-shrink-0 w-72 group cursor-pointer">
+                      {matchedVideo ? (
+                        <div className="bg-background rounded-lg overflow-hidden border hover:border-primary/50 transition-colors">
+                          <div className="aspect-video relative overflow-hidden">
+                            <img 
+                              src={matchedVideo.thumbnail_url}
+                              alt={videoTitle}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <div className="p-4">
+                            <p className="text-sm font-medium line-clamp-2 mb-2">{videoTitle}</p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span className="font-semibold">{matchedVideo.temporal_performance_score.toFixed(1)}x</span>
+                              <span>{(matchedVideo.view_count / 1000).toFixed(0)}k views</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-muted/20 rounded-lg overflow-hidden border border-border">
+                          <div className="aspect-video flex items-center justify-center">
+                            <Video className="w-10 h-10 text-muted-foreground/30" />
+                          </div>
+                          <div className="p-4">
+                            <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
     );
   };
 
