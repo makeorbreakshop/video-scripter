@@ -1,0 +1,115 @@
+{
+  "video_id": "XKrDUnZCmQQ",
+  "target_video": {
+    "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+    "views": 164825,
+    "performance_score": 17.719,
+    "thumbnail_url": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg"
+  },
+  "baseline_videos_count": 10,
+  "test_results": [
+    {
+      "test_name": "Control (No Thinking)",
+      "config": {
+        "thinking": null
+      },
+      "analysis": {
+        "step_1_visual_inventory": {
+          "colors": "Bold orange against mint green background - high contrast, energetic vs calming colors creates visual tension",
+          "typography": "Clean, bold, all-caps 'PERFECT FIT' text floating above scene - communicates authority and precision",
+          "composition": "Simple, geometric setup with orange box lid at dynamic angle showing perfect fit concept",
+          "focal_points": "1) Orange box grabs attention first, 2) Text second, 3) Lid movement implied by arrow"
+        },
+        "step_2_baseline_differentiation": "Drastically simpler than channel's typical busy thumbnails showing complex prints or multiple elements. Uses basic geometry to demonstrate an advanced concept.",
+        "step_3_psychological_mechanism": "Leverages the 'Satisfaction Principle' - humans are inherently drawn to perfect fits and satisfying solutions. The simple demonstration promises to solve a universal 3D printing pain point.",
+        "step_4_pattern_formulation": {
+          "pattern_name": "Satisfying Simplicity Pattern",
+          "pattern_description": "Using minimal elements to demonstrate a satisfying solution to a common problem",
+          "success_factors": [
+            "High contrast simple geometry",
+            "Promise of perfection/precision",
+            "Universal pain point solution",
+            "Clean, uncluttered composition"
+          ],
+          "replication_strategy": "Identify universal technical challenges and demonstrate solutions using minimal, high-contrast visuals that promise satisfaction"
+        },
+        "confidence_level": "High - thumbnail follows established principles of visual hierarchy, problem-solution framing, and satisfaction-seeking behavior",
+        "channel_specific_insight": "While the channel typically shows complex 3D printing results, this thumbnail succeeds by focusing on the fundamental challenge of tolerance fitting that affects all practitioners regardless of expertise level"
+      },
+      "thinking_content": null,
+      "performance": {
+        "execution_time_ms": 10792,
+        "tokens": {
+          "input_tokens": 1189,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 494,
+          "service_tier": "standard"
+        },
+        "cost": {
+          "input": 0.003567,
+          "output": 0.00741,
+          "total": 0.010977
+        }
+      },
+      "cost_vs_expected": {
+        "expected": 0.066,
+        "actual": 0.010977,
+        "difference_pct": "-83.4"
+      }
+    },
+    {
+      "test_name": "Moderate Thinking (4k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 4000
+        }
+      },
+      "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`max_tokens` must be greater than `thinking.budget_tokens`. Please consult our documentation at https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#max-tokens-and-context-window-size\"}}",
+      "performance": {
+        "execution_time_ms": 161,
+        "tokens": null,
+        "cost": null
+      }
+    },
+    {
+      "test_name": "Deep Thinking (8k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 8000
+        }
+      },
+      "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`max_tokens` must be greater than `thinking.budget_tokens`. Please consult our documentation at https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#max-tokens-and-context-window-size\"}}",
+      "performance": {
+        "execution_time_ms": 289,
+        "tokens": null,
+        "cost": null
+      }
+    }
+  ],
+  "total_execution_time_ms": 11534,
+  "test_summary": {
+    "tests_completed": 1,
+    "tests_failed": 2,
+    "total_cost": 0.010977,
+    "cost_analysis": [
+      {
+        "test": "Control (No Thinking)",
+        "cost": 0.010977,
+        "vs_control": "baseline"
+      },
+      {
+        "test": "Moderate Thinking (4k tokens)",
+        "cost": 0,
+        "vs_control": "+-100%"
+      },
+      {
+        "test": "Deep Thinking (8k tokens)",
+        "cost": 0,
+        "vs_control": "+-100%"
+      }
+    ]
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "video_id": "XKrDUnZCmQQ",
+  "target_video": {
+    "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+    "views": 164825,
+    "performance_score": 17.719,
+    "thumbnail_url": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg"
+  },
+  "baseline_videos_count": 10,
+  "test_results": [
+    {
+      "test_name": "Control (No Thinking)",
+      "config": {
+        "thinking": null
+      },
+      "analysis": {
+        "step_1_visual_inventory": {
+          "colors": "Vibrant orange box against mint green background - high contrast creates pop. Orange suggests energy/technical precision while green provides calming trust.",
+          "typography": "Clean, bold, sans-serif 'PERFECT FIT' text floating above object - suggests authority and clarity",
+          "composition": "Simple, centered composition with clear depth from box lid angle. White curved arrow draws attention to the fit mechanism.",
+          "focal_points": "1) Orange box grabs attention, 2) White arrow guides eye to gap, 3) Text reinforces concept"
+        },
+        "step_2_baseline_differentiation": "Dramatically simpler than channel's typical busy thumbnails. Most other thumbnails show complex prints or multiple elements. This reduces to one clear concept with perfect execution.",
+        "step_3_psychological_mechanism": "Leverages 'Satisfaction Gap' psychology - the slight opening of the box creates cognitive tension that viewers want to resolve. The promise of 'PERFECT FIT' addresses a universal pain point for 3D printing enthusiasts.",
+        "step_4_pattern_formulation": {
+          "pattern_name": "Singular Solution Spotlight",
+          "pattern_description": "Focus on one universal technical challenge with a clear visual demonstration of the solution",
+          "success_factors": [
+            "High contrast simple visualization",
+            "Universal pain point addressed",
+            "Clear promise of precision/perfection",
+            "Dynamic element (arrow) suggesting action"
+          ],
+          "replication_strategy": "Identify common technical frustrations, create minimal demonstrations of solutions, use strong contrasting colors and clear text promises"
+        },
+        "confidence_level": "High - Thumbnail follows established principles of visual hierarchy, problem-solution framing, and cognitive tension that consistently drive higher CTR in technical tutorials",
+        "channel_specific_insight": "While the channel typically covers broad 3D printing topics with complex visuals, this thumbnail succeeds by drilling down to a single fundamental challenge every 3D printing practitioner faces - achieving perfect tolerances. The simplicity stands out in their feed and promises to solve a universal pain point."
+      },
+      "thinking_content": null,
+      "performance": {
+        "execution_time_ms": 10687,
+        "tokens": {
+          "input_tokens": 1189,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 495,
+          "service_tier": "standard"
+        },
+        "cost": {
+          "input": 0.003567,
+          "output": 0.007425,
+          "total": 0.010992
+        }
+      },
+      "cost_vs_expected": {
+        "expected": 0.066,
+        "actual": 0.010992,
+        "difference_pct": "-83.3"
+      }
+    },
+    {
+      "test_name": "Moderate Thinking (4k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 4000
+        }
+      },
+      "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"'claude-3-5-sonnet-20241022' does not support thinking.\"}}",
+      "performance": {
+        "execution_time_ms": 177,
+        "tokens": null,
+        "cost": null
+      }
+    },
+    {
+      "test_name": "Deep Thinking (8k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 8000
+        }
+      },
+      "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"'claude-3-5-sonnet-20241022' does not support thinking.\"}}",
+      "performance": {
+        "execution_time_ms": 124,
+        "tokens": null,
+        "cost": null
+      }
+    }
+  ],
+  "total_execution_time_ms": 11328,
+  "test_summary": {
+    "tests_completed": 1,
+    "tests_failed": 2,
+    "total_cost": 0.010992,
+    "cost_analysis": [
+      {
+        "test": "Control (No Thinking)",
+        "cost": 0.010992,
+        "vs_control": "baseline"
+      },
+      {
+        "test": "Moderate Thinking (4k tokens)",
+        "cost": 0,
+        "vs_control": "+-100%"
+      },
+      {
+        "test": "Deep Thinking (8k tokens)",
+        "cost": 0,
+        "vs_control": "+-100%"
+      }
+    ]
+  }
+}

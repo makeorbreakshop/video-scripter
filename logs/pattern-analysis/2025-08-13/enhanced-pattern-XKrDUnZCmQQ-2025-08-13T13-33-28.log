@@ -1,0 +1,965 @@
+[2025-08-13T13:33:28.909Z] ================================================================================
+[2025-08-13T13:33:28.909Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-13T13:33:28.909Z
+[2025-08-13T13:33:28.909Z] Video ID: XKrDUnZCmQQ
+[2025-08-13T13:33:28.909Z] ================================================================================
+[2025-08-13T13:33:28.909Z] 
+============================================================
+[2025-08-13T13:33:28.909Z] INITIAL SETUP
+[2025-08-13T13:33:28.909Z] ============================================================
+[2025-08-13T13:33:28.909Z] 🔍 [Enhanced] Analyzing pattern for video: XKrDUnZCmQQ
+[2025-08-13T13:33:29.925Z] 📺 Target: "How to Design a Print with Perfect Tolerance EVERY Time" (17.7x TPS)
+[2025-08-13T13:33:29.926Z] 🖼️ Thumbnail: Available
+[2025-08-13T13:33:29.926Z] Target Video Data:
+{
+  "id": "XKrDUnZCmQQ",
+  "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+  "channel": "Slant 3D",
+  "views": 164825,
+  "performance_score": 17.719,
+  "baseline": 10162.5,
+  "thumbnail_url": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg",
+  "niche": "Fashion & Beauty"
+}
+
+[2025-08-13T13:33:30.391Z] 📊 Found 4 baseline videos for comparison
+[2025-08-13T13:33:30.392Z] Baseline Videos:
+[
+  {
+    "title": "Why Variation is Bad | Multipurpose Machines are a Bad Sign | 3D Printing News | Podcast Ep 115",
+    "views": 7594,
+    "score": 0.813
+  },
+  {
+    "title": "How Parts are Made in a Giant 3D Print Farm",
+    "views": 9863,
+    "score": 0.875
+  },
+  {
+    "title": "Should We Replace Etsy? | Limiting Tangled Orders | Rocket Engines | 3D Printing News Ep 110",
+    "views": 11047,
+    "score": 0.99
+  },
+  {
+    "title": "How We Would Make a Product for Mr. Beast",
+    "views": 11651,
+    "score": 1
+  }
+]
+
+[2025-08-13T13:33:30.392Z] 
+============================================================
+[2025-08-13T13:33:30.392Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-13T13:33:30.392Z] ============================================================
+[2025-08-13T13:33:30.393Z] Generated extraction prompt for Claude Vision API
+[2025-08-13T13:33:30.393Z] Extraction Prompt:
+{
+  "prompt": "You are a YouTube performance analyst examining why one video dramatically outperformed a channel's baseline using systematic visual analysis.\n\nCONTEXT:\n- Channel: Slant 3D (Fashion & Beauty content)\n- Typical performance: 0.8x, 0.9x, 1.0x, 1.0x \n- Target breakthrough: 164,825 views (17.7x multiplier)\n- Audience: Content consumers in Fashion & Beauty niche\n\nTARGET VIDEO:\nTitle: \"How to Design a Print with Perfect Tolerance EVERY Time\"\nPerformance: 17.7x normal performance\nSummary: Designing parts with perfect tolerances for 3D printing by applying proven design principles that ensure a reliable fit regardless of printer, material, or slicer settings. Techniques include creating press-fits, snap-fits, and interlocking components while addressing issues like shrinkage and machine variations through features such as rounded corners and compliant designs.\n\nBASELINE COMPARISON (last 10 videos):\n1. \"Why Variation is Bad | Multipurpose Machines are a Bad Sign | 3D Printing News | Podcast Ep 115\" - 7,594 views (0.8x)\n2. \"How Parts are Made in a Giant 3D Print Farm\" - 9,863 views (0.9x)\n3. \"Should We Replace Etsy? | Limiting Tangled Orders | Rocket Engines | 3D Printing News Ep 110\" - 11,047 views (1.0x)\n4. \"How We Would Make a Product for Mr. Beast\" - 11,651 views (1.0x)\n\nSYSTEMATIC ANALYSIS FRAMEWORK:\nUsing chain of thought reasoning, analyze the thumbnail step-by-step:\n\nStep 1: VISUAL INVENTORY\nExamine the thumbnail's color psychology, typography choices, composition elements, visual hierarchy, and emotional triggers systematically.\n\nStep 2: BASELINE DIFFERENTIATION  \nCompare against the channel's normal content patterns. What visual elements break from their typical format or style?\n\nStep 3: PSYCHOLOGICAL MECHANISM\nExplain the specific psychological principle that makes viewers more likely to click this thumbnail over similar content.\n\nStep 4: PATTERN FORMULATION\nSynthesize findings into a replicable pattern with clear success factors.\n\nOUTPUT FORMAT:\n{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Primary colors and their psychological impact\",\n    \"typography\": \"Text style, size, placement analysis\", \n    \"composition\": \"Layout and visual hierarchy description\",\n    \"focal_points\": \"What draws the eye first, second, third\"\n  },\n  \"step_2_baseline_differentiation\": \"How this thumbnail breaks from channel norms\",\n  \"step_3_psychological_mechanism\": \"Why this specific combination triggers more clicks\",\n  \"step_4_pattern_formulation\": {\n    \"pattern_name\": \"Memorable 2-4 word pattern name\",\n    \"pattern_description\": \"One clear sentence explaining the core principle\",\n    \"success_factors\": [\"Factor 1\", \"Factor 2\", \"Factor 3\"],\n    \"replication_strategy\": \"How to apply this pattern to similar content\"\n  },\n  \"confidence_level\": \"High/Medium/Low with brief justification\",\n  \"channel_specific_insight\": \"Why this worked for THIS channel specifically\"\n}\n\nVERIFICATION CHECK:\nAfter analysis, confirm your visual observations are actually present in the thumbnail and align with established click-psychology principles."
+}
+
+[2025-08-13T13:33:30.393Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg
+[2025-08-13T13:33:30.393Z] Calling Claude Sonnet 4 API for superior pattern extraction...
+[2025-08-13T13:33:44.526Z] 💰 Pattern extraction cost: $0.010722 (1044 input + 506 output tokens + vision)
+[2025-08-13T13:33:44.527Z] ✅ Claude response received in 14133ms
+[2025-08-13T13:33:44.527Z] Raw Claude Response:
+{
+  "response": "{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Vibrant orange object against mint green background - high contrast, energetic vs calming colors creates visual pop\",\n    \"typography\": \"Bold, white, all-caps 'PERFECT FIT' text floating above - clear hierarchy and readability\",\n    \"composition\": \"Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy\",\n    \"focal_points\": \"1) Orange box lid movement, 2) White text, 3) Box base showing fit concept\"\n  },\n\n  \"step_2_baseline_differentiation\": \"Dramatically simpler than typical tech/machine-focused thumbnails. Uses product design aesthetic rather than industrial 3D printing look. Clean, minimal approach stands out in technical niche.\",\n\n  \"step_3_psychological_mechanism\": \"Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.\",\n\n  \"step_4_pattern_formulation\": {\n    \"pattern_name\": \"Satisfying Simplicity Pattern\",\n    \"pattern_description\": \"Using minimal elements to create visual tension that promises satisfaction through resolution\",\n    \"success_factors\": [\n      \"High contrast complementary colors\",\n      \"Single clear demonstration object\",\n      \"Implied motion/action\",\n      \"Clear problem-solution framing\"\n    ],\n    \"replication_strategy\": \"1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements\"\n  },\n\n  \"confidence_level\": \"High - Thumbnail follows established principles of visual hierarchy, color psychology, and tension-resolution that drive clicks. Performance data validates effectiveness.\",\n\n  \"channel_specific_insight\": \"This thumbnail succeeds by translating complex technical content into a visually simple promise of satisfaction - perfect for a technical channel looking to broaden appeal while maintaining authority.\"\n}\n\nThe analysis reveals this thumbnail effectively bridges technical expertise with broad appeal through masterful use of simplicity, color psychology, and the tension-resolution principle. The dramatic performance increase suggests this pattern could be valuable for similar technical channels looking to expand reach.",
+  "thinkingBlocks": 0,
+  "usage": {
+    "input_tokens": 1044,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 506,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-13T13:33:44.528Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-13T13:33:44.529Z] Extracted Pattern:
+{
+  "pattern_name": "Satisfying Simplicity Pattern",
+  "pattern_description": "Using minimal elements to create visual tension that promises satisfaction through resolution",
+  "psychological_trigger": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+  "key_elements": [
+    "1) Orange box lid movement",
+    "2) White text",
+    "3) Box base showing fit concept"
+  ],
+  "visual_elements": [
+    "Vibrant orange object against mint green background - high contrast, energetic vs calming colors creates visual pop",
+    "Bold, white, all-caps 'PERFECT FIT' text floating above - clear hierarchy and readability",
+    "Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy"
+  ],
+  "thumbnail_psychology": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+  "design_quality_score": 8.5,
+  "design_strengths": [
+    "High contrast complementary colors",
+    "Single clear demonstration object",
+    "Implied motion/action",
+    "Clear problem-solution framing"
+  ],
+  "marketing_positioning": "Dramatically simpler than typical tech/machine-focused thumbnails. Uses product design aesthetic rather than industrial 3D printing look. Clean, minimal approach stands out in technical niche.",
+  "competitive_advantage": "1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements",
+  "why_it_works": "VISUAL: Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy. PSYCHOLOGY: Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.. STRATEGY: 1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements.",
+  "semantic_queries": [
+    "satisfying simplicity pattern pattern examples"
+  ],
+  "visual_queries": [
+    "orange and green high contrast design",
+    "bold high contrast visual design"
+  ],
+  "channel_outlier_explanation": "This thumbnail succeeds by translating complex technical content into a visually simple promise of satisfaction - perfect for a technical channel looking to broaden appeal while maintaining authority.",
+  "step_1_visual_inventory": {
+    "colors": "Vibrant orange object against mint green background - high contrast, energetic vs calming colors creates visual pop",
+    "typography": "Bold, white, all-caps 'PERFECT FIT' text floating above - clear hierarchy and readability",
+    "composition": "Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy",
+    "focal_points": "1) Orange box lid movement, 2) White text, 3) Box base showing fit concept"
+  },
+  "step_2_baseline_differentiation": "Dramatically simpler than typical tech/machine-focused thumbnails. Uses product design aesthetic rather than industrial 3D printing look. Clean, minimal approach stands out in technical niche.",
+  "step_3_psychological_mechanism": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+  "step_4_pattern_formulation": {
+    "pattern_name": "Satisfying Simplicity Pattern",
+    "pattern_description": "Using minimal elements to create visual tension that promises satisfaction through resolution",
+    "success_factors": [
+      "High contrast complementary colors",
+      "Single clear demonstration object",
+      "Implied motion/action",
+      "Clear problem-solution framing"
+    ],
+    "replication_strategy": "1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements"
+  },
+  "confidence_level": "High - Thumbnail follows established principles of visual hierarchy, color psychology, and tension-resolution that drive clicks. Performance data validates effectiveness.",
+  "channel_specific_insight": "This thumbnail succeeds by translating complex technical content into a visually simple promise of satisfaction - perfect for a technical channel looking to broaden appeal while maintaining authority."
+}
+
+[2025-08-13T13:33:44.529Z] ✅ Pattern extracted: Satisfying Simplicity Pattern
+[2025-08-13T13:33:44.529Z] 📝 Text queries: satisfying simplicity pattern pattern examples
+[2025-08-13T13:33:44.529Z] 🎨 Visual queries: orange and green high contrast design, bold high contrast visual design
+[2025-08-13T13:33:44.529Z] 
+============================================================
+[2025-08-13T13:33:44.529Z] MULTI-MODAL SEARCH PHASE
+[2025-08-13T13:33:44.529Z] ============================================================
+[2025-08-13T13:33:44.529Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-13T13:33:44.530Z] 🔎 Starting text-based semantic searches...
+[2025-08-13T13:33:44.530Z]   Searching text for: "satisfying simplicity pattern pattern examples"
+[2025-08-13T13:33:44.530Z]     Generating OpenAI embedding for query...
+[2025-08-13T13:33:46.286Z]     Generated embedding in 1756ms (512D)
+[2025-08-13T13:33:46.287Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T13:33:51.626Z]     Parallel search completed in 5339ms
+[2025-08-13T13:33:51.626Z] Title Search Results:
+{
+  "found": 12,
+  "avgSimilarity": "0.521",
+  "topResults": [
+    {
+      "title": "How Patterns Work",
+      "score": "0.564",
+      "views": 6536
+    },
+    {
+      "title": "A Pattern Style Refresh",
+      "score": "0.537",
+      "views": 1287
+    },
+    {
+      "title": "The Infinite Pattern That Never Repeats",
+      "score": "0.531",
+      "views": 21431822
+    }
+  ]
+}
+
+[2025-08-13T13:33:51.627Z] Summary Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.474",
+  "topResults": [
+    {
+      "title": "Tessellation Is Easier Than You Think",
+      "score": "0.539",
+      "views": 242969
+    },
+    {
+      "title": "Make your own Puppet Pattern! - Puppet Building 101",
+      "score": "0.525",
+      "views": 95004
+    },
+    {
+      "title": "Badborne",
+      "score": "0.493",
+      "views": 127582
+    }
+  ]
+}
+
+[2025-08-13T13:33:51.627Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-13T13:33:51.627Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-13T13:33:51.627Z]   Searching thumbnails for: "orange and green high contrast design"
+[2025-08-13T13:33:51.627Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T13:33:52.886Z]     Generated CLIP embedding in 1259ms (768D)
+[2025-08-13T13:33:52.886Z]     Searching dedicated thumbnail index...
+[2025-08-13T13:33:54.453Z]     Thumbnail search completed in 1567ms
+[2025-08-13T13:33:54.453Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.225",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "How To Make Any Graphic Design INSTANTLY AMAZING!",
+      "score": "0.252",
+      "views": 89178,
+      "channel": "Satori Graphics"
+    },
+    {
+      "title": "How to Dropship T Shirts on Etsy (Complete Tutorial)",
+      "score": "0.249",
+      "views": 296,
+      "channel": "Bryan Guerra | eCommerce Tutorials"
+    },
+    {
+      "title": "Completely dissolving a penny in acid",
+      "score": "0.238",
+      "views": 12856344,
+      "channel": "NileRed"
+    }
+  ]
+}
+
+[2025-08-13T13:33:54.454Z]   Searching thumbnails for: "bold high contrast visual design"
+[2025-08-13T13:33:54.454Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T13:33:54.838Z]     Generated CLIP embedding in 384ms (768D)
+[2025-08-13T13:33:54.838Z]     Searching dedicated thumbnail index...
+[2025-08-13T13:33:55.117Z]     Thumbnail search completed in 279ms
+[2025-08-13T13:33:55.117Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.263",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Photoshop Tutorial: 2 Stunning Text Effects (That Look Amazing!) 🔥",
+      "score": "0.292",
+      "views": 17315,
+      "channel": "Will Paterson"
+    },
+    {
+      "title": "Design Fundamentals with AI | Layout Techniques | Adobe",
+      "score": "0.284",
+      "views": 35,
+      "channel": "Adobe"
+    },
+    {
+      "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+      "score": "0.277",
+      "views": 23301,
+      "channel": "Gareth David Studio"
+    }
+  ]
+}
+
+[2025-08-13T13:33:55.118Z] 
+============================================================
+[2025-08-13T13:33:55.118Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-13T13:33:55.118Z] ============================================================
+[2025-08-13T13:33:55.118Z] 📋 Getting full video data for 78 unique videos...
+[2025-08-13T13:33:55.250Z] 📊 Filtered to 15 high performers (2.5x-100x) for validation
+[2025-08-13T13:33:55.250Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "views": 742321,
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+    "views": 166857,
+    "score": 9.604,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "EASY Scale Pattern Works Like MAGIC for Blues AND ROCK!",
+    "views": 181394,
+    "score": 8.763,
+    "channel": "Mark Zabel",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "views": 156542,
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "5 Useful EDM Patterns (that changed my life)",
+    "views": 255390,
+    "score": 6.334,
+    "channel": "Alex Rome",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Blender Typography - Grease Pencil Animation Practice",
+    "views": 9840,
+    "score": 5.719,
+    "channel": "Kevandram",
+    "hasThumbnail": true
+  },
+  {
+    "title": "EASIEST Repeating Patterns in Procreate // Procreate Tutorial",
+    "views": 97846,
+    "score": 5.622,
+    "channel": "Bardot Brush",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 23301,
+    "score": 5.27,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+    "views": 12541211,
+    "score": 4.606,
+    "channel": "Jeremy Ethier",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 17075,
+    "score": 3.862,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "views": 237801,
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Make Any Graphic Design INSTANTLY AMAZING!",
+    "views": 89178,
+    "score": 3.025,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Infinite Pattern That Never Repeats",
+    "views": 21431822,
+    "score": 2.876,
+    "channel": "Veritasium",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "views": 152640,
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Make your parts bendy with this design hack - 3D design for 3D printing",
+    "views": 172260,
+    "score": 2.515,
+    "channel": "Teaching Tech",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-13T13:33:55.252Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-13T13:33:55.252Z] 🤖 Starting enhanced LLM validation for 15 videos...
+[2025-08-13T13:34:45.248Z] ✅ Enhanced validation complete: 15 videos confirmed
+[2025-08-13T13:34:45.249Z] Final Validated Videos:
+[
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "reason": "The video thumbnail demonstrates satisfying simplicity through its clean typographic hierarchy, minimal color palette, and geometric logo construction guides that align with the pattern's emphasis on clear, organized visual elements.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+    "score": 9.604,
+    "channel": "Satori Graphics",
+    "reason": "The video demonstrates the pattern through its clear side-by-side comparison format showing \"Rookie vs Master\" designs, with simple text labels and contrasting visual styles that create an immediately understandable progression.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "EASY Scale Pattern Works Like MAGIC for Blues AND ROCK!",
+    "score": 8.763,
+    "channel": "Mark Zabel",
+    "reason": "The video thumbnail demonstrates satisfying simplicity through clear white text (\"INSTANT BLUES\"), a simple visual pattern of red dots on a guitar fretboard, and an arrow pointing to show the key concept, making the learning pattern immediately graspable.",
+    "source": "summary"
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "reason": "The video thumbnail demonstrates satisfying simplicity through its minimal color palette, clean typography, and striking contrast between the text and eye imagery against the neutral background.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "5 Useful EDM Patterns (that changed my life)",
+    "score": 6.334,
+    "channel": "Alex Rome",
+    "reason": "The video uses simple, clean circular visualizations with color-coded patterns against a dark background, demonstrating a satisfyingly minimal approach to presenting musical concepts.",
+    "source": "title"
+  },
+  {
+    "title": "Blender Typography - Grease Pencil Animation Practice",
+    "score": 5.719,
+    "channel": "Kevandram",
+    "reason": "The smooth, fluid animation of stylized text combined with vibrant colors and simple geometric elements creates a satisfying visual experience that aligns with the core aspects of the pattern.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "EASIEST Repeating Patterns in Procreate // Procreate Tutorial",
+    "score": 5.622,
+    "channel": "Bardot Brush",
+    "reason": "The video thumbnail demonstrates satisfying simplicity through its clean, minimal design elements - white daisy pattern, clear text overlay, and cohesive pink color scheme that creates an appealing and easy-to-understand visual composition.",
+    "source": "title"
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+    "score": 5.27,
+    "channel": "Gareth David Studio",
+    "reason": "The video demonstrates satisfying simplicity through its clean, minimalist poster designs that use bold colors and clear visual hierarchy to create engaging yet uncomplicated compositions.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+    "score": 4.606,
+    "channel": "Jeremy Ethier",
+    "reason": "The thumbnail uses a simple, visually satisfying before/after transformation with clear numbered steps (1-2-3) and color-coded arrows to demonstrate the progression, which aligns with the pattern's emphasis on clear, step-wise visual satisfaction.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+    "score": 3.862,
+    "channel": "Gareth David Studio",
+    "reason": "The video demonstrates satisfying simplicity through its clean, minimalist poster designs that effectively use negative space and simple geometric shapes to create visual impact and hierarchy.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "reason": "The thumbnail demonstrates satisfying simplicity through its clean white text against a black box, contrasted with dynamic wavy striped patterns in vibrant colors that create visual interest while maintaining readability.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How To Make Any Graphic Design INSTANTLY AMAZING!",
+    "score": 3.025,
+    "channel": "Satori Graphics",
+    "reason": "The video demonstrates satisfying simplicity by showing a clear before/after transformation from a basic square frame to a vibrant, dynamic album cover design, with the stark contrast emphasizing the power of thoughtful design elements.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "The Infinite Pattern That Never Repeats",
+    "score": 2.876,
+    "channel": "Veritasium",
+    "reason": "The colorful, geometric pattern being assembled on the floor creates a visually satisfying and simple-to-follow arrangement that draws viewers in, even though the specific pattern elements differ from the original pattern description.",
+    "source": "title"
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "reason": "The video thumbnail demonstrates satisfying simplicity through its minimal color palette (orange/black/white), clean typography, and clever negative space usage in the lightbulb hand visual that creates an instantly understandable before/after concept.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Make your parts bendy with this design hack - 3D design for 3D printing",
+    "score": 2.515,
+    "channel": "Teaching Tech",
+    "reason": "The thumbnail shows a simple, satisfying demonstration of flexibility with a clean orange bendy part against a wood background, incorporating clear text and a straightforward visual concept that aligns with the pattern's emphasis on clear, appealing presentation.",
+    "source": "thumbnail"
+  }
+]
+
+[2025-08-13T13:34:45.252Z] Pre-Calculation Metrics:
+{
+  "validationResults": 7,
+  "totalValidations": 15,
+  "avgPatternScore": 5.242857142857142,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Instruments",
+      "count": 1,
+      "avg_score": 8.763,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Photography & Video",
+      "count": 1,
+      "avg_score": 6.334,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Cultural Travel",
+      "count": 9,
+      "avg_score": 5.984000000000001,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Sewing",
+      "count": 1,
+      "avg_score": 5.622,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Nutrition",
+      "count": 1,
+      "avg_score": 4.606,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Outlier",
+      "count": 1,
+      "avg_score": 2.876,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Star Wars",
+      "count": 1,
+      "avg_score": 2.515,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-13T13:34:45.252Z] Pattern Strength Calculation:
+{
+  "totalValidations": 15,
+  "avgPatternScore": 5.242857142857142,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 5.242857142857142,
+  "finalStrength": "strong"
+}
+
+[2025-08-13T13:34:45.252Z] 
+============================================================
+[2025-08-13T13:34:45.252Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-13T13:34:45.252Z] ============================================================
+[2025-08-13T13:34:45.253Z] ✅ Enhanced pattern analysis complete in 76343ms
+[2025-08-13T13:34:45.253Z] 📊 Found 15 validations (0 with visual matches) across 7 niches
+[2025-08-13T13:34:45.253Z] 
+============================================================
+[2025-08-13T13:34:45.253Z] COST SUMMARY
+[2025-08-13T13:34:45.253Z] ============================================================
+[2025-08-13T13:34:45.253Z] 💰 Claude API (vision enabled): $0.045171
+[2025-08-13T13:34:45.253Z] 💰 OpenAI embeddings: $0.000000
+[2025-08-13T13:34:45.253Z] 💰 Replicate CLIP: $0.002000
+[2025-08-13T13:34:45.253Z] 💰 TOTAL ANALYSIS COST: $0.047171
+[2025-08-13T13:34:45.253Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Satisfying Simplicity Pattern",
+    "pattern_description": "Using minimal elements to create visual tension that promises satisfaction through resolution",
+    "psychological_trigger": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+    "key_elements": [
+      "1) Orange box lid movement",
+      "2) White text",
+      "3) Box base showing fit concept"
+    ],
+    "visual_elements": [
+      "Vibrant orange object against mint green background - high contrast, energetic vs calming colors creates visual pop",
+      "Bold, white, all-caps 'PERFECT FIT' text floating above - clear hierarchy and readability",
+      "Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy"
+    ],
+    "thumbnail_psychology": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+    "design_quality_score": 8.5,
+    "design_strengths": [
+      "High contrast complementary colors",
+      "Single clear demonstration object",
+      "Implied motion/action",
+      "Clear problem-solution framing"
+    ],
+    "marketing_positioning": "Dramatically simpler than typical tech/machine-focused thumbnails. Uses product design aesthetic rather than industrial 3D printing look. Clean, minimal approach stands out in technical niche.",
+    "competitive_advantage": "1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements",
+    "why_it_works": "VISUAL: Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy. PSYCHOLOGY: Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.. STRATEGY: 1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements.",
+    "semantic_queries": [
+      "satisfying simplicity pattern pattern examples"
+    ],
+    "visual_queries": [
+      "orange and green high contrast design",
+      "bold high contrast visual design"
+    ],
+    "channel_outlier_explanation": "This thumbnail succeeds by translating complex technical content into a visually simple promise of satisfaction - perfect for a technical channel looking to broaden appeal while maintaining authority.",
+    "step_1_visual_inventory": {
+      "colors": "Vibrant orange object against mint green background - high contrast, energetic vs calming colors creates visual pop",
+      "typography": "Bold, white, all-caps 'PERFECT FIT' text floating above - clear hierarchy and readability",
+      "composition": "Simple, clean composition with single object and text. Diagonal positioning creates dynamic energy",
+      "focal_points": "1) Orange box lid movement, 2) White text, 3) Box base showing fit concept"
+    },
+    "step_2_baseline_differentiation": "Dramatically simpler than typical tech/machine-focused thumbnails. Uses product design aesthetic rather than industrial 3D printing look. Clean, minimal approach stands out in technical niche.",
+    "step_3_psychological_mechanism": "Leverages 'Satisfying Resolution' principle - the slight gap in the fitted pieces creates tension that viewers instinctively want to see resolved. Orange/green complementary colors maximize visual impact.",
+    "step_4_pattern_formulation": {
+      "pattern_name": "Satisfying Simplicity Pattern",
+      "pattern_description": "Using minimal elements to create visual tension that promises satisfaction through resolution",
+      "success_factors": [
+        "High contrast complementary colors",
+        "Single clear demonstration object",
+        "Implied motion/action",
+        "Clear problem-solution framing"
+      ],
+      "replication_strategy": "1) Isolate one clear concept 2) Show it partially unresolved 3) Use strong color contrast 4) Minimize elements"
+    },
+    "confidence_level": "High - Thumbnail follows established principles of visual hierarchy, color psychology, and tension-resolution that drive clicks. Performance data validates effectiveness.",
+    "channel_specific_insight": "This thumbnail succeeds by translating complex technical content into a visually simple promise of satisfaction - perfect for a technical channel looking to broaden appeal while maintaining authority."
+  },
+  "source_video": {
+    "id": "XKrDUnZCmQQ",
+    "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+    "channel": "Slant 3D",
+    "score": 17.719,
+    "niche": "Fashion & Beauty",
+    "views": 164825,
+    "thumbnail": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg",
+    "baseline": 10162.5,
+    "published_at": "2025-07-31T16:01:01+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Instruments",
+        "videos": [
+          {
+            "title": "EASY Scale Pattern Works Like MAGIC for Blues AND ROCK!",
+            "score": 8.763,
+            "views": 181394,
+            "channel": "Mark Zabel",
+            "thumbnail_url": "https://i.ytimg.com/vi/cc9UkyGrQSM/hqdefault.jpg",
+            "summary": "Demonstrating an easy scale pattern that effectively applies to both blues and rock music, showcasing techniques for improvisation and soloing.",
+            "validation_reason": "The video thumbnail demonstrates satisfying simplicity through clear white text (\"INSTANT BLUES\"), a simple visual pattern of red dots on a guitar fretboard, and an arrow pointing to show the key concept, making the learning pattern immediately graspable.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 8.763,
+        "count": 1
+      },
+      {
+        "niche": "Photography & Video",
+        "videos": [
+          {
+            "title": "5 Useful EDM Patterns (that changed my life)",
+            "score": 6.334,
+            "views": 255390,
+            "channel": "Alex Rome",
+            "thumbnail_url": "https://i.ytimg.com/vi/_jd5Hw1dtok/hqdefault.jpg",
+            "summary": "Demonstrating five essential EDM patterns that can enhance music production skills, focusing on foundational techniques that significantly impact creativity and workflow.",
+            "validation_reason": "The video uses simple, clean circular visualizations with color-coded patterns against a dark background, demonstrating a satisfyingly minimal approach to presenting musical concepts.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 6.334,
+        "count": 1
+      },
+      {
+        "niche": "Cultural Travel",
+        "videos": [
+          {
+            "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+            "score": 12.174,
+            "views": 742321,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/T54ytwmlObg/hqdefault.jpg",
+            "summary": "Exploring the 13 essential rules of logo design, emphasizing the importance of vector graphics, dynamic design for motion, and ensuring appropriateness for the target market. Highlighting key considerations to keep in mind for effective logo creation.",
+            "validation_reason": "The video thumbnail demonstrates satisfying simplicity through its clean typographic hierarchy, minimal color palette, and geometric logo construction guides that align with the pattern's emphasis on clear, organized visual elements.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+            "score": 9.604,
+            "views": 166857,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/CzyCiQfqjEg/hqdefault.jpg",
+            "summary": "Exploring essential marketing concepts for graphic designers, including key performance indicators (KPIs), target audiences, and the three golden rules of marketing. Understanding the deeper significance of marketing beyond basic design elements to enhance professional practice.",
+            "validation_reason": "The video demonstrates the pattern through its clear side-by-side comparison format showing \"Rookie vs Master\" designs, with simple text labels and contrasting visual styles that create an immediately understandable progression.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+            "score": 7.868,
+            "views": 156542,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/UtEnQCWd0m4/hqdefault.jpg",
+            "summary": "Exploring mindset shifts that differentiate advanced graphic designers from their intermediate counterparts, focusing on emotional clarity, future-proofing decisions, and structuring files to build trust within teams and with clients. Mastering both micro and macro thinking, and designing scalable systems across platforms are also key components discussed.",
+            "validation_reason": "The video thumbnail demonstrates satisfying simplicity through its minimal color palette, clean typography, and striking contrast between the text and eye imagery against the neutral background.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "Blender Typography - Grease Pencil Animation Practice",
+            "score": 5.719,
+            "views": 9840,
+            "channel": "Kevandram",
+            "thumbnail_url": "https://i.ytimg.com/vi/jYmHkXXVe0c/hqdefault.jpg",
+            "summary": "Modeling abstract typography in Blender, focusing on the phrase \"Become Better\" while utilizing shaders, textures, modifiers, and depth of field. Creating a Grease Pencil animation that enhances the visual appeal of the typography.",
+            "validation_reason": "The smooth, fluid animation of stylized text combined with vibrant colors and simple geometric elements creates a satisfying visual experience that aligns with the core aspects of the pattern.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 5.984000000000001,
+        "count": 9
+      },
+      {
+        "niche": "Sewing",
+        "videos": [
+          {
+            "title": "EASIEST Repeating Patterns in Procreate // Procreate Tutorial",
+            "score": 5.622,
+            "views": 97846,
+            "channel": "Bardot Brush",
+            "thumbnail_url": "https://i.ytimg.com/vi/nlef2y0CW3o/hqdefault.jpg",
+            "summary": "Creating seamless repeating patterns in Procreate using three simple methods, allowing for unique designs suitable for various applications such as fabric and home goods.",
+            "validation_reason": "The video thumbnail demonstrates satisfying simplicity through its clean, minimal design elements - white daisy pattern, clear text overlay, and cohesive pink color scheme that creates an appealing and easy-to-understand visual composition.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 5.622,
+        "count": 1
+      },
+      {
+        "niche": "Nutrition",
+        "videos": [
+          {
+            "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+            "score": 4.606,
+            "views": 12541211,
+            "channel": "Jeremy Ethier",
+            "thumbnail_url": "https://i.ytimg.com/vi/qTBfmwHN3_I/hqdefault.jpg",
+            "summary": "Losing stubborn belly fat involves maintaining a calorie deficit while incorporating regular weightlifting to enhance fat loss. The process requires patience, as it may take time for the body to begin utilizing belly fat as a fuel source after reducing fat from other areas.",
+            "validation_reason": "The thumbnail uses a simple, visually satisfying before/after transformation with clear numbered steps (1-2-3) and color-coded arrows to demonstrate the progression, which aligns with the pattern's emphasis on clear, step-wise visual satisfaction.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 4.606,
+        "count": 1
+      },
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "The Infinite Pattern That Never Repeats",
+            "score": 2.876,
+            "views": 21431822,
+            "channel": "Veritasium",
+            "thumbnail_url": "https://i.ytimg.com/vi/48sCx-wBs34/maxresdefault.jpg",
+            "summary": "Exploring the concept of 5-fold symmetry and demonstrating how it is possible to create non-repeating patterns using Penrose tilings. Highlighting the implications of these findings on the understanding of geometry and crystallography.",
+            "validation_reason": "The colorful, geometric pattern being assembled on the floor creates a visually satisfying and simple-to-follow arrangement that draws viewers in, even though the specific pattern elements differ from the original pattern description.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 2.876,
+        "count": 1
+      },
+      {
+        "niche": "Star Wars",
+        "videos": [
+          {
+            "title": "Make your parts bendy with this design hack - 3D design for 3D printing",
+            "score": 2.515,
+            "views": 172260,
+            "channel": "Teaching Tech",
+            "thumbnail_url": "https://i.ytimg.com/vi/8WEqKYa6XRk/hqdefault.jpg",
+            "summary": "Demonstrating how to create flexible 3D printed parts by cutting a slot pattern into the design, allowing for bending and movement. The process includes using a free 3D CAD program and offers alternative methods for those who prefer slicing software or TinkerCAD.",
+            "validation_reason": "The thumbnail shows a simple, satisfying demonstration of flexibility with a clean orange bendy part against a wood background, incorporating clear text and a straightforward visual concept that aligns with the pattern's emphasis on clear, appealing presentation.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 2.515,
+        "count": 1
+      }
+    ],
+    "total_validations": 15,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 5.242857142857142
+  },
+  "processing_time_ms": 76343,
+  "debug": {
+    "total_searches": 3,
+    "text_searches": 1,
+    "visual_searches": 2,
+    "unique_videos_found": 78,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"satisfying simplicity pattern pattern examples\"",
+      "    Generated embedding in 1756ms",
+      "    Title search: 12 results (avg similarity: 0.521)",
+      "    Summary search: 19 results (avg similarity: 0.474)",
+      "    Parallel search completed in 5339ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"orange and green high contrast design\"",
+      "    Generated CLIP embedding in 1259ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.225)",
+      "    Visual search completed in 1567ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"bold high contrast visual design\"",
+      "    Generated CLIP embedding in 384ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.263)",
+      "    Visual search completed in 279ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 78 across all searches",
+      "📋 Getting full video data for 78 unique videos...",
+      "📊 Filtered to 15 high performers (2.5x-100x) for validation",
+      "🤖 Starting enhanced LLM validation for 15 videos...",
+      "    ✅ Validated \"LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)...\" in 3404ms (thumbnail source)",
+      "    ✅ Validated \"The ONLY Marketing Video A Graphic Designer Needs ...\" in 2970ms (thumbnail source)",
+      "    ✅ Validated \"EASY Scale Pattern Works Like MAGIC for Blues AND ...\" in 9129ms (summary source)",
+      "    ✅ Validated \"Why Your Designs Still Look Amateur (And How Pros ...\" in 3054ms (thumbnail source)",
+      "    ✅ Validated \"5 Useful EDM Patterns (that changed my life)...\" in 1843ms (title source)",
+      "    ✅ Validated \"Blender Typography - Grease Pencil Animation Pract...\" in 2353ms (thumbnail source)",
+      "    ✅ Validated \"EASIEST Repeating Patterns in Procreate // Procrea...\" in 2562ms (title source)",
+      "    ✅ Validated \"Contrast In Colour - Visual Hierarchy In Poster De...\" in 6148ms (thumbnail source)",
+      "    ✅ Validated \"How To Lose Stubborn Belly Fat In 3 Steps (And How...\" in 2557ms (thumbnail source)",
+      "    ✅ Validated \"Contrast In Space - Visual Hierarchy In Poster Des...\" in 1640ms (thumbnail source)",
+      "    ✅ Validated \"The BEST ‘Before & After’ Designs Of 2021 So Far!...\" in 2235ms (thumbnail source)",
+      "    ✅ Validated \"How To Make Any Graphic Design INSTANTLY AMAZING!...\" in 2148ms (thumbnail source)",
+      "    ✅ Validated \"The Infinite Pattern That Never Repeats...\" in 2575ms (title source)",
+      "    ✅ Validated \"Before & After Graphic Design Ep9 (‘Space’ Is A SE...\" in 4673ms (thumbnail source)",
+      "    ✅ Validated \"Make your parts bendy with this design hack - 3D d...\" in 2702ms (thumbnail source)",
+      "✅ Enhanced validation complete: 15 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "satisfying simplicity pattern pattern examples",
+          "duration": 7097,
+          "titleResults": 12,
+          "summaryResults": 19
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "orange and green high contrast design",
+          "duration": 2827,
+          "results": 25
+        },
+        {
+          "query": "bold high contrast visual design",
+          "duration": 664,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "satisfying simplicity pattern pattern examples",
+        "duration": 7097,
+        "titleSearch": {
+          "found": 12,
+          "avgSimilarity": 0.52113689675,
+          "threshold": 0.5,
+          "topScores": [
+            0.563613892,
+            0.536888838,
+            0.53103441
+          ]
+        },
+        "summarySearch": {
+          "found": 19,
+          "avgSimilarity": 0.47430617105263156,
+          "threshold": 0.4,
+          "topScores": [
+            0.538973808,
+            0.524947166,
+            0.493296
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "orange and green high contrast design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 2827,
+        "avgSimilarity": 0.22463161232,
+        "topScores": [
+          0.252066523,
+          0.24874869,
+          0.237757966
+        ]
+      },
+      {
+        "query": "bold high contrast visual design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 664,
+        "avgSimilarity": 0.26340684880000004,
+        "topScores": [
+          0.292289644,
+          0.284006119,
+          0.277464
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 78,
+      "afterPerformanceFilter": 15,
+      "validated": 15,
+      "validationRate": "100.0%",
+      "sourceBreakdown": {
+        "title": 3,
+        "summary": 1,
+        "thumbnail": 11
+      }
+    },
+    "extraction": {
+      "promptTokens": 1044,
+      "responseTokens": 506,
+      "thinkingTokens": 0,
+      "thinkingContent": "",
+      "model": "claude-3-5-sonnet-20241022",
+      "validation_model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "extendedThinking": false,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  },
+  "costs": {
+    "claude": 0.045171,
+    "openai": 1.2e-7,
+    "replicate": 0.002,
+    "total": 0.047171120000000004,
+    "breakdown": {
+      "pattern_extraction": 0.010722,
+      "text_embeddings": 1.2e-7,
+      "visual_embeddings": 0.002,
+      "validations": 0.034449
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T13:34:45.256Z
+================================================================================

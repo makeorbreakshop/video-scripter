@@ -1,0 +1,1107 @@
+[2025-08-13T16:10:08.156Z] ================================================================================
+[2025-08-13T16:10:08.156Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-13T16:10:08.156Z
+[2025-08-13T16:10:08.156Z] Video ID: zVjyfWn1dxk
+[2025-08-13T16:10:08.156Z] ================================================================================
+[2025-08-13T16:10:08.157Z] 
+============================================================
+[2025-08-13T16:10:08.157Z] INITIAL SETUP
+[2025-08-13T16:10:08.157Z] ============================================================
+[2025-08-13T16:10:08.157Z] 🔍 [Enhanced] Analyzing pattern for video: zVjyfWn1dxk
+[2025-08-13T16:10:08.505Z] 📺 Target: "The BEST Magic Trick To Do At A Party (Thank Me Later)" (4.5x TPS)
+[2025-08-13T16:10:08.505Z] 🖼️ Thumbnail: Available
+[2025-08-13T16:10:08.505Z] Target Video Data:
+{
+  "id": "zVjyfWn1dxk",
+  "title": "The BEST Magic Trick To Do At A Party (Thank Me Later)",
+  "channel": "Oscar Owen Magic",
+  "views": 241437,
+  "performance_score": 4.513,
+  "baseline": 55511.809,
+  "thumbnail_url": "https://i.ytimg.com/vi/zVjyfWn1dxk/hqdefault.jpg",
+  "niche": "Painting"
+}
+
+[2025-08-13T16:10:08.631Z] 📊 Found 10 baseline videos for comparison
+[2025-08-13T16:10:08.631Z] Baseline Videos:
+[
+  {
+    "title": "Give me 6 mins, I'll teach you an IMPOSSIBLE card trick",
+    "views": 150706,
+    "score": 1.18
+  },
+  {
+    "title": "The Card Trick That FOOLS Magicians | Revealed",
+    "views": 77684,
+    "score": 0.991
+  },
+  {
+    "title": "Any Deck. No Setup. The Best Card Trick Ever Revealed",
+    "views": 91363,
+    "score": 0.983
+  },
+  {
+    "title": "The STRONGEST Self-Working Card Trick EVER | Revealed",
+    "views": 104928,
+    "score": 0.953
+  },
+  {
+    "title": "9 VISUAL Card Tricks Anyone Can Do | Revealed",
+    "views": 265274,
+    "score": 1.057
+  },
+  {
+    "title": "8 VISUAL Card Tricks Anyone Card Do | Revealed",
+    "views": 198334,
+    "score": 0.921
+  },
+  {
+    "title": "How To Spin A Pen Around Your Fingers Like A PRO",
+    "views": 161722,
+    "score": 1.002
+  },
+  {
+    "title": "The Trick That FOOLED Will Smith | Revealed",
+    "views": 242324,
+    "score": 0.998
+  },
+  {
+    "title": "The Card Trick That FOOLED Bill Gates | Revealed",
+    "views": 234686,
+    "score": 0.95
+  },
+  {
+    "title": "5 INSANE Card Tricks Anyone Can Do | Revealed",
+    "views": 253872,
+    "score": 1.14
+  }
+]
+
+[2025-08-13T16:10:08.631Z] 
+============================================================
+[2025-08-13T16:10:08.631Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-13T16:10:08.631Z] ============================================================
+[2025-08-13T16:10:08.632Z] Generated extraction prompt for Claude Vision API
+[2025-08-13T16:10:08.632Z] Extraction Prompt:
+{
+  "prompt": "You are a YouTube performance analyst examining why one video dramatically outperformed a channel's baseline using systematic visual and content analysis.\n\nCONTEXT:\n- Channel: Oscar Owen Magic (Painting content)\n- Typical performance: 1.2x, 1.0x, 1.0x, 1.0x, 1.1x, 0.9x, 1.0x, 1.0x, 0.9x, 1.1x \n- Target breakthrough: 241,437 views (4.5x multiplier)\n- Audience: Content consumers in Painting niche\n\nTARGET VIDEO BREAKTHROUGH:\nTitle: \"The BEST Magic Trick To Do At A Party (Thank Me Later)\"\nPerformance: 4.5x normal performance\nContent: Learn a captivating magic trick perfect for entertaining guests at a party. This demonstration showcases techniques that will impress and engage your audience.\nThumbnail: [First image provided - this is the breakthrough thumbnail to analyze]\n\nBASELINE PATTERN (last 10 videos for comparison):\n1. Title: \"Give me 6 mins, I'll teach you an IMPOSSIBLE card trick\"\n   Performance: 1.2x (150,706 views)\n   Content: Teaching a simple yet impressive card trick that is suitable for beginners.\n   Thumbnail: [Image 2 provided]\n\n2. Title: \"The Card Trick That FOOLS Magicians | Revealed\"\n   Performance: 1.0x (77,684 views)\n   Content: Learn an amazing card trick that can fool even experienced magicians. This technique involves a clever method to create surprising outcomes with a standard deck of cards.\n   Thumbnail: [Image 3 provided]\n\n3. Title: \"Any Deck. No Setup. The Best Card Trick Ever Revealed\"\n   Performance: 1.0x (91,363 views)\n   Content: Demonstrating a self-working magic trick that is easy to learn and perfect for beginners, allowing them to perform a captivating card effect in just a few minutes.\n   Thumbnail: [Image 4 provided]\n\n4. Title: \"The STRONGEST Self-Working Card Trick EVER | Revealed\"\n   Performance: 1.0x (104,928 views)\n   Content: Teaching a self-working prediction card trick that requires no sleight of hand and can be mastered in under five minutes, making it ideal for beginners.\n   Thumbnail: [Image 5 provided]\n\n5. Title: \"9 VISUAL Card Tricks Anyone Can Do | Revealed\"\n   Performance: 1.1x (265,274 views)\n   Content: Demonstrating nine card tricks suitable for both beginners and advanced performers, the content showcases a variety of techniques that anyone can learn and execute. Each trick is presented with clear instructions to facilitate easy understanding and practice.\n   Thumbnail: [Image 6 provided]\n\n6. Title: \"8 VISUAL Card Tricks Anyone Card Do | Revealed\"\n   Performance: 0.9x (198,334 views)\n   Content: Teaching eight visual card tricks that can be learned in five minutes or less, designed to impress audiences and elicit strong reactions. Each trick is demonstrated with clear instructions for easy learning.\n   Thumbnail: Not available\n\n7. Title: \"How To Spin A Pen Around Your Fingers Like A PRO\"\n   Performance: 1.0x (161,722 views)\n   Content: Teaching three easy pen spins suitable for beginners, including \"The Charge,\" \"The Sonic,\" and \"The Twisted Sonic,\" along with practice tips.\n   Thumbnail: Not available\n\n8. Title: \"The Trick That FOOLED Will Smith | Revealed\"\n   Performance: 1.0x (242,324 views)\n   Content: Teaching the three card monte, an intermediate level card trick that emphasizes deceptive sleight of hand techniques. The routine is designed to be relatively simple while still creating a strong impact.\n   Thumbnail: Not available\n\n9. Title: \"The Card Trick That FOOLED Bill Gates | Revealed\"\n   Performance: 0.9x (234,686 views)\n   Content: Teaching a simple, self-working version of the Out Of This World card trick, which is designed to create a powerful effect that can impress audiences.\n   Thumbnail: Not available\n\n10. Title: \"5 INSANE Card Tricks Anyone Can Do | Revealed\"\n   Performance: 1.1x (253,872 views)\n   Content: Teaching five impressive card tricks that require minimal sleight of hand, including a trick that allows for a card to be changed using fire.\n   Thumbnail: Not available\n\nVISUAL ANALYSIS INSTRUCTIONS:\n- Image 1: Target breakthrough thumbnail (analyze this against baseline patterns)\n- Images 2-6: Baseline channel thumbnails (compare visual patterns)\n- Focus on visual differentiation between breakthrough vs. normal channel style\n\nSYSTEMATIC ANALYSIS FRAMEWORK:\nUsing chain of thought reasoning, analyze both visual and content patterns:\n\nStep 1: VISUAL INVENTORY\nExamine the breakthrough thumbnail's color psychology, typography choices, composition elements, visual hierarchy, and emotional triggers systematically.\n\nStep 2: CONTENT DIFFERENTIATION  \nCompare the breakthrough video's content approach, audience promise, and delivery method against the baseline pattern. What specific content strategy did they break from?\n\nStep 3: BASELINE DIFFERENTIATION (Visual + Content)\nAnalyze how this video breaks from the channel's normal patterns in BOTH visual presentation and content approach. Consider:\n- Visual: How does the thumbnail differ from their typical style?\n- Content: How does the content promise/approach differ from their baseline videos?\n- Audience Promise: What different value proposition does this offer?\n\nStep 4: PSYCHOLOGICAL MECHANISM\nExplain the specific psychological principle that makes viewers more likely to choose this content over the channel's typical offerings.\n\nStep 5: PATTERN FORMULATION\nSynthesize findings into a replicable pattern with clear success factors that combine both visual and content strategies.\n\nOUTPUT FORMAT:\n{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Primary colors and their psychological impact\",\n    \"typography\": \"Text style, size, placement analysis\", \n    \"composition\": \"Layout and visual hierarchy description\",\n    \"focal_points\": \"What draws the eye first, second, third\"\n  },\n  \"step_2_content_differentiation\": \"How the breakthrough video's content approach differs from baseline pattern\",\n  \"step_3_baseline_differentiation\": {\n    \"visual_break\": \"How this thumbnail breaks from channel's visual norms\",\n    \"content_break\": \"How this content promise differs from their typical offerings\",\n    \"audience_promise_shift\": \"What different value proposition this provides\"\n  },\n  \"step_4_psychological_mechanism\": \"Why this specific combination triggers more engagement than baseline content\",\n  \"step_5_pattern_formulation\": {\n    \"pattern_name\": \"Memorable 2-4 word pattern name\",\n    \"pattern_description\": \"One clear sentence explaining the core principle\",\n    \"success_factors\": [\"Factor 1\", \"Factor 2\", \"Factor 3\"],\n    \"replication_strategy\": \"How to apply this pattern to similar content\",\n    \"content_strategy\": \"Specific content approach that enables this pattern\",\n    \"visual_strategy\": \"Specific visual elements that support this pattern\"\n  },\n  \"confidence_level\": \"High/Medium/Low with brief justification\",\n  \"channel_specific_insight\": \"Why this worked for THIS channel's audience specifically\",\n  \"baseline_analysis\": \"Summary of what the channel normally does vs. this breakthrough approach\"\n}\n\nVERIFICATION CHECK:\nAfter analysis, confirm your visual observations are actually present in the thumbnail and align with established click-psychology principles."
+}
+
+[2025-08-13T16:10:08.632Z] 🖼️ Adding target thumbnail to analysis: https://i.ytimg.com/vi/zVjyfWn1dxk/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] 🖼️ Adding baseline thumbnail: Give me 6 mins, I'll teach you an IMPOSSIBLE card trick - https://i.ytimg.com/vi/vmeg80riLik/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] 🖼️ Adding baseline thumbnail: The Card Trick That FOOLS Magicians | Revealed - https://i.ytimg.com/vi/MCjgYC8plVQ/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] 🖼️ Adding baseline thumbnail: Any Deck. No Setup. The Best Card Trick Ever Revealed - https://i.ytimg.com/vi/1E-3M8viSi4/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] 🖼️ Adding baseline thumbnail: The STRONGEST Self-Working Card Trick EVER | Revealed - https://i.ytimg.com/vi/EHJDteJ-oLY/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] 🖼️ Adding baseline thumbnail: 9 VISUAL Card Tricks Anyone Can Do | Revealed - https://i.ytimg.com/vi/Mk_xIiyjVKM/hqdefault.jpg
+[2025-08-13T16:10:08.632Z] Calling Claude Sonnet 4 API for superior pattern extraction...
+[2025-08-13T16:10:41.755Z] 💰 Pattern extraction cost: $0.151275 (3235 input + 1370 output tokens + vision)
+[2025-08-13T16:10:41.755Z] ✅ Claude response received in 33123ms
+[2025-08-13T16:10:41.755Z] Raw Claude Response:
+{
+  "response": "{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Bright yellow 'BEST' text creates high contrast against dark background, psychologically suggesting premium value and instant attention-grabbing. Black background eliminates distractions and focuses attention on the floating card effect.\",\n    \"typography\": \"Large, bold sans-serif font with 'BEST' prominently positioned at top, creating hierarchy. 'PARTY TRICK' uses clean white text that's easily readable. Typography suggests confidence and accessibility rather than complexity.\",\n    \"composition\": \"Central figure with extended hand creates natural focal point. The floating King of Hearts card positioned above palm creates visual intrigue and suggests impossible levitation. Clean, uncluttered layout with person positioned slightly right of center.\",\n    \"focal_points\": \"1st - Bright yellow 'BEST' text, 2nd - Floating playing card creating curiosity gap, 3rd - Extended hand gesture suggesting demonstration readiness\"\n  },\n  \"step_2_content_differentiation\": \"While baseline videos focus on technical difficulty and impressing other magicians ('FOOLS MAGICIANS', 'IMPOSSIBLE'), the breakthrough video shifts to social utility and immediate practical application at parties. It promises social success rather than technical mastery.\",\n  \"step_3_baseline_differentiation\": {\n    \"visual_break\": \"Breakthrough thumbnail uses warmer, more approachable lighting and positioning. Unlike baseline thumbnails that show multiple cards or complex hand positions, this shows a single, clearly visible card in an impossible position that immediately communicates the effect.\",\n    \"content_break\": \"Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.\",\n    \"audience_promise_shift\": \"From 'Learn this difficult/impressive technique' to 'Gain instant social status and entertainment value at your next social gathering'\"\n  },\n  \"step_4_psychological_mechanism\": \"The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.\",\n  \"step_5_pattern_formulation\": {\n    \"pattern_name\": \"Social Utility Hook\",\n    \"pattern_description\": \"Transform skill-based content into immediate social currency by emphasizing specific social contexts where the skill provides instant status.\",\n    \"success_factors\": [\n      \"Specific social context identification (parties vs. general performance)\",\n      \"Benefit-focused language over difficulty-focused language\", \n      \"Visual demonstration of impressive end result rather than technique complexity\"\n    ],\n    \"replication_strategy\": \"Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself\",\n    \"content_strategy\": \"Focus on social outcomes and practical application scenarios rather than technical difficulty or professional validation\",\n    \"visual_strategy\": \"Show the impressive end result in a clean, uncluttered way that immediately communicates the social benefit rather than the complexity of execution\"\n  },\n  \"confidence_level\": \"High - Clear visual and content differentiation with strong psychological basis in social status motivation\",\n  \"channel_specific_insight\": \"Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.\",\n  \"baseline_analysis\": \"Channel normally focuses on technical difficulty, magician validation, and skill complexity ('IMPOSSIBLE', 'FOOLS MAGICIANS'). Breakthrough shifted to social utility, immediate practical application, and audience benefit ('PARTY TRICK', social entertainment value).\"\n}",
+  "thinkingBlocks": 1,
+  "usage": {
+    "input_tokens": 3235,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 1370,
+    "service_tier": "standard"
+  },
+  "model": "claude-sonnet-4-20250514"
+}
+
+[2025-08-13T16:10:41.757Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-13T16:10:41.757Z] Extracted Pattern:
+{
+  "pattern_name": "Social Utility Hook",
+  "pattern_description": "Transform skill-based content into immediate social currency by emphasizing specific social contexts where the skill provides instant status.",
+  "psychological_trigger": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+  "key_elements": [
+    "1st - Bright yellow 'BEST' text",
+    "2nd - Floating playing card creating curiosity gap",
+    "3rd - Extended hand gesture suggesting demonstration readiness"
+  ],
+  "visual_elements": [
+    "Bright yellow 'BEST' text creates high contrast against dark background, psychologically suggesting premium value and instant attention-grabbing. Black background eliminates distractions and focuses attention on the floating card effect.",
+    "Large, bold sans-serif font with 'BEST' prominently positioned at top, creating hierarchy. 'PARTY TRICK' uses clean white text that's easily readable. Typography suggests confidence and accessibility rather than complexity.",
+    "Central figure with extended hand creates natural focal point. The floating King of Hearts card positioned above palm creates visual intrigue and suggests impossible levitation. Clean, uncluttered layout with person positioned slightly right of center."
+  ],
+  "thumbnail_psychology": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+  "design_quality_score": 8.5,
+  "design_strengths": [
+    "Specific social context identification (parties vs. general performance)",
+    "Benefit-focused language over difficulty-focused language",
+    "Visual demonstration of impressive end result rather than technique complexity"
+  ],
+  "marketing_positioning": "While baseline videos focus on technical difficulty and impressing other magicians ('FOOLS MAGICIANS', 'IMPOSSIBLE'), the breakthrough video shifts to social utility and immediate practical application at parties. It promises social success rather than technical mastery.",
+  "competitive_advantage": "Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself",
+  "why_it_works": "VISUAL: Show the impressive end result in a clean, uncluttered way that immediately communicates the social benefit rather than the complexity of execution. CONTENT: Focus on social outcomes and practical application scenarios rather than technical difficulty or professional validation. PSYCHOLOGY: The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.. STRATEGY: Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself.",
+  "semantic_queries": [
+    "social utility hook pattern examples"
+  ],
+  "visual_queries": [
+    "bold high contrast visual design",
+    "single focal point design"
+  ],
+  "channel_outlier_explanation": "Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.",
+  "differentiation_factor": "Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.",
+  "step_1_visual_inventory": {
+    "colors": "Bright yellow 'BEST' text creates high contrast against dark background, psychologically suggesting premium value and instant attention-grabbing. Black background eliminates distractions and focuses attention on the floating card effect.",
+    "typography": "Large, bold sans-serif font with 'BEST' prominently positioned at top, creating hierarchy. 'PARTY TRICK' uses clean white text that's easily readable. Typography suggests confidence and accessibility rather than complexity.",
+    "composition": "Central figure with extended hand creates natural focal point. The floating King of Hearts card positioned above palm creates visual intrigue and suggests impossible levitation. Clean, uncluttered layout with person positioned slightly right of center.",
+    "focal_points": "1st - Bright yellow 'BEST' text, 2nd - Floating playing card creating curiosity gap, 3rd - Extended hand gesture suggesting demonstration readiness"
+  },
+  "step_2_content_differentiation": "While baseline videos focus on technical difficulty and impressing other magicians ('FOOLS MAGICIANS', 'IMPOSSIBLE'), the breakthrough video shifts to social utility and immediate practical application at parties. It promises social success rather than technical mastery.",
+  "step_3_baseline_differentiation": {
+    "visual_break": "Breakthrough thumbnail uses warmer, more approachable lighting and positioning. Unlike baseline thumbnails that show multiple cards or complex hand positions, this shows a single, clearly visible card in an impossible position that immediately communicates the effect.",
+    "content_break": "Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.",
+    "audience_promise_shift": "From 'Learn this difficult/impressive technique' to 'Gain instant social status and entertainment value at your next social gathering'"
+  },
+  "step_4_psychological_mechanism": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+  "step_5_pattern_formulation": {
+    "pattern_name": "Social Utility Hook",
+    "pattern_description": "Transform skill-based content into immediate social currency by emphasizing specific social contexts where the skill provides instant status.",
+    "success_factors": [
+      "Specific social context identification (parties vs. general performance)",
+      "Benefit-focused language over difficulty-focused language",
+      "Visual demonstration of impressive end result rather than technique complexity"
+    ],
+    "replication_strategy": "Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself",
+    "content_strategy": "Focus on social outcomes and practical application scenarios rather than technical difficulty or professional validation",
+    "visual_strategy": "Show the impressive end result in a clean, uncluttered way that immediately communicates the social benefit rather than the complexity of execution"
+  },
+  "confidence_level": "High - Clear visual and content differentiation with strong psychological basis in social status motivation",
+  "channel_specific_insight": "Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.",
+  "baseline_analysis": "Channel normally focuses on technical difficulty, magician validation, and skill complexity ('IMPOSSIBLE', 'FOOLS MAGICIANS'). Breakthrough shifted to social utility, immediate practical application, and audience benefit ('PARTY TRICK', social entertainment value)."
+}
+
+[2025-08-13T16:10:41.757Z] ✅ Pattern extracted: Social Utility Hook
+[2025-08-13T16:10:41.757Z] 📝 Text queries: social utility hook pattern examples
+[2025-08-13T16:10:41.758Z] 🎨 Visual queries: bold high contrast visual design, single focal point design
+[2025-08-13T16:10:41.758Z] 🧠 Extended thinking: 0 tokens used for enhanced analysis
+[2025-08-13T16:10:41.758Z] 
+============================================================
+[2025-08-13T16:10:41.758Z] MULTI-MODAL SEARCH PHASE
+[2025-08-13T16:10:41.758Z] ============================================================
+[2025-08-13T16:10:41.758Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-13T16:10:41.758Z] 🔎 Starting text-based semantic searches...
+[2025-08-13T16:10:41.758Z]   Searching text for: "social utility hook pattern examples"
+[2025-08-13T16:10:41.758Z]     Generating OpenAI embedding for query...
+[2025-08-13T16:10:42.396Z]     Generated embedding in 638ms (512D)
+[2025-08-13T16:10:42.396Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T16:10:44.366Z]     Parallel search completed in 1970ms
+[2025-08-13T16:10:44.366Z] Title Search Results:
+{
+  "found": 1,
+  "avgSimilarity": "0.526",
+  "topResults": [
+    {
+      "title": "Hooked on hooks!",
+      "score": "0.526",
+      "views": 1182
+    }
+  ]
+}
+
+[2025-08-13T16:10:44.367Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.429",
+  "topResults": [
+    {
+      "title": "WHAT IS A HOOK RULE short #24 tubalcain lufkin starrett",
+      "score": "0.528",
+      "views": 11783
+    },
+    {
+      "title": "15+ BRILLIANT Home Hacks Using Command Hooks!",
+      "score": "0.451",
+      "views": 215931
+    },
+    {
+      "title": "Cant Hook",
+      "score": "0.447",
+      "views": 73502
+    }
+  ]
+}
+
+[2025-08-13T16:10:44.367Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-13T16:10:44.367Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-13T16:10:44.367Z]   Searching thumbnails for: "bold high contrast visual design"
+[2025-08-13T16:10:44.367Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T16:11:25.975Z]     Generated CLIP embedding in 41608ms (768D)
+[2025-08-13T16:11:25.975Z]     Searching dedicated thumbnail index...
+[2025-08-13T16:11:27.493Z]     Thumbnail search completed in 1518ms
+[2025-08-13T16:11:27.493Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.263",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Photoshop Tutorial: 2 Stunning Text Effects (That Look Amazing!) 🔥",
+      "score": "0.292",
+      "views": 17315,
+      "channel": "Will Paterson"
+    },
+    {
+      "title": "Design Fundamentals with AI | Layout Techniques | Adobe",
+      "score": "0.284",
+      "views": 35,
+      "channel": "Adobe"
+    },
+    {
+      "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+      "score": "0.277",
+      "views": 23301,
+      "channel": "Gareth David Studio"
+    }
+  ]
+}
+
+[2025-08-13T16:11:27.494Z]   Searching thumbnails for: "single focal point design"
+[2025-08-13T16:11:27.494Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T16:11:28.195Z]     Generated CLIP embedding in 701ms (768D)
+[2025-08-13T16:11:28.195Z]     Searching dedicated thumbnail index...
+[2025-08-13T16:11:28.451Z]     Thumbnail search completed in 256ms
+[2025-08-13T16:11:28.451Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.232",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "How to design jewelry as a total beginner",
+      "score": "0.256",
+      "views": 11991,
+      "channel": "Learn With Shopify"
+    },
+    {
+      "title": "interior point in topology",
+      "score": "0.248",
+      "views": 22935,
+      "channel": "E-Academy"
+    },
+    {
+      "title": "3DPrinted Star Vase From 100% Recycled PLA",
+      "score": "0.247",
+      "views": 457,
+      "channel": "stlDenise3D"
+    }
+  ]
+}
+
+[2025-08-13T16:11:28.452Z] 
+============================================================
+[2025-08-13T16:11:28.452Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-13T16:11:28.452Z] ============================================================
+[2025-08-13T16:11:28.452Z] 📋 Getting full video data for 70 unique videos...
+[2025-08-13T16:11:28.600Z] 📊 TEST A: Ranked by search similarity - Top 18 most relevant candidates
+[2025-08-13T16:11:28.601Z] Top Candidates by Relevance:
+[
+  {
+    "title": "A New Drag And Drop Library For EVERY Fr...",
+    "score": "4.0x",
+    "relevance": "4.51",
+    "similarity": "0.510",
+    "queries": 1
+  },
+  {
+    "title": "No Bench Dogs? Use the Compass Rose Sawy...",
+    "score": "1.6x",
+    "relevance": "4.50",
+    "similarity": "0.503",
+    "queries": 1
+  },
+  {
+    "title": "Give me 15 mins, and I'll make your hook...",
+    "score": "3.1x",
+    "relevance": "4.49",
+    "similarity": "0.492",
+    "queries": 1
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In...",
+    "score": "5.3x",
+    "relevance": "0.36",
+    "similarity": "0.361",
+    "queries": 1
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In ...",
+    "score": "3.9x",
+    "relevance": "0.35",
+    "similarity": "0.354",
+    "queries": 1
+  }
+]
+
+[2025-08-13T16:11:28.602Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "A New Drag And Drop Library For EVERY Framework",
+    "views": 206524,
+    "score": 4.013,
+    "channel": "Theo - t3․gg",
+    "hasThumbnail": true
+  },
+  {
+    "title": "No Bench Dogs? Use the Compass Rose Sawyer's Hooks Instead!!!",
+    "views": 80280,
+    "score": 1.626,
+    "channel": "Rex Krueger",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Give me 15 mins, and I'll make your hooks impossible to skip",
+    "views": 146408,
+    "score": 3.143,
+    "channel": "Kallaway",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 23301,
+    "score": 5.27,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 17075,
+    "score": 3.862,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "🔸 The ONLY Typeface-Psychology Video You Ever Need To Watch!",
+    "views": 40672,
+    "score": 1.819,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "views": 237801,
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "views": 742321,
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "views": 152640,
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "views": 156542,
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+    "views": 166857,
+    "score": 9.604,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Best Method To Learn Graphic Design  |  Design Q&A  |  Gareth David Studio",
+    "views": 51387,
+    "score": 2.074,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+    "views": 64797,
+    "score": 1.727,
+    "channel": "Will Paterson",
+    "hasThumbnail": true
+  },
+  {
+    "title": "interior point in topology",
+    "views": 22935,
+    "score": 2.206,
+    "channel": "E-Academy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How to Round Off Corners in InDesign Tutorial",
+    "views": 180831,
+    "score": 11.647,
+    "channel": "Dansky",
+    "hasThumbnail": true
+  },
+  {
+    "title": "open cover and finite subcover",
+    "views": 17028,
+    "score": 2.384,
+    "channel": "E-Academy",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Modern Logo Design Tutorial - Start To Finish",
+    "views": 148119,
+    "score": 3.952,
+    "channel": "Will Paterson",
+    "hasThumbnail": true
+  },
+  {
+    "title": "AutoCAD How To Rotate Viewports - 3 Easy Methods! | 2 Minute Tuesday",
+    "views": 214612,
+    "score": 6.97,
+    "channel": "CAD Intentions",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-13T16:11:28.603Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-13T16:11:28.603Z] 🤖 Starting enhanced LLM validation for 18 videos...
+[2025-08-13T16:11:29.753Z] ✅ Validated: "A New Drag And Drop Library For EVERY Framework" - Transforms: FROM "technical achievement" TO "immediate social benefit and practical application" | Psychology: The video promises that the Swapy library will enable viewers to easily add drag-and-drop functionality to their projects, which can make them the "entertaining person at social gatherings" by impressing others with their technical skills. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be socially admired and seen as
+[2025-08-13T16:11:31.583Z] ✅ Validated: "No Bench Dogs? Use the Compass Rose Sawyer's Hooks Instead!!!" - Transforms: From "technical achievement" to "practical application" | Psychology: The video promises to provide a practical solution to a common problem (not needing bench dogs) that can enhance the functionality of a workbench, which has immediate social utility by making the viewer more capable and useful in social gatherings. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be the entertaining, capable, and useful person in social situations
+[2025-08-13T16:11:33.108Z] ✅ Validated: "Give me 15 mins, and I'll make your hooks impossible to skip" - Transforms: FROM "technical achievement" TO "immediate social benefit and practical application" | Psychology: The video promises to help viewers create hooks that will make their content more engaging and shareable, allowing them to be the "entertaining person at social gatherings." This taps into the "Social Utility Psychology" by focusing on the audience's desire to be seen as socially skilled and valuable. | Cross-niche appeal: The original "Social Utility Hook" pattern an
+[2025-08-13T16:11:38.020Z] ✅ Validated: "The BEST ‘Before & After’ Designs Of 2021 So Far!" - Transforms: FROM "Technical Achievement" TO "Practical Application" | Psychology: The video promises to showcase "Before & After" graphic design transformations, demonstrating the impact of small changes and a methodical approach. This appeals to the viewer's desire to be the "entertaining person at social gatherings" by showcasing their design skills and ability to create visually impactful content. | Cross-niche appeal: The original "Social Utility Hook" pattern an
+[2025-08-13T16:11:39.456Z] ✅ Validated: "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)" - Transforms: From performer-focused to audience-benefit focused | Psychology: The video promises to teach viewers the "Golden Rules of Logo Design", which can help them create professional-looking logos and impress others at social gatherings. The emphasis on essential design principles and appropriateness for the target market suggests the content has practical, real-world applications. | Cross-niche appeal: Like the original "Social Utility Hook" pattern, this video taps into the desire
+[2025-08-13T16:11:40.563Z] ✅ Validated: "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)" - Transforms: FROM "Technical Achievement" TO "Practical Application" | Psychology: The video promises to show how effective use of space can significantly enhance graphic design projects, providing a practical and immediately applicable skill that viewers can use to stand out and impress others at social gatherings. | Cross-niche appeal: Like the original "Social Utility Hook" pattern, this video taps into the desire to acquire a skill that can make the viewer more entertaining and socially valuable
+[2025-08-13T16:11:41.660Z] ✅ Validated: "Why Your Designs Still Look Amateur (And How Pros Think Differently)" - Transforms: From "Amateur" to "Pro" Designs | Psychology: The video promises to help viewers transition from being an amateur designer to a professional one, which provides a clear social utility by allowing them to create more impressive and impactful designs that can be used to impress others and advance their careers. | Cross-niche appeal: The original "Social Utility Hook" pattern is about tapping into the viewer's desire to be the entertaining or impressive person at
+[2025-08-13T16:11:42.689Z] ✅ Validated: "The ONLY Marketing Video A Graphic Designer Needs To See!" - Transforms: FROM "Rookie" TO "Master"
+PSYCHOLOGY: The "Rookie" image promises social utility by showcasing an attractive person enjoying a delicious-looking meal, which could make the viewer feel like they too could be that person at a social gathering. The "Master" image promises social utility by highlighting a major sales event, which could make the viewer feel like they are an expert at finding great deals and saving money.
+REASON: | Psychology: The "Rookie" image promises social utility by showcasing an attractive person enjoying a delicious-looking meal, which could make the viewer feel like they too could be that person at a social gathering. The "Master" image promises social utility by highlighting a major sales event, which could make the viewer feel like they are an expert at finding great deals and saving money.
+REASON:
+[2025-08-13T16:11:45.327Z] ✅ Validated: "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22" - Transforms: FROM "technical achievement" TO "immediate social benefit and practical application" | Psychology: The video promises to teach viewers how to create a modern 3D logo, which can be used to impress others and enhance one's social standing at gatherings. | Cross-niche appeal: The original "Social Utility Hook" pattern is applicable across niches, as the desire to be the entertaining or impressive person at social events is a universal human motivation.
+[2025-08-13T16:11:51.775Z] ✅ Validated: "AutoCAD How To Rotate Viewports - 3 Easy Methods! | 2 Minute Tuesday" - Transforms: From technical achievement ('Rotate Viewports') to social utility ('How To Rotate Viewports - 3 Easy Methods! | Psychology: The video promises to enhance productivity and efficiency in layout design, which can be socially beneficial by allowing the viewer to become more skilled and proficient in AutoCAD, potentially impressing others or being more valuable in a professional setting. | Cross-niche appeal: The
+[2025-08-13T16:11:51.776Z] ✅ Enhanced validation complete: 10 videos confirmed
+[2025-08-13T16:11:51.776Z] Final Validated Videos:
+[
+  {
+    "title": "A New Drag And Drop Library For EVERY Framework",
+    "score": 4.013,
+    "channel": "Theo - t3․gg",
+    "reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises that the Swapy library will enable viewers to easily add drag-and-drop functionality to their projects, which can make them the \"entertaining person at social gatherings\" by impressing others with their technical skills. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be socially admired and seen as",
+    "source": "summary"
+  },
+  {
+    "title": "No Bench Dogs? Use the Compass Rose Sawyer's Hooks Instead!!!",
+    "score": 1.626,
+    "channel": "Rex Krueger",
+    "reason": "Transforms: From \"technical achievement\" to \"practical application\" | Psychology: The video promises to provide a practical solution to a common problem (not needing bench dogs) that can enhance the functionality of a workbench, which has immediate social utility by making the viewer more capable and useful in social gatherings. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be the entertaining, capable, and useful person in social situations",
+    "source": "summary"
+  },
+  {
+    "title": "Give me 15 mins, and I'll make your hooks impossible to skip",
+    "score": 3.143,
+    "channel": "Kallaway",
+    "reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises to help viewers create hooks that will make their content more engaging and shareable, allowing them to be the \"entertaining person at social gatherings.\" This taps into the \"Social Utility Psychology\" by focusing on the audience's desire to be seen as socially skilled and valuable. | Cross-niche appeal: The original \"Social Utility Hook\" pattern an",
+    "source": "summary"
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"Technical Achievement\" TO \"Practical Application\" | Psychology: The video promises to showcase \"Before & After\" graphic design transformations, demonstrating the impact of small changes and a methodical approach. This appeals to the viewer's desire to be the \"entertaining person at social gatherings\" by showcasing their design skills and ability to create visually impactful content. | Cross-niche appeal: The original \"Social Utility Hook\" pattern an",
+    "source": "thumbnail"
+  },
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: From performer-focused to audience-benefit focused | Psychology: The video promises to teach viewers the \"Golden Rules of Logo Design\", which can help them create professional-looking logos and impress others at social gatherings. The emphasis on essential design principles and appropriateness for the target market suggests the content has practical, real-world applications. | Cross-niche appeal: Like the original \"Social Utility Hook\" pattern, this video taps into the desire",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"Technical Achievement\" TO \"Practical Application\" | Psychology: The video promises to show how effective use of space can significantly enhance graphic design projects, providing a practical and immediately applicable skill that viewers can use to stand out and impress others at social gatherings. | Cross-niche appeal: Like the original \"Social Utility Hook\" pattern, this video taps into the desire to acquire a skill that can make the viewer more entertaining and socially valuable",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: From \"Amateur\" to \"Pro\" Designs | Psychology: The video promises to help viewers transition from being an amateur designer to a professional one, which provides a clear social utility by allowing them to create more impressive and impactful designs that can be used to impress others and advance their careers. | Cross-niche appeal: The original \"Social Utility Hook\" pattern is about tapping into the viewer's desire to be the entertaining or impressive person at",
+    "source": "thumbnail"
+  },
+  {
+    "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+    "score": 9.604,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"Rookie\" TO \"Master\"\nPSYCHOLOGY: The \"Rookie\" image promises social utility by showcasing an attractive person enjoying a delicious-looking meal, which could make the viewer feel like they too could be that person at a social gathering. The \"Master\" image promises social utility by highlighting a major sales event, which could make the viewer feel like they are an expert at finding great deals and saving money.\nREASON: | Psychology: The \"Rookie\" image promises social utility by showcasing an attractive person enjoying a delicious-looking meal, which could make the viewer feel like they too could be that person at a social gathering. The \"Master\" image promises social utility by highlighting a major sales event, which could make the viewer feel like they are an expert at finding great deals and saving money.\nREASON:",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+    "score": 1.727,
+    "channel": "Will Paterson",
+    "reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises to teach viewers how to create a modern 3D logo, which can be used to impress others and enhance one's social standing at gatherings. | Cross-niche appeal: The original \"Social Utility Hook\" pattern is applicable across niches, as the desire to be the entertaining or impressive person at social events is a universal human motivation.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "AutoCAD How To Rotate Viewports - 3 Easy Methods! | 2 Minute Tuesday",
+    "score": 6.97,
+    "channel": "CAD Intentions",
+    "reason": "Transforms: From technical achievement ('Rotate Viewports') to social utility ('How To Rotate Viewports - 3 Easy Methods! | Psychology: The video promises to enhance productivity and efficiency in layout design, which can be socially beneficial by allowing the viewer to become more skilled and proficient in AutoCAD, potentially impressing others or being more valuable in a professional setting. | Cross-niche appeal: The",
+    "source": "thumbnail"
+  }
+]
+
+[2025-08-13T16:11:51.779Z] Pre-Calculation Metrics:
+{
+  "validationResults": 6,
+  "totalValidations": 10,
+  "avgPatternScore": 4.112500000000001,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Cultural Travel",
+      "count": 5,
+      "avg_score": 7.196,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Star Wars",
+      "count": 1,
+      "avg_score": 6.97,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Programming",
+      "count": 1,
+      "avg_score": 4.013,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Outlier",
+      "count": 1,
+      "avg_score": 3.143,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Adventure Travel",
+      "count": 1,
+      "avg_score": 1.727,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Finance & Trading",
+      "count": 1,
+      "avg_score": 1.626,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-13T16:11:51.779Z] Pattern Strength Calculation:
+{
+  "totalValidations": 10,
+  "avgPatternScore": 4.112500000000001,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 4.112500000000001,
+  "finalStrength": "strong"
+}
+
+[2025-08-13T16:11:51.779Z] 
+============================================================
+[2025-08-13T16:11:51.779Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-13T16:11:51.780Z] ============================================================
+[2025-08-13T16:11:51.780Z] ✅ Enhanced pattern analysis complete in 103624ms
+[2025-08-13T16:11:51.780Z] 📊 Found 10 validations (0 with visual matches) across 6 niches
+[2025-08-13T16:11:51.780Z] 
+============================================================
+[2025-08-13T16:11:51.780Z] COST SUMMARY
+[2025-08-13T16:11:51.780Z] ============================================================
+[2025-08-13T16:11:51.780Z] 💰 Claude API (vision enabled): $0.157207
+[2025-08-13T16:11:51.780Z] 💰 OpenAI embeddings: $0.000000
+[2025-08-13T16:11:51.780Z] 💰 Replicate CLIP: $0.002000
+[2025-08-13T16:11:51.780Z] 💰 TOTAL ANALYSIS COST: $0.159207
+[2025-08-13T16:11:51.780Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Social Utility Hook",
+    "pattern_description": "Transform skill-based content into immediate social currency by emphasizing specific social contexts where the skill provides instant status.",
+    "psychological_trigger": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+    "key_elements": [
+      "1st - Bright yellow 'BEST' text",
+      "2nd - Floating playing card creating curiosity gap",
+      "3rd - Extended hand gesture suggesting demonstration readiness"
+    ],
+    "visual_elements": [
+      "Bright yellow 'BEST' text creates high contrast against dark background, psychologically suggesting premium value and instant attention-grabbing. Black background eliminates distractions and focuses attention on the floating card effect.",
+      "Large, bold sans-serif font with 'BEST' prominently positioned at top, creating hierarchy. 'PARTY TRICK' uses clean white text that's easily readable. Typography suggests confidence and accessibility rather than complexity.",
+      "Central figure with extended hand creates natural focal point. The floating King of Hearts card positioned above palm creates visual intrigue and suggests impossible levitation. Clean, uncluttered layout with person positioned slightly right of center."
+    ],
+    "thumbnail_psychology": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+    "design_quality_score": 8.5,
+    "design_strengths": [
+      "Specific social context identification (parties vs. general performance)",
+      "Benefit-focused language over difficulty-focused language",
+      "Visual demonstration of impressive end result rather than technique complexity"
+    ],
+    "marketing_positioning": "While baseline videos focus on technical difficulty and impressing other magicians ('FOOLS MAGICIANS', 'IMPOSSIBLE'), the breakthrough video shifts to social utility and immediate practical application at parties. It promises social success rather than technical mastery.",
+    "competitive_advantage": "Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself",
+    "why_it_works": "VISUAL: Show the impressive end result in a clean, uncluttered way that immediately communicates the social benefit rather than the complexity of execution. CONTENT: Focus on social outcomes and practical application scenarios rather than technical difficulty or professional validation. PSYCHOLOGY: The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.. STRATEGY: Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself.",
+    "semantic_queries": [
+      "social utility hook pattern examples"
+    ],
+    "visual_queries": [
+      "bold high contrast visual design",
+      "single focal point design"
+    ],
+    "channel_outlier_explanation": "Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.",
+    "differentiation_factor": "Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.",
+    "step_1_visual_inventory": {
+      "colors": "Bright yellow 'BEST' text creates high contrast against dark background, psychologically suggesting premium value and instant attention-grabbing. Black background eliminates distractions and focuses attention on the floating card effect.",
+      "typography": "Large, bold sans-serif font with 'BEST' prominently positioned at top, creating hierarchy. 'PARTY TRICK' uses clean white text that's easily readable. Typography suggests confidence and accessibility rather than complexity.",
+      "composition": "Central figure with extended hand creates natural focal point. The floating King of Hearts card positioned above palm creates visual intrigue and suggests impossible levitation. Clean, uncluttered layout with person positioned slightly right of center.",
+      "focal_points": "1st - Bright yellow 'BEST' text, 2nd - Floating playing card creating curiosity gap, 3rd - Extended hand gesture suggesting demonstration readiness"
+    },
+    "step_2_content_differentiation": "While baseline videos focus on technical difficulty and impressing other magicians ('FOOLS MAGICIANS', 'IMPOSSIBLE'), the breakthrough video shifts to social utility and immediate practical application at parties. It promises social success rather than technical mastery.",
+    "step_3_baseline_differentiation": {
+      "visual_break": "Breakthrough thumbnail uses warmer, more approachable lighting and positioning. Unlike baseline thumbnails that show multiple cards or complex hand positions, this shows a single, clearly visible card in an impossible position that immediately communicates the effect.",
+      "content_break": "Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.",
+      "audience_promise_shift": "From 'Learn this difficult/impressive technique' to 'Gain instant social status and entertainment value at your next social gathering'"
+    },
+    "step_4_psychological_mechanism": "The breakthrough triggers 'Social Utility Psychology' - viewers don't just want to learn magic, they want to be the entertaining person at social gatherings. The word 'PARTY' activates social aspiration, while 'Thank Me Later' suggests guaranteed positive social outcomes. This taps into social status desires rather than just skill acquisition.",
+    "step_5_pattern_formulation": {
+      "pattern_name": "Social Utility Hook",
+      "pattern_description": "Transform skill-based content into immediate social currency by emphasizing specific social contexts where the skill provides instant status.",
+      "success_factors": [
+        "Specific social context identification (parties vs. general performance)",
+        "Benefit-focused language over difficulty-focused language",
+        "Visual demonstration of impressive end result rather than technique complexity"
+      ],
+      "replication_strategy": "Identify where your skill/knowledge can provide immediate social value, then frame content around that social context rather than the technical aspects of the skill itself",
+      "content_strategy": "Focus on social outcomes and practical application scenarios rather than technical difficulty or professional validation",
+      "visual_strategy": "Show the impressive end result in a clean, uncluttered way that immediately communicates the social benefit rather than the complexity of execution"
+    },
+    "confidence_level": "High - Clear visual and content differentiation with strong psychological basis in social status motivation",
+    "channel_specific_insight": "Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.",
+    "baseline_analysis": "Channel normally focuses on technical difficulty, magician validation, and skill complexity ('IMPOSSIBLE', 'FOOLS MAGICIANS'). Breakthrough shifted to social utility, immediate practical application, and audience benefit ('PARTY TRICK', social entertainment value)."
+  },
+  "source_video": {
+    "id": "zVjyfWn1dxk",
+    "title": "The BEST Magic Trick To Do At A Party (Thank Me Later)",
+    "channel": "Oscar Owen Magic",
+    "score": 4.513,
+    "niche": "Painting",
+    "views": 241437,
+    "thumbnail": "https://i.ytimg.com/vi/zVjyfWn1dxk/hqdefault.jpg",
+    "baseline": 55511.809,
+    "published_at": "2025-07-20T11:30:48+00:00",
+    "summary": "Learn a captivating magic trick perfect for entertaining guests at a party. This demonstration showcases techniques that will impress and engage your audience."
+  },
+  "baseline_videos": [
+    {
+      "title": "Give me 6 mins, I'll teach you an IMPOSSIBLE card trick",
+      "views": 150706,
+      "score": 1.18,
+      "summary": "Teaching a simple yet impressive card trick that is suitable for beginners.",
+      "thumbnail_url": "https://i.ytimg.com/vi/vmeg80riLik/hqdefault.jpg",
+      "published_at": "2025-06-06T23:01:04+00:00"
+    },
+    {
+      "title": "The Card Trick That FOOLS Magicians | Revealed",
+      "views": 77684,
+      "score": 0.991,
+      "summary": "Learn an amazing card trick that can fool even experienced magicians. This technique involves a clever method to create surprising outcomes with a standard deck of cards.",
+      "thumbnail_url": "https://i.ytimg.com/vi/MCjgYC8plVQ/hqdefault.jpg",
+      "published_at": "2025-05-24T12:30:33+00:00"
+    },
+    {
+      "title": "Any Deck. No Setup. The Best Card Trick Ever Revealed",
+      "views": 91363,
+      "score": 0.983,
+      "summary": "Demonstrating a self-working magic trick that is easy to learn and perfect for beginners, allowing them to perform a captivating card effect in just a few minutes.",
+      "thumbnail_url": "https://i.ytimg.com/vi/1E-3M8viSi4/hqdefault.jpg",
+      "published_at": "2025-04-12T11:44:57+00:00"
+    },
+    {
+      "title": "The STRONGEST Self-Working Card Trick EVER | Revealed",
+      "views": 104928,
+      "score": 0.953,
+      "summary": "Teaching a self-working prediction card trick that requires no sleight of hand and can be mastered in under five minutes, making it ideal for beginners.",
+      "thumbnail_url": "https://i.ytimg.com/vi/EHJDteJ-oLY/hqdefault.jpg",
+      "published_at": "2025-03-19T12:44:56+00:00"
+    },
+    {
+      "title": "9 VISUAL Card Tricks Anyone Can Do | Revealed",
+      "views": 265274,
+      "score": 1.057,
+      "summary": "Demonstrating nine card tricks suitable for both beginners and advanced performers, the content showcases a variety of techniques that anyone can learn and execute. Each trick is presented with clear instructions to facilitate easy understanding and practice.",
+      "thumbnail_url": "https://i.ytimg.com/vi/Mk_xIiyjVKM/hqdefault.jpg",
+      "published_at": "2024-04-10T11:00:29+00:00"
+    },
+    {
+      "title": "8 VISUAL Card Tricks Anyone Card Do | Revealed",
+      "views": 198334,
+      "score": 0.921,
+      "summary": "Teaching eight visual card tricks that can be learned in five minutes or less, designed to impress audiences and elicit strong reactions. Each trick is demonstrated with clear instructions for easy learning.",
+      "thumbnail_url": "https://i.ytimg.com/vi/sjzATs44SuQ/hqdefault.jpg",
+      "published_at": "2023-11-22T13:00:45+00:00"
+    },
+    {
+      "title": "How To Spin A Pen Around Your Fingers Like A PRO",
+      "views": 161722,
+      "score": 1.002,
+      "summary": "Teaching three easy pen spins suitable for beginners, including \"The Charge,\" \"The Sonic,\" and \"The Twisted Sonic,\" along with practice tips.",
+      "thumbnail_url": "https://i.ytimg.com/vi/cCGofEo8cEE/hqdefault.jpg",
+      "published_at": "2023-06-30T12:55:36+00:00"
+    },
+    {
+      "title": "The Trick That FOOLED Will Smith | Revealed",
+      "views": 242324,
+      "score": 0.998,
+      "summary": "Teaching the three card monte, an intermediate level card trick that emphasizes deceptive sleight of hand techniques. The routine is designed to be relatively simple while still creating a strong impact.",
+      "thumbnail_url": "https://i.ytimg.com/vi/J5nGHjHVHf0/hqdefault.jpg",
+      "published_at": "2021-07-26T16:09:18+00:00"
+    },
+    {
+      "title": "The Card Trick That FOOLED Bill Gates | Revealed",
+      "views": 234686,
+      "score": 0.95,
+      "summary": "Teaching a simple, self-working version of the Out Of This World card trick, which is designed to create a powerful effect that can impress audiences.",
+      "thumbnail_url": "https://i.ytimg.com/vi/38lzf1r9SN8/hqdefault.jpg",
+      "published_at": "2021-02-24T12:00:01+00:00"
+    },
+    {
+      "title": "5 INSANE Card Tricks Anyone Can Do | Revealed",
+      "views": 253872,
+      "score": 1.14,
+      "summary": "Teaching five impressive card tricks that require minimal sleight of hand, including a trick that allows for a card to be changed using fire.",
+      "thumbnail_url": "https://i.ytimg.com/vi/6UWX-ViGp0s/hqdefault.jpg",
+      "published_at": "2021-01-28T13:00:02+00:00"
+    }
+  ],
+  "baseline_analysis": "Channel normally focuses on technical difficulty, magician validation, and skill complexity ('IMPOSSIBLE', 'FOOLS MAGICIANS'). Breakthrough shifted to social utility, immediate practical application, and audience benefit ('PARTY TRICK', social entertainment value).",
+  "channel_insight": "Magic trick audience has dual motivation: learning impressive skills AND gaining social status. This video tapped into the underserved social status motivation while the baseline content primarily served the skill acquisition motivation.",
+  "differentiation_factor": "Baseline content promises technical achievement ('IMPOSSIBLE', 'FOOLS MAGICIANS', 'STRONGEST'). Breakthrough promises immediate social benefit and practical application ('PARTY', 'Thank Me Later'). Shifts from performer-focused to audience-benefit focused.",
+  "validation": {
+    "results": [
+      {
+        "niche": "Cultural Travel",
+        "videos": [
+          {
+            "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+            "score": 3.64,
+            "views": 237801,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/k2DWClcoHFI/hqdefault.jpg",
+            "summary": "Showcasing before and after graphic design transformations that highlight the impact of small changes on overall design quality. Demonstrating a methodical approach to graphic design, emphasizing the balance between creativity and systematic techniques.",
+            "validation_reason": "Transforms: FROM \"Technical Achievement\" TO \"Practical Application\" | Psychology: The video promises to showcase \"Before & After\" graphic design transformations, demonstrating the impact of small changes and a methodical approach. This appeals to the viewer's desire to be the \"entertaining person at social gatherings\" by showcasing their design skills and ability to create visually impactful content. | Cross-niche appeal: The original \"Social Utility Hook\" pattern an",
+            "source": "thumbnail"
+          },
+          {
+            "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+            "score": 12.174,
+            "views": 742321,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/T54ytwmlObg/hqdefault.jpg",
+            "summary": "Exploring the 13 essential rules of logo design, emphasizing the importance of vector graphics, dynamic design for motion, and ensuring appropriateness for the target market. Highlighting key considerations to keep in mind for effective logo creation.",
+            "validation_reason": "Transforms: From performer-focused to audience-benefit focused | Psychology: The video promises to teach viewers the \"Golden Rules of Logo Design\", which can help them create professional-looking logos and impress others at social gatherings. The emphasis on essential design principles and appropriateness for the target market suggests the content has practical, real-world applications. | Cross-niche appeal: Like the original \"Social Utility Hook\" pattern, this video taps into the desire",
+            "source": "thumbnail"
+          },
+          {
+            "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+            "score": 2.694,
+            "views": 152640,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/PJrxpOQmD-E/hqdefault.jpg",
+            "summary": "Demonstrating the effective use of micro and macro white space, along with negative space, to enhance graphic design projects. Real-life before and after examples illustrate how space can significantly impact the success of artwork.",
+            "validation_reason": "Transforms: FROM \"Technical Achievement\" TO \"Practical Application\" | Psychology: The video promises to show how effective use of space can significantly enhance graphic design projects, providing a practical and immediately applicable skill that viewers can use to stand out and impress others at social gatherings. | Cross-niche appeal: Like the original \"Social Utility Hook\" pattern, this video taps into the desire to acquire a skill that can make the viewer more entertaining and socially valuable",
+            "source": "thumbnail"
+          },
+          {
+            "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+            "score": 7.868,
+            "views": 156542,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/UtEnQCWd0m4/hqdefault.jpg",
+            "summary": "Exploring mindset shifts that differentiate advanced graphic designers from their intermediate counterparts, focusing on emotional clarity, future-proofing decisions, and structuring files to build trust within teams and with clients. Mastering both micro and macro thinking, and designing scalable systems across platforms are also key components discussed.",
+            "validation_reason": "Transforms: From \"Amateur\" to \"Pro\" Designs | Psychology: The video promises to help viewers transition from being an amateur designer to a professional one, which provides a clear social utility by allowing them to create more impressive and impactful designs that can be used to impress others and advance their careers. | Cross-niche appeal: The original \"Social Utility Hook\" pattern is about tapping into the viewer's desire to be the entertaining or impressive person at",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 7.196,
+        "count": 5
+      },
+      {
+        "niche": "Star Wars",
+        "videos": [
+          {
+            "title": "AutoCAD How To Rotate Viewports - 3 Easy Methods! | 2 Minute Tuesday",
+            "score": 6.97,
+            "views": 214612,
+            "channel": "CAD Intentions",
+            "thumbnail_url": "https://i.ytimg.com/vi/pctaqvMYLzI/hqdefault.jpg",
+            "summary": "Rotating viewports in AutoCAD using three different methods that allow for customization in layout space without affecting the model. Each technique is demonstrated to enhance productivity in layout and viewport setup.",
+            "validation_reason": "Transforms: From technical achievement ('Rotate Viewports') to social utility ('How To Rotate Viewports - 3 Easy Methods! | Psychology: The video promises to enhance productivity and efficiency in layout design, which can be socially beneficial by allowing the viewer to become more skilled and proficient in AutoCAD, potentially impressing others or being more valuable in a professional setting. | Cross-niche appeal: The",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 6.97,
+        "count": 1
+      },
+      {
+        "niche": "Programming",
+        "videos": [
+          {
+            "title": "A New Drag And Drop Library For EVERY Framework",
+            "score": 4.013,
+            "views": 206524,
+            "channel": "Theo - t3․gg",
+            "thumbnail_url": "https://i.ytimg.com/vi/gaNLnuwoFRI/hqdefault.jpg",
+            "summary": "Exploring the Swapy library, which enables drag-and-drop functionality across various frameworks including vanilla JS, React, Vue, and Svelte. Demonstrating its versatility and ease of use for developers.",
+            "validation_reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises that the Swapy library will enable viewers to easily add drag-and-drop functionality to their projects, which can make them the \"entertaining person at social gatherings\" by impressing others with their technical skills. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be socially admired and seen as",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 4.013,
+        "count": 1
+      },
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "Give me 15 mins, and I'll make your hooks impossible to skip",
+            "score": 3.143,
+            "views": 146408,
+            "channel": "Kallaway",
+            "thumbnail_url": "https://i.ytimg.com/vi/2byPP_9F0-Q/maxresdefault.jpg",
+            "summary": "Identifying and correcting four major mistakes that hinder effective hooks in content creation. Enhancing viewer engagement by ensuring hooks are timely, clear, relevant, and interesting.",
+            "validation_reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises to help viewers create hooks that will make their content more engaging and shareable, allowing them to be the \"entertaining person at social gatherings.\" This taps into the \"Social Utility Psychology\" by focusing on the audience's desire to be seen as socially skilled and valuable. | Cross-niche appeal: The original \"Social Utility Hook\" pattern an",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 3.143,
+        "count": 1
+      },
+      {
+        "niche": "Adventure Travel",
+        "videos": [
+          {
+            "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+            "score": 1.727,
+            "views": 64797,
+            "channel": "Will Paterson",
+            "thumbnail_url": "https://i.ytimg.com/vi/thT0sMG8veY/hqdefault.jpg",
+            "summary": "Creating a modern 3D logo using Adobe Illustrator by setting up color swatches, designing letter shapes, and applying a 3D effect. Utilizing tools like the Shape Builder and gradients to enhance the logo's appearance and ensure it scales correctly.",
+            "validation_reason": "Transforms: FROM \"technical achievement\" TO \"immediate social benefit and practical application\" | Psychology: The video promises to teach viewers how to create a modern 3D logo, which can be used to impress others and enhance one's social standing at gatherings. | Cross-niche appeal: The original \"Social Utility Hook\" pattern is applicable across niches, as the desire to be the entertaining or impressive person at social events is a universal human motivation.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 1.727,
+        "count": 1
+      },
+      {
+        "niche": "Finance & Trading",
+        "videos": [
+          {
+            "title": "No Bench Dogs? Use the Compass Rose Sawyer's Hooks Instead!!!",
+            "score": 1.626,
+            "views": 80280,
+            "channel": "Rex Krueger",
+            "thumbnail_url": "https://i.ytimg.com/vi/borYasoAZ8g/maxresdefault.jpg",
+            "summary": "Demonstrating the use of Compass Rose Sawyers Hooks to enhance the functionality of a workbench without requiring modifications, this content showcases various assembly techniques and additional tips for effective workholding.",
+            "validation_reason": "Transforms: From \"technical achievement\" to \"practical application\" | Psychology: The video promises to provide a practical solution to a common problem (not needing bench dogs) that can enhance the functionality of a workbench, which has immediate social utility by making the viewer more capable and useful in social gatherings. | Cross-niche appeal: The original pattern and this video both appeal to the viewer's desire to be the entertaining, capable, and useful person in social situations",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 1.626,
+        "count": 1
+      }
+    ],
+    "total_validations": 10,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 4.112500000000001
+  },
+  "processing_time_ms": 103624,
+  "debug": {
+    "total_searches": 3,
+    "text_searches": 1,
+    "visual_searches": 2,
+    "unique_videos_found": 70,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"social utility hook pattern examples\"",
+      "    Generated embedding in 638ms",
+      "    Title search: 1 results (avg similarity: 0.526)",
+      "    Summary search: 20 results (avg similarity: 0.429)",
+      "    Parallel search completed in 1970ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"bold high contrast visual design\"",
+      "    Generated CLIP embedding in 41608ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.263)",
+      "    Visual search completed in 1518ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"single focal point design\"",
+      "    Generated CLIP embedding in 701ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.232)",
+      "    Visual search completed in 256ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 70 across all searches",
+      "📋 Getting full video data for 70 unique videos...",
+      "📊 TEST A: Ranked by search similarity - Top 18 most relevant candidates",
+      "🤖 Starting enhanced LLM validation for 18 videos...",
+      "    ✅ Validated \"A New Drag And Drop Library For EVERY Framework...\" in 1150ms (unknown source)",
+      "    ✅ Validated \"No Bench Dogs? Use the Compass Rose Sawyer's Hooks...\" in 1828ms (unknown source)",
+      "    ✅ Validated \"Give me 15 mins, and I'll make your hooks impossib...\" in 1525ms (unknown source)",
+      "    ❌ Rejected \"Contrast In Colour - Visual Hierarchy In Poster De...\" in 1240ms - MATCH: No\nTRANSFORMATION: N/A\nPSYCHOLOGY: The video does not appear to promise any social utility or",
+      "    ❌ Rejected \"Contrast In Space - Visual Hierarchy In Poster Des...\" in 1182ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: The video does not appear to promise any social utilit",
+      "    ❌ Rejected \"🔸 The ONLY Typeface-Psychology Video You Ever Nee...\" in 1182ms - MATCH: No\nTRANSFORMATION: N/A\nPSYCHOLOGY: The video does not appear to promise any social utility. I",
+      "    ✅ Validated \"The BEST ‘Before & After’ Designs Of 2021 So Far!...\" in 1308ms (unknown source)",
+      "    ✅ Validated \"LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)...\" in 1435ms (unknown source)",
+      "    ✅ Validated \"Before & After Graphic Design Ep9 (‘Space’ Is A SE...\" in 1107ms (unknown source)",
+      "    ✅ Validated \"Why Your Designs Still Look Amateur (And How Pros ...\" in 1096ms (unknown source)",
+      "    ✅ Validated \"The ONLY Marketing Video A Graphic Designer Needs ...\" in 1029ms (unknown source)",
+      "    ❌ Rejected \"Best Method To Learn Graphic Design  |  Design Q&A...\" in 1474ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: The video does not promise social utility or aspiratio",
+      "    ✅ Validated \"How To Design A 3D Modern Logo Easily! 😲Adobe Ill...\" in 1164ms (unknown source)",
+      "    ❌ Rejected \"interior point in topology...\" in 1413ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: The video does not appear to promise any social utilit",
+      "    ❌ Rejected \"How to Round Off Corners in InDesign Tutorial...\" in 1133ms - MATCH: No\nTRANSFORMATION: N/A\nPSYCHOLOGY: N/A\nREASON: The shared image does not contain a human face",
+      "    ❌ Rejected \"open cover and finite subcover...\" in 1412ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: The video does not appear to promise any social utilit",
+      "    ❌ Rejected \"Modern Logo Design Tutorial - Start To Finish...\" in 1262ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: The video does not promise any social utility or immed",
+      "    ✅ Validated \"AutoCAD How To Rotate Viewports - 3 Easy Methods! ...\" in 1227ms (unknown source)",
+      "✅ Enhanced validation complete: 10 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "social utility hook pattern examples",
+          "duration": 2609,
+          "titleResults": 1,
+          "summaryResults": 20
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "bold high contrast visual design",
+          "duration": 43127,
+          "results": 25
+        },
+        {
+          "query": "single focal point design",
+          "duration": 958,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "social utility hook pattern examples",
+        "duration": 2609,
+        "titleSearch": {
+          "found": 1,
+          "avgSimilarity": 0.525647044,
+          "threshold": 0.5,
+          "topScores": [
+            0.525647044
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.42931600365,
+          "threshold": 0.4,
+          "topScores": [
+            0.527622342,
+            0.45120573,
+            0.446587235
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "bold high contrast visual design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 43127,
+        "avgSimilarity": 0.26340684880000004,
+        "topScores": [
+          0.292289644,
+          0.284006119,
+          0.277464
+        ]
+      },
+      {
+        "query": "single focal point design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 958,
+        "avgSimilarity": 0.23153919115999996,
+        "topScores": [
+          0.25647679,
+          0.248430207,
+          0.246899247
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 70,
+      "afterPerformanceFilter": 18,
+      "validated": 10,
+      "validationRate": "55.6%",
+      "sourceBreakdown": {
+        "title": 0,
+        "summary": 3,
+        "thumbnail": 7
+      }
+    },
+    "extraction": {
+      "promptTokens": 3235,
+      "responseTokens": 1370,
+      "thinkingTokens": 0,
+      "thinkingContent": "Looking at the images provided:\n\nImage 1 (Breakthrough thumbnail): Shows a man in dark clothing holding out his hand with what appears to be a playing card (looks like the King of Hearts) floating above his palm. The text says \"BEST PARTY TRICK\" in large yellow text. The background is dark/black.\n\nImage 2: Shows the same person holding a fanned deck of cards, with text \"THIS HITS HARD\" where \"HARD\" is highlighted in yellow. Dark background with blue/red lighting.\n\nImage 3: Shows the person holding two cards (appears to be a Queen of Hearts and a Joker), with text \"THIS FOOLS MAGICIANS\". Background appears to be a room setting.\n\nImage 4: Shows the person with cards in hand, text says \"BEST TRICK EVER\" with \"TRICK\" highlighted in yellow. Dark background with colorful lighting.\n\nImage 5: Shows the person holding two cards (King of Spades and Jack of Diamonds), with text \"THIS FOOLS EVERYONE\" in white text. Gray/neutral background.\n\nImage 6: Shows hands holding what appears to be a Queen of Hearts card, with text \"9 CARD TRICKS\". This appears to be more of a close-up shot focusing on the hands and card.\n\nNow let me analyze systematically:\n\nThe breakthrough thumbnail (Image 1) has several key differences:\n1. It focuses on a specific social context (\"PARTY TRICK\") rather than just the trick itself\n2. The visual shows the card floating/levitating above the palm, creating intrigue\n3. \"BEST\" is prominently featured, making a strong claim\n4. The social application is emphasized over the technical difficulty\n\nThe baseline thumbnails typically focus on:\n- Difficulty level (\"IMPOSSIBLE\", \"FOOLS MAGICIANS\", \"ANYONE CAN DO\")\n- Technical aspects of the tricks\n- General card trick teaching\n\nThe breakthrough differentiates by:\n- Focusing on social utility rather than technical achievement\n\n\n- Promising immediate social benefit by highlighting personal impact\n- Targeting specific social interactions where the trick can create excitement\n- Transforming a technical skill into a social advantage that feels accessible and fun\n\nI see the marketing approach is strategically positioning the card trick as a social tool. The thumbnail design suggests the trick isn't just about technical skill, but about creating memorable social moments. By emphasizing \"PARTY TRICK\" and showing a dramatic visual of a levitating card, it promises an experience that goes beyond mere performance - it's about creating connection and surprise in social settings.",
+      "model": "claude-sonnet-4-20250514",
+      "validation_model": "claude-3-haiku-20240307",
+      "temperature": 1,
+      "extendedThinking": true,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  },
+  "costs": {
+    "claude": 0.15720689999999998,
+    "openai": 1.2e-7,
+    "replicate": 0.002,
+    "total": 0.15920701999999998,
+    "breakdown": {
+      "pattern_extraction": 0.151275,
+      "text_embeddings": 1.2e-7,
+      "visual_embeddings": 0.002,
+      "validations": 0.00593189999999999
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T16:11:51.785Z
+================================================================================

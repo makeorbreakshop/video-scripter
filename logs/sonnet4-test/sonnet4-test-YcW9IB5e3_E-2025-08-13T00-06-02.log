@@ -1,0 +1,109 @@
+[2025-08-13T00:06:02.833Z] ================================================================================
+[2025-08-13T00:06:02.833Z] SONNET 4 TEST LOG - 2025-08-13T00:06:02.833Z
+[2025-08-13T00:06:02.833Z] Video ID: YcW9IB5e3_E
+[2025-08-13T00:06:02.833Z] ================================================================================
+[2025-08-13T00:06:03.058Z] 🔍 Testing Sonnet 4 vs 3.5 for video: YcW9IB5e3_E
+[2025-08-13T00:06:03.058Z] 📺 Target: "The internet keeps getting worse. Let's talk about why." (6.6x TPS)
+[2025-08-13T00:06:03.058Z] 🖼️ Thumbnail: Available
+[2025-08-13T00:06:03.058Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/YcW9IB5e3_E/hqdefault.jpg
+[2025-08-13T00:06:03.058Z] 
+============================================================
+[2025-08-13T00:06:03.058Z] TESTING SONNET 3.5 (CURRENT)
+[2025-08-13T00:06:03.058Z] ============================================================
+[2025-08-13T00:06:09.322Z] ⏱️ Sonnet 3.5 completed in 6264ms
+[2025-08-13T00:06:09.322Z] 💰 Sonnet 3.5 cost: $0.006358 (491 input + 306 output tokens)
+[2025-08-13T00:06:09.322Z] 
+============================================================
+[2025-08-13T00:06:09.322Z] TESTING SONNET 4 (NEW)
+[2025-08-13T00:06:09.322Z] ============================================================
+[2025-08-13T00:06:18.563Z] ⏱️ Sonnet 4 completed in 9241ms
+[2025-08-13T00:06:18.563Z] 💰 Sonnet 4 cost: $0.026340 (491 input + 253 output tokens)
+[2025-08-13T00:06:18.563Z] 
+============================================================
+[2025-08-13T00:06:18.563Z] COMPARISON RESULTS
+[2025-08-13T00:06:18.563Z] ============================================================
+[2025-08-13T00:06:18.563Z] Performance Comparison:
+{
+  "performance": {
+    "sonnet35_duration_ms": 6264,
+    "sonnet4_duration_ms": 9241,
+    "speed_difference": "Sonnet 4 is 47.5% slower"
+  },
+  "costs": {
+    "sonnet35_cost": 0.006357600000000001,
+    "sonnet4_cost": 0.02634,
+    "cost_multiplier": "4.1x more expensive"
+  },
+  "output_quality": {
+    "sonnet35_parsed": true,
+    "sonnet4_parsed": true,
+    "sonnet35_elements_count": 4,
+    "sonnet4_elements_count": 4,
+    "sonnet35_queries_count": 3,
+    "sonnet4_queries_count": 3
+  }
+}
+
+[2025-08-13T00:06:18.564Z] 
+Sonnet 3.5 Pattern:
+{
+  "pattern_name": "Digital Decay Critique",
+  "pattern_description": "Critical analysis of declining internet quality with authoritative but approachable presentation style",
+  "psychological_trigger": "Nostalgia and frustration with deteriorating online experiences that viewers personally relate to",
+  "key_elements": [
+    "Provocative but credible title addressing shared pain point",
+    "Casual yet knowledgeable presentation style",
+    "Clear examples of internet degradation",
+    "Solutions-oriented discussion"
+  ],
+  "visual_elements": [
+    "Clean minimalist background",
+    "Screenshot examples of declining search quality",
+    "Text overlays highlighting key points"
+  ],
+  "thumbnail_psychology": "Combines controversial statement ('TikTok's enshittification') with warm, trustworthy presentation against dark background for strong contrast",
+  "why_it_works": "Taps into widespread dissatisfaction with modern internet while providing expert analysis and potential solutions, making viewers feel both validated and informed",
+  "semantic_queries": [
+    "why is internet getting worse",
+    "google search quality declining",
+    "social media problems 2023"
+  ],
+  "visual_queries": [
+    "deteriorating internet quality examples",
+    "social media decline screenshots"
+  ]
+}
+
+[2025-08-13T00:06:18.564Z] 
+Sonnet 4 Pattern:
+{
+  "pattern_name": "Tech Decline Commentary",
+  "pattern_description": "Addresses widespread frustration with deteriorating digital platforms using conversational tone and relatable examples",
+  "psychological_trigger": "Validates viewer frustration with shared negative experiences of internet degradation",
+  "key_elements": [
+    "Universal problem statement",
+    "Conversational invitation to discuss",
+    "Implies insider knowledge",
+    "Addresses systemic issues"
+  ],
+  "visual_elements": [
+    "Clean presenter-focused composition",
+    "On-screen examples of platform issues"
+  ],
+  "thumbnail_psychology": "Professional presenter builds trust while screenshot examples provide concrete evidence of the problem being discussed",
+  "why_it_works": "Taps into collective frustration with tech platforms while promising explanation and discussion rather than just complaints. The casual 'let's talk' approach makes complex topics accessible and creates parasocial connection.",
+  "semantic_queries": [
+    "why is the internet getting worse",
+    "internet quality decline explained",
+    "tech platforms deteriorating user experience"
+  ],
+  "visual_queries": [
+    "tech commentary thumbnail with examples",
+    "internet problems discussion video thumbnail"
+  ]
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T00:06:18.564Z
+================================================================================

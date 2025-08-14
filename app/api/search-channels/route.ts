@@ -32,11 +32,12 @@ export async function GET(request: NextRequest) {
 
     console.log(`🔍 Searching channels for: "${query}"`);
 
-    // Search for channels matching the query
+    // Super fast approach: Just get distinct channel names, no stats
     const { data: channels, error } = await supabase
       .from('videos')
-      .select('channel_id, channel_name, thumbnail_url, temporal_performance_score, published_at')
+      .select('channel_id, channel_name, thumbnail_url')
       .ilike('channel_name', `%${query}%`)
+      .limit(20) // Small limit for fast response
       .order('published_at', { ascending: false });
 
     if (error) {
@@ -44,48 +45,27 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    // Group by channel and calculate stats
-    const channelMap = new Map<string, {
-      channel_id: string;
-      channel_name: string;
-      channel_icon?: string;
-      video_count: number;
-      total_score: number;
-      latest_date?: string;
-    }>();
+    if (!channels || channels.length === 0) {
+      console.log(`✅ No channels found matching "${query}"`);
+      return NextResponse.json({ channels: [] });
+    }
 
-    channels?.forEach(video => {
-      const existing = channelMap.get(video.channel_id);
-      if (existing) {
-        existing.video_count++;
-        existing.total_score += video.temporal_performance_score || 0;
-        if (!existing.latest_date || video.published_at > existing.latest_date) {
-          existing.latest_date = video.published_at;
-        }
-      } else {
-        channelMap.set(video.channel_id, {
-          channel_id: video.channel_id,
-          channel_name: video.channel_name,
-          channel_icon: video.thumbnail_url, // Use latest thumbnail as icon
-          video_count: 1,
-          total_score: video.temporal_performance_score || 0,
-          latest_date: video.published_at
+    // Simple deduplication by channel_id
+    const uniqueChannels = new Map<string, any>();
+    channels.forEach(channel => {
+      if (!uniqueChannels.has(channel.channel_id)) {
+        uniqueChannels.set(channel.channel_id, {
+          channel_id: channel.channel_id,
+          channel_name: channel.channel_name,
+          channel_icon: channel.thumbnail_url,
+          video_count: 0, // Not calculated for speed
+          avg_performance: 0, // Not calculated for speed
+          latest_video_date: new Date().toISOString()
         });
       }
     });
 
-    // Convert to array and calculate averages
-    const results: ChannelSearchResult[] = Array.from(channelMap.values())
-      .map(ch => ({
-        channel_id: ch.channel_id,
-        channel_name: ch.channel_name,
-        channel_icon: ch.channel_icon,
-        video_count: ch.video_count,
-        avg_performance: ch.video_count > 0 ? ch.total_score / ch.video_count : 0,
-        latest_video_date: ch.latest_date
-      }))
-      .sort((a, b) => b.video_count - a.video_count) // Sort by video count
-      .slice(0, limit);
+    const results: ChannelSearchResult[] = Array.from(uniqueChannels.values()).slice(0, limit);
 
     console.log(`✅ Found ${results.length} channels matching "${query}"`);
 

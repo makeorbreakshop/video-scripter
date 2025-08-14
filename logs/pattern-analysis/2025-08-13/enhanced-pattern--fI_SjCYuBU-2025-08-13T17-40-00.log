@@ -1,0 +1,1151 @@
+[2025-08-13T17:40:00.273Z] ================================================================================
+[2025-08-13T17:40:00.273Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-13T17:40:00.273Z
+[2025-08-13T17:40:00.273Z] Video ID: -fI_SjCYuBU
+[2025-08-13T17:40:00.273Z] ================================================================================
+[2025-08-13T17:40:00.274Z] 
+============================================================
+[2025-08-13T17:40:00.274Z] INITIAL SETUP
+[2025-08-13T17:40:00.274Z] ============================================================
+[2025-08-13T17:40:00.274Z] 🔍 [Enhanced] Analyzing pattern for video: -fI_SjCYuBU
+[2025-08-13T17:40:00.516Z] 📺 Target: "Design Like a Pro with 7 Must-Have Tools" (5.5x TPS)
+[2025-08-13T17:40:00.516Z] 🖼️ Thumbnail: Available
+[2025-08-13T17:40:00.516Z] Target Video Data:
+{
+  "id": "-fI_SjCYuBU",
+  "title": "Design Like a Pro with 7 Must-Have Tools",
+  "channel": "Dansky",
+  "views": 21616,
+  "performance_score": 5.471,
+  "baseline": 1943.035,
+  "thumbnail_url": "https://i.ytimg.com/vi/-fI_SjCYuBU/hqdefault.jpg",
+  "niche": "Adventure Travel"
+}
+
+[2025-08-13T17:40:00.681Z] 📊 Found 10 baseline videos for comparison
+[2025-08-13T17:40:00.695Z] Baseline Videos:
+[
+  {
+    "title": "LIVE Logo Design in Illustrator: Real-Time Full Workflow",
+    "views": 3250,
+    "score": 1.024
+  },
+  {
+    "title": "Animate Your Designs Fast & Easy with Hana - Crash Course 🔥",
+    "views": 3374,
+    "score": 1.169
+  },
+  {
+    "title": "Live Photo Manipulation in Photoshop with Dansky",
+    "views": 2631,
+    "score": 0.908
+  },
+  {
+    "title": "Reworking My Branding and Design Identity Live - Part 1",
+    "views": 2218,
+    "score": 0.817
+  },
+  {
+    "title": "Live Design and Photo Manipulation in Adobe Photoshop",
+    "views": 3715,
+    "score": 1.171
+  },
+  {
+    "title": "Live Graphic Design in Adobe Photoshop",
+    "views": 3246,
+    "score": 1.002
+  },
+  {
+    "title": "Live Photo Manipulation in Adobe Photoshop",
+    "views": 3024,
+    "score": 0.944
+  },
+  {
+    "title": "Live Photo Manipulation in Adobe Photoshop",
+    "views": 3358,
+    "score": 1.067
+  },
+  {
+    "title": "Live Thumbnail Design for YouTube in Adobe Photoshop",
+    "views": 2703,
+    "score": 0.848
+  },
+  {
+    "title": "App Icon Design in Adobe Illustrator",
+    "views": 2813,
+    "score": 0.863
+  }
+]
+
+[2025-08-13T17:40:00.699Z] 
+============================================================
+[2025-08-13T17:40:00.699Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-13T17:40:00.699Z] ============================================================
+[2025-08-13T17:40:00.718Z] Generated extraction prompt for Claude Vision API
+[2025-08-13T17:40:00.718Z] Extraction Prompt:
+{
+  "prompt": "You are a YouTube performance analyst examining why one video dramatically outperformed a channel's baseline using systematic visual and content analysis.\n\nCONTEXT:\n- Channel: Dansky (Adventure Travel content)\n- Typical performance: 1.0x, 1.2x, 0.9x, 0.8x, 1.2x, 1.0x, 0.9x, 1.1x, 0.8x, 0.9x \n- Target breakthrough: 21,616 views (5.5x multiplier)\n- Audience: Content consumers in Adventure Travel niche\n\nTARGET VIDEO BREAKTHROUGH:\nTitle: \"Design Like a Pro with 7 Must-Have Tools\"\nPerformance: 5.5x normal performance\nContent: Exploring essential tools and features in Adobe Illustrator, this content demonstrates techniques that help designers create professional-grade designs effectively. It covers seven must-have tools that enhance design skills for both beginners and experienced users.\nThumbnail: [First image provided - this is the breakthrough thumbnail to analyze]\n\nBASELINE PATTERN (last 10 videos for comparison):\n1. Title: \"LIVE Logo Design in Illustrator: Real-Time Full Workflow\"\n   Performance: 1.0x (3,250 views)\n   Content: Demonstrating a complete logo design workflow in Illustrator, focusing on real-time techniques and processes for creating professional graphics.\n   Thumbnail: [Image 2 provided]\n\n2. Title: \"Animate Your Designs Fast & Easy with Hana - Crash Course 🔥\"\n   Performance: 1.2x (3,374 views)\n   Content: Animating UI elements and adding interactivity using Hana, a platform by Spline, without the need for coding. The process involves utilizing intuitive animation tools to create dynamic and engaging designs.\n   Thumbnail: [Image 3 provided]\n\n3. Title: \"Live Photo Manipulation in Photoshop with Dansky\"\n   Performance: 0.9x (2,631 views)\n   Content: Manipulating live photos in Photoshop to enhance visual effects and create dynamic imagery. Demonstrating techniques for editing and transforming images to achieve professional-quality results.\n   Thumbnail: [Image 4 provided]\n\n4. Title: \"Reworking My Branding and Design Identity Live - Part 1\"\n   Performance: 0.8x (2,218 views)\n   Content: Reworking personal branding and design identity through a live design session. Engaging in the creative process of updating visual elements and overall aesthetic.\n   Thumbnail: [Image 5 provided]\n\n5. Title: \"Live Design and Photo Manipulation in Adobe Photoshop\"\n   Performance: 1.2x (3,715 views)\n   Content: Demonstrating live design techniques and photo manipulation using Adobe Photoshop, focusing on real-world applications and skills development.\n   Thumbnail: [Image 6 provided]\n\n6. Title: \"Live Graphic Design in Adobe Photoshop\"\n   Performance: 1.0x (3,246 views)\n   Content: Demonstrating graphic design techniques using Adobe Photoshop, focusing on real-world applications and skill development.\n   Thumbnail: Not available\n\n7. Title: \"Live Photo Manipulation in Adobe Photoshop\"\n   Performance: 0.9x (3,024 views)\n   Content: Demonstrating live photo manipulation techniques in Adobe Photoshop, focusing on enhancing images and creating dynamic visual effects.\n   Thumbnail: Not available\n\n8. Title: \"Live Photo Manipulation in Adobe Photoshop\"\n   Performance: 1.1x (3,358 views)\n   Content: Demonstrating live photo manipulation techniques in Adobe Photoshop, focusing on enhancing images through creative editing methods.\n   Thumbnail: Not available\n\n9. Title: \"Live Thumbnail Design for YouTube in Adobe Photoshop\"\n   Performance: 0.8x (2,703 views)\n   Content: Creating a YouTube thumbnail design using Adobe Photoshop, demonstrating techniques for effective visual composition and branding.\n   Thumbnail: Not available\n\n10. Title: \"App Icon Design in Adobe Illustrator\"\n   Performance: 0.9x (2,813 views)\n   Content: Creating an app icon design using Adobe Illustrator, focusing on design techniques and photo manipulation skills.\n   Thumbnail: Not available\n\nVISUAL ANALYSIS INSTRUCTIONS:\n- Image 1: Target breakthrough thumbnail (analyze this against baseline patterns)\n- Images 2-6: Baseline channel thumbnails (compare visual patterns)\n- Focus on visual differentiation between breakthrough vs. normal channel style\n\nSYSTEMATIC ANALYSIS FRAMEWORK:\nUsing chain of thought reasoning, analyze both visual and content patterns:\n\nStep 1: VISUAL INVENTORY\nExamine the breakthrough thumbnail's color psychology, typography choices, composition elements, visual hierarchy, and emotional triggers systematically.\n\nStep 2: CONTENT DIFFERENTIATION  \nCompare the breakthrough video's content approach, audience promise, and delivery method against the baseline pattern. What specific content strategy did they break from?\n\nStep 3: BASELINE DIFFERENTIATION (Visual + Content)\nAnalyze how this video breaks from the channel's normal patterns in BOTH visual presentation and content approach. Consider:\n- Visual: How does the thumbnail differ from their typical style?\n- Content: How does the content promise/approach differ from their baseline videos?\n- Audience Promise: What different value proposition does this offer?\n\nStep 4: PSYCHOLOGICAL MECHANISM\nExplain the specific psychological principle that makes viewers more likely to choose this content over the channel's typical offerings.\n\nStep 5: PATTERN FORMULATION\nSynthesize findings into a replicable pattern with clear success factors that combine both visual and content strategies.\n\nOUTPUT FORMAT:\n{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Primary colors and their psychological impact\",\n    \"typography\": \"Text style, size, placement analysis\", \n    \"composition\": \"Layout and visual hierarchy description\",\n    \"focal_points\": \"What draws the eye first, second, third\"\n  },\n  \"step_2_content_differentiation\": \"How the breakthrough video's content approach differs from baseline pattern\",\n  \"step_3_baseline_differentiation\": {\n    \"visual_break\": \"How this thumbnail breaks from channel's visual norms\",\n    \"content_break\": \"How this content promise differs from their typical offerings\",\n    \"audience_promise_shift\": \"What different value proposition this provides\"\n  },\n  \"step_4_psychological_mechanism\": \"Why this specific combination triggers more engagement than baseline content\",\n  \"step_5_pattern_formulation\": {\n    \"pattern_name\": \"Memorable 2-4 word pattern name\",\n    \"pattern_description\": \"One clear sentence explaining the core principle\",\n    \"success_factors\": [\"Factor 1\", \"Factor 2\", \"Factor 3\"],\n    \"replication_strategy\": \"How to apply this pattern to similar content\",\n    \"content_strategy\": \"Specific content approach that enables this pattern\",\n    \"visual_strategy\": \"Specific visual elements that support this pattern\"\n  },\n  \"confidence_level\": \"High/Medium/Low with brief justification\",\n  \"channel_specific_insight\": \"Why this worked for THIS channel's audience specifically\",\n  \"baseline_analysis\": \"Summary of what the channel normally does vs. this breakthrough approach\"\n}\n\nVERIFICATION CHECK:\nAfter analysis, confirm your visual observations are actually present in the thumbnail and align with established click-psychology principles."
+}
+
+[2025-08-13T17:40:00.722Z] 🖼️ Adding target thumbnail to analysis: https://i.ytimg.com/vi/-fI_SjCYuBU/hqdefault.jpg
+[2025-08-13T17:40:00.722Z] 🖼️ Adding baseline thumbnail: LIVE Logo Design in Illustrator: Real-Time Full Workflow - https://i.ytimg.com/vi/E9zVcRkjj9U/hqdefault_live.jpg
+[2025-08-13T17:40:00.722Z] 🖼️ Adding baseline thumbnail: Animate Your Designs Fast & Easy with Hana - Crash Course 🔥 - https://i.ytimg.com/vi/ibNbv43gAC0/hqdefault.jpg
+[2025-08-13T17:40:00.722Z] 🖼️ Adding baseline thumbnail: Live Photo Manipulation in Photoshop with Dansky - https://i.ytimg.com/vi/9AB9Bsgqrwg/hqdefault.jpg
+[2025-08-13T17:40:00.722Z] 🖼️ Adding baseline thumbnail: Reworking My Branding and Design Identity Live - Part 1 - https://i.ytimg.com/vi/zaWOG2f3uTk/hqdefault.jpg
+[2025-08-13T17:40:00.722Z] 🖼️ Adding baseline thumbnail: Live Design and Photo Manipulation in Adobe Photoshop - https://i.ytimg.com/vi/SSVbctDFhp8/hqdefault.jpg
+[2025-08-13T17:40:00.722Z] Calling Claude Sonnet 4 API for superior pattern extraction...
+[2025-08-13T17:40:34.132Z] 💰 Pattern extraction cost: $0.144030 (3187 input + 1283 output tokens + vision)
+[2025-08-13T17:40:34.132Z] ✅ Claude response received in 33409ms
+[2025-08-13T17:40:34.132Z] Raw Claude Response:
+{
+  "response": "{\n  \"step_1_visual_inventory\": {\n    \"colors\": \"Dominant orange accent on black background creates high contrast and urgency. Orange psychologically signals creativity, enthusiasm, and action - perfect for design tools. Black background eliminates distractions and creates premium software aesthetic.\",\n    \"typography\": \"Clean, bold 'Ai' typography leverages immediate brand recognition. No competing text elements unlike baseline thumbnails that are text-heavy with multiple competing messages.\",\n    \"composition\": \"Extreme focal simplicity - single central element (Ai icon) with blurred peripheral app icons. Creates immediate software/tools association. Contrasts sharply with baseline's person-centric or text-heavy compositions.\",\n    \"focal_points\": \"1st: Orange-outlined Ai icon (immediate software recognition), 2nd: Blurred surrounding app icons (reinforces 'tools' concept), 3rd: Nothing else - intentionally minimal\"\n  },\n  \"step_2_content_differentiation\": \"Breakthrough shifts from 'watch me work live' process content to 'learn specific tools' educational format. Instead of live streaming workflows, it promises concrete, actionable tool knowledge that viewers can immediately apply. The '7 Must-Have Tools' creates a numbered list format that feels complete and digestible versus open-ended live sessions.\",\n  \"step_3_baseline_differentiation\": {\n    \"visual_break\": \"Abandons person-centric thumbnails (Dansky's face prominent in 4/5 baseline examples) for tool/software-centric design. Eliminates text overlay clutter for clean icon focus. Moves from 'streaming aesthetic' to 'course/tutorial aesthetic'.\",\n    \"content_break\": \"Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.\",\n    \"audience_promise_shift\": \"From 'watch me create something' (performance/entertainment) to 'you will master these tools' (skill acquisition). Transforms passive viewing into active learning promise.\"\n  },\n  \"step_4_psychological_mechanism\": \"Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.\",\n  \"step_5_pattern_formulation\": {\n    \"pattern_name\": \"Tool Mastery\",\n    \"pattern_description\": \"Replace process documentation with specific skill/tool acquisition promises using clean, software-focused visuals.\",\n    \"success_factors\": [\"Numbered learning promise\", \"Tool/software-centric visual\", \"Educational over entertainment positioning\"],\n    \"replication_strategy\": \"Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs\",\n    \"content_strategy\": \"Structure content as skill-building modules with specific, countable takeaways rather than open-ended creative processes\",\n    \"visual_strategy\": \"Use software icons/interfaces as focal points with high-contrast accent colors, eliminate competing visual elements, remove person from thumbnail when focusing on tools\"\n  },\n  \"confidence_level\": \"High - Clear visual differentiation from baseline pattern combined with content strategy shift from entertainment to education, supported by strong performance differential\",\n  \"channel_specific_insight\": \"Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.\",\n  \"baseline_analysis\": \"Channel normally uses person-centric thumbnails with 'LIVE' branding, focusing on process documentation and real-time creation. Breakthrough video eliminated person focus, removed 'live' positioning, and promised specific tool mastery instead of creative process observation.\"\n}",
+  "thinkingBlocks": 1,
+  "usage": {
+    "input_tokens": 3187,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 1283,
+    "service_tier": "standard"
+  },
+  "model": "claude-sonnet-4-20250514"
+}
+
+[2025-08-13T17:40:34.133Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-13T17:40:34.133Z] Extracted Pattern:
+{
+  "pattern_name": "Tool Mastery",
+  "pattern_description": "Replace process documentation with specific skill/tool acquisition promises using clean, software-focused visuals.",
+  "psychological_trigger": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+  "key_elements": [
+    "1st: Orange-outlined Ai icon (immediate software recognition)",
+    "2nd: Blurred surrounding app icons (reinforces 'tools' concept)",
+    "3rd: Nothing else - intentionally minimal"
+  ],
+  "visual_elements": [
+    "Dominant orange accent on black background creates high contrast and urgency. Orange psychologically signals creativity, enthusiasm, and action - perfect for design tools. Black background eliminates distractions and creates premium software aesthetic.",
+    "Clean, bold 'Ai' typography leverages immediate brand recognition. No competing text elements unlike baseline thumbnails that are text-heavy with multiple competing messages.",
+    "Extreme focal simplicity - single central element (Ai icon) with blurred peripheral app icons. Creates immediate software/tools association. Contrasts sharply with baseline's person-centric or text-heavy compositions."
+  ],
+  "thumbnail_psychology": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+  "design_quality_score": 8.5,
+  "design_strengths": [
+    "Numbered learning promise",
+    "Tool/software-centric visual",
+    "Educational over entertainment positioning"
+  ],
+  "marketing_positioning": "Breakthrough shifts from 'watch me work live' process content to 'learn specific tools' educational format. Instead of live streaming workflows, it promises concrete, actionable tool knowledge that viewers can immediately apply. The '7 Must-Have Tools' creates a numbered list format that feels complete and digestible versus open-ended live sessions.",
+  "competitive_advantage": "Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs",
+  "why_it_works": "VISUAL: Use software icons/interfaces as focal points with high-contrast accent colors, eliminate competing visual elements, remove person from thumbnail when focusing on tools. CONTENT: Structure content as skill-building modules with specific, countable takeaways rather than open-ended creative processes. PSYCHOLOGY: Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.. STRATEGY: Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs.",
+  "semantic_queries": [
+    "tool mastery pattern examples"
+  ],
+  "visual_queries": [
+    "bold high contrast visual design"
+  ],
+  "channel_outlier_explanation": "Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.",
+  "differentiation_factor": "Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.",
+  "step_1_visual_inventory": {
+    "colors": "Dominant orange accent on black background creates high contrast and urgency. Orange psychologically signals creativity, enthusiasm, and action - perfect for design tools. Black background eliminates distractions and creates premium software aesthetic.",
+    "typography": "Clean, bold 'Ai' typography leverages immediate brand recognition. No competing text elements unlike baseline thumbnails that are text-heavy with multiple competing messages.",
+    "composition": "Extreme focal simplicity - single central element (Ai icon) with blurred peripheral app icons. Creates immediate software/tools association. Contrasts sharply with baseline's person-centric or text-heavy compositions.",
+    "focal_points": "1st: Orange-outlined Ai icon (immediate software recognition), 2nd: Blurred surrounding app icons (reinforces 'tools' concept), 3rd: Nothing else - intentionally minimal"
+  },
+  "step_2_content_differentiation": "Breakthrough shifts from 'watch me work live' process content to 'learn specific tools' educational format. Instead of live streaming workflows, it promises concrete, actionable tool knowledge that viewers can immediately apply. The '7 Must-Have Tools' creates a numbered list format that feels complete and digestible versus open-ended live sessions.",
+  "step_3_baseline_differentiation": {
+    "visual_break": "Abandons person-centric thumbnails (Dansky's face prominent in 4/5 baseline examples) for tool/software-centric design. Eliminates text overlay clutter for clean icon focus. Moves from 'streaming aesthetic' to 'course/tutorial aesthetic'.",
+    "content_break": "Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.",
+    "audience_promise_shift": "From 'watch me create something' (performance/entertainment) to 'you will master these tools' (skill acquisition). Transforms passive viewing into active learning promise."
+  },
+  "step_4_psychological_mechanism": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+  "step_5_pattern_formulation": {
+    "pattern_name": "Tool Mastery",
+    "pattern_description": "Replace process documentation with specific skill/tool acquisition promises using clean, software-focused visuals.",
+    "success_factors": [
+      "Numbered learning promise",
+      "Tool/software-centric visual",
+      "Educational over entertainment positioning"
+    ],
+    "replication_strategy": "Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs",
+    "content_strategy": "Structure content as skill-building modules with specific, countable takeaways rather than open-ended creative processes",
+    "visual_strategy": "Use software icons/interfaces as focal points with high-contrast accent colors, eliminate competing visual elements, remove person from thumbnail when focusing on tools"
+  },
+  "confidence_level": "High - Clear visual differentiation from baseline pattern combined with content strategy shift from entertainment to education, supported by strong performance differential",
+  "channel_specific_insight": "Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.",
+  "baseline_analysis": "Channel normally uses person-centric thumbnails with 'LIVE' branding, focusing on process documentation and real-time creation. Breakthrough video eliminated person focus, removed 'live' positioning, and promised specific tool mastery instead of creative process observation."
+}
+
+[2025-08-13T17:40:34.134Z] ✅ Pattern extracted: Tool Mastery
+[2025-08-13T17:40:34.134Z] 📝 Text queries: tool mastery pattern examples
+[2025-08-13T17:40:34.134Z] 🎨 Visual queries: bold high contrast visual design
+[2025-08-13T17:40:34.134Z] 🧠 Extended thinking: 0 tokens used for enhanced analysis
+[2025-08-13T17:40:34.134Z] 
+============================================================
+[2025-08-13T17:40:34.134Z] MULTI-MODAL SEARCH PHASE
+[2025-08-13T17:40:34.134Z] ============================================================
+[2025-08-13T17:40:34.134Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-13T17:40:34.134Z] 🔎 Starting text-based semantic searches...
+[2025-08-13T17:40:34.134Z]   Searching text for: "tool mastery pattern examples"
+[2025-08-13T17:40:34.134Z]     Generating OpenAI embedding for query...
+[2025-08-13T17:40:34.727Z]     Generated embedding in 593ms (512D)
+[2025-08-13T17:40:34.728Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T17:40:36.654Z]     Parallel search completed in 1926ms
+[2025-08-13T17:40:36.654Z] Title Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.550",
+  "topResults": [
+    {
+      "title": "Make your own Puppet Pattern! - Puppet Building 101",
+      "score": "0.588",
+      "views": 95004
+    },
+    {
+      "title": "Pattern Fundamentals: Two Essential Skills",
+      "score": "0.584",
+      "views": 22853
+    },
+    {
+      "title": "Tools of the Trade",
+      "score": "0.583",
+      "views": 135984
+    }
+  ]
+}
+
+[2025-08-13T17:40:36.655Z] Summary Search Results:
+{
+  "found": 15,
+  "avgSimilarity": "0.538",
+  "topResults": [
+    {
+      "title": "Is This Incredible Vise The REAL Reason He Bought This House?",
+      "score": "0.554",
+      "views": 14768
+    },
+    {
+      "title": "Make your own Puppet Pattern! - Puppet Building 101",
+      "score": "0.553",
+      "views": 95004
+    },
+    {
+      "title": "Learning Impossible Skills (Level 1 to Level 100)",
+      "score": "0.543",
+      "views": 5541263
+    }
+  ]
+}
+
+[2025-08-13T17:40:36.655Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-13T17:40:36.655Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-13T17:40:36.655Z]   Searching thumbnails for: "bold high contrast visual design"
+[2025-08-13T17:40:36.655Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T17:40:37.549Z]     Generated CLIP embedding in 894ms (768D)
+[2025-08-13T17:40:37.549Z]     Searching dedicated thumbnail index...
+[2025-08-13T17:40:38.306Z]     Thumbnail search completed in 757ms
+[2025-08-13T17:40:38.306Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.263",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Photoshop Tutorial: 2 Stunning Text Effects (That Look Amazing!) 🔥",
+      "score": "0.292",
+      "views": 17315,
+      "channel": "Will Paterson"
+    },
+    {
+      "title": "Design Fundamentals with AI | Layout Techniques | Adobe",
+      "score": "0.284",
+      "views": 44,
+      "channel": "Adobe"
+    },
+    {
+      "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+      "score": "0.277",
+      "views": 23301,
+      "channel": "Gareth David Studio"
+    }
+  ]
+}
+
+[2025-08-13T17:40:38.307Z] 
+============================================================
+[2025-08-13T17:40:38.307Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-13T17:40:38.307Z] ============================================================
+[2025-08-13T17:40:38.307Z] 📋 Getting full video data for 56 unique videos...
+[2025-08-13T17:40:38.457Z] 📊 TEST A: Ranked by search similarity - Top 18 most relevant candidates
+[2025-08-13T17:40:38.457Z] Top Candidates by Relevance:
+[
+  {
+    "title": "Is This Incredible Vise The REAL Reason ...",
+    "score": "1.6x",
+    "relevance": "1.67",
+    "similarity": "0.665",
+    "queries": 1
+  },
+  {
+    "title": "WHAT IS IT? Mystery ITEMS #91b answers t...",
+    "score": "2.0x",
+    "relevance": "1.65",
+    "similarity": "0.645",
+    "queries": 1
+  },
+  {
+    "title": "WHAT IS IT? Mystery Tools #82b answers t...",
+    "score": "3.2x",
+    "relevance": "1.64",
+    "similarity": "0.645",
+    "queries": 1
+  },
+  {
+    "title": "21 HAND TOOL TIPS, TRICKS & SECRETS!! (H...",
+    "score": "5.2x",
+    "relevance": "1.64",
+    "similarity": "0.643",
+    "queries": 1
+  },
+  {
+    "title": "WHAT IS IT? MYSTERY TOOLS #75b answers t...",
+    "score": "2.0x",
+    "relevance": "1.64",
+    "similarity": "0.642",
+    "queries": 1
+  }
+]
+
+[2025-08-13T17:40:38.458Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "Is This Incredible Vise The REAL Reason He Bought This House?",
+    "views": 14768,
+    "score": 1.603,
+    "channel": "Wood By Wright How To",
+    "hasThumbnail": true
+  },
+  {
+    "title": "WHAT IS IT? Mystery ITEMS #91b answers tubalcain MRPETE tools",
+    "views": 27220,
+    "score": 1.962,
+    "channel": "mrpete222",
+    "hasThumbnail": true
+  },
+  {
+    "title": "WHAT IS IT? Mystery Tools #82b answers tubalcain mrpete",
+    "views": 65992,
+    "score": 3.2,
+    "channel": "mrpete222",
+    "hasThumbnail": true
+  },
+  {
+    "title": "21 HAND TOOL TIPS, TRICKS & SECRETS!! (Hammer/Screwdriver/Tape Measure/Pliers...& MORE HAND TOOLS!)",
+    "views": 1496664,
+    "score": 5.156,
+    "channel": "The Honest Carpenter",
+    "hasThumbnail": true
+  },
+  {
+    "title": "WHAT IS IT? MYSTERY TOOLS #75b answers tubalcain",
+    "views": 32378,
+    "score": 1.977,
+    "channel": "mrpete222",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Top Ten Tools I Use Every Day in the Shop",
+    "views": 474091,
+    "score": 10.478,
+    "channel": "Clough42",
+    "hasThumbnail": true
+  },
+  {
+    "title": "5 Useful EDM Patterns (that changed my life)",
+    "views": 255390,
+    "score": 6.334,
+    "channel": "Alex Rome",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Top 6 Genius Jack of All Trades Skills",
+    "views": 2439,
+    "score": 1.566,
+    "channel": "Mr Sagoo",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 23301,
+    "score": 5.27,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+    "views": 17075,
+    "score": 3.862,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "🔸 The ONLY Typeface-Psychology Video You Ever Need To Watch!",
+    "views": 40672,
+    "score": 1.819,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "views": 237801,
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "views": 742321,
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "views": 152640,
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "views": 156542,
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The ONLY Marketing Video A Graphic Designer Needs To See!",
+    "views": 166857,
+    "score": 9.604,
+    "channel": "Satori Graphics",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Best Method To Learn Graphic Design  |  Design Q&A  |  Gareth David Studio",
+    "views": 51387,
+    "score": 2.074,
+    "channel": "Gareth David Studio",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+    "views": 64797,
+    "score": 1.727,
+    "channel": "Will Paterson",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-13T17:40:38.459Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-13T17:40:38.459Z] 🤖 Starting enhanced LLM validation for 18 videos...
+[2025-08-13T17:40:39.826Z] ✅ Validated: "Is This Incredible Vise The REAL Reason He Bought This House?" - Transforms: From 'live process documentation' to 'structured skill building' | Psychology: Promises immediate applicable knowledge and skill acquisition, triggering a sense of urgency and desire for completion | Cross-niche appeal: The focus on a specific tool (the pattern maker's vice) and its versatility for different woodworking tasks aligns with the original pattern's emphasis on 'tool mastery' and the promise of practical, immediately applicable knowledge.
+[2025-08-13T17:40:40.884Z] ✅ Validated: "WHAT IS IT? Mystery ITEMS #91b answers tubalcain MRPETE tools" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining/metalworking tools) rather than general entertainment. | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications within a workshop setting, aligns with the original pattern's promise of "immediate applicable knowledge" and "structured skill building" rather than just entertainment.
+[2025-08-13T17:40:41.837Z] ✅ Validated: "WHAT IS IT? Mystery Tools #82b answers tubalcain mrpete" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both focus on teaching practical skills and tools, appealing to the desire to acquire useful abilities
+[2025-08-13T17:40:43.038Z] ✅ Validated: "21 HAND TOOL TIPS, TRICKS & SECRETS!! (Hammer/Screwdriver/Tape Measure/Pliers...& MORE HAND TOOLS!)" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: It promises immediate applicable knowledge and skill acquisition, which satisfies the viewer's desire to learn practical, useful techniques. | Cross-niche appeal: The original "Tool Mastery" pattern and this video both focus on teaching specific tool usage and techniques, which has broad appeal across different niches as it provides practical, actionable knowledge.
+[2025-08-13T17:40:44.117Z] ✅ Validated: "WHAT IS IT? MYSTERY TOOLS #75b answers tubalcain" - Transforms: From "live process documentation" to "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining and metalworking tools) rather than general entertainment | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications, aligns with the original pattern's emphasis on skill acquisition and practical knowledge, even though the specific domain is different.
+[2025-08-13T17:40:45.689Z] ✅ Validated: "Top Ten Tools I Use Every Day in the Shop" - Transforms: From "live process documentation" to "structured skill building" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on essential tools and their practical application in a workshop setting has a similar appeal to the original "Tool Mastery" pattern, as it provides viewers with valuable, actionable information to improve their skills and productivity.
+[2025-08-13T17:40:46.637Z] ✅ Validated: "5 Useful EDM Patterns (that changed my life)" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on demonstrating essential EDM patterns and foundational techniques aligns with the original "Tool Mastery" pattern's promise of providing practical, applicable knowledge for skill development.
+[2025-08-13T17:40:49.060Z] ✅ Validated: "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson" - Transforms: FROM "live process documentation" (watching someone work) TO "structured skill building" (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both the original pattern and this video focus on teaching design techniques and skills, appealing to the desire for practical, applicable knowledge.
+[2025-08-13T17:40:50.045Z] ✅ Validated: "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises to teach specific design techniques that can be immediately applied to enhance visual hierarchy and design effectiveness. | Cross-niche appeal: Both the original pattern and this video focus on providing educational content related to design skills and techniques, which appeals to viewers seeking to improve their practical design abilities.
+[2025-08-13T17:40:52.079Z] ✅ Validated: "The BEST ‘Before & After’ Designs Of 2021 So Far!" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment, triggering a "skill acquisition urgency" | Cross-niche appeal: Both patterns focus on demonstrating a methodical approach to improving design quality, which has broad appeal across creative niches.
+[2025-08-13T17:40:53.016Z] ✅ Validated: "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)" - Transforms: From 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill acquisition, triggering a sense of urgency and desire for completion | Cross-niche appeal: Both patterns focus on providing practical, educational content that teaches specific skills, appealing to the viewer's need to acquire useful knowledge and abilities.
+[2025-08-13T17:40:53.933Z] ✅ Validated: "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development in graphic design, rather than just entertainment. | Cross-niche appeal: The original "Tool Mastery" pattern and this video both focus on teaching practical skills and techniques, which has broad appeal across different niches.
+[2025-08-13T17:40:55.035Z] ✅ Validated: "Why Your Designs Still Look Amateur (And How Pros Think Differently)" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment. The focus on "pro" designs and the specific number "2K25" creates a sense of urgency and desire to acquire advanced design skills. | Cross-niche appeal: The appeal to improving design skills and mindset shifts is likely to resonate across different creative niches, as the core psychological drivers around skill development
+[2025-08-13T17:40:57.286Z] ✅ Validated: "Best Method To Learn Graphic Design  |  Design Q&A  |  Gareth David Studio" - Transforms: From 'live process documentation' to 'structured skill building' | Psychology: Promises a clear, actionable pathway to develop a valuable skill (graphic design) with immediate practical application, triggering a sense of skill acquisition urgency | Cross-niche appeal: Both the original "Tool Mastery" pattern and this video focus on teaching specific skills and tools, appealing to the viewer's desire to gain practical, applicable knowledge.
+[2025-08-13T17:40:58.432Z] ✅ Validated: "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22" - Transforms: FROM "live process documentation" TO "structured skill building" | Psychology: It promises immediate applicable knowledge and skill acquisition, which aligns with the "Tool Mastery" pattern by triggering a sense of urgency and desire for completion. | Cross-niche appeal: The focus on learning specific design tools and techniques, such as creating a 3D logo in Adobe Illustrator, is likely to have a similar appeal across different niches, as it
+[2025-08-13T17:40:58.432Z] ✅ Enhanced validation complete: 15 videos confirmed
+[2025-08-13T17:40:58.432Z] Final Validated Videos:
+[
+  {
+    "title": "Is This Incredible Vise The REAL Reason He Bought This House?",
+    "score": 1.603,
+    "channel": "Wood By Wright How To",
+    "reason": "Transforms: From 'live process documentation' to 'structured skill building' | Psychology: Promises immediate applicable knowledge and skill acquisition, triggering a sense of urgency and desire for completion | Cross-niche appeal: The focus on a specific tool (the pattern maker's vice) and its versatility for different woodworking tasks aligns with the original pattern's emphasis on 'tool mastery' and the promise of practical, immediately applicable knowledge.",
+    "source": "summary"
+  },
+  {
+    "title": "WHAT IS IT? Mystery ITEMS #91b answers tubalcain MRPETE tools",
+    "score": 1.962,
+    "channel": "mrpete222",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining/metalworking tools) rather than general entertainment. | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications within a workshop setting, aligns with the original pattern's promise of \"immediate applicable knowledge\" and \"structured skill building\" rather than just entertainment.",
+    "source": "summary"
+  },
+  {
+    "title": "WHAT IS IT? Mystery Tools #82b answers tubalcain mrpete",
+    "score": 3.2,
+    "channel": "mrpete222",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both focus on teaching practical skills and tools, appealing to the desire to acquire useful abilities",
+    "source": "summary"
+  },
+  {
+    "title": "21 HAND TOOL TIPS, TRICKS & SECRETS!! (Hammer/Screwdriver/Tape Measure/Pliers...& MORE HAND TOOLS!)",
+    "score": 5.156,
+    "channel": "The Honest Carpenter",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: It promises immediate applicable knowledge and skill acquisition, which satisfies the viewer's desire to learn practical, useful techniques. | Cross-niche appeal: The original \"Tool Mastery\" pattern and this video both focus on teaching specific tool usage and techniques, which has broad appeal across different niches as it provides practical, actionable knowledge.",
+    "source": "summary"
+  },
+  {
+    "title": "WHAT IS IT? MYSTERY TOOLS #75b answers tubalcain",
+    "score": 1.977,
+    "channel": "mrpete222",
+    "reason": "Transforms: From \"live process documentation\" to \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining and metalworking tools) rather than general entertainment | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications, aligns with the original pattern's emphasis on skill acquisition and practical knowledge, even though the specific domain is different.",
+    "source": "summary"
+  },
+  {
+    "title": "Top Ten Tools I Use Every Day in the Shop",
+    "score": 10.478,
+    "channel": "Clough42",
+    "reason": "Transforms: From \"live process documentation\" to \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on essential tools and their practical application in a workshop setting has a similar appeal to the original \"Tool Mastery\" pattern, as it provides viewers with valuable, actionable information to improve their skills and productivity.",
+    "source": "summary"
+  },
+  {
+    "title": "5 Useful EDM Patterns (that changed my life)",
+    "score": 6.334,
+    "channel": "Alex Rome",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on demonstrating essential EDM patterns and foundational techniques aligns with the original \"Tool Mastery\" pattern's promise of providing practical, applicable knowledge for skill development.",
+    "source": "title"
+  },
+  {
+    "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+    "score": 5.27,
+    "channel": "Gareth David Studio",
+    "reason": "Transforms: FROM \"live process documentation\" (watching someone work) TO \"structured skill building\" (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both the original pattern and this video focus on teaching design techniques and skills, appealing to the desire for practical, applicable knowledge.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+    "score": 3.862,
+    "channel": "Gareth David Studio",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises to teach specific design techniques that can be immediately applied to enhance visual hierarchy and design effectiveness. | Cross-niche appeal: Both the original pattern and this video focus on providing educational content related to design skills and techniques, which appeals to viewers seeking to improve their practical design abilities.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+    "score": 3.64,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment, triggering a \"skill acquisition urgency\" | Cross-niche appeal: Both patterns focus on demonstrating a methodical approach to improving design quality, which has broad appeal across creative niches.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+    "score": 12.174,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: From 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill acquisition, triggering a sense of urgency and desire for completion | Cross-niche appeal: Both patterns focus on providing practical, educational content that teaches specific skills, appealing to the viewer's need to acquire useful knowledge and abilities.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Before & After Graphic Design Ep9 (‘Space’ Is A SECRET Weapon)",
+    "score": 2.694,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development in graphic design, rather than just entertainment. | Cross-niche appeal: The original \"Tool Mastery\" pattern and this video both focus on teaching practical skills and techniques, which has broad appeal across different niches.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Why Your Designs Still Look Amateur (And How Pros Think Differently)",
+    "score": 7.868,
+    "channel": "Satori Graphics",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment. The focus on \"pro\" designs and the specific number \"2K25\" creates a sense of urgency and desire to acquire advanced design skills. | Cross-niche appeal: The appeal to improving design skills and mindset shifts is likely to resonate across different creative niches, as the core psychological drivers around skill development",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Best Method To Learn Graphic Design  |  Design Q&A  |  Gareth David Studio",
+    "score": 2.074,
+    "channel": "Gareth David Studio",
+    "reason": "Transforms: From 'live process documentation' to 'structured skill building' | Psychology: Promises a clear, actionable pathway to develop a valuable skill (graphic design) with immediate practical application, triggering a sense of skill acquisition urgency | Cross-niche appeal: Both the original \"Tool Mastery\" pattern and this video focus on teaching specific skills and tools, appealing to the viewer's desire to gain practical, applicable knowledge.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+    "score": 1.727,
+    "channel": "Will Paterson",
+    "reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: It promises immediate applicable knowledge and skill acquisition, which aligns with the \"Tool Mastery\" pattern by triggering a sense of urgency and desire for completion. | Cross-niche appeal: The focus on learning specific design tools and techniques, such as creating a 3D logo in Adobe Illustrator, is likely to have a similar appeal across different niches, as it",
+    "source": "thumbnail"
+  }
+]
+
+[2025-08-13T17:40:58.434Z] Pre-Calculation Metrics:
+{
+  "validationResults": 9,
+  "totalValidations": 15,
+  "avgPatternScore": 4.200650793650793,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Finance & Trading",
+      "count": 1,
+      "avg_score": 10.478,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Photography & Video",
+      "count": 1,
+      "avg_score": 6.334,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Cultural Travel",
+      "count": 7,
+      "avg_score": 5.368857142857142,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Audio Technology",
+      "count": 1,
+      "avg_score": 5.156,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Digital Fabrication",
+      "count": 1,
+      "avg_score": 3.2,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Theme Parks",
+      "count": 1,
+      "avg_score": 1.977,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Outlier",
+      "count": 1,
+      "avg_score": 1.962,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Adventure Travel",
+      "count": 1,
+      "avg_score": 1.727,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Tech Business",
+      "count": 1,
+      "avg_score": 1.603,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-13T17:40:58.434Z] Pattern Strength Calculation:
+{
+  "totalValidations": 15,
+  "avgPatternScore": 4.200650793650793,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 4.200650793650793,
+  "finalStrength": "strong"
+}
+
+[2025-08-13T17:40:58.434Z] 
+============================================================
+[2025-08-13T17:40:58.435Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-13T17:40:58.435Z] ============================================================
+[2025-08-13T17:40:58.435Z] ✅ Enhanced pattern analysis complete in 58162ms
+[2025-08-13T17:40:58.435Z] 📊 Found 15 validations (0 with visual matches) across 9 niches
+[2025-08-13T17:40:58.435Z] 
+============================================================
+[2025-08-13T17:40:58.435Z] COST SUMMARY
+[2025-08-13T17:40:58.435Z] ============================================================
+[2025-08-13T17:40:58.435Z] 💰 Claude API (vision enabled): $0.149370
+[2025-08-13T17:40:58.435Z] 💰 OpenAI embeddings: $0.000000
+[2025-08-13T17:40:58.435Z] 💰 Replicate CLIP: $0.001000
+[2025-08-13T17:40:58.435Z] 💰 TOTAL ANALYSIS COST: $0.150370
+[2025-08-13T17:40:58.435Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Tool Mastery",
+    "pattern_description": "Replace process documentation with specific skill/tool acquisition promises using clean, software-focused visuals.",
+    "psychological_trigger": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+    "key_elements": [
+      "1st: Orange-outlined Ai icon (immediate software recognition)",
+      "2nd: Blurred surrounding app icons (reinforces 'tools' concept)",
+      "3rd: Nothing else - intentionally minimal"
+    ],
+    "visual_elements": [
+      "Dominant orange accent on black background creates high contrast and urgency. Orange psychologically signals creativity, enthusiasm, and action - perfect for design tools. Black background eliminates distractions and creates premium software aesthetic.",
+      "Clean, bold 'Ai' typography leverages immediate brand recognition. No competing text elements unlike baseline thumbnails that are text-heavy with multiple competing messages.",
+      "Extreme focal simplicity - single central element (Ai icon) with blurred peripheral app icons. Creates immediate software/tools association. Contrasts sharply with baseline's person-centric or text-heavy compositions."
+    ],
+    "thumbnail_psychology": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+    "design_quality_score": 8.5,
+    "design_strengths": [
+      "Numbered learning promise",
+      "Tool/software-centric visual",
+      "Educational over entertainment positioning"
+    ],
+    "marketing_positioning": "Breakthrough shifts from 'watch me work live' process content to 'learn specific tools' educational format. Instead of live streaming workflows, it promises concrete, actionable tool knowledge that viewers can immediately apply. The '7 Must-Have Tools' creates a numbered list format that feels complete and digestible versus open-ended live sessions.",
+    "competitive_advantage": "Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs",
+    "why_it_works": "VISUAL: Use software icons/interfaces as focal points with high-contrast accent colors, eliminate competing visual elements, remove person from thumbnail when focusing on tools. CONTENT: Structure content as skill-building modules with specific, countable takeaways rather than open-ended creative processes. PSYCHOLOGY: Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.. STRATEGY: Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs.",
+    "semantic_queries": [
+      "tool mastery pattern examples"
+    ],
+    "visual_queries": [
+      "bold high contrast visual design"
+    ],
+    "channel_outlier_explanation": "Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.",
+    "differentiation_factor": "Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.",
+    "step_1_visual_inventory": {
+      "colors": "Dominant orange accent on black background creates high contrast and urgency. Orange psychologically signals creativity, enthusiasm, and action - perfect for design tools. Black background eliminates distractions and creates premium software aesthetic.",
+      "typography": "Clean, bold 'Ai' typography leverages immediate brand recognition. No competing text elements unlike baseline thumbnails that are text-heavy with multiple competing messages.",
+      "composition": "Extreme focal simplicity - single central element (Ai icon) with blurred peripheral app icons. Creates immediate software/tools association. Contrasts sharply with baseline's person-centric or text-heavy compositions.",
+      "focal_points": "1st: Orange-outlined Ai icon (immediate software recognition), 2nd: Blurred surrounding app icons (reinforces 'tools' concept), 3rd: Nothing else - intentionally minimal"
+    },
+    "step_2_content_differentiation": "Breakthrough shifts from 'watch me work live' process content to 'learn specific tools' educational format. Instead of live streaming workflows, it promises concrete, actionable tool knowledge that viewers can immediately apply. The '7 Must-Have Tools' creates a numbered list format that feels complete and digestible versus open-ended live sessions.",
+    "step_3_baseline_differentiation": {
+      "visual_break": "Abandons person-centric thumbnails (Dansky's face prominent in 4/5 baseline examples) for tool/software-centric design. Eliminates text overlay clutter for clean icon focus. Moves from 'streaming aesthetic' to 'course/tutorial aesthetic'.",
+      "content_break": "Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.",
+      "audience_promise_shift": "From 'watch me create something' (performance/entertainment) to 'you will master these tools' (skill acquisition). Transforms passive viewing into active learning promise."
+    },
+    "step_4_psychological_mechanism": "Triggers 'skill acquisition urgency' - the specific number '7' creates completion desire, while tool focus promises immediate applicable knowledge rather than entertainment. Clean visual removes decision fatigue while orange creates action impulse. Viewers click because they want to 'collect' the 7 tools rather than just watch someone work.",
+    "step_5_pattern_formulation": {
+      "pattern_name": "Tool Mastery",
+      "pattern_description": "Replace process documentation with specific skill/tool acquisition promises using clean, software-focused visuals.",
+      "success_factors": [
+        "Numbered learning promise",
+        "Tool/software-centric visual",
+        "Educational over entertainment positioning"
+      ],
+      "replication_strategy": "Create tutorials around 'X Essential [Tools/Techniques/Tips]' with clean software interface thumbnails instead of person-focused designs",
+      "content_strategy": "Structure content as skill-building modules with specific, countable takeaways rather than open-ended creative processes",
+      "visual_strategy": "Use software icons/interfaces as focal points with high-contrast accent colors, eliminate competing visual elements, remove person from thumbnail when focusing on tools"
+    },
+    "confidence_level": "High - Clear visual differentiation from baseline pattern combined with content strategy shift from entertainment to education, supported by strong performance differential",
+    "channel_specific_insight": "Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.",
+    "baseline_analysis": "Channel normally uses person-centric thumbnails with 'LIVE' branding, focusing on process documentation and real-time creation. Breakthrough video eliminated person focus, removed 'live' positioning, and promised specific tool mastery instead of creative process observation."
+  },
+  "source_video": {
+    "id": "-fI_SjCYuBU",
+    "title": "Design Like a Pro with 7 Must-Have Tools",
+    "channel": "Dansky",
+    "score": 5.471,
+    "niche": "Adventure Travel",
+    "views": 21616,
+    "thumbnail": "https://i.ytimg.com/vi/-fI_SjCYuBU/hqdefault.jpg",
+    "baseline": 1943.035,
+    "published_at": "2024-07-01T22:00:00+00:00",
+    "summary": "Exploring essential tools and features in Adobe Illustrator, this content demonstrates techniques that help designers create professional-grade designs effectively. It covers seven must-have tools that enhance design skills for both beginners and experienced users."
+  },
+  "baseline_videos": [
+    {
+      "title": "LIVE Logo Design in Illustrator: Real-Time Full Workflow",
+      "views": 3250,
+      "score": 1.024,
+      "summary": "Demonstrating a complete logo design workflow in Illustrator, focusing on real-time techniques and processes for creating professional graphics.",
+      "thumbnail_url": "https://i.ytimg.com/vi/E9zVcRkjj9U/hqdefault_live.jpg",
+      "published_at": "2025-08-11T09:04:19+00:00"
+    },
+    {
+      "title": "Animate Your Designs Fast & Easy with Hana - Crash Course 🔥",
+      "views": 3374,
+      "score": 1.169,
+      "summary": "Animating UI elements and adding interactivity using Hana, a platform by Spline, without the need for coding. The process involves utilizing intuitive animation tools to create dynamic and engaging designs.",
+      "thumbnail_url": "https://i.ytimg.com/vi/ibNbv43gAC0/hqdefault.jpg",
+      "published_at": "2025-07-15T10:01:20+00:00"
+    },
+    {
+      "title": "Live Photo Manipulation in Photoshop with Dansky",
+      "views": 2631,
+      "score": 0.908,
+      "summary": "Manipulating live photos in Photoshop to enhance visual effects and create dynamic imagery. Demonstrating techniques for editing and transforming images to achieve professional-quality results.",
+      "thumbnail_url": "https://i.ytimg.com/vi/9AB9Bsgqrwg/hqdefault.jpg",
+      "published_at": "2025-05-27T07:04:56+00:00"
+    },
+    {
+      "title": "Reworking My Branding and Design Identity Live - Part 1",
+      "views": 2218,
+      "score": 0.817,
+      "summary": "Reworking personal branding and design identity through a live design session. Engaging in the creative process of updating visual elements and overall aesthetic.",
+      "thumbnail_url": "https://i.ytimg.com/vi/zaWOG2f3uTk/hqdefault.jpg",
+      "published_at": "2025-05-20T15:38:57+00:00"
+    },
+    {
+      "title": "Live Design and Photo Manipulation in Adobe Photoshop",
+      "views": 3715,
+      "score": 1.171,
+      "summary": "Demonstrating live design techniques and photo manipulation using Adobe Photoshop, focusing on real-world applications and skills development.",
+      "thumbnail_url": "https://i.ytimg.com/vi/SSVbctDFhp8/hqdefault.jpg",
+      "published_at": "2025-04-24T18:45:51+00:00"
+    },
+    {
+      "title": "Live Graphic Design in Adobe Photoshop",
+      "views": 3246,
+      "score": 1.002,
+      "summary": "Demonstrating graphic design techniques using Adobe Photoshop, focusing on real-world applications and skill development.",
+      "thumbnail_url": "https://i.ytimg.com/vi/yki6-9m3vYk/hqdefault.jpg",
+      "published_at": "2025-04-22T17:42:06+00:00"
+    },
+    {
+      "title": "Live Photo Manipulation in Adobe Photoshop",
+      "views": 3024,
+      "score": 0.944,
+      "summary": "Demonstrating live photo manipulation techniques in Adobe Photoshop, focusing on enhancing images and creating dynamic visual effects.",
+      "thumbnail_url": "https://i.ytimg.com/vi/v4uX3ABSJt4/hqdefault.jpg",
+      "published_at": "2025-04-17T17:07:28+00:00"
+    },
+    {
+      "title": "Live Photo Manipulation in Adobe Photoshop",
+      "views": 3358,
+      "score": 1.067,
+      "summary": "Demonstrating live photo manipulation techniques in Adobe Photoshop, focusing on enhancing images through creative editing methods.",
+      "thumbnail_url": "https://i.ytimg.com/vi/TEtWUP8Aj0E/hqdefault.jpg",
+      "published_at": "2025-04-15T17:56:21+00:00"
+    },
+    {
+      "title": "Live Thumbnail Design for YouTube in Adobe Photoshop",
+      "views": 2703,
+      "score": 0.848,
+      "summary": "Creating a YouTube thumbnail design using Adobe Photoshop, demonstrating techniques for effective visual composition and branding.",
+      "thumbnail_url": "https://i.ytimg.com/vi/h3qmx0jZpm0/hqdefault.jpg",
+      "published_at": "2025-04-10T16:24:24+00:00"
+    },
+    {
+      "title": "App Icon Design in Adobe Illustrator",
+      "views": 2813,
+      "score": 0.863,
+      "summary": "Creating an app icon design using Adobe Illustrator, focusing on design techniques and photo manipulation skills.",
+      "thumbnail_url": "https://i.ytimg.com/vi/ueWxC0jaV4s/hqdefault.jpg",
+      "published_at": "2025-04-08T19:14:21+00:00"
+    }
+  ],
+  "baseline_analysis": "Channel normally uses person-centric thumbnails with 'LIVE' branding, focusing on process documentation and real-time creation. Breakthrough video eliminated person focus, removed 'live' positioning, and promised specific tool mastery instead of creative process observation.",
+  "channel_insight": "Dansky's audience has both entertainment and education motivations. While they enjoy watching creative processes, they responded 5.5x stronger to concrete skill-building promises. The channel can maintain live content but should create more structured tutorial series.",
+  "differentiation_factor": "Shifts from 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools). Changes from entertainment-education hybrid to pure educational value.",
+  "validation": {
+    "results": [
+      {
+        "niche": "Finance & Trading",
+        "videos": [
+          {
+            "title": "Top Ten Tools I Use Every Day in the Shop",
+            "score": 10.478,
+            "views": 474091,
+            "channel": "Clough42",
+            "thumbnail_url": "https://i.ytimg.com/vi/BE8sER-WgrI/maxresdefault.jpg",
+            "summary": "Highlighting essential tools for various projects, this content showcases a selection of ten frequently used tools in a workshop setting, including bandsaws, hex key sets, precision blocks, and digital calipers. Each tool is demonstrated for its practical applications and benefits in everyday tasks.",
+            "validation_reason": "Transforms: From \"live process documentation\" to \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on essential tools and their practical application in a workshop setting has a similar appeal to the original \"Tool Mastery\" pattern, as it provides viewers with valuable, actionable information to improve their skills and productivity.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 10.478,
+        "count": 1
+      },
+      {
+        "niche": "Photography & Video",
+        "videos": [
+          {
+            "title": "5 Useful EDM Patterns (that changed my life)",
+            "score": 6.334,
+            "views": 255390,
+            "channel": "Alex Rome",
+            "thumbnail_url": "https://i.ytimg.com/vi/_jd5Hw1dtok/hqdefault.jpg",
+            "summary": "Demonstrating five essential EDM patterns that can enhance music production skills, focusing on foundational techniques that significantly impact creativity and workflow.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill acquisition, rather than just entertainment | Cross-niche appeal: The focus on demonstrating essential EDM patterns and foundational techniques aligns with the original \"Tool Mastery\" pattern's promise of providing practical, applicable knowledge for skill development.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 6.334,
+        "count": 1
+      },
+      {
+        "niche": "Cultural Travel",
+        "videos": [
+          {
+            "title": "Contrast In Colour - Visual Hierarchy In Poster Design | Design Lesson",
+            "score": 5.27,
+            "views": 23301,
+            "channel": "Gareth David Studio",
+            "thumbnail_url": "https://i.ytimg.com/vi/5GVLHSdz52M/hqdefault.jpg",
+            "summary": "Exploring how contrast in colour establishes visual hierarchy in poster design, this lesson presents examples and insights to enhance design techniques. It emphasizes the application of colour contrast to effectively communicate information and guide viewer attention.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" (watching someone work) TO \"structured skill building\" (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both the original pattern and this video focus on teaching design techniques and skills, appealing to the desire for practical, applicable knowledge.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "Contrast In Space - Visual Hierarchy In Poster Design | Design Lesson",
+            "score": 3.862,
+            "views": 17075,
+            "channel": "Gareth David Studio",
+            "thumbnail_url": "https://i.ytimg.com/vi/9JmmVe689OI/hqdefault.jpg",
+            "summary": "Exploring contrast in space to establish visual hierarchy in poster design, highlighting examples and lessons that can be applied to enhance design effectiveness.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises to teach specific design techniques that can be immediately applied to enhance visual hierarchy and design effectiveness. | Cross-niche appeal: Both the original pattern and this video focus on providing educational content related to design skills and techniques, which appeals to viewers seeking to improve their practical design abilities.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "The BEST ‘Before & After’ Designs Of 2021 So Far!",
+            "score": 3.64,
+            "views": 237801,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/k2DWClcoHFI/hqdefault.jpg",
+            "summary": "Showcasing before and after graphic design transformations that highlight the impact of small changes on overall design quality. Demonstrating a methodical approach to graphic design, emphasizing the balance between creativity and systematic techniques.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment, triggering a \"skill acquisition urgency\" | Cross-niche appeal: Both patterns focus on demonstrating a methodical approach to improving design quality, which has broad appeal across creative niches.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)",
+            "score": 12.174,
+            "views": 742321,
+            "channel": "Satori Graphics",
+            "thumbnail_url": "https://i.ytimg.com/vi/T54ytwmlObg/hqdefault.jpg",
+            "summary": "Exploring the 13 essential rules of logo design, emphasizing the importance of vector graphics, dynamic design for motion, and ensuring appropriateness for the target market. Highlighting key considerations to keep in mind for effective logo creation.",
+            "validation_reason": "Transforms: From 'live process documentation' (watching someone work) to 'structured skill building' (learning specific tools) | Psychology: Promises immediate applicable knowledge and skill acquisition, triggering a sense of urgency and desire for completion | Cross-niche appeal: Both patterns focus on providing practical, educational content that teaches specific skills, appealing to the viewer's need to acquire useful knowledge and abilities.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 5.368857142857142,
+        "count": 7
+      },
+      {
+        "niche": "Audio Technology",
+        "videos": [
+          {
+            "title": "21 HAND TOOL TIPS, TRICKS & SECRETS!! (Hammer/Screwdriver/Tape Measure/Pliers...& MORE HAND TOOLS!)",
+            "score": 5.156,
+            "views": 1496664,
+            "channel": "The Honest Carpenter",
+            "thumbnail_url": "https://i.ytimg.com/vi/h_LsE0alntY/hqdefault.jpg",
+            "summary": "Demonstrating various hand tool techniques, the content reveals tips for effectively using tools like tape measures, screwdrivers, and pliers, including how to utilize tape measure tabs for marking, the multifunctionality of screwdrivers, and innovative uses for pliers in carpentry tasks. Additionally, it highlights the benefits of tools such as speed squares and utility knives for improved accuracy and efficiency in DIY projects.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: It promises immediate applicable knowledge and skill acquisition, which satisfies the viewer's desire to learn practical, useful techniques. | Cross-niche appeal: The original \"Tool Mastery\" pattern and this video both focus on teaching specific tool usage and techniques, which has broad appeal across different niches as it provides practical, actionable knowledge.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 5.156,
+        "count": 1
+      },
+      {
+        "niche": "Digital Fabrication",
+        "videos": [
+          {
+            "title": "WHAT IS IT? Mystery Tools #82b answers tubalcain mrpete",
+            "score": 3.2,
+            "views": 65992,
+            "channel": "mrpete222",
+            "thumbnail_url": "https://i.ytimg.com/vi/-dVhYE1Z_r4/hqdefault.jpg",
+            "summary": "Exploring and identifying various mystery tools used in machining and metalworking. Demonstrating their functions and applications in a workshop setting.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development rather than just entertainment | Cross-niche appeal: Both focus on teaching practical skills and tools, appealing to the desire to acquire useful abilities",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 3.2,
+        "count": 1
+      },
+      {
+        "niche": "Theme Parks",
+        "videos": [
+          {
+            "title": "WHAT IS IT? MYSTERY TOOLS #75b answers tubalcain",
+            "score": 1.977,
+            "views": 32378,
+            "channel": "mrpete222",
+            "thumbnail_url": "https://i.ytimg.com/vi/oe9jYkBqCBw/hqdefault.jpg",
+            "summary": "Exploring and identifying various mystery tools used in machining and metalworking. Demonstrating their functions and applications in a shop setting.",
+            "validation_reason": "Transforms: From \"live process documentation\" to \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining and metalworking tools) rather than general entertainment | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications, aligns with the original pattern's emphasis on skill acquisition and practical knowledge, even though the specific domain is different.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 1.977,
+        "count": 1
+      },
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "WHAT IS IT? Mystery ITEMS #91b answers tubalcain MRPETE tools",
+            "score": 1.962,
+            "views": 27220,
+            "channel": "mrpete222",
+            "thumbnail_url": "https://i.ytimg.com/vi/Hl5BczsEy0A/hqdefault.jpg",
+            "summary": "Exploring and identifying various mystery tools used in machining and metalworking. Demonstrating their functions and applications within a workshop setting.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: Promises immediate applicable knowledge and skill development in a specific domain (machining/metalworking tools) rather than general entertainment. | Cross-niche appeal: The focus on exploring and identifying various tools, demonstrating their functions and applications within a workshop setting, aligns with the original pattern's promise of \"immediate applicable knowledge\" and \"structured skill building\" rather than just entertainment.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 1.962,
+        "count": 1
+      },
+      {
+        "niche": "Adventure Travel",
+        "videos": [
+          {
+            "title": "How To Design A 3D Modern Logo Easily! 😲Adobe Illustrator 22",
+            "score": 1.727,
+            "views": 64797,
+            "channel": "Will Paterson",
+            "thumbnail_url": "https://i.ytimg.com/vi/thT0sMG8veY/hqdefault.jpg",
+            "summary": "Creating a modern 3D logo using Adobe Illustrator by setting up color swatches, designing letter shapes, and applying a 3D effect. Utilizing tools like the Shape Builder and gradients to enhance the logo's appearance and ensure it scales correctly.",
+            "validation_reason": "Transforms: FROM \"live process documentation\" TO \"structured skill building\" | Psychology: It promises immediate applicable knowledge and skill acquisition, which aligns with the \"Tool Mastery\" pattern by triggering a sense of urgency and desire for completion. | Cross-niche appeal: The focus on learning specific design tools and techniques, such as creating a 3D logo in Adobe Illustrator, is likely to have a similar appeal across different niches, as it",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 1.727,
+        "count": 1
+      }
+    ],
+    "total_validations": 15,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 4.200650793650793
+  },
+  "processing_time_ms": 58162,
+  "debug": {
+    "total_searches": 2,
+    "text_searches": 1,
+    "visual_searches": 1,
+    "unique_videos_found": 56,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"tool mastery pattern examples\"",
+      "    Generated embedding in 593ms",
+      "    Title search: 17 results (avg similarity: 0.550)",
+      "    Summary search: 15 results (avg similarity: 0.538)",
+      "    Parallel search completed in 1926ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"bold high contrast visual design\"",
+      "    Generated CLIP embedding in 894ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.263)",
+      "    Visual search completed in 757ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 56 across all searches",
+      "📋 Getting full video data for 56 unique videos...",
+      "📊 TEST A: Ranked by search similarity - Top 18 most relevant candidates",
+      "🤖 Starting enhanced LLM validation for 18 videos...",
+      "    ✅ Validated \"Is This Incredible Vise The REAL Reason He Bought ...\" in 1367ms (unknown source)",
+      "    ✅ Validated \"WHAT IS IT? Mystery ITEMS #91b answers tubalcain M...\" in 1058ms (unknown source)",
+      "    ✅ Validated \"WHAT IS IT? Mystery Tools #82b answers tubalcain m...\" in 953ms (unknown source)",
+      "    ✅ Validated \"21 HAND TOOL TIPS, TRICKS & SECRETS!! (Hammer/Scre...\" in 1200ms (unknown source)",
+      "    ✅ Validated \"WHAT IS IT? MYSTERY TOOLS #75b answers tubalcain...\" in 1079ms (unknown source)",
+      "    ✅ Validated \"Top Ten Tools I Use Every Day in the Shop...\" in 1572ms (unknown source)",
+      "    ✅ Validated \"5 Useful EDM Patterns (that changed my life)...\" in 948ms (unknown source)",
+      "    ❌ Rejected \"Top 6 Genius Jack of All Trades Skills...\" in 1174ms - MATCH: No | TRANSFORMATION: N/A | PSYCHOLOGY: N/A | REASON: N/A\n\nThe image provided does not contain",
+      "    ✅ Validated \"Contrast In Colour - Visual Hierarchy In Poster De...\" in 1247ms (unknown source)",
+      "    ✅ Validated \"Contrast In Space - Visual Hierarchy In Poster Des...\" in 985ms (unknown source)",
+      "    ❌ Rejected \"🔸 The ONLY Typeface-Psychology Video You Ever Nee...\" in 1076ms - MATCH: No\nTRANSFORMATION: FROM \"Mountain\" TO \"Digitize Ideas\"\nPSYCHOLOGY: It promises social utility",
+      "    ✅ Validated \"The BEST ‘Before & After’ Designs Of 2021 So Far!...\" in 958ms (unknown source)",
+      "    ✅ Validated \"LEARN 13 Golden Rules Of Logo Design! (MUST KNOW)...\" in 937ms (unknown source)",
+      "    ✅ Validated \"Before & After Graphic Design Ep9 (‘Space’ Is A SE...\" in 915ms (unknown source)",
+      "    ✅ Validated \"Why Your Designs Still Look Amateur (And How Pros ...\" in 1102ms (unknown source)",
+      "    ❌ Rejected \"The ONLY Marketing Video A Graphic Designer Needs ...\" in 1126ms - MATCH: No\nTRANSFORMATION: FROM \"structured skill building\" TO \"cultural travel\"\nPSYCHOLOGY: It promi",
+      "    ✅ Validated \"Best Method To Learn Graphic Design  |  Design Q&A...\" in 1124ms (unknown source)",
+      "    ✅ Validated \"How To Design A 3D Modern Logo Easily! 😲Adobe Ill...\" in 1145ms (unknown source)",
+      "✅ Enhanced validation complete: 15 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "tool mastery pattern examples",
+          "duration": 2521,
+          "titleResults": 17,
+          "summaryResults": 15
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "bold high contrast visual design",
+          "duration": 1652,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "tool mastery pattern examples",
+        "duration": 2521,
+        "titleSearch": {
+          "found": 17,
+          "avgSimilarity": 0.549627443647059,
+          "threshold": 0.5,
+          "topScores": [
+            0.588243842,
+            0.583743393,
+            0.582820356
+          ]
+        },
+        "summarySearch": {
+          "found": 15,
+          "avgSimilarity": 0.5383357207333334,
+          "threshold": 0.4,
+          "topScores": [
+            0.55444622,
+            0.553117216,
+            0.543419361
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "bold high contrast visual design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 1652,
+        "avgSimilarity": 0.26340684880000004,
+        "topScores": [
+          0.292289644,
+          0.284006119,
+          0.277464
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 56,
+      "afterPerformanceFilter": 18,
+      "validated": 15,
+      "validationRate": "83.3%",
+      "sourceBreakdown": {
+        "title": 1,
+        "summary": 6,
+        "thumbnail": 8
+      }
+    },
+    "extraction": {
+      "promptTokens": 3187,
+      "responseTokens": 1283,
+      "thinkingTokens": 0,
+      "thinkingContent": "Looking at the images provided, I need to analyze the breakthrough thumbnail (image 1) against the baseline thumbnails (images 2-6).\n\nImage 1 (Breakthrough): Shows the Adobe Illustrator \"Ai\" icon prominently with an orange border outline. The background is dark/black with other app icons blurred. The \"Ai\" is the clear focal point.\n\nImage 2: Shows \"LIVE LOGO DESIGN\" text with a person (Dansky) in a red hoodie smiling. Dark background.\n\nImage 3: Shows \"DESIGN ANIMATE DONE\" text with a purple/blue circular design element and glowing effects.\n\nImage 4: Shows a person (Dansky) smiling in what appears to be a setup with purple lighting and shelving in background.\n\nImage 5: Shows a person (Dansky) in a red hoodie with what appears to be a website or portfolio design behind him.\n\nImage 6: Shows the Photoshop \"Ps\" logo and \"LIVE DESIGN IN PHOTOSHOP\" text with the person (Dansky) smiling.\n\nNow analyzing the content:\n- Breakthrough video: \"Design Like a Pro with 7 Must-Have Tools\" - This is a tutorial/educational format about specific tools\n- Baseline videos: Mostly \"Live\" design sessions, focusing on real-time workflows and processes\n\nThe breakthrough differentiates by:\n1. Visual: Clean, focused on the software icon vs. person-centric or text-heavy thumbnails\n2. Content: Structured tutorial format vs. live streaming/process videos\n3. Promise: Concrete tools/skills vs. watching a process unfold\n\nLet me structure this analysis properly.",
+      "model": "claude-sonnet-4-20250514",
+      "validation_model": "claude-3-haiku-20240307",
+      "temperature": 1,
+      "extendedThinking": true,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  },
+  "costs": {
+    "claude": 0.14936965,
+    "openai": 1.0000000000000001e-7,
+    "replicate": 0.001,
+    "total": 0.15036975,
+    "breakdown": {
+      "pattern_extraction": 0.14403,
+      "text_embeddings": 1.0000000000000001e-7,
+      "visual_embeddings": 0.001,
+      "validations": 0.005339650000000001
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T17:40:58.440Z
+================================================================================

@@ -1,0 +1,1047 @@
+[2025-08-12T21:31:11.728Z] ================================================================================
+[2025-08-12T21:31:11.735Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-12T21:31:11.735Z
+[2025-08-12T21:31:11.735Z] Video ID: YcW9IB5e3_E
+[2025-08-12T21:31:11.735Z] ================================================================================
+[2025-08-12T21:31:11.741Z] 
+============================================================
+[2025-08-12T21:31:11.741Z] INITIAL SETUP
+[2025-08-12T21:31:11.741Z] ============================================================
+[2025-08-12T21:31:11.741Z] 🔍 [Enhanced] Analyzing pattern for video: YcW9IB5e3_E
+[2025-08-12T21:31:12.248Z] 📺 Target: "The internet keeps getting worse. Let's talk about why." (6.6x TPS)
+[2025-08-12T21:31:12.248Z] 🖼️ Thumbnail: Available
+[2025-08-12T21:31:12.248Z] Target Video Data:
+{
+  "id": "YcW9IB5e3_E",
+  "title": "The internet keeps getting worse. Let's talk about why.",
+  "channel": "Jared Henderson",
+  "views": 855143,
+  "performance_score": 6.62,
+  "baseline": 136683.961,
+  "thumbnail_url": "https://i.ytimg.com/vi/YcW9IB5e3_E/hqdefault.jpg",
+  "niche": "Outlier"
+}
+
+[2025-08-12T21:31:12.535Z] 📊 Found 10 baseline videos for comparison
+[2025-08-12T21:31:12.536Z] Baseline Videos:
+[
+  {
+    "title": "How to Start Reading Again",
+    "views": 195309,
+    "score": 0.908
+  },
+  {
+    "title": "Why we're lonely",
+    "views": 193242,
+    "score": 0.929
+  },
+  {
+    "title": "6 books that changed how I see the world",
+    "views": 172928,
+    "score": 1.138
+  },
+  {
+    "title": "My Top 10 Philosophy Books",
+    "views": 73394,
+    "score": 0.94
+  },
+  {
+    "title": "Classic Philosophical Novels You Should Read",
+    "views": 71545,
+    "score": 1.112
+  },
+  {
+    "title": "These Books Could Change Your Life",
+    "views": 245864,
+    "score": 1.098
+  },
+  {
+    "title": "The books that made me who I am",
+    "views": 174782,
+    "score": 0.881
+  },
+  {
+    "title": "How I Take Great Notes as a Philosophy PhD",
+    "views": 192482,
+    "score": 1.097
+  },
+  {
+    "title": "8 Great Books You Can Read In A Day",
+    "views": 146401,
+    "score": 0.811
+  },
+  {
+    "title": "Commonplace Books",
+    "views": 308686,
+    "score": 1
+  }
+]
+
+[2025-08-12T21:31:12.536Z] 
+============================================================
+[2025-08-12T21:31:12.536Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-12T21:31:12.536Z] ============================================================
+[2025-08-12T21:31:12.564Z] Generated extraction prompt for Claude Vision API
+[2025-08-12T21:31:12.564Z] Extraction Prompt:
+{
+  "prompt": "You are analyzing a viral YouTube video to extract transferable success patterns. You will analyze both the text content AND the thumbnail visual.\n\nTARGET VIDEO (6.6x performance):\nTitle: \"The internet keeps getting worse. Let's talk about why.\"\nViews: 855,143\nChannel: Jared Henderson\nNiche: Outlier\nSummary: Exploring the concept of \"enshittification,\" this discussion analyzes the patterns of growth, decline, and eventual failure of major online platforms, highlighting the pervasive issues of advertising and bot interference. It also emphasizes the need for a better internet experience.\n\nCHANNEL BASELINE (normal performers):\n1. \"How to Start Reading Again\" - 195,309 views (0.9x)\n2. \"Why we're lonely\" - 193,242 views (0.9x)\n3. \"6 books that changed how I see the world\" - 172,928 views (1.1x)\n4. \"My Top 10 Philosophy Books\" - 73,394 views (0.9x)\n5. \"Classic Philosophical Novels You Should Read\" - 71,545 views (1.1x)\n6. \"These Books Could Change Your Life\" - 245,864 views (1.1x)\n7. \"The books that made me who I am\" - 174,782 views (0.9x)\n8. \"How I Take Great Notes as a Philosophy PhD\" - 192,482 views (1.1x)\n9. \"8 Great Books You Can Read In A Day\" - 146,401 views (0.8x)\n10. \"Commonplace Books\" - 308,686 views (1.0x)\n\nAnalyze what makes the target video different from the baseline, considering BOTH text and visual elements.\n\nFor the thumbnail analysis, focus on:\n- Facial expressions and emotions\n- Color scheme and mood\n- Composition and framing\n- Text overlays or graphics\n- How the visual reinforces or contrasts with the title\n\nReturn a JSON object with enhanced fields:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Why humans can't resist watching (one sentence)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How the thumbnail emotion/composition supports the pattern (one sentence)\",\n  \"why_it_works\": \"Why this gets clicks (one sentence)\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (1-2 sentences)\"\n}"
+}
+
+[2025-08-12T21:31:12.564Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/YcW9IB5e3_E/hqdefault.jpg
+[2025-08-12T21:31:12.564Z] Calling Claude Vision API for pattern extraction...
+[2025-08-12T21:31:19.829Z] ✅ Claude response received in 7265ms
+[2025-08-12T21:31:19.829Z] Raw Claude Response:
+{
+  "response": "{\n  \"pattern_name\": \"Digital Decay Discussion Pattern\",\n  \"pattern_description\": \"Addressing widespread frustration with declining internet quality through relatable examples and shared experiences\",\n  \"psychological_trigger\": \"Taps into collective dissatisfaction with deteriorating online experiences that viewers personally encounter daily\",\n  \"key_elements\": [\n    \"Use of technical term 'enshittification' creates intrigue\",\n    \"Direct acknowledgment of a shared problem\",\n    \"Present-tense framing suggests urgency\"\n  ],\n  \"visual_elements\": [\n    \"Dark, moody lighting suggesting seriousness\",\n    \"Screenshot overlay showing real examples\",\n    \"Casual setting creating authenticity\"\n  ],\n  \"thumbnail_psychology\": \"The combination of concerned expression and real screenshot evidence creates immediate credibility and relatability\",\n  \"why_it_works\": \"Validates viewers' growing frustrations while promising insights into why their daily internet experience keeps getting worse\",\n  \"semantic_queries\": [\n    \"why is internet getting worse\",\n    \"what happened to google search\",\n    \"social media quality declining\"\n  ],\n  \"visual_queries\": [\n    \"concerned expert in casual setting\",\n    \"screenshot evidence in thumbnail\"\n  ],\n  \"channel_outlier_explanation\": \"While the channel typically focuses on book recommendations and philosophy, this video taps into a universal pain point that transcends the usual niche, attracting viewers seeking answers to a shared modern problem\"\n}",
+  "usage": {
+    "input_tokens": 928,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 338,
+    "service_tier": "standard"
+  },
+  "model": "claude-3-5-sonnet-20241022"
+}
+
+[2025-08-12T21:31:19.829Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-12T21:31:19.829Z] Extracted Pattern:
+{
+  "pattern_name": "Digital Decay Discussion Pattern",
+  "pattern_description": "Addressing widespread frustration with declining internet quality through relatable examples and shared experiences",
+  "psychological_trigger": "Taps into collective dissatisfaction with deteriorating online experiences that viewers personally encounter daily",
+  "key_elements": [
+    "Use of technical term 'enshittification' creates intrigue",
+    "Direct acknowledgment of a shared problem",
+    "Present-tense framing suggests urgency"
+  ],
+  "visual_elements": [
+    "Dark, moody lighting suggesting seriousness",
+    "Screenshot overlay showing real examples",
+    "Casual setting creating authenticity"
+  ],
+  "thumbnail_psychology": "The combination of concerned expression and real screenshot evidence creates immediate credibility and relatability",
+  "why_it_works": "Validates viewers' growing frustrations while promising insights into why their daily internet experience keeps getting worse",
+  "semantic_queries": [
+    "why is internet getting worse",
+    "what happened to google search",
+    "social media quality declining"
+  ],
+  "visual_queries": [
+    "concerned expert in casual setting",
+    "screenshot evidence in thumbnail"
+  ],
+  "channel_outlier_explanation": "While the channel typically focuses on book recommendations and philosophy, this video taps into a universal pain point that transcends the usual niche, attracting viewers seeking answers to a shared modern problem"
+}
+
+[2025-08-12T21:31:19.830Z] ✅ Pattern extracted: Digital Decay Discussion Pattern
+[2025-08-12T21:31:19.830Z] 📝 Text queries: why is internet getting worse, what happened to google search, social media quality declining
+[2025-08-12T21:31:19.830Z] 🎨 Visual queries: concerned expert in casual setting, screenshot evidence in thumbnail
+[2025-08-12T21:31:19.830Z] 
+============================================================
+[2025-08-12T21:31:19.830Z] MULTI-MODAL SEARCH PHASE
+[2025-08-12T21:31:19.830Z] ============================================================
+[2025-08-12T21:31:19.830Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-12T21:31:19.830Z] 🔎 Starting text-based semantic searches...
+[2025-08-12T21:31:19.830Z]   Searching text for: "why is internet getting worse"
+[2025-08-12T21:31:19.830Z]     Generating OpenAI embedding for query...
+[2025-08-12T21:31:20.543Z]     Generated embedding in 713ms (512D)
+[2025-08-12T21:31:20.543Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T21:31:23.164Z]     Parallel search completed in 2621ms
+[2025-08-12T21:31:23.164Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.573",
+  "topResults": [
+    {
+      "title": "The internet keeps getting worse. Let's talk about why.",
+      "score": "0.782",
+      "views": 855143
+    },
+    {
+      "title": "Why Does the Internet Suck Now?",
+      "score": "0.710",
+      "views": 4924
+    },
+    {
+      "title": "How The Internet Became Uglier",
+      "score": "0.705",
+      "views": 6252
+    }
+  ]
+}
+
+[2025-08-12T21:31:23.165Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.469",
+  "topResults": [
+    {
+      "title": "Why Does the Internet Suck Now?",
+      "score": "0.619",
+      "views": 4924
+    },
+    {
+      "title": "How to BOOST Slow Internet Speed 2X - Cheap & EASY!",
+      "score": "0.530",
+      "views": 92704
+    },
+    {
+      "title": "Why American Internet SUCKS",
+      "score": "0.517",
+      "views": 300575
+    }
+  ]
+}
+
+[2025-08-12T21:31:23.165Z]   Searching text for: "what happened to google search"
+[2025-08-12T21:31:23.165Z]     Generating OpenAI embedding for query...
+[2025-08-12T21:31:23.604Z]     Generated embedding in 439ms (512D)
+[2025-08-12T21:31:23.604Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T21:31:24.715Z]     Parallel search completed in 1111ms
+[2025-08-12T21:31:24.715Z] Title Search Results:
+{
+  "found": 15,
+  "avgSimilarity": "0.587",
+  "topResults": [
+    {
+      "title": "Google Search is Dead .... My View #digitalmarketing #googleads",
+      "score": "0.649",
+      "views": 1755
+    },
+    {
+      "title": "Google Has Lost Control of Its Search Algorithm (What it Means for You)",
+      "score": "0.629",
+      "views": 4667
+    },
+    {
+      "title": "Something strange is happening on Google",
+      "score": "0.604",
+      "views": 305586
+    }
+  ]
+}
+
+[2025-08-12T21:31:24.715Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.484",
+  "topResults": [
+    {
+      "title": "Sundar Pichai on declines in traditional Google Search as a result of AI. #Decoder",
+      "score": "0.572",
+      "views": 15287
+    },
+    {
+      "title": "Google's New AI Search Engine",
+      "score": "0.518",
+      "views": 70715
+    },
+    {
+      "title": "Apple Gets 36% of Google Ad Revenue, New Google Experiments and Updates + Weird Niche Sites",
+      "score": "0.518",
+      "views": 2062
+    }
+  ]
+}
+
+[2025-08-12T21:31:24.716Z]   Searching text for: "social media quality declining"
+[2025-08-12T21:31:24.716Z]     Generating OpenAI embedding for query...
+[2025-08-12T21:31:25.378Z]     Generated embedding in 662ms (512D)
+[2025-08-12T21:31:25.378Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-12T21:31:26.345Z]     Parallel search completed in 967ms
+[2025-08-12T21:31:26.345Z] Title Search Results:
+{
+  "found": 16,
+  "avgSimilarity": "0.564",
+  "topResults": [
+    {
+      "title": "Social Media Is Evolving",
+      "score": "0.644",
+      "views": 46963
+    },
+    {
+      "title": "SOCIAL MEDIA is on the Verge of Collapse. Finally.",
+      "score": "0.634",
+      "views": 14766
+    },
+    {
+      "title": "Great News - Social Media Is Falling Apart...",
+      "score": "0.608",
+      "views": 299130
+    }
+  ]
+}
+
+[2025-08-12T21:31:26.345Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.538",
+  "topResults": [
+    {
+      "title": "We All Agree Twitter is Terrible Now, Right?",
+      "score": "0.597",
+      "views": 1920512
+    },
+    {
+      "title": "YouTube ENDS Mainstream Media's Control (Why Creators Will WIN)",
+      "score": "0.569",
+      "views": 17208
+    },
+    {
+      "title": "Instagram is DYING. Here’s why.",
+      "score": "0.568",
+      "views": 196364
+    }
+  ]
+}
+
+[2025-08-12T21:31:26.346Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-12T21:31:26.346Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-12T21:31:26.346Z]   Searching thumbnails for: "concerned expert in casual setting"
+[2025-08-12T21:31:26.346Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T21:31:28.322Z]     Generated CLIP embedding in 1976ms (768D)
+[2025-08-12T21:31:28.322Z]     Searching dedicated thumbnail index...
+[2025-08-12T21:31:29.391Z]     Thumbnail search completed in 1069ms
+[2025-08-12T21:31:29.391Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.227",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "11 QUICK-FIRE TIPS TO MASTERING SMART CASUAL DRESSING | LESSONS WITH LYDIA",
+      "score": "0.244",
+      "views": 95674,
+      "channel": "Lydia Tomlinson"
+    },
+    {
+      "title": "The top of the engineering hierarchy #engineering",
+      "score": "0.243",
+      "views": 561099,
+      "channel": "Casually Explained"
+    },
+    {
+      "title": "WAS THIS A MISTAKE? (channelreviews.com review)",
+      "score": "0.241",
+      "views": 1628,
+      "channel": "Meredith Marsh"
+    }
+  ]
+}
+
+[2025-08-12T21:31:29.391Z]   Searching thumbnails for: "screenshot evidence in thumbnail"
+[2025-08-12T21:31:29.391Z]     Generating CLIP text embedding for visual search...
+[2025-08-12T21:31:30.063Z]     Generated CLIP embedding in 672ms (768D)
+[2025-08-12T21:31:30.063Z]     Searching dedicated thumbnail index...
+[2025-08-12T21:31:30.279Z]     Thumbnail search completed in 216ms
+[2025-08-12T21:31:30.279Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.268",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "Latest News: YouTube Podcasts are Here",
+      "score": "0.286",
+      "views": 399,
+      "channel": "PSS Creative Media"
+    },
+    {
+      "title": "IMPOSSIBLE Pokémon Card Challenge ($900 Charizard on the line)",
+      "score": "0.274",
+      "views": 1398952,
+      "channel": "Deep Pocket Monster"
+    },
+    {
+      "title": "Power Up Ads w/ Promotion Assets🏆💯",
+      "score": "0.272",
+      "views": 94,
+      "channel": "Jason Whaling"
+    }
+  ]
+}
+
+[2025-08-12T21:31:30.279Z] 
+============================================================
+[2025-08-12T21:31:30.279Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-12T21:31:30.279Z] ============================================================
+[2025-08-12T21:31:30.279Z] 📋 Getting full video data for 142 unique videos...
+[2025-08-12T21:31:30.887Z] 📊 Filtered to 20 high performers (2.5x-100x) for validation
+[2025-08-12T21:31:30.888Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "Google CEO Sundar Pichai on the future of search, AI agents, and selling Chrome",
+    "views": 779032,
+    "score": 26.569,
+    "channel": "The Verge",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Actually Stick To A Schedule (Even if you lack discipline)",
+    "views": 40827,
+    "score": 21.153,
+    "channel": "Ross Harkness",
+    "hasThumbnail": true
+  },
+  {
+    "title": "iPhone 16 Pro camera review: change these settings for best results",
+    "views": 515543,
+    "score": 19.37,
+    "channel": "The Verge",
+    "hasThumbnail": true
+  },
+  {
+    "title": "999 Photos on the Pixel 9 Pro XL",
+    "views": 189747,
+    "score": 16.007,
+    "channel": "Becca Farsace",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Stupid Things People Search On Google",
+    "views": 1376600,
+    "score": 15.834,
+    "channel": "MrBeast",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Real Reason Why Music Is Getting Worse",
+    "views": 4465462,
+    "score": 10.537,
+    "channel": "Rick Beato",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Great News - Social Media Is Falling Apart...",
+    "views": 299130,
+    "score": 10.169,
+    "channel": "heyDominik",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Google Update That Crushed His Business Overnight",
+    "views": 672633,
+    "score": 6.943,
+    "channel": "Ahrefs",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The internet keeps getting worse. Let's talk about why.",
+    "views": 855143,
+    "score": 6.62,
+    "channel": "Jared Henderson",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Google CEO Sundar Pichai says AI search will actually help the web",
+    "views": 193846,
+    "score": 5.883,
+    "channel": "The Verge",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Why TikTok has me Terrified",
+    "views": 355199,
+    "score": 5.838,
+    "channel": "Hank Green",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Coronavirus anxiety (Covid-19): How to stop worrying about your health",
+    "views": 144684,
+    "score": 5.714,
+    "channel": "Doctor Ali Mattu",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Social Media Is Changing For Good & Nobody Notices It",
+    "views": 78964,
+    "score": 5.373,
+    "channel": "heyDominik",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Eating Healthy at McDonald’s VS KFC",
+    "views": 11569872,
+    "score": 4.74,
+    "channel": "Browney",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Internet Comment Etiquette: \"Reaction Videos\"",
+    "views": 1285836,
+    "score": 4.112,
+    "channel": "Internet Comment Etiquette with Erik",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The smartphone we were promised... has arrived",
+    "views": 2750913,
+    "score": 4.034,
+    "channel": "JerryRigEverything",
+    "hasThumbnail": true
+  },
+  {
+    "title": "INSTAGRAM ENGAGEMENT DROP 2019 - The Harsh Truth",
+    "views": 21838,
+    "score": 4.024,
+    "channel": "heyDominik",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Hidden Crisis of the Internet.",
+    "views": 5733,
+    "score": 3.888,
+    "channel": "David Boland",
+    "hasThumbnail": true
+  },
+  {
+    "title": "We Bought The Internet's WORST Turbo",
+    "views": 1649753,
+    "score": 3.86,
+    "channel": "OVERDRIVE",
+    "hasThumbnail": true
+  },
+  {
+    "title": "The Skill You're Slowly Losing",
+    "views": 929339,
+    "score": 3.519,
+    "channel": "Thomas Frank",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-12T21:31:30.889Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-12T21:31:30.889Z] 🤖 Starting enhanced LLM validation for 20 videos...
+[2025-08-12T21:32:19.112Z] ✅ Enhanced validation complete: 9 videos confirmed
+[2025-08-12T21:32:19.112Z] Final Validated Videos:
+[
+  {
+    "title": "The Real Reason Why Music Is Getting Worse",
+    "score": 10.537,
+    "channel": "Rick Beato",
+    "reason": "The title \"WTF HAPPENED?\" combined with the dramatic lighting and studio setting creates intrigue while directly addressing a perceived decline in music quality, matching the pattern's elements of acknowledging a shared problem with present-tense urgency.",
+    "source": "title"
+  },
+  {
+    "title": "Great News - Social Media Is Falling Apart...",
+    "score": 10.169,
+    "channel": "heyDominik",
+    "reason": "The thumbnail directly addresses the decline of social media platforms with urgent present-tense framing (\"the END OF AN ERA\") and acknowledges a shared problem affecting creators and users across multiple platforms.",
+    "source": "summary"
+  },
+  {
+    "title": "The Google Update That Crushed His Business Overnight",
+    "score": 6.943,
+    "channel": "Ahrefs",
+    "reason": "The dramatic graph showing sudden decline and title \"Killed by Google\" directly acknowledges a shared problem of Google's algorithm changes destroying businesses, while creating urgency through its stark visualization of the impact.",
+    "source": "summary"
+  },
+  {
+    "title": "The internet keeps getting worse. Let's talk about why.",
+    "score": 6.62,
+    "channel": "Jared Henderson",
+    "reason": "The video uses the technical term \"enshittification,\" directly addresses the deterioration of internet services like Google search, and frames it as an ongoing present-day issue requiring discussion.",
+    "source": "title"
+  },
+  {
+    "title": "Why TikTok has me Terrified",
+    "score": 5.838,
+    "channel": "Hank Green",
+    "reason": "The title directly acknowledges a current technological concern (\"terrified\") and the video appears to be discussing an urgent social media platform issue in the present tense, matching the pattern's focus on immediate digital problems.",
+    "source": "summary"
+  },
+  {
+    "title": "Social Media Is Changing For Good & Nobody Notices It",
+    "score": 5.373,
+    "channel": "heyDominik",
+    "reason": "The thumbnail and title directly address the decline of social media platforms with urgent framing (\"END of an era\") and includes a technical graph showing the platforms' trajectories, matching the pattern's elements of acknowledging a shared problem with present-tense urgency.",
+    "source": "summary"
+  },
+  {
+    "title": "INSTAGRAM ENGAGEMENT DROP 2019 - The Harsh Truth",
+    "score": 4.024,
+    "channel": "heyDominik",
+    "reason": "The video title directly addresses a widespread technical problem (engagement drop) with urgent present-tense framing and promises \"an honest answer to the problem,\" matching all key pattern elements.",
+    "source": "summary"
+  },
+  {
+    "title": "The Hidden Crisis of the Internet.",
+    "score": 3.888,
+    "channel": "David Boland",
+    "reason": "The dramatic thumbnail with ominous lighting, laptop, and \"this is dangerous\" text directly acknowledges internet problems while creating intrigue about hidden digital threats.",
+    "source": "summary"
+  },
+  {
+    "title": "The Skill You're Slowly Losing",
+    "score": 3.519,
+    "channel": "Thomas Frank",
+    "reason": "The title \"The Skill You're Slowly Losing\" directly acknowledges a shared problem and uses present-tense framing to create urgency about a deteriorating capability, matching the pattern's key elements.",
+    "source": "summary"
+  }
+]
+
+[2025-08-12T21:32:19.114Z] Pre-Calculation Metrics:
+{
+  "validationResults": 5,
+  "totalValidations": 9,
+  "avgPatternScore": 6.053749999999999,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "Entrepreneurship",
+      "count": 2,
+      "avg_score": 10.353000000000002,
+      "visualMatches": 0
+    },
+    {
+      "niche": "E-commerce",
+      "count": 1,
+      "avg_score": 6.943,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Outlier",
+      "count": 4,
+      "avg_score": 5.42975,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Digital Marketing",
+      "count": 1,
+      "avg_score": 4.024,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Language Learning",
+      "count": 1,
+      "avg_score": 3.519,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-12T21:32:19.115Z] Pattern Strength Calculation:
+{
+  "totalValidations": 9,
+  "avgPatternScore": 6.053749999999999,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 6.053749999999999,
+  "finalStrength": "strong"
+}
+
+[2025-08-12T21:32:19.115Z] 
+============================================================
+[2025-08-12T21:32:19.115Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-12T21:32:19.115Z] ============================================================
+[2025-08-12T21:32:19.115Z] ✅ Enhanced pattern analysis complete in 67405ms
+[2025-08-12T21:32:19.115Z] 📊 Found 9 validations (0 with visual matches) across 5 niches
+[2025-08-12T21:32:19.115Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Digital Decay Discussion Pattern",
+    "pattern_description": "Addressing widespread frustration with declining internet quality through relatable examples and shared experiences",
+    "psychological_trigger": "Taps into collective dissatisfaction with deteriorating online experiences that viewers personally encounter daily",
+    "key_elements": [
+      "Use of technical term 'enshittification' creates intrigue",
+      "Direct acknowledgment of a shared problem",
+      "Present-tense framing suggests urgency"
+    ],
+    "visual_elements": [
+      "Dark, moody lighting suggesting seriousness",
+      "Screenshot overlay showing real examples",
+      "Casual setting creating authenticity"
+    ],
+    "thumbnail_psychology": "The combination of concerned expression and real screenshot evidence creates immediate credibility and relatability",
+    "why_it_works": "Validates viewers' growing frustrations while promising insights into why their daily internet experience keeps getting worse",
+    "semantic_queries": [
+      "why is internet getting worse",
+      "what happened to google search",
+      "social media quality declining"
+    ],
+    "visual_queries": [
+      "concerned expert in casual setting",
+      "screenshot evidence in thumbnail"
+    ],
+    "channel_outlier_explanation": "While the channel typically focuses on book recommendations and philosophy, this video taps into a universal pain point that transcends the usual niche, attracting viewers seeking answers to a shared modern problem"
+  },
+  "source_video": {
+    "id": "YcW9IB5e3_E",
+    "title": "The internet keeps getting worse. Let's talk about why.",
+    "channel": "Jared Henderson",
+    "score": 6.62,
+    "niche": "Outlier",
+    "views": 855143,
+    "thumbnail": "https://i.ytimg.com/vi/YcW9IB5e3_E/hqdefault.jpg",
+    "baseline": 136683.961,
+    "published_at": "2025-07-16T13:52:16+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "Entrepreneurship",
+        "videos": [
+          {
+            "title": "The Real Reason Why Music Is Getting Worse",
+            "score": 10.537,
+            "views": 4465462,
+            "channel": "Rick Beato",
+            "thumbnail_url": "https://i.ytimg.com/vi/1bZ0OSEViyo/hqdefault.jpg",
+            "summary": "Discussing the crisis in music, examining how the ease of music creation and consumption negatively impacts the quality of music. Analyzing the implications of these trends in two distinct acts.",
+            "validation_reason": "The title \"WTF HAPPENED?\" combined with the dramatic lighting and studio setting creates intrigue while directly addressing a perceived decline in music quality, matching the pattern's elements of acknowledging a shared problem with present-tense urgency.",
+            "source": "title"
+          },
+          {
+            "title": "Great News - Social Media Is Falling Apart...",
+            "score": 10.169,
+            "views": 299130,
+            "channel": "heyDominik",
+            "thumbnail_url": "https://i.ytimg.com/vi/Vw1vBzevnWU/hqdefault.jpg",
+            "summary": "Analyzing the decline of social media, highlighting the challenges faced by influencers, and discussing strategies for adapting to changing dynamics in content creation. Emphasizing the importance of uniqueness and addressing issues like saturation and profitability in the creator economy.",
+            "validation_reason": "The thumbnail directly addresses the decline of social media platforms with urgent present-tense framing (\"the END OF AN ERA\") and acknowledges a shared problem affecting creators and users across multiple platforms.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 10.353000000000002,
+        "count": 2
+      },
+      {
+        "niche": "E-commerce",
+        "videos": [
+          {
+            "title": "The Google Update That Crushed His Business Overnight",
+            "score": 6.943,
+            "views": 672633,
+            "channel": "Ahrefs",
+            "thumbnail_url": "https://i.ytimg.com/vi/FozpcXclAtU/hqdefault.jpg",
+            "summary": "Exploring the impact of a Google algorithm update that drastically reduced website traffic, this content outlines strategies for recovery and resilience in the face of sudden changes in search engine dynamics. It provides insights and actionable tips for online business owners to safeguard their websites against future updates.",
+            "validation_reason": "The dramatic graph showing sudden decline and title \"Killed by Google\" directly acknowledges a shared problem of Google's algorithm changes destroying businesses, while creating urgency through its stark visualization of the impact.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 6.943,
+        "count": 1
+      },
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "The internet keeps getting worse. Let's talk about why.",
+            "score": 6.62,
+            "views": 855143,
+            "channel": "Jared Henderson",
+            "thumbnail_url": "https://i.ytimg.com/vi/YcW9IB5e3_E/hqdefault.jpg",
+            "summary": "Exploring the concept of \"enshittification,\" this discussion analyzes the patterns of growth, decline, and eventual failure of major online platforms, highlighting the pervasive issues of advertising and bot interference. It also emphasizes the need for a better internet experience.",
+            "validation_reason": "The video uses the technical term \"enshittification,\" directly addresses the deterioration of internet services like Google search, and frames it as an ongoing present-day issue requiring discussion.",
+            "source": "title"
+          },
+          {
+            "title": "Why TikTok has me Terrified",
+            "score": 5.838,
+            "views": 355199,
+            "channel": "Hank Green",
+            "thumbnail_url": "https://i.ytimg.com/vi/i861JOJDxbs/hqdefault.jpg",
+            "summary": "Exploring the challenges of social media platforms regarding social responsibility and their potential impact on user safety and well-being.",
+            "validation_reason": "The title directly acknowledges a current technological concern (\"terrified\") and the video appears to be discussing an urgent social media platform issue in the present tense, matching the pattern's focus on immediate digital problems.",
+            "source": "summary"
+          },
+          {
+            "title": "Social Media Is Changing For Good & Nobody Notices It",
+            "score": 5.373,
+            "views": 78964,
+            "channel": "heyDominik",
+            "thumbnail_url": "https://i.ytimg.com/vi/ha5yf542K6s/hqdefault.jpg",
+            "summary": "Analyzing the evolution of social media content, highlighting the shift towards \"worthy content\" and the differences between past and present creator strategies. Discussing the importance of focusing on specific platforms in 2023 and providing insights on staying relevant in the changing landscape.",
+            "validation_reason": "The thumbnail and title directly address the decline of social media platforms with urgent framing (\"END of an era\") and includes a technical graph showing the platforms' trajectories, matching the pattern's elements of acknowledging a shared problem with present-tense urgency.",
+            "source": "summary"
+          },
+          {
+            "title": "The Hidden Crisis of the Internet.",
+            "score": 3.888,
+            "views": 5733,
+            "channel": "David Boland",
+            "thumbnail_url": "https://i.ytimg.com/vi/QuQXQF2KCyY/hqdefault.jpg",
+            "summary": "Exploring the negative impacts of the internet, focusing on issues like social media addiction and its effects on mental health. Analyzing how excessive use of technology can lead to a hidden crisis in society.",
+            "validation_reason": "The dramatic thumbnail with ominous lighting, laptop, and \"this is dangerous\" text directly acknowledges internet problems while creating intrigue about hidden digital threats.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 5.42975,
+        "count": 4
+      },
+      {
+        "niche": "Digital Marketing",
+        "videos": [
+          {
+            "title": "INSTAGRAM ENGAGEMENT DROP 2019 - The Harsh Truth",
+            "score": 4.024,
+            "views": 21838,
+            "channel": "heyDominik",
+            "thumbnail_url": "https://i.ytimg.com/vi/bd8a_jp5XcE/hqdefault.jpg",
+            "summary": "Exploring the reasons behind the decline in Instagram engagement, including analyzing user-submitted screenshots and discussing trends observed in the platform's performance.",
+            "validation_reason": "The video title directly addresses a widespread technical problem (engagement drop) with urgent present-tense framing and promises \"an honest answer to the problem,\" matching all key pattern elements.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 4.024,
+        "count": 1
+      },
+      {
+        "niche": "Language Learning",
+        "videos": [
+          {
+            "title": "The Skill You're Slowly Losing",
+            "score": 3.519,
+            "views": 929339,
+            "channel": "Thomas Frank",
+            "thumbnail_url": "https://i.ytimg.com/vi/31Rp5LemYeA/maxresdefault.jpg",
+            "summary": "Exploring the impact of constant internet use on critical thinking skills and offering strategies to regain those skills. Discussing how reliance on online information can diminish cognitive abilities and suggesting methods to counteract this trend.",
+            "validation_reason": "The title \"The Skill You're Slowly Losing\" directly acknowledges a shared problem and uses present-tense framing to create urgency about a deteriorating capability, matching the pattern's key elements.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 3.519,
+        "count": 1
+      }
+    ],
+    "total_validations": 9,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 6.053749999999999
+  },
+  "processing_time_ms": 67405,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 142,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"why is internet getting worse\"",
+      "    Generated embedding in 713ms",
+      "    Title search: 19 results (avg similarity: 0.573)",
+      "    Summary search: 20 results (avg similarity: 0.469)",
+      "    Parallel search completed in 2621ms",
+      "  Searching text for: \"what happened to google search\"",
+      "    Generated embedding in 439ms",
+      "    Title search: 15 results (avg similarity: 0.587)",
+      "    Summary search: 20 results (avg similarity: 0.484)",
+      "    Parallel search completed in 1111ms",
+      "  Searching text for: \"social media quality declining\"",
+      "    Generated embedding in 662ms",
+      "    Title search: 16 results (avg similarity: 0.564)",
+      "    Summary search: 20 results (avg similarity: 0.538)",
+      "    Parallel search completed in 967ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"concerned expert in casual setting\"",
+      "    Generated CLIP embedding in 1976ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.227)",
+      "    Visual search completed in 1069ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"screenshot evidence in thumbnail\"",
+      "    Generated CLIP embedding in 672ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.268)",
+      "    Visual search completed in 216ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 142 across all searches",
+      "📋 Getting full video data for 142 unique videos...",
+      "📊 Filtered to 20 high performers (2.5x-100x) for validation",
+      "🤖 Starting enhanced LLM validation for 20 videos...",
+      "    ❌ Rejected \"Google CEO Sundar Pichai on the future of search, ...\" in 3276ms - NO: While the video discusses technological change and AI's future impact, it doesn't specifically a",
+      "    ❌ Rejected \"How To Actually Stick To A Schedule (Even if you l...\" in 2177ms - NO: While the video addresses a common productivity problem, it lacks the technical terminology and ",
+      "    ❌ Rejected \"iPhone 16 Pro camera review: change these settings...\" in 2523ms - NO: This appears to be a straightforward tutorial/review video focused on optimizing camera settings",
+      "    ❌ Rejected \"999 Photos on the Pixel 9 Pro XL...\" in 3071ms - NO: This appears to be a standard smartphone camera review/comparison video thumbnail focusing on th",
+      "    ❌ Rejected \"Stupid Things People Search On Google...\" in 2974ms - NO: While this shows concerning search behavior, it doesn't match the pattern since it lacks technic",
+      "    ✅ Validated \"The Real Reason Why Music Is Getting Worse...\" in 2972ms (title source)",
+      "    ✅ Validated \"Great News - Social Media Is Falling Apart......\" in 2053ms (summary source)",
+      "    ✅ Validated \"The Google Update That Crushed His Business Overni...\" in 2753ms (summary source)",
+      "    ✅ Validated \"The internet keeps getting worse. Let's talk about...\" in 2277ms (title source)",
+      "    ❌ Rejected \"Google CEO Sundar Pichai says AI search will actua...\" in 2601ms - NO: While the video discusses AI's impact on web search, it lacks the key pattern elements - it does",
+      "    ✅ Validated \"Why TikTok has me Terrified...\" in 2156ms (summary source)",
+      "    ❌ Rejected \"Coronavirus anxiety (Covid-19): How to stop worryi...\" in 2269ms - NO: While this video addresses a widespread concern (COVID anxiety), it lacks the technical terminol",
+      "    ✅ Validated \"Social Media Is Changing For Good & Nobody Notices...\" in 2789ms (summary source)",
+      "    ❌ Rejected \"Eating Healthy at McDonald’s VS KFC...\" in 1735ms - NO: This appears to be a straightforward fast food comparison video focused on nutrition rather than",
+      "    ❌ Rejected \"Internet Comment Etiquette: \"Reaction Videos\"...\" in 1971ms - NO: While this video discusses online content, it appears to be a comedic take on reaction videos ra",
+      "    ❌ Rejected \"The smartphone we were promised... has arrived...\" in 2132ms - NO: While the title suggests a long-awaited solution, it lacks the technical terminology and direct ",
+      "    ✅ Validated \"INSTAGRAM ENGAGEMENT DROP 2019 - The Harsh Truth...\" in 2210ms (summary source)",
+      "    ✅ Validated \"The Hidden Crisis of the Internet....\" in 2089ms (summary source)",
+      "    ❌ Rejected \"We Bought The Internet's WORST Turbo...\" in 1737ms - NO: While the title addresses a quality issue, it lacks the technical terminology and urgent framing",
+      "    ✅ Validated \"The Skill You're Slowly Losing...\" in 2456ms (summary source)",
+      "✅ Enhanced validation complete: 9 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "why is internet getting worse",
+          "duration": 3335,
+          "titleResults": 19,
+          "summaryResults": 20
+        },
+        {
+          "query": "what happened to google search",
+          "duration": 1551,
+          "titleResults": 15,
+          "summaryResults": 20
+        },
+        {
+          "query": "social media quality declining",
+          "duration": 1630,
+          "titleResults": 16,
+          "summaryResults": 20
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "concerned expert in casual setting",
+          "duration": 3045,
+          "results": 25
+        },
+        {
+          "query": "screenshot evidence in thumbnail",
+          "duration": 888,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "why is internet getting worse",
+        "duration": 3335,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.5732818438947368,
+          "threshold": 0.5,
+          "topScores": [
+            0.781884491,
+            0.709830642,
+            0.705469668
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.4694437486500001,
+          "threshold": 0.4,
+          "topScores": [
+            0.619363368,
+            0.529902,
+            0.516912103
+          ]
+        }
+      },
+      {
+        "query": "what happened to google search",
+        "duration": 1551,
+        "titleSearch": {
+          "found": 15,
+          "avgSimilarity": 0.5870266192666667,
+          "threshold": 0.5,
+          "topScores": [
+            0.648661733,
+            0.628775656,
+            0.603536
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.48437579265,
+          "threshold": 0.4,
+          "topScores": [
+            0.571668625,
+            0.518260062,
+            0.518111348
+          ]
+        }
+      },
+      {
+        "query": "social media quality declining",
+        "duration": 1630,
+        "titleSearch": {
+          "found": 16,
+          "avgSimilarity": 0.5643149666875,
+          "threshold": 0.5,
+          "topScores": [
+            0.643897355,
+            0.63424474,
+            0.608048737
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.5384283367,
+          "threshold": 0.4,
+          "topScores": [
+            0.596713245,
+            0.56877476,
+            0.568326831
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "concerned expert in casual setting",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 3045,
+        "avgSimilarity": 0.22732292008000005,
+        "topScores": [
+          0.243839473,
+          0.24343738,
+          0.240948677
+        ]
+      },
+      {
+        "query": "screenshot evidence in thumbnail",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 888,
+        "avgSimilarity": 0.26825456812000004,
+        "topScores": [
+          0.286092103,
+          0.273745358,
+          0.271627367
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 142,
+      "afterPerformanceFilter": 20,
+      "validated": 9,
+      "validationRate": "45.0%",
+      "sourceBreakdown": {
+        "title": 2,
+        "summary": 7,
+        "thumbnail": 0
+      }
+    },
+    "extraction": {
+      "promptTokens": 586,
+      "responseTokens": 373,
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-12T21:32:19.118Z
+================================================================================

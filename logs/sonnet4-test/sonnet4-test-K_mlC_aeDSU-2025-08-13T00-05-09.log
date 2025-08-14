@@ -1,0 +1,111 @@
+[2025-08-13T00:05:09.261Z] ================================================================================
+[2025-08-13T00:05:09.261Z] SONNET 4 TEST LOG - 2025-08-13T00:05:09.261Z
+[2025-08-13T00:05:09.261Z] Video ID: K_mlC_aeDSU
+[2025-08-13T00:05:09.261Z] ================================================================================
+[2025-08-13T00:05:09.544Z] 🔍 Testing Sonnet 4 vs 3.5 for video: K_mlC_aeDSU
+[2025-08-13T00:05:09.545Z] 📺 Target: "Complete ChatGPT-5 Breakdown and First Impressions" (4.0x TPS)
+[2025-08-13T00:05:09.545Z] 🖼️ Thumbnail: Available
+[2025-08-13T00:05:09.545Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/K_mlC_aeDSU/hqdefault.jpg
+[2025-08-13T00:05:09.545Z] 
+============================================================
+[2025-08-13T00:05:09.545Z] TESTING SONNET 3.5 (CURRENT)
+[2025-08-13T00:05:09.545Z] ============================================================
+[2025-08-13T00:05:15.871Z] ⏱️ Sonnet 3.5 completed in 6326ms
+[2025-08-13T00:05:15.871Z] 💰 Sonnet 3.5 cost: $0.006477 (495 input + 313 output tokens)
+[2025-08-13T00:05:15.871Z] 
+============================================================
+[2025-08-13T00:05:15.871Z] TESTING SONNET 4 (NEW)
+[2025-08-13T00:05:15.871Z] ============================================================
+[2025-08-13T00:05:22.612Z] ⏱️ Sonnet 4 completed in 6741ms
+[2025-08-13T00:05:22.612Z] 💰 Sonnet 4 cost: $0.030825 (495 input + 312 output tokens)
+[2025-08-13T00:05:22.612Z] 
+============================================================
+[2025-08-13T00:05:22.612Z] COMPARISON RESULTS
+[2025-08-13T00:05:22.612Z] ============================================================
+[2025-08-13T00:05:22.612Z] Performance Comparison:
+{
+  "performance": {
+    "sonnet35_duration_ms": 6326,
+    "sonnet4_duration_ms": 6741,
+    "speed_difference": "Sonnet 4 is 6.6% slower"
+  },
+  "costs": {
+    "sonnet35_cost": 0.006477,
+    "sonnet4_cost": 0.030825,
+    "cost_multiplier": "4.8x more expensive"
+  },
+  "output_quality": {
+    "sonnet35_parsed": true,
+    "sonnet4_parsed": true,
+    "sonnet35_elements_count": 4,
+    "sonnet4_elements_count": 4,
+    "sonnet35_queries_count": 3,
+    "sonnet4_queries_count": 3
+  }
+}
+
+[2025-08-13T00:05:22.614Z] 
+Sonnet 3.5 Pattern:
+{
+  "pattern_name": "Breaking News Tech Reveal",
+  "pattern_description": "First-look analysis of a highly anticipated tech release, positioned as exclusive insider information",
+  "psychological_trigger": "FOMO (Fear of Missing Out) + Curiosity about next-gen AI technology",
+  "key_elements": [
+    "Time-sensitive announcement",
+    "Expert analysis perspective",
+    "Screenshot evidence/proof",
+    "Clear value proposition in title"
+  ],
+  "visual_elements": [
+    "Phone screenshot showing new interface",
+    "Purple/dark gradient background with dramatic lighting",
+    "Large 'FINALLY!' text overlay"
+  ],
+  "thumbnail_psychology": "Contrast between tangible proof (phone screenshot) and dramatic reaction creates intrigue and authenticity",
+  "why_it_works": "Combines urgency of breaking news with concrete evidence and expert analysis, making viewers feel they're getting privileged early access to important information",
+  "semantic_queries": [
+    "ChatGPT 5 release date",
+    "ChatGPT 5 features",
+    "ChatGPT 5 vs 4"
+  ],
+  "visual_queries": [
+    "ChatGPT 5 interface screenshot",
+    "ChatGPT 5 update announcement"
+  ]
+}
+
+[2025-08-13T00:05:22.614Z] 
+Sonnet 4 Pattern:
+{
+  "pattern_name": "Breaking News First Access",
+  "pattern_description": "Positioning as the first to cover major tech releases with immediate analysis and genuine reactions",
+  "psychological_trigger": "FOMO and curiosity about cutting-edge AI developments combined with trust in getting expert first impressions",
+  "key_elements": [
+    "Complete breakdown promise",
+    "First impressions authenticity",
+    "Major version release timing",
+    "Expert credibility positioning"
+  ],
+  "visual_elements": [
+    "Shocked facial expression",
+    "Phone screen showing ChatGPT interface",
+    "Bold 'FINALLY!' text overlay",
+    "Purple gradient background"
+  ],
+  "thumbnail_psychology": "Creates urgency with 'FINALLY!' while the shocked expression suggests something significant happened that viewers need to know about immediately",
+  "why_it_works": "Combines timeliness with expertise - viewers want to stay current on AI developments and trust Matt Wolfe's analysis. The 'complete breakdown' promise suggests comprehensive value while 'first impressions' adds authenticity and immediacy.",
+  "semantic_queries": [
+    "ChatGPT-5 release date",
+    "ChatGPT-5 new features",
+    "ChatGPT-5 vs ChatGPT-4 comparison"
+  ],
+  "visual_queries": [
+    "ChatGPT-5 interface screenshot",
+    "AI expert reaction face thumbnail"
+  ]
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T00:05:22.614Z
+================================================================================

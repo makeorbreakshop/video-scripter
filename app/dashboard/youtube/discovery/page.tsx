@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscoveryDashboard } from '@/components/discovery-dashboard';
-import { UnifiedReviewQueue } from '@/components/youtube/unified-review-queue';
+import { UnifiedReviewQueueOptimized } from '@/components/youtube/unified-review-queue-optimized';
 import { DiscoverySettings } from '@/components/youtube/discovery-settings';
 import { GooglePSETab } from '@/components/youtube/google-pse-tab';
 
@@ -37,7 +37,7 @@ export default function DiscoveryPage() {
 
         <TabsContent value="queue">
           <Suspense fallback={<div>Loading review queue...</div>}>
-            <UnifiedReviewQueue />
+            <UnifiedReviewQueueOptimized />
           </Suspense>
         </TabsContent>
 

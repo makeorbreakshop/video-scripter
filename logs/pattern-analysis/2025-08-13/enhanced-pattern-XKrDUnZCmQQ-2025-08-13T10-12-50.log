@@ -1,0 +1,1185 @@
+[2025-08-13T10:12:50.586Z] ================================================================================
+[2025-08-13T10:12:50.586Z] ENHANCED PATTERN ANALYSIS LOG - 2025-08-13T10:12:50.586Z
+[2025-08-13T10:12:50.586Z] Video ID: XKrDUnZCmQQ
+[2025-08-13T10:12:50.586Z] ================================================================================
+[2025-08-13T10:12:50.587Z] 
+============================================================
+[2025-08-13T10:12:50.587Z] INITIAL SETUP
+[2025-08-13T10:12:50.587Z] ============================================================
+[2025-08-13T10:12:50.587Z] 🔍 [Enhanced] Analyzing pattern for video: XKrDUnZCmQQ
+[2025-08-13T10:12:50.804Z] 📺 Target: "How to Design a Print with Perfect Tolerance EVERY Time" (17.7x TPS)
+[2025-08-13T10:12:50.804Z] 🖼️ Thumbnail: Available
+[2025-08-13T10:12:50.804Z] Target Video Data:
+{
+  "id": "XKrDUnZCmQQ",
+  "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+  "channel": "Slant 3D",
+  "views": 164825,
+  "performance_score": 17.719,
+  "baseline": 10162.5,
+  "thumbnail_url": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg",
+  "niche": "Fashion & Beauty"
+}
+
+[2025-08-13T10:12:50.923Z] 📊 Found 4 baseline videos for comparison
+[2025-08-13T10:12:50.924Z] Baseline Videos:
+[
+  {
+    "title": "Why Variation is Bad | Multipurpose Machines are a Bad Sign | 3D Printing News | Podcast Ep 115",
+    "views": 7594,
+    "score": 0.813
+  },
+  {
+    "title": "How Parts are Made in a Giant 3D Print Farm",
+    "views": 9863,
+    "score": 0.875
+  },
+  {
+    "title": "Should We Replace Etsy? | Limiting Tangled Orders | Rocket Engines | 3D Printing News Ep 110",
+    "views": 11047,
+    "score": 0.99
+  },
+  {
+    "title": "How We Would Make a Product for Mr. Beast",
+    "views": 11651,
+    "score": 1
+  }
+]
+
+[2025-08-13T10:12:50.924Z] 
+============================================================
+[2025-08-13T10:12:50.924Z] PATTERN EXTRACTION WITH CLAUDE VISION
+[2025-08-13T10:12:50.924Z] ============================================================
+[2025-08-13T10:12:50.936Z] Generated extraction prompt for Claude Vision API
+[2025-08-13T10:12:50.936Z] Extraction Prompt:
+{
+  "prompt": "You are a team of three specialized analysts examining this viral YouTube video and its thumbnail to extract transferable success patterns.\n\n**DESIGN ANALYST**: Focus on visual composition, color theory, typography, layout principles, and aesthetic appeal. Rate the design quality and identify specific design choices that impact performance.\n\n**PSYCHOLOGY ANALYST**: Focus on emotional triggers, cognitive biases, viewer psychology, curiosity gaps, and behavioral responses. Explain why viewers would click based on psychological principles.\n\n**MARKETING ANALYST**: Focus on positioning, competitive differentiation, target audience alignment, trend awareness, and market positioning. Compare to successful content in this niche.\n\nTARGET VIDEO (17.7x performance):\nTitle: \"How to Design a Print with Perfect Tolerance EVERY Time\"\nViews: 164,825\nChannel: Slant 3D\nNiche: Fashion & Beauty\nSummary: Designing parts with perfect tolerances for 3D printing by applying proven design principles that ensure a reliable fit regardless of printer, material, or slicer settings. Techniques include creating press-fits, snap-fits, and interlocking components while addressing issues like shrinkage and machine variations through features such as rounded corners and compliant designs.\n\nCHANNEL BASELINE (normal performers for comparison):\n1. \"Why Variation is Bad | Multipurpose Machines are a Bad Sign | 3D Printing News | Podcast Ep 115\" - 7,594 views (0.8x)\n2. \"How Parts are Made in a Giant 3D Print Farm\" - 9,863 views (0.9x)\n3. \"Should We Replace Etsy? | Limiting Tangled Orders | Rocket Engines | 3D Printing News Ep 110\" - 11,047 views (1.0x)\n4. \"How We Would Make a Product for Mr. Beast\" - 11,651 views (1.0x)\n\nEach analyst should contribute their expertise to identify what makes this video outperform the baseline. The design analyst examines the visual elements, the psychology analyst identifies the emotional triggers, and the marketing analyst explains the competitive positioning.\n\nReturn a JSON object with enhanced multi-analyst insights:\n{\n  \"pattern_name\": \"Short, memorable name (max 5 words)\",\n  \"pattern_description\": \"One sentence explaining the pattern in simple terms\",\n  \"psychological_trigger\": \"Core psychological reason viewers click (from psychology analyst)\",\n  \"key_elements\": [\"Text Element 1\", \"Text Element 2\", \"Text Element 3\"],\n  \"visual_elements\": [\"Visual Element 1\", \"Visual Element 2\", \"Visual Element 3\"],\n  \"thumbnail_psychology\": \"How thumbnail emotion/composition creates click desire (psychology analyst)\",\n  \"design_quality_score\": 8.5,\n  \"design_strengths\": [\"Design strength 1\", \"Design strength 2\"],\n  \"marketing_positioning\": \"How this differentiates from competitors (marketing analyst)\",\n  \"competitive_advantage\": \"Key advantage over similar content (marketing analyst)\",\n  \"why_it_works\": \"Multi-faceted explanation combining all three analysts' insights\",\n  \"semantic_queries\": [\"query 1\", \"query 2\", \"query 3\"],\n  \"visual_queries\": [\"visual pattern 1\", \"visual pattern 2\"],\n  \"channel_outlier_explanation\": \"Why this video exploded compared to baseline (all analysts)\"\n}"
+}
+
+[2025-08-13T10:12:50.937Z] 🖼️ Adding thumbnail to analysis: https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg
+[2025-08-13T10:12:50.937Z] Calling Claude Sonnet 4 API for superior pattern extraction...
+[2025-08-13T10:13:05.708Z] 💰 Pattern extraction cost: $0.055035 (1009 input + 532 output tokens + vision)
+[2025-08-13T10:13:05.708Z] ✅ Claude response received in 14771ms
+[2025-08-13T10:13:05.708Z] Raw Claude Response:
+{
+  "response": "```json\n{\n  \"pattern_name\": \"Perfect Solution Promise\",\n  \"pattern_description\": \"Promises to solve a universal frustration with a definitive, foolproof method that works every time.\",\n  \"psychological_trigger\": \"Loss aversion combined with certainty bias - viewers fear wasting time/materials on imperfect fits and crave guaranteed solutions\",\n  \"key_elements\": [\"PERFECT FIT\", \"EVERY Time\", \"How to Design\"],\n  \"visual_elements\": [\"Bright orange interlocking 3D printed parts\", \"Clean mint green background\", \"Bold white sans-serif typography\"],\n  \"thumbnail_psychology\": \"The perfectly fitted orange components create immediate visual satisfaction and demonstrate the promised outcome, while the motion arrow suggests the satisfying click-fit action viewers want to achieve\",\n  \"design_quality_score\": 8.7,\n  \"design_strengths\": [\"High contrast orange-on-green creates maximum visibility\", \"Clean minimalist composition focuses attention on the core promise\"],\n  \"marketing_positioning\": \"Positions as the definitive educational resource rather than entertainment or news, targeting serious practitioners who need reliable results\",\n  \"competitive_advantage\": \"Offers concrete methodology over theoretical discussions or case studies, promising universal applicability across all equipment and materials\",\n  \"why_it_works\": \"DESIGN: The thumbnail uses complementary colors and clean typography to create professional credibility while the interlocking parts provide immediate visual proof. PSYCHOLOGY: Taps into the universal frustration of trial-and-error in 3D printing by promising certainty and perfection. MARKETING: Differentiates from the channel's typical news/commentary content by offering actionable education that solves a core technical challenge every 3D printer faces.\",\n  \"semantic_queries\": [\"3D printing tolerance tutorial\", \"perfect fit 3D design\", \"3D printing design principles\"],\n  \"visual_queries\": [\"interlocking 3D printed parts demonstration\", \"orange and green high contrast thumbnail design\"],\n  \"channel_outlier_explanation\": \"This video exploded because it shifted from the channel's typical industry commentary to solving a universal pain point that every 3D printing practitioner faces daily. The promise of 'EVERY Time' success creates irresistible appeal for viewers tired of failed prints and wasted materials, while the visual proof in the thumbnail immediately communicates the value proposition.\"\n}\n```",
+  "usage": {
+    "input_tokens": 1009,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 532,
+    "service_tier": "standard"
+  },
+  "model": "claude-sonnet-4-20250514"
+}
+
+[2025-08-13T10:13:05.709Z] ✅ Successfully parsed and validated pattern from Claude response
+[2025-08-13T10:13:05.709Z] Extracted Pattern:
+{
+  "pattern_name": "Perfect Solution Promise",
+  "pattern_description": "Promises to solve a universal frustration with a definitive, foolproof method that works every time.",
+  "psychological_trigger": "Loss aversion combined with certainty bias - viewers fear wasting time/materials on imperfect fits and crave guaranteed solutions",
+  "key_elements": [
+    "PERFECT FIT",
+    "EVERY Time",
+    "How to Design"
+  ],
+  "visual_elements": [
+    "Bright orange interlocking 3D printed parts",
+    "Clean mint green background",
+    "Bold white sans-serif typography"
+  ],
+  "thumbnail_psychology": "The perfectly fitted orange components create immediate visual satisfaction and demonstrate the promised outcome, while the motion arrow suggests the satisfying click-fit action viewers want to achieve",
+  "design_quality_score": 8.7,
+  "design_strengths": [
+    "High contrast orange-on-green creates maximum visibility",
+    "Clean minimalist composition focuses attention on the core promise"
+  ],
+  "marketing_positioning": "Positions as the definitive educational resource rather than entertainment or news, targeting serious practitioners who need reliable results",
+  "competitive_advantage": "Offers concrete methodology over theoretical discussions or case studies, promising universal applicability across all equipment and materials",
+  "why_it_works": "DESIGN: The thumbnail uses complementary colors and clean typography to create professional credibility while the interlocking parts provide immediate visual proof. PSYCHOLOGY: Taps into the universal frustration of trial-and-error in 3D printing by promising certainty and perfection. MARKETING: Differentiates from the channel's typical news/commentary content by offering actionable education that solves a core technical challenge every 3D printer faces.",
+  "semantic_queries": [
+    "3D printing tolerance tutorial",
+    "perfect fit 3D design",
+    "3D printing design principles"
+  ],
+  "visual_queries": [
+    "interlocking 3D printed parts demonstration",
+    "orange and green high contrast thumbnail design"
+  ],
+  "channel_outlier_explanation": "This video exploded because it shifted from the channel's typical industry commentary to solving a universal pain point that every 3D printing practitioner faces daily. The promise of 'EVERY Time' success creates irresistible appeal for viewers tired of failed prints and wasted materials, while the visual proof in the thumbnail immediately communicates the value proposition."
+}
+
+[2025-08-13T10:13:05.709Z] ✅ Pattern extracted: Perfect Solution Promise
+[2025-08-13T10:13:05.709Z] 📝 Text queries: 3D printing tolerance tutorial, perfect fit 3D design, 3D printing design principles
+[2025-08-13T10:13:05.709Z] 🎨 Visual queries: interlocking 3D printed parts demonstration, orange and green high contrast thumbnail design
+[2025-08-13T10:13:05.709Z] 
+============================================================
+[2025-08-13T10:13:05.709Z] MULTI-MODAL SEARCH PHASE
+[2025-08-13T10:13:05.709Z] ============================================================
+[2025-08-13T10:13:05.709Z] 
+--- Text-Based Semantic Searches ---
+[2025-08-13T10:13:05.709Z] 🔎 Starting text-based semantic searches...
+[2025-08-13T10:13:05.709Z]   Searching text for: "3D printing tolerance tutorial"
+[2025-08-13T10:13:05.709Z]     Generating OpenAI embedding for query...
+[2025-08-13T10:13:06.307Z]     Generated embedding in 598ms (512D)
+[2025-08-13T10:13:06.307Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T10:13:08.070Z]     Parallel search completed in 1763ms
+[2025-08-13T10:13:08.070Z] Title Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.691",
+  "topResults": [
+    {
+      "title": "Making 3D Prints Fit Perfectly with One Simple Setting",
+      "score": "0.737",
+      "views": 99737
+    },
+    {
+      "title": "Fixing a Design Flaw with 3D Printing",
+      "score": "0.715",
+      "views": 16725
+    },
+    {
+      "title": "How to 3D Print Dimensionally Accurate Parts",
+      "score": "0.704",
+      "views": 226745
+    }
+  ]
+}
+
+[2025-08-13T10:13:08.070Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.649",
+  "topResults": [
+    {
+      "title": "Fusion 360 for 3D Printing LESSON 17: Creating a Design Rule Checker for 3d Printing",
+      "score": "0.665",
+      "views": 7316
+    },
+    {
+      "title": "Just Say, \"No!\" to 3D Print Stringing!",
+      "score": "0.663",
+      "views": 2423
+    },
+    {
+      "title": "Hide Gaps in 3D Prints with Cura Slicer Settings",
+      "score": "0.661",
+      "views": 61852
+    }
+  ]
+}
+
+[2025-08-13T10:13:08.071Z]   Searching text for: "perfect fit 3D design"
+[2025-08-13T10:13:08.071Z]     Generating OpenAI embedding for query...
+[2025-08-13T10:13:08.368Z]     Generated embedding in 297ms (512D)
+[2025-08-13T10:13:08.368Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T10:13:09.080Z]     Parallel search completed in 712ms
+[2025-08-13T10:13:09.080Z] Title Search Results:
+{
+  "found": 17,
+  "avgSimilarity": "0.596",
+  "topResults": [
+    {
+      "title": "Creating sloppy parts to ensure perfect fit  - 3D design for 3D printing",
+      "score": "0.645",
+      "views": 73594
+    },
+    {
+      "title": "Complex design from start to finish - 3D design for 3D printing pt11",
+      "score": "0.642",
+      "views": 331446
+    },
+    {
+      "title": "Parts that fit odd shaped objects - 3D design for 3D printing pt4",
+      "score": "0.623",
+      "views": 244281
+    }
+  ]
+}
+
+[2025-08-13T10:13:09.080Z] Summary Search Results:
+{
+  "found": 18,
+  "avgSimilarity": "0.542",
+  "topResults": [
+    {
+      "title": "From Scan to Print: 3D-Printed Orthosis for Comfort Testing",
+      "score": "0.577",
+      "views": 12993
+    },
+    {
+      "title": "How to design your own helmet. Full tutorial in the membership!! #3dprinting",
+      "score": "0.569",
+      "views": 2654
+    },
+    {
+      "title": "Designing a Shoulder Piece. A full step by step tutorial is up on my membership site #3dprinting",
+      "score": "0.557",
+      "views": 3579
+    }
+  ]
+}
+
+[2025-08-13T10:13:09.080Z]   Searching text for: "3D printing design principles"
+[2025-08-13T10:13:09.080Z]     Generating OpenAI embedding for query...
+[2025-08-13T10:13:09.748Z]     Generated embedding in 668ms (512D)
+[2025-08-13T10:13:09.748Z]     Executing parallel Pinecone searches (title + summary)...
+[2025-08-13T10:13:10.354Z]     Parallel search completed in 606ms
+[2025-08-13T10:13:10.354Z] Title Search Results:
+{
+  "found": 19,
+  "avgSimilarity": "0.691",
+  "topResults": [
+    {
+      "title": "3D Printing Basics - The CORE Design Fundamental",
+      "score": "0.782",
+      "views": 5308
+    },
+    {
+      "title": "Designing STRONG parts: tips and tricks - 3D design for 3D printing pt5",
+      "score": "0.723",
+      "views": 269377
+    },
+    {
+      "title": "Fixing a Design Flaw with 3D Printing",
+      "score": "0.718",
+      "views": 16725
+    }
+  ]
+}
+
+[2025-08-13T10:13:10.354Z] Summary Search Results:
+{
+  "found": 20,
+  "avgSimilarity": "0.660",
+  "topResults": [
+    {
+      "title": "3D Printing Basics - The CORE Design Fundamental",
+      "score": "0.707",
+      "views": 5308
+    },
+    {
+      "title": "How I Made this Over Engineered Candy Dispenser",
+      "score": "0.703",
+      "views": 31735
+    },
+    {
+      "title": "Practical Printing TO THE RESCUE!",
+      "score": "0.687",
+      "views": 36820
+    }
+  ]
+}
+
+[2025-08-13T10:13:10.355Z] 
+--- Visual-Based Thumbnail Searches ---
+[2025-08-13T10:13:10.355Z] 🎨 Starting visual-based thumbnail searches...
+[2025-08-13T10:13:10.355Z]   Searching thumbnails for: "interlocking 3D printed parts demonstration"
+[2025-08-13T10:13:10.355Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T10:13:10.563Z]     Generated CLIP embedding in 208ms (768D)
+[2025-08-13T10:13:10.563Z]     Searching dedicated thumbnail index...
+[2025-08-13T10:13:11.321Z]     Thumbnail search completed in 758ms
+[2025-08-13T10:13:11.321Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.282",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "3D Printed Desk Plaque Custom Order #3dprinting #customised",
+      "score": "0.297",
+      "views": 602,
+      "channel": "Just Make It"
+    },
+    {
+      "title": "R2D2 Kit Card #3dprinting #starwars #r2d2",
+      "score": "0.290",
+      "views": 1413,
+      "channel": "Nikko Industries"
+    },
+    {
+      "title": "Resincrete Ashtrays? #resin #resinart #diy #resincrafts #Resincrete",
+      "score": "0.287",
+      "views": 3757,
+      "channel": "Steve McDonald Arts and Crafts"
+    }
+  ]
+}
+
+[2025-08-13T10:13:11.321Z]   Searching thumbnails for: "orange and green high contrast thumbnail design"
+[2025-08-13T10:13:11.321Z]     Generating CLIP text embedding for visual search...
+[2025-08-13T10:13:11.677Z]     Generated CLIP embedding in 356ms (768D)
+[2025-08-13T10:13:11.677Z]     Searching dedicated thumbnail index...
+[2025-08-13T10:13:11.908Z]     Thumbnail search completed in 231ms
+[2025-08-13T10:13:11.908Z] Thumbnail Search Results:
+{
+  "found": 25,
+  "avgSimilarity": "0.284",
+  "threshold": 0.2,
+  "topResults": [
+    {
+      "title": "How to Dropship T Shirts on Etsy (Complete Tutorial)",
+      "score": "0.304",
+      "views": 296,
+      "channel": "Bryan Guerra | eCommerce Tutorials"
+    },
+    {
+      "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+      "score": "0.297",
+      "views": 12541211,
+      "channel": "Jeremy Ethier"
+    },
+    {
+      "title": "One Of The MOST Important Design Theories I've Learnt (Must Know!)",
+      "score": "0.295",
+      "views": 31734,
+      "channel": "Satori Graphics"
+    }
+  ]
+}
+
+[2025-08-13T10:13:11.909Z] 
+============================================================
+[2025-08-13T10:13:11.909Z] VIDEO VALIDATION WITH ENHANCED LLM ANALYSIS
+[2025-08-13T10:13:11.909Z] ============================================================
+[2025-08-13T10:13:11.909Z] 📋 Getting full video data for 144 unique videos...
+[2025-08-13T10:13:12.021Z] 📊 Filtered to 20 high performers (2.5x-100x) for validation
+[2025-08-13T10:13:12.022Z] High-Performing Videos for Validation:
+[
+  {
+    "title": "Selfmade Mandalorian blaster! 🪐 #starwars #diycrafts",
+    "views": 5499323,
+    "score": 69.948,
+    "channel": "KamuiCosplay",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How to fix a Filament Blob on Ender 3 3D Printer",
+    "views": 179999,
+    "score": 23.244,
+    "channel": "CHEP",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Flexible NinjaFlex TPU using EZR on Ender 3",
+    "views": 194879,
+    "score": 22.622,
+    "channel": "CHEP",
+    "hasThumbnail": true
+  },
+  {
+    "title": "3D Printing with ABS - Tips for Success",
+    "views": 424836,
+    "score": 11.364,
+    "channel": "Clough42",
+    "hasThumbnail": true
+  },
+  {
+    "title": "My Secret To Perfectly Fitting 3D Prints",
+    "views": 138775,
+    "score": 11.199,
+    "channel": "Keep Making",
+    "hasThumbnail": true
+  },
+  {
+    "title": "3d Printing Basics with 3D Printing Nerd",
+    "views": 438055,
+    "score": 10.955,
+    "channel": "Anne of All Trades",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Fit ANY 3D Model on ANY 3D Printer! - A Cutting and Slicing Tutorial",
+    "views": 364686,
+    "score": 9.621,
+    "channel": "Frankly Built",
+    "hasThumbnail": true
+  },
+  {
+    "title": "This 3D Printer Fits in your Hand",
+    "views": 125985,
+    "score": 9.459,
+    "channel": "SeanHodgins",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Selecting a free 3D CAD option - 3D design for 3D printing pt1",
+    "views": 846271,
+    "score": 8.855,
+    "channel": "Teaching Tech",
+    "hasThumbnail": true
+  },
+  {
+    "title": "I PAID FIVERR EXPERTS To Run My WHOLE Dropshipping Business In 2023",
+    "views": 365251,
+    "score": 8.507,
+    "channel": "THE ECOM KING",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Tesla Valve 3D Printed",
+    "views": 571831,
+    "score": 7.659,
+    "channel": "Integza",
+    "hasThumbnail": true
+  },
+  {
+    "title": "One Click Smoother 3D Prints Using Ironing In Cura",
+    "views": 203173,
+    "score": 7.13,
+    "channel": "ModBot",
+    "hasThumbnail": true
+  },
+  {
+    "title": "3D Printed Perfect Coffee Scoop",
+    "views": 18768,
+    "score": 6.491,
+    "channel": "Functional Print Friday",
+    "hasThumbnail": true
+  },
+  {
+    "title": "how i found the 'so no head' vine road in 15 minutes",
+    "views": 644723,
+    "score": 5.933,
+    "channel": "RAINBOLT",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+    "views": 12541211,
+    "score": 4.606,
+    "channel": "Jeremy Ethier",
+    "hasThumbnail": true
+  },
+  {
+    "title": "2k Primer for Smoothing 3d printed parts",
+    "views": 15622,
+    "score": 4.422,
+    "channel": "gordontarpley",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How a Pro Designs a Cube for 3D Printing",
+    "views": 40844,
+    "score": 4.339,
+    "channel": "Slant 3D",
+    "hasThumbnail": true
+  },
+  {
+    "title": "Designing STRONG parts: tips and tricks - 3D design for 3D printing pt5",
+    "views": 269377,
+    "score": 4.215,
+    "channel": "Teaching Tech",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How to 3D Print Dimensionally Accurate Parts",
+    "views": 226745,
+    "score": 4.148,
+    "channel": "Clough42",
+    "hasThumbnail": true
+  },
+  {
+    "title": "How I get SMOOTH 3D Prints | EASY Slicer Settings You've Been Wanting!",
+    "views": 123175,
+    "score": 3.976,
+    "channel": "Frankly Built",
+    "hasThumbnail": true
+  }
+]
+
+[2025-08-13T10:13:12.024Z] 
+--- Enhanced LLM Validation Process ---
+[2025-08-13T10:13:12.024Z] 🤖 Starting enhanced LLM validation for 20 videos...
+[2025-08-13T10:14:53.283Z] ✅ Enhanced validation complete: 17 videos confirmed
+[2025-08-13T10:14:53.283Z] Final Validated Videos:
+[
+  {
+    "title": "Selfmade Mandalorian blaster! 🪐 #starwars #diycrafts",
+    "score": 69.948,
+    "channel": "KamuiCosplay",
+    "reason": "The video appears to be a DIY tutorial promising to show viewers exactly how to create a perfect Mandalorian blaster prop through step-by-step instructions, implying guaranteed results if followed correctly.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How to fix a Filament Blob on Ender 3 3D Printer",
+    "score": 23.244,
+    "channel": "CHEP",
+    "reason": "The video title and thumbnail suggest it offers a definitive solution for fixing filament blobs on the Ender 3 printer, implying a perfect, guaranteed fix for this specific problem.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "Flexible NinjaFlex TPU using EZR on Ender 3",
+    "score": 22.622,
+    "channel": "CHEP",
+    "reason": "The video title and thumbnail suggest it's demonstrating a specific solution for printing flexible filament perfectly on the Ender 3 printer, implying an ideal or \"perfect\" method for this challenging printing scenario.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "3D Printing with ABS - Tips for Success",
+    "score": 11.364,
+    "channel": "Clough42",
+    "reason": "The title and thumbnail suggesting \"Hard Mode!\" with tips for ABS printing implies a promise of mastering/perfecting a notoriously difficult 3D printing material through specific guidance.",
+    "source": "title"
+  },
+  {
+    "title": "My Secret To Perfectly Fitting 3D Prints",
+    "score": 11.199,
+    "channel": "Keep Making",
+    "reason": "The video title and thumbnail directly promise \"Design to Fit EVERYTIME\" which implies a perfect, guaranteed solution for 3D print fitting issues - a classic example of the Perfect Solution Promise pattern.",
+    "source": "title"
+  },
+  {
+    "title": "How To Fit ANY 3D Model on ANY 3D Printer! - A Cutting and Slicing Tutorial",
+    "score": 9.621,
+    "channel": "Frankly Built",
+    "reason": "The title's use of \"ANY\" twice and promise of universal compatibility (\"Fit ANY 3D Model on ANY 3D Printer!\") strongly exemplifies the Perfect Solution Promise pattern by suggesting a complete, universal solution that works in all cases.",
+    "source": "summary"
+  },
+  {
+    "title": "This 3D Printer Fits in your Hand",
+    "score": 9.459,
+    "channel": "SeanHodgins",
+    "reason": "The video's title and thumbnail suggesting a hand-sized 3D printer implies a \"perfect solution\" by promising an idealized compact form factor that seems to solve all 3D printing needs in one small package.",
+    "source": "title"
+  },
+  {
+    "title": "I PAID FIVERR EXPERTS To Run My WHOLE Dropshipping Business In 2023",
+    "score": 8.507,
+    "channel": "THE ECOM KING",
+    "reason": "The video appears to demonstrate the Perfect Solution Promise pattern by positioning Fiverr experts as a guaranteed way to successfully run and improve a dropshipping business, implying a complete and perfect solution for entrepreneurs.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "One Click Smoother 3D Prints Using Ironing In Cura",
+    "score": 7.13,
+    "channel": "ModBot",
+    "reason": "The video title and thumbnail promise a simple \"one click\" solution for achieving perfectly smooth 3D prints every time, which aligns with the \"Perfect Solution Promise\" pattern of guaranteeing ideal results through a seemingly effortless process.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "3D Printed Perfect Coffee Scoop",
+    "score": 6.491,
+    "channel": "Functional Print Friday",
+    "reason": "The video's title and premise of creating a \"Perfect\" coffee scoop through 3D printing directly aligns with the pattern's emphasis on promising an ideal, flawless solution to a common problem.",
+    "source": "summary"
+  },
+  {
+    "title": "how i found the 'so no head' vine road in 15 minutes",
+    "score": 5.933,
+    "channel": "RAINBOLT",
+    "reason": "The video thumbnail and title suggest a \"perfect solution\" by promising a specific, fast method (15 minutes) to find an exact location, implying a guaranteed successful outcome for this particular search challenge.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+    "score": 4.606,
+    "channel": "Jeremy Ethier",
+    "reason": "The video thumbnail and title strongly suggest a \"perfect solution\" by promising a definitive 3-step process to solve the common problem of belly fat, complete with before/after imagery implying guaranteed results.",
+    "source": "thumbnail"
+  },
+  {
+    "title": "2k Primer for Smoothing 3d printed parts",
+    "score": 4.422,
+    "channel": "gordontarpley",
+    "reason": "The video appears to be a tutorial promising a perfect solution for smoothing 3D printed parts using 2k primer, suggesting it will work effectively every time when following the demonstrated technique.",
+    "source": "title"
+  },
+  {
+    "title": "How a Pro Designs a Cube for 3D Printing",
+    "score": 4.339,
+    "channel": "Slant 3D",
+    "reason": "The title \"Design Like a Pro\" and the promise of professional-level cube design implies a perfect, expert solution that will work every time, which aligns with the Perfect Solution Promise pattern.",
+    "source": "summary"
+  },
+  {
+    "title": "Designing STRONG parts: tips and tricks - 3D design for 3D printing pt5",
+    "score": 4.215,
+    "channel": "Teaching Tech",
+    "reason": "The video title and thumbnail suggest it offers definitive \"tips and tricks\" for designing strong parts every time, implying a perfect solution for 3D printing strength challenges, which aligns with the Perfect Solution Promise pattern.",
+    "source": "title"
+  },
+  {
+    "title": "How to 3D Print Dimensionally Accurate Parts",
+    "score": 4.148,
+    "channel": "Clough42",
+    "reason": "The title and focus on \"dimensionally accurate parts\" suggests a promise of perfect, precise results every time through following specific tuning instructions, which aligns with the \"Perfect Solution Promise\" pattern.",
+    "source": "summary"
+  },
+  {
+    "title": "How I get SMOOTH 3D Prints | EASY Slicer Settings You've Been Wanting!",
+    "score": 3.976,
+    "channel": "Frankly Built",
+    "reason": "The title and thumbnail promising \"SUPER SMOOTH\" prints and \"EASY\" settings suggests a perfect, guaranteed solution for achieving flawless 3D prints every time, which aligns with the Perfect Solution Promise pattern.",
+    "source": "summary"
+  }
+]
+
+[2025-08-13T10:14:53.285Z] Pre-Calculation Metrics:
+{
+  "validationResults": 7,
+  "totalValidations": 17,
+  "avgPatternScore": 16.755489795918365,
+  "visualValidations": 0,
+  "resultDetails": [
+    {
+      "niche": "3D Printing",
+      "count": 1,
+      "avg_score": 69.948,
+      "visualMatches": 0
+    },
+    {
+      "niche": "LEGO",
+      "count": 4,
+      "avg_score": 11.316000000000003,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Outlier",
+      "count": 7,
+      "avg_score": 8.71342857142857,
+      "visualMatches": 0
+    },
+    {
+      "niche": "E-commerce Strategy",
+      "count": 1,
+      "avg_score": 8.507,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Star Wars",
+      "count": 2,
+      "avg_score": 7.707,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Electric Vehicles",
+      "count": 1,
+      "avg_score": 6.491,
+      "visualMatches": 0
+    },
+    {
+      "niche": "Nutrition",
+      "count": 1,
+      "avg_score": 4.606,
+      "visualMatches": 0
+    }
+  ]
+}
+
+[2025-08-13T10:14:53.286Z] Pattern Strength Calculation:
+{
+  "totalValidations": 17,
+  "avgPatternScore": 16.755489795918365,
+  "visualValidations": 0,
+  "hasVisualValidation": false,
+  "multiModalBonus": 1,
+  "adjustedAvgScore": 16.755489795918365,
+  "finalStrength": "strong"
+}
+
+[2025-08-13T10:14:53.286Z] 
+============================================================
+[2025-08-13T10:14:53.286Z] ANALYSIS COMPLETE - FINAL RESULTS
+[2025-08-13T10:14:53.286Z] ============================================================
+[2025-08-13T10:14:53.286Z] ✅ Enhanced pattern analysis complete in 122701ms
+[2025-08-13T10:14:53.286Z] 📊 Found 17 validations (0 with visual matches) across 7 niches
+[2025-08-13T10:14:53.286Z] 
+============================================================
+[2025-08-13T10:14:53.286Z] COST SUMMARY
+[2025-08-13T10:14:53.286Z] ============================================================
+[2025-08-13T10:14:53.286Z] 💰 Claude API (vision enabled): $0.123568
+[2025-08-13T10:14:53.286Z] 💰 OpenAI embeddings: $0.000000
+[2025-08-13T10:14:53.286Z] 💰 Replicate CLIP: $0.002000
+[2025-08-13T10:14:53.287Z] 💰 TOTAL ANALYSIS COST: $0.125568
+[2025-08-13T10:14:53.287Z] Complete Analysis Results:
+{
+  "enhanced": true,
+  "pattern": {
+    "pattern_name": "Perfect Solution Promise",
+    "pattern_description": "Promises to solve a universal frustration with a definitive, foolproof method that works every time.",
+    "psychological_trigger": "Loss aversion combined with certainty bias - viewers fear wasting time/materials on imperfect fits and crave guaranteed solutions",
+    "key_elements": [
+      "PERFECT FIT",
+      "EVERY Time",
+      "How to Design"
+    ],
+    "visual_elements": [
+      "Bright orange interlocking 3D printed parts",
+      "Clean mint green background",
+      "Bold white sans-serif typography"
+    ],
+    "thumbnail_psychology": "The perfectly fitted orange components create immediate visual satisfaction and demonstrate the promised outcome, while the motion arrow suggests the satisfying click-fit action viewers want to achieve",
+    "design_quality_score": 8.7,
+    "design_strengths": [
+      "High contrast orange-on-green creates maximum visibility",
+      "Clean minimalist composition focuses attention on the core promise"
+    ],
+    "marketing_positioning": "Positions as the definitive educational resource rather than entertainment or news, targeting serious practitioners who need reliable results",
+    "competitive_advantage": "Offers concrete methodology over theoretical discussions or case studies, promising universal applicability across all equipment and materials",
+    "why_it_works": "DESIGN: The thumbnail uses complementary colors and clean typography to create professional credibility while the interlocking parts provide immediate visual proof. PSYCHOLOGY: Taps into the universal frustration of trial-and-error in 3D printing by promising certainty and perfection. MARKETING: Differentiates from the channel's typical news/commentary content by offering actionable education that solves a core technical challenge every 3D printer faces.",
+    "semantic_queries": [
+      "3D printing tolerance tutorial",
+      "perfect fit 3D design",
+      "3D printing design principles"
+    ],
+    "visual_queries": [
+      "interlocking 3D printed parts demonstration",
+      "orange and green high contrast thumbnail design"
+    ],
+    "channel_outlier_explanation": "This video exploded because it shifted from the channel's typical industry commentary to solving a universal pain point that every 3D printing practitioner faces daily. The promise of 'EVERY Time' success creates irresistible appeal for viewers tired of failed prints and wasted materials, while the visual proof in the thumbnail immediately communicates the value proposition."
+  },
+  "source_video": {
+    "id": "XKrDUnZCmQQ",
+    "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+    "channel": "Slant 3D",
+    "score": 17.719,
+    "niche": "Fashion & Beauty",
+    "views": 164825,
+    "thumbnail": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg",
+    "baseline": 10162.5,
+    "published_at": "2025-07-31T16:01:01+00:00"
+  },
+  "validation": {
+    "results": [
+      {
+        "niche": "3D Printing",
+        "videos": [
+          {
+            "title": "Selfmade Mandalorian blaster! 🪐 #starwars #diycrafts",
+            "score": 69.948,
+            "views": 5499323,
+            "channel": "KamuiCosplay",
+            "thumbnail_url": "https://i.ytimg.com/vi/Q0Bmwn0XskQ/hqdefault.jpg",
+            "summary": "Building a Mandalorian Amban rifle using EVA foam and a PVC pipe, focusing on screen accuracy. The project is completed with painting for a finished look.",
+            "validation_reason": "The video appears to be a DIY tutorial promising to show viewers exactly how to create a perfect Mandalorian blaster prop through step-by-step instructions, implying guaranteed results if followed correctly.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 69.948,
+        "count": 1
+      },
+      {
+        "niche": "LEGO",
+        "videos": [
+          {
+            "title": "Flexible NinjaFlex TPU using EZR on Ender 3",
+            "score": 22.622,
+            "views": 194879,
+            "channel": "CHEP",
+            "thumbnail_url": "https://i.ytimg.com/vi/1GNDxvxpWr8/hqdefault.jpg",
+            "summary": "Installing the EZR Extruder on a Creality Ender 3 to improve the printing of 85A TPU (NinjaFlex) filament, demonstrating its effectiveness by printing runner feet for the 3D printer.",
+            "validation_reason": "The video title and thumbnail suggest it's demonstrating a specific solution for printing flexible filament perfectly on the Ender 3 printer, implying an ideal or \"perfect\" method for this challenging printing scenario.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "3D Printing with ABS - Tips for Success",
+            "score": 11.364,
+            "views": 424836,
+            "channel": "Clough42",
+            "thumbnail_url": "https://i.ytimg.com/vi/DQu0ThBS4MY/maxresdefault.jpg",
+            "summary": "Explaining the causes of warping and peeling in ABS 3D printing, along with effective strategies to prevent these issues for successful prints.",
+            "validation_reason": "The title and thumbnail suggesting \"Hard Mode!\" with tips for ABS printing implies a promise of mastering/perfecting a notoriously difficult 3D printing material through specific guidance.",
+            "source": "title"
+          },
+          {
+            "title": "One Click Smoother 3D Prints Using Ironing In Cura",
+            "score": 7.13,
+            "views": 203173,
+            "channel": "ModBot",
+            "thumbnail_url": "https://i.ytimg.com/vi/HMqch_L58do/hqdefault.jpg",
+            "summary": "Demonstrating the ironing feature in Cura, this content explains how to activate it and adjust various settings to achieve smoother top surfaces on 3D printed parts. It also showcases the printing process and the effects of ironing on tolerances.",
+            "validation_reason": "The video title and thumbnail promise a simple \"one click\" solution for achieving perfectly smooth 3D prints every time, which aligns with the \"Perfect Solution Promise\" pattern of guaranteeing ideal results through a seemingly effortless process.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "How to 3D Print Dimensionally Accurate Parts",
+            "score": 4.148,
+            "views": 226745,
+            "channel": "Clough42",
+            "thumbnail_url": "https://i.ytimg.com/vi/0dFThbwAx2Y/maxresdefault.jpg",
+            "summary": "Identifying and addressing common issues that lead to dimensional inaccuracies in 3D-printed parts. Discussing the causes of size discrepancies and demonstrating effective solutions to ensure proper fit.",
+            "validation_reason": "The title and focus on \"dimensionally accurate parts\" suggests a promise of perfect, precise results every time through following specific tuning instructions, which aligns with the \"Perfect Solution Promise\" pattern.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 11.316000000000003,
+        "count": 4
+      },
+      {
+        "niche": "Outlier",
+        "videos": [
+          {
+            "title": "How to fix a Filament Blob on Ender 3 3D Printer",
+            "score": 23.244,
+            "views": 179999,
+            "channel": "CHEP",
+            "thumbnail_url": "https://i.ytimg.com/vi/JsEKEQGpP7I/hqdefault.jpg",
+            "summary": "Installing a silicon heater block cover on the Creality Ender 3, CR-10 Mini, or CR-10 to facilitate easier removal of filament blobs from the hotend. Demonstrating the installation process and explaining how the modification improves performance.",
+            "validation_reason": "The video title and thumbnail suggest it offers a definitive solution for fixing filament blobs on the Ender 3 printer, implying a perfect, guaranteed fix for this specific problem.",
+            "source": "thumbnail"
+          },
+          {
+            "title": "How To Fit ANY 3D Model on ANY 3D Printer! - A Cutting and Slicing Tutorial",
+            "score": 9.621,
+            "views": 364686,
+            "channel": "Frankly Built",
+            "thumbnail_url": "https://i.ytimg.com/vi/oA7p_YQ_KoQ/maxresdefault.jpg",
+            "summary": "Fitting 3D models to various printer sizes using cutting and slicing techniques. Demonstrating methods to adapt any 3D file for compatibility with different 3D printers.",
+            "validation_reason": "The title's use of \"ANY\" twice and promise of universal compatibility (\"Fit ANY 3D Model on ANY 3D Printer!\") strongly exemplifies the Perfect Solution Promise pattern by suggesting a complete, universal solution that works in all cases.",
+            "source": "summary"
+          },
+          {
+            "title": "This 3D Printer Fits in your Hand",
+            "score": 9.459,
+            "views": 125985,
+            "channel": "SeanHodgins",
+            "thumbnail_url": "https://i.ytimg.com/vi/VCcJjI2u4AU/hqdefault.jpg",
+            "summary": "Demonstrating a compact 3D printer that fits in the palm of your hand, showcasing its functionality and potential applications.",
+            "validation_reason": "The video's title and thumbnail suggesting a hand-sized 3D printer implies a \"perfect solution\" by promising an idealized compact form factor that seems to solve all 3D printing needs in one small package.",
+            "source": "title"
+          },
+          {
+            "title": "how i found the 'so no head' vine road in 15 minutes",
+            "score": 5.933,
+            "views": 644723,
+            "channel": "RAINBOLT",
+            "thumbnail_url": "https://i.ytimg.com/vi/qfdwjleF7nY/hqdefault.jpg",
+            "summary": "Exploring the location of the 'so no head' vine, demonstrating the process of finding it efficiently in a short time frame.",
+            "validation_reason": "The video thumbnail and title suggest a \"perfect solution\" by promising a specific, fast method (15 minutes) to find an exact location, implying a guaranteed successful outcome for this particular search challenge.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 8.71342857142857,
+        "count": 7
+      },
+      {
+        "niche": "E-commerce Strategy",
+        "videos": [
+          {
+            "title": "I PAID FIVERR EXPERTS To Run My WHOLE Dropshipping Business In 2023",
+            "score": 8.507,
+            "views": 365251,
+            "channel": "THE ECOM KING",
+            "thumbnail_url": "https://i.ytimg.com/vi/6MKO7iAtiAE/hqdefault.jpg",
+            "summary": "Automating a Shopify dropshipping business by hiring freelancers on Fiverr to find winning products, build a one-product store, create TikTok video ads, and manage TikTok advertising for five days. The experiment evaluates the effectiveness of freelancers in the e-commerce space.",
+            "validation_reason": "The video appears to demonstrate the Perfect Solution Promise pattern by positioning Fiverr experts as a guaranteed way to successfully run and improve a dropshipping business, implying a complete and perfect solution for entrepreneurs.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 8.507,
+        "count": 1
+      },
+      {
+        "niche": "Star Wars",
+        "videos": [
+          {
+            "title": "My Secret To Perfectly Fitting 3D Prints",
+            "score": 11.199,
+            "views": 138775,
+            "channel": "Keep Making",
+            "thumbnail_url": "https://i.ytimg.com/vi/0VCss6i7HAk/hqdefault.jpg",
+            "summary": "Leveraging scale reference and precision modeling in Blender, transform photos into accurate designs for 3D printing. Utilize a ruler to ensure perfectly fitting prints, enhancing the quality of your 3D projects.",
+            "validation_reason": "The video title and thumbnail directly promise \"Design to Fit EVERYTIME\" which implies a perfect, guaranteed solution for 3D print fitting issues - a classic example of the Perfect Solution Promise pattern.",
+            "source": "title"
+          },
+          {
+            "title": "Designing STRONG parts: tips and tricks - 3D design for 3D printing pt5",
+            "score": 4.215,
+            "views": 269377,
+            "channel": "Teaching Tech",
+            "thumbnail_url": "https://i.ytimg.com/vi/yP7_qZ_Mi78/hqdefault.jpg",
+            "summary": "Designing a strong bracket and mount using a free 3D CAD program by incorporating three separate parts to optimize print orientation for strength. The process includes taking measurements, considering design features, and utilizing trapped nuts and self-threading bolts for assembly.",
+            "validation_reason": "The video title and thumbnail suggest it offers definitive \"tips and tricks\" for designing strong parts every time, implying a perfect solution for 3D printing strength challenges, which aligns with the Perfect Solution Promise pattern.",
+            "source": "title"
+          }
+        ],
+        "avg_score": 7.707,
+        "count": 2
+      },
+      {
+        "niche": "Electric Vehicles",
+        "videos": [
+          {
+            "title": "3D Printed Perfect Coffee Scoop",
+            "score": 6.491,
+            "views": 18768,
+            "channel": "Functional Print Friday",
+            "thumbnail_url": "https://i.ytimg.com/vi/an4bQNBIzzw/maxresdefault.jpg",
+            "summary": "Creating a 3D printed coffee scoop designed for precision and functionality, focusing on the design considerations and practical applications of the finished product.",
+            "validation_reason": "The video's title and premise of creating a \"Perfect\" coffee scoop through 3D printing directly aligns with the pattern's emphasis on promising an ideal, flawless solution to a common problem.",
+            "source": "summary"
+          }
+        ],
+        "avg_score": 6.491,
+        "count": 1
+      },
+      {
+        "niche": "Nutrition",
+        "videos": [
+          {
+            "title": "How To Lose Stubborn Belly Fat In 3 Steps (And How Long It Will Take You)",
+            "score": 4.606,
+            "views": 12541211,
+            "channel": "Jeremy Ethier",
+            "thumbnail_url": "https://i.ytimg.com/vi/qTBfmwHN3_I/hqdefault.jpg",
+            "summary": "Losing stubborn belly fat involves maintaining a calorie deficit while incorporating regular weightlifting to enhance fat loss. The process requires patience, as it may take time for the body to begin utilizing belly fat as a fuel source after reducing fat from other areas.",
+            "validation_reason": "The video thumbnail and title strongly suggest a \"perfect solution\" by promising a definitive 3-step process to solve the common problem of belly fat, complete with before/after imagery implying guaranteed results.",
+            "source": "thumbnail"
+          }
+        ],
+        "avg_score": 4.606,
+        "count": 1
+      }
+    ],
+    "total_validations": 17,
+    "visual_validations": 0,
+    "pattern_strength": "strong",
+    "avg_pattern_score": 16.755489795918365
+  },
+  "processing_time_ms": 122701,
+  "debug": {
+    "total_searches": 5,
+    "text_searches": 3,
+    "visual_searches": 2,
+    "unique_videos_found": 144,
+    "thumbnail_analysis_enabled": true,
+    "searchLogs": [
+      "🔎 Starting text-based semantic searches...",
+      "  Searching text for: \"3D printing tolerance tutorial\"",
+      "    Generated embedding in 598ms",
+      "    Title search: 20 results (avg similarity: 0.691)",
+      "    Summary search: 20 results (avg similarity: 0.649)",
+      "    Parallel search completed in 1763ms",
+      "  Searching text for: \"perfect fit 3D design\"",
+      "    Generated embedding in 297ms",
+      "    Title search: 17 results (avg similarity: 0.596)",
+      "    Summary search: 18 results (avg similarity: 0.542)",
+      "    Parallel search completed in 712ms",
+      "  Searching text for: \"3D printing design principles\"",
+      "    Generated embedding in 668ms",
+      "    Title search: 19 results (avg similarity: 0.691)",
+      "    Summary search: 20 results (avg similarity: 0.660)",
+      "    Parallel search completed in 606ms",
+      "🎨 Starting visual-based thumbnail searches...",
+      "  Searching thumbnails for: \"interlocking 3D printed parts demonstration\"",
+      "    Generated CLIP embedding in 208ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.282)",
+      "    Visual search completed in 758ms",
+      "    Added 25 visual matches to tracking",
+      "  Searching thumbnails for: \"orange and green high contrast thumbnail design\"",
+      "    Generated CLIP embedding in 356ms (768D)",
+      "    Thumbnail search: 25 results (avg similarity: 0.284)",
+      "    Visual search completed in 231ms",
+      "    Added 25 visual matches to tracking",
+      "📊 Total unique videos found: 144 across all searches",
+      "📋 Getting full video data for 144 unique videos...",
+      "📊 Filtered to 20 high performers (2.5x-100x) for validation",
+      "🤖 Starting enhanced LLM validation for 20 videos...",
+      "    ✅ Validated \"Selfmade Mandalorian blaster! 🪐 #starwars #diycra...\" in 2416ms (thumbnail source)",
+      "    ✅ Validated \"How to fix a Filament Blob on Ender 3 3D Printer...\" in 2817ms (thumbnail source)",
+      "    ✅ Validated \"Flexible NinjaFlex TPU using EZR on Ender 3...\" in 17947ms (thumbnail source)",
+      "    ✅ Validated \"3D Printing with ABS - Tips for Success...\" in 4134ms (title source)",
+      "    ✅ Validated \"My Secret To Perfectly Fitting 3D Prints...\" in 2815ms (title source)",
+      "    ❌ Rejected \"3d Printing Basics with 3D Printing Nerd...\" in 3311ms - NO: The title \"3D Printing 101\" and workshop setting suggest this is an educational basics video foc",
+      "    ✅ Validated \"How To Fit ANY 3D Model on ANY 3D Printer! - A Cut...\" in 3479ms (summary source)",
+      "    ✅ Validated \"This 3D Printer Fits in your Hand...\" in 2113ms (title source)",
+      "    ❌ Rejected \"Selecting a free 3D CAD option - 3D design for 3D ...\" in 4235ms - NO: While the video discusses CAD software options, the thoughtful pose and comparison of multiple s",
+      "    ✅ Validated \"I PAID FIVERR EXPERTS To Run My WHOLE Dropshipping...\" in 2209ms (thumbnail source)",
+      "    ❌ Rejected \"Tesla Valve 3D Printed...\" in 2354ms - NO: While the video demonstrates a specific engineering solution (Tesla valve), the 7.7x performance",
+      "    ✅ Validated \"One Click Smoother 3D Prints Using Ironing In Cura...\" in 4421ms (thumbnail source)",
+      "    ✅ Validated \"3D Printed Perfect Coffee Scoop...\" in 8501ms (summary source)",
+      "    ✅ Validated \"how i found the 'so no head' vine road in 15 minut...\" in 4198ms (thumbnail source)",
+      "    ✅ Validated \"How To Lose Stubborn Belly Fat In 3 Steps (And How...\" in 3479ms (thumbnail source)",
+      "    ✅ Validated \"2k Primer for Smoothing 3d printed parts...\" in 4403ms (title source)",
+      "    ✅ Validated \"How a Pro Designs a Cube for 3D Printing...\" in 5590ms (summary source)",
+      "    ✅ Validated \"Designing STRONG parts: tips and tricks - 3D desig...\" in 4602ms (title source)",
+      "    ✅ Validated \"How to 3D Print Dimensionally Accurate Parts...\" in 10611ms (summary source)",
+      "    ✅ Validated \"How I get SMOOTH 3D Prints | EASY Slicer Settings ...\" in 7620ms (summary source)",
+      "✅ Enhanced validation complete: 17 videos confirmed"
+    ],
+    "searchTimings": {
+      "textSearches": [
+        {
+          "query": "3D printing tolerance tutorial",
+          "duration": 2362,
+          "titleResults": 20,
+          "summaryResults": 20
+        },
+        {
+          "query": "perfect fit 3D design",
+          "duration": 1009,
+          "titleResults": 17,
+          "summaryResults": 18
+        },
+        {
+          "query": "3D printing design principles",
+          "duration": 1275,
+          "titleResults": 19,
+          "summaryResults": 20
+        }
+      ],
+      "visualSearches": [
+        {
+          "query": "interlocking 3D printed parts demonstration",
+          "duration": 966,
+          "results": 25
+        },
+        {
+          "query": "orange and green high contrast thumbnail design",
+          "duration": 587,
+          "results": 25
+        }
+      ]
+    },
+    "searchResults": [
+      {
+        "query": "3D printing tolerance tutorial",
+        "duration": 2362,
+        "titleSearch": {
+          "found": 20,
+          "avgSimilarity": 0.6908630631,
+          "threshold": 0.5,
+          "topScores": [
+            0.737056,
+            0.714606345,
+            0.704357266
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.6493895281500002,
+          "threshold": 0.4,
+          "topScores": [
+            0.66456604,
+            0.662901342,
+            0.66091305
+          ]
+        }
+      },
+      {
+        "query": "perfect fit 3D design",
+        "duration": 1009,
+        "titleSearch": {
+          "found": 17,
+          "avgSimilarity": 0.5961275756470588,
+          "threshold": 0.5,
+          "topScores": [
+            0.645106673,
+            0.642213643,
+            0.622714102
+          ]
+        },
+        "summarySearch": {
+          "found": 18,
+          "avgSimilarity": 0.5417217497222223,
+          "threshold": 0.4,
+          "topScores": [
+            0.5771842,
+            0.569004297,
+            0.55651319
+          ]
+        }
+      },
+      {
+        "query": "3D printing design principles",
+        "duration": 1275,
+        "titleSearch": {
+          "found": 19,
+          "avgSimilarity": 0.6912642457368422,
+          "threshold": 0.5,
+          "topScores": [
+            0.782404184,
+            0.72326988,
+            0.718458712
+          ]
+        },
+        "summarySearch": {
+          "found": 20,
+          "avgSimilarity": 0.6604535251,
+          "threshold": 0.4,
+          "topScores": [
+            0.707217813,
+            0.70304203,
+            0.686807036
+          ]
+        }
+      }
+    ],
+    "visualSearchResults": [
+      {
+        "query": "interlocking 3D printed parts demonstration",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 966,
+        "avgSimilarity": 0.28172261572,
+        "topScores": [
+          0.297018439,
+          0.290399194,
+          0.287484795
+        ]
+      },
+      {
+        "query": "orange and green high contrast thumbnail design",
+        "found": 25,
+        "threshold": 0.2,
+        "embedding_type": "CLIP-768D",
+        "duration": 587,
+        "avgSimilarity": 0.2841294527599999,
+        "topScores": [
+          0.304498494,
+          0.296641469,
+          0.295271963
+        ]
+      }
+    ],
+    "validation": {
+      "totalVideosFound": 144,
+      "afterPerformanceFilter": 20,
+      "validated": 17,
+      "validationRate": "85.0%",
+      "sourceBreakdown": {
+        "title": 5,
+        "summary": 5,
+        "thumbnail": 7
+      }
+    },
+    "extraction": {
+      "promptTokens": 1009,
+      "responseTokens": 532,
+      "model": "claude-sonnet-4-20250514",
+      "validation_model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "thumbnailAnalyzed": true
+    },
+    "thresholds": {
+      "similarity": {
+        "titles": 0.5,
+        "summaries": 0.4,
+        "thumbnails": 0.5
+      },
+      "performance": 2.5,
+      "maxValidations": 20
+    }
+  },
+  "costs": {
+    "claude": 0.1235676,
+    "openai": 3.0000000000000004e-7,
+    "replicate": 0.002,
+    "total": 0.12556789999999998,
+    "breakdown": {
+      "pattern_extraction": 0.055035,
+      "text_embeddings": 3.0000000000000004e-7,
+      "visual_embeddings": 0.002,
+      "validations": 0.0685326
+    }
+  }
+}
+
+
+================================================================================
+LOG COMPLETE - 2025-08-13T10:14:53.290Z
+================================================================================

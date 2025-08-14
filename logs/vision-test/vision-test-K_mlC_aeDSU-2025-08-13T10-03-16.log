@@ -1,0 +1,46 @@
+[2025-08-13T10:03:16.417Z] ================================================================================
+[2025-08-13T10:03:16.417Z] VISION APPROACHES TEST - 2025-08-13T10:03:16.417Z
+[2025-08-13T10:03:16.417Z] Video ID: K_mlC_aeDSU
+[2025-08-13T10:03:16.417Z] ================================================================================
+[2025-08-13T10:03:16.660Z] 🔍 Testing vision approaches for: K_mlC_aeDSU
+[2025-08-13T10:03:16.660Z] 📺 Target: "Complete ChatGPT-5 Breakdown and First Impressions" (4.0x TPS)
+[2025-08-13T10:03:16.660Z] 🖼️ Thumbnail: https://i.ytimg.com/vi/K_mlC_aeDSU/hqdefault.jpg
+[2025-08-13T10:03:16.660Z] 🧪 Testing approaches: progressive
+[2025-08-13T10:03:16.660Z] 
+============================================================
+[2025-08-13T10:03:16.661Z] TESTING: PROGRESSIVE VISION ANALYSIS
+[2025-08-13T10:03:16.661Z] ============================================================
+[2025-08-13T10:03:42.092Z] ⏱️ Progressive completed in 25431ms (3 steps)
+[2025-08-13T10:03:42.093Z] 📝 Total response length: 3792 chars
+[2025-08-13T10:03:42.093Z] 
+============================================================
+[2025-08-13T10:03:42.093Z] COMPARISON RESULTS
+[2025-08-13T10:03:42.093Z] ============================================================
+[2025-08-13T10:03:42.093Z] Performance comparison:
+{
+  "approaches_tested": [
+    "progressive"
+  ],
+  "performance": [
+    {
+      "approach": "progressive",
+      "duration_ms": 25431,
+      "response_length": 3792,
+      "tokens_used": 2227
+    }
+  ],
+  "total_processing_time": 25676
+}
+
+[2025-08-13T10:03:42.093Z] 
+📊 QUALITY ASSESSMENT:
+[2025-08-13T10:03:42.093Z] PROGRESSIVE:
+[2025-08-13T10:03:42.093Z] - Word count: 505
+[2025-08-13T10:03:42.094Z] - Has structure: true
+[2025-08-13T10:03:42.094Z] - Has specifics: true
+[2025-08-13T10:03:42.094Z] - Preview: ## OVERVIEW
+This thumbnail appears to be for a video about the release or announcement of GPT-5, as indicated by a mobile phone screen showing "Introd...
+
+================================================================================
+LOG COMPLETE - 2025-08-13T10:03:42.094Z
+================================================================================

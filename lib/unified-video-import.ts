@@ -1073,8 +1073,7 @@ export class VideoImportService {
     const videoIds: string[] = [];
     let nextPageToken: string | undefined;
     const pageSize = 50;
-    const maxResults = options?.maxVideosPerChannel || 500; // Default limit
-    const minVideosTarget = 50; // Fallback target if date filtering yields too few videos
+    const maxResults = options?.maxVideosPerChannel || 200; // Default limit: 200 videos per channel
     
     console.log(`📺 Fetching videos from channel ${channelId}`);
     
@@ -1172,80 +1171,8 @@ export class VideoImportService {
       console.error(`❌ Error fetching videos from channel ${channelId}:`, error);
     }
     
-    // Fallback logic: if we have date filtering and got less than 50 videos, try without date filter
-    if (publishedAfter && videoIds.length < minVideosTarget && videoIds.length > 0) {
-      console.log(`⚠️ Channel ${channelId}: Only found ${videoIds.length} videos in date range. Fetching older videos to reach ${minVideosTarget} minimum...`);
-      
-      try {
-        // Reset and fetch without date filter to get at least 50 total videos
-        const additionalVideoIds: string[] = [];
-        let fallbackNextPageToken: string | undefined;
-        
-        // Get channel uploads playlist ID (we should have it cached from above)
-        const channelResponse = await this.makeYouTubeRequest(
-          `https://www.googleapis.com/youtube/v3/channels?` +
-          `part=contentDetails&` +
-          `id=${channelId}`
-        );
-        
-        if (channelResponse.ok) {
-          const channelData = await channelResponse.json();
-          const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-          
-          if (uploadsPlaylistId) {
-            // Fetch without date filter until we have at least 50 total
-            const targetTotal = Math.max(minVideosTarget, videoIds.length);
-            
-            do {
-              const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?` +
-                `part=snippet&` +
-                `playlistId=${uploadsPlaylistId}&` +
-                `maxResults=${pageSize}` +
-                (fallbackNextPageToken ? `&pageToken=${fallbackNextPageToken}` : '');
-
-              const response = await this.makeYouTubeRequest(playlistUrl);
-              
-              if (!response.ok) break;
-              
-              const data = await response.json();
-              
-              if (data.items && data.items.length > 0) {
-                // Don't re-add videos we already have
-                const existingVideoIds = new Set(videoIds);
-                const newVideoIds = data.items
-                  .map((item: any) => item.snippet.resourceId.videoId)
-                  .filter((id: string) => !existingVideoIds.has(id));
-                
-                // Filter shorts if requested
-                if (options?.excludeShorts && newVideoIds.length > 0) {
-                  const nonShortIds = await this.filterOutShorts(newVideoIds);
-                  additionalVideoIds.push(...nonShortIds);
-                } else {
-                  additionalVideoIds.push(...newVideoIds);
-                }
-                
-                const totalVideos = videoIds.length + additionalVideoIds.length;
-                if (totalVideos >= targetTotal) {
-                  // Trim to exact target
-                  const needed = targetTotal - videoIds.length;
-                  additionalVideoIds.splice(needed);
-                  break;
-                }
-                
-                fallbackNextPageToken = data.nextPageToken;
-              } else {
-                break;
-              }
-            } while (fallbackNextPageToken && (videoIds.length + additionalVideoIds.length) < targetTotal);
-            
-            videoIds.push(...additionalVideoIds);
-            console.log(`✅ Fallback: Added ${additionalVideoIds.length} older videos. Total: ${videoIds.length} videos`);
-          }
-        }
-      } catch (fallbackError) {
-        console.error(`❌ Fallback fetch failed for channel ${channelId}:`, fallbackError);
-      }
-    }
+    // Simple approach: respect user's date filtering choice without fallback
+    // Each channel limited to 200 videos maximum
     
     console.log(`✅ Retrieved ${videoIds.length} videos from channel ${channelId}`);
     return videoIds;

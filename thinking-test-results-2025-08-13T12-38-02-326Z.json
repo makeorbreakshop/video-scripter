@@ -1,0 +1,190 @@
+{
+  "video_id": "XKrDUnZCmQQ",
+  "target_video": {
+    "title": "How to Design a Print with Perfect Tolerance EVERY Time",
+    "views": 164825,
+    "performance_score": 17.719,
+    "thumbnail_url": "https://i.ytimg.com/vi/XKrDUnZCmQQ/hqdefault.jpg"
+  },
+  "baseline_videos_count": 10,
+  "test_results": [
+    {
+      "test_name": "Control (No Thinking)",
+      "config": {
+        "thinking": null
+      },
+      "analysis": {
+        "step_1_visual_inventory": {
+          "colors": "Vibrant orange box dominates against clean mint green background - orange triggers urgency and action while green provides calming contrast that makes the orange pop. The color combination is highly saturated and eye-catching.",
+          "typography": "Bold white 3D text 'PERFECT FIT' with strong drop shadow creates dimensional hierarchy. Text is large, clean, and positioned in upper portion for immediate readability. Sans-serif font conveys technical precision.",
+          "composition": "Simple, clean composition with orange box as singular focal point. Box is positioned at slight angle with lid opening, creating dynamic movement. Minimal background eliminates distractions.",
+          "focal_points": "1st: Bright orange box (color contrast), 2nd: 'PERFECT FIT' text (size and positioning), 3rd: Opening lid with arrow (motion indicator)"
+        },
+        "step_2_baseline_differentiation": "This thumbnail breaks dramatically from channel norms by using a single, bold product demonstration rather than talking heads, text-heavy layouts, or complex manufacturing scenes. The clean, almost product-advertisement aesthetic contrasts sharply with typical technical/industrial imagery. The vibrant color palette is much more consumer-friendly than usual technical grays and blues.",
+        "step_3_psychological_mechanism": "The thumbnail triggers the 'demonstration promise' - viewers can immediately visualize a concrete, actionable outcome (perfect fit tolerance) through the simple box metaphor. The opening lid with arrow creates anticipation and implies revelation of hidden knowledge. The word 'PERFECT' taps into the human desire for mastery and flawless execution, particularly appealing to precision-focused technical practitioners.",
+        "step_4_pattern_formulation": {
+          "pattern_name": "Demonstration Promise",
+          "pattern_description": "Use a single, clear visual metaphor that immediately demonstrates the promised outcome or skill being taught.",
+          "success_factors": [
+            "Simple physical object that represents the technical concept",
+            "Vibrant colors that break from typical technical aesthetics",
+            "Action indicator (arrow, opening, movement) suggesting revelation"
+          ],
+          "replication_strategy": "For technical tutorials, identify the core outcome and find a simple physical object that embodies that result. Use consumer-product photography style with bright colors rather than industrial imagery."
+        },
+        "confidence_level": "High - The visual elements are clearly identifiable and align with established principles of demonstration-based learning and visual metaphor effectiveness",
+        "channel_specific_insight": "This worked exceptionally well for Slant 3D because their technical audience struggles daily with tolerance issues - the 'perfect fit' box immediately communicates solving their most frustrating problem. The clean, product-like presentation also elevates 3D printing from hobbyist craft to professional manufacturing tool."
+      },
+      "thinking_content": null,
+      "performance": {
+        "execution_time_ms": 17475,
+        "tokens": {
+          "input_tokens": 1189,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 643,
+          "service_tier": "standard"
+        },
+        "cost": {
+          "input": 0.003567,
+          "output": 0.009645,
+          "total": 0.013212000000000002
+        }
+      },
+      "cost_vs_expected": {
+        "expected": 0.066,
+        "actual": 0.013212000000000002,
+        "difference_pct": "-80.0"
+      }
+    },
+    {
+      "test_name": "Moderate Thinking (4k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 4000
+        }
+      },
+      "analysis": {
+        "step_1_visual_inventory": {
+          "colors": "Vibrant orange/red gradient boxes against bright green background create maximum contrast and attention-grabbing combination. Orange conveys energy and precision, while green provides complementary pop that makes the orange appear even more vivid.",
+          "typography": "Large, bold 'PERFECT FIT' text in white with dimensional shadow effect. Text placement is strategic - positioned where eye naturally flows after seeing the visual demonstration.",
+          "composition": "Clean, minimal layout with two identical orange boxes - one lifted to show precise fitting action. Curved arrow guides eye movement and reinforces the 'fitting' motion. Composition uses rule of thirds with boxes positioned for maximum visual impact.",
+          "focal_points": "1st: The lifted orange box (motion draws attention), 2nd: The gap showing 'perfect fit', 3rd: The text 'PERFECT FIT' reinforcing the visual concept"
+        },
+        "step_2_baseline_differentiation": "Dramatically simpler than channel's typical thumbnails. While baseline videos use complex text layouts, multiple elements, and industry-specific imagery, this uses pure visual metaphor. Breaks from podcast-style graphics and manufacturing photos to focus on one universal concept that anyone can instantly understand.",
+        "step_3_psychological_mechanism": "Triggers 'satisfying completion' psychology - the visual metaphor of perfect fit taps into universal human satisfaction with precision and problem-solving. Combined with promise of 'EVERY Time' reliability, it transforms technical frustration (tolerance issues) into anticipated satisfaction (perfect results).",
+        "step_4_pattern_formulation": {
+          "pattern_name": "Universal Satisfaction Trigger",
+          "pattern_description": "Transform technical problems into universally satisfying visual metaphors that promise reliable solutions.",
+          "success_factors": [
+            "Clear visual metaphor that anyone can understand instantly",
+            "Taps into universal satisfaction trigger (perfect fit, completion, precision)",
+            "High contrast colors for maximum thumbnail visibility",
+            "Promises reliable, repeatable results ('EVERY Time')"
+          ],
+          "replication_strategy": "Identify the core frustration in technical content, then find a simple visual metaphor that represents the satisfying solution. Use high-contrast colors and minimal elements to ensure mobile visibility."
+        },
+        "confidence_level": "High - Visual metaphor is clear and present, satisfying completion psychology is well-established, and the dramatic performance difference supports the analysis",
+        "channel_specific_insight": "Perfect for Slant 3D's technical audience who face daily tolerance and precision challenges. The thumbnail promises to solve their recurring frustration with a reliable, repeatable method - exactly what technical practitioners value most."
+      },
+      "thinking_content": "Looking at this thumbnail image, I need to systematically analyze what makes it so effective compared to the baseline videos.\n\nStep 1: Visual Inventory\n- Colors: Bright orange/red gradient boxes on a green background - very high contrast\n- The orange appears to be a vibrant, attention-grabbing color\n- Green background provides strong contrast\n- Typography: \"PERFECT FIT\" in large, bold white letters with dimensional effect\n- Composition: Two orange boxes, one lifted to show they fit together perfectly\n- There's an arrow showing the motion/fit\n- Very clean, minimal design focused on one concept\n\nStep 2: Baseline Differentiation\nLooking at the other video titles, they seem to be more complex, technical podcast-style content or manufacturing behind-the-scenes. This thumbnail is much simpler and focuses on one clear visual metaphor.\n\nStep 3: Psychological Mechanism  \nThe \"perfect fit\" concept is universally satisfying - it triggers our desire for precision, completion, and problem-solving. The visual metaphor immediately communicates the value proposition.\n\nStep 4: Pattern Formation\nThis seems to be about visual metaphor + universal satisfaction trigger + clear value proposition.",
+      "performance": {
+        "execution_time_ms": 21122,
+        "tokens": {
+          "input_tokens": 1217,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 888,
+          "service_tier": "standard"
+        },
+        "cost": {
+          "input": 0.003651,
+          "output": 0.01332,
+          "total": 0.016971
+        }
+      },
+      "cost_vs_expected": {
+        "expected": 0.126,
+        "actual": 0.016971,
+        "difference_pct": "-86.5"
+      }
+    },
+    {
+      "test_name": "Deep Thinking (8k tokens)",
+      "config": {
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 8000
+        }
+      },
+      "analysis": {
+        "step_1_visual_inventory": {
+          "colors": "Vibrant orange box against sage green background creates high contrast complementary color scheme that immediately draws attention. Orange conveys warmth, precision, and craftsmanship while green provides calming technical credibility.",
+          "typography": "Bold, clean sans-serif 'PERFECT FIT' text in cream/white positioned prominently above the visual. Large, readable font creates hierarchy and reinforces the precision messaging.",
+          "composition": "Minimalist centered composition with single focal point. Clean 3D-rendered orange box with slightly opened lid creates visual interest without clutter. Curved arrow indicates opening motion, adding dynamic element.",
+          "focal_points": "1st: Bright orange box dominates center frame, 2nd: 'PERFECT FIT' text reinforces concept, 3rd: Opening motion arrow suggests revelation/discovery"
+        },
+        "step_2_baseline_differentiation": "Dramatic departure from channel's typical thumbnails showing actual 3D printers, parts, or people. This uses pure visual metaphor instead of literal equipment imagery. Much cleaner, more conceptual design versus their usual documentary-style thumbnails with multiple elements and realistic photography.",
+        "step_3_psychological_mechanism": "Transforms abstract technical concept (tolerance in 3D printing) into universally understood visual metaphor. Everyone intuitively grasps 'perfect fit' through a box and lid, creating immediate comprehension. The slight opening suggests hidden knowledge/secrets, triggering curiosity gap. Simplicity reduces cognitive load while orange color psychology conveys precision and mastery.",
+        "step_4_pattern_formulation": {
+          "pattern_name": "Metaphorical Simplification",
+          "pattern_description": "Convert complex technical concepts into simple, universally understood visual metaphors that everyone can instantly grasp.",
+          "success_factors": [
+            "Single clear metaphor that mirrors the technical concept",
+            "High contrast colors for maximum visibility",
+            "Minimal composition reducing cognitive load",
+            "Subtle dynamic elements suggesting discovery"
+          ],
+          "replication_strategy": "For technical content, identify the core concept and find everyday objects that embody that same principle. Use clean 3D renders with complementary colors and minimal text overlay."
+        },
+        "confidence_level": "High - Clear visual metaphor with proven psychological principles (curiosity gap, cognitive ease, color psychology) and dramatic departure from baseline pattern",
+        "channel_specific_insight": "Slant 3D's technical audience likely appreciates precision and reliability above all. This thumbnail promises mastery of a fundamental challenge (tolerance) while making complex engineering accessible through familiar imagery, perfectly matching their practical problem-solving content approach."
+      },
+      "thinking_content": "Looking at this thumbnail, I can see:\n\n1. Visual elements:\n- Orange/red colored box with a lid that's slightly open\n- Text \"PERFECT FIT\" in white/cream letters on the top\n- Green background\n- The box appears to be 3D rendered or illustrated\n- There's a curved arrow showing the lid lifting/opening motion\n\nLet me analyze this systematically:\n\nStep 1: Visual Inventory\n- Colors: Bright orange/red box against green background - high contrast, complementary colors that pop\n- Typography: \"PERFECT FIT\" in bold, clean sans-serif font in white/cream color\n- Composition: Simple, centered composition with the box as the main focal point\n- The opening motion suggested by the arrow creates movement and intrigue\n\nStep 2: Baseline Differentiation\nLooking at the baseline titles, most seem to be either podcast episodes, manufacturing content, or specific 3D printing techniques. This thumbnail is much more conceptual and metaphorical - using a simple box to represent the concept of \"perfect fit\" rather than showing actual 3D printing equipment or parts.\n\nStep 3: Psychological Mechanism  \nThis works because it takes an abstract technical concept (tolerance in 3D printing) and makes it concrete and relatable through a simple visual metaphor. Everyone understands what a \"perfect fit\" looks like with a box and lid. It also creates curiosity - what's inside? How does this relate to 3D printing?\n\nStep 4: Pattern Formulation\nThis seems to be about \"Metaphorical Simplification\" - taking complex technical concepts and representing them through simple, universally understood objects/scenarios.",
+      "performance": {
+        "execution_time_ms": 24410,
+        "tokens": {
+          "input_tokens": 1217,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 996,
+          "service_tier": "standard"
+        },
+        "cost": {
+          "input": 0.003651,
+          "output": 0.01494,
+          "total": 0.018591
+        }
+      },
+      "cost_vs_expected": {
+        "expected": 0.186,
+        "actual": 0.018591,
+        "difference_pct": "-90.0"
+      }
+    }
+  ],
+  "total_execution_time_ms": 63340,
+  "test_summary": {
+    "tests_completed": 3,
+    "tests_failed": 0,
+    "total_cost": 0.048774,
+    "cost_analysis": [
+      {
+        "test": "Control (No Thinking)",
+        "cost": 0.013212000000000002,
+        "vs_control": "baseline"
+      },
+      {
+        "test": "Moderate Thinking (4k tokens)",
+        "cost": 0.016971,
+        "vs_control": "+28%"
+      },
+      {
+        "test": "Deep Thinking (8k tokens)",
+        "cost": 0.018591,
+        "vs_control": "+41%"
+      }
+    ]
+  }
+}
