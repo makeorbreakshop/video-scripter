@@ -1022,14 +1022,12 @@ export default function ConceptPackagePage() {
     return (
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header Card */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+        <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-3 text-2xl">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Package className="w-5 h-5" />
-                  </div>
+                  <Package className="w-6 h-6 text-muted-foreground" />
                   Frame Extraction Complete
                 </CardTitle>
                 <CardDescription className="text-base mt-2">
@@ -1047,11 +1045,9 @@ export default function ConceptPackagePage() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="p-4 bg-background/60 backdrop-blur-sm border border-primary/20 rounded-lg">
+            <div className="p-4 bg-muted/30 border border-border rounded-lg">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
+                <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Strategic Summary</h4>
                   <p className="text-muted-foreground leading-relaxed">{frameAnalysis.strategic_summary}</p>
@@ -1063,12 +1059,10 @@ export default function ConceptPackagePage() {
 
         {/* Cross-Frame Insights */}
         {frameAnalysis.cross_frame_insights && (
-          <Card className="border-secondary/20">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-secondary/20 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
+                <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 Cross-Frame Insights
               </CardTitle>
               <CardDescription>
@@ -1076,11 +1070,9 @@ export default function ConceptPackagePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="p-4 bg-secondary/5 border border-secondary/20 rounded-lg">
+              <div className="p-4 bg-muted/30 border border-border rounded-lg">
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Lightbulb className="w-4 h-4" />
-                  </div>
+                  <Lightbulb className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <p className="text-foreground leading-relaxed">{frameAnalysis.cross_frame_insights}</p>
                 </div>
               </div>
@@ -1091,11 +1083,11 @@ export default function ConceptPackagePage() {
         {/* Discovered Frames */}
         <div className="space-y-6">
           {frameAnalysis.discovered_frames.map((frame, index) => (
-            <Card key={index} className="border-l-4 border-l-primary hover:shadow-lg transition-all duration-200">
+            <Card key={index} className="border-l-4 border-l-primary">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
                       <Package className="w-5 h-5" />
                     </div>
                     <div>
@@ -1122,11 +1114,9 @@ export default function ConceptPackagePage() {
               <CardContent className="space-y-6 pt-0">
                 {/* Channel Fit & Recommendation */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-background border border-border rounded-lg">
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4" />
-                      </div>
+                      <CheckCircle className="w-5 h-5 text-muted-foreground" />
                       <h4 className="font-semibold text-foreground">Your Channel Fit</h4>
                     </div>
                     <Badge 
@@ -1141,14 +1131,12 @@ export default function ConceptPackagePage() {
                       {frame.your_channel_fit.replace('_', ' ')}
                     </Badge>
                   </div>
-                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Target className="w-4 h-4" />
-                      </div>
+                      <Target className="w-5 h-5 text-muted-foreground" />
                       <h4 className="font-semibold text-foreground">Recommendation</h4>
                     </div>
-                    <Badge variant="outline" className="capitalize border-primary/40 text-primary">
+                    <Badge variant="outline" className="capitalize">
                       {frame.recommendation.replace('_', ' ')}
                     </Badge>
                   </div>
@@ -1156,29 +1144,23 @@ export default function ConceptPackagePage() {
 
                 {/* Multi-Modal Evidence */}
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-muted/50 border border-border rounded-lg">
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
                     <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <div className="w-5 h-5 rounded bg-primary/20 flex items-center justify-center">
-                        <Camera className="w-3 h-3" />
-                      </div>
+                      <Camera className="w-4 h-4 text-muted-foreground" />
                       Thumbnail Pattern
                     </h4>
                     <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.thumbnail_pattern}</p>
                   </div>
-                  <div className="p-4 bg-muted/50 border border-border rounded-lg">
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
                     <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <div className="w-5 h-5 rounded bg-secondary/20 flex items-center justify-center">
-                        <FileText className="w-3 h-3" />
-                      </div>
+                      <FileText className="w-4 h-4 text-muted-foreground" />
                       Title Pattern
                     </h4>
                     <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.title_pattern}</p>
                   </div>
-                  <div className="p-4 bg-muted/50 border border-border rounded-lg">
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
                     <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
-                      <div className="w-5 h-5 rounded bg-accent/20 flex items-center justify-center">
-                        <Video className="w-3 h-3" />
-                      </div>
+                      <Video className="w-4 h-4 text-muted-foreground" />
                       Content Pattern
                     </h4>
                     <p className="text-sm text-muted-foreground">{frame.multi_modal_evidence.content_pattern}</p>
@@ -1186,15 +1168,13 @@ export default function ConceptPackagePage() {
                 </div>
 
                 {/* Application to Your Concept */}
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <div className="p-4 bg-muted/30 border border-border rounded-lg">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Lightbulb className="w-4 h-4" />
-                    </div>
+                    <Lightbulb className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
                         Application to Your Concept
-                        <Badge variant="secondary" className="text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                        <Badge variant="secondary" className="text-xs">
                           {Math.round(frame.application_to_your_concept.confidence * 100)}% confidence
                         </Badge>
                       </h4>
@@ -1205,7 +1185,7 @@ export default function ConceptPackagePage() {
                         <ul className="space-y-1">
                           {frame.application_to_your_concept.specific_recommendations.map((rec, recIndex) => (
                             <li key={recIndex} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <span className="text-emerald-600 dark:text-emerald-500 mt-0.5">•</span>
+                              <span className="text-muted-foreground mt-0.5">•</span>
                               {rec}
                             </li>
                           ))}
@@ -1217,28 +1197,48 @@ export default function ConceptPackagePage() {
 
                 {/* Example Videos */}
                 {frame.example_videos.length > 0 && (
-                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Video className="w-3 h-3" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground mb-2">Example Videos Using This Frame</h4>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          {frame.example_videos.slice(0, 3).map((video, videoIndex) => (
-                            <div key={videoIndex} className="flex items-start gap-2">
-                              <span className="text-blue-600 dark:text-blue-500 mt-0.5">•</span>
-                              <span className="italic">"{video}"</span>
-                            </div>
-                          ))}
-                          {frame.example_videos.length > 3 && (
-                            <p className="text-muted-foreground/60 text-xs mt-2">
-                              +{frame.example_videos.length - 3} more videos
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-foreground flex items-center gap-2">
+                      <Video className="w-4 h-4 text-muted-foreground" />
+                      Example Videos Using This Frame
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {frame.example_videos.slice(0, 3).map((videoTitle, videoIndex) => {
+                        // Try to find the video in searchResults to get the thumbnail
+                        const matchedVideo = searchResults.find(v => v.title === videoTitle);
+                        
+                        return (
+                          <div key={videoIndex} className="bg-muted/30 border border-border rounded-lg overflow-hidden">
+                            {matchedVideo ? (
+                              <>
+                                <div className="aspect-video bg-muted">
+                                  <img 
+                                    src={matchedVideo.thumbnail_url}
+                                    alt={videoTitle}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="p-3">
+                                  <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {matchedVideo.view_count.toLocaleString()} views • {matchedVideo.temporal_performance_score.toFixed(1)}x
+                                  </p>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="p-3">
+                                <p className="text-sm font-medium line-clamp-2">{videoTitle}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
+                    {frame.example_videos.length > 3 && (
+                      <p className="text-xs text-muted-foreground">
+                        +{frame.example_videos.length - 3} more videos using this pattern
+                      </p>
+                    )}
                   </div>
                 )}
               </CardContent>
