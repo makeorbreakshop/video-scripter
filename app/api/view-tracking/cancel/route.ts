@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    if (job.status !== 'processing') {
+    if (job.status !== 'processing' && job.status !== 'pending') {
       return NextResponse.json({ 
-        error: `Cannot cancel job with status: ${job.status}` 
+        error: `Cannot cancel job with status: ${job.status}. Only pending and processing jobs can be cancelled.` 
       }, { status: 400 });
     }
 

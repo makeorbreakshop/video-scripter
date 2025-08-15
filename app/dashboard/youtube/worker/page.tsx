@@ -873,12 +873,12 @@ export default function WorkerDashboard() {
                               )}>
                                 {job.status}
                               </Badge>
-                              {job.status === 'processing' && (
+                              {(job.status === 'processing' || job.status === 'pending') && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={async () => {
-                                    if (confirm('Are you sure you want to cancel this job?')) {
+                                    if (confirm(`Are you sure you want to cancel this ${job.status} job?`)) {
                                       try {
                                         const response = await fetch('/api/view-tracking/cancel', {
                                           method: 'POST',

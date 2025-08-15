@@ -5,7 +5,7 @@ import { quotaTracker } from '@/lib/youtube-quota-tracker';
 export async function GET(request: NextRequest) {
   try {
     // Get current quota usage from tracker
-    const currentUsage = await quotaTracker.getCurrentUsage();
+    const quotaStatus = await quotaTracker.getQuotaStatus();
     
     // Get API key status
     const apiStatus = youtubeAPIWithFallback.getStatus();
@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
         configured: apiStatus.hasPrimary,
         working: primaryWorking,
         exhausted: apiStatus.primaryExhausted,
-        quotaUsed: currentUsage.used,
-        quotaLimit: currentUsage.limit,
-        quotaRemaining: currentUsage.limit - currentUsage.used
+        quotaUsed: quotaStatus?.quota_used || 0,
+        quotaLimit: quotaStatus?.quota_limit || 10000,
+        quotaRemaining: quotaStatus?.quota_remaining || 10000
       },
       backup: {
         configured: apiStatus.hasBackup,

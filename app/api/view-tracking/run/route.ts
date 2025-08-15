@@ -64,51 +64,33 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // For immediate execution (small batches), run directly
-    // For larger batches, consider using the worker
-    // Increased threshold to 800 to handle daily tracking with buffer
-    if (maxApiCalls <= 800) {
-      // Small batch - run directly with timeout protection
-      const viewTrackingService = new ViewTrackingService();
-      
-      // Run tracking without timeout for immediate execution
-      // The 5-minute maxDuration should be sufficient
-      viewTrackingService.trackDailyViews(maxApiCalls)
-        .then(async () => {
-          // Update job status
-          await supabase
-            .from('jobs')
-            .update({ 
-              status: 'completed',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', job.id);
-        })
-        .catch(async (error) => {
-          console.error('View tracking error:', error);
-          // Update job status
-          await supabase
-            .from('jobs')
-            .update({ 
-              status: 'failed',
-              error: error.message,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', job.id);
-        });
-    } else {
-      // Large batch - update job to pending for worker to pick up
-      await supabase
-        .from('jobs')
-        .update({ 
-          status: 'pending',
-          data: {
-            ...job.data,
-            note: 'Large batch - queued for worker processing'
-          }
-        })
-        .eq('id', job.id);
-    }
+    // Execute view tracking immediately regardless of batch size
+    const viewTrackingService = new ViewTrackingService();
+    
+    // Run tracking with 5-minute maxDuration timeout protection
+    viewTrackingService.trackDailyViews(maxApiCalls)
+      .then(async () => {
+        // Update job status
+        await supabase
+          .from('jobs')
+          .update({ 
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', job.id);
+      })
+      .catch(async (error) => {
+        console.error('View tracking error:', error);
+        // Update job status
+        await supabase
+          .from('jobs')
+          .update({ 
+            status: 'failed',
+            error: error.message,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', job.id);
+      });
 
     return NextResponse.json({
       message: 'View tracking started',

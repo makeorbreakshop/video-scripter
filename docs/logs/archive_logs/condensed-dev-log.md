@@ -1284,3 +1284,74 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Vision-first message structure with systematic analysis framework delivers superior results
 - Direct database connections essential for bulk operations (>1000 rows)
 - CLIP cross-modal similarity requires 0.2-0.3 thresholds vs 0.5+ for text-to-text matching
+
+## 2025-08-14: View Tracking Job Management, Concept Package Tool Redesign & MCP Server Implementation
+
+### Major Achievements
+
+1. **View Tracking Job Management Fix**
+   - Fixed stuck view tracking job cancellation functionality with state management bug
+   - Removed buggy `runningJobId` state dependency, made cancel action inline with direct API call
+   - Added confirmation dialog and automatic stats refresh after cancellation
+   - Successfully tested cancellation of stuck processing job
+
+2. **Concept Package Tool UI Redesign**
+   - Complete redesign from bulk generation to focused, actionable frame-by-frame approach
+   - Implemented frame-by-frame selection with auto-scroll detection and individual "Generate Packaging" buttons
+   - Enhanced visual feedback with better padding, subtle gray backgrounds, improved typography sizing
+   - Added channel fit reasoning display with color-coded backgrounds (blue=proven, amber=opportunity, gray=untested)
+   - Created inline concept display with numbered badges and detailed breakdowns
+   - Integrated visual thumbnail analysis (fetches and sends actual images to Claude)
+
+3. **Concept Iteration System Implementation**
+   - Built complete iteration system for refining titles, hooks, and thumbnails with full context tracking
+   - Selection system with checkboxes carrying full journey context (transcript → pattern → concept)
+   - Iteration Tab (Step 6) with 3-column layout for variations, append-only pattern preserving context
+   - Cost optimized from ~$0.051 to ~$0.015-0.020 per call (70% reduction) by removing unnecessary context
+
+4. **Video Import System - Cloudflare Blocking Fix**
+   - Fixed Cloudflare blocking issue during large video imports (1000+ videos failing at chunk #3)
+   - Implemented direct PostgreSQL connection for bulk operations bypassing Supabase API
+   - Smart routing: 100+ videos → Direct DB (500 chunks), 200+ → Chunked API (50 chunks), <100 → Standard API
+   - Performance: 500 video chunks for direct DB, 50 for API with 2-second delays between chunks
+
+5. **Worker Polling Fix - Database Pool Blocking Issue**
+   - Fixed worker polling mechanism stopped after adding direct database support
+   - Root cause: Persistent database connection pool blocking Node.js event loop
+   - Solution: Removed persistent pool, create temporary pools only when needed, immediate cleanup
+
+6. **MCP Server Implementation for Intelligent Pattern Exploration**
+   - Built local MCP server wrapping existing APIs for intelligent YouTube pattern exploration
+   - Smart search generation: Automatically generates 12 search angles from single concept
+   - Parallel execution: Orchestrates 7+ searches simultaneously across different data sources
+   - Performance: Single tool call replaces 5-10 manual API calls, ~10s → ~2s latency
+
+7. **MCP Server Testing Infrastructure & Production Fix**
+   - Created comprehensive testing suite (60% pass rate), health monitoring (83% pass rate)
+   - Fixed environment loading issues with `start-mcp.js` wrapper for Claude Desktop
+   - Optimized queries reducing timeouts from 15+ seconds → ~2 seconds
+   - Successfully integrated with Claude Desktop production environment
+
+### Technical Implementation Details
+
+- **Concept Generation**: `/app/api/generate-frame-concepts/route.ts` for single frame analysis
+- **Iteration APIs**: Three endpoints for title/hook/thumbnail variations with context preservation  
+- **Direct Database**: `pg.Pool` with bulk INSERT ON CONFLICT for Cloudflare bypass
+- **MCP Tools**: 3 pattern exploration tools with parallel search orchestration
+- **Query Optimization**: Reduced limits, specific column selection, batched enrichment
+
+### Performance Improvements
+
+- Concept generation: Frame-by-frame approach vs overwhelming bulk approach
+- Video imports: 500 video chunks without Cloudflare blocks vs 500 causing failures
+- Worker polling: Reliable 30-second intervals vs stuck after startup
+- MCP queries: 2-second responses vs 15+ second timeouts
+- Pattern discovery: Single tool call vs 5-10 manual API operations
+
+### Key Learnings
+
+- Bulk concept generation overwhelming users vs focused frame-by-frame workflow
+- Direct database connections essential for bulk imports >1000 videos
+- Persistent database pools can block Node.js event loop in worker systems
+- MCP servers excellent for orchestrating multiple API calls with organized responses
+- Environment variable loading critical for Claude Desktop MCP integration
