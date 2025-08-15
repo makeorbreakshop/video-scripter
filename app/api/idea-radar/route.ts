@@ -27,6 +27,7 @@ interface IdeaRadarResponse {
   filters_applied: {
     time_range: string;
     min_score: number;
+    min_views: number;
     domain?: string;
   };
 }
@@ -42,11 +43,21 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
     const randomize = searchParams.get('randomize') === 'true';
+    const minViews = parseInt(searchParams.get('minViews') || '100000');
 
     // Validate parameters
-    if (minScore < 1 || minScore > 10) {
+    if (minScore < 1 || minScore > 100) {
       return NextResponse.json(
-        { error: 'minScore must be between 1 and 10' },
+        { error: 'minScore must be between 1 and 100' },
+        { status: 400 }
+      );
+    }
+
+    // Validate minViews (must be one of the allowed values)
+    const allowedViews = [100, 1000, 10000, 100000, 1000000, 10000000];
+    if (!allowedViews.includes(minViews)) {
+      return NextResponse.json(
+        { error: 'minViews must be one of: 100, 1000, 10000, 100000, 1000000, 10000000' },
         { status: 400 }
       );
     }
@@ -69,7 +80,7 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    console.log(`🎯 Idea Radar: Finding outliers (${timeRange}, score>${minScore}, domain:${domain || 'all'}, randomize:${randomize})`);
+    console.log(`🎯 Idea Radar: Finding outliers (${timeRange}, score>${minScore}, views>${minViews}, domain:${domain || 'all'}, randomize:${randomize})`);
 
     // Always use videos table directly with optimized indexes (faster than materialized view)
     const useDirectTable = true;
@@ -77,60 +88,39 @@ export async function GET(request: NextRequest) {
     console.log(`Using ${tableName} table (days: ${days})`);
     
     if (randomize) {
-      // For random results, we need to get a truly random sample
-      // First, get the total count to know the size of our dataset
+      // Get a larger sample and shuffle for true randomization
+      // Fetch 3x the needed amount to get good randomness across the dataset
+      const sampleSize = Math.max(limit * 3, 100);
       
-      let countQuery = supabase
-        .from('videos')
-        .select('*', { count: 'exact', head: true })
-        .gte('temporal_performance_score', minScore)
-        .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .eq('is_short', false)
-        .gt('view_count', 100000);
-      
-      if (domain) {
-        countQuery = countQuery.eq('topic_domain', domain);
-      }
-      
-      const { count: totalCount, error: countError } = await countQuery;
-      
-      if (countError) {
-        console.error('❌ Failed to get count:', countError);
-        throw countError;
-      }
-      
-      const total = totalCount || 0;
-      const poolSize = Math.min(500, total); // Don't try to fetch more than exists
-      
-      // Generate a random offset to start from a different position each time
-      const maxOffset = Math.max(0, total - poolSize);
-      const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
-      
-      // Get a random slice of videos
       let randomQuery = supabase
         .from('videos')
         .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
         .gte('temporal_performance_score', minScore)
+        .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
-        .gt('view_count', 100000)
-        .range(randomOffset, randomOffset + poolSize - 1);
+        .gte('view_count', minViews) // Use new minViews parameter
+        .limit(sampleSize);
       
       if (domain) {
         randomQuery = randomQuery.eq('topic_domain', domain);
       }
       
-      const { data: poolVideos, error } = await randomQuery;
+      const { data: sampleVideos, error } = await randomQuery;
       
       if (error) {
-        console.error('❌ Failed to fetch random pool:', error);
+        console.error('❌ Failed to fetch sample videos:', error);
         throw error;
       }
       
-      // Shuffle the pool and take what we need
-      const shuffledVideos = (poolVideos || [])
-        .sort(() => Math.random() - 0.5)
-        .slice(offset, offset + limit);
+      // Fisher-Yates shuffle for true randomization
+      const videos = [...(sampleVideos || [])];
+      for (let i = videos.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [videos[i], videos[j]] = [videos[j], videos[i]];
+      }
+      
+      const shuffledVideos = videos.slice(offset, offset + limit);
 
       const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
         video_id: v.id,
@@ -146,15 +136,16 @@ export async function GET(request: NextRequest) {
         summary: v.llm_summary
       }));
 
-      console.log(`✅ Found ${outliers.length} random outliers (offset ${randomOffset} from ${total} total, pool of ${poolVideos?.length}) in ${Date.now() - startTime}ms`);
+      console.log(`✅ Found ${outliers.length} truly random outliers (sample of ${sampleSize} from dataset) in ${Date.now() - startTime}ms`);
 
       return NextResponse.json({
         outliers,
-        total: poolVideos?.length || 0,
+        total: sampleVideos?.length || 0,
         hasMore: true, // Always show more for random results to encourage exploration
         filters_applied: {
           time_range: timeRange,
           min_score: minScore,
+          min_views: minViews,
           domain: domain || undefined
         }
       });
@@ -166,9 +157,10 @@ export async function GET(request: NextRequest) {
         .from('videos')
         .select('*', { count: 'exact', head: true })
         .gte('temporal_performance_score', minScore)
+        .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
-        .gt('view_count', 100000);
+        .gte('view_count', minViews); // Use new minViews parameter
 
       if (domain) {
         countQuery = countQuery.eq('topic_domain', domain);
@@ -190,9 +182,10 @@ export async function GET(request: NextRequest) {
         .from('videos')
         .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
         .gte('temporal_performance_score', minScore)
+        .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
-        .gt('view_count', 100000)
+        .gte('view_count', minViews) // Use new minViews parameter
         .order('temporal_performance_score', { ascending: false })
         .range(adjustedOffset, adjustedOffset + limit - 1);
 
@@ -235,6 +228,7 @@ export async function GET(request: NextRequest) {
         filters_applied: {
           time_range: timeRange,
           min_score: minScore,
+          min_views: minViews,
           domain: domain || undefined
         }
       };
@@ -270,8 +264,9 @@ export async function POST(request: NextRequest) {
         .select('topic_domain')
         .not('topic_domain', 'is', null)
         .gte('temporal_performance_score', 1.5)
+        .lte('temporal_performance_score', 100) // Cap at 100x
         .eq('is_short', false)
-        .gt('view_count', 100000)
+        .gte('view_count', 100000) // Keep default for domain list
         .gte('published_at', new Date(Date.now() - 730 * 24 * 60 * 60 * 1000).toISOString()); // 2 years
 
       if (error) throw error;

@@ -1,0 +1,29 @@
+{
+  "name": "video-scripter-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for intelligent YouTube pattern exploration",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "setup": "npm install && npm run build && node health-check.js",
+    "test": "node test-mcp.js",
+    "test:full": "node test-suite.js",
+    "health": "node health-check.js",
+    "mcp": "npm install && npm run build && node setup-claude.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.39.3",
+    "@pinecone-database/pinecone": "^4.0.0",
+    "openai": "^4.52.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

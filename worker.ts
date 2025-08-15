@@ -48,10 +48,14 @@ class VideoWorker {
     // Clean up any stuck jobs from previous runs
     await this.cleanupStuckJobs();
     
+    console.log('🔄 Starting main worker loop...');
+    
     // Main worker loop
     while (!this.isShuttingDown) {
       try {
+        console.log(`🔍 Polling for jobs at ${new Date().toLocaleTimeString()}...`);
         await this.processJobs();
+        console.log(`⏰ Sleeping for ${POLL_INTERVAL / 1000} seconds...`);
         await this.sleep(POLL_INTERVAL);
       } catch (error) {
         console.error('❌ Worker loop error:', error);
@@ -285,6 +289,8 @@ class VideoWorker {
       console.log(`❌ Job ${job.job_id.slice(0, 8)} failed after ${duration}s: ${errorMessage}`);
     } finally {
       this.activeJobs.delete(job.job_id);
+      // Clean up database pool connections after job completes
+      await this.videoImportService.cleanup();
     }
   }
 

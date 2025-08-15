@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "video-scripter": {
+      "command": "node",
+      "args": [
+        "/Users/brandoncullum/video-scripter/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "DOTENV_CONFIG_PATH": "/Users/brandoncullum/video-scripter/.env"
+      }
+    }
+  }
+}

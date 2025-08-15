@@ -6,6 +6,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Pinecone } from '@pinecone-database/pinecone';
+import pg from 'pg';
 import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
@@ -20,6 +21,8 @@ import { BERTopicClassificationService } from './bertopic-classification-service
 import { generateVideoSummaries, generateSummaryEmbeddings } from './unified-import-summary-integration.ts';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const { Pool } = pg;
 
 // Initialize Supabase client with service role for full database access
 const supabase = createClient(
@@ -119,6 +122,8 @@ export class VideoImportService {
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
     this.youtubeApiKey = process.env.YOUTUBE_API_KEY || '';
+    
+    // Don't initialize pool in constructor - create on demand to avoid blocking
     
     if (!this.openaiApiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
@@ -596,20 +601,23 @@ export class VideoImportService {
   }
 
   /**
-   * Store video data in Supabase with chunked processing and timeout fallback
+   * Store video data using direct database connection for bulk operations
    */
   async storeVideoData(videos: VideoMetadata[]): Promise<void> {
     console.log(`💾 Storing ${videos.length} videos in database...`);
     
-    // For large batches, use chunked storage to avoid timeouts
-    const CHUNK_SIZE = 500; // Process 500 videos at a time
-    const TIMEOUT_THRESHOLD = 1000; // Use chunking for 1000+ videos
+    // Use direct database connection for large batches (100+ videos)
+    const DIRECT_DB_THRESHOLD = 100;
     
-    if (videos.length >= TIMEOUT_THRESHOLD) {
+    if (this.pool && videos.length >= DIRECT_DB_THRESHOLD) {
+      console.log(`📦 Large batch detected (${videos.length} videos), using direct database connection...`);
+      await this.storeVideoDataDirect(videos);
+    } else if (videos.length >= 200) {
+      // For large batches without direct connection, use chunked storage
       console.log(`📦 Large batch detected (${videos.length} videos), using chunked storage...`);
-      await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+      await this.storeVideoDataChunked(videos, 50);
     } else {
-      // For smaller batches, try normal storage first
+      // For smaller batches, use regular Supabase API
       try {
         const { error } = await supabase
           .from('videos')
@@ -622,7 +630,7 @@ export class VideoImportService {
           // If we get a timeout error, fall back to chunked storage
           if (error.code === '57014') { // statement timeout
             console.log(`⚠️ Timeout detected, falling back to chunked storage...`);
-            await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+            await this.storeVideoDataChunked(videos, 50);
             return;
           }
           
@@ -636,10 +644,166 @@ export class VideoImportService {
         const errorMessage = error instanceof Error ? error.message : String(error);
         if (errorMessage.includes('timeout') || errorMessage.includes('57014')) {
           console.log(`⚠️ Timeout error detected, falling back to chunked storage...`);
-          await this.storeVideoDataChunked(videos, CHUNK_SIZE);
+          await this.storeVideoDataChunked(videos, 50);
         } else {
           throw error;
         }
+      }
+    }
+  }
+
+  /**
+   * Store video data using direct PostgreSQL connection for maximum performance
+   */
+  private async storeVideoDataDirect(videos: VideoMetadata[]): Promise<void> {
+    if (!process.env.DATABASE_URL || typeof window !== 'undefined') {
+      console.log('⚠️ Direct database connection not available, falling back to chunked storage');
+      await this.storeVideoDataChunked(videos, 50);
+      return;
+    }
+
+    // Create a temporary pool just for this operation
+    const tempPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 1, // Only need one connection
+      idleTimeoutMillis: 1000, // Close quickly after use
+      connectionTimeoutMillis: 5000,
+    });
+
+    let client;
+    try {
+      client = await tempPool.connect();
+      
+      // Set a long timeout for this session (10 minutes in milliseconds)
+      await client.query("SET statement_timeout = '600000'");
+      
+      // Process in chunks of 500 to avoid parameter limit
+      const CHUNK_SIZE = 500;
+      let totalStored = 0;
+      
+      for (let i = 0; i < videos.length; i += CHUNK_SIZE) {
+        const chunk = videos.slice(i, i + CHUNK_SIZE);
+        const chunkNumber = Math.floor(i / CHUNK_SIZE) + 1;
+        const totalChunks = Math.ceil(videos.length / CHUNK_SIZE);
+        
+        console.log(`📦 Processing chunk ${chunkNumber}/${totalChunks} (${chunk.length} videos)...`);
+        
+        // Build the VALUES clause for bulk insert
+        const values: any[] = [];
+        const valueStrings: string[] = [];
+        let paramIndex = 1;
+        
+        for (const video of chunk) {
+          const valueString = `($${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++})`;
+          valueStrings.push(valueString);
+          
+          // Add all video fields in order
+          values.push(
+            video.id,
+            video.title,
+            video.description,
+            video.channel_id,
+            video.channel_name,
+            video.published_at,
+            video.duration,
+            video.view_count || 0,
+            video.like_count || 0,
+            video.comment_count || 0,
+            video.thumbnail_url,
+            video.is_short || false,
+            video.performance_ratio || 1,
+            video.channel_subscriber_count || 0,
+            video.tags || [],
+            video.category_id,
+            video.data_source || 'discovery',
+            video.is_competitor || true,
+            video.metadata || {},
+            video.topic_level_1,
+            video.topic_level_2,
+            video.topic_level_3,
+            video.topic_confidence,
+            video.format_type,
+            video.format_confidence,
+            video.format_reasoning,
+            video.llm_summary,
+            video.llm_summary_model || 'gpt-4o-mini'
+          );
+        }
+        
+        // Build and execute the INSERT query with ON CONFLICT
+        const query = `
+          INSERT INTO videos (
+            id, title, description, channel_id, channel_name, published_at, duration,
+            view_count, like_count, comment_count, thumbnail_url, is_short,
+            performance_ratio, channel_subscriber_count, tags, category_id,
+            data_source, is_competitor, metadata,
+            topic_level_1, topic_level_2, topic_level_3, topic_confidence,
+            format_type, format_confidence, format_reasoning,
+            llm_summary, llm_summary_model
+          ) VALUES ${valueStrings.join(', ')}
+          ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            channel_id = EXCLUDED.channel_id,
+            channel_name = EXCLUDED.channel_name,
+            published_at = EXCLUDED.published_at,
+            duration = EXCLUDED.duration,
+            view_count = EXCLUDED.view_count,
+            like_count = EXCLUDED.like_count,
+            comment_count = EXCLUDED.comment_count,
+            thumbnail_url = EXCLUDED.thumbnail_url,
+            is_short = EXCLUDED.is_short,
+            performance_ratio = EXCLUDED.performance_ratio,
+            channel_subscriber_count = EXCLUDED.channel_subscriber_count,
+            tags = EXCLUDED.tags,
+            category_id = EXCLUDED.category_id,
+            data_source = EXCLUDED.data_source,
+            is_competitor = EXCLUDED.is_competitor,
+            metadata = EXCLUDED.metadata,
+            topic_level_1 = EXCLUDED.topic_level_1,
+            topic_level_2 = EXCLUDED.topic_level_2,
+            topic_level_3 = EXCLUDED.topic_level_3,
+            topic_confidence = EXCLUDED.topic_confidence,
+            format_type = EXCLUDED.format_type,
+            format_confidence = EXCLUDED.format_confidence,
+            format_reasoning = EXCLUDED.format_reasoning,
+            llm_summary = EXCLUDED.llm_summary,
+            llm_summary_model = EXCLUDED.llm_summary_model,
+            updated_at = NOW()
+        `;
+        
+        await client.query(query, values);
+        totalStored += chunk.length;
+        console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
+        
+        // Small delay between chunks to be nice to the database
+        if (i + CHUNK_SIZE < videos.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      console.log(`✅ Direct database storage complete: ${totalStored} videos stored`);
+      
+    } catch (error) {
+      console.error('❌ Direct database storage failed:', error);
+      console.log('⚠️ Falling back to chunked Supabase API storage...');
+      await this.storeVideoDataChunked(videos, 50);
+    } finally {
+      // Always release client and close temporary pool
+      if (client) {
+        try {
+          client.release();
+        } catch (e) {
+          // Already released, ignore
+        }
+      }
+      
+      // Close the temporary pool to free all connections
+      try {
+        await tempPool.end();
+      } catch (e) {
+        // Ignore errors when closing pool
       }
     }
   }
@@ -687,15 +851,25 @@ export class VideoImportService {
 
         if (error) {
           console.error(`❌ Chunk ${chunkNumber} failed after retries:`, error);
-          failureCount += chunk.length;
           
-          // For persistent timeout errors on chunks, try even smaller sub-chunks
-          if (error.code === '57014' && chunk.length > 50) {
+          // Check if this is a Cloudflare block
+          const errorMessage = error.message || '';
+          const isCloudflareBlock = errorMessage.includes('Cloudflare') || 
+                                    errorMessage.includes('you have been blocked') ||
+                                    errorMessage.includes('<!DOCTYPE html>');
+          
+          if (isCloudflareBlock) {
+            console.log(`⚠️ Cloudflare block detected, waiting 10 seconds and retrying with smaller chunks...`);
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            await this.storeVideoDataSubChunks(chunk, 20); // Much smaller chunks for Cloudflare
+            successCount += chunk.length;
+          } else if (error.code === '57014' && chunk.length > 50) {
+            // For persistent timeout errors on chunks, try even smaller sub-chunks
             console.log(`⚠️ Chunk timeout even after retries, trying smaller sub-chunks...`);
             await this.storeVideoDataSubChunks(chunk, 50);
             successCount += chunk.length;
-            failureCount -= chunk.length;
           } else {
+            failureCount += chunk.length;
             throw new Error(`Chunk ${chunkNumber} failed: ${error.message}`);
           }
         } else {
@@ -703,9 +877,12 @@ export class VideoImportService {
           console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
         }
         
-        // Add small delay between chunks to avoid overwhelming the database
+        // Add delay between chunks to avoid triggering rate limits
         if (i + chunkSize < videos.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Fixed 2 second delay between chunks to avoid Cloudflare
+          const delay = 2000;
+          console.log(`⏳ Waiting ${delay}ms before next chunk...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
         
       } catch (error) {
@@ -1812,6 +1989,15 @@ export class VideoImportService {
       console.error(`❌ Failed to fetch video details for ${videoId}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Cleanup resources when done
+   */
+  async cleanup(): Promise<void> {
+    // Clear channel stats cache
+    this.channelStatsCache.clear();
+    // No pool to clean up anymore - using temporary pools per operation
   }
 }
 

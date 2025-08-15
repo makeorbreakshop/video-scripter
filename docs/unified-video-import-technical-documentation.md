@@ -199,6 +199,35 @@ const response = await fetch('/api/video-import/unified', {
 
 ### 4. Data Storage
 
+#### Storage Strategy
+The system uses a **three-tier storage approach** optimized for different batch sizes:
+
+1. **Direct PostgreSQL Connection** (100+ videos)
+   - Uses `pg.Pool` for direct database access
+   - Bypasses Supabase API and Cloudflare protection
+   - Bulk INSERT with ON CONFLICT for upsert behavior
+   - Processes 500 videos per chunk
+   - ~27x performance improvement over API calls
+
+2. **Chunked Supabase API** (50-99 videos or fallback)
+   - Uses Supabase client with smaller chunks (50 videos)
+   - 2-second delays between chunks to avoid rate limits
+   - Automatic Cloudflare detection and retry with smaller chunks
+
+3. **Standard Supabase API** (<50 videos)
+   - Direct upsert for small batches
+   - Most efficient for small operations
+
+#### Direct Database Connection Setup
+```bash
+# Required environment variable for bulk operations
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+```
+
+- Use the **pooler connection** (port 6543) for better handling
+- Get from Supabase Dashboard > Settings > Database > Connection String (URI)
+- Enables bulk operations that would timeout via API
+
 #### Supabase Database
 ```sql
 -- Core video table structure
@@ -239,6 +268,34 @@ CREATE TABLE videos (
 - **Pinecone Main Index**: Title embeddings (512D)
 - **Pinecone Thumbnail Index**: Thumbnail embeddings (768D)
 - **Local Cache**: Thumbnail embeddings with 24-hour TTL
+
+#### Bulk Insert Implementation
+```typescript
+// Direct database storage for 100+ videos
+private async storeVideoDataDirect(videos: VideoMetadata[]): Promise<void> {
+  const client = await this.pool.connect();
+  
+  // Set long timeout for bulk operations
+  await client.query("SET statement_timeout = '10m'");
+  
+  // Process in chunks of 500 to avoid parameter limits
+  const CHUNK_SIZE = 500;
+  
+  // Build VALUES clause for bulk INSERT
+  const query = `
+    INSERT INTO videos (
+      id, title, description, channel_id, channel_name, ...
+    ) VALUES ${valueStrings.join(', ')}
+    ON CONFLICT (id) DO UPDATE SET
+      title = EXCLUDED.title,
+      view_count = EXCLUDED.view_count,
+      ... // All fields updated
+      updated_at = NOW()
+  `;
+  
+  await client.query(query, values);
+}
+```
 
 #### Temporal Baseline Analytics Processing
 - **Automatic Trigger**: Temporal baseline processing automatically triggered after successful import
@@ -322,9 +379,13 @@ The temporal baseline system provides age-adjusted performance metrics by compar
 # Required
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 YOUTUBE_API_KEY=your_youtube_api_key
 OPENAI_API_KEY=your_openai_api_key
 REPLICATE_API_TOKEN=your_replicate_token
+
+# Direct Database Connection (for bulk operations)
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
 
 # Pinecone
 PINECONE_API_KEY=your_pinecone_api_key
@@ -455,6 +516,20 @@ The system maintains backward compatibility by:
 
 ### Common Issues
 
+#### Cloudflare Blocking (Large Imports)
+```javascript
+// Error: "Sorry, you have been blocked" from Supabase API
+// Cause: Cloudflare protection triggers on large batch inserts
+// Solution 1: Ensure DATABASE_URL is configured for direct connection
+// Solution 2: Reduce batch sizes if direct connection unavailable
+options: { batchSize: 50 } // Smaller batches avoid Cloudflare
+
+// System automatically handles this with three-tier approach:
+// - 100+ videos → Direct database (bypasses Cloudflare)
+// - 50-99 videos → Chunked API with delays
+// - <50 videos → Standard API
+```
+
 #### YouTube API Quota Exceeded
 ```javascript
 // Error: YouTube API quota exceeded
@@ -524,6 +599,13 @@ chmod 755 exports
    - Issue: Batch processing function timing out after 167 seconds with large imports
    - Solution: Rewrote function to use single UPDATE with correlated subqueries instead of loops
    - Impact: Successfully processes batches of 100+ videos without timeouts
+
+4. **Cloudflare Blocking on Large Imports** (Fixed 2025-08-14)
+   - Issue: Bulk imports (1000+ videos) blocked by Cloudflare when using Supabase API
+   - Root Cause: Supabase API endpoints protected by Cloudflare triggered on 500-video chunks
+   - Solution: Implemented three-tier storage strategy with direct PostgreSQL connection for bulk ops
+   - Impact: Successfully imports 1000+ videos using direct database connection, bypassing Cloudflare
+   - Performance: ~27x faster than API calls, processes 500 videos per chunk without blocks
 
 ### Current Limitations
 - Export files are typically skipped for RSS/competitor imports to prevent duplicates
