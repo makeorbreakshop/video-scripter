@@ -99,7 +99,9 @@ export async function GET(request: NextRequest) {
         .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
+        .eq('is_institutional', false) // Filter out institutional content
         .gte('view_count', minViews) // Use new minViews parameter
+        .order('id') // Add explicit ordering to prevent implicit high-performance bias
         .limit(sampleSize);
       
       if (domain) {
@@ -160,6 +162,7 @@ export async function GET(request: NextRequest) {
         .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
+        .eq('is_institutional', false) // Filter out institutional content
         .gte('view_count', minViews); // Use new minViews parameter
 
       if (domain) {
@@ -185,6 +188,7 @@ export async function GET(request: NextRequest) {
         .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .eq('is_short', false)
+        .eq('is_institutional', false) // Filter out institutional content
         .gte('view_count', minViews) // Use new minViews parameter
         .order('temporal_performance_score', { ascending: false })
         .range(adjustedOffset, adjustedOffset + limit - 1);
@@ -266,6 +270,7 @@ export async function POST(request: NextRequest) {
         .gte('temporal_performance_score', 1.5)
         .lte('temporal_performance_score', 100) // Cap at 100x
         .eq('is_short', false)
+        .eq('is_institutional', false) // Filter out institutional content
         .gte('view_count', 100000) // Keep default for domain list
         .gte('published_at', new Date(Date.now() - 730 * 24 * 60 * 60 * 1000).toISOString()); // 2 years
 

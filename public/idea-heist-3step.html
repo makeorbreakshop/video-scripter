@@ -1423,7 +1423,12 @@
                         <option value="100">100+</option>
                     </select>
                     
-                    <button onclick="refreshOutliers()" style="margin-left: auto; background: #48bb78; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">🎲 Fresh Content</button>
+                    <div style="display: flex; gap: 10px; margin-left: auto;">
+                        <!-- Random discovery mode always enabled for serendipity -->
+                        <button onclick="refreshOutliers()" style="background: #48bb78; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+                            🔄 Refresh
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -1579,6 +1584,7 @@
         let currentPage = 0;
         let isLoading = false;
         let hasMore = true;
+        let isRandomMode = true; // Always use random mode for serendipitous discovery
         
         // Debug Panel State
         let debugLog = [];
@@ -2458,14 +2464,15 @@
                 minViews: document.getElementById('minViews').value,
                 limit: '20',
                 offset: offset.toString(),
-                randomize: 'true'  // Always randomize for fresh results
+                randomize: 'true' // Always randomize for serendipity
             });
             
             try {
                 // Debug logging
                 updateDebugStatus(1, 'Loading');
                 addDebugEntry('info', '=== FETCHING VIRAL VIDEOS ===');
-                addDebugEntry('info', `Query: timeRange=${params.get('timeRange')}, minScore=${params.get('minScore')}, minViews=${params.get('minViews')}, offset=${offset}`);
+                const mode = 'RANDOM';
+                addDebugEntry('info', `Query: ${mode} mode, timeRange=${params.get('timeRange')}, minScore=${params.get('minScore')}, minViews=${params.get('minViews')}, offset=${offset}`);
                 
                 const startTime = Date.now();
                 const response = await fetch(`/api/idea-radar?${params}`);
@@ -2492,7 +2499,14 @@
                     outliers = data.outliers;
                 }
                 
-                hasMore = data.hasMore;
+                // Update hasMore based on response and mode
+                if (isRandomMode) {
+                    // In random mode, always allow more random results if we got a full batch
+                    hasMore = data.outliers.length === 20;
+                } else {
+                    // In sorted mode, respect the actual hasMore from API
+                    hasMore = data.hasMore;
+                }
                 
                 displayOutliers(outliers, append);
                 
@@ -2515,13 +2529,18 @@
             await loadOutliers(true);
         }
         
-        // Fresh content handler - gets new randomized results
+        // Removed toggle - using pure random mode for serendipitous discovery
+
+        // Fresh content handler - refreshes current mode
         function refreshOutliers() {
             currentPage = 0;
             outliers = [];
             hasMore = true;
             window.scrollTo(0, 0);
             loadOutliers(false);
+            
+            const mode = 'random';
+            addDebugEntry('info', `🔄 Refreshed content in ${mode} mode`);
         }
         
         function displayOutliers(allOutliers, append = false) {

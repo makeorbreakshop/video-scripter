@@ -48,6 +48,15 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 
 ## 🕒 Development Log
 
+### August 15, 2025
+- **View Tracking System Fix**: Fixed quota API calling non-existent method. Updated to use `getQuotaStatus()` with proper property references.
+- **Job Cancellation Enhancement**: Extended cancellation to both pending and processing jobs. Fixed stuck jobs with >800 API calls waiting for non-existent worker.
+- **View Tracking Threshold Removal**: Eliminated 800 API call threshold causing large jobs to get stuck. All jobs now execute immediately (827 calls working).
+- **Idea Heist Randomization**: Fixed poor 500-video pool limitation. Implemented 3x sample + Fisher-Yates shuffle accessing full 49K+ dataset.
+- **View Count Filtering**: Added 6-tier view filter (100 to 10M views) with 10K default. Capped performance scores at 100x to prevent outliers.
+- **Pure Random Mode**: Converted to serendipitous discovery only. Added `.order('id')` to prevent implicit high-performance bias in random sampling.
+- **Impact**: View tracking operational for 100K+ videos daily. Users can now discover from full viral content dataset with proper distribution.
+
 ### August 13, 2025
 - **Extended Thinking Implementation**: Fixed response parsing for Claude Sonnet 4 thinking blocks. Optimal 4k token budget for pattern analysis.
 - **Model Routing Optimization**: Sonnet 4 for analysis ($75/1M), Haiku for validation ($1.25/1M) - 85% validation cost reduction.
