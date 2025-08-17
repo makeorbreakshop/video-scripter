@@ -38,14 +38,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Apply rate limiting based on request size
+    // Apply rate limiting based on request size (increased for RSS monitoring)
     const totalItems = (importRequest.videoIds?.length || 0) + 
                       (importRequest.channelIds?.length || 0) + 
                       (importRequest.rssFeedUrls?.length || 0);
     
-    if (totalItems > 1000) {
+    // Higher limit for RSS feeds since they're lightweight (15 videos each)
+    const maxItems = importRequest.source === 'rss' ? 10000 : 1000;
+    
+    if (totalItems > maxItems) {
       return NextResponse.json(
-        { error: 'Request too large. Maximum 1000 items per request.' },
+        { error: `Request too large. Maximum ${maxItems} items per request for ${importRequest.source} import.` },
         { status: 413 }
       );
     }

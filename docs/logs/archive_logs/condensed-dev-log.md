@@ -1364,3 +1364,15 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
 - Persistent database pools can block Node.js event loop in worker systems
 - MCP servers excellent for orchestrating multiple API calls with organized responses
 - Environment variable loading critical for Claude Desktop MCP integration
+
+---
+
+## August 16, 2025
+
+8. **Institutional Content Filtering & Film Booth Avatar Strategy**
+   - Added `is_institutional` column to filter news orgs/corporate channels from creator-focused tools
+   - Marked 727 videos from 37 institutional channels (ABC News, CNBC, etc.) to improve Idea Heist quality
+   - Created comprehensive Film Booth avatar documentation with 4 key segments and content discovery strategy
+   - Developed 40+ Google PSE search queries for systematic channel discovery aligned with Film Booth methodology
+   - Implemented bulk outlier analysis discovering 4 ultra-specific viral content frames with 14.6x-33.4x avg performance
+   - Revolutionary insight: Film Booth avatars teach pure skills as "educational bait" vs monetization-focused content

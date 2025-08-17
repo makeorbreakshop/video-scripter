@@ -1030,7 +1030,7 @@ export default function CompetitorsPage() {
                           className={`cursor-pointer hover:shadow-md transition-shadow ${
                             channel.isAlreadyImported ? 'opacity-60' : ''
                           }`}
-                          onClick={() => !channel.isAlreadyImported && handleSelectChannel(channel)}
+                          onClick={() => window.open(`/dashboard/youtube/channels/${channel.channelId}`, '_blank')}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
@@ -1055,12 +1055,31 @@ export default function CompetitorsPage() {
                                 </div>
                               </div>
                               {channel.isAlreadyImported ? (
-                                <Badge variant="secondary">
-                                  {channel.importSource === 'competitor' ? 'Competitor' : 
-                                   channel.importSource === 'discovery' ? 'Discovery' : 'Imported'}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary">
+                                    {channel.importSource === 'competitor' ? 'Competitor' : 
+                                     channel.importSource === 'discovery' ? 'Discovery' : 'Imported'}
+                                  </Badge>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(`/dashboard/youtube/channels/${channel.channelId}`, '_blank');
+                                    }}
+                                  >
+                                    View
+                                  </Button>
+                                </div>
                               ) : (
-                                <Button size="sm" variant="outline">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectChannel(channel);
+                                  }}
+                                >
                                   Select
                                 </Button>
                               )}
