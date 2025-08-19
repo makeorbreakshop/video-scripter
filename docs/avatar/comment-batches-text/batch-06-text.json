@@ -1,0 +1,1252 @@
+[
+  {
+    "text": "Impressive video. Have you come across any of these desktop lasers that work with light burn?",
+    "likes": 2,
+    "video": "The Makeblock Laserbox - Is this the Laser Cutter "
+  },
+  {
+    "text": "Great video....very simply instructive and you covered all the bases.  I wanted to buy the Ortur Aufero CNC Engraver as I will  use it for a project w/Hardwood....Walnut.  It appears that product is now discontinued.  Do you have another recommendation of a non-laser engraver that would be $300-$550 as this was?  Thanks.",
+    "likes": 3,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "Just got my daughter some pots. Now I've got inspiration for kitchen. This one looks AMAZING.",
+    "likes": 0,
+    "video": "Custom Farmhouse Sink, Dials and Oven Top for a Pl"
+  },
+  {
+    "text": "yes , defiantly worth it. I am a war gamer. MDF terrain is expansive. using my stock K40 I have already made more than a tables worth of MDF terrian which would have cost me way more than the K40 did. love the thing :)",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "I want to start small business with laser engraver. All kinds of gifts, metal key chains... Mostly on wood, but i would like to have open option to engrave on metal, it doesnt need to be deep, just enough to not be wiped off. I would like to buy if possibly around 700$. But i will work a lot on that laser and i need it to work long term. Do you reccomend atomstack x7 50w dual laser? I also looked at ortur laser master 2 pro, but as i saw it is weak to cut through even 5mm wood. What do you think about x7 and if not can you reccomend me something else. I cant get xtool d1 shipped to my country(Serbia). And is it better to order from aliexpress or from official site, because sometimes the difference in price is arond 50-100$. By the way i love your videos, they are very detailed. Sorry for the gramatical errors my english isnt the best.",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Great review! I've been waiting for some in-depth info on the D1 for weeks now. I am wondering, though, how it would do cutting very thin hardwood. They claim it can cut 6mm Basswood in one pass. My main use for a laser is cutting through 1.5mm hardwood (.062) of different species (Maple, Cherry, Walnut, etc). If you ever have a chance to check out that capability, I'd lover to know how it goes. I have a Glowforge now, but when it dies, I'd love to find a cheaper alternative. Thanks again for the detailed laser reviews!",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Great video! I have one on the way. So great info!!\nCheers",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "The software that is shipped with the LaserPro is buggy and and not very powerful. LaserPro is not compatible with Lightburn - yet - they are working on it. However after several weeks playing with it, I found that with a very simple GCODE header and footer added to the Lightburn configuration file, the LaserPro will (mostly) run with Lightburn. It has a very small spot and is very powerful. It easily cuts 3mm plywood at 225mm/min at 95% power, and engraves literally everything. It has an internal fan that provides air assist, blowing air from the same orifice as the laser, and the lens is recessed in the laser head so smoke does not settle out on the lens. The auto focus works great, and the enclosure with the fan lets you vent the smoke out a window. The video camera takes a bit of careful setup but is extremely useful. When the LaserPro is fully Lightburn compatible it will definitely be the diode laser engraver to buy. My LaserPro is now the one I use for all my projects, and my previous laser engraver (which I was very happy with) sits pretty much idle.",
+    "likes": 3,
+    "video": "SparkMaker LaserPro: The new King 👑 of budget las"
+  },
+  {
+    "text": "Bro They just pulled your advertisement link, almost doubled the price. Classic switcheroo. Fastest I have seen this far. Hopefully they paid you directly ahead of time.",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I do custom stamped ring which I fill with color. Is there a laser that can cut deep enough in stainless steel, that I can fill on the spot and make for a customer in about 10 to 15 min. turn around? About 1/2mm deep and the lettering are around 3 to 4mm tall by 2 to 3mm wide.. Also this would be at an indoors event show. Would there be any toxic fumes coming off ?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Will we be seeing a review of the neje master 2s max 40w laser soon ?",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I belong to a large dog rescue and want to make dogs tags with all owner’s information what should I buy",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Whats your thoughts on the M1 they are releasing on Kickstarter? Xtool seems like a great company to buy from for an affordable laser option",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I want to cut holes for controls, switches, etc. In project boxes..\n\nThis means the surface being cut could be up to a couple of centimetres above the bed. Would this be a problem for the cheaper machines?\n\nProject boxes, are quite often ABS, rather than acrylic. Are there any problems associated with cutting ABS?\n\nThanks.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Sir, i had a question.\nIs there a laser machine (in one) that can adjust to print or to cut?\nThank you very much.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "At my local Makerspace we have 3 Thunders and an Epilog.  They are quite nice machines.  The big thunder we have has like a 3ft × 4.5ft cutting area which seems insane, but one thing we have noticed with it is that the laser's cutting power gets weaker as you move away from the source, so you can't really utilize the full cutting area as easily.  That's probably just as issue with such a large laser, so keep that in mind.  Still an awesome machine and I love being able to get my hands on that pro grade stuff",
+    "likes": 3,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Price is showing as $849... I don't appreciate manufacturers who jump the price by 25% just hours after a review goes live. They're not doing you any favors, which is unfortunate, since your well intentions are apparent. Perhaps ask them in the future if they plan on making your video's pictured price obsolete so soon after you made the effort to edit in the initial price they gave you.",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I'd love your opinion on our use case of this vs the Ortur. Was just about to go for the Ortur LM2 Pro when I saw this video. Eithers' most difficult and frequent use case would be for a teacher cutting paper, cardboard, and occasional thin (6mm or less basswood/balsawood) for young student projects. Along with doing engraving for gifts and occasional sales (once or twice a year flea markets, no online shop).  Would a 4\" hose and exhaust fan to outside *near* the xTool be enough in a basement shop? I've got preexisting 4\" exhausts running for airbrush and resin 3d printers. Or should we really use an enclosure?  Really like the xTool build quality and what seems to be a better laser module with dual diode. \"Good enough\" software doesn't seem to be a problem since it doesn't need a persistent online connection like glowforge. The big thing that has me hesitating on this xTool is that the Ortur has an optional enclosure, seems to have more reviews, more mods, and more units actually out there in the hands of hobbyists.",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Does it work on gold, silver, platinum? If not, would you be able to recommend one that is affordable?",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Hi there! Wanting to ask which among these lasers can actually cut a metal?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Isn't that divider is the same dimensions as the side walls?",
+    "likes": 0,
+    "video": "Designing Furniture with Fusion 360 for Absolute B"
+  },
+  {
+    "text": "I suppose  you cant do a video how to setup a ANYCUBIC Mega Pro with its laser that wont impact issues with the printer??",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Great review thank you.  Waiting on my 10w D1 to arrive any day now.",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Nice machine, but, why the filters of my laser machine extractor are in dark brown color? without cabinet this is a cancer machine man, be aware.",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "What is the cheapest one that can cut through metals like steel titanium, maybe a max of 1cm thickness",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Could use some advice.\n\nLooking at the glowforge and K40. But wouldnt mind to be directed towards more industrial versions.\n\nI got a spare room, probably 2x1m left. Ability to place air assist and extract fumes through a window nearby. It's in an appartement, quite populated so wouldnt be cutting overnight haha.\n\nPlanning on cutting acrylic/pmma 3mm thick plates i want to feed atleast 50x50cm plates for ease. \n\nBut also want to engrave/scorch leather and woodies(multipex/plywood most likely)\n\nMaybe engrave aluminium but I realise there are specialised laser(lenses) for that particular operation.\n\nGot max 5k to spend. Looking for a ROI within a year. (Things I sell will be around €5/€25 a product, around 5000mm distance in lines per product)\n\nIt's mainly hobby orientated. I want to comfortably be out for work during the day while it is running. Ofcourse I have a contact in the appartement that could keep an eye on things and unplug the field if necessary.\n\nWhat would you guys recommend based on my input? What might I have forgot to mention that could be detrimental for decision making?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I’d love to hear your thoughts on the Atomstack X7 Pro. It seems to use the same laser module as this one. It is a more traditional extruded aluminum chassis but that allows for easy future work area expansion.",
+    "likes": 2,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "But it’s advertised that it supports lightburn/lasergrb",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I have had great results with a K40 with no upgrades. I only use it to make war gaming terrain but I have found it to be a very useful tool.   I should add a air assist when I can get around to it.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I bought this October 3rd after the preorder phase. Fair warning they are having logistic issues and are not very transparent about it when placing your order. They push that they have a California warehouse, but I was told mine will ship from China. After being a squeaky wheel, they printed a Cali shipping label Friday, but have yet to give the package to UPS. I believe they have not met their preorder obligations and new customers are getting pushed even further back. So depending on time constraints you may want to look elsewhere.",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Have you heard of those double diode lasers? The two beams are focused on one spot creating a quite capable diode laser cutter. I'm very interested in that.",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Great, excellent video again. I'm excited to see the Comgrow Z1 review, and if you have any questions, please feel free to contact me:)",
+    "likes": 3,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "It looks very nice but the first question i have, how i could install a air assist ??? The laser is closed",
+    "likes": 2,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "What do you use underneath the project to protect your table? Also I'm so glad you reviewed the D1, you are by far the best laser reviewer. I purchased the D1 but I haven't gotten it yet.",
+    "likes": 5,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I think a a k40 with a couple of little mods would be a much better alternative?",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Which one would you recommend for engraving wood cutting boards? Thanks",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey awesome review! When will it be released to the public? As a first time buyer would you recommend the ortur lm2 pro or the xtool D1?",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Would you say this is better than the laserpecker? I work with leather (boxing gloves) and would like to start engraving on them. Which of the two would you recommend?",
+    "likes": 0,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I just ordered mine yesterday. I’m really excited to start using it for my craft projects. Does this work with SVG files?",
+    "likes": 3,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "I own one and love it so far minus the software. Hopefully 3rd party integration happens soon.",
+    "likes": 5,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Great review.  What's the downside of this laser's software compared to lightburn.",
+    "likes": 2,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Lots of information in an easy to digest nugget. I appreciate the different types of lasers being compared 'side by side' in the same video.\nThanks. \nLet's go Brandon!",
+    "likes": 2,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "How many times did you actually say actually? I actually think, it was a lot.\nNice review Brandon.",
+    "likes": 1,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Great video!\nIt was a toss up between this and the Ortur LM2 Pro, with the deciding factor finally being software.  My first ever laser engraver was a Wainlux K6 with proprietary software and mobile app.  On the xTool site I believe there's some sort of mentioning of D1 working with 3rd party software?  I tried reaching out to make sure Lightburn was compatible but so far no response from xTool.",
+    "likes": 3,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "Seems like a capable little machine Brandon, thanks for sharing! :D",
+    "likes": 5,
+    "video": "The Nicest Laser Engraver This Year? The xTool D1 "
+  },
+  {
+    "text": "What's a good quality lazer cutter that can cut through 1/4\" inch acrylic. This is getting confusing with all the different options. 😅",
+    "likes": 5,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey - dumb question by a nooby, would this be good for toner on ABS, PLA,  or PETG?",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "The SCULPFUN S9 engraves stainless steel and is currently on offer at less than £230.",
+    "likes": 1,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "How does this compare with the SCULPFUN S9, which is supposed to be equivalent to a 90W CO2 laser?  Does anyone know which model would engrave stainless steel better?",
+    "likes": 2,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "will this do rubber stamps for custom ink stamps for crafting?",
+    "likes": 1,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "i been looking at laser/engraving machines , for a entry level. but still something that's decent for around $500.00 that can make custom rubber stamps for crafting. i would be very thankful for any information that you can give me. keep up on the great videos.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Brilliant and as another viewer said, I didn’t realise you could pan the video- amazing",
+    "likes": 0,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Do you have a video on exhausting the fumes from the laser? Eye and lung protection is very important of course. Have you ever had to clean off the laser lens due to burnt, ejected material? Thanks. Great video, editing. Where did you get the laser filter shield that is attached to the laser head?",
+    "likes": 0,
+    "video": "How to Make Money with Laser Engraved Ceramic Tile"
+  },
+  {
+    "text": "If you had to choose between the muse or xtool what one would you get and why?\n\nThanks",
+    "likes": 1,
+    "video": "The Makeblock Laserbox - Is this the Laser Cutter "
+  },
+  {
+    "text": "interesting product, but I don't trust proprietary software, because the machine may also be the best in the world, but it will always and only do what that software allows it, and if the software is limited or poor, production can only be limited and poor",
+    "likes": 0,
+    "video": "SparkMaker LaserPro: The new King 👑 of budget las"
+  },
+  {
+    "text": "I'd love to see a Elegoo neptune 2S review. I'd heard a lot about it recently and I haven't seen too many videos about it. All the videos I've seen are for the neptune 2, the previous model. The 2S seems similar to the Ender 3 v2, but a heck of a lot cheaper.",
+    "likes": 3,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "Most barrel heads are 15 inches in diameter is it safe to use this on something that is larger than the dimensions of the rails? Would it be able to sit and engrave on something that thick?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I‘m Chinese, I bought a used 40W machine. the laser tube was broken, but it only cost $50. I bought a new laser tube, it cost less than $120 for all of this.hahahahhahahahha , I'm so happy about the result.",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "sculpfun have just release the S9.. wonder how that stacks up against ortur or the atomstack?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Any hardware that REQUIRES a cloud connection is a deal-breaker.  Internet down, you're down.  The company goes bust, you have a paperweight.  I don't mind tinkering and have the skills to do the upgrades, but the increased bed space of the 50W is appealing.",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "How much does it cost to make such thing ? \nAmazing project by the way",
+    "likes": 0,
+    "video": "Sending a 360 Camera to the Edge of Space - Insta3"
+  },
+  {
+    "text": "This was very helpful. Sub-a-dub-dubbed. Oh hey my name is Brandon too. You liking how we are all getting such strong motivation around America right now? Lol",
+    "likes": 8,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hello, where do you go in lightburn to change the settings if you purchased the z lift? I am so lost.",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Hey man what if I want it for laser engraving a firearm or something like that or jewelery?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Hi Brandon, I love your videos!! Are there any reasonably priced fiber lasers that will engrave on the exterior/interior of rings as well as cut through up to 5mm thickness of metal?",
+    "likes": 2,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "So besides having online and proprietary software, i really don't like the glowforgesince they put the tube on y stage? I never understood this ( i know it's to save mirror cost and to make it more compact), you add complexity by moving something around that needs high power and cooling. I think the design is very silly and id avoid it just because of that.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I love your channel and im to buy a laser cutter and engraver next year.  Could you please make a review of the Snapmaker 2.0 laser engraver? thanks",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "When printing bigger objects like you can on this, does it take…… LONGER to print?",
+    "likes": 3,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "Could you do a vid on engraving a watch?\nWatch back obviously but the band itself would be interesting .",
+    "likes": 1,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Great Video!! All I want to do is engrave plastic light switches.  Your recommendation Please.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "What you machine recommended for making laser printing [Little - Medium quantities] & on metal / wood such Car License Plate or wood work, please let me know with details where to get , model, price etc.",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Need web address where to see the range of these machines and the Prices.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Anyone got experience with acryllic fumes from lasercutting? Do i need active ventilation in a separate room in the house?\nNot really want to choke my fam haha",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "I was hoping you would talk a little bit more about fiber lasers.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "How hard is it to deal with lasers that don't have autofocus? Is manual focus a huge pain?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "A suggestion--if I were to use this model for construction, I would want to see a set of views with dimensions.  Perhaps include a quickie on how to get dimensioned 2D drawings along with the nice model?  Its a pretty simple thing to do, and would be critical for anyone needing this to construct the table.  For my class, I have every student submit a set of pdf's along with the f3d model that show top, front and side views with all important dimensions labeled, or I take points off their projects...this one should also include an exploded view of the joints you made. \n\nGood video though!",
+    "likes": 0,
+    "video": "Designing Furniture with Fusion 360 for Absolute B"
+  },
+  {
+    "text": "If that's the most dangerous machine you have.. consider yourself lucky.. my wife likes to refer to most of my tools as \"spinny blades of death\"... Most don't bother or scare me.. the jointer however is terrifying, and extra precautions need to be taken.",
+    "likes": 1,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "I bout the plans from your website. I did not realize they would not include SVG files. Can you help?",
+    "likes": 2,
+    "video": "Building a Modular Paint Organization System"
+  },
+  {
+    "text": "Tube life. Service & support. Reliability. Minimum spot size. Tube switching speed.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Invaluable resource for choosing a laser. However, the music and sound effects can be distracting.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Ordered mine yesterday but i also bought upgraded dual fan cooling fan because i noticed all reviews had same problems with cooling. its going to be my first 3d printer hehe.",
+    "likes": 2,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "Was wondering if anyone pointed out it is Jimi, not Jimmy.  Hehe.  Love the videos!",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I think i will start with the 50w version after seeing your Video instead of buying the k40. Good comparison. Thank you so much",
+    "likes": 1,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "With a diode laser I use to cut 5 mm 8 mm plywood at 200 mm/m.",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "Which would be best for engraving large format leather and cutting patterns from same?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey, a magic sponge will probably get rid of the shadow on those Airpods! I use an industrial CO2 laser regularly and magic sponges are awesome for removing that shadow on a variety of materials.",
+    "likes": 2,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Universal laser systems make very nice machines, thier software is a little clunky  but very easy to use, very fast",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "The video is a great reference. Some aspects of the presentation are absolutely professional.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "That's amazing! The video is really vivid and talented. I must say that I've learned a lot from it.",
+    "likes": 2,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "I did have a browse through the comments, but when using the laser on the tiles like in the video, does it produce any smoke or fumes? I can't really tell in the video. I don't have a spare place to use mine when I buy one, so hoping I can use it in my bedroom or is that a bad Idea?",
+    "likes": 0,
+    "video": "How to Make Money with Laser Engraved Ceramic Tile"
+  },
+  {
+    "text": "I'm interested in laser cutting yet, at the moment it would be for hobby purposes.  Creating buildings for a model railroad.  I would have to take it on the back covered porch to use it.  I saw all those boxes you made in the background of one of your other videos.  Using that type of thin plywood, what do you recommend for a beginner/hobbyist?  K40?",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Hello, did you try to engraving icon on black switch from car?",
+    "likes": 0,
+    "video": "SparkMaker LaserPro: The new King 👑 of budget las"
+  },
+  {
+    "text": "The major fire is when the soot gets build up in the laser module.",
+    "likes": 1,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "THANK YOU FOR GIVING US KNOWLDGE ABOUT LASER, I WANT TO START LASER ENGRAVING YOU MENTIONED CANNOT USE AT THE BAMBO MATERIALS. WHICH MACHINEWITH SMALL BUDGET , I HAVE SMALL STORE WHICH LASER IS THE BEST WITH SMALL BUDEGT AND FOR MY SMALL STORE",
+    "likes": 0,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "If they send you a muse titan, can you do a full break down video?",
+    "likes": 0,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "What would you recommend for engraving names and short messages into small objects like keyrings?",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I got the Ortur master 2 before the Pro came out. Do you recommend that I can upgrade the laser to something like endurance 10w+? I hate to have waisted my money to buy all new machine but would like to cut at least thing material without having to do 16 passes",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Is there a desktop machine that can actually cut through 2 or 3mm metal?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "But isn't that machine have a safety switch for a fire ?",
+    "likes": 0,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "Can you point me at something that will drill sub-80 drill bit size laser holes in SLA type casting resins?   Through flat, thin sections, perhaps on the order of 2mm or less.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "In all the months that you have been using your Ortur have you had any problems with framing your tiles.",
+    "likes": 0,
+    "video": "How to Make Money with Laser Engraved Ceramic Tile"
+  },
+  {
+    "text": "Maybe use something to thin the wall from the inside to make the shallow engraving show better.",
+    "likes": 0,
+    "video": "Can You Carve a Pumpkin with a Laser?"
+  },
+  {
+    "text": "Do not look into beam with remaining eye. 😎\n\nSeriously, I don’t trust them to be un-enclosed. Put them in a box… doesn’t have to be fancy, just light-tight.",
+    "likes": 4,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "Attempt this video but with the laser slightly out of focus. That might net the results that you are looking for!",
+    "likes": 5,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "I have the Ortur Laser Master 2 Pro.  It is on a bed of tile.  I also keep a full-sized fire extinguisher near it.  I very much look forward to your video on the air assist, especially if it is something I could 3D print for it.",
+    "likes": 2,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "Great video sir!  I just received my laser master 2 pro S2 (they upgraded it) and it has a flame sensor plus emergency stop.  I think the laser is fixed focus now…\nI accidentally burned “Hello World” into my coffee table when I was testing it out for the first time.\n\nI’m looking forward to your video of what type of air assist module you’ll be using.",
+    "likes": 2,
+    "video": "How Dangerous are Laser Cutters and Engravers?"
+  },
+  {
+    "text": "At that size why not convert a 3d printer. I mean it's the same machine really.",
+    "likes": 0,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "Good video, however just about everything you said sketchup cant do.....it can. For one, model using dynamic components. You can not only change sizing on the fly but you can also animate door openings, drawers and check for collisions etc. This is HUGE! You can change material thickness etc. Rendering....well, that depends on what you are trying to accomplish. Sketchup uses companies like VRay and Lumion..... Fusion 360s internal renderer cant compare. That does require an additional software purchase, but being that was a point brought up I assume we are focusing on quality of render potential and Vray simply cant be touched. One huge advantage Sketchup has over Fusion 360 is Layout, the quality and ease of use to create amazing drawings is a big need for me. Again both of these programs are solid, it just depends on what you are doing and what you need. I would not count sketchup out as it is very powerful, and even more so when paired with quality plugins. I do like Fusions CAM capability though, I currently export to Aspire, but 3d shapes would\n be nice to toolpath on screen like that. Thanks for the video!",
+    "likes": 1,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "For the auto align do you have to pay for their pay version? or can i use inkscape and the auto align will still work",
+    "likes": 0,
+    "video": "Should You Buy a Glowforge?"
+  },
+  {
+    "text": "Sorry if this has been said before but that is NOT running at 70mm per minute, more like per second https://youtu.be/vRLJz2QB-Gc?t=773",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "The ORTUR looks like it be good for some DIY 3D printer, with some modifications.\n\nI worked at a place that used a type of plastic powder, in the consistency of baby powder. Wile sitting in it's shaker, it looked like bubbling liquid. Wile in that state, it is sucked up with a positive charge added to it, and sprayed on a metal part with a negative charge, to make the powder paint stick to it. After, it goes into an oven to melt the plastic onto the metal as a covering. Comes in many colors.\n\nIf one was to have a table that a slider arm will lay out a thin layer of that powder onto a table, the ORTUR could be use to trace out the shape of one layer to a 3D part. The table would drop by one layer, as the slider arm adds another layer of powder. The ORTUR traces out that next layer, before the table drops again. Repeat, until all layers are complete.\n\nUse a small vac to suck up the unused powder, and you got a 3D part. Trick is, getting the ORTUR to be part of that automated task. Could be make possible with a Raspberry PI I think.\n\nWould prove to be a neat project. And cost vastly less than other 3D printers that do such already costing over 15,000 for a low end 3D printer of that type.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "1) what do you put under the machine to prevent you from cutting the table?\n2) is Chinese safety goggle good enough for stray light?",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Can I use Autocad software on this machine and if so, is it just a matter of connecting it to my computer and cut away or is there other software I need?",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "Will the Omtech K40 cut thin metals, say 1/32\" aluminum?",
+    "likes": 1,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "My body shows it being 267\" is there a way to rescale the model in fusion?",
+    "likes": 1,
+    "video": "Get started in Fusion 360 for CAM & CNC - Complete"
+  },
+  {
+    "text": "Would this be a good platform for etching on bullet/casings? Any further information would be appreciated!",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "Is this good for engraving into guns? I want to design beautiful patterns onto them",
+    "likes": 0,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Hi there, am hoping you can assist. :)  I am looking to make acrylic jewellery with my daughter (see kitschy for style).  Just a hobby really, she's in highschool and wanted to try something different. What machine would you recommend?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "k40 whisperer was a game changer for the k40...i now have built my own \n600x400 co2 laser using the k40 control board, 45w spt laser.....have \nhad for 3+ years.....spt makes great tubes.....they are actually tested \nwith info like peak power......made motorized bed out of 1x1 steel tube \nand 3d printed parts....total cost was $900....well worth it as its paid\n for itself many times over",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "k40 whisperer was a game changer for the k40...i now have built my own \n600x400 co2 laser using the k40 control board, 45w spt laser.....have \nhad for 3+ years.....spt makes great tubes.....they are actually tested \nwith info like peak power......made motorized bed out of 1x1 steel tube \nand 3d printed parts....total cost was $900....well worth it as its paid\n for itself many times over",
+    "likes": 6,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "How are you there I have a question it can be writing on aluminium or a plastic",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "If anyone's viewing this video on a PC, at 2:17:45, hover over the video progress bar and watch the wave like motion from the lens. I accidentally discovered it and further proves my point that the lens is clearly causing false curvature.",
+    "likes": 5,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Hello, would you consider doing a phone consultation with me to choose the best laser cutter? I would compensate you of course. Please PM me to continue this conversation.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I got one of these 3018 CNC/Laser machines about 3 years ago. I assembled it according to the instructions that came with it and everything seems to be OK until I tried to start carving. Nothing moves!! But when I move it manually on any of the 3 axies, it moves fine. Do you know what might be the issue? \r\nThanks and best regards.",
+    "likes": 0,
+    "video": "Is a Sub $250 CNC worth it?  Alfawise C10 CNC & La"
+  },
+  {
+    "text": "You could also use that as a print block.. engrave some Gustave Dore etching, put a dab of ink on it, get a roller, and some paper.  \nGutenberg approved.",
+    "likes": 2,
+    "video": "How to Make Money with Laser Engraved Ceramic Tile"
+  },
+  {
+    "text": "The first ad was for an engraving company, so fool thought is was the actual Video, Silly me...lol",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi, any desktop laser cutters to cut up to 8mm acrylic plexiglass sheets? can you please guide me.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "After a lot of research I went the modified K40 route. I upgraded lenses & mirrors, added air assist, amp meter, better temp displays and a better internal and external fan. I also expanded the bed area by cutting down the exhaust shroud. I did run through a major tune-up and alignment to really dial everything in before use. I didn't bother with a chiller, a 5-gallon bucket serves me just fine. I also haven't bothered to upgrade the controller board, the original works just fine for my workflow with K40 Whisperer. I mainly use it for cutting plastic or plywood parts for prototyping rather than engraving, so the stock controller is fine. All in, it easily came in under $800 to have a very versatile machine in my arsenal that I can add and upgrade to later if needed.",
+    "likes": 6,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "I’m interested in starting a small sports labeling/engraving business, mainly engraving basketballs and footballs, and possibly making trophies and awards. What type of laser do you recommend for these applications?",
+    "likes": 1,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "thanks for your excellent videos ! btw, which laser would be strong enough to produce a similar effect like this one here?  https://www.youtube.com/watch?v=iHYBz_dAkpg  thanks and best of luck with your work!",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Pretty sure this video just so me my glowforge pro..",
+    "likes": 0,
+    "video": "Should You Buy a Glowforge?"
+  },
+  {
+    "text": "Would love to see more on the software. How do you create items to be etched or cut? For instance, I want to replicate a paper cutout piece of art I purchased and got ruined. Do you scan that in or how doe sit work?",
+    "likes": 1,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Speaking from my heart you shouldnt mention that these machines have a range of 20-100kHz. Open the machine and check the fiberlaser module and you will see it yourself. If its a \"cheap\" Raycus this will eventuelly be a QS-Version (RFL-P20QS blue) with a range of 30-60kHz. This is what the chinese guys sell you as an 20-100kHz. If you use it out of this range the module will fail within months. Btw. even the good cheap china fiberlaser modules on these machines are RFL-P20QE versions with have a range of 20-60kHz. So be prepared.",
+    "likes": 33,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "No mention of the SparkMaker LaserPro.. Any reason in particular?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "You know, when talking about ”Pro” level cutting, we've had good luck with getting used machines through Mitsubishi.  5'x10' cut area, and 4kw will cut up to 1\" carbon steel (O2 assist).",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "The exhaust fan should be at the exhaust end of the tube... that way you're never pressurizing the tubes... you're always pulling air into it.  The reason for this is so that you never push smoke out of the ducting... you're always drawing air through any leaks in it.  (It's always a negative pressure, instead of a positive pressure, in the tubes.)",
+    "likes": 30,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Hey Make or Break, nice video!  Really good at placing the various options in terms of feature set and capabilities.\n\nI’m specifically looking to cut foamcore (aka foamboard.)  Which has two issues, the paper layers burning and the sandwiched foam melting back leaving concave edges.  Have you ever experimented with this material?  Any advice or recommendations on laser choice?",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Thanks for the review on this and all your other lasers.  I know you said fiber lasers are not for wood, but what about glass?",
+    "likes": 2,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Thanks for this!  A GREAT laser primer!!!  (New subscriber!)",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "if i wanted to engrave keyboard keycaps what would be my best option?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Everyone seems to think we all run Macs or Windows.  It would be nice to specify when you speak about a product that it will run on these different OSs.  I retired out of the computer industry and have never used a package like Lightburn.  So intuitive and easy to use.  The forum there also has a lot of great people, including the developers.  RDWorks which comes with the Ruida controllers is Windows based and useless for a Linux user.  Lightburn covers the main three, Linux, Windows and Mac, no monthly or yearly fee.  Being a Linux user, proprietary software is not even considered.  Thanks for the video.  First laser was a ss laser for my little cnc machine.  Got me hooked, now have one of the 50 watt (lol) China Blue machines since last mid June.  Great machine.",
+    "likes": 3,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "great list but many of these can be ordered directly from China for 1/3 to 1/2 the price. Especially the lower end of each tier is usually just a relabel. Glowforge is really anti consumer so I would STRONGLY advise against it.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi there, have you tried Neje diodes 40w double laser?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "How strange, I was known as Laserpecker by all the ladies way back in my high school days!",
+    "likes": 1,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Thanks for this video. It was exactly what I was looking for. My new toy is on the way.",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "What about cutting or engraving on curved surfaces? Your video showed cutting on a pumpkin. How does the machine keep focus on something that is curved?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "How much will that whole set up run me if you don’t mind me asking",
+    "likes": 0,
+    "video": "Laser Engraved Cups! Using a Rotary Attachment on "
+  },
+  {
+    "text": "I'm actually surprised that there was no mention of Gravograph/Gravotech. Granted, those machines are on the pro level in terms of features and price point, but I'm still surprised that the name wasn't brought up.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "OK I'm old and just getting in to lasers and what they can do when I etch glass I have like holes in the burn the coating I'm using is cold galvanizing compound. What could it be ? glass is cleaned very good but 3 times now this has happened trying to find out why the holes in the letters.",
+    "likes": 0,
+    "video": "Did I Waste $1500 on a 50W Laser Cutter from China"
+  },
+  {
+    "text": "I own the lk5 I love it. Where would I get the stl file for the upgraded fan shroud?",
+    "likes": 4,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "hello Brandon, can this laser cut metal like silver 3 mm thick",
+    "likes": 0,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Thank you for this channel I feel like I instantly came to the right place! I'm interested in buying a quality laser cutter /engraver that can do 2mm possibly up to 4mm metal what are my options? I know it could be pricy but don't want to buy something I'll outgrow right away",
+    "likes": 1,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I got one to get into 3d printing. My sttings i must not fully understad. I can print boats all day test prints but as soon as i print a file of my own look out it turns into a wereking ball. I don't get it. Any advice?",
+    "likes": 1,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "At 9:19, a screw fell out.  That got an eyebrow raise out of me.  I was wondering if the whole thing was about to come loose and shoot the laser at the camera.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "How can you not have bigger epilog on this list? They are like the premier professional laser cutting company if you want the best. The zing is far from pro IMHO it is not really worth buying. I would buy the bigger machine",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "very clear, how would thgis work on leather?  small areas. I do leather carving by hand so leather needs to be moist. How would this machine perform on thin (2mm max) leather? Thanks",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Actually my 5w diode laser can cut 4mm plywood but I gotta go real slow with 5 passes or so. But, it works, but it's only suitable for really small stuff. I did some finger joint boxes for CNC router bits, roughly 15x10x10cm box size. Took a few hours but I just left it running so that was fine. Also a bit of cleanup work was necessary to get all parts out.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Thank you for this very informative video.  I want to cut 2mm acrylic at various colors.  Does the OM Tech 50W have any limitations on the color of acrylic it can cut?  For example, I noticed that some low-end CO2 laser cutters are unable to cut blue acrylic.  Thanks.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I’ve been looking at the LK4 for a while and I saw someone selling a used one with around 100hours printing time for ~$200usd.  Is that a good price? 🤔",
+    "likes": 0,
+    "video": "The Longer LK5 Pro is Big and Cheap. But is this 3"
+  },
+  {
+    "text": "Years ago I worked, extensively, with an Epilogue Summit 2000/25. That machine was built in the mid 90s. Back then you connected to it, as a printer, so Epilogue provided a print driver. Being older it had no USB, so it has a parallel printer port connector. But I \"printed\" thru Corel Draw, which would both cut and engrave. The engraving portion, was provided with a simple image file format (.jpg, .png, .bmp, etc), and the cutting with a vector format (.dxf), that I imported into corel, to make the final file, to be engraved & cut out. Is this still an option on modern engravers ? The prices on these new units are hobby affordable, as Epilogue units start around $20K, so not going to happen, unless you're in the business.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "9:36 FDA? I didn't realize that the Food and Drug Administration certified lasers.",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "AMazing Brandon - ... Really a Cool Project - The Ice Box Thing - Kept it REAL -......  As it got higher the Sky got a FEEP Darker Blue- The Timeout on the Balloon was amazing - ... and the Jet FLyBy for a 2nd and third Look - was INCREDIBLE-\n\nIm sure 360 Camra Companies will use this Project - Now your CLASS needs to figure out how to Monetise it ... (SMiling)\nWell DONE !",
+    "likes": 0,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "If I want to cut acrylic, twill material for clothing and engrave images into leather and metal, what am I looking to buy?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "We have a $30k retail trotec and a similar epilog at our maker space and I would rather have my $3k 60w omtech (rebranded shenhui) laser any day, even without considering price. I have used several laser brands at various maker spaces throughout my career and so far the omtech lasers have come out far ahead. I hope this helps someone make an informed decision. Thank you for high quality, informative video.",
+    "likes": 3,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "simple and cool table saw jig, that chainsaw joke was actually funny but only because i fully thought you were gunna let that chainsaw fling the scrap 90ft in a random direction lol",
+    "likes": 0,
+    "video": "3 Ways to Make Wooden Shims (DIY Wedges)"
+  },
+  {
+    "text": "We have an epilog and a universal at our makerspace and the universal has been a far more reliable and capable cutter.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey Brother, Great video. Appreciate the time you take to make these videos. Incredibly helpful!",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Need a cheap one currently a college student so not to the point of getting a glowforge or laserbox. Id say the max I could afford is up to 1k which won't really get me anywhere.. I rlly want to start my business tho. I can use the lasercutter at my school but I want my own personal laser for when I go back home during the summer.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hola, una pregunta loca.... que si ya habeis bajado de la luna???",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "6:10 you put the collet on upside down (backwards). =) i'm sure its just something that slipped by editing but for those using this as reference... put the collet into the nut (the text on the collet should be facing the work peace; there's also a little notch inside the nut for pressing collet in and out); screw collet and nut into spindle loosely; and then insert cutting bit into the entire assembly before tightening everything down.",
+    "likes": 1,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "I think it would be safe to add Gravotech to the Pro list.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Shucks you got me interested in the 50W one. Wish you would have gone more into which upgrades are unnecessary on the 50W vs the 40w to get near glow forge. It almost sounds like you don't recommend any upgrades but no biggie more research for me!",
+    "likes": 1,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Go make or BREAK (?!!) something in your shop... LOVE IT!  Break (then FIX) is my life!  Awesome idea on the shelves!  I'll have a drill press on one end, and a soldering station on the other (on a portable/removable elevated a metal tray).  Wish me luck!",
+    "likes": 0,
+    "video": "Building a Simple (and Cheap!) Miter Station + Sto"
+  },
+  {
+    "text": "I would like to see a demo of it engraving on Stainless Steel if you could?",
+    "likes": 7,
+    "video": "SparkMaker LaserPro: The new King 👑 of budget las"
+  },
+  {
+    "text": "Seems like minimal upgrade as far as performance over our 20w. May just see about getting the laser module if it's not too expensive. For just a little more money you can get a k40 instead of this.",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "I'm curious whether it could be used to engrave onto a Lego brick (i.e. ABS). Either a piece of text onto a single brick, or maybe even a design engraved across several bricks connected together.",
+    "likes": 3,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "I work at a custom fab shop, what would be good for 3/8\" plate steel and .125 aluminum? At 4x8' sheet",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Totem S 40W / NEJE Master 2S Max / Atomstack A5 Pro / Ortur Laser Master 2 pro\nI found the four. would like to know which one of the favorites is and which one is best for small knives, normal kitchen knives, silver key rings, zippo, silver engraved bracelet for children. thank you in advance for the help and information I will get. nice day",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Great video.  Gave me all the information I needed to start my research on what I want or what I need for what I want to do.  haha",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi there, great informative video thanks.... Will this machine engrave black text on metallic plates and jewellery. cheers",
+    "likes": 1,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "K40 because it does the job for 500$. Maybe a stronger and fully fledged one is the perfect 2nd laser cutter. Thanks a lot for the video",
+    "likes": 1,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Great video and information! Seems like the omtech machines have gone up in price quite a bit since this video haha. It's $480 in the video but on the website it's $680. The old question of risking the eBay k40 vs a \"trusted\" omtech is starting to become more valid again... Oh well I guess this is just the way it goes",
+    "likes": 1,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Can you please tell me what laser machine can do very small or micro engravings on metal with high resolution that you can see with a magnifier  . thnx",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Great built!  If you could show rendering that would be great, thank you!",
+    "likes": 0,
+    "video": "Designing Furniture with Fusion 360 for Absolute B"
+  },
+  {
+    "text": "I enjoy seeing your mistakes and tips on how to avoid them. Thanks for showing the whole process! It is very helpful!",
+    "likes": 0,
+    "video": "Laser Engraved Cups! Using a Rotary Attachment on "
+  },
+  {
+    "text": "Good review and lots of great information.  I had a little Elksmaker diode laser and realized it could burn wood and leather.  I switched to 3D printing and that opened a new world.  I still follow lasers, but if I got back into it want something that could cut and engrave metal.  Your channel helps get me up to date, but the prices are a lot more than a 3D printer that can really do something right out of the box.",
+    "likes": 2,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Where can I get the omtech 50w laser. There are so many versions of it on eBay. Will you please provide a link to the one you recommend. Thanks!",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "You can do it for half that amount, ( https://www.youtube.com/watch?v=iL3WUZiQriE&t=665s) the ones I convert run lightburn off CNC shield V3 and Uno which uses GRBL in PWM Spindle with a simple one transistor two resistors not gate circuit to have the capacity to control the power of the laser in software. the total cost of upgrades I do is around 600$ Canadian dollars TOTAL.",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "nice video until you \"trashed it\" with that stupid music",
+    "likes": 0,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "Very informative - I got an Elks maker laser engraver years ago and purchased 3rd party software.  I soon realized that I could only burn so much wood or leather and made the switch to 3D printing",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "OptLaser 15W for 800$ ??!! Sorry but you made a huge error on price... go check the price of the 15W on their website",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "So much info, great video. Thank you for taking the time to create this amazing summary.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Nice video,  but your description of co2 vs fiber is completely wrong.  You described a galvo vs xy laser. Both co2 and fiber support galvo and xy, depending on its use case.",
+    "likes": 4,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Is there a budget laser that's best for polymer and plastics. Like magazines for guns and grips for guns",
+    "likes": 2,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "The other thing you can do when you make it like that is stain the various pieces different colours and then glue it up.  Then it looks like different kinds of wood in the block.",
+    "likes": 0,
+    "video": "How to Make a Butcher Block Countertop // DIY Wood"
+  },
+  {
+    "text": "First time viewer and immediately subscribed.  I learned a lot - thank you 👍😎👍",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "So best laser around 2k$. That I can use for firearm engraving and stippling.. but also for plastic, leather, cups etc. ?????",
+    "likes": 2,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "Thks, you're right too much trouble.\nOh nice white balance in the video.",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Hi, I’m looking for a laser where you can scan an image really good and cut out the image.\nOnly needs to cut paper or card, ty",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Can 3mm acrylic sheet be cut via diode laser such as orthur machine?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Thk-you, thk-you, thk-you, thk-you, thk-you, ........................ ∞xthk-you; for raising above the geek details & endless jargon.  Very few can/will.\r\nI’m a retired physicist & just want a laser engraver/cutter as a professional hobby.  ?Would I probably regret DIYing a CO2 laser engraver/cutter? \r\n         For example https://www.youtube.com/watch?v=5zpbXpHWSB0&t=31s \r\nEven if I make the perfect DIY CO2 laser engraver/cutter to brag about, ?Will software application suite compatibility screw-me over anyway?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "If they gave you the machine..then they gave you 7k to do a review which makes you working for glowforge. Cut the bullshit.  And you left out what your kickback is.  It's $500.  Yes, you get $500 every time someone clicks your link and buys a slowforge.  Come one man...seriously?",
+    "likes": 0,
+    "video": "Should You Buy a Glowforge?"
+  },
+  {
+    "text": "Sorry you have to be an idiot to buy a glowforge. Nobody should ever buy a glowforge. Anybody that recommends a glowforge is somebody that you should not listen to. I know it's popular but listen, any day they can say your laser is dead and it stops working instantly. They go under your laser stops working instantly. They get hacked your laser burns down your house. You lose internet for any reason you have a brick until you get service restored. They will someday say we want a monthly fee for you to use your laser, you will have no choice but to pay. That is the only reason for their design choice of no offline usage, you will be forced sooner than later to pay a monthly subscription to use your machine. Anybody who says different is a liar. Friend don't let friends buy a glowforge. Loved the video by the way. Keep up the good work",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi whats the smallest logo it can burn, for eg how small could I make the windows logo..",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Great review. I need an engraver but I have fire strikers as part of a flint fire starter kit. I blue the steel. So I'm wondering what result this machine would give? Also, can it engrave glass?",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "$4k plus doesn’t feel like “ a hobby” machine to me. Cool machine, but hardly something you’d pick up for shits and giggles. I think the Beamo at $2k would more hobby friendly.",
+    "likes": 4,
+    "video": "The Makeblock Laserbox - Is this the Laser Cutter "
+  },
+  {
+    "text": "This was a very helpful video and very well put together. Thank you \n.",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "If you have the space buying a Omtech 50w to 80w and adding a camera using lightburn software will out perform Glowforge at a cheaper price point..  minimal upgrade just add a camera.  plus larger work area and ability to use thicker material. Omtech Rocks.  I own one and love it.",
+    "likes": 0,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "Nobody noticed the screw that fell out of the beamo while it's engraving?",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "What's the min. requirements for a laptop to run Lightburn on a Ortur LM2 Pro",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Can a diode laser \"engrave\" powder-coated metal?  It doesn't need to cut a groove per se but more like altering the color of the coating.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I just tunned into your channel and it is very informative. I am on the virge to buy what is called a mixed laser. It pretty much is a CO2 laser coupled with oxigen in order to cut metal. They are telling me that it is also called hybrid cutting machine. Do you know any thing about these types of machines?",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Thanks for this video am very new and this is my 1st time to buy a laser cutter. this is the 1st video that explains those power button please my question is the 3 ➕ and minus ➖ buttons only for the power?  and can i set directly from 40k whisperer software?",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "2:00 wtf? That looks like a glitch to me.  You had the wood cut out around the sink and suddenly it pops out from the edge and connects itself where you did not have it connected.",
+    "likes": 0,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "I'm so glad I stumbled upon this video!  I the noobiest noob and I want to begin a creative career using one of these machines.  I appreciate the time you took to build your spreadsheet as that was a bullet point on my to-do list.\nI'd welcome any advice from you and all other makers regarding anything laser and business.  (I'm an apartment dweller and would be venting my machine out a window.)",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi, I may have missed it but how is this for engraving cylindrical parts?",
+    "likes": 1,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "WHave you any experience with Neje they have an 80w laser at this moment",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "New subscriber here. I have recently bought an Atomstack A5 pro to use primarily for wood engraving and also for cutting templates for hand routing out of 3mm plywood.Am using LightBurn  software which is brilliant. I would be really interested in what you think of yours when you get it. Am I correct in thinking that Airassist isnt worth having on a low power laser as the chances of setting fire to something is minimal?",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I'm looking to cut cardboard... would this or something else would do the job?",
+    "likes": 0,
+    "video": "SparkMaker LaserPro: The new King 👑 of budget las"
+  },
+  {
+    "text": "Hi, can you recommend me a laser engraver for urns that are mode of brass metal. What we will be engraving is just the names or may be picture of a pet. Thanks",
+    "likes": 2,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I have an Ortur LM2, two Jtech 7w's for my CNC's, and just got an OMTech 60w for batch work :)",
+    "likes": 3,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "is it good for a fake / pu leather engraving? does it have to be a perfectly flat surface or it`s ok to engrave on the curved/round as well?",
+    "likes": 0,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "They want you to spend 5000$ after tax and possible add-ons, yet it only comes with a 6 month warranty. A lot of faith in your product.",
+    "likes": 1,
+    "video": "The Makeblock Laserbox - Is this the Laser Cutter "
+  },
+  {
+    "text": "Do you think that chinese laser would engrave acrylic lets say like a quarter , meaning that kind of depth or contour? We could even call it the 25cent engraving if you will, thanks for any input.",
+    "likes": 0,
+    "video": "What can a $1500 50W Chinese laser actually cut?"
+  },
+  {
+    "text": "Did the unit at 9:20 chuck a screw on the workpiece?  What is that?",
+    "likes": 2,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey Brandon, great info and stuff to consider..your channel is a good help. Wondering if you have seen or heard anything of the GWEIKE cloud yet? looks like a glowforge copy but hard to get any impartial views as yet.",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Curious what the quality of a beamo 30W laser would be with say cutting acrylic & engraving",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "When it comes to software, it's also worth pointing out which ones rely on online services. I know you said \"web based\", but not everyone quite gets what that means. Having been screwed by a company going out of business, turning my 3d printer into a brick, I will never buy tools like these that require an online service (as opposed to web-based software served up from the tool, like most routers). For the price of something like the glowforge, I'd want to ensure I could use it for as long as I decide to.\n\nProprietary software (that they eventually stop updating) is another no-no, but at least you can work around that by keeping a frozen PC around for the life of the tool. No way to work around a service requirement, though.",
+    "likes": 77,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Can you use fiber lasers to cut wood?  Or is there a laser unit wherein you can adjust the laser wavelength and not have to buy two lasers.",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I would be interested to see a comparison of the LM2pro with the Atomstack 50w. I have some serious doubts on the longevity of such high power laser diode without quality air cooling.  Thanks for the great episode 😊",
+    "likes": 1,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "I love the fact that Brandon means burning stuff in French. As in Firebrand or branding cattle. Cool association...😎",
+    "likes": 5,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hi Brandon there is a laser that is blowing up on Facebook. It’s called the Yorahome 6550 diode laser. They claim that there’s is up to 40 W compared to the Ortur LaserPro. Have you thought about considering this one? Is it not worth the money? What are your thoughts please",
+    "likes": 0,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Another amazing episode! You know your stuff Brandon, thanks for sharing. You're a rockstar dude!",
+    "likes": 17,
+    "video": "The Best Laser Cutter for any Budget?"
+  },
+  {
+    "text": "Hey,\nNice video.\nAre this device able to engrave/mark glass at around 100 micrometers (0.1mm)?\nCheers",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Can this cut 3mm acrylic or plywood, does the laser has good power",
+    "likes": 0,
+    "video": "A Robot Laser Arm??!! - Rotrics DexArm First Look"
+  },
+  {
+    "text": "Great rundown. I bought my K-40 about 2 years ago and did all of the mods. Loved it, but wanted a bigger work area and bought a 60 watt \"Red and black\" unit from ebay for around $3000 and have never looked back. The only thing I had to add was a ma meter. I gave my K-40 to my daughter and she is having a lot of fun with it. Great review, thanks for the info.",
+    "likes": 2,
+    "video": "Should you upgrade a budget laser cutter?"
+  },
+  {
+    "text": "What in your opinion is the best for etching/engraving glass?",
+    "likes": 0,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Where/how can I get that power/speed & power/freq file?",
+    "likes": 0,
+    "video": "This Laser Can Engrave METAL!  -  OMTech 20W Fiber"
+  },
+  {
+    "text": "Can this be a good engrave for small aluminum parts",
+    "likes": 0,
+    "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi"
+  },
+  {
+    "text": "Please NEVER delete this video!!! IT'S SO FUN TO WATCH!!!!!! :) :) :) :)",
+    "likes": 3,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "HOW DID I MISS THIS??? I have the same kind of bench, and I am making these TODAY! Thank you",
+    "likes": 2,
+    "video": "How to organize a Messy Drawer with a Laser Cutter"
+  },
+  {
+    "text": "Thanks for the great review! I'm thinking of getting one of these to step up my foam crafting hobby... Do you know if this machine can engrave and possibly cut XPS or Styrodur foam? Cheers!",
+    "likes": 2,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Laser master 2pro is currently the most accurate laser engraving machine",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Now lets see...\nLooka flat 2 me..\nU kno why\nHe made the firmament to seperate \nThe wateea above\nFrom\nThe waters below\n\nThen lucifer FELL FROM THE HEAVENS UPON EARTH AND 1/3 OF HEAVENS ANGELS FELL AS WELL...\nso FUCK NASA",
+    "likes": 2,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Mine worked great for a few months, then the servomechanisms crapped out. You get what you pay for.",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Is there any chance to cut 8mm thick plywood with this?",
+    "likes": 0,
+    "video": "NEW favorite diode laser engraver? Ortur Laser Mas"
+  },
+  {
+    "text": "Where can I get the ortur laser engraver. Kindly share the link to buy these",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "At 1:53:37 at one of the sides of the ballon is a purple light going back and forth. Its probably light reflecting from the lenses but still looks cool.",
+    "likes": 0,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Hanzhen harmonic drive gear ,  robot arm gear ,  over  30 years experience  ,,",
+    "likes": 0,
+    "video": "A Robot Laser Arm??!! - Rotrics DexArm First Look"
+  },
+  {
+    "text": "A comparison like this is how I got away from the K40 and to a 50W larger laser. I'm so glad to have that since the z height has been great to do larger items, my roller, etc. I did similar math and am very glad I skipped the K40.",
+    "likes": 4,
+    "video": "Should you upgrade a budget laser cutter?"
+  }
+]

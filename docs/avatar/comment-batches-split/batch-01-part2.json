@@ -1,0 +1,627 @@
+[
+  {
+    "text": "Thanks using your video as a guide before I buy, how does this compare to the $1500 Chinese laser in your other videos?",
+    "likes": 0,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "@Make Or Break Shop Does 50watt cut leather? PS. Awesome vid, love the work!",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Well I can't say the world is a basketball. It is round but is it flat and round  like a penny . If the camera wasnt so round viewing in other words the camera dosent see as human eye .I guess I'll never know cause I'm not jumping out no plane lol.",
+    "likes": 0,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "hello!  Just researching for future to make jewerly.  With wood, metals, acrylic.  The others in box you have to be concerned about venting and concerns on toxins and chemicals.  what about this?  How safe is  it in putting off same things? thks",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I was wondering if this would be enough to engrave something on metal, like a bottle or a pc side panel",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Quick question: I've been thinking about lasers to engrave small round glass bottles (10-100ml). Would one of those small diode laser work or do I need to go with a larger CO2 laser?\nThanks!",
+    "likes": 1,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "I'm interested to see how you come along with this machine.  I really like mine but I'm inexperienced with laser engraving.  I've had 3d printers for years, so I like small CNC machines like this...   So far, I've mostly been playing around and working ON the machine doing upgrades, not so much WITH the machine, but that's not a complaint and not due to any fault of the machine. It worked 'fine' out of the box. \n\nI wanted to mention the grounding to you though.  They paint the shell before they put the grounding hardware in.  You will likely find that you don't have a good earth ground to shell and it could be very dangerous.  Following advice of others, I removed the washer and ground it bare under the washer.  I also did the same under the PS, but prob was overkill.  I plan to replace the power inlet and 120 plugs on the back because they are garbage.  I also don't like the fact that full line voltage goes all the way to the power switch on the control panel then back down to the PS.  I want to replace the inlet with a better quality unit with dual pole switch built in so there is no voltage inside the control chamber at all when i have my hands in there. I wanted to make sure you and anyone else with one of these knew about the poor grounding since it's a pretty serious safety issue.   Before I fixed it, i did get a pretty decent shock by touching the edge of the sheet metal where the paint was thin.  Some people recommend to run a direct connection to earth ground with its own ground spike. (Do your own research though, I'm not an electrician just trying not to shock myself or burn the house down LOL)\n\nYou do need to get an ammeter in there asap so you can tell what's actually going on with laser power.  You simply connect it between Cathode of the laser tube and the PS.  If the needle moves backward, reverse it\n\nOver all I'm happy with the OM Tech though.  I ordered a different \"K40\" at first.  When it arrived it had been dropped and dented badly so I returned it.  Long story short, the seller was a jerk so I eventually got it refunded by UPS and ordered this machine instead.  I'm glad I did.  This one is much sturdier and just generally better.  I've mostly been learning about the control system so far and upgrading the electronics.  I figure I should understand how it works and get everything working as well as possible before I actually start learning more about laser engraving.  I like to know my machines so I know how to repair them when they break. Like with drones, if you don't build it yourself, what are ya gonna do when ya crash it?? LOL  It's much harder to learn on a machine that isn't up to par.  We all know going in that these machines are good, but need upgrades to be great.  So far, I have mine running Marlin on a SKR1.4t.  With TMC2209s, its super quiet and both drivers and motors stay cool.  Having lots of inputs and outputs gives me lots of options for firmwares or things like Gcode/Macro Button control of case lighting and the red dot.  I'm working on adding a relay board today so I can do the same with air and water pump etc.  I added the smallest gas strut I could find to the door bc I accidentally slammed it shut a couple times lol.  I also ran an LED strip with a micro switch on the control side so it comes on like a fridge when I open the door LMAO.   It has been a bit of a bumpy road with Marlin though, so once I'm happier with my config ans engraving speeds, I'll share it so it's easier for others to use inexpensive boards like this instead of the pricey ones.  I believe Smoothie may even be more appropriate for lightburn and will run on SKR/MKS... Will find out later haha.  I haven't added air assist yet because I'm hesitant to order the wrong pump in effort to save $ and still debating, but it's time so I have to choose a compressor asap.  \n\nI really enjoy your work brother.  Keep it up",
+    "likes": 1,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "I was just surprised that Fusion360 was actually free when I first heard about it. It was basically AutoCAD + Inventor into one program FOR FREE! And nobody thought that maybe...maybe this software was too good to be free?",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "You forgot trotec and universal laser in the big boy list, two great companies that are up there with epilogue if not better. Great video mate 👍",
+    "likes": 9,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "You should try Stodoys plans. You can get your money back if you don't like it",
+    "likes": 0,
+    "video": "How to Make a Kids Play Kitchen: The Frame/Doors/D"
+  },
+  {
+    "text": "Would you suggest this as a first laser vs the larger one you have?",
+    "likes": 0,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "Very nice video documentation...better than NASA have...",
+    "likes": 3,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "as for grounding i seen where they leave the screw area where the ground wire is , is painted, so you need to remove the paint to the metal so it will ground.",
+    "likes": 0,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "Would it be asking too much that you clean and organize your shop before you make these videos?",
+    "likes": 1,
+    "video": "Testing the OM Tech K40 Laser"
+  },
+  {
+    "text": "Hi I need guidance from you to buy a machine... can you text me on 3462989668 I want to print logos on cricket bats like baseball bats... which one do you recommend",
+    "likes": 1,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "How long did it take to do the different designs? Like when you time lapsed the Santa and the barcode?",
+    "likes": 0,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Best chiller idea I saw was put a few frozen bottle water bottles in a bucket of water and circulate water from that",
+    "likes": 2,
+    "video": "Unboxing and First Tests of the OM Tech 40W CO2 La"
+  },
+  {
+    "text": "Will Fusion 360 work on a Microsoft Surface Pro 7 with a core i5",
+    "likes": 0,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "U have a recommendation for cutting eva foam ? 5-10mm.  Wss thinking of trying the 2 20w version",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Hey Brandon, thanks so much for making this video. I am in search of a laser and this helped answer a few of my questions. Perhaps you can help me... I am in search of a laser that can Etch through powder coating. My biggest issue is that the product is large and I would need a pass-through system or some way to Etch in the middle of the product. I have been looking at the Orion Motor Tech 60W, but how do you think that might compare to the FSL Muse Core 2D with Hobby Kit?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I feel violated.  Never again !\nI am a FreeCad Hobbyist now.",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Do these things actually use a proper f-theta lens ? Or is it just the galvo system & the original beam with the focus shifting slightly as it diverges from center ?",
+    "likes": 0,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Can you fold the base back 180 deg (kind of like a Z shape vs. a C shape) in order to engrave something larger, such as a 2ft x 2ft piece of plywood?  May need to weight the base down so it doesn't fall over.",
+    "likes": 5,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Baby Yoda, from space all thw way down in a piece of plywood, all in this channel xd",
+    "likes": 2,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "seems like there are soooooo many different machines that can engrave. Gotten to the point that they look all the same in terms of functionality",
+    "likes": 5,
+    "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro"
+  },
+  {
+    "text": "Honestly i dont much care about free version cause wanted to use 360 for commercial work, but all that thing they change are defenitely are dick-move indeed. But autodesk just fucked it up even more further. This is absolutely the top level of bullshitness.\nFor 400+ per year you get:\n1. Exporting model to OBJ = up to 5 minutes and more of what cloud computation bullshit. Year 2020. You on decent SSD and wait 5 minutes to just save you model as OBJ. \n2. You are NOT able to change mesh export settings and if you get model with ugly faceted surfaces because of that and you cant render it = there's no solution. \nTHAT level of bullshitness for payed software? No way.",
+    "likes": 0,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Man, your narrative is exhausting!  I’m really interested in what your thoughts on the product are but your delivery is a hundred miles an hour and difficult to keep up with.  It doesn’t help that you seem to edit out any pauses with the result that the presentation is relentless.  I stood it for two minutes before giving up.  Please... stop to draw breath every now and again!  You’re clearly knowledgeable and thorough in your subject but it counts for nothing if your audience can’t assimilate the information.  I’m not trolling you as I genuinely want to hear your views.  I’ll try again later!",
+    "likes": 1,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "What is the best budget-friendly laser engraver for metal (gold) specifically upcoming jeweler.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I want to start engraving plastic pistol hand guards and aluminum A.R. 15 lower receivers which would be the best machine for me to start with",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I have had my Muse 3D for about eight months now.  As a machine and a piece of hardware I agree with your review:  this is an outstanding machine that looks great, is well designed and solidly built and cuts and engraves extremely well.  As with any complex device, you will encounter difficulties with various things (such as alignment and belt adjustment),  but their customer service has been outstanding and such issues are totally normal with any laser.\n\nMy issue with the Muse is  the software that runs it: re3.  In my hands, this is a horrible piece of software that is slow,  non-intuitive, confusing, constantly freezes my laptop, and is so frustrating to use that I may in fact sell my Muse because of the constant battles I have had with the software. I consider myself proficient with software and have used numerous programs, but at every turn, I have found difficulties with re3.   Interestingly,  re3 looks very similar to Lightburn,  but Lightburn is extremely well designed, intuitive, and  is an absolute joy to use.  It just has a polished \"feel\" and ease of use that re3 totally lacks.  In my opinion, re3 is a high school software project while Lightburn is sleek, professional and easy.  If only re3 were as well \"built\" as the Muse itself this would be an awesome combination. \n\nOne thing I have learned , and one should consider when buying a laser, is that when you purchase a proprietary device such as the Muse or the Glowforge for example, (I don't know anything about the Dremel)  you are totally dependent on the software and interface supplied by the respective companies.  For example, if Glowforge should fold as a company, your laser would be completely useless as it runs only via the company internet.  Although the Muse would not suffer a similar fate as the re3 software is on the machine, if you like re3, great, but if you don't, you are stuck.  So basically, by going with a proprietary machine you are exchanging the convenience of a \"plug and play\" device (obviously a great advantage) but totally giving up any flexibility or controlof the machine  to the respective company.\n\nI sincerely hope FS Laser comes out with a useful re3 update soon.",
+    "likes": 2,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "Do you know of a laser that would work on fabrics ?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "You should see the stuff I make with my 6kw bystar fiber lol. Well I wish it was mine. Great video.",
+    "likes": 1,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I need a jewelry laser engraver but they're so expensive!!!! 😭😭😭😭😭",
+    "likes": 1,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "If you want, you can learn how to do it with Stodoys plans woodworking plans.",
+    "likes": 0,
+    "video": "How to Make a Cedar Window Planter Box"
+  },
+  {
+    "text": "https://youtu.be/GYVfkzllTtY    Friend, if u need laser machine, can contact me. Whatsapp: +86 15624071968",
+    "likes": 0,
+    "video": "Did I Waste $1500 on a 50W Laser Cutter from China"
+  },
+  {
+    "text": "This seems like a good starting point and much more affordable that the piranha or the shark.",
+    "likes": 1,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "I wonder how this compares to the Sainsmart 3018 ProVer? My friend's prover seems to have MUCH LESS vibration noise, but the mounting for the router on his is plastic and the controller is not as nice.",
+    "likes": 1,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "That’s amazing! However, I still didn’t get it if I want to cut mirrors let’s say I want to get letters or names out of mirrors which one should I get? Sorry I’m a beginner and still gathering info",
+    "likes": 1,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "What if I have 36’’ by 6’’engraving?    Can the rails on one side be changed?",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Hello! This video was very helpful to me. I've learned a lot of tips and tricks by being able to follow along. Thank you so much",
+    "likes": 1,
+    "video": "Designing Furniture with Fusion 360 for Absolute B"
+  },
+  {
+    "text": "Would something like this work on hard clear plastic or something like plexiglass?",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I wonder if they’ll sell the touch-pad offline controller separately. The one that I got with my Sainsmart machine is awful. They’re both grbl, I wonder if they’d be compatible.",
+    "likes": 2,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "I’m looking to add engraving to cutting boards. Do you think this cnc or their laser would be the better option? I’d be engraving into mostly walnut/cherry/maple. Thanks!",
+    "likes": 1,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "Looks awesome, seriously considering it, have 3 lasers and I think this would compliment them well. I really don't see why a laser module would be good, as you say this isn't fast so loses alot of the benefits of laser",
+    "likes": 9,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "At the 200 range I would consider it, much higher and it'd be questioning it though.",
+    "likes": 1,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "Sweet video! I wonder if it can cut through carbon fiber sheets?",
+    "likes": 2,
+    "video": "What can a $300 CNC do? - Ortur Aufero CNC Engrave"
+  },
+  {
+    "text": "For the SpaceX Fake AF X fanboys. See how fast those f16 were going and yet no sonic boom? You backwards landing rockets 🚀 that let off a supposed sonic boom 💥  as they land? Makes zero sense. Maybe if the rockets sonic boomed just as they're seen in the sky. But to travel above 7t0 mph or 1150 ft per second and then land which is zero fps that fast of a deceleration would crush the rocket before rhe ground had a chance to even touch it.",
+    "likes": 0,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Yes! MORE! This is exactly what I am interested in now. You got me with the the Fusion 360 material now I'm happily following in your brain wake. Run with it!",
+    "likes": 3,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "Im fortunate and get all autodesk software for free, but how does the hobbyist afford fusion 360.  Is there a free version somewhere.",
+    "likes": 0,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "What materials are you using here? What exactly are their names?",
+    "likes": 0,
+    "video": "Laser Cutting Eleven's Head From Stranger Things ("
+  },
+  {
+    "text": "What is that attachment you put a link in description for?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "good information man but you talk so fast with no breaks that i really can't process and sink all info down. You are cool though :)",
+    "likes": 3,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "is this possible to run it via flash drive? similar to a 3D printer",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "In very new to the concept of laser printing, cutting/engraving. I got into the idea when searching for new ideas in diorama building.  \nDo you have a recommendation of something that could cut or etch into styrene (enough for it to snap cleanly)?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Seems like it’s only good for cardboard & thin wood.  What wattage would I need to etch or engrave thin metal items?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "User: I want a laser cutter for cheap.\nChina: Here's the cutter, plus a bunch of very non plug and play parts and no manual.\nUser: But I...\nChina: NO. MANUAL.",
+    "likes": 0,
+    "video": "Did I Waste $1500 on a 50W Laser Cutter from China"
+  },
+  {
+    "text": "Would this work on something on the scale of a building? Something that large then scaled down for printing might make the imperfections less noticeable.",
+    "likes": 0,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "I was actually able to engrave and cut on black acrylic and as well engrave on clear acrylic",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "So how much does the program cost. And is it hard to use",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I see all kinds of statements about you have to pay duty and taxes on the item form China. What was that process like for you?",
+    "likes": 0,
+    "video": "Did I Waste $1500 on a 50W Laser Cutter from China"
+  },
+  {
+    "text": "Typical Autodesk bitch move - Its funny because I remember in the fusion360 Beta they claimed the free version would never be limited.",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "15watts in not the out out of the laser. More like 5 watts output.",
+    "likes": 2,
+    "video": "Does a $200 Laser Engraver Make Sense in Your Shop"
+  },
+  {
+    "text": "I used Woodglut instructions for this and I already did it :)",
+    "likes": 0,
+    "video": "How to Make a Butcher Block Countertop // DIY Wood"
+  },
+  {
+    "text": "I'm curious what can be done with some of the new phones that include a LiDAR sensor.",
+    "likes": 3,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "Cast acrylic works much better for the edge lit sign stuff than the standard acrylic. It gets that bright frosted etch vs. the more transparent etch on the regular acrylic.",
+    "likes": 0,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "All this time I was wondering why i wasn't getting notifications from your channel . . . I wasn't subscribed?!?!?!  No idea how that happened.  Great episode by the way my friend!",
+    "likes": 3,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "fantastically informative ! thanks for the great video :)",
+    "likes": 4,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "*Edit: Meshroom only works on a PC...I said Mac like a dummy ;)",
+    "likes": 18,
+    "video": "Turn Real Things into 3D Models with Photogrammetr"
+  },
+  {
+    "text": "Totally agree, the only real complaint I have is around the number of pages for drawing. Maybe a limit of 10 but 1 is pretty tough. Hopefully Lars can help us out!!!",
+    "likes": 0,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "I did a oak butcher block bout thirty yrs ago after I stained it I gave it twelve coats polyurethane with sanding in-between each coat",
+    "likes": 0,
+    "video": "How to Make a Butcher Block Countertop // DIY Wood"
+  },
+  {
+    "text": "I want to buy the project in your webpage, but i have question, can i make it on \"ortur master 2 laser\" and  your plans is ready to put in laser? \nVery cool chanel, waiting for next videos:)",
+    "likes": 0,
+    "video": "Building a Modular Paint Organization System"
+  },
+  {
+    "text": "It seems like perhaps you don't know very much about skechup. Almost everything, not everything, but almost everythig you did in fusion you can do in sketchup. Are you aware of any of the following plugins; curviloft, sub d tools, flowify, soap,  bezier spline, curic stretch, fredo box stretch etc. There are so many plugins in sketchup that are extremely powerful for quick organic manipulation. I think there are some great points about fusion here but it's a poor comparison video because you don't talk about sketchup pro, why just talk about sketchup, sketchup pro is really where the power is, not sketchup because it's about the available plugins that are within sketchup that are incredible. You certainly don't have to go and do things from scratch like you mention in your video. I would say that after watching this and the lack of these comments that I've just mentioned that this video is a poor comparison video and you should perhaps be informed well on both products before you generalize the two together in a comparison because it's very confusing for people like in your comments section who are unsure about which they need for their modelling projects.",
+    "likes": 2,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "Which one you recommend to engrave on solid gold and 925 silver? We receive lots of requests to engrave names on bracelets and rings.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "I already switched to one shape. At least they are more fair.",
+    "likes": 0,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Thanks for this video,  could you please tell me which device is better for Electricity expenses ?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "I'm in the market for an ORTUR and can't decide if the 7, 15 or 20 is the best fit for me. Any recommendation? I won't be doing a lot of cutting I don't think, mostly engraving.",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Fun fact, you can hover your drone for 10 hours and still don't see the earth spin!",
+    "likes": 7,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Can this engrave onto very small areas; for example a slim bottle opener?",
+    "likes": 0,
+    "video": "Does a $200 Laser Engraver Make Sense in Your Shop"
+  },
+  {
+    "text": "I did something like this a month ago with plans from Stodoys.",
+    "likes": 0,
+    "video": "How to Make a Cedar Window Planter Box"
+  },
+  {
+    "text": "Do buildings engraved or just etched the outer shape? Not a normal 0,1 mm step engraving.",
+    "likes": 0,
+    "video": "Why are custom laser cut maps so hard to make?"
+  },
+  {
+    "text": "I’ve been doing a lot of research on this machine and I’m pretty sure I’m going to get one but the one thing that keeps changing is how powerful the laser is any fruit from 80 W to 50 W does anyone know how powerful it actually is?",
+    "likes": 0,
+    "video": "Did I Waste $1500 on a 50W Laser Cutter from China"
+  },
+  {
+    "text": "why is there a gap in the darth vader myan calendar print?",
+    "likes": 0,
+    "video": "Does a $200 Laser Engraver Make Sense in Your Shop"
+  },
+  {
+    "text": "The video is irrelevant. What happened is that Autodesk has shown you that the can f*** you up good if the management decides you are not relevant for the company.\nI already started re-learning freeCAD and it is not that bad.",
+    "likes": 8,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Could this be used on brass? It says it can't be used on reflective surfaces, but of you went over the brass with some wire wool I presume it would work?",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Mine works too. I used the Woodglut plans and performed it without any problems.",
+    "likes": 0,
+    "video": "How to Make a Wooden Mallet // THOR Hammer!"
+  },
+  {
+    "text": "You explain things way to fast, and this is totally confusing to a hobbyist. I would rather not use anything , rather than follow your tutorial.",
+    "likes": 0,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "Thanks for very informative information, I have autodesk licenses through my company, but not for fusion 360, I have need for others of there CAD software from time to time, they resently changed there network license to personal wich almost trippled my companys anual fee for something I need seldom, but when I need it I need it bad and can't be without it. For my personal use I used sketchup for the last 10 years or, so not realising the time saved with putting effort into parametric design, witch would have saved me alot of time with small changes in the design prosess with limitations of payed version. I am personally no converting to freeCAD and blender to mix my personal use since it is opensource and seems to have strong community. Of what I seen on youtube freeCAD can give me my needs for personal use and much more than I need without worring about license changes. Of cource many non autodesk files have caused problems in work since autodesk recognises that and put problems in import of what should be a standard format. Easier 3D modeling software are good to see what you need, but I wish I found parametric design software alot earlier, learning curve is alot steper, but only after a few models I see the win of making that extra effort. So to summary my thoughts, non parametric designs are if you have simple shapes you want and make one design and stick with it, if you have designs that can change small dimesions made in earlie stage without to mouch work go with parametric. Wiched I gone parametric now many years erlier. My finall thougt is that if you are planning to make future with 3D software and modelling for commersial use and get job in company, yes autodesk is most common and used around the world, but if you are a hobbyist or a small company protect your self about changes in future and look at opensorce prosjekts like freeCAD and Blender. I do pay for licenses when needed, but for non company use I only pay for the licenses needed, I try to keep paying atleast 1/3 to opensorce prosjekts if there is equivalent I can use to support further development. Even as smal programmer I believe that the creator sets the price, big or small creator , if you use product respect license conditions, support what you belive in. My first experience with autodesk I think is about 30 years ago with first computer lessons in architektural computing, autodesk has a stayed on top since then for comersial use along trimples sketchup with promise of free use for hobby , sorry to say I think commercial software as they think they won ground in uff they restrict the free for non commecial use to the  point it's  useless to hobbiest use. even if changes wan't as bad as most makers of youtube made it and thanks for that with your information, that where very informative, I still for personal use look for mor long terme stable solution for you as hobbist, for me it would be easier to keep to one, autodesk do not let me keep my persona fredom as hobbyist and my hobby programs to intergrate with my work at this time. So finalising my thoughts. Yes for work I need to keep up with Autodesk, but for my fredom in private I now fokus for freeCAd and blender, even thou reworking my models from sketchup that I need is a pain, putting alot of effort into lerning software that suddenly changes conditions is a pain, so as coclusion if you read all of this thoughts is,, if your going for learning for work at companies, this is good thing, but as hobbiest for your own use it is better to keep to opensource without restrictions. With my computer being both my personal and working I see complexity in many problems of free and non free versions, but I pay anual taxes for my personal computer and my own computer being the same, the same goes from my telephone that my company pais for and I get taxes for and can't get sirin sevices because of that. If you are new to parametric design I recommend freeCAD and put effort into that, if you plan yor 3D moddeling as work, definitly go with fusion 360. I would surtinality make good thougt about making in freeCAD and 360 videos in future compared to make same in fusion 360, my company gives me licenses if I say I need them without quistion, thats there fault, most licenses could be avoided so investors are at total loss. I do not care about that, if anyone been reading throuhg this it is about proos and con I can think of, there is no simple answer. No english is not my first language, nor do I intend it to be, best regards from Sweden. With all kritics it still the best informative video of fusion 360 autodesk changes in users agrement and priviliges. If anyone gotten throgh my thoughts definitly watch this video and make your desision made of information and need of use",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "I wonder why nobody mentions the community edition of solid edge. It's at least as powerful as fusion, it's free, doesn't expire, no cloud. https://www.plm.automation.siemens.com/plmapp/education/solid-edge/en_us/free-software/community",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Autodesk is obviously not interestet in new customers. Same Bogus as the last 30 years. Will they ever learn? It's 2020. We all (!) should get used to it. ASAP.",
+    "likes": 1,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Great to see you having fun in the shop again. Hope all is going well for your growing family. Missed you while you were taking care of your Fusion 360 course and other projects that kept you away from the shop and podcast studio.",
+    "likes": 1,
+    "video": "Making the Ultimate 3D Carved Sign from Disney's H"
+  },
+  {
+    "text": "Ended up ordering the engraver from your link. Ordered over a week ago and it still hasnt even shipped. Any idea how long yours took to get? Im in Wa state.. thought itd be on its way by now.",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Is there a way to cut thru a plexi box, but only thru the laser side and not thru the other?\nSomething you can put inside the box?\nI would assume just put a block of wood that is thick enough to stop the laser from going all the way thru?\nWhat is it for? Making vents for an enclosure.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "when u say \"software specific\" u mean windows right? because pcs use Linux (and even hackintosh pcs run macos)",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "For less money, you'd have gotten AEON laser with much better hardware and running customised RUIDA interface. The entire linear motion hardware are also in enclosed chambers.",
+    "likes": 0,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "You can try covering your metal object in black sharpie to engrave it, it worked with a 60W trotec, it worked as good as the expensive stuff recommend by trotec",
+    "likes": 2,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Did it really just take like 30 minutes just for the ballon to land",
+    "likes": 1,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "Thanks for your post!  I’m on my second table, trying to minimize mistakes..... still learning.  Thanks for your help.",
+    "likes": 0,
+    "video": "6 Mistakes Not to Make When Building a Farmhouse T"
+  },
+  {
+    "text": "too bad you didn‘t include which one can cut vector lines., especially on the cheap ones. i got a ugreen mini 5W laser which would do the job for me but it can only do line by line instead of following a path :-(\n\nso engraving: yes but cutting? nope",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Yes you can engrave and cut metal with a CO2 laser!! You just need 130+ watts and a 1.5\" lens.   https://www.youtube.com/watch?v=XNcapGmzIOg",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Maybe you can help. I just got a Lasermaster 2 20 W. It worked great and was just getting productive, then ran into a snag. When I turn the machine on and try to link it to Lightburn, the program can't connect. The lights are on in the laser and it homes itself but will not connect. I'm still waiting to hear from Gearbest. Any ideas??  Steve",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "have you fusion 360 file please? have you CNC vidéo use this?",
+    "likes": 0,
+    "video": "How to make Dovetail Joints in Fusion 360 - Woodwo"
+  },
+  {
+    "text": "Need a lazer to just remove paint or engrave plastic for my holster company what do u recommend",
+    "likes": 0,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "Based on your comparison chart I would have thought the Beambox Pro would be the cutter of choise.  It has the largest cutting area of all the machines you compared (aside from the feed feature of the Glowforge Pro) which is a huge plus in my mind.  Is its functionality and software that much less user-friendly that it doesn't get your vote?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Which is the cheapest solution to lasercut thin MDF?\nNot engrave,cut it or better make precuts and then cut by pushing with hands?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Disliked video due to sending us to a fraudulent website  gearbest. They stole my money and won't replace a broken laser they sent. Do more research on companies you promote instead of taking money blindly.",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Thanks for all of this.  Any word on if they're going to fix the 1:1 printing bug before they take away the create-pdf workaround?  The bug was still in existence as of January (the last time I forgot and sent something directly to my printer to print full size).  You send something to a printer (full size, everything set correctly to print 1:1), and Fusion prints at something like 93% scale for no reason.  I printed several patterns, used them to cut out the parts I was making, and about 6 hours later I realized everything was undersized.  The workaround was to create a PDF, then print THAT at 1:1 and it works fine.",
+    "likes": 2,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Great video and tips. I don't why people use a bread board. IMO it does nothing for the look of the table and is a great deal of extra work. BTW: What type of timber did you use?",
+    "likes": 0,
+    "video": "6 Mistakes Not to Make When Building a Farmhouse T"
+  },
+  {
+    "text": "Great Video! Great information! thanks for sharing! Really helpful!",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "Hey! I loved the video it was very informative. I am looking to pick up a 20w diode laser. Do you think it could cut nylon fabrics with ease?",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "looking for a laser engraver that can laser plastic on holster clips or metal paint of thats not very expensive what do u recommend",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "AGAIN,,,, the problem is any short term gains can ( and WILL ) be wiped out  at their whim....   We have no bargianing rights at all!... Just cut them OFF and  change to FREE CAD!... or Blender  or some other FREE app.  You know FreeCad will be getting better and better... and with a larger user base... better!",
+    "likes": 5,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "working on engraving bourbon/wine barrel heads, would this work?  they are larger than 15\" but the cutting space probably wouldnt be.  is there an option to change the cutting deck overall space to hold the object? another option for a hobbyist?",
+    "likes": 1,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "One specific suggestion: Stop saying \"here\" and shortly wiggle the mouse cursor somewhere. That's very hard to follow because the mouse cursor is small and while you move over other stuff, Fusion highlights irrelevant things. There are a couple of occassions where you say \"click here and here\" within maybe half a ssecond and I am left wondering what just happened.\nHow about \"click here *on the front pane of the bottom component* [stop for half a second and only move the mouse very slightly] and then click here *on the back pane of the bottom component [stop again for a short while]\" Thanks a lot!",
+    "likes": 2,
+    "video": "Designing Furniture with Fusion 360 for Absolute B"
+  },
+  {
+    "text": "What is the best and affordable laser engraver for gold and silver jewelry? \n\nPlease let me know and thank you!",
+    "likes": 0,
+    "video": "What is the Best Laser Cutter and Engraver for You"
+  },
+  {
+    "text": "i'm switching to fusion 360 because sketchup removed the offline version for all but their most expensive option. i don't always have a connection when i'm working on models.",
+    "likes": 2,
+    "video": "Is Fusion 360 worth learning over Sketchup?"
+  },
+  {
+    "text": "Restrictions might not be such a big deal now but it might be a continuing trend.  It might be a good time to start looking for another option because it's hard to trust a public company.  Nevertheless,  a company needs to make money so those who are using Fusion for a business should purchase a license.",
+    "likes": 7,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "hi there!  good video.  I need your expert advice.  My friend and I want to start engraving on wooden sticks.  Particularly Rattan 24 to 30\"  sticks used in Kali or Eskrima Stickfighting.  We are Filipino Martial Artist and looking to place some designs on sticks for different groups or practitioners.  \nWhat do you recommend we use as beginners??  Haven't really seen machines that can accommodate up to a 30\" length with a roller. The enclosures gets in the way?  \nAppreciate any recommendations you have. Thanks!!",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  },
+  {
+    "text": "Except you totally missed a huge portion. They have made the software completely useless to any maker building robots. They did this with Eagle. Fusion 360 is dead, over the next year Autodesk will make it completely pay. Everyone should switch to FreeCAD. Autodesk is lieing, they dont care about us at all, never have.",
+    "likes": 12,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Wow just look at the two commercial planes crossing. That's pretty amazing!",
+    "likes": 3,
+    "video": "Full Flight of Insta360 Weather Balloon Flight (Pl"
+  },
+  {
+    "text": "I think they went a step too far with step files,  and being locked into a proprietary format with a company who has some asshat that thinks active / inactive nonsense is a fun way to artificially frustrate people is not a good thing to read in your inbox",
+    "likes": 6,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "It's really amazing software and I used it for my CNC CAM work but I won't invest too much time in mastering software that they can change at any point - the real issue here.  My real beef is the subscription model I guess, I would rather pay once and know I \"own\" the software.    The subscription model is quite widespread but not something I like.",
+    "likes": 40,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Love your content especially the sending the camera to basically space! Keep up the good work. You have inspired me!!",
+    "likes": 4,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "This was terrific! I would love to watch a walk through of cutting each material on the list. There's a big difference in settings and workflow of cutting something like 1/4-inch acrylic verses 1/8-inch wood and having an idea of the work process would be SO nice! Just a suggestion if you have time / if it's cost effective. Thanks again!",
+    "likes": 6,
+    "video": "What is a 3D Laser Cutter?  Full Spectrum Muse 3D "
+  },
+  {
+    "text": "TLDR: The changes to Fusion won't really affect most people in the maker/DIY community (especially now that they have added STEP back in).  There are a few areas where friction is being added to keep people from abusing the free version to create designs as a business.  The uproar around the changes have been a little bit overblown.... and why I went with a crazier thumbnail and title ;)",
+    "likes": 8,
+    "video": "Fusion 360 - Did Autodesk just kill the FREE Versi"
+  },
+  {
+    "text": "Can this laser engrave shot glasses and beer pints?",
+    "likes": 0,
+    "video": "Is this the BEST budget Laser Engraver? Ortur Lase"
+  }
+]

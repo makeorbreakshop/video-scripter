@@ -1,0 +1,617 @@
+{
+  "totalCommentsAnalyzed": 1250,
+  "batchesCompleted": [
+    1,
+    1,
+    2,
+    3,
+    4
+  ],
+  "videoCommentCounts": {
+    "What is the Best Laser Cutter and Engraver for You?": 186,
+    "The Worlds FASTEST Laser Engraver? Laserpecker Pro Review": 40,
+    "Did I Waste $1500 on a 50W Laser Cutter from China?": 55,
+    "Is this the BEST budget Laser Engraver? Ortur Laser Master Engrave 2 Review": 178,
+    "Fusion 360 - Did Autodesk just kill the FREE Version?": 48,
+    "I Sent Baby Yoda to Space (sort of....)": 20,
+    "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Review": 38,
+    "What is a 3D Laser Cutter?  Full Spectrum Muse 3D Review": 44,
+    "Full Flight of Insta360 Weather Balloon Flight (Plus Fighter Jet Fly By!)": 61,
+    "What can a $300 CNC do? - Ortur Aufero CNC Engraver Review": 23,
+    "The Makeblock Laserbox - Is this the Laser Cutter You've Been Waiting For?": 18,
+    "Is Fusion 360 worth learning over Sketchup?": 37,
+    "Welded DIY Metal Bed, This is What I MESSED Up": 3,
+    "Can I Stain a Maple Butcher Block Countertop?": 16,
+    "How to make Dovetail Joints in Fusion 360 - Woodworking Joints": 8,
+    "Designing Furniture with Fusion 360 for Absolute Beginners!": 27,
+    "Does a $200 Laser Engraver Make Sense in Your Shop?": 70,
+    "Is a Sub $250 CNC worth it?  Alfawise C10 CNC & Laser Review": 27,
+    "Turn Real Things into 3D Models with Photogrammetry": 14,
+    "Testing the OM Tech K40 Laser": 16,
+    "Custom Farmhouse Sink, Dials and Oven Top for a Play Kitchen // DIY": 3,
+    "Build a Baby Gate (for cheap) // DIY Woodworking": 3,
+    "Why are custom laser cut maps so hard to make?": 25,
+    "3 Ways to Make Wooden Shims (DIY Wedges)": 6,
+    "How to Make a Kids Play Kitchen: The Frame/Doors/Drawers!": 3,
+    "Unboxing and First Tests of the OM Tech 40W CO2 Laser": 2,
+    "How to Make a Cedar Window Planter Box": 8,
+    "Laser Cutting Eleven's Head From Stranger Things (DIY Lightbox)": 3,
+    "How to Make a Butcher Block Countertop // DIY Woodworking": 13,
+    "Building a Modular Paint Organization System": 8,
+    "How to Make a Wooden Mallet // THOR Hammer!": 2,
+    "Making the Ultimate 3D Carved Sign from Disney's Haunted Mansion": 2,
+    "6 Mistakes Not to Make When Building a Farmhouse Table": 28,
+    "Laser Engraved Cups! Using a Rotary Attachment on the Muse Full Spectrum Laser": 8,
+    "Building a Simple (and Cheap!) Miter Station + Storage for the Shop": 7,
+    "Night Sky Star Map Wall Sign (THAT LIGHTS UP!!)  // DIY": 4,
+    "This is Why I Use Fusion 360 to Make a Bed.": 3,
+    "What can a $1500 50W Chinese laser actually cut?": 8,
+    "Carving a Baby Groot Planter out of Wood": 2,
+    "Build a Rubber Stamp with a Removable Handle // DIY": 5,
+    "Building a Hinged Lightsaber for Dark Rey // Star Wars": 12,
+    "Sending a 360 Camera to the Edge of Space - Insta360 One X": 18,
+    "Building a Picture Frame Ron Swanson Would be Proud Of // DIY Half Lap Joints and Dowels": 2,
+    "How to Build a Crib for the Nursery! | DIY Woodworking": 5,
+    "This is How Much YouTube Paid me for My 300,000 View Chinese Laser Review": 8,
+    "Simple Wooden Book Shelves (for a nursery!)": 1,
+    "Carved Wooden Football Stadium Signs on the CNC // DIY": 1,
+    "Air Filter vs. Fire, Who wins in the shop?": 2,
+    "Is a Budget $250 3D Printer worth it? Alfawise U30 Pro Review": 2,
+    "Build a Built-In Closet Organizer (Woodworking DIY)": 3,
+    "DIY X-Wing Swing from Star Wars!": 1,
+    "Making Super Tiny Furniture! (Miniatures for a Dollhouse)": 5,
+    "What Makes a Better Lightsaber?  Wood or 3D Printed?": 1,
+    "Building a Bluetooth Speaker into a Side Table": 2,
+    "How to Make a Simple Tool Wall for a Garage Workshop": 1,
+    "Cut Straight Edges without a Jointer on the Table Saw": 1,
+    "Cheaper and Better?  Atomstack X7 Pro Laser Engraver Review": 15,
+    "The Most Powerful Laser Diode? NEJE Master 2S Plus A40640 Laser": 18,
+    "The Nicest Laser Engraver This Year? The xTool D1 Review": 9,
+    "The Best Laser Cutter for any Budget?": 18,
+    "How to Make Money with Laser Engraved Ceramic Tiles + Ortur Pro GIVEAWAY!": 2,
+    "Should you upgrade a budget laser cutter?": 1,
+    "The Best Budget Laser Engraver: Ortur Aufero Laser 1 Review": 3,
+    "NEW favorite diode laser engraver? Ortur Laser Master Engraver 2 Pro!": 3,
+    "I've Never Seen A Laser Do THIS Before! - Laserpecker 2 Review": 39,
+    "This Laser Can Engrave METAL!  -  OMTech 20W Fiber Laser Review": 1,
+    "Should You Buy a Glowforge?": 1,
+    "SparkMaker LaserPro: The new King 👑 of budget laser engravers?": 1,
+    "Making the Elder Wand from Harry Potter out of Walnut | DIY": 1,
+    "The Longer LK5 Pro is Big and Cheap. But is this 3d Printer worth it?": 1
+  },
+  "goalPhrases": {},
+  "painPoints": {},
+  "questionTypes": {},
+  "identityMarkers": {},
+  "technicalTerms": {},
+  "emotionalLanguage": {},
+  "videoPatterns": {
+    "What is the Best Laser Cutter and Engraver for You?": {
+      "questionCount": 110,
+      "painCount": 9,
+      "successCount": 26,
+      "technicalCount": 0
+    },
+    "The Worlds FASTEST Laser Engraver? Laserpecker Pro Review": {
+      "questionCount": 14,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Did I Waste $1500 on a 50W Laser Cutter from China?": {
+      "questionCount": 28,
+      "painCount": 2,
+      "successCount": 7,
+      "technicalCount": 0
+    },
+    "Is this the BEST budget Laser Engraver? Ortur Laser Master Engrave 2 Review": {
+      "questionCount": 135,
+      "painCount": 10,
+      "successCount": 24,
+      "technicalCount": 0
+    },
+    "Fusion 360 - Did Autodesk just kill the FREE Version?": {
+      "questionCount": 10,
+      "painCount": 2,
+      "successCount": 4,
+      "technicalCount": 0
+    },
+    "I Sent Baby Yoda to Space (sort of....)": {
+      "questionCount": 4,
+      "painCount": 0,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Review": {
+      "questionCount": 12,
+      "painCount": 4,
+      "successCount": 5,
+      "technicalCount": 0
+    },
+    "What is a 3D Laser Cutter?  Full Spectrum Muse 3D Review": {
+      "questionCount": 17,
+      "painCount": 2,
+      "successCount": 8,
+      "technicalCount": 0
+    },
+    "Full Flight of Insta360 Weather Balloon Flight (Plus Fighter Jet Fly By!)": {
+      "questionCount": 14,
+      "painCount": 2,
+      "successCount": 6,
+      "technicalCount": 0
+    },
+    "What can a $300 CNC do? - Ortur Aufero CNC Engraver Review": {
+      "questionCount": 8,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "The Makeblock Laserbox - Is this the Laser Cutter You've Been Waiting For?": {
+      "questionCount": 6,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Is Fusion 360 worth learning over Sketchup?": {
+      "questionCount": 4,
+      "painCount": 2,
+      "successCount": 7,
+      "technicalCount": 0
+    },
+    "Welded DIY Metal Bed, This is What I MESSED Up": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Can I Stain a Maple Butcher Block Countertop?": {
+      "questionCount": 7,
+      "painCount": 0,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "How to make Dovetail Joints in Fusion 360 - Woodworking Joints": {
+      "questionCount": 4,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Designing Furniture with Fusion 360 for Absolute Beginners!": {
+      "questionCount": 6,
+      "painCount": 3,
+      "successCount": 5,
+      "technicalCount": 0
+    },
+    "Does a $200 Laser Engraver Make Sense in Your Shop?": {
+      "questionCount": 32,
+      "painCount": 1,
+      "successCount": 6,
+      "technicalCount": 0
+    },
+    "Is a Sub $250 CNC worth it?  Alfawise C10 CNC & Laser Review": {
+      "questionCount": 14,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Turn Real Things into 3D Models with Photogrammetry": {
+      "questionCount": 6,
+      "painCount": 2,
+      "successCount": 6,
+      "technicalCount": 0
+    },
+    "Testing the OM Tech K40 Laser": {
+      "questionCount": 12,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Custom Farmhouse Sink, Dials and Oven Top for a Play Kitchen // DIY": {
+      "questionCount": 0,
+      "painCount": 1,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Build a Baby Gate (for cheap) // DIY Woodworking": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "Why are custom laser cut maps so hard to make?": {
+      "questionCount": 11,
+      "painCount": 2,
+      "successCount": 8,
+      "technicalCount": 0
+    },
+    "3 Ways to Make Wooden Shims (DIY Wedges)": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "How to Make a Kids Play Kitchen: The Frame/Doors/Drawers!": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "Unboxing and First Tests of the OM Tech 40W CO2 Laser": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "How to Make a Cedar Window Planter Box": {
+      "questionCount": 2,
+      "painCount": 1,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Laser Cutting Eleven's Head From Stranger Things (DIY Lightbox)": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "How to Make a Butcher Block Countertop // DIY Woodworking": {
+      "questionCount": 6,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Building a Modular Paint Organization System": {
+      "questionCount": 4,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "How to Make a Wooden Mallet // THOR Hammer!": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Making the Ultimate 3D Carved Sign from Disney's Haunted Mansion": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "6 Mistakes Not to Make When Building a Farmhouse Table": {
+      "questionCount": 7,
+      "painCount": 0,
+      "successCount": 5,
+      "technicalCount": 0
+    },
+    "Laser Engraved Cups! Using a Rotary Attachment on the Muse Full Spectrum Laser": {
+      "questionCount": 4,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "Building a Simple (and Cheap!) Miter Station + Storage for the Shop": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "Night Sky Star Map Wall Sign (THAT LIGHTS UP!!)  // DIY": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "This is Why I Use Fusion 360 to Make a Bed.": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "What can a $1500 50W Chinese laser actually cut?": {
+      "questionCount": 6,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Carving a Baby Groot Planter out of Wood": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Build a Rubber Stamp with a Removable Handle // DIY": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Building a Hinged Lightsaber for Dark Rey // Star Wars": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "Sending a 360 Camera to the Edge of Space - Insta360 One X": {
+      "questionCount": 4,
+      "painCount": 0,
+      "successCount": 5,
+      "technicalCount": 0
+    },
+    "Building a Picture Frame Ron Swanson Would be Proud Of // DIY Half Lap Joints and Dowels": {
+      "questionCount": 2,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "How to Build a Crib for the Nursery! | DIY Woodworking": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "This is How Much YouTube Paid me for My 300,000 View Chinese Laser Review": {
+      "questionCount": 3,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "Simple Wooden Book Shelves (for a nursery!)": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Carved Wooden Football Stadium Signs on the CNC // DIY": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Air Filter vs. Fire, Who wins in the shop?": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Is a Budget $250 3D Printer worth it? Alfawise U30 Pro Review": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "Build a Built-In Closet Organizer (Woodworking DIY)": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "DIY X-Wing Swing from Star Wars!": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Making Super Tiny Furniture! (Miniatures for a Dollhouse)": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "What Makes a Better Lightsaber?  Wood or 3D Printed?": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Building a Bluetooth Speaker into a Side Table": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "How to Make a Simple Tool Wall for a Garage Workshop": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Cut Straight Edges without a Jointer on the Table Saw": {
+      "questionCount": 0,
+      "painCount": 1,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Cheaper and Better?  Atomstack X7 Pro Laser Engraver Review": {
+      "questionCount": 9,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "The Most Powerful Laser Diode? NEJE Master 2S Plus A40640 Laser": {
+      "questionCount": 8,
+      "painCount": 0,
+      "successCount": 2,
+      "technicalCount": 0
+    },
+    "The Nicest Laser Engraver This Year? The xTool D1 Review": {
+      "questionCount": 7,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "The Best Laser Cutter for any Budget?": {
+      "questionCount": 9,
+      "painCount": 0,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "How to Make Money with Laser Engraved Ceramic Tiles + Ortur Pro GIVEAWAY!": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Should you upgrade a budget laser cutter?": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 1,
+      "technicalCount": 0
+    },
+    "The Best Budget Laser Engraver: Ortur Aufero Laser 1 Review": {
+      "questionCount": 2,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "NEW favorite diode laser engraver? Ortur Laser Master Engraver 2 Pro!": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "I've Never Seen A Laser Do THIS Before! - Laserpecker 2 Review": {
+      "questionCount": 19,
+      "painCount": 1,
+      "successCount": 3,
+      "technicalCount": 0
+    },
+    "This Laser Can Engrave METAL!  -  OMTech 20W Fiber Laser Review": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Should You Buy a Glowforge?": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "SparkMaker LaserPro: The new King 👑 of budget laser engravers?": {
+      "questionCount": 1,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "Making the Elder Wand from Harry Potter out of Walnut | DIY": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    },
+    "The Longer LK5 Pro is Big and Cheap. But is this 3d Printer worth it?": {
+      "questionCount": 0,
+      "painCount": 0,
+      "successCount": 0,
+      "technicalCount": 0
+    }
+  },
+  "emergingThemes": [],
+  "batchInsights": {
+    "batch_1": {
+      "processedAt": "2025-08-18T19:33:12.276Z",
+      "commentCount": 250,
+      "topVideos": [
+        {
+          "video": "What is the Best Laser Cutter and Engraver for You",
+          "count": 94
+        },
+        {
+          "video": "Is this the BEST budget Laser Engraver? Ortur Lase",
+          "count": 76
+        },
+        {
+          "video": "Fusion 360 - Did Autodesk just kill the FREE Versi",
+          "count": 48
+        },
+        {
+          "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro",
+          "count": 38
+        },
+        {
+          "video": "Is a 40W CO2 Laser Cutter Worth?  OM Tech K40 Revi",
+          "count": 32
+        }
+      ]
+    },
+    "batch_2": {
+      "processedAt": "2025-08-18T19:33:26.210Z",
+      "commentCount": 250,
+      "topVideos": [
+        {
+          "video": "What is the Best Laser Cutter and Engraver for You",
+          "count": 174
+        },
+        {
+          "video": "Is this the BEST budget Laser Engraver? Ortur Lase",
+          "count": 130
+        },
+        {
+          "video": "Fusion 360 - Did Autodesk just kill the FREE Versi",
+          "count": 48
+        },
+        {
+          "video": "The Worlds FASTEST Laser Engraver? Laserpecker Pro",
+          "count": 38
+        },
+        {
+          "video": "Did I Waste $1500 on a 50W Laser Cutter from China",
+          "count": 36
+        }
+      ]
+    },
+    "batch_3": {
+      "processedAt": "2025-08-18T19:42:43.650Z",
+      "commentCount": 250,
+      "topVideos": [
+        {
+          "video": "What is the Best Laser Cutter and Engraver for You",
+          "count": 183
+        },
+        {
+          "video": "Is this the BEST budget Laser Engraver? Ortur Lase",
+          "count": 174
+        },
+        {
+          "video": "Did I Waste $1500 on a 50W Laser Cutter from China",
+          "count": 54
+        },
+        {
+          "video": "Does a $200 Laser Engraver Make Sense in Your Shop",
+          "count": 53
+        },
+        {
+          "video": "Full Flight of Insta360 Weather Balloon Flight (Pl",
+          "count": 50
+        }
+      ]
+    },
+    "batch_4": {
+      "processedAt": "2025-08-18T19:49:03.093Z",
+      "commentCount": 250,
+      "topVideos": [
+        {
+          "video": "What is the Best Laser Cutter and Engraver for You",
+          "count": 186
+        },
+        {
+          "video": "Is this the BEST budget Laser Engraver? Ortur Lase",
+          "count": 178
+        },
+        {
+          "video": "Does a $200 Laser Engraver Make Sense in Your Shop",
+          "count": 70
+        },
+        {
+          "video": "Full Flight of Insta360 Weather Balloon Flight (Pl",
+          "count": 61
+        },
+        {
+          "video": "Did I Waste $1500 on a 50W Laser Cutter from China",
+          "count": 55
+        }
+      ]
+    }
+  }
+}
