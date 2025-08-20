@@ -1345,13 +1345,13 @@
         <div class="header">
             <!-- Compact Single Row Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
-                <!-- AI Agent Toggle -->
-                <div id="agentic-toggle" style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onclick="toggleAgenticMode()">
-                    <span style="font-weight: 600; color: #374151; font-size: 11px;">AI Agent</span>
+                <!-- Admin Toggle -->
+                <div id="admin-toggle" style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onclick="toggleAdminMode()">
+                    <span style="font-weight: 600; color: #374151; font-size: 11px;">Admin</span>
                     <div id="toggle-switch" style="width: 28px; height: 14px; background: #cbd5e0; border-radius: 7px; position: relative; transition: background 0.2s;">
                         <div id="toggle-knob" style="width: 10px; height: 10px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>
                     </div>
-                    <span id="toggle-label" style="font-size: 10px; color: #6b7280;">Classic</span>
+                    <span id="toggle-label" style="font-size: 10px; color: #6b7280;">Off</span>
                 </div>
                 
                 <!-- Main Title - Centered -->
@@ -1585,6 +1585,7 @@
         let isLoading = false;
         let hasMore = true;
         let isRandomMode = true; // Always use random mode for serendipitous discovery
+        let sessionSeed = null; // Maintain seed for consistent random pagination
         
         // Debug Panel State
         let debugLog = [];
@@ -1869,7 +1870,7 @@
         }
         
         // Agentic Mode State
-        let agenticMode = false;
+        let adminMode = false;
         let agenticProgress = null;
         
         // Debug logging function
@@ -1889,35 +1890,110 @@
             }
         }
         
-        function toggleAgenticMode() {
-            agenticMode = !agenticMode;
-            const toggle = document.getElementById('agentic-toggle');
+        function toggleAdminMode() {
+            adminMode = !adminMode;
+            const toggle = document.getElementById('admin-toggle');
             const toggleSwitch = document.getElementById('toggle-switch');
             const toggleKnob = document.getElementById('toggle-knob');
             const toggleLabel = document.getElementById('toggle-label');
             
-            if (agenticMode) {
-                // Enable agentic mode
-                toggleSwitch.style.background = '#8b5cf6';
-                toggleKnob.style.transform = 'translateX(20px)';
-                toggleLabel.textContent = 'Autonomous';
-                toggleLabel.style.color = '#8b5cf6';
-                toggle.style.borderColor = '#8b5cf6';
-                toggle.style.background = '#f3f4f6';
+            if (adminMode) {
+                // Enable admin mode
+                toggleSwitch.style.background = '#dc2626';
+                toggleKnob.style.transform = 'translateX(14px)';
+                toggleLabel.textContent = 'On';
+                toggleLabel.style.color = '#dc2626';
+                toggle.style.borderColor = '#dc2626';
+                toggle.style.background = '#fef2f2';
                 
-                addDebugLog('info', 'AI Agent mode enabled - autonomous pattern discovery');
+                addDebugLog('info', 'Admin mode enabled - institutional channel management');
+                // Show admin menus on video results
+                showAdminMenus();
             } else {
-                // Disable agentic mode
+                // Disable admin mode
                 toggleSwitch.style.background = '#cbd5e0';
                 toggleKnob.style.transform = 'translateX(0px)';
-                toggleLabel.textContent = 'Classic';
+                toggleLabel.textContent = 'Off';
                 toggleLabel.style.color = '#6b7280';
                 toggle.style.borderColor = '#e9ecef';
                 toggle.style.background = '#f8f9fa';
                 
-                addDebugLog('info', 'Classic mode enabled - structured analysis pipeline');
+                addDebugLog('info', 'Admin mode disabled');
+                // Hide admin menus on video results
+                hideAdminMenus();
             }
         }
+        
+        // Admin Functions
+        function showAdminMenus() {
+            document.querySelectorAll('.admin-menu').forEach(menu => {
+                menu.style.display = 'block';
+            });
+        }
+        
+        function hideAdminMenus() {
+            document.querySelectorAll('.admin-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+            // Also hide any open dropdowns
+            document.querySelectorAll('.admin-dropdown').forEach(dropdown => {
+                dropdown.style.display = 'none';
+            });
+        }
+        
+        function toggleAdminDropdown(videoId) {
+            const dropdown = document.getElementById(`admin-dropdown-${videoId}`);
+            const isVisible = dropdown.style.display === 'block';
+            
+            // Hide all other dropdowns first
+            document.querySelectorAll('.admin-dropdown').forEach(d => {
+                d.style.display = 'none';
+            });
+            
+            // Toggle this dropdown
+            dropdown.style.display = isVisible ? 'none' : 'block';
+        }
+        
+        async function markChannelAsInstitutional(channelId, channelName, videoId) {
+            try {
+                const response = await fetch('/api/admin/mark-institutional', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        channelId,
+                        channelTitle: channelName
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addDebugLog('info', `Successfully marked "${channelName}" as institutional`);
+                    
+                    // Hide the dropdown
+                    document.getElementById(`admin-dropdown-${videoId}`).style.display = 'none';
+                    
+                    // Show success message
+                    alert(`Channel "${channelName}" has been marked as institutional and will be filtered from future creator-focused results.`);
+                } else {
+                    throw new Error(result.error || 'Failed to mark channel as institutional');
+                }
+            } catch (error) {
+                addDebugLog('error', `Failed to mark channel as institutional: ${error.message}`);
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        // Click outside to close dropdowns
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.admin-menu')) {
+                document.querySelectorAll('.admin-dropdown').forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                });
+            }
+        });
         
         // Agentic Analysis Function
         async function analyzePatternAgentic(videoId) {
@@ -2467,6 +2543,11 @@
                 randomize: 'true' // Always randomize for serendipity
             });
             
+            // Add session seed if we have one (for consistent pagination)
+            if (sessionSeed) {
+                params.set('seed', sessionSeed.toString());
+            }
+            
             try {
                 // Debug logging
                 updateDebugStatus(1, 'Loading');
@@ -2482,6 +2563,12 @@
                 if (!response.ok) {
                     addDebugEntry('error', `Failed to load outliers: ${data.error}`);
                     throw new Error(data.error || 'Failed to load outliers');
+                }
+                
+                // Store the seed from the response for consistent pagination
+                if (data.seed && !sessionSeed) {
+                    sessionSeed = data.seed;
+                    addDebugEntry('info', `🎲 Session seed initialized: ${sessionSeed}`);
                 }
                 
                 // Log API response
@@ -2536,11 +2623,12 @@
             currentPage = 0;
             outliers = [];
             hasMore = true;
+            sessionSeed = null; // Reset seed to get a new random shuffle
             window.scrollTo(0, 0);
             loadOutliers(false);
             
             const mode = 'random';
-            addDebugEntry('info', `🔄 Refreshed content in ${mode} mode`);
+            addDebugEntry('info', `🔄 Refreshed content in ${mode} mode with new seed`);
         }
         
         function displayOutliers(allOutliers, append = false) {
@@ -2582,6 +2670,12 @@
                     <div class="thumbnail-container">
                         <img src="${video.thumbnail_url}" alt="${video.title}" class="thumbnail">
                         <span class="score-badge ${scoreClass}">${video.score.toFixed(1)}x</span>
+                        <div class="admin-menu" style="position: absolute; top: 10px; left: 10px; display: none;">
+                            <div class="admin-dots" onclick="event.stopPropagation(); toggleAdminDropdown('${video.video_id}')" style="background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 16px;">⋯</div>
+                            <div id="admin-dropdown-${video.video_id}" class="admin-dropdown" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); min-width: 200px; z-index: 1000; display: none;">
+                                <div onclick="event.stopPropagation(); markChannelAsInstitutional('${video.channel_id}', '${video.channel_name.replace(/'/g, "\\'")}', '${video.video_id}')" style="padding: 8px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee;">🏢 Mark Channel as Institutional</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="outlier-info">
                         <div class="outlier-title">${video.title}</div>

@@ -83,6 +83,7 @@ interface VideoItem {
   id: string;
   title: string;
   channelTitle: string;
+  channelId?: string;
   viewCount: number;
   totalChunks: number;
   processed: boolean;
@@ -192,8 +193,8 @@ export default function DatabasePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const deferredSearchTerm = useDeferredValue(searchTerm);
   
-  // Add state for agentic mode
-  const [agenticMode, setAgenticMode] = useState(false);
+  // Add state for admin mode
+  const [adminMode, setAdminMode] = useState(false);
   const [agenticDebugData, setAgenticDebugData] = useState<any>(null);
   const [agenticProgress, setAgenticProgress] = useState<{
     isOpen: boolean;
@@ -600,8 +601,8 @@ Focus on:
       userPrompt: fullUserPrompt,
     });
     
-    // Check if agentic mode is enabled
-    if (agenticMode) {
+    // Check if admin mode is enabled
+    if (adminMode) {
       // Start agentic analysis
       setAgenticProgress({
         isOpen: true,
@@ -2399,19 +2400,19 @@ Focus on:
                 </Button>
               </div>
               
-              {/* Agentic Mode Toggle */}
+              {/* Admin Mode Toggle */}
               <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-md">
-                <Label htmlFor="agentic-mode" className="text-sm text-gray-300 font-medium">
-                  AI Agent
+                <Label htmlFor="admin-mode" className="text-sm text-gray-300 font-medium">
+                  Admin
                 </Label>
                 <Checkbox
-                  id="agentic-mode"
-                  checked={agenticMode}
-                  onCheckedChange={setAgenticMode}
-                  className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                  id="admin-mode"
+                  checked={adminMode}
+                  onCheckedChange={setAdminMode}
+                  className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
                 <span className="text-xs text-gray-500">
-                  {agenticMode ? 'Autonomous' : 'Classic'}
+                  {adminMode ? 'On' : 'Off'}
                 </span>
               </div>
               
@@ -2712,13 +2713,64 @@ Focus on:
                               href={`https://www.youtube.com/watch?v=${video.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-400 flex-shrink-0"
+                              className="text-blue-500 hover:text-blue-400 flex-shrink-0 mr-2"
                               title="Watch on YouTube"
                             >
                               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                               </svg>
                             </a>
+
+                            {/* Admin Menu */}
+                            {adminMode && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-300 p-1">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-gray-800 border-gray-700 text-gray-200">
+                                  <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator className="bg-gray-700" />
+                                  <DropdownMenuItem 
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch('/api/admin/mark-institutional', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({
+                                            channelId: video.channelId || video.channelTitle, // Use channelId if available, fallback to channelTitle
+                                            channelTitle: video.channelTitle
+                                          })
+                                        });
+                                        
+                                        const result = await response.json();
+                                        
+                                        if (result.success) {
+                                          toast({
+                                            title: "Channel Marked Institutional",
+                                            description: result.message,
+                                            variant: "default"
+                                          });
+                                        } else {
+                                          throw new Error(result.error);
+                                        }
+                                      } catch (error) {
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to mark channel as institutional",
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    }}
+                                    className="hover:bg-gray-700 cursor-pointer text-red-400"
+                                  >
+                                    <AlertCircle className="h-4 w-4 mr-2 text-red-400" />
+                                    Mark Channel as Institutional
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                           <div className="flex items-center text-sm text-gray-400 flex-wrap mt-1">
                             <span className="text-gray-500">Channel: </span>
@@ -2872,6 +2924,47 @@ Focus on:
                                   <FileDown className="h-4 w-4 mr-2 text-green-400" />
                                   Download Transcript
                                 </DropdownMenuItem>
+                                {adminMode && (
+                                  <>
+                                    <DropdownMenuSeparator className="bg-gray-700" />
+                                    <DropdownMenuItem 
+                                      onClick={async () => {
+                                        try {
+                                          const response = await fetch('/api/admin/mark-institutional', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              channelId: video.channelId || video.channelTitle,
+                                              channelTitle: video.channelTitle
+                                            })
+                                          });
+                                          
+                                          const result = await response.json();
+                                          
+                                          if (result.success) {
+                                            toast({
+                                              title: "Channel Marked Institutional",
+                                              description: result.message,
+                                              variant: "default"
+                                            });
+                                          } else {
+                                            throw new Error(result.error);
+                                          }
+                                        } catch (error) {
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to mark channel as institutional",
+                                            variant: "destructive"
+                                          });
+                                        }
+                                      }}
+                                      className="hover:bg-gray-700 cursor-pointer text-red-400"
+                                    >
+                                      <AlertCircle className="h-4 w-4 mr-2 text-red-400" />
+                                      Mark Channel as Institutional
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>

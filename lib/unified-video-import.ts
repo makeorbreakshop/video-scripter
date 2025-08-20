@@ -1401,72 +1401,182 @@ export class VideoImportService {
   }
 
   /**
+   * Helper: Process RSS feeds with concurrency limiting and retry logic
+   */
+  private async processFeedsWithConcurrency(rssFeedUrls: string[], concurrency: number): Promise<string[][]> {
+    const results: string[][] = [];
+    const failedFeeds: { url: string; index: number; attempts: number }[] = [];
+    
+    // Process feeds in batches with concurrency limiting
+    for (let i = 0; i < rssFeedUrls.length; i += concurrency) {
+      const batch = rssFeedUrls.slice(i, i + concurrency);
+      const batchNumber = Math.floor(i / concurrency) + 1;
+      const totalBatches = Math.ceil(rssFeedUrls.length / concurrency);
+      
+      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} feeds)`);
+      
+      const batchPromises = batch.map(async (feedUrl, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        return this.fetchSingleRSSFeed(feedUrl, globalIndex, rssFeedUrls.length);
+      });
+      
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      // Process results and track failures
+      batchResults.forEach((result, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        if (result.status === 'fulfilled') {
+          results[globalIndex] = result.value;
+        } else {
+          console.error(`❌ Feed ${globalIndex + 1}/${rssFeedUrls.length} failed:`, result.reason);
+          results[globalIndex] = [];
+          failedFeeds.push({ 
+            url: batch[batchIndex], 
+            index: globalIndex, 
+            attempts: 1 
+          });
+        }
+      });
+      
+      // Small delay between batches to be respectful
+      if (i + concurrency < rssFeedUrls.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    // Retry failed feeds with exponential backoff
+    if (failedFeeds.length > 0) {
+      console.log(`🔄 Retrying ${failedFeeds.length} failed feeds...`);
+      await this.retryFailedFeeds(failedFeeds, results, rssFeedUrls.length);
+    }
+    
+    const successCount = results.filter(r => r.length >= 0).length;
+    const failureCount = rssFeedUrls.length - successCount;
+    
+    console.log(`📊 RSS Processing Summary:`);
+    console.log(`   • Total feeds: ${rssFeedUrls.length}`);
+    console.log(`   • Successful: ${successCount} (${((successCount / rssFeedUrls.length) * 100).toFixed(1)}%)`);
+    console.log(`   • Failed: ${failureCount} (${((failureCount / rssFeedUrls.length) * 100).toFixed(1)}%)`);
+    
+    return results;
+  }
+
+  /**
+   * Helper: Fetch a single RSS feed with timeout and proper error handling
+   */
+  private async fetchSingleRSSFeed(feedUrl: string, index: number, total: number): Promise<string[]> {
+    // Support both direct RSS URLs and channel IDs
+    let actualFeedUrl = feedUrl;
+    if (feedUrl.startsWith('UC') && feedUrl.length === 24) {
+      actualFeedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feedUrl}`;
+    }
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const response = await fetch(actualFeedUrl, {
+        headers: {
+          'User-Agent': 'Unified-Video-Import/1.0',
+          'Accept': 'application/rss+xml, application/xml, text/xml'
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const xmlText = await response.text();
+      
+      // Parse entries with both video IDs and published dates
+      const entryPattern = /<entry>(.*?)<\/entry>/gs;
+      const entries = xmlText.match(entryPattern) || [];
+      
+      const recentVideoIds: string[] = [];
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 7); // Only videos from last 7 days
+      
+      for (const entry of entries) {
+        // Extract video ID
+        const videoIdMatch = entry.match(/<yt:videoId>([\w-]+)<\/yt:videoId>/);
+        if (!videoIdMatch) continue;
+        
+        const videoId = videoIdMatch[1];
+        
+        // Extract published date
+        const publishedMatch = entry.match(/<published>([^<]+)<\/published>/);
+        if (!publishedMatch) continue;
+        
+        const publishedDate = new Date(publishedMatch[1]);
+        
+        // Only include videos from last 7 days
+        if (publishedDate >= cutoffDate) {
+          recentVideoIds.push(videoId);
+        }
+      }
+      
+      console.log(`✅ Feed ${index + 1}/${total}: ${recentVideoIds.length} recent videos (last 7 days)`);
+      return recentVideoIds;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Feed ${index + 1}/${total} error: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Helper: Retry failed feeds with exponential backoff
+   */
+  private async retryFailedFeeds(
+    failedFeeds: { url: string; index: number; attempts: number }[], 
+    results: string[][], 
+    total: number
+  ): Promise<void> {
+    const maxRetries = 3;
+    
+    for (let attempt = 2; attempt <= maxRetries; attempt++) {
+      const remainingFailed = failedFeeds.filter(f => f.attempts < attempt);
+      if (remainingFailed.length === 0) break;
+      
+      console.log(`🔄 Retry attempt ${attempt}/${maxRetries} for ${remainingFailed.length} feeds`);
+      
+      // Exponential backoff delay
+      const delay = Math.pow(2, attempt - 1) * 1000; // 2s, 4s, 8s...
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Retry feeds one by one to avoid overwhelming the server
+      for (const failed of remainingFailed) {
+        try {
+          const result = await this.fetchSingleRSSFeed(failed.url, failed.index, total);
+          results[failed.index] = result;
+          failed.attempts = maxRetries; // Mark as successful
+        } catch (error) {
+          failed.attempts = attempt;
+          if (attempt === maxRetries) {
+            console.error(`❌ Feed ${failed.index + 1}/${total} failed after ${maxRetries} attempts`);
+          }
+        }
+        
+        // Small delay between retries
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+  }
+
+  /**
    * Helper: Fetch videos from RSS feeds (OPTIMIZED)
    * Processes all RSS feeds in parallel and deduplicates before YouTube API calls
    */
   private async fetchVideosFromRSS(rssFeedUrls: string[]): Promise<string[]> {
-    console.log(`🚀 Starting optimized RSS processing for ${rssFeedUrls.length} feeds`);
+    console.log(`🚀 Starting RSS processing for ${rssFeedUrls.length} feeds with concurrency limiting`);
     const startTime = Date.now();
     
-    // Parallel RSS feed processing
-    const rssPromises = rssFeedUrls.map(async (feedUrl, index) => {
-      try {
-        // Support both direct RSS URLs and channel IDs
-        let actualFeedUrl = feedUrl;
-        if (feedUrl.startsWith('UC') && feedUrl.length === 24) {
-          actualFeedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feedUrl}`;
-        }
-        
-        const response = await fetch(actualFeedUrl, {
-          headers: {
-            'User-Agent': 'Unified-Video-Import/1.0'
-          }
-        });
-
-        if (!response.ok) {
-          console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} failed: ${response.status}`);
-          return [];
-        }
-
-        const xmlText = await response.text();
-        
-        // Parse entries with both video IDs and published dates
-        const entryPattern = /<entry>(.*?)<\/entry>/gs;
-        const entries = xmlText.match(entryPattern) || [];
-        
-        const recentVideoIds: string[] = [];
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - 7); // Only videos from last 7 days
-        
-        for (const entry of entries) {
-          // Extract video ID
-          const videoIdMatch = entry.match(/<yt:videoId>([\w-]+)<\/yt:videoId>/);
-          if (!videoIdMatch) continue;
-          
-          const videoId = videoIdMatch[1];
-          
-          // Extract published date
-          const publishedMatch = entry.match(/<published>([^<]+)<\/published>/);
-          if (!publishedMatch) continue;
-          
-          const publishedDate = new Date(publishedMatch[1]);
-          
-          // Only include videos from last 7 days
-          if (publishedDate >= cutoffDate) {
-            recentVideoIds.push(videoId);
-          }
-        }
-        
-        console.log(`✅ Feed ${index + 1}/${rssFeedUrls.length}: ${recentVideoIds.length} recent videos (last 7 days)`);
-        return recentVideoIds;
-      } catch (error) {
-        console.error(`❌ Feed ${index + 1}/${rssFeedUrls.length} error:`, error instanceof Error ? error.message : String(error));
-        return [];
-      }
-    });
-
-    // Wait for all RSS feeds to complete
-    const allResults = await Promise.all(rssPromises);
+    // Process feeds with concurrency limiting and retry logic
+    const allResults = await this.processFeedsWithConcurrency(rssFeedUrls, 50); // Process 50 feeds at a time
     const allVideoIds = allResults.flat();
     
     // Deduplicate video IDs

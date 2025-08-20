@@ -109,7 +109,8 @@ export async function GET(request: Request) {
       return {
         id: video.id,
         title: video.title || 'Untitled',
-        channelTitle: video.channel_id || 'Unknown Channel',
+        channelTitle: video.channel_name || video.channel_id || 'Unknown Channel',
+        channelId: video.channel_id,
         viewCount: video.view_count || 0,
         totalChunks: chunks?.length || 0,
         processed: true,

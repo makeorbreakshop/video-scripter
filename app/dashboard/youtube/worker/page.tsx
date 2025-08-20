@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap, Database, Image, Play, Square, TrendingUp, AlertTriangle, Info, FileText } from "lucide-react"
+import { RefreshCw, Activity, Clock, CheckCircle, XCircle, AlertCircle, Users, Zap, Database, Image, Play, Square, TrendingUp, AlertTriangle, Info, FileText, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface QueueStats {
@@ -144,6 +144,31 @@ export default function WorkerDashboard() {
     } finally {
       setIsLoading(false)
       setLastRefresh(new Date())
+    }
+  }
+
+  const cancelProcessingJob = async (jobId: string) => {
+    try {
+      const response = await fetch('/api/worker/cancel-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ jobId })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Refresh the job list to show updated status
+        await fetchQueueStats()
+      } else {
+        console.error('Failed to cancel job:', data.error)
+        alert(`Failed to cancel job: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to cancel job:', error)
+      alert('Failed to cancel job. Please try again.')
     }
   }
 
@@ -1277,12 +1302,13 @@ export default function WorkerDashboard() {
                       <th className="px-4 py-3 text-left text-sm font-medium">Started</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Duration</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">Worker</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {recentJobs.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                        <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                           No recent jobs found
                         </td>
                       </tr>
@@ -1314,6 +1340,23 @@ export default function WorkerDashboard() {
                               </code>
                             ) : (
                               '-'
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {job.status === 'processing' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`Cancel job ${job.id}?`)) {
+                                    cancelProcessingJob(job.id)
+                                  }
+                                }}
+                                className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
                             )}
                           </td>
                         </tr>

@@ -88,41 +88,28 @@ export async function GET(request: NextRequest) {
     console.log(`Using ${tableName} table (days: ${days})`);
     
     if (randomize) {
-      // Get a larger sample and shuffle for true randomization
-      // Fetch 3x the needed amount to get good randomness across the dataset
-      const sampleSize = Math.max(limit * 3, 100);
+      // Use RPC function for true random ordering with consistent pagination
+      // Get or create a session seed from the request
+      const sessionSeed = searchParams.get('seed');
+      const seedValue = sessionSeed ? parseFloat(sessionSeed) : Math.random();
       
-      let randomQuery = supabase
-        .from('videos')
-        .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
-        .gte('temporal_performance_score', minScore)
-        .lte('temporal_performance_score', 100) // Cap at 100x
-        .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .eq('is_short', false)
-        .eq('is_institutional', false) // Filter out institutional content
-        .gte('view_count', minViews) // Use new minViews parameter
-        .order('id') // Add explicit ordering to prevent implicit high-performance bias
-        .limit(sampleSize);
+      console.log(`🎲 Using RPC function with seed: ${seedValue}, offset: ${offset}`);
       
-      if (domain) {
-        randomQuery = randomQuery.eq('topic_domain', domain);
-      }
-      
-      const { data: sampleVideos, error } = await randomQuery;
+      // Call the RPC function for random video fetching
+      const { data: shuffledVideos, error } = await supabase.rpc('get_random_outlier_videos', {
+        seed_value: seedValue,
+        min_score: minScore,
+        days_back: days,
+        min_views: minViews,
+        domain_filter: domain || null,
+        page_limit: limit,
+        page_offset: offset
+      });
       
       if (error) {
-        console.error('❌ Failed to fetch sample videos:', error);
+        console.error('❌ Failed to fetch random videos via RPC:', error);
         throw error;
       }
-      
-      // Fisher-Yates shuffle for true randomization
-      const videos = [...(sampleVideos || [])];
-      for (let i = videos.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [videos[i], videos[j]] = [videos[j], videos[i]];
-      }
-      
-      const shuffledVideos = videos.slice(offset, offset + limit);
 
       const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
         video_id: v.id,
@@ -138,12 +125,13 @@ export async function GET(request: NextRequest) {
         summary: v.llm_summary
       }));
 
-      console.log(`✅ Found ${outliers.length} truly random outliers (sample of ${sampleSize} from dataset) in ${Date.now() - startTime}ms`);
+      console.log(`✅ Found ${outliers.length} random outliers via RPC in ${Date.now() - startTime}ms`);
 
       return NextResponse.json({
         outliers,
-        total: sampleVideos?.length || 0,
+        total: outliers.length, // Actual count from RPC
         hasMore: true, // Always show more for random results to encourage exploration
+        seed: seedValue, // Return the seed for frontend to maintain consistency
         filters_applied: {
           time_range: timeRange,
           min_score: minScore,
