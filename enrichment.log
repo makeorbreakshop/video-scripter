@@ -1,0 +1,16 @@
+Starting channel enrichment process...
+Dry run: false
+Found 2 channels to enrich
+
+Processing batch 1 of 1
+Channels: 2
+Received data for 0 channels
+Progress: 2/2 channels processed
+Successful: 0, Failed: 0
+
+=== ENRICHMENT COMPLETE ===
+Total channels processed: 2
+Successfully enriched: 0
+Failed: 0
+API calls made: 1
+Channel enrichment completed

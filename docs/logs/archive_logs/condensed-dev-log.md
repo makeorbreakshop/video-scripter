@@ -1386,3 +1386,15 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - Developed 40+ Google PSE search queries for systematic channel discovery aligned with Film Booth methodology
    - Implemented bulk outlier analysis discovering 4 ultra-specific viral content frames with 14.6x-33.4x avg performance
    - Revolutionary insight: Film Booth avatars teach pure skills as "educational bait" vs monetization-focused content
+
+---
+
+## August 18, 2025
+
+10. **RSS Feed Processing Reliability & Customer Avatar Analysis**
+   - Fixed RSS monitoring 30% failure rate: added concurrency limiting (50 feeds/batch), exponential backoff retry, 10s timeouts
+   - Built YouTube comments import system: 10,403 comments from 189 videos imported with 99% success rate
+   - Customer avatar analysis reveals single "Practical Maker" persona in different contexts rather than separate segments
+   - Discovered tutorial pacing as #1 complaint, 2021 Fusion 360 revolt triggering 2022 universal cloud rejection
+   - Fixed Idea Heist randomization: PostgreSQL RPC with seeded random now accesses full 43K videos (was showing only 100)
+   - Implemented batch processing to overcome 256KB read limits on 3.6MB comment files for deep analysis

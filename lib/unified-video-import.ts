@@ -54,6 +54,8 @@ export interface VideoImportRequest {
     // Date filtering options
     dateFilter?: 'all' | 'recent'; // Filter videos by date
     dateRange?: number; // Number of days to look back (default: 1095 for 3 years)
+    // Channel enrichment options
+    enrichChannels?: boolean; // Default: true - Enrich channel data via YouTube API
   };
 }
 
@@ -71,6 +73,7 @@ export interface VideoImportResult {
   exportFiles: string[];
   errors: string[];
   processedVideoIds: string[];
+  channelsEnriched?: number; // Number of channels enriched with YouTube API data
 }
 
 export interface VideoMetadata {
@@ -228,6 +231,18 @@ export class VideoImportService {
 
       // Step 2: Store video data in Supabase
       await this.storeVideoData(videoMetadata);
+
+      // Step 2b: Maintain and enrich channels table
+      if (request.options?.enrichChannels !== false) { // Default to true
+        try {
+          const channelsEnriched = await this.maintainAndEnrichChannels(videoMetadata, request.source);
+          result.channelsEnriched = channelsEnriched;
+          console.log(`📊 Enriched ${channelsEnriched} channels`);
+        } catch (error) {
+          console.error('⚠️ Channel enrichment failed (non-blocking):', error);
+          result.errors.push(`Channel enrichment failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
 
       // Prepare parallel operations
       const parallelOperations: Promise<any>[] = [];
@@ -2099,6 +2114,235 @@ export class VideoImportService {
       console.error(`❌ Failed to fetch video details for ${videoId}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Maintain channels table and enrich with YouTube API data
+   */
+  private async maintainAndEnrichChannels(videos: VideoMetadata[], source: string): Promise<number> {
+    try {
+      // Extract unique channels from imported videos
+      const channelMap = new Map<string, { name: string; thumbnailUrl?: string }>();
+      
+      for (const video of videos) {
+        if (video.channel_id && !channelMap.has(video.channel_id)) {
+          channelMap.set(video.channel_id, {
+            name: video.channel_name,
+            thumbnailUrl: video.metadata?.channel_stats?.channel_thumbnail
+          });
+        }
+      }
+      
+      if (channelMap.size === 0) {
+        return 0;
+      }
+      
+      console.log(`📊 Found ${channelMap.size} unique channels to maintain`);
+      
+      // Step 1: Upsert channels to database
+      await this.upsertChannelsToDatabase(channelMap, source);
+      
+      // Step 2: Check which channels need enrichment
+      const channelsNeedingEnrichment = await this.getChannelsNeedingEnrichment(Array.from(channelMap.keys()));
+      
+      if (channelsNeedingEnrichment.length === 0) {
+        console.log('✅ All channels already enriched');
+        return 0;
+      }
+      
+      console.log(`🔄 ${channelsNeedingEnrichment.length} channels need enrichment`);
+      
+      // Step 3: Batch enrich channels via YouTube API
+      const enrichedCount = await this.enrichChannelsBatch(channelsNeedingEnrichment);
+      
+      return enrichedCount;
+    } catch (error) {
+      console.error('Error in maintainAndEnrichChannels:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Upsert channels to the channels table
+   */
+  private async upsertChannelsToDatabase(
+    channelMap: Map<string, { name: string; thumbnailUrl?: string }>,
+    source: string
+  ): Promise<void> {
+    const channels = Array.from(channelMap.entries()).map(([id, data]) => ({
+      channel_id: id,
+      channel_name: data.name,
+      thumbnail_url: data.thumbnailUrl || null,
+      discovery_source: source,
+      first_seen_date: new Date().toISOString()
+    }));
+    
+    // Batch upsert to channels table
+    const { error } = await supabase
+      .from('channels')
+      .upsert(channels, { 
+        onConflict: 'channel_id',
+        ignoreDuplicates: false // Update channel_name if it changed
+      });
+    
+    if (error) {
+      console.error('Error upserting channels:', error);
+      throw error;
+    }
+    
+    console.log(`✅ Upserted ${channels.length} channels to database`);
+  }
+  
+  /**
+   * Check which channels need enrichment (no sync or old sync)
+   */
+  private async getChannelsNeedingEnrichment(channelIds: string[]): Promise<string[]> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    const { data, error } = await supabase
+      .from('channels')
+      .select('channel_id')
+      .in('channel_id', channelIds)
+      .or(`last_youtube_sync.is.null,last_youtube_sync.lt.${sevenDaysAgo}`);
+    
+    if (error) {
+      console.error('Error checking channel enrichment status:', error);
+      return [];
+    }
+    
+    return data?.map(c => c.channel_id) || [];
+  }
+  
+  /**
+   * Enrich channels with YouTube API data in batches
+   */
+  private async enrichChannelsBatch(channelIds: string[]): Promise<number> {
+    const BATCH_SIZE = 50; // YouTube API max
+    const DELAY_BETWEEN_BATCHES = 1000; // 1 second
+    let enrichedCount = 0;
+    
+    for (let i = 0; i < channelIds.length; i += BATCH_SIZE) {
+      const batch = channelIds.slice(i, i + BATCH_SIZE);
+      
+      try {
+        // Fetch channel details from YouTube API
+        const parts = [
+          'snippet',
+          'contentDetails',
+          'statistics',
+          'topicDetails',
+          'status',
+          'brandingSettings'
+        ].join(',');
+        
+        const response = await this.makeYouTubeRequest(
+          `https://www.googleapis.com/youtube/v3/channels?` +
+          `part=${parts}&` +
+          `id=${batch.join(',')}`
+        );
+        
+        // Track quota usage
+        await quotaTracker.trackAPICall('channels.list', {
+          description: `Enrich ${batch.length} channels`,
+          jobId: this.jobId,
+          count: 1
+        });
+        
+        if (!response.ok) {
+          console.error(`YouTube API error: ${response.status}`);
+          continue;
+        }
+        
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+          // Process and update channels
+          const updates = data.items.map((channel: any) => this.extractChannelData(channel));
+          
+          // Batch update to database
+          const { error } = await supabase
+            .from('channels')
+            .upsert(updates, { 
+              onConflict: 'channel_id',
+              ignoreDuplicates: false 
+            });
+          
+          if (error) {
+            console.error('Error updating enriched channels:', error);
+          } else {
+            enrichedCount += data.items.length;
+            console.log(`✅ Enriched batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(channelIds.length / BATCH_SIZE)} (${data.items.length} channels)`);
+          }
+        }
+        
+        // Rate limiting
+        if (i + BATCH_SIZE < channelIds.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        }
+      } catch (error) {
+        console.error(`Error enriching batch ${Math.floor(i / BATCH_SIZE) + 1}:`, error);
+      }
+    }
+    
+    return enrichedCount;
+  }
+  
+  /**
+   * Extract channel data from YouTube API response
+   */
+  private extractChannelData(channel: any): any {
+    const snippet = channel.snippet || {};
+    const statistics = channel.statistics || {};
+    const status = channel.status || {};
+    const brandingSettings = channel.brandingSettings || {};
+    const contentDetails = channel.contentDetails || {};
+    const topicDetails = channel.topicDetails || {};
+    
+    return {
+      channel_id: channel.id,
+      channel_name: snippet.title,
+      description: snippet.description,
+      custom_url: snippet.customUrl,
+      default_language: snippet.defaultLanguage || null,
+      country: snippet.country,
+      published_at: snippet.publishedAt,
+      thumbnail_url: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url,
+      
+      // Statistics
+      subscriber_count: parseInt(statistics.subscriberCount) || null,
+      view_count: parseInt(statistics.viewCount) || null,
+      video_count: parseInt(statistics.videoCount) || null,
+      hidden_subscriber_count: statistics.hiddenSubscriberCount || false,
+      
+      // Status
+      privacy_status: status.privacyStatus || 'public',
+      made_for_kids: status.madeForKids || false,
+      
+      // Content details
+      uploads_playlist_id: contentDetails.relatedPlaylists?.uploads || null,
+      
+      // Branding
+      keywords: brandingSettings.channel?.keywords || null,
+      
+      // Mark as synced
+      last_youtube_sync: new Date().toISOString(),
+      
+      // Additional metadata in JSONB
+      metadata: {
+        youtube_data: {
+          topic_ids: topicDetails.topicIds || [],
+          topic_categories: topicDetails.topicCategories || [],
+          unsubscribed_trailer: brandingSettings.channel?.unsubscribedTrailer || null,
+          banner_url: brandingSettings.image?.bannerExternalUrl || null,
+          tracking_analytics_id: brandingSettings.channel?.trackingAnalyticsAccountId || null,
+          is_linked: status.isLinked || null,
+          long_uploads_status: status.longUploadsStatus || null,
+          localizations: Object.keys(channel.localizations || {}),
+          thumbnails: snippet.thumbnails || {},
+          last_enriched: new Date().toISOString()
+        }
+      }
+    };
   }
 
   /**

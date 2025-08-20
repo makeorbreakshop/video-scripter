@@ -165,6 +165,7 @@ export default function DatabasePage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [totalVideosInDatabase, setTotalVideosInDatabase] = useState<number>(0);
   const [chunkingMethod, setChunkingMethod] = useState<string>('enhanced');
   const [processMode, setProcessMode] = useState<'full' | 'metadata'>('full');
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
@@ -273,6 +274,19 @@ export default function DatabasePage() {
       }
       
       const data = await response.json();
+      
+      // Also fetch the total count from Idea Radar API for context
+      try {
+        const countResponse = await fetch('/api/idea-radar?randomize=true&limit=1&minScore=1.5&minViews=100&timeRange=twoyears');
+        if (countResponse.ok) {
+          const countData = await countResponse.json();
+          if (countData.total) {
+            setTotalVideosInDatabase(countData.total);
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch total count:', error);
+      }
       
       // Process the videos to correctly identify basic videos
       const processedVideos = (data.videos || []).map((video: VideoItem) => {
@@ -2359,22 +2373,71 @@ Focus on:
                 </Button>
               )}
               
-              {/* Video Counter - Add this new component */}
+              {/* Enhanced Video Counter with Total Dataset Info */}
               <div className="flex items-center">
-                <div className="px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-md flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-gray-300">
-                    {filteredVideos.length}
-                  </span>
-                  {filteredVideos.length !== videos.length && (
-                    <>
-                      <span className="text-xs text-gray-500">/</span>
-                      <span className="text-xs text-gray-500">{videos.length}</span>
-                    </>
-                  )}
-                  <span className="text-xs text-gray-500 ml-0.5">
-                    {filteredVideos.length === 1 ? "video" : "videos"}
-                    {filteredVideos.length !== videos.length ? " shown" : ""}
-                  </span>
+                <div className="relative group">
+                  <div className="px-3.5 py-1.5 bg-gradient-to-r from-gray-800/70 to-gray-800/50 border border-gray-700/60 rounded-lg flex items-center gap-2 backdrop-blur-sm">
+                    {/* Current/Filtered Count */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-white">
+                        {filteredVideos.length.toLocaleString()}
+                      </span>
+                      {filteredVideos.length !== videos.length && (
+                        <>
+                          <span className="text-xs text-gray-500">/</span>
+                          <span className="text-xs font-medium text-gray-400">
+                            {videos.length.toLocaleString()}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Separator */}
+                    <div className="h-4 w-px bg-gray-700"></div>
+                    
+                    {/* Label with icon */}
+                    <div className="flex items-center gap-1">
+                      <Video className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-400 font-medium">
+                        {filteredVideos.length === 1 ? "video" : "videos"}
+                      </span>
+                    </div>
+                    
+                    {/* Total Database Count (if available) */}
+                    {totalVideosInDatabase > 0 && totalVideosInDatabase > videos.length && (
+                      <>
+                        <div className="h-4 w-px bg-gray-700"></div>
+                        <div className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-blue-500/70" />
+                          <span className="text-xs text-blue-400/80 font-medium">
+                            {totalVideosInDatabase.toLocaleString()} total
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Hover tooltip with more details */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                    <div className="text-xs space-y-1">
+                      <div className="text-gray-300">
+                        Showing: <span className="font-semibold text-white">{filteredVideos.length.toLocaleString()}</span> videos
+                      </div>
+                      {filteredVideos.length !== videos.length && (
+                        <div className="text-gray-400">
+                          Loaded: <span className="font-medium">{videos.length.toLocaleString()}</span> videos
+                        </div>
+                      )}
+                      {totalVideosInDatabase > 0 && (
+                        <div className="text-blue-400">
+                          Database: <span className="font-medium">{totalVideosInDatabase.toLocaleString()}</span> total videos
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                      <div className="border-4 border-transparent border-t-gray-900"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -2511,6 +2574,38 @@ Focus on:
                     </button>
                   </Badge>
                 )}
+              </div>
+            )}
+            
+            {/* Dataset Overview Banner - Shows when we have a large total count */}
+            {totalVideosInDatabase > 1000 && (
+              <div className="mb-4">
+                <div className="bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-blue-900/20 border border-blue-800/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-600/20 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-white mb-1">
+                          Viral Content Discovery
+                        </h3>
+                        <p className="text-xs text-gray-400">
+                          Exploring <span className="font-semibold text-blue-400">{totalVideosInDatabase.toLocaleString()}</span> outlier videos
+                          {filteredVideos.length < totalVideosInDatabase && (
+                            <> • Showing <span className="font-semibold text-white">{filteredVideos.length.toLocaleString()}</span> based on current filters</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-blue-700/50 text-blue-400 text-xs">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        {Math.round((filteredVideos.length / totalVideosInDatabase) * 100)}% visible
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             

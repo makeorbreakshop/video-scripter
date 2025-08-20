@@ -12,13 +12,32 @@ The Unified Video Import System consolidates all video import mechanisms into a 
    - `VideoImportService` class that handles all processing logic
    - Standardized interfaces for requests and responses
    - Integrated error handling and logging
+   - **YouTube API Fallback System**: Automatic failover to backup API key when primary quota exhausted
+   - **Channel Stats Caching**: In-memory cache to reduce redundant YouTube API calls
+   - **Job ID Tracking**: Links imports to background job system for monitoring
 
 2. **Unified API Endpoint** (`/app/api/video-import/unified/route.ts`)
    - Single POST endpoint for all import operations
-   - Input validation and rate limiting
+   - Input validation and rate limiting (1,000 items default, 10,000 for RSS)
+   - **Queue System Integration**: Supports both synchronous and asynchronous processing
+   - **Duplicate Detection**: Checks `channel_import_status` to skip already-imported channels
    - Comprehensive documentation via GET endpoint
 
-3. **Updated Legacy Endpoints**
+3. **Worker/Queue System**
+   - **Background Processing**: Default mode uses job queue for large imports
+   - **Job Creation**: Creates entries in `jobs` table with status tracking
+   - **Worker Processing**: Dedicated workers handle import jobs asynchronously
+   - **Progress Tracking**: Real-time status updates via job monitoring
+   - **Synchronous Mode**: Optional `useQueue: false` for immediate processing
+
+4. **Supporting Services**
+   - **BERTopic Classification Service** (`/lib/bertopic-classification-service.ts`)
+   - **Temporal Baseline Processor** (`/lib/temporal-baseline-processor.ts`)
+   - **LLM Format Classification Service** (`/lib/llm-format-classification-service.ts`)
+   - **Pinecone Services**: Separate services for titles, thumbnails, and summaries
+   - **Quota Tracker** (`/lib/youtube-quota-tracker.ts`): Real-time quota monitoring
+
+5. **Updated Legacy Endpoints**
    - `/app/api/youtube/daily-monitor/route.ts` - RSS monitoring
    - `/app/api/youtube/import-competitor/route.ts` - Competitor analysis
    - Additional endpoints can be migrated following the same pattern
@@ -39,14 +58,25 @@ POST /api/video-import/unified
   videoIds?: string[],
   channelIds?: string[],
   rssFeedUrls?: string[],
+  useQueue?: boolean,  // Default: true - Use background job queue
   options?: {
     skipEmbeddings?: boolean,
     skipExports?: boolean,
     skipThumbnailEmbeddings?: boolean,
     skipTitleEmbeddings?: boolean,
     skipClassification?: boolean,
+    skipSummaries?: boolean,  // Skip LLM summary generation
+    summaryModel?: string,     // Model for summary generation (default: gpt-4o-mini)
     batchSize?: number,
-    forceReEmbed?: boolean
+    forceReEmbed?: boolean,
+    maxVideosPerChannel?: number,
+    // Competitor-specific options
+    timePeriod?: string,       // 'all' or number of days
+    excludeShorts?: boolean,   // Exclude YouTube Shorts
+    userId?: string,           // User ID for tracking
+    // Date filtering options
+    dateFilter?: 'all' | 'recent',
+    dateRange?: number         // Days to look back (default: 1095)
   }
 }
 ```
@@ -62,14 +92,16 @@ POST /api/video-import/unified
     titles: number,
     thumbnails: number
   },
-  classificationsGenerated: {
-    topics: number,
-    formats: number
-  },
+  classificationsGenerated: number,  // Total classifications (topics + formats)
+  summariesGenerated: number,        // LLM summaries created
+  summaryEmbeddingsGenerated: number, // Summary embeddings created
   exportFiles: string[],
   errors: string[],
   processedVideoIds: string[],
-  processingTime: number,
+  // Queue-specific fields
+  jobId?: string,                    // Job ID when using queue
+  status?: string,                   // Job status
+  skippedChannels?: string[],        // Channels already imported
   timestamp: string
 }
 ```
@@ -131,7 +163,20 @@ const response = await fetch('/api/video-import/unified', {
 - Extracts thumbnail URLs (prioritizes maxres > high > medium > default)
 - **Quota Tracking**: All YouTube API calls are tracked for quota management
 
-### 2. Embedding Generation
+### 2. Channel Maintenance & Enrichment
+- **Automatic Channel Tracking**: Extracts unique channels from imported videos
+- **Channel Table Updates**: Upserts channels with basic info (id, name, thumbnail)
+- **Discovery Source Tracking**: Records where each channel was discovered
+- **Batch Enrichment**: Enriches channels with YouTube API data
+  - Processes up to 50 channels per API call
+  - Fetches: statistics, keywords, topics, upload playlists, COPPA status
+  - Updates subscriber counts, view counts, video counts
+  - Stores metadata: topic IDs, banner URLs, localizations
+- **Smart Refresh**: Only enriches channels not synced in last 7 days
+- **Quota Impact**: Minimal - typically 2-20 API calls for hundreds of videos
+- **Non-blocking**: Enrichment failures don't stop video import
+
+### 3. Embedding Generation
 
 #### Title Embeddings
 - **Model**: OpenAI `text-embedding-3-small`
@@ -149,7 +194,7 @@ const response = await fetch('/api/video-import/unified', {
 - **Database Tracking**: `thumbnail_embedding_version` field set to 'v1'
 - **Cost**: ~$0.00098 per image
 
-### 3. LLM Summary Generation
+### 4. LLM Summary Generation
 
 #### Summary Generation
 - **Method**: GPT-4o-mini with action-focused prompts
@@ -167,7 +212,7 @@ const response = await fetch('/api/video-import/unified', {
 - **Database Tracking**: `llm_summary_embedding_synced` field set to true
 - **Timing**: After summary generation completes
 
-### 4. Content Classification
+### 5. Content Classification
 
 #### Topic Classification
 - **Method**: K-nearest neighbor using title embeddings
@@ -197,7 +242,7 @@ const response = await fetch('/api/video-import/unified', {
 - **Cost**: ~$0.06 per 1,000 videos
 - **Processing**: ~50-100 videos/minute
 
-### 4. Data Storage
+### 6. Data Storage
 
 #### Storage Strategy
 The system uses a **three-tier storage approach** optimized for different batch sizes:
@@ -230,37 +275,83 @@ DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].poole
 
 #### Supabase Database
 ```sql
--- Core video table structure
+-- Core video table structure (current production schema)
 CREATE TABLE videos (
   id text PRIMARY KEY,
   title text NOT NULL,
   description text,
   channel_id text NOT NULL,
   channel_name text,
-  view_count bigint DEFAULT 0,
+  view_count integer DEFAULT 0,
+  like_count integer,
+  comment_count integer,
+  duration text,
   published_at timestamptz,
   thumbnail_url text,
-  performance_ratio numeric DEFAULT 1,
+  channel_avg_views double precision,
+  performance_ratio double precision DEFAULT 1,
+  outlier_factor double precision,
+  niche text,
   data_source text DEFAULT 'competitor',
   is_competitor boolean DEFAULT true,
   import_date timestamptz DEFAULT now(),
+  imported_by uuid,
   metadata jsonb,
+  
+  -- Embedding tracking
+  pinecone_embedded boolean DEFAULT false,
+  pinecone_embedding_version varchar(10),
+  pinecone_last_updated timestamp,
+  embedding_thumbnail_synced boolean DEFAULT false,
+  thumbnail_embedding_version varchar(10),
+  thumbnail_analysis_metadata jsonb,
+  
   -- Classification fields
   topic_level_1 integer,
   topic_level_2 integer,
   topic_level_3 integer,
+  topic_domain text,
+  topic_niche text,
+  topic_micro text,
+  topic_cluster_id integer,
+  topic_cluster_old integer,
   topic_confidence numeric(3,2),
+  bertopic_version text,
   format_type text,
+  format_primary text,
   format_confidence numeric(3,2),
-  format_reasoning text,
+  format_llm_used boolean DEFAULT false,
+  classification_llm_used boolean DEFAULT false,
+  classification_timestamp timestamptz,
+  classified_at timestamptz,
+  
   -- LLM Summary fields
   llm_summary text,
-  llm_summary_generated_at timestamptz,
-  llm_summary_model text DEFAULT 'gpt-4o-mini',
+  llm_summary_generated_at timestamp,
+  llm_summary_model varchar(50) DEFAULT 'gpt-4o-mini',
   llm_summary_embedding_synced boolean DEFAULT false,
-  -- Temporal Performance fields
+  
+  -- Performance metrics
+  rolling_baseline_views integer,
   channel_baseline_at_publish numeric,
-  temporal_performance_score numeric
+  temporal_performance_score numeric,
+  envelope_performance_ratio numeric,
+  envelope_performance_category text,
+  first_day_views integer,
+  first_week_views integer,
+  first_month_views integer,
+  view_velocity_7d double precision,
+  view_velocity_30d double precision,
+  age_confidence double precision,
+  
+  -- Content flags
+  is_short boolean DEFAULT false,
+  is_institutional boolean DEFAULT false,
+  
+  -- System fields
+  user_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 ```
 
@@ -306,7 +397,7 @@ private async storeVideoDataDirect(videos: VideoMetadata[]): Promise<void> {
 - **Daily Updates**: Automated cron job recalculates baselines for videos reaching 30-day maturity
 - **Efficiency**: Uses single UPDATE statement with correlated subqueries for batch processing
 
-### 5. Temporal Performance Analytics
+### 7. Temporal Performance Analytics
 
 #### Overview
 The temporal baseline system provides age-adjusted performance metrics by comparing videos to their channel's historical performance at the time of publication.
@@ -342,7 +433,7 @@ The temporal baseline system provides age-adjusted performance metrics by compar
 - Processes batches in single UPDATE statement for performance
 - Function-level timeout set to 2 minutes for large batches
 
-### 6. Export System
+### 8. Export System
 
 #### Export Formats
 - **JSON**: Full embeddings with metadata
@@ -359,7 +450,7 @@ The temporal baseline system provides age-adjusted performance metrics by compar
 - **Manual Exports**: Can be triggered separately when needed
 - **Automatic Exports**: Only generated when `skipExports` is false or undefined
 
-### 6. Error Handling
+### 9. Error Handling
 
 #### Retry Logic
 - YouTube API failures: 3 retries with exponential backoff
@@ -397,7 +488,7 @@ PINECONE_SUMMARY_INDEX_NAME=video-summaries
 ### Rate Limits
 
 - **YouTube API**: 10,000 units/day (optimized from 100 to 1 unit per channel)
-  - channels.list: 1 unit
+  - channels.list: 1 unit per 50 channels (enrichment)
   - playlistItems.list: 1 unit per 50 videos
   - videos.list: 1 unit per 50 videos
 - **OpenAI API**: 3,000 requests/minute (org-level)

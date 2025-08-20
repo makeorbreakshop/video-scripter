@@ -10,6 +10,7 @@ interface OutlierVideo {
   video_id: string;
   title: string;
   channel_name: string;
+  channel_id?: string;
   thumbnail_url: string;
   score: number;
   domain: string;
@@ -95,50 +96,131 @@ export async function GET(request: NextRequest) {
       
       console.log(`🎲 Using RPC function with seed: ${seedValue}, offset: ${offset}`);
       
-      // Call the RPC function for random video fetching
-      const { data: shuffledVideos, error } = await supabase.rpc('get_random_outlier_videos', {
-        seed_value: seedValue,
-        min_score: minScore,
-        days_back: days,
-        min_views: minViews,
-        domain_filter: domain || null,
-        page_limit: limit,
-        page_offset: offset
-      });
-      
-      if (error) {
-        console.error('❌ Failed to fetch random videos via RPC:', error);
-        throw error;
-      }
-
-      const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
-        video_id: v.id,
-        title: v.title,
-        channel_name: v.channel_name,
-        thumbnail_url: v.thumbnail_url,
-        score: parseFloat(v.temporal_performance_score),
-        domain: v.topic_domain || 'Unknown',
-        niche: v.topic_niche || 'Unknown',
-        micro: v.topic_micro || '',
-        views: v.view_count,
-        age_days: Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)),
-        summary: v.llm_summary
-      }));
-
-      console.log(`✅ Found ${outliers.length} random outliers via RPC in ${Date.now() - startTime}ms`);
-
-      return NextResponse.json({
-        outliers,
-        total: outliers.length, // Actual count from RPC
-        hasMore: true, // Always show more for random results to encourage exploration
-        seed: seedValue, // Return the seed for frontend to maintain consistency
-        filters_applied: {
-          time_range: timeRange,
+      // Try to use the new function that returns both videos and count
+      // If it doesn't exist, fall back to the old approach
+      try {
+        // Call the new RPC function that returns both videos and accurate count
+        const { data: result, error } = await supabase.rpc('get_random_outlier_videos_with_data', {
+          seed_value: seedValue,
           min_score: minScore,
+          days_back: days,
           min_views: minViews,
-          domain: domain || undefined
+          domain_filter: domain || null,
+          page_limit: limit,
+          page_offset: offset
+        });
+        
+        if (error) {
+          console.log('New RPC function not found, falling back to old method:', error.message);
+          throw error; // Fall back to old method
         }
-      });
+
+        const shuffledVideos = result.videos || [];
+        const totalCount = result.total || 0;
+
+        const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
+          video_id: v.id,
+          title: v.title,
+          channel_name: v.channel_name,
+          channel_id: v.channel_id,
+          thumbnail_url: v.thumbnail_url,
+          score: parseFloat(v.temporal_performance_score),
+          domain: v.topic_domain || 'Unknown',
+          niche: v.topic_niche || 'Unknown',
+          micro: v.topic_micro || '',
+          views: v.view_count,
+          age_days: Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)),
+          summary: v.llm_summary
+        }));
+
+        console.log(`✅ Found ${outliers.length} random outliers via RPC from ${totalCount} total (with institutional filtering) in ${Date.now() - startTime}ms`);
+
+        return NextResponse.json({
+          outliers,
+          total: totalCount,
+          totalMatching: totalCount,
+          currentPage: Math.floor(offset / limit) + 1,
+          pageSize: limit,
+          hasMore: offset + limit < totalCount,
+          seed: seedValue,
+          filters_applied: {
+            time_range: timeRange,
+            min_score: minScore,
+            min_views: minViews,
+            domain: domain || undefined
+          }
+        });
+
+      } catch (rpcError) {
+        // Fall back to old method if new RPC doesn't exist
+        console.log('Falling back to original RPC function');
+        
+        // First get the total count of matching videos (without institutional filtering)
+        let countQuery = supabase
+          .from('videos')
+          .select('*', { count: 'exact', head: true })
+          .gte('temporal_performance_score', minScore)
+          .lte('temporal_performance_score', 100)
+          .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+          .eq('is_short', false)
+          .gte('view_count', minViews);
+
+        if (domain) {
+          countQuery = countQuery.eq('topic_domain', domain);
+        }
+
+        // Note: This doesn't filter by institutional channels, but gives us a rough count
+        const { count: totalCount } = await countQuery;
+        
+        // Call the RPC function for random video fetching
+        const { data: shuffledVideos, error } = await supabase.rpc('get_random_outlier_videos', {
+          seed_value: seedValue,
+          min_score: minScore,
+          days_back: days,
+          min_views: minViews,
+          domain_filter: domain || null,
+          page_limit: limit,
+          page_offset: offset
+        });
+        
+        if (error) {
+          console.error('❌ Failed to fetch random videos via RPC:', error);
+          throw error;
+        }
+
+        const outliers: OutlierVideo[] = shuffledVideos.map(v => ({
+          video_id: v.id,
+          title: v.title,
+          channel_name: v.channel_name,
+          channel_id: v.channel_id,  // Add channel_id to the response
+          thumbnail_url: v.thumbnail_url,
+          score: parseFloat(v.temporal_performance_score),
+          domain: v.topic_domain || 'Unknown',
+          niche: v.topic_niche || 'Unknown',
+          micro: v.topic_micro || '',
+          views: v.view_count,
+          age_days: Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)),
+          summary: v.llm_summary
+        }));
+
+        console.log(`✅ Found ${outliers.length} random outliers via RPC from ~${totalCount} total (approximate) in ${Date.now() - startTime}ms`);
+
+        return NextResponse.json({
+          outliers,
+          total: totalCount || 0, // Return the actual total count
+          totalMatching: totalCount || 0, // Also include as totalMatching for clarity
+          currentPage: Math.floor(offset / limit) + 1,
+          pageSize: limit,
+          hasMore: offset + limit < (totalCount || 0), // Calculate based on actual total
+          seed: seedValue, // Return the seed for frontend to maintain consistency
+          filters_applied: {
+            time_range: timeRange,
+            min_score: minScore,
+            min_views: minViews,
+            domain: domain || undefined
+          }
+        });
+      }
 
     } else {
       // Original pagination-based approach
@@ -198,6 +280,7 @@ export async function GET(request: NextRequest) {
         video_id: v.id,
         title: v.title,
         channel_name: v.channel_name,
+        channel_id: v.channel_id,  // Add channel_id to the response
         thumbnail_url: v.thumbnail_url,
         score: parseFloat(v.temporal_performance_score),
         domain: v.topic_domain || 'Unknown',
