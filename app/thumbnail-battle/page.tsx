@@ -393,18 +393,16 @@ export default function ThumbnailBattlePage() {
         }`}
         onClick={onClick}
         disabled={gameState !== 'playing' || transitioning}
-        initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: transitioning ? 0 : 1,
-          y: transitioning ? 20 : 0
+          opacity: transitioning ? 0.5 : 1
         }}
         transition={{ 
-          duration: 0.4, 
+          duration: 0.3, 
           ease: [0.4, 0, 0.2, 1]
         }}
       >
-        {/* Large thumbnail with 16:9 aspect ratio */}
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-4">
+        {/* Large thumbnail with 16:9 aspect ratio - bigger on desktop */}
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-4 lg:mb-6">
           <img 
             src={video.thumbnail_url} 
             alt={video.title}
@@ -463,8 +461,8 @@ export default function ThumbnailBattlePage() {
           
         </div>
         
-        {/* Larger title with better typography */}
-        <h3 className="text-xl font-semibold leading-tight line-clamp-2 min-h-[3.5rem]">
+        {/* Larger title with better typography - bigger on desktop */}
+        <h3 className="text-xl lg:text-2xl font-semibold leading-tight line-clamp-2 min-h-[3.5rem] lg:min-h-[4rem]">
           {video.title}
         </h3>
       </motion.button>
@@ -557,23 +555,15 @@ export default function ThumbnailBattlePage() {
           </motion.div>
         ) : (
           // Game screen content
-          <AnimatePresence mode="wait">
-            <motion.main 
-              key={battle?.videoA.id || 'loading'}
-              className="max-w-7xl mx-auto px-6 py-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+          <motion.main 
+            className="w-full mx-auto px-6 py-8 flex flex-col items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
               {/* Channel info header */}
               {battle && (
-                <motion.div 
-                  className="flex items-center justify-center gap-3 mb-8"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                >
+                <div className="flex items-center justify-center gap-3 mb-8">
                 <img 
                   src={battle.channel.channel_avatar}
                   alt={battle.channel.channel_title}
@@ -594,11 +584,11 @@ export default function ThumbnailBattlePage() {
                     {formatSubscriberCount(battle.channel.channel_subscriber_count)} subscribers
                   </p>
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {/* Video comparison grid */}
-            <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8">
+            {/* Video comparison grid - centered and larger */}
+            <div className="grid md:grid-cols-2 gap-12 max-w-[1400px] w-full mx-auto mb-8 mt-8 px-4 lg:px-8">
               <AnimatePresence mode="wait">
                 {battle && (
                   <>
@@ -641,8 +631,7 @@ export default function ThumbnailBattlePage() {
                 </motion.div>
               )}
             </AnimatePresence>
-            </motion.main>
-          </AnimatePresence>
+          </motion.main>
         )}
       </AnimatePresence>
 
