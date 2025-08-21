@@ -19,6 +19,9 @@ function getBallparkSubs(count: number): number {
 }
 
 export async function GET() {
+  const startTime = Date.now();
+  console.log('API: Starting matchup generation');
+  
   try {
     // Get the date 30 days ago
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 import { SemanticPatternDiscovery } from '@/lib/semantic-pattern-discovery';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // Use imported supabase client
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();

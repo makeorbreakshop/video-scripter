@@ -43,6 +43,7 @@ function formatSubscriberCount(count: number): string {
 
 export default function ThumbnailBattlePage() {
   const [battle, setBattle] = useState<Battle | null>(null);
+  const [battleQueue, setBattleQueue] = useState<Battle[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [highScore, setHighScore] = useState(0);
@@ -51,6 +52,7 @@ export default function ThumbnailBattlePage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [totalGames, setTotalGames] = useState(0);
   const [correctPicks, setCorrectPicks] = useState(0);
 
@@ -63,24 +65,98 @@ export default function ThumbnailBattlePage() {
     if (games) setTotalGames(parseInt(games));
     if (correct) setCorrectPicks(parseInt(correct));
     
-    // Pre-fetch first battle for smooth transition
-    loadNewBattle(true);
+    // Load multiple battles on mount for instant transitions
+    loadInitialBattles();
   }, []);
 
+  // Preload images for a battle
+  const preloadBattleImages = (battle: Battle) => {
+    const images = [
+      battle.videoA.thumbnail_url,
+      battle.videoB.thumbnail_url,
+      battle.channel.channel_avatar
+    ].filter(Boolean);
+    
+    images.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  };
+
+  // Fetch multiple matchups for the queue
+  const fetchMatchups = async (count: number = 5) => {
+    const matchups: Battle[] = [];
+    const promises = Array(count).fill(null).map(async () => {
+      try {
+        const response = await fetch('/api/thumbnail-battle/get-matchup');
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch matchup:', error);
+        return null;
+      }
+    });
+    
+    const results = await Promise.all(promises);
+    const validMatchups = results.filter(r => r !== null) as Battle[];
+    
+    // Preload images for all fetched matchups
+    validMatchups.forEach(preloadBattleImages);
+    
+    return validMatchups;
+  };
+
+  // Load initial battles on mount
+  const loadInitialBattles = async () => {
+    setLoading(true);
+    const matchups = await fetchMatchups(5);
+    if (matchups.length > 0) {
+      setBattle(matchups[0]);
+      setBattleQueue(matchups.slice(1));
+    }
+    setLoading(false);
+  };
+
+  // Get next battle from queue or fetch new ones
   const loadNewBattle = async (isInitial = false) => {
     if (!isInitial) {
       setTransitioning(true);
     }
     
-    try {
-      const response = await fetch('/api/thumbnail-battle/get-matchup');
-      const data = await response.json();
-      setBattle(data);
-    } catch (error) {
-      console.error('Failed to load battle:', error);
-    } finally {
+    // Use battle from queue if available
+    if (battleQueue.length > 0) {
+      setBattle(battleQueue[0]);
+      setBattleQueue(prev => prev.slice(1));
+      
+      // Fetch more in background if queue is getting low
+      if (battleQueue.length <= 2 && !isFetchingMore) {
+        setIsFetchingMore(true);
+        fetchMatchups(3).then(newMatchups => {
+          setBattleQueue(prev => [...prev, ...newMatchups]);
+          setIsFetchingMore(false);
+        });
+      }
+      
       if (!isInitial) {
         setTransitioning(false);
+      }
+    } else {
+      // Fallback: fetch directly if queue is empty
+      try {
+        const response = await fetch('/api/thumbnail-battle/get-matchup');
+        const data = await response.json();
+        setBattle(data);
+        
+        // Refill queue in background
+        fetchMatchups(5).then(newMatchups => {
+          setBattleQueue(newMatchups);
+        });
+      } catch (error) {
+        console.error('Failed to load battle:', error);
+      } finally {
+        if (!isInitial) {
+          setTransitioning(false);
+        }
       }
     }
   };
@@ -312,15 +388,20 @@ export default function ThumbnailBattlePage() {
 
     return (
       <motion.button
-        className={`relative block w-full text-left transition-all ${
+        className={`relative block w-full text-left ${
           gameState !== 'playing' ? 'cursor-default' : 'cursor-pointer group'
         }`}
         onClick={onClick}
         disabled={gameState !== 'playing' || transitioning}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ 
-          opacity: transitioning ? 0.6 : 1
+          opacity: transitioning ? 0 : 1,
+          y: transitioning ? 20 : 0
         }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ 
+          duration: 0.4, 
+          ease: [0.4, 0, 0.2, 1]
+        }}
       >
         {/* Large thumbnail with 16:9 aspect ratio */}
         <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-4">
@@ -476,16 +557,23 @@ export default function ThumbnailBattlePage() {
           </motion.div>
         ) : (
           // Game screen content
-          <motion.main 
-            key="game"
-            className="max-w-7xl mx-auto px-6 py-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Channel info header */}
-            {battle && (
-              <div className="flex items-center justify-center gap-3 mb-8">
+          <AnimatePresence mode="wait">
+            <motion.main 
+              key={battle?.videoA.id || 'loading'}
+              className="max-w-7xl mx-auto px-6 py-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Channel info header */}
+              {battle && (
+                <motion.div 
+                  className="flex items-center justify-center gap-3 mb-8"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
                 <img 
                   src={battle.channel.channel_avatar}
                   alt={battle.channel.channel_title}
@@ -506,7 +594,7 @@ export default function ThumbnailBattlePage() {
                     {formatSubscriberCount(battle.channel.channel_subscriber_count)} subscribers
                   </p>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Video comparison grid */}
@@ -553,7 +641,8 @@ export default function ThumbnailBattlePage() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.main>
+            </motion.main>
+          </AnimatePresence>
         )}
       </AnimatePresence>
 

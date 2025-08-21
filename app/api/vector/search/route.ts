@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createEmbeddings } from '@/lib/openai-api';
+import { createEmbeddings } from '@/lib/server/openai-embeddings';
 import { searchVideoContent, searchVideoById } from '@/lib/vector-db-service';
 import { getOpenAIApiKey, isPgvectorEnabled, getVectorSimilarityThreshold, getVectorMaxResults } from '@/lib/env-config';
 

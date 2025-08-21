@@ -1,5 +1,5 @@
 import { Pinecone } from '@pinecone-database/pinecone';
-import { createClient } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 import { Database } from '@/types/database';
 
 interface SemanticCluster {
@@ -51,7 +51,7 @@ export class SemanticPatternDiscovery {
     this.pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY!,
     });
-    this.supabase = createClient();
+    this.supabase = supabase;
   }
 
   async initialize() {
