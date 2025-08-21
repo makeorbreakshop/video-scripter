@@ -4,13 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { simpleYouTubeAnalytics, BasicAnalyticsData } from '@/lib/simple-youtube-analytics';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // Import progress update function
 import { updateProgress } from './progress/route.ts';
@@ -25,6 +20,7 @@ let refreshProgress = {
 };
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     if (refreshProgress.isRunning) {
       return NextResponse.json(

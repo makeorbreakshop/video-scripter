@@ -328,16 +328,8 @@ export default function ThumbnailBattlePage() {
       const newScore = score + 1;
       setScore(newScore);
       
-      // Celebrate milestones
-      if (newScore % 5 === 0) {
-        triggerConfetti();
-      }
-      
       if (newScore > highScore) {
         setHighScore(newScore);
-        if (newScore > 1) {
-          triggerConfetti();
-        }
       }
       
       // Update player stats in database
@@ -393,7 +385,7 @@ export default function ThumbnailBattlePage() {
     // Reset current streak for player
     if (player) {
       updatePlayerStats({
-        current_streak: 0,
+        current_score: 0,
         attempts_today: player.attempts_today + 1
       });
     }
@@ -403,6 +395,18 @@ export default function ThumbnailBattlePage() {
     // Battle is already loaded, just transition
     setGameState('playing');
   };
+
+  const handleResetPlayer = () => {
+    // Clear player data and return to welcome screen
+    localStorage.removeItem('thumbnailBattleSessionId');
+    setPlayer(null);
+    setPlayerName('');
+    setScore(0);
+    setHighScore(0);
+    setGameState('welcome');
+  };
+
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -524,19 +528,14 @@ export default function ThumbnailBattlePage() {
     const showResult = gameState === 'revealed';
 
     return (
-      <motion.button
+      <button
         className={`relative block w-full text-left ${
           gameState !== 'playing' ? 'cursor-default' : 'cursor-pointer group'
+        } ${
+          transitioning ? 'opacity-50' : ''
         }`}
         onClick={onClick}
         disabled={gameState !== 'playing' || transitioning}
-        animate={{ 
-          opacity: transitioning ? 0.5 : 1
-        }}
-        transition={{ 
-          duration: 0.3, 
-          ease: [0.4, 0, 0.2, 1]
-        }}
       >
         {/* Large thumbnail with 16:9 aspect ratio - bigger on desktop */}
         <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-4 lg:mb-6">
@@ -552,49 +551,32 @@ export default function ThumbnailBattlePage() {
           )}
           
           {/* Result overlay */}
-          <AnimatePresence>
-            {showResult && (
-              <motion.div
-                className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-sm bg-background/85"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                {isSelected && (
-                  <motion.div
-                    className="mb-4"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                  >
-                    {isCorrect ? (
-                      <Check className="w-16 h-16 text-[#00ff00]" />
-                    ) : (
-                      <X className="w-16 h-16 text-red-500" />
-                    )}
-                  </motion.div>
-                )}
-                
-                <motion.div
-                  className="text-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    {video.temporal_performance_score.toFixed(1)}x
-                  </div>
-                  <div className="text-sm text-muted-foreground mb-3">
-                    channel average
-                  </div>
-                  <div className="flex items-center gap-1 justify-center text-muted-foreground text-sm">
-                    <Eye className="w-4 h-4" />
-                    {video.view_count.toLocaleString()} views
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {showResult && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-sm bg-background/85">
+              {isSelected && (
+                <div className="mb-4">
+                  {isCorrect ? (
+                    <Check className="w-16 h-16 text-[#00ff00]" />
+                  ) : (
+                    <X className="w-16 h-16 text-red-500" />
+                  )}
+                </div>
+              )}
+              
+              <div className="text-center">
+                <div className="text-3xl font-bold text-foreground mb-1">
+                  {video.temporal_performance_score.toFixed(1)}x
+                </div>
+                <div className="text-sm text-muted-foreground mb-3">
+                  channel average
+                </div>
+                <div className="flex items-center gap-1 justify-center text-muted-foreground text-sm">
+                  <Eye className="w-4 h-4" />
+                  {video.view_count.toLocaleString()} views
+                </div>
+              </div>
+            </div>
+          )}
           
         </div>
         
@@ -602,7 +584,7 @@ export default function ThumbnailBattlePage() {
         <h3 className="text-xl lg:text-2xl font-semibold leading-tight line-clamp-2 min-h-[3.5rem] lg:min-h-[4rem]">
           {video.title}
         </h3>
-      </motion.button>
+      </button>
     );
   };
 
@@ -769,6 +751,25 @@ export default function ThumbnailBattlePage() {
                     {battle ? 'Start Game' : 'Loading...'}
                   </button>
                 </div>
+
+                {/* Bottom options */}
+                <div className="flex justify-center gap-6 mt-8">
+                  <button
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                    onClick={() => {
+                      setShowLeaderboard(true);
+                      fetchLeaderboard();
+                    }}
+                  >
+                    View Leaderboard
+                  </button>
+                  <button
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                    onClick={handleResetPlayer}
+                  >
+                    Switch Player
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -871,6 +872,68 @@ export default function ThumbnailBattlePage() {
           )}
         </div>
       )}
+
+      {/* Leaderboard Modal */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <motion.div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLeaderboard(false)}
+          >
+            <motion.div
+              className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Leaderboard</h2>
+                <button
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowLeaderboard(false)}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {leaderboard.length > 0 ? (
+                <div className="space-y-3">
+                  {leaderboard.map((entry, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-muted-foreground">
+                          #{index + 1}
+                        </span>
+                        <div>
+                          <p className="font-semibold">{entry.player_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Accuracy: {entry.accuracy}%
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold">{entry.best_score}</p>
+                        <p className="text-xs text-muted-foreground">Best Score</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Loading leaderboard...</p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

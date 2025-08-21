@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 // Helper function to check if a video is a YouTube Short based on duration
 function isYouTubeShort(duration: string | null): boolean {
@@ -22,12 +22,8 @@ function isYouTubeShort(duration: string | null): boolean {
   return totalSeconds <= 60;
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100');
