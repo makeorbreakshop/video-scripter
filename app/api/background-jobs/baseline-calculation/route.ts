@@ -6,10 +6,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create supabase client inside functions to avoid build-time initialization
+function getSupabaseClient() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
 
 // Job status tracking
 interface BaselineJob {
@@ -28,6 +34,7 @@ interface BaselineJob {
 // POST: Start baseline calculation job
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
     const { exclude_shorts = true, recalculate_all = false } = await request.json();
 
     // Create job record
@@ -73,6 +80,7 @@ export async function POST(request: NextRequest) {
 // GET: Check job status
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get('job_id');
 
@@ -113,6 +121,7 @@ async function processBaselineCalculation(
   excludeShorts: boolean, 
   recalculateAll: boolean
 ) {
+  const supabase = getSupabaseClient();
   try {
     // Update job status to running
     await supabase
@@ -207,6 +216,7 @@ async function processBaselineCalculation(
 
 // Process baselines for a single channel (incremental approach)
 async function processChannelBaselines(channelId: string, excludeShorts: boolean): Promise<number> {
+  const supabase = getSupabaseClient();
   // Get all videos for this channel in chronological order
   const { data: videos, error } = await supabase
     .from('videos')

@@ -28,6 +28,28 @@ interface Battle {
   videoB: Video;
 }
 
+interface Player {
+  id: string;
+  session_id: string;
+  player_name: string;
+  current_streak: number;
+  best_streak: number;
+  total_battles: number;
+  total_wins: number;
+  attempts_today: number;
+  last_played: string;
+  created_at: string;
+}
+
+interface LeaderboardEntry {
+  player_name: string;
+  best_streak: number;
+  total_battles: number;
+  total_wins: number;
+  accuracy: number;
+  created_at: string;
+}
+
 // Format subscriber count for display
 function formatSubscriberCount(count: number): string {
   if (!count) return '0';
@@ -47,7 +69,11 @@ export default function ThumbnailBattlePage() {
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [highScore, setHighScore] = useState(0);
-  const [gameState, setGameState] = useState<'start' | 'playing' | 'revealed' | 'gameOver'>('start');
+  const [gameState, setGameState] = useState<'welcome' | 'start' | 'playing' | 'revealed' | 'gameOver'>('welcome');
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [playerName, setPlayerName] = useState('');
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<'A' | 'B' | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,17 +83,101 @@ export default function ThumbnailBattlePage() {
   const [correctPicks, setCorrectPicks] = useState(0);
 
   useEffect(() => {
-    const saved = localStorage.getItem('thumbnailBattleHighScore');
-    const games = localStorage.getItem('thumbnailBattleTotalGames');
-    const correct = localStorage.getItem('thumbnailBattleCorrectPicks');
+    // Check for existing player
+    checkExistingPlayer();
     
-    if (saved) setHighScore(parseInt(saved));
-    if (games) setTotalGames(parseInt(games));
-    if (correct) setCorrectPicks(parseInt(correct));
+    // Load leaderboard
+    fetchLeaderboard();
     
     // Load multiple battles on mount for instant transitions
     loadInitialBattles();
   }, []);
+
+  // Get or create session ID
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem('thumbnailBattleSessionId');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('thumbnailBattleSessionId', sessionId);
+    }
+    return sessionId;
+  };
+
+  // Check if player already exists
+  const checkExistingPlayer = async () => {
+    const sessionId = getSessionId();
+    try {
+      const response = await fetch(`/api/thumbnail-battle/player?session_id=${sessionId}`);
+      const data = await response.json();
+      if (data.player) {
+        setPlayer(data.player);
+        setGameState('start');
+        setScore(data.player.current_streak);
+        setHighScore(data.player.best_streak);
+      }
+    } catch (error) {
+      console.error('Error checking player:', error);
+    }
+  };
+
+  // Create new player
+  const createPlayer = async () => {
+    if (!playerName.trim()) return;
+    
+    const sessionId = getSessionId();
+    try {
+      const response = await fetch('/api/thumbnail-battle/player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          player_name: playerName.trim()
+        })
+      });
+      const data = await response.json();
+      if (data.player) {
+        setPlayer(data.player);
+        setGameState('start');
+      }
+    } catch (error) {
+      console.error('Error creating player:', error);
+    }
+  };
+
+  // Update player stats
+  const updatePlayerStats = async (updates: Partial<Player>) => {
+    if (!player) return;
+    
+    try {
+      const response = await fetch('/api/thumbnail-battle/player', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: player.session_id,
+          updates
+        })
+      });
+      const data = await response.json();
+      if (data.player) {
+        setPlayer(data.player);
+      }
+    } catch (error) {
+      console.error('Error updating player:', error);
+    }
+  };
+
+  // Fetch leaderboard
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch('/api/thumbnail-battle/leaderboard?limit=10');
+      const data = await response.json();
+      if (data.leaderboard) {
+        setLeaderboard(data.leaderboard);
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    }
+  };
 
   // Preload images for a battle
   const preloadBattleImages = (battle: Battle) => {
@@ -210,13 +320,11 @@ export default function ThumbnailBattlePage() {
     setIsCorrect(correct);
     setGameState('revealed');
     
-    // Update stats
+    // Update local stats
     const newTotal = totalGames + 1;
     const newCorrect = correctPicks + (correct ? 1 : 0);
     setTotalGames(newTotal);
     setCorrectPicks(newCorrect);
-    localStorage.setItem('thumbnailBattleTotalGames', newTotal.toString());
-    localStorage.setItem('thumbnailBattleCorrectPicks', newCorrect.toString());
 
     if (correct) {
       const newScore = score + 1;
@@ -229,24 +337,43 @@ export default function ThumbnailBattlePage() {
       
       if (newScore > highScore) {
         setHighScore(newScore);
-        localStorage.setItem('thumbnailBattleHighScore', newScore.toString());
         if (newScore > 1) {
           triggerConfetti();
         }
+      }
+      
+      // Update player stats in database
+      if (player) {
+        updatePlayerStats({
+          current_streak: newScore,
+          best_streak: Math.max(newScore, player.best_streak),
+          total_battles: player.total_battles + 1,
+          total_wins: player.total_wins + 1
+        });
       }
     } else {
       // Lose a life
       const newLives = lives - 1;
       setLives(newLives);
       
+      // Update player stats for loss
+      if (player) {
+        updatePlayerStats({
+          current_streak: 0,
+          total_battles: player.total_battles + 1,
+          attempts_today: player.attempts_today + 1
+        });
+      }
+      
       // Game over if no lives left
       if (newLives <= 0) {
         setTimeout(() => {
           setGameState('gameOver');
+          fetchLeaderboard(); // Refresh leaderboard on game over
         }, 2000);
       }
     }
-  }, [gameState, battle, score, lives, highScore, totalGames, correctPicks]);
+  }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player]);
 
   const handleNext = () => {
     // Clear results immediately for smooth transition
@@ -264,11 +391,20 @@ export default function ThumbnailBattlePage() {
     setScore(0);
     setLives(3);
     setGameState('start');
+    
+    // Reset current streak for player
+    if (player) {
+      updatePlayerStats({
+        current_streak: 0,
+        attempts_today: player.attempts_today + 1
+      });
+    }
   };
 
   const handleStartGame = () => {
     // Battle is already loaded, just transition
     setGameState('playing');
+    setShowLeaderboard(false);
   };
 
   // Keyboard shortcuts

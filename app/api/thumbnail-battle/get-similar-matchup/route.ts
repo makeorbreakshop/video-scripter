@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabase } from '@/lib/supabase-lazy';
 
 // Format subscriber count as ballpark figure
 function getBallparkSubs(count: number): number {
@@ -18,6 +13,7 @@ function getBallparkSubs(count: number): number {
 }
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     const startTime = Date.now();
     
