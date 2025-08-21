@@ -1423,7 +1423,9 @@
                         <option value="100">100+</option>
                     </select>
                     
-                    <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <div style="display: flex; gap: 10px; margin-left: auto; align-items: center;">
+                        <!-- Result count display -->
+                        <span id="resultCount" style="color: #718096; font-size: 14px; font-weight: 500;"></span>
                         <!-- Random discovery mode always enabled for serendipity -->
                         <button onclick="refreshOutliers()" style="background: #48bb78; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
                             🔄 Refresh
@@ -2584,6 +2586,13 @@
                     if (loadingMore) loadingMore.remove();
                 } else {
                     outliers = data.outliers;
+                }
+                
+                // Update result count display
+                const resultCountElement = document.getElementById('resultCount');
+                if (resultCountElement && data.total) {
+                    const formattedCount = data.total.toLocaleString();
+                    resultCountElement.textContent = `${formattedCount}+ results`;
                 }
                 
                 // Update hasMore based on response and mode

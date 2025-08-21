@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
             skipEmbeddings: false,
             skipExports: false,
             timePeriod: timePeriod,
-            maxVideos: maxVideos,
+            maxVideosPerChannel: maxVideos,  // Fixed: was 'maxVideos'
             excludeShorts: excludeShorts
           }
         };
@@ -366,7 +366,7 @@ export async function POST(request: NextRequest) {
         skipEmbeddings: false,
         skipExports: false,
         timePeriod: timePeriod,
-        maxVideos: maxVideos,
+        maxVideosPerChannel: maxVideos,  // Fixed: was 'maxVideos'
         excludeShorts: excludeShorts
       }
     };

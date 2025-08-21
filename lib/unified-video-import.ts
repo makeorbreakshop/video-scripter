@@ -17,7 +17,7 @@ import { TemporalBaselineProcessor } from './temporal-baseline-processor.ts';
 import { llmFormatClassificationService } from './llm-format-classification-service.ts';
 import { topicDetectionService } from './topic-detection-service.ts';
 import { retryPineconeOperation, retrySupabaseOperation } from './utils/retry-with-backoff.ts';
-import { BERTopicClassificationService } from './bertopic-classification-service.ts';
+// import { BERTopicClassificationService } from './bertopic-classification-service.ts';
 import { generateVideoSummaries, generateSummaryEmbeddings } from './unified-import-summary-integration.ts';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -39,10 +39,10 @@ export interface VideoImportRequest {
   options?: {
     skipEmbeddings?: boolean;
     skipExports?: boolean;
-    skipThumbnailEmbeddings?: boolean;
+    skipThumbnailEmbeddings?: boolean;  // Default: true (skip for speed)
     skipTitleEmbeddings?: boolean;
     skipClassification?: boolean;
-    skipSummaries?: boolean;
+    skipSummaries?: boolean;  // Default: true (skip for speed)
     summaryModel?: string;
     batchSize?: number;
     forceReEmbed?: boolean;
@@ -120,7 +120,7 @@ export class VideoImportService {
   // Job ID for quota tracking
   private jobId?: string;
   // BERTopic classification service
-  private bertopicService: BERTopicClassificationService;
+  // private bertopicService: BERTopicClassificationService;
 
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
@@ -135,8 +135,8 @@ export class VideoImportService {
       throw new Error('YOUTUBE_API_KEY environment variable is required');
     }
     
-    // Initialize BERTopic service
-    this.bertopicService = new BERTopicClassificationService();
+    // Initialize BERTopic service (disabled for production)
+    // this.bertopicService = new BERTopicClassificationService();
     
     // Initialize fallback system if backup key exists (async)
     this.initializeFallbackSystem();
@@ -199,6 +199,20 @@ export class VideoImportService {
    */
   async processVideos(request: VideoImportRequest): Promise<VideoImportResult> {
     console.log(`🚀 Starting unified video import for source: ${request.source}`);
+    
+    // Apply defaults for performance optimization
+    if (!request.options) {
+      request.options = {};
+    }
+    // Default to skipping expensive operations for speed
+    if (request.options.skipThumbnailEmbeddings === undefined) {
+      request.options.skipThumbnailEmbeddings = true; // Skip Replicate CLIP by default
+    }
+    if (request.options.skipSummaries === undefined) {
+      request.options.skipSummaries = true; // Skip LLM summaries by default
+    }
+    
+    console.log(`⚡ Performance settings: skipThumbnails=${request.options.skipThumbnailEmbeddings}, skipSummaries=${request.options.skipSummaries}`);
     
     // Ensure fallback system is initialized
     await this.initializeFallbackSystem();
@@ -481,7 +495,8 @@ export class VideoImportService {
     videos: VideoMetadata[], 
     options?: VideoImportRequest['options']
   ): Promise<EmbeddingResults> {
-    console.log(`🔄 Generating embeddings for ${videos.length} videos`);
+    console.log(`🔄 Starting embedding generation for ${videos.length} videos`);
+    console.log(`📋 Settings: skipTitles=${options?.skipTitleEmbeddings || false}, skipThumbnails=${options?.skipThumbnailEmbeddings || false}`);
     
     const results: EmbeddingResults = {
       titleEmbeddings: [],
@@ -495,6 +510,9 @@ export class VideoImportService {
     if (!options?.skipTitleEmbeddings) {
       const titlePromise = (async () => {
         try {
+          console.log(`🚀 Starting title embedding generation for ${videos.length} videos...`);
+          const startTime = Date.now();
+          
           const titles = videos.map(v => v.title);
           const titleEmbeddings = await batchGenerateTitleEmbeddings(titles, this.openaiApiKey);
           
@@ -505,7 +523,8 @@ export class VideoImportService {
             error: titleEmbeddings[index] ? undefined : 'Failed to generate title embedding'
           }));
           
-          console.log(`✅ Generated ${results.titleEmbeddings.filter(e => e.success).length} title embeddings`);
+          const duration = Math.round((Date.now() - startTime) / 1000);
+          console.log(`✅ Generated ${results.titleEmbeddings.filter(e => e.success).length} title embeddings in ${duration} seconds`);
         } catch (error) {
           console.error('❌ Title embedding generation failed:', error);
           // Mark all as failed
@@ -892,12 +911,17 @@ export class VideoImportService {
           console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
         }
         
-        // Add delay between chunks to avoid triggering rate limits
+        // Add small delay between chunks to avoid triggering rate limits
         if (i + chunkSize < videos.length) {
-          // Fixed 2 second delay between chunks to avoid Cloudflare
-          const delay = 2000;
-          console.log(`⏳ Waiting ${delay}ms before next chunk...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          // Dynamic delay based on chunk success/failure
+          // Only add delay if we're seeing errors or for very large imports
+          const needsDelay = failureCount > 0 || videos.length > 1000;
+          if (needsDelay) {
+            const delay = failureCount > 0 ? 2000 : 500; // Longer delay if errors occurred
+            console.log(`⏳ Waiting ${delay}ms before next chunk...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+          // No delay for smaller successful imports
         }
         
       } catch (error) {
@@ -1856,10 +1880,10 @@ export class VideoImportService {
       }
       
       // Step 2: Topic Classification using BERTopic model from August 1st
-      console.log(`🎯 Classifying video topics using BERTopic model...`);
+      console.log(`🎯 BERTopic classification disabled for production deployment`);
       
-      // Initialize BERTopic service
-      await this.bertopicService.initialize();
+      // Initialize BERTopic service (disabled for production)
+      // await this.bertopicService.initialize();
       
       // Process videos that have successful embeddings
       // Use blended embeddings when both title and summary are available
@@ -1901,8 +1925,9 @@ export class VideoImportService {
         for (let i = 0; i < videosWithEmbeddings.length; i += topicBatchSize) {
           const batch = videosWithEmbeddings.slice(i, i + topicBatchSize);
           
-          // Classify topics for batch using new BERTopic service
-          const topicAssignments = await this.bertopicService.classifyVideos(batch);
+          // Classify topics for batch using new BERTopic service (disabled for production)
+          // const topicAssignments = await this.bertopicService.classifyVideos(batch);
+          const topicAssignments: any[] = []; // Empty array for production
           
           // Store topic assignments in database
           for (const { id, assignment } of topicAssignments) {

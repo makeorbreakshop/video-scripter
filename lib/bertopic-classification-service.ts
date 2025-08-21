@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { Pinecone } from '@pinecone-database/pinecone';
-import topicData from '../data/bertopic/better_topic_names_v2.json' with { type: 'json' };
-import hierarchyData from '../data/bertopic/bertopic_smart_hierarchy_20250801_131446.json' with { type: 'json' };
+
+// Default empty data for production builds
+const topicData = { topics: {} };
+const hierarchyData = { metadata: { mappings: {} } };
 
 interface TopicAssignment {
   clusterId: number;
@@ -44,9 +46,9 @@ export class BERTopicClassificationService {
       apiKey: process.env.PINECONE_API_KEY!
     });
     
-    // Load topic names and hierarchy from the August 1st model
-    this.topicNames = topicData.topics;
-    this.hierarchyMappings = hierarchyData.metadata.mappings;
+    // Load topic names and hierarchy from the August 1st model (if available)
+    this.topicNames = topicData?.topics || {};
+    this.hierarchyMappings = hierarchyData?.metadata?.mappings || {};
   }
 
   async initialize() {

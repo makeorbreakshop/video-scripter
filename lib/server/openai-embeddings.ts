@@ -99,9 +99,16 @@ export async function batchCreateEmbeddings(
 
   const allEmbeddings: number[][] = [];
   
+  console.log(`📊 Starting embedding generation: ${batches.length} batches (${texts.length} total items)`);
+  
   // Process each batch sequentially to avoid rate limits
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
+    const processedSoFar = i * batchSize;
+    const percentComplete = Math.round((processedSoFar / texts.length) * 100);
+    
+    console.log(`⏳ Processing batch ${i + 1}/${batches.length} (${processedSoFar}/${texts.length} items, ${percentComplete}% complete)...`);
+    
     try {
       
       // Minimal delay to avoid overwhelming the API
@@ -112,6 +119,8 @@ export async function batchCreateEmbeddings(
       // Process each batch as a whole instead of one text at a time
       const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
       allEmbeddings.push(...batchEmbeddings);
+      
+      console.log(`✅ Batch ${i + 1}/${batches.length} complete (${allEmbeddings.length}/${texts.length} embeddings generated)`);
       
     } catch (error) {
       console.error(`🚨 Error processing batch ${i + 1}:`, error);
@@ -124,6 +133,7 @@ export async function batchCreateEmbeddings(
         console.log(`🔄 Retrying OpenAI batch ${i + 1}/${batches.length}`);
         const batchEmbeddings = await createEmbeddings(batch, apiKey, model);
         allEmbeddings.push(...batchEmbeddings);
+        console.log(`✅ Retry successful for batch ${i + 1}/${batches.length}`);
       } catch (retryError) {
         console.error(`❌ OpenAI batch ${i + 1}/${batches.length} failed after retry:`, retryError.message || retryError);
         
@@ -136,5 +146,7 @@ export async function batchCreateEmbeddings(
     }
   }
 
+  console.log(`🎉 Embedding generation complete: ${allEmbeddings.length}/${texts.length} embeddings generated successfully`);
+  
   return allEmbeddings;
 } 

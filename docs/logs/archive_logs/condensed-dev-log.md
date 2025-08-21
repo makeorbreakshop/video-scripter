@@ -1398,3 +1398,29 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - Discovered tutorial pacing as #1 complaint, 2021 Fusion 360 revolt triggering 2022 universal cloud rejection
    - Fixed Idea Heist randomization: PostgreSQL RPC with seeded random now accesses full 43K videos (was showing only 100)
    - Implemented batch processing to overcome 256KB read limits on 3.6MB comment files for deep analysis
+
+---
+
+## August 20, 2025
+
+11. **Institutional Content Filtering via Centralized Channels Table**
+   - Diagnosed issue: NBC News, FOX, DW News appearing in Idea Heist despite institutional filtering (0 of 252 videos marked)
+   - Created centralized `channels` table consolidating 3,506 unique channels from scattered metadata (single source of truth)
+   - Architecture: channel-level institutional marking (10 channels) vs marking thousands of individual videos
+   - Performance: Channel filtering via LEFT JOIN, comprehensive indexes (institutional, discovery_source, subscriber_count)
+   - Fixed marking API: Added verification queries, separate INSERT/UPDATE logic preventing silent failures
+   - Successfully filtered 13 institutional channels including Fox 11 Los Angeles after debugging upsert issues
+
+12. **YouTube API Channel Enrichment Pipeline**
+   - Enriched ALL 3,504 channels with YouTube API metadata (99.94% success rate, only 2 invalid IDs failed)
+   - Cost efficiency: 71 API calls for 3,506 channels (0.7% of daily quota) using 50 channels/batch
+   - Data captured: custom URLs (@handles), keywords, topic categories, upload playlist IDs, COPPA flags, localizations
+   - Fixed Supabase 1000-row pagination limit in enrichment script to process all channels
+   - Added database columns: custom_url, default_language, uploads_playlist_id, keywords, made_for_kids, privacy_status
+   - Stored rich metadata: topic IDs, banner URLs, 20+ language localizations in JSONB field
+
+13. **Idea Heist UI Enhancements**
+   - Added total count display on filter bar showing "XXX results" (updates dynamically with filters)
+   - Fixed channel_id undefined bug: Added channel_id to OutlierVideo interface and API response
+   - Corrected total count in randomized mode: Created `get_random_outlier_videos_with_data` RPC with accurate LEFT JOIN counting
+   - Count now properly reflects institutional filtering: ~300 non-institutional videos vs incorrect 46,000+
