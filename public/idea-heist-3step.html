@@ -73,15 +73,6 @@
             transform: translateY(-2px);
         }
         
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.3;
-            }
-        }
-        
         .debug-header {
             background: #111;
             padding: 15px;
@@ -1432,12 +1423,7 @@
                         <option value="100">100+</option>
                     </select>
                     
-                    <div style="display: flex; gap: 20px; margin-left: auto; align-items: center;">
-                        <!-- Total count display -->
-                        <span id="total-count" style="color: #6b7280; font-size: 14px;">
-                            <!-- Will be populated dynamically -->
-                        </span>
-                        
+                    <div style="display: flex; gap: 10px; margin-left: auto;">
                         <!-- Random discovery mode always enabled for serendipity -->
                         <button onclick="refreshOutliers()" style="background: #48bb78; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
                             🔄 Refresh
@@ -1595,7 +1581,6 @@
         let selectedChannel = null;
         let channelStyle = null;
         let outliers = [];
-        let totalOutliersCount = 0;
         let currentPage = 0;
         let isLoading = false;
         let hasMore = true;
@@ -2599,7 +2584,6 @@
                     if (loadingMore) loadingMore.remove();
                 } else {
                     outliers = data.outliers;
-                    totalOutliersCount = data.total || 0; // Store total count
                 }
                 
                 // Update hasMore based on response and mode
@@ -2611,7 +2595,7 @@
                     hasMore = data.hasMore;
                 }
                 
-                displayOutliers(outliers, append, totalOutliersCount);
+                displayOutliers(outliers, append);
                 
             } catch (error) {
                 if (!append) {
@@ -2647,7 +2631,7 @@
             addDebugEntry('info', `🔄 Refreshed content in ${mode} mode with new seed`);
         }
         
-        function displayOutliers(allOutliers, append = false, totalCount = 0) {
+        function displayOutliers(allOutliers, append = false) {
             const container = document.getElementById('outliers-container');
             
             if (!append && (!allOutliers || allOutliers.length === 0)) {
@@ -2655,17 +2639,8 @@
                 return;
             }
             
-            // Update simple count display
-            if (totalCount > 0 && !append) {
-                const countDisplay = document.getElementById('total-count');
-                if (countDisplay) {
-                    countDisplay.innerHTML = `${totalCount.toLocaleString()} results`;
-                }
-            }
-            
             // Get existing grid or create new one
             let grid = container.querySelector('.outliers-grid');
-            
             if (!grid || !append) {
                 grid = document.createElement('div');
                 grid.className = 'outliers-grid';
