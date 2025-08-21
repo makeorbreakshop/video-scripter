@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
+  const supabase = getSupabase();
   console.log('📋 Pattern List API called');
   
   try {

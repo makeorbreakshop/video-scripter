@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 /**
  * API route for retrieving processed videos from the vector database
@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase';
  * }
  */
 export async function GET(request: Request) {
+  const supabase = getSupabase();
   try {
     // Get user ID from query params, use default if not provided
     const { searchParams } = new URL(request.url);

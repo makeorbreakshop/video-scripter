@@ -5,9 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PatternDiscoveryService } from '@/lib/pattern-discovery-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   const startTime = Date.now();
   
   try {

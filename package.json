@@ -159,6 +159,7 @@
     "eslint-config-next": "^15.3.4",
     "eventsource": "^4.0.0",
     "identity-obj-proxy": "^3.0.0",
+    "ignore-loader": "^0.1.2",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
     "kill-port": "^2.0.1",

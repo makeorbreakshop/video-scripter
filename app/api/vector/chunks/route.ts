@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { isPgvectorEnabled } from '@/lib/env-config';
 
 /**
@@ -18,6 +18,7 @@ import { isPgvectorEnabled } from '@/lib/env-config';
  * }
  */
 export async function GET(request: Request) {
+  const supabase = getSupabase();
   try {
     // Check if pgvector is enabled
     if (!isPgvectorEnabled()) {

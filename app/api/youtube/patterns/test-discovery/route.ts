@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { PatternDiscoveryService } from '@/lib/pattern-discovery-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     console.log('🧪 Testing pattern discovery...');
     

@@ -4,9 +4,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Use the SQL function to get distinct dates
     const { data, error } = await supabase

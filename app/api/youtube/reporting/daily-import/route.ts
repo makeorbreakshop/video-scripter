@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseYouTubeReports } from '@/lib/youtube-csv-parser';
 import { AnalyticsDbService } from '@/lib/analytics-db-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 interface DailyImportResponse {
   success: boolean;
@@ -282,6 +282,7 @@ function getTargetDate(targetDate?: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   const startTime = Date.now();
   
   const response: DailyImportResponse = {
@@ -494,6 +495,7 @@ export async function POST(request: NextRequest) {
  * GET endpoint to check import status and get recent import history
  */
 export async function GET() {
+  const supabase = getSupabase();
   try {
     const supabaseClient = supabase;
     

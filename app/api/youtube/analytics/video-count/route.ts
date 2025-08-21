@@ -4,9 +4,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Get count of videos that match the Analytics API filtering criteria
     const { count, error } = await supabase

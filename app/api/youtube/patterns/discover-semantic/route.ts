@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { SemanticPatternDiscovery } from '@/lib/semantic-pattern-discovery';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     // Use imported supabase client
     

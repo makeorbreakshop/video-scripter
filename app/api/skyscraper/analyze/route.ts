@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { createEmbeddings } from '@/lib/server/openai-embeddings';
 import { getOpenAIApiKey, isPgvectorEnabled } from '@/lib/env-config';
 
@@ -25,6 +25,7 @@ import { getOpenAIApiKey, isPgvectorEnabled } from '@/lib/env-config';
  * }
  */
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     // Check if pgvector is enabled (required for embeddings)
     if (!isPgvectorEnabled()) {

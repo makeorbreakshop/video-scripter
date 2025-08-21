@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { openai } from '@/lib/openai-client';
 
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   console.log('🔮 Pattern Prediction API called');
   
   try {

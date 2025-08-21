@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { youtubeAnalyticsDailyService } from '@/lib/youtube-analytics-daily';
 import { AnalyticsDbService } from '@/lib/analytics-db-service';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 interface AnalyticsBackfillState {
   isRunning: boolean;
@@ -203,6 +203,7 @@ async function runAnalyticsBackfill(
  * POST: Start Analytics API backfill process
  */
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { daysBack, accessToken, refreshToken } = await request.json();
     
@@ -250,6 +251,7 @@ export async function POST(request: NextRequest) {
  * GET: Get current Analytics API backfill status
  */
 export async function GET() {
+  const supabase = getSupabase();
   return NextResponse.json({
     success: true,
     ...analyticsBackfillState
@@ -260,6 +262,7 @@ export async function GET() {
  * DELETE: Stop Analytics API backfill process
  */
 export async function DELETE() {
+  const supabase = getSupabase();
   try {
     analyticsBackfillState.isRunning = false;
     

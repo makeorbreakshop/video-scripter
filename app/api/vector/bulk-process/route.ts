@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { processYoutubeVideo } from '@/lib/video-processor';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { isPgvectorEnabled } from '@/lib/env-config';
 
 interface ProcessResult {
@@ -111,6 +111,7 @@ async function processVideo(videoUrl: string, userId: string, chunkingMethod: st
 }
 
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     // Check if pgvector is enabled
     if (!isPgvectorEnabled()) {

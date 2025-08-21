@@ -4,19 +4,19 @@ import { getSupabase } from '@/lib/supabase-lazy';
 export async function GET(request: Request) {
   const supabase = getSupabase();
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type') || 'best_streak';
+  const type = searchParams.get('type') || 'best_score';
   const limit = parseInt(searchParams.get('limit') || '10');
 
   try {
     let query = supabase
       .from('thumbnail_battle_players')
-      .select('player_name, best_streak, total_battles, total_wins, created_at');
+      .select('player_name, best_score, total_battles, total_wins, created_at');
 
     // Different leaderboard types
     switch (type) {
-      case 'best_streak':
+      case 'best_score':
         query = query
-          .order('best_streak', { ascending: false })
+          .order('best_score', { ascending: false })
           .limit(limit);
         break;
       
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         today.setHours(0, 0, 0, 0);
         query = query
           .gte('last_played', today.toISOString())
-          .order('best_streak', { ascending: false })
+          .order('best_score', { ascending: false })
           .limit(limit);
         break;
     }

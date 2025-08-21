@@ -4,9 +4,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { multiChannelShelvesDiscovery } from '@/lib/multi-channel-shelves-discovery';
 import { youtubeDiscoveryAPI } from '@/lib/youtube-discovery-api';
-import { supabase } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const body = await request.json();
     const { 
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     // Get statistics for multi-channel shelves discoveries
     const { data: shelfDiscoveries, error } = await supabase

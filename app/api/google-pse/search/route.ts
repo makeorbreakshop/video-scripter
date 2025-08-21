@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { googlePSE } from '@/lib/google-pse-service';
-import { supabase } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { quotaTracker } from '@/lib/youtube-quota-tracker';
 
 // Extended interface for enriched channel data
@@ -279,6 +279,7 @@ async function applyFilters(channels: EnrichedChannel[], apiKey: string): Promis
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const { query, includeDebug } = await request.json();
 

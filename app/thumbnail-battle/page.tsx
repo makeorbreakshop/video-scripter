@@ -32,8 +32,8 @@ interface Player {
   id: string;
   session_id: string;
   player_name: string;
-  current_streak: number;
-  best_streak: number;
+  current_score: number;
+  best_score: number;
   total_battles: number;
   total_wins: number;
   attempts_today: number;
@@ -43,7 +43,7 @@ interface Player {
 
 interface LeaderboardEntry {
   player_name: string;
-  best_streak: number;
+  best_score: number;
   total_battles: number;
   total_wins: number;
   accuracy: number;
@@ -73,7 +73,7 @@ export default function ThumbnailBattlePage() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  // Leaderboard only shown on game over screen
   const [selectedVideo, setSelectedVideo] = useState<'A' | 'B' | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,14 +83,13 @@ export default function ThumbnailBattlePage() {
   const [correctPicks, setCorrectPicks] = useState(0);
 
   useEffect(() => {
+    // Start loading battles immediately in background
+    loadInitialBattles();
+    
     // Check for existing player
     checkExistingPlayer();
     
-    // Load leaderboard
-    fetchLeaderboard();
-    
-    // Load multiple battles on mount for instant transitions
-    loadInitialBattles();
+    // Leaderboard loaded only on game over
   }, []);
 
   // Get or create session ID
@@ -112,8 +111,8 @@ export default function ThumbnailBattlePage() {
       if (data.player) {
         setPlayer(data.player);
         setGameState('start');
-        setScore(data.player.current_streak);
-        setHighScore(data.player.best_streak);
+        setScore(data.player.current_score);
+        setHighScore(data.player.best_score);
       }
     } catch (error) {
       console.error('Error checking player:', error);
@@ -216,15 +215,14 @@ export default function ThumbnailBattlePage() {
     return validMatchups;
   };
 
-  // Load initial battles on mount
+  // Load initial battles on mount (runs in background)
   const loadInitialBattles = async () => {
-    setLoading(true);
+    // Don't show loading spinner since this runs in background
     const matchups = await fetchMatchups(5);
     if (matchups.length > 0) {
       setBattle(matchups[0]);
       setBattleQueue(matchups.slice(1));
     }
-    setLoading(false);
   };
 
   // Get next battle from queue or fetch new ones
@@ -345,8 +343,8 @@ export default function ThumbnailBattlePage() {
       // Update player stats in database
       if (player) {
         updatePlayerStats({
-          current_streak: newScore,
-          best_streak: Math.max(newScore, player.best_streak),
+          current_score: newScore,
+          best_score: Math.max(newScore, player.best_score),
           total_battles: player.total_battles + 1,
           total_wins: player.total_wins + 1
         });
@@ -359,7 +357,7 @@ export default function ThumbnailBattlePage() {
       // Update player stats for loss
       if (player) {
         updatePlayerStats({
-          current_streak: 0,
+          current_score: 0,
           total_battles: player.total_battles + 1,
           attempts_today: player.attempts_today + 1
         });
@@ -404,7 +402,6 @@ export default function ThumbnailBattlePage() {
   const handleStartGame = () => {
     // Battle is already loaded, just transition
     setGameState('playing');
-    setShowLeaderboard(false);
   };
 
   // Keyboard shortcuts
@@ -440,14 +437,6 @@ export default function ThumbnailBattlePage() {
 
   const accuracy = totalGames > 0 ? Math.round((correctPicks / totalGames) * 100) : 0;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
 
   if (gameState === 'gameOver') {
     return (
@@ -469,6 +458,9 @@ export default function ThumbnailBattlePage() {
             </motion.div>
             
             <h1 className="text-3xl font-semibold mb-2">Game Over</h1>
+            {player && (
+              <p className="text-lg mb-2">{player.player_name}</p>
+            )}
             <p className="text-muted-foreground mb-8">Great effort! Ready for another round?</p>
             
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -478,8 +470,8 @@ export default function ThumbnailBattlePage() {
               </div>
               
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">High Score</span>
-                <span className="text-2xl font-bold">{highScore}</span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Best Score</span>
+                <span className="text-2xl font-bold">{player?.best_score || highScore}</span>
               </div>
 
               <div className="bg-secondary/50 rounded-lg p-4">
@@ -489,9 +481,18 @@ export default function ThumbnailBattlePage() {
 
               <div className="bg-secondary/50 rounded-lg p-4">
                 <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Total Games</span>
-                <span className="text-2xl font-bold">{totalGames}</span>
+                <span className="text-2xl font-bold">{player?.total_battles || totalGames}</span>
               </div>
             </div>
+            
+            {/* Show position on leaderboard if they made it */}
+            {score >= 5 && (
+              <div className="mb-6 p-4 bg-[#00ff00]/10 border border-[#00ff00]/20 rounded-lg">
+                <p className="text-sm text-[#00ff00]">
+                  {score > (player?.best_score || 0) ? '🎆 New Personal Best!' : 'Nice score!'}
+                </p>
+              </div>
+            )}
             
             <button 
               className="w-full bg-[#00ff00] text-black rounded-lg py-3 px-6 font-semibold hover:bg-[#00ff00]/90 transition-colors flex items-center justify-center gap-2"
@@ -576,8 +577,8 @@ export default function ThumbnailBattlePage() {
                 
                 <motion.div
                   className="text-center"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
                   <div className="text-3xl font-bold text-foreground mb-1">
@@ -619,9 +620,16 @@ export default function ThumbnailBattlePage() {
           >
             <div className="max-w-7xl mx-auto px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Axe className="w-6 h-6 text-[#00ff00]" />
-                  <span className="text-lg font-semibold">Thumbnail Battle</span>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3">
+                    <Axe className="w-6 h-6 text-[#00ff00]" />
+                    <span className="text-lg font-semibold">Thumbnail Battle</span>
+                  </div>
+                  {player && (
+                    <div className="text-sm text-muted-foreground">
+                      Playing as <span className="font-semibold text-foreground">{player.player_name}</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-4">
@@ -633,6 +641,24 @@ export default function ThumbnailBattlePage() {
                       {score}
                     </span>
                   </div>
+                  {player && player.best_score > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
+                      <span className="text-xs uppercase tracking-wider">Best</span>
+                      <span className="font-semibold">
+                        {player.best_score}
+                      </span>
+                    </div>
+                  )}
+                  {score > 0 && player && score > player.best_score && (
+                    <motion.div
+                      className="bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded text-xs font-medium"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500 }}
+                    >
+                      NEW BEST!
+                    </motion.div>
+                  )}
                   <div className="flex items-center gap-1">
                     {[...Array(3)].map((_, i) => (
                       <Heart 
@@ -654,39 +680,96 @@ export default function ThumbnailBattlePage() {
 
       {/* Main content area */}
       <AnimatePresence mode="wait">
-        {gameState === 'start' ? (
-          // Start screen content
+        {gameState === 'welcome' ? (
+          // Welcome screen with name entry
+          <motion.div
+            key="welcome"
+            className="relative min-h-screen flex items-center justify-center p-6"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="max-w-md w-full">
+              <motion.div
+                className="text-center mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h1 className="text-5xl font-bold mb-2">Thumbnail Battle</h1>
+                <p className="text-lg text-muted-foreground">Can you spot the winner?</p>
+              </motion.div>
+
+              <motion.div
+                className="bg-card rounded-lg border border-border p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <h2 className="text-xl font-semibold mb-4">Welcome! What should we call you?</h2>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && createPlayer()}
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#00ff00] mb-4"
+                  maxLength={30}
+                  autoFocus
+                />
+                <button
+                  className="w-full bg-[#00ff00] text-black rounded-lg py-3 px-6 font-semibold hover:bg-[#00ff00]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  onClick={createPlayer}
+                  disabled={!playerName.trim()}
+                >
+                  {battleQueue.length > 0 ? (
+                    <>Start Playing</>
+                  ) : (
+                    <>Loading game...</>
+                  )}
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+        ) : gameState === 'start' ? (
+          // Start screen
           <motion.div
             key="start"
             className="relative"
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Remove background thumbnails - we don't want them on start screen */}
-
-            {/* Start screen content */}
             <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
-              <motion.div
-                className="text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h1 className="text-5xl font-bold mb-2">
-                  Thumbnail Battle
-                </h1>
-                
-                <p className="text-lg text-muted-foreground mb-6">
-                  Can you spot the winner?
-                </p>
-
-                <button
-                  className="bg-[#00ff00] text-black rounded-lg py-3 px-10 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors"
-                  onClick={handleStartGame}
+              <div className="max-w-4xl w-full">
+                <motion.div
+                  className="text-center mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  Start
-                </button>
-              </motion.div>
+                  <h1 className="text-5xl font-bold mb-2">Thumbnail Battle</h1>
+                  {player && (
+                    <p className="text-lg text-muted-foreground mb-2">
+                      Welcome back, {player.player_name}!
+                    </p>
+                  )}
+                  {player && player.best_score > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Your best score: {player.best_score}
+                    </p>
+                  )}
+                </motion.div>
+
+                {/* Just the button, no card */}
+                <div className="flex justify-center">
+                  <button
+                    className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors disabled:opacity-50"
+                    onClick={handleStartGame}
+                    disabled={!battle}
+                  >
+                    {battle ? 'Start Game' : 'Loading...'}
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         ) : (
@@ -725,24 +808,22 @@ export default function ThumbnailBattlePage() {
 
             {/* Video comparison grid - centered and larger */}
             <div className="grid md:grid-cols-2 gap-12 max-w-[1400px] w-full mx-auto mb-8 mt-8 px-4 lg:px-8">
-              <AnimatePresence mode="wait">
-                {battle && (
-                  <>
-                    <VideoCard 
-                      key={`${battle.videoA.id}-A`}
-                      video={battle.videoA} 
-                      side="A" 
-                      onClick={() => handleSelection('A')}
-                    />
-                    <VideoCard 
-                      key={`${battle.videoB.id}-B`}
-                      video={battle.videoB} 
-                      side="B" 
-                      onClick={() => handleSelection('B')}
-                    />
-                  </>
-                )}
-              </AnimatePresence>
+              {battle && (
+                <>
+                  <VideoCard 
+                    key={`${battle.videoA.id}-A`}
+                    video={battle.videoA} 
+                    side="A" 
+                    onClick={() => handleSelection('A')}
+                  />
+                  <VideoCard 
+                    key={`${battle.videoB.id}-B`}
+                    video={battle.videoB} 
+                    side="B" 
+                    onClick={() => handleSelection('B')}
+                  />
+                </>
+              )}
             </div>
 
             {/* Next button - show for both correct and incorrect if lives remain */}
@@ -750,9 +831,9 @@ export default function ThumbnailBattlePage() {
               {gameState === 'revealed' && (
                 <motion.div
                   className="text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
                   {(isCorrect || lives > 0) && (
                     <button 

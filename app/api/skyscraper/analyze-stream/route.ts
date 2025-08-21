@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { anthropic } from '@ai-sdk/anthropic';
 import { streamText } from 'ai';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 /**
  * API route for streaming Skyscraper Analysis from Claude
@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
  * }
  */
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     // Parse request body
     const { videoId, userId, modelId = 'claude-3-7-sonnet-20250219' } = await request.json();

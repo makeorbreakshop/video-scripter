@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { getOpenAIApiKey, isPgvectorEnabled } from '@/lib/env-config';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -95,6 +95,7 @@ function transformAnalysisData(data: any) {
  * }
  */
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     // Check if necessary configurations are available
     if (!ANTHROPIC_API_KEY) {

@@ -2,11 +2,12 @@
 // Provides analytics and metrics for the discovery system
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { youtubeDiscoveryAPI } from '@/lib/youtube-discovery-api';
 import { subscriptionCrawler } from '@/lib/subscription-crawler';
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || '7'; // days
@@ -135,6 +136,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const body = await request.json();
     const { action } = body;

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { processYoutubeVideo } from '@/lib/video-processor';
 import { extractYouTubeId } from '@/lib/utils';
 import { isPgvectorEnabled } from '@/lib/env-config';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 // Add these types at the top of the file
 interface VideoChunk {
@@ -47,6 +47,7 @@ interface ProcessingResult {
  * }
  */
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     // Check if pgvector is enabled
     if (!isPgvectorEnabled()) {

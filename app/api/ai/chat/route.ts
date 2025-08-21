@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { Anthropic } from '@anthropic-ai/sdk';
-import { supabase } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-client';
 import { createEmbeddings } from '@/lib/server/openai-embeddings';
 import { hybridSearchVideoContent } from '@/lib/vector-db-service';
 import { 
@@ -109,6 +109,7 @@ function getVideoTitle(videoId: string): string | null {
  * POST /api/ai/chat
  */
 export async function POST(request: Request) {
+  const supabase = getSupabaseClient();
   try {
     // Check if vector database is enabled
     if (!isPgvectorEnabled()) {
