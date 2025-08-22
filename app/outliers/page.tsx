@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Database, RefreshCw, Lock, X, Sparkles } from 'lucide-react';
+import { CheckCircle, TrendingUp, Database, RefreshCw, Lock, Sparkles, X } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -15,17 +15,9 @@ import {
 export default function OutliersPage() {
   const [email, setEmail] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showEmailCapture, setShowEmailCapture] = useState(false);
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<any[]>([]);
 
-  // Email capture popup after 8 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowEmailCapture(true);
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Fetch real video data with actual performance scores
   useEffect(() => {
@@ -220,30 +212,30 @@ export default function OutliersPage() {
             <h2 className="text-3xl font-bold mb-6 text-white">Why I Made This</h2>
             <div className="space-y-4 text-gray-400">
               <p>
-                I run <a href="https://www.youtube.com/@MakeorBreakShop" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 underline">Make or Break Shop</a> on YouTube. 
-                Like you, I was taking courses trying to crack the code on titles and thumbnails. 
-                Every single course had the same advice: "Study what's already working."
+                I run <a href="https://www.youtube.com/@MakeorBreakShop" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 underline">Make or Break Shop</a> on YouTube - 
+                I review laser engravers, do DIY projects, that kind of stuff. YouTube drives my entire business, 
+                so I know firsthand how much titles and thumbnails matter.
               </p>
               <p>
-                Great advice. Terrible execution. The existing tools? They showed me maybe 50 videos, 
-                charged $97/month, and their "outlier detection" was basically useless. 
-                I tried building spreadsheets manually, but after weeks of work I had maybe 
-                100 videos documented. At that rate, I'd need years to spot real patterns.
+                Here's what I learned: successful channels don't guess. They study outliers - 
+                videos that randomly blow up and get 10x or 50x more views than normal. 
+                That's their secret. Find the outliers, understand why they worked, replicate the patterns.
               </p>
               <p>
-                So I did what any reasonable person would do: I built my own system. 
-                Started small, but it grew into something powerful. Now it automatically imports 
-                tens of thousands of new videos every single day, analyzing what makes them 
-                outperform their channel's average by 10x, 20x, even 50x.
+                The problem? Every tool that finds outliers costs like $97+ per month. Forever. 
+                And honestly, most of them suck. They show you maybe 50 videos and call it a day.
+                I tried tracking them manually in spreadsheets but that was a nightmare - took forever 
+                and I barely scratched the surface.
               </p>
               <p>
-                The database keeps growing - new viral videos, new patterns, new insights. 
-                Every day. Automatically. And I realized: why should this advantage be mine alone?
+                So I built my own tool. Started simple but now it's importing tens of thousands 
+                of new videos every day, automatically flagging the outliers. Real outliers - 
+                videos getting 20x, 50x, even 100x their channel's normal views.
               </p>
               <p className="font-semibold text-white">
-                What started as solving my own problem became the tool I wish existed when 
-                I was struggling. Now you can skip the months of manual work and jump straight 
-                to knowing what actually works.
+                Look, I built this because I needed it. But once I had it working, I figured 
+                why not share it? One-time payment, no monthly BS, and you get access to 
+                the same outlier data that's been growing my channel.
               </p>
             </div>
           </Card>
@@ -606,62 +598,6 @@ export default function OutliersPage() {
         </motion.section>
       </div>
 
-      {/* Email Capture Popup */}
-      <AnimatePresence>
-        {showEmailCapture && !email && (
-          <motion.div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <Card className="bg-black/90 border-gray-800 p-6 max-w-md w-full relative shadow-[0_0_40px_rgba(0,255,0,0.2)]">
-                <button 
-                  onClick={() => setShowEmailCapture(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                
-                <Sparkles className="w-8 h-8 text-[#00ff00] mb-3 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                
-                <h3 className="text-2xl font-bold mb-2 text-white">
-                  Get 10 Free Viral Video Examples
-                </h3>
-                <p className="text-gray-400 mb-4">
-                  See the exact titles and thumbnails that got millions of views.
-                </p>
-                
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-md text-foreground placeholder-gray-500 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00ff00] focus:border-transparent transition-all duration-200"
-                />
-                
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button 
-                    onClick={() => setShowEmailCapture(false)}
-                    className="w-full bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
-                  >
-                    Send My Examples
-                  </Button>
-                </motion.div>
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  No spam. Unsubscribe anytime.
-                </p>
-              </Card>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

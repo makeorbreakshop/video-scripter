@@ -168,18 +168,22 @@ export default function ThumbnailBattlePage() {
     // Load preview immediately for welcome screen (FAST)
     loadWelcomePreview();
     
-    // Defer heavy operations to next tick to allow initial render
-    setTimeout(() => {
-      // Start loading battles in background for the game
+    // Load battles in background after initial render
+    const loadTimer = setTimeout(() => {
       loadInitialBattles();
-      
-      // Check for existing player after a small delay to prevent state change blocking
-      setTimeout(() => {
-        checkExistingPlayer();
-      }, 100);
-    }, 0);
+    }, 50); // Small delay to ensure UI renders first
+    
+    // Check for existing player
+    const playerTimer = setTimeout(() => {
+      checkExistingPlayer();
+    }, 200); // Slightly longer delay
     
     // Leaderboard loaded only on game over
+    
+    return () => {
+      clearTimeout(loadTimer);
+      clearTimeout(playerTimer);
+    };
   }, []);
 
   // Get or create session ID

@@ -49,7 +49,7 @@ export async function GET() {
     console.log(`Selected channel: ${selectedChannel.channel_name} (${selectedChannel.subscriber_count} subs)`);
 
     // Step 2: Get high performer from this channel
-    const { data: highPerformer, error: highError } = await supabase
+    const { data: highPerformers, error: highError } = await supabase
       .from('videos')
       .select('id, title, temporal_performance_score, thumbnail_url, view_count')
       .eq('channel_id', selectedChannel.channel_id)
@@ -60,16 +60,18 @@ export async function GET() {
       .eq('is_short', false)
       .eq('is_institutional', false)
       .order('temporal_performance_score', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (highError || !highPerformer) {
+    if (highError || !highPerformers || highPerformers.length === 0) {
       console.error('No high performer found for channel:', highError);
-      return NextResponse.json({ error: 'No suitable videos found' }, { status: 500 });
+      // Try another channel by recursively calling this endpoint
+      return GET();
     }
+    
+    const highPerformer = highPerformers[0];
 
     // Step 3: Get low performer from same channel
-    const { data: lowPerformer, error: lowError } = await supabase
+    const { data: lowPerformers, error: lowError } = await supabase
       .from('videos')
       .select('id, title, temporal_performance_score, thumbnail_url, view_count')
       .eq('channel_id', selectedChannel.channel_id)
@@ -81,13 +83,15 @@ export async function GET() {
       .eq('is_institutional', false)
       .neq('id', highPerformer.id) // Different from high performer
       .order('temporal_performance_score', { ascending: true })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (lowError || !lowPerformer) {
+    if (lowError || !lowPerformers || lowPerformers.length === 0) {
       console.error('No low performer found for channel:', lowError);
-      return NextResponse.json({ error: 'No suitable video pair found' }, { status: 500 });
+      // Try another channel by recursively calling this endpoint
+      return GET();
     }
+    
+    const lowPerformer = lowPerformers[0];
 
     // Fix avatar URL size - only s88 and smaller work due to CORS restrictions
     let avatarUrl = selectedChannel.thumbnail_url || null;
