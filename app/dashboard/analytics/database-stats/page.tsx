@@ -36,7 +36,6 @@ export default function DatabaseStatsPage() {
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     fetchStats();
@@ -47,6 +46,7 @@ export default function DatabaseStatsPage() {
 
   const fetchStats = async () => {
     try {
+      const supabase = createClientComponentClient();
       const { data, error } = await supabase
         .from('analytics_stats')
         .select(`
