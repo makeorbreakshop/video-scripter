@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { storeMatchup } from '@/lib/thumbnail-battle-store';
+import crypto from 'crypto';
 
 function getSupabaseClient() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -169,7 +171,24 @@ export async function GET() {
       }
     }
 
-    // Format the response
+    // Randomly assign positions FIRST
+    const randomOrder = Math.random() > 0.5;
+    const finalVideoA = randomOrder ? videoA : videoB;
+    const finalVideoB = randomOrder ? videoB : videoA;
+    
+    // Generate unique matchup ID and store the answer
+    const matchupId = crypto.randomUUID();
+    const winner = finalVideoA.temporal_performance_score > finalVideoB.temporal_performance_score ? 'A' : 'B';
+    
+    // Store the matchup answer server-side
+    storeMatchup(
+      matchupId,
+      winner,
+      finalVideoA.temporal_performance_score,
+      finalVideoB.temporal_performance_score
+    );
+    
+    // Format the response WITHOUT scores (secure version)
     const formatVideo = (video: any) => ({
       id: video.id,
       title: video.title,
@@ -177,17 +196,17 @@ export async function GET() {
       channel_title: video.channel_title || video.channel_name || 'Unknown Channel',
       channel_avatar: video.channel_avatar,
       channel_subscriber_count: video.channel_subscriber_count,
-      temporal_performance_score: video.temporal_performance_score,
+      // REMOVED: temporal_performance_score - this is the key security fix!
       view_count: video.view_count
     });
-
-    // Randomly assign positions
-    const randomOrder = Math.random() > 0.5;
+    
+    console.log(`[MATCHUP] Created matchup ${matchupId}, winner is ${winner}`);
     
     return NextResponse.json({
+      matchup_id: matchupId, // Add matchup ID for answer checking
       channel: channelInfo, // Include channel info separately
-      videoA: formatVideo(randomOrder ? videoA : videoB),
-      videoB: formatVideo(randomOrder ? videoB : videoA)
+      videoA: formatVideo(finalVideoA),
+      videoB: formatVideo(finalVideoB)
     });
 
   } catch (error) {

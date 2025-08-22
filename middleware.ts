@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  // Only apply restrictions in production (Vercel)
+  const isProduction = process.env.NODE_ENV === 'production'
+  
+  // Skip middleware entirely in development
+  if (!isProduction) {
+    return NextResponse.next()
+  }
+  
   const path = request.nextUrl.pathname
   
-  // Allow these paths
+  // Allow these paths in production
   const allowedPaths = [
     '/thumbnail-battle',
     '/api/thumbnail-battle',  // API routes for the game
@@ -19,7 +27,7 @@ export function middleware(request: NextRequest) {
   )
   
   if (!isAllowed) {
-    // Redirect all other paths to thumbnail battle
+    // Redirect all other paths to thumbnail battle (production only)
     return NextResponse.redirect(new URL('/thumbnail-battle', request.url))
   }
   

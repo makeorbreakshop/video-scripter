@@ -12,7 +12,7 @@ interface Video {
   channel_title: string;
   channel_avatar: string | null;
   channel_subscriber_count: number;
-  temporal_performance_score: number;
+  temporal_performance_score?: number; // Optional - only present after reveal
   view_count: number;
 }
 
@@ -23,6 +23,7 @@ interface Channel {
 }
 
 interface Battle {
+  matchup_id?: string; // Add matchup ID for secure answer checking
   channel: Channel;
   videoA: Video;
   videoB: Video;
@@ -381,97 +382,97 @@ export default function ThumbnailBattlePage() {
     });
   };
 
-  const handleSelection = useCallback((selection: 'A' | 'B') => {
-    if (gameState !== 'playing' || !battle) return;
+  const handleSelection = useCallback(async (selection: 'A' | 'B') => {
+    if (gameState !== 'playing' || !battle || !battle.matchup_id) return;
     
     console.log(`[CLICK] Selected ${selection} at ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
     console.log(`[DEBUG-CLICK] roundStartTime at click time: ${roundStartTime}`);
     setSelectedVideo(selection);
     
-    const winner = battle!.videoA.temporal_performance_score > battle!.videoB.temporal_performance_score ? 'A' : 'B';
-    const correct = selection === winner;
-    
-    setIsCorrect(correct);
-    setGameState('revealed');
-    
-    // Update local stats
-    const newTotal = totalGames + 1;
-    const newCorrect = correctPicks + (correct ? 1 : 0);
-    setTotalGames(newTotal);
-    setCorrectPicks(newCorrect);
+    // Call the secure check-answer API
+    const clickTime = Date.now();
+    try {
+      const response = await fetch('/api/thumbnail-battle/check-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matchup_id: battle.matchup_id,
+          selection,
+          clicked_at: roundStartTime ? clickTime - roundStartTime : null
+        })
+      });
+      
+      const result = await response.json();
+      
+      // Update the battle with the revealed scores
+      const updatedBattle = {
+        ...battle,
+        videoA: { ...battle.videoA, temporal_performance_score: result.videoA_score },
+        videoB: { ...battle.videoB, temporal_performance_score: result.videoB_score }
+      };
+      setBattle(updatedBattle);
+      
+      const correct = result.correct;
+      setIsCorrect(correct);
+      setGameState('revealed');
+      
+      // Update local stats
+      const newTotal = totalGames + 1;
+      const newCorrect = correctPicks + (correct ? 1 : 0);
+      setTotalGames(newTotal);
+      setCorrectPicks(newCorrect);
 
-    if (correct) {
-      // Calculate points based on decision time - EXACT SAME LOGIC AS LIVE DISPLAY
-      let pointsEarned = 0;
-      if (roundStartTime) {
-        const clickTime = Date.now();
-        const elapsed = clickTime - roundStartTime;
-        const elapsedSeconds = elapsed / 1000;
-        console.log(`[TIMING] Decision time: ${elapsedSeconds.toFixed(2)} seconds (${elapsed}ms)`);
-        console.log(`[DEBUG] roundStartTime=${roundStartTime}, clickTime=${clickTime}, elapsed=${elapsed}`);
+      if (correct) {
+        const pointsEarned = result.points || 500;
+        console.log(`[POINTS] Server awarded: ${pointsEarned} points`);
         
-        // EXACT same calculation as LiveScoreDisplay
-        if (elapsed <= 500) {
-          pointsEarned = 1000;
-          console.log(`[DEBUG] Under 500ms - giving 1000 points`);
-        } else if (elapsed >= 10000) {
-          pointsEarned = 500;
-          console.log(`[DEBUG] Over 10000ms - giving 500 points`);
-        } else {
-          const timeRange = 10000 - 500;
-          const timeInRange = elapsed - 500;
-          const percentThroughRange = timeInRange / timeRange;
-          const pointsLost = 500 * percentThroughRange;
-          pointsEarned = Math.floor(1000 - pointsLost);
-          console.log(`[DEBUG] In range - timeInRange=${timeInRange}, percent=${percentThroughRange.toFixed(3)}, lost=${pointsLost.toFixed(0)}, earned=${pointsEarned}`);
+        setLastPointsEarned(pointsEarned);
+        const newScore = score + pointsEarned;
+        setScore(newScore);
+        
+        if (newScore > highScore) {
+          setHighScore(newScore);
         }
         
-        console.log(`[POINTS] Final points earned: ${pointsEarned}`);
+        // Update player stats in database
+        if (player) {
+          updatePlayerStats({
+            current_score: newScore,
+            best_score: Math.max(newScore, player.best_score),
+            total_battles: player.total_battles + 1,
+            total_wins: player.total_wins + 1
+          });
+        }
       } else {
-        pointsEarned = 500; // Fallback if timing failed
-        console.log('[ERROR] Timer was null! Using fallback 500 points');
-        console.log(`[ERROR] gameState=${gameState}, battle exists=${!!battle}, roundStartTime=${roundStartTime}`);
+        // Lose a life
+        const newLives = lives - 1;
+        setLives(newLives);
+        setLastPointsEarned(null); // Clear points display on wrong answer
+        
+        // Update player stats for loss (but keep current score!)
+        if (player) {
+          updatePlayerStats({
+            current_score: score, // Keep current score, don't reset to 0!
+            total_battles: player.total_battles + 1,
+            attempts_today: player.attempts_today + 1
+          });
+        }
+        
+        // Game over if no lives left
+        if (newLives <= 0) {
+          setTimeout(() => {
+            // Clear round state when game ends
+            setRoundStartTime(null);
+            setLastPointsEarned(null);
+            setGameState('gameOver');
+            fetchLeaderboard(); // Refresh leaderboard on game over
+          }, 2000);
+        }
       }
-      
-      setLastPointsEarned(pointsEarned);
-      const newScore = score + pointsEarned;
-      setScore(newScore);
-      
-      if (newScore > highScore) {
-        setHighScore(newScore);
-      }
-      
-      // Update player stats in database
-      if (player) {
-        updatePlayerStats({
-          current_score: newScore,
-          best_score: Math.max(newScore, player.best_score),
-          total_battles: player.total_battles + 1,
-          total_wins: player.total_wins + 1
-        });
-      }
-    } else {
-      // Lose a life
-      const newLives = lives - 1;
-      setLives(newLives);
-      setLastPointsEarned(null); // Clear points display on wrong answer
-      
-      // Update player stats for loss (but keep current score!)
-      if (player) {
-        updatePlayerStats({
-          current_score: score, // Keep current score, don't reset to 0!
-          total_battles: player.total_battles + 1,
-          attempts_today: player.attempts_today + 1
-        });
-      }
-      
-      // Game over if no lives left
-      if (newLives <= 0) {
-        setTimeout(() => {
-          setGameState('gameOver');
-          fetchLeaderboard(); // Refresh leaderboard on game over
-        }, 2000);
-      }
+    } catch (error) {
+      console.error('[ERROR] Failed to check answer:', error);
+      // Fallback to prevent game from getting stuck
+      setGameState('revealed');
     }
   }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player, roundStartTime]); // ADD roundStartTime to dependencies!
 
@@ -487,10 +488,27 @@ export default function ThumbnailBattlePage() {
     // Timer will be reset by the useEffect when gameState changes to 'playing'
   };
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
+    // Reset all game state
     setScore(0);
     setLives(3);
-    setGameState('start');
+    setSelectedVideo(null);
+    setIsCorrect(null);
+    setLastPointsEarned(null);
+    setRoundStartTime(null);
+    
+    // Load a fresh battle before transitioning to start
+    setTransitioning(true);
+    const success = await loadNewBattle();
+    setTransitioning(false);
+    
+    if (success) {
+      setGameState('start');
+    } else {
+      // If loading fails, try loading initial battles
+      await loadInitialBattles();
+      setGameState('start');
+    }
     
     // Reset current streak for player
     if (player) {
@@ -501,9 +519,22 @@ export default function ThumbnailBattlePage() {
     }
   };
 
-  const handleStartGame = () => {
-    // Battle is already loaded, just transition
-    setGameState('playing');
+  const handleStartGame = async () => {
+    // Ensure we have a battle before starting
+    if (!battle) {
+      setTransitioning(true);
+      const success = await loadNewBattle();
+      setTransitioning(false);
+      if (!success) {
+        // If loading fails, try loading initial battles
+        await loadInitialBattles();
+      }
+    }
+    
+    // Only transition if we now have a battle
+    if (battle || battleQueue.length > 0) {
+      setGameState('playing');
+    }
   };
 
   const handleResetPlayer = () => {
@@ -633,8 +664,10 @@ export default function ThumbnailBattlePage() {
     onClick: () => void;
   }) => {
     const isSelected = selectedVideo === side;
-    const isWinner = video.temporal_performance_score > 
-      (side === 'A' ? battle.videoB : battle.videoA).temporal_performance_score;
+    const otherVideo = side === 'A' ? battle.videoB : battle.videoA;
+    const isWinner = video.temporal_performance_score && otherVideo.temporal_performance_score 
+      ? video.temporal_performance_score > otherVideo.temporal_performance_score
+      : false;
     const showResult = gameState === 'revealed';
 
     return (
@@ -682,7 +715,7 @@ export default function ThumbnailBattlePage() {
               
               <div className="text-center">
                 <div className="text-3xl font-bold text-foreground mb-1">
-                  {video.temporal_performance_score.toFixed(1)}x
+                  {video.temporal_performance_score ? `${video.temporal_performance_score.toFixed(1)}x` : '...'}
                 </div>
                 <div className="text-sm text-muted-foreground mb-3">
                   channel average
@@ -724,16 +757,11 @@ export default function ThumbnailBattlePage() {
                     <Axe className="w-6 h-6 text-[#00ff00]" />
                     <span className="text-lg font-semibold">Thumbnail Battle</span>
                   </div>
-                  {player && (
-                    <div className="text-sm text-muted-foreground">
-                      Playing as <span className="font-semibold text-foreground">{player.player_name}</span>
-                    </div>
-                  )}
                 </div>
                 
-                <div className="flex items-center gap-4">
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-                    score >= 5 ? 'bg-[#00ff00]/20 text-[#00ff00]' : 'bg-secondary/50'
+                <div className="flex items-center gap-6">
+                  <div className={`flex items-center gap-2 ${
+                    score >= 5 ? 'text-[#00ff00]' : ''
                   }`}>
                     <span className="text-xs uppercase tracking-wider">Score</span>
                     <span className="font-semibold text-sm">
@@ -741,22 +769,12 @@ export default function ThumbnailBattlePage() {
                     </span>
                   </div>
                   {player && player.best_score > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
+                    <div className="flex items-center gap-2">
                       <span className="text-xs uppercase tracking-wider">Best</span>
                       <span className="font-semibold text-sm">
                         {player.best_score}
                       </span>
                     </div>
-                  )}
-                  {score > 0 && player && score > player.best_score && (
-                    <motion.div
-                      className="bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded text-xs font-medium"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500 }}
-                    >
-                      NEW BEST!
-                    </motion.div>
                   )}
                   <div className="flex items-center gap-1">
                     {[...Array(3)].map((_, i) => (
