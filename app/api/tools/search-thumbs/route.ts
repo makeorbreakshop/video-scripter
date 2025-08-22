@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pinecone } from '@pinecone-database/pinecone';
 import Replicate from 'replicate';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { SearchResult, SearchFilters, ToolResponse } from '@/types/tools';
 import { wrapTool, createToolContext } from '@/lib/tools/base-wrapper';
 
@@ -19,10 +19,6 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN!
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface SearchThumbsParams {
   query: string | string[];  // Text query or image URL(s)
@@ -357,6 +353,7 @@ const wrappedHandler = wrapTool({
 });
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     const context = createToolContext({

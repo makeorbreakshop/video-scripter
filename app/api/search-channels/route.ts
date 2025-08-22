@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 interface ChannelSearchResult {
   channel_id: string;
@@ -16,6 +16,7 @@ interface ChannelSearchResult {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
@@ -25,10 +26,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ channels: [] });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     console.log(`🔍 Searching channels for: "${query}"`);
 

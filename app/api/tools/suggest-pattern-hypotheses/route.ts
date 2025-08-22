@@ -5,16 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { ToolResponse } from '@/types/tools';
 import { wrapTool, createToolContext } from '@/lib/tools/base-wrapper';
 
 // Initialize clients
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!
@@ -626,6 +622,7 @@ const wrappedHandler = wrapTool({
 });
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     const context = createToolContext({

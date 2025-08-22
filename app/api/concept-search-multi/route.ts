@@ -4,14 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { pineconeService } from '@/lib/pinecone-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface MultiDimensionalSearchRequest {
   semantic_queries: string[];
@@ -27,6 +23,7 @@ interface MultiDimensionalSearchRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { 
       semantic_queries,

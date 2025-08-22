@@ -82,10 +82,6 @@ export async function POST(request: NextRequest) {
 
         // Fetch temporal performance scores from Supabase
         const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
 
         const { data: temporalScores } = await supabase
           .from('videos')

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { openai } from '@/lib/openai-client';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { concept, threshold = 0.5, topK = 50 } = await req.json();
     
@@ -39,10 +40,6 @@ export async function POST(req: NextRequest) {
     console.log('First few scores:', queryResponse.matches?.slice(0, 5).map(m => ({ id: m.id, score: m.score })));
     
     // Get video details from Supabase using the IDs
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     
     const videoIds = queryResponse.matches?.map(m => m.id) || [];
     
