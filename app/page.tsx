@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // Redirect to thumbnail battle game
-    router.push("/thumbnail-battle-v2")
+    router.push("/thumbnail-battle")
   }, [router])
 
   return (

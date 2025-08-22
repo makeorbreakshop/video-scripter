@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   
   // Allow these paths
   const allowedPaths = [
-    '/thumbnail-battle-v2',
+    '/thumbnail-battle',
     '/api/thumbnail-battle',  // API routes for the game
     '/_next',  // Next.js assets
     '/favicon.ico',
@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
   
   if (!isAllowed) {
     // Redirect all other paths to thumbnail battle
-    return NextResponse.redirect(new URL('/thumbnail-battle-v2', request.url))
+    return NextResponse.redirect(new URL('/thumbnail-battle', request.url))
   }
   
   return NextResponse.next()
