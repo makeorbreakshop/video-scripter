@@ -5,6 +5,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ videoId: string }> }
 ) {
+  const supabase = getSupabase();
   try {
 
     const { videoId } = await params;

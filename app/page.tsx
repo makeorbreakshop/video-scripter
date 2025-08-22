@@ -7,10 +7,8 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    // In production, redirect to thumbnail battle game
-    // In development, redirect to dashboard
-    const isProduction = process.env.NODE_ENV === 'production'
-    router.push(isProduction ? "/thumbnail-battle" : "/dashboard")
+    // Always redirect to dashboard for now
+    router.push("/dashboard")
   }, [router])
 
   return (

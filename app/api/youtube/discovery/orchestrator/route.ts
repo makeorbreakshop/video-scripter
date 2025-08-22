@@ -364,6 +364,7 @@ async function runImportPhase(config: OrchestratorConfig, dryRun: boolean) {
 }
 
 async function checkQuotaStatus() {
+  const supabase = getSupabase();
   const { data } = await supabase
     .from('youtube_quota_usage')
     .select('quota_used, quota_limit')
