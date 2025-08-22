@@ -25,90 +25,104 @@ function getBallparkSubs(count: number): number {
 }
 
 export async function GET() {
+  const startTime = Date.now();
+  console.log('API: Starting preview generation');
+  
   try {
     const supabase = getSupabaseClient();
     
-    // Try to get a random matchup from the materialized view
-    // This should be INSTANT since it's pre-computed
-    const { data: matchup, error } = await supabase
-      .from('thumbnail_battle_matchup_pool')
-      .select('*')
-      .order('random_sort', { ascending: true })
+    // Step 1: Get a random channel with 100K+ subscribers that has enough videos
+    const { data: randomChannel, error: channelError } = await supabase
+      .from('channels')
+      .select('channel_id, channel_name, subscriber_count, thumbnail_url')
+      .gte('subscriber_count', 100000)
+      .order('channel_id', { ascending: false }) // Use deterministic order, then RANDOM()
+      .limit(1000); // Get a pool to pick from
+
+    if (channelError || !randomChannel || randomChannel.length === 0) {
+      console.error('No eligible channels found:', channelError);
+      return NextResponse.json({ error: 'No eligible channels found' }, { status: 500 });
+    }
+
+    // Pick a random channel from the pool
+    const selectedChannel = randomChannel[Math.floor(Math.random() * randomChannel.length)];
+    console.log(`Selected channel: ${selectedChannel.channel_name} (${selectedChannel.subscriber_count} subs)`);
+
+    // Step 2: Get high performer from this channel
+    const { data: highPerformer, error: highError } = await supabase
+      .from('videos')
+      .select('id, title, temporal_performance_score, thumbnail_url, view_count')
+      .eq('channel_id', selectedChannel.channel_id)
+      .not('temporal_performance_score', 'is', null)
+      .gt('temporal_performance_score', 1.0) // At least decent performance
+      .not('thumbnail_url', 'is', null)
+      .lte('published_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .eq('is_short', false)
+      .eq('is_institutional', false)
+      .order('temporal_performance_score', { ascending: false })
       .limit(1)
       .single();
 
-    if (error || !matchup) {
-      // Fallback to a simple query if materialized view doesn't exist
-      console.log('Materialized view not available, using fallback');
-      
-      // Just get 2 random videos from big channels for preview
-      const { data: videos, error: fallbackError } = await supabase
-        .from('videos')
-        .select(`
-          id,
-          title,
-          thumbnail_url,
-          channel_id,
-          view_count,
-          channels!inner(
-            channel_name,
-            subscriber_count,
-            thumbnail_url
-          )
-        `)
-        .not('thumbnail_url', 'is', null)
-        .gte('channels.subscriber_count', 100000)
-        .limit(2);
-
-      if (fallbackError || !videos || videos.length < 2) {
-        return NextResponse.json({ error: 'No preview available' }, { status: 500 });
-      }
-
-      // Format as simple preview
-      return NextResponse.json({
-        preview: true,
-        videoA: {
-          thumbnail_url: videos[0].thumbnail_url,
-          title: videos[0].title
-        },
-        videoB: {
-          thumbnail_url: videos[1].thumbnail_url,
-          title: videos[1].title
-        }
-      });
+    if (highError || !highPerformer) {
+      console.error('No high performer found for channel:', highError);
+      return NextResponse.json({ error: 'No suitable videos found' }, { status: 500 });
     }
 
-    // Format the response from materialized view
-    // Randomly assign A/B positions for variety
-    const randomOrder = Math.random() > 0.5;
+    // Step 3: Get low performer from same channel
+    const { data: lowPerformer, error: lowError } = await supabase
+      .from('videos')
+      .select('id, title, temporal_performance_score, thumbnail_url, view_count')
+      .eq('channel_id', selectedChannel.channel_id)
+      .not('temporal_performance_score', 'is', null)
+      .lt('temporal_performance_score', 1.0) // Below average performance
+      .not('thumbnail_url', 'is', null)
+      .lte('published_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .eq('is_short', false)
+      .eq('is_institutional', false)
+      .neq('id', highPerformer.id) // Different from high performer
+      .order('temporal_performance_score', { ascending: true })
+      .limit(1)
+      .single();
+
+    if (lowError || !lowPerformer) {
+      console.error('No low performer found for channel:', lowError);
+      return NextResponse.json({ error: 'No suitable video pair found' }, { status: 500 });
+    }
+
+    // Fix avatar URL size - only s88 and smaller work due to CORS restrictions
+    let avatarUrl = selectedChannel.thumbnail_url || null;
+    if (avatarUrl) {
+      avatarUrl = avatarUrl.replace(/s\d+-c/, 's88-c');
+    }
     
     const channelInfo = {
-      channel_title: matchup.channel_name,
-      channel_avatar: matchup.channel_avatar,
-      channel_subscriber_count: getBallparkSubs(matchup.subscriber_count)
+      channel_title: selectedChannel.channel_name,
+      channel_avatar: avatarUrl,
+      channel_subscriber_count: getBallparkSubs(selectedChannel.subscriber_count)
     };
 
-    const highPerformer = {
-      id: matchup.high_performer_id,
-      title: matchup.high_performer_title,
-      thumbnail_url: matchup.high_performer_thumbnail,
-      view_count: matchup.high_performer_views,
+    // Format videos with channel info
+    const formatVideo = (video: any) => ({
+      id: video.id,
+      title: video.title,
+      thumbnail_url: video.thumbnail_url,
+      view_count: video.view_count,
       ...channelInfo
-    };
+    });
 
-    const lowPerformer = {
-      id: matchup.low_performer_id,
-      title: matchup.low_performer_title,
-      thumbnail_url: matchup.low_performer_thumbnail,
-      view_count: matchup.low_performer_views,
-      ...channelInfo
-    };
+    // Randomly assign A/B positions for variety
+    const randomOrder = Math.random() > 0.5;
+    const videoA = randomOrder ? highPerformer : lowPerformer;
+    const videoB = randomOrder ? lowPerformer : highPerformer;
+
+    const elapsed = Date.now() - startTime;
+    console.log(`Preview generated in ${elapsed}ms - High: ${highPerformer.temporal_performance_score}, Low: ${lowPerformer.temporal_performance_score}`);
 
     return NextResponse.json({
       preview: true,
       channel: channelInfo,
-      videoA: randomOrder ? highPerformer : lowPerformer,
-      videoB: randomOrder ? lowPerformer : highPerformer
+      videoA: formatVideo(videoA),
+      videoB: formatVideo(videoB)
     });
 
   } catch (error) {

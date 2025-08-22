@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle, TrendingUp, Database, RefreshCw, Lock, ChevronDown, ChevronUp, X, Sparkles } from 'lucide-react';
+import { CheckCircle, TrendingUp, Database, RefreshCw, Lock, X, Sparkles } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -13,11 +13,11 @@ import {
 } from '@/components/ui/accordion';
 
 export default function OutliersPage() {
-  const [showMore, setShowMore] = useState(false);
   const [email, setEmail] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
   const [showEmailCapture, setShowEmailCapture] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [videos, setVideos] = useState<any[]>([]);
 
   // Email capture popup after 8 seconds
   useEffect(() => {
@@ -27,9 +27,54 @@ export default function OutliersPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Simulate loading
+  // Fetch real video data
   useEffect(() => {
-    setTimeout(() => setLoading(false), 500);
+    const fetchVideos = async () => {
+      setLoading(true);
+      const videoData = [];
+      
+      try {
+        // Fetch 15 video pairs (30 videos total) from the preview endpoint
+        for (let i = 0; i < 15; i++) {
+          const response = await fetch('/api/thumbnail-battle/preview');
+          if (response.ok) {
+            const data = await response.json();
+            // Add both videos from each pair
+            if (data.videoA) {
+              videoData.push({
+                id: data.videoA.id,
+                title: data.videoA.title,
+                channel: data.videoA.channel_title,
+                views: data.videoA.view_count,
+                thumbnail: data.videoA.thumbnail_url,
+                score: Math.random() * 75 + 1 // Random score between 1-76 for now
+              });
+            }
+            if (data.videoB) {
+              videoData.push({
+                id: data.videoB.id,
+                title: data.videoB.title,
+                channel: data.videoB.channel_title,
+                views: data.videoB.view_count,
+                thumbnail: data.videoB.thumbnail_url,
+                score: Math.random() * 75 + 1 // Random score between 1-76 for now
+              });
+            }
+          }
+          // Small delay to avoid overwhelming the API
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        setVideos(videoData);
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+        // Fallback to sample data if API fails
+        setVideos(sampleVideos);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchVideos();
   }, []);
 
   // Sample data for preview table
@@ -66,7 +111,7 @@ export default function OutliersPage() {
     { title: "Why I Quit My $200k Job to Make YouTube Videos", channel: "Career Change", views: 345000, score: 18.9, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
   ];
 
-  const displayedVideos = showMore ? sampleVideos : sampleVideos.slice(0, 10);
+  const displayedVideos = videos.length > 0 ? videos : sampleVideos;
 
   const handleGetAccess = () => {
     if (!email) {
@@ -221,7 +266,7 @@ export default function OutliersPage() {
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {displayedVideos.slice(0, 30).map((video, i) => (
+                  {displayedVideos.map((video, i) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, y: 20 }}
@@ -271,35 +316,22 @@ export default function OutliersPage() {
               )}
             </div>
 
-            {/* Show More / Lock Overlay */}
+            {/* Lock Overlay */}
             <div className="p-4 text-center border-t border-gray-800 bg-black/50">
-              {!showMore ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-gray-500">
+                  <Lock className="w-4 h-4" />
+                  <span>Showing 30 of 500,000+ videos</span>
+                </div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
-                    onClick={() => setShowMore(true)}
-                    variant="ghost" 
-                    className="text-gray-400 hover:text-[#00ff00] transition-colors"
+                    onClick={() => document.getElementById('email-input')?.focus()}
+                    className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
                   >
-                    <ChevronDown className="w-4 h-4 mr-2" />
-                    Show More Examples
+                    Unlock Full Access
                   </Button>
                 </motion.div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2 text-gray-500">
-                    <Lock className="w-4 h-4" />
-                    <span>Showing 30 of 500,000+ videos</span>
-                  </div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button 
-                      onClick={() => document.getElementById('email-input')?.focus()}
-                      className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
-                    >
-                      Unlock Full Access
-                    </Button>
-                  </motion.div>
-                </div>
-              )}
+              </div>
             </div>
           </Card>
         </motion.section>
