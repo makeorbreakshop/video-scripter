@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { llmFormatClassificationService } from '@/lib/llm-format-classification-service';
 import fs from 'fs/promises';
 import path from 'path';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Configuration
 const CONFIG = {
@@ -72,6 +67,7 @@ async function loadProgress() {
 loadProgress();
 
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     const { action, totalLimit } = await request.json();
     

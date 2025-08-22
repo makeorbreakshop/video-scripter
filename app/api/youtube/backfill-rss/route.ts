@@ -4,12 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabase } from '@/lib/supabase-lazy';
 
 interface YouTubeVideoResponse {
   items: Array<{
@@ -41,6 +36,7 @@ interface YouTubeVideoResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { batchSize = 50 } = await request.json();
 
@@ -184,6 +180,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     // Get count of videos that need backfilling
     const { data: needsBackfill, error } = await supabase

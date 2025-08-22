@@ -15,12 +15,14 @@ function getSupabaseClient() {
 function getBallparkSubs(count: number): number {
   if (!count) return 0;
   
-  // Round to nearest significant figure
+  // More natural rounding
   if (count < 1000) return Math.round(count / 100) * 100;
   if (count < 10000) return Math.round(count / 1000) * 1000;
-  if (count < 100000) return Math.round(count / 10000) * 10000;
-  if (count < 1000000) return Math.round(count / 100000) * 100000;
-  return Math.round(count / 1000000) * 1000000;
+  if (count < 50000) return Math.round(count / 5000) * 5000;  // Round to nearest 5K
+  if (count < 100000) return Math.round(count / 10000) * 10000;  // Round to nearest 10K
+  if (count < 500000) return Math.round(count / 50000) * 50000;  // Round to nearest 50K
+  if (count < 1000000) return Math.round(count / 100000) * 100000;  // Round to nearest 100K
+  return Math.round(count / 1000000) * 1000000;  // Round to nearest million
 }
 
 export async function GET() {

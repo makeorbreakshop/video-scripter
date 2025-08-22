@@ -753,21 +753,21 @@ export default function ThumbnailBattlePage() {
                 </div>
 
                 {/* Bottom options */}
-                <div className="flex justify-center gap-6 mt-8">
+                <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-8">
                   <button
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                    className="text-gray-600 hover:text-[#00ff00] transition-colors text-xs uppercase tracking-wider"
                     onClick={() => {
                       setShowLeaderboard(true);
                       fetchLeaderboard();
                     }}
                   >
-                    View Leaderboard
+                    VIEW LEADERBOARD
                   </button>
                   <button
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                    className="text-gray-600 hover:text-[#00ff00] transition-colors text-xs uppercase tracking-wider"
                     onClick={handleResetPlayer}
                   >
-                    Switch Player
+                    SWITCH PLAYER
                   </button>
                 </div>
               </div>
