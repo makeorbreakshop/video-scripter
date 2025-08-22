@@ -148,8 +148,11 @@ export default function ThumbnailBattlePage() {
       const now = Date.now();
       setRoundStartTime(now);
       console.log(`[TIMER] Started at ${new Date(now).toLocaleTimeString()}.${now % 1000}`);
+      console.log(`[TIMER-DEBUG] Timer set to: ${now}, gameState: ${gameState}, battle exists: ${!!battle}`);
+    } else {
+      console.log(`[TIMER-DEBUG] Not starting timer - gameState: ${gameState}, battle exists: ${!!battle}`);
     }
-  }, [gameState]); // Only depend on gameState, not battle!
+  }, [gameState, battle]); // Add battle to dependencies for consistency
 
   useEffect(() => {
     // Start loading battles immediately in background
@@ -382,6 +385,7 @@ export default function ThumbnailBattlePage() {
     if (gameState !== 'playing' || !battle) return;
     
     console.log(`[CLICK] Selected ${selection} at ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
+    console.log(`[DEBUG-CLICK] roundStartTime at click time: ${roundStartTime}`);
     setSelectedVideo(selection);
     
     const winner = battle!.videoA.temporal_performance_score > battle!.videoB.temporal_performance_score ? 'A' : 'B';
@@ -426,7 +430,7 @@ export default function ThumbnailBattlePage() {
       } else {
         pointsEarned = 500; // Fallback if timing failed
         console.log('[ERROR] Timer was null! Using fallback 500 points');
-        console.log(`[ERROR] gameState=${gameState}, battle exists=${!!battle}`);
+        console.log(`[ERROR] gameState=${gameState}, battle exists=${!!battle}, roundStartTime=${roundStartTime}`);
       }
       
       setLastPointsEarned(pointsEarned);
@@ -469,7 +473,7 @@ export default function ThumbnailBattlePage() {
         }, 2000);
       }
     }
-  }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player]);
+  }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player, roundStartTime]); // ADD roundStartTime to dependencies!
 
   const handleNext = async () => {
     // Clear results for new round
