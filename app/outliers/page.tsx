@@ -34,21 +34,36 @@ export default function OutliersPage() {
 
   // Sample data for preview table
   const sampleVideos = [
-    { title: "I Tried Every AI Video Tool. Here's What Actually Works", channel: "Tech Review Pro", views: 2847293, score: 94, thumbnail: "/api/placeholder/120/67" },
-    { title: "The $1 vs $100,000 Computer Challenge", channel: "MrBeast", views: 89234567, score: 98, thumbnail: "/api/placeholder/120/67" },
-    { title: "Why This Simple Trick Gets 10M Views", channel: "Creator Insider", views: 10234567, score: 92, thumbnail: "/api/placeholder/120/67" },
-    { title: "I Built My Dream Studio for $500", channel: "DIY Creator", views: 4567890, score: 88, thumbnail: "/api/placeholder/120/67" },
-    { title: "The Psychology of Viral Videos Explained", channel: "Science Daily", views: 3456789, score: 85, thumbnail: "/api/placeholder/120/67" },
-    { title: "Making $100k/Month with YouTube Shorts", channel: "Finance Freedom", views: 6789012, score: 91, thumbnail: "/api/placeholder/120/67" },
-    { title: "AI Changed My Content Forever - Here's How", channel: "Future Tech", views: 2345678, score: 83, thumbnail: "/api/placeholder/120/67" },
-    { title: "The Secret Formula Top Creators Use", channel: "YouTube Mastery", views: 5678901, score: 90, thumbnail: "/api/placeholder/120/67" },
-    { title: "I Analyzed 1000 Viral Videos - Shocking Results", channel: "Data Driven", views: 7890123, score: 93, thumbnail: "/api/placeholder/120/67" },
-    { title: "Why 99% of Videos Fail (And How to Fix It)", channel: "Growth Hacker", views: 3456789, score: 86, thumbnail: "/api/placeholder/120/67" },
-    { title: "The $1M YouTube Algorithm Hack", channel: "Success Stories", views: 8901234, score: 95, thumbnail: "/api/placeholder/120/67" },
-    { title: "Turning Failed Videos into Winners", channel: "Creator Tips", views: 2345678, score: 82, thumbnail: "/api/placeholder/120/67" },
-    { title: "The Dark Truth About Going Viral", channel: "Real Talk", views: 4567890, score: 87, thumbnail: "/api/placeholder/120/67" },
-    { title: "How I Got 100M Views in 30 Days", channel: "Viral King", views: 12345678, score: 97, thumbnail: "/api/placeholder/120/67" },
-    { title: "The Perfect Video Length According to Data", channel: "Analytics Pro", views: 3456789, score: 84, thumbnail: "/api/placeholder/120/67" },
+    { title: "I Tried Every AI Video Tool. Here's What Actually Works", channel: "Tech Review Pro", views: 2847293, score: 76.8, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The $1 vs $100,000 Computer Challenge", channel: "MrBeast", views: 89234567, score: 26.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Why This Simple Trick Gets 10M Views", channel: "Creator Insider", views: 10234567, score: 5.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "I Built My Dream Studio for $500", channel: "DIY Creator", views: 4567890, score: 3.5, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Psychology of Viral Videos Explained", channel: "Science Daily", views: 3456789, score: 6.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Making $100k/Month with YouTube Shorts", channel: "Finance Freedom", views: 6789012, score: 4.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "AI Changed My Content Forever - Here's How", channel: "Future Tech", views: 2345678, score: 13.7, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Secret Formula Top Creators Use", channel: "YouTube Mastery", views: 5678901, score: 3.8, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "I Analyzed 1000 Viral Videos - Shocking Results", channel: "Data Driven", views: 7890123, score: 8.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Why 99% of Videos Fail (And How to Fix It)", channel: "Growth Hacker", views: 3456789, score: 12.4, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The $1M YouTube Algorithm Hack", channel: "Success Stories", views: 8901234, score: 9.1, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Turning Failed Videos into Winners", channel: "Creator Tips", views: 2345678, score: 4.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Dark Truth About Going Viral", channel: "Real Talk", views: 4567890, score: 7.3, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "How I Got 100M Views in 30 Days", channel: "Viral King", views: 12345678, score: 15.8, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Perfect Video Length According to Data", channel: "Analytics Pro", views: 3456789, score: 5.7, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "FULL INTERVIEW: Tom Brady Talks Football", channel: "Youth Inc.", views: 159000, score: 76.8, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Biggest Difference Between Bad and Great Comedy", channel: "Film Courage", views: 162000, score: 5.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "15 Towns Built in PERFECT SHAPES", channel: "Top Fives", views: 215300, score: 26.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The ONLY 2 Leg Strength Exercises You Need", channel: "Garage Strength", views: 46000, score: 3.5, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "END TO END APP SECURITY WITH AI AGENTS", channel: "Tech Security", views: 89000, score: 6.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "STOP USING GPT-5 (before it's too late)", channel: "AI Insider", views: 234000, score: 13.7, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Why This Trading Strategy Actually Works", channel: "Trading Mastery", views: 87000, score: 4.0, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "I Tested Every Productivity App for 30 Days", channel: "Productivity Pro", views: 156000, score: 8.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Real Reason Most YouTubers Quit", channel: "Creator Insights", views: 198000, score: 12.4, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Building a $10M Company from Scratch", channel: "Entrepreneur Life", views: 267000, score: 9.1, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Why Everyone's Wrong About Remote Work", channel: "Future of Work", views: 145000, score: 7.3, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Psychology Behind Viral TikToks", channel: "Social Media Lab", views: 178000, score: 15.8, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "I Spent $1000 on Instagram Ads - Here's What Happened", channel: "Marketing Experiments", views: 123000, score: 5.7, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "The Hidden Cost of Free Software", channel: "Tech Truth", views: 89000, score: 4.2, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
+    { title: "Why I Quit My $200k Job to Make YouTube Videos", channel: "Career Change", views: 345000, score: 18.9, thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" },
   ];
 
   const displayedVideos = showMore ? sampleVideos : sampleVideos.slice(0, 10);
@@ -63,9 +78,14 @@ export default function OutliersPage() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-[#00ff00] font-bold text-lg tabular-nums';
-    if (score >= 80) return 'text-yellow-400 font-semibold tabular-nums';
-    return 'text-red-500 tabular-nums';
+    if (score >= 20) return 'bg-[#00ff00] text-black';
+    if (score >= 10) return 'bg-yellow-500 text-black';
+    if (score >= 5) return 'bg-orange-500 text-white';
+    return 'bg-red-500 text-white';
+  };
+
+  const formatScore = (score: number) => {
+    return `${score}x`;
   };
 
   return (
@@ -181,58 +201,73 @@ export default function OutliersPage() {
               </motion.div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Video Grid */}
+            <div className="p-6">
               {loading ? (
-                <div className="p-4">
-                  {[...Array(10)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-4 mb-3">
-                      <div className="w-20 h-12 bg-gray-800 rounded animate-pulse" />
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-800 rounded w-3/4 mb-2 animate-pulse" />
-                        <div className="h-3 bg-gray-800 rounded w-1/4 animate-pulse" />
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[...Array(12)].map((_, i) => (
+                    <div key={i} className="bg-gray-800/40 rounded-lg overflow-hidden animate-pulse">
+                      <div className="aspect-video bg-gray-700" />
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-gray-700 rounded w-3/4" />
+                        <div className="h-3 bg-gray-700 rounded w-1/2" />
+                        <div className="flex justify-between">
+                          <div className="h-3 bg-gray-700 rounded w-1/4" />
+                          <div className="h-6 w-12 bg-gray-700 rounded-full" />
+                        </div>
                       </div>
-                      <div className="w-16 h-4 bg-gray-800 rounded animate-pulse" />
-                      <div className="w-12 h-4 bg-gray-800 rounded animate-pulse" />
                     </div>
                   ))}
                 </div>
               ) : (
-                <table className="w-full">
-                  <thead className="bg-black/70 border-b border-gray-800">
-                    <tr>
-                      <th className="text-left p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Video</th>
-                      <th className="text-left p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Channel</th>
-                      <th className="text-right p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Views</th>
-                      <th className="text-right p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedVideos.map((video, i) => (
-                      <motion.tr 
-                        key={i} 
-                        className="border-b border-gray-800 hover:bg-gray-900/50 transition-colors cursor-pointer"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <td className="p-4 flex items-center gap-3">
-                          <img src={video.thumbnail} alt="" className="w-20 h-12 rounded object-cover border border-gray-800" />
-                          <span className="text-white font-medium text-base">{video.title}</span>
-                        </td>
-                        <td className="p-4 text-gray-400">{video.channel}</td>
-                        <td className="p-4 text-right text-gray-300 font-semibold">
-                          {(video.views / 1000000).toFixed(1)}M
-                        </td>
-                        <td className="p-4 text-right">
-                          <span className={getScoreColor(video.score)}>
-                            {video.score}
-                          </span>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {displayedVideos.slice(0, 30).map((video, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05, duration: 0.3 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      className="bg-black/40 border border-gray-800 rounded-lg overflow-hidden hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-300 cursor-pointer group"
+                    >
+                      {/* Thumbnail with Score Badge */}
+                      <div className="relative aspect-video">
+                        <img 
+                          src={video.thumbnail} 
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold ${getScoreColor(video.score)}`}>
+                          {formatScore(video.score)}
+                        </div>
+                      </div>
+                      
+                      {/* Card Content */}
+                      <div className="p-4">
+                        <h3 className="text-white font-medium text-sm line-clamp-2 mb-2 group-hover:text-[#00ff00] transition-colors">
+                          {video.title}
+                        </h3>
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-400">
+                          <span className="font-medium">{video.channel}</span>
+                          <span className="tabular-nums">{(video.views / 1000000).toFixed(1)}M views</span>
+                        </div>
+                        
+                        {/* Stats Bar */}
+                        <div className="mt-3 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+                          <div className="flex gap-4 text-gray-500">
+                            <span>Viral</span>
+                            <span>Recent</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3 text-[#00ff00]" />
+                            <span className="text-[#00ff00] font-bold">{formatScore(video.score)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -253,7 +288,7 @@ export default function OutliersPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2 text-gray-500">
                     <Lock className="w-4 h-4" />
-                    <span>Showing 15 of 500,000+ videos</span>
+                    <span>Showing 30 of 500,000+ videos</span>
                   </div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button 

@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
     const days = daysMap[timeRange as keyof typeof daysMap] || 7;
 
     // Initialize Supabase client
+    const supabase = getSupabase();
 
     console.log(`🎯 Idea Radar: Finding outliers (${timeRange}, score>${minScore}, views>${minViews}, domain:${domain || 'all'}, randomize:${randomize})`);
 
