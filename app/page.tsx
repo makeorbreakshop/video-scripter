@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    // Always redirect to the dashboard, bypassing authentication
-    router.push("/dashboard")
+    // Redirect to thumbnail battle game
+    router.push("/thumbnail-battle-v2")
   }, [router])
 
   return (

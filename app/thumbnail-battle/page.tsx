@@ -63,6 +63,61 @@ function formatSubscriberCount(count: number): string {
   return count.toString();
 }
 
+// Live score display component
+function LiveScoreDisplay({ startTime }: { startTime: number }) {
+  const [currentPoints, setCurrentPoints] = useState(1000);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const elapsedSeconds = elapsed / 1000;
+      setTimeElapsed(elapsedSeconds);
+      
+      // Calculate points based on elapsed time
+      let points = 0;
+      if (elapsed <= 500) {
+        points = 1000;
+      } else if (elapsed >= 10000) {
+        points = 500;
+      } else {
+        const timeRange = 10000 - 500;
+        const timeInRange = elapsed - 500;
+        const percentThroughRange = timeInRange / timeRange;
+        const pointsLost = 500 * percentThroughRange;
+        points = Math.floor(1000 - pointsLost);
+      }
+      
+      setCurrentPoints(points);
+    }, 50); // Update every 50ms for smooth display
+
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  // Color based on points
+  const getColor = () => {
+    if (currentPoints >= 900) return '#00ff00';
+    if (currentPoints >= 700) return '#88ff00';
+    if (currentPoints >= 600) return '#ffaa00';
+    return '#ff6600';
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div 
+        className="text-3xl font-bold" 
+        style={{ color: getColor() }}
+      >
+        {currentPoints} points
+      </div>
+      <div className="text-sm text-muted-foreground">
+        {timeElapsed.toFixed(1)}s elapsed
+      </div>
+    </div>
+  );
+}
+
 export default function ThumbnailBattlePage() {
   const [battle, setBattle] = useState<Battle | null>(null);
   const [battleQueue, setBattleQueue] = useState<Battle[]>([]);
@@ -86,18 +141,15 @@ export default function ThumbnailBattlePage() {
   const [roundStartTime, setRoundStartTime] = useState<number | null>(null);
   const [lastPointsEarned, setLastPointsEarned] = useState<number | null>(null);
 
-  // Start timer when game state changes to playing AND we have a new battle
+  // Start timer when game state changes to playing
   useEffect(() => {
-    if (gameState === 'playing' && battle && !roundStartTime) {
-      // Small delay to ensure UI has transitioned
-      const timer = setTimeout(() => {
-        const now = Date.now();
-        setRoundStartTime(now);
-        console.log(`[TIMER] Started at ${new Date(now).toLocaleTimeString()}.${now % 1000}`);
-      }, 50);
-      return () => clearTimeout(timer);
+    if (gameState === 'playing' && battle) {
+      // Start timer IMMEDIATELY when playing starts
+      const now = Date.now();
+      setRoundStartTime(now);
+      console.log(`[TIMER] Started at ${new Date(now).toLocaleTimeString()}.${now % 1000}`);
     }
-  }, [gameState, battle, roundStartTime]);
+  }, [gameState]); // Only depend on gameState, not battle!
 
   useEffect(() => {
     // Start loading battles immediately in background
@@ -244,8 +296,7 @@ export default function ThumbnailBattlePage() {
 
   // Get next battle from queue or fetch new ones
   const loadNewBattle = async (isInitial = false) => {
-    // Reset timer for new round
-    setRoundStartTime(null);
+    // Don't reset timer here - only reset when moving to next round
     
     if (!isInitial) {
       setTransitioning(true);
@@ -346,38 +397,36 @@ export default function ThumbnailBattlePage() {
     setCorrectPicks(newCorrect);
 
     if (correct) {
-      // Calculate points based on decision time
+      // Calculate points based on decision time - EXACT SAME LOGIC AS LIVE DISPLAY
       let pointsEarned = 0;
       if (roundStartTime) {
         const clickTime = Date.now();
-        const decisionTimeMs = clickTime - roundStartTime;
-        const decisionTimeSeconds = decisionTimeMs / 1000;
-        console.log(`[TIMING] Decision time: ${decisionTimeSeconds.toFixed(2)} seconds (${decisionTimeMs}ms)`);
+        const elapsed = clickTime - roundStartTime;
+        const elapsedSeconds = elapsed / 1000;
+        console.log(`[TIMING] Decision time: ${elapsedSeconds.toFixed(2)} seconds (${elapsed}ms)`);
+        console.log(`[DEBUG] roundStartTime=${roundStartTime}, clickTime=${clickTime}, elapsed=${elapsed}`);
         
-        // Simple formula: 
-        // - Under 0.5 seconds: 1000 points
-        // - 0.5 to 10 seconds: Linear decrease from 1000 to 500
-        // - Over 10 seconds: 500 points
-        
-        if (decisionTimeMs <= 500) {
-          // Grace period - full points
+        // EXACT same calculation as LiveScoreDisplay
+        if (elapsed <= 500) {
           pointsEarned = 1000;
-        } else if (decisionTimeMs >= 10000) {
-          // Too slow - minimum points
+          console.log(`[DEBUG] Under 500ms - giving 1000 points`);
+        } else if (elapsed >= 10000) {
           pointsEarned = 500;
+          console.log(`[DEBUG] Over 10000ms - giving 500 points`);
         } else {
-          // Linear decrease from 1000 to 500 over 9.5 seconds (500ms to 10000ms)
-          const timeRange = 10000 - 500; // 9500ms range
-          const timeInRange = decisionTimeMs - 500; // How far into the range
+          const timeRange = 10000 - 500;
+          const timeInRange = elapsed - 500;
           const percentThroughRange = timeInRange / timeRange;
           const pointsLost = 500 * percentThroughRange;
           pointsEarned = Math.floor(1000 - pointsLost);
+          console.log(`[DEBUG] In range - timeInRange=${timeInRange}, percent=${percentThroughRange.toFixed(3)}, lost=${pointsLost.toFixed(0)}, earned=${pointsEarned}`);
         }
         
-        console.log(`Points earned: ${pointsEarned}`);
+        console.log(`[POINTS] Final points earned: ${pointsEarned}`);
       } else {
         pointsEarned = 500; // Fallback if timing failed
-        console.log('Timer failed, using fallback points');
+        console.log('[ERROR] Timer was null! Using fallback 500 points');
+        console.log(`[ERROR] gameState=${gameState}, battle exists=${!!battle}`);
       }
       
       setLastPointsEarned(pointsEarned);
@@ -423,15 +472,15 @@ export default function ThumbnailBattlePage() {
   }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player]);
 
   const handleNext = async () => {
-    // Clear results and reset timer for new round
+    // Clear results for new round
     setSelectedVideo(null);
     setIsCorrect(null);
-    setRoundStartTime(null); // Reset timer
     setLastPointsEarned(null); // Clear points display
     
     // Load new battle and transition
     await loadNewBattle();
     setGameState('playing');
+    // Timer will be reset by the useEffect when gameState changes to 'playing'
   };
 
   const handleRestart = () => {
@@ -664,7 +713,7 @@ export default function ThumbnailBattlePage() {
             exit={{ y: -100 }}
             transition={{ type: "spring", stiffness: 100 }}
           >
-            <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="max-w-7xl mx-auto px-6 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
@@ -683,14 +732,14 @@ export default function ThumbnailBattlePage() {
                     score >= 5 ? 'bg-[#00ff00]/20 text-[#00ff00]' : 'bg-secondary/50'
                   }`}>
                     <span className="text-xs uppercase tracking-wider">Score</span>
-                    <span className="font-semibold text-lg">
+                    <span className="font-semibold text-sm">
                       {score}
                     </span>
                   </div>
                   {player && player.best_score > 0 && (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
                       <span className="text-xs uppercase tracking-wider">Best</span>
-                      <span className="font-semibold">
+                      <span className="font-semibold text-sm">
                         {player.best_score}
                       </span>
                     </div>
@@ -917,23 +966,12 @@ export default function ThumbnailBattlePage() {
         )}
       </AnimatePresence>
 
-      {/* Keyboard hints - only show during gameplay */}
-      {gameState !== 'start' && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <kbd className="px-2 py-1 bg-secondary/50 rounded text-xs font-mono">←</kbd>
-            <span>Select left</span>
+      {/* Live timer - only show during gameplay */}
+      {gameState === 'playing' && roundStartTime && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+          <div className="text-center">
+            <LiveScoreDisplay startTime={roundStartTime} />
           </div>
-          <div className="flex items-center gap-2">
-            <kbd className="px-2 py-1 bg-secondary/50 rounded text-xs font-mono">→</kbd>
-            <span>Select right</span>
-          </div>
-          {gameState === 'revealed' && (
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-secondary/50 rounded text-xs font-mono">Enter</kbd>
-              <span>Next</span>
-            </div>
-          )}
         </div>
       )}
 
