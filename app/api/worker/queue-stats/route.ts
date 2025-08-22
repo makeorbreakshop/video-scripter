@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { queueStatsCache } from '@/lib/simple-cache';
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     // Check cache first
     const cacheKey = 'queue-stats';
@@ -10,10 +11,6 @@ export async function GET(request: NextRequest) {
     if (cached) {
       return NextResponse.json(cached);
     }
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get queue statistics - limit to recent jobs only
     const { data: jobs, error: jobsError } = await supabase

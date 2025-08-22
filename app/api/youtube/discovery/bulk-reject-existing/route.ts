@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     // Get existing channel names from videos table
     const { data: existingChannels, error: existingError } = await supabase
@@ -76,6 +73,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Get existing channel names from videos table
     const { data: existingChannels } = await supabase

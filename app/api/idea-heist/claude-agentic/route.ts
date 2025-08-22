@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeClaudeAgenticAnalysis } from '@/lib/agentic/claude-orchestrator';
 import { isClaudeConfigured } from '@/lib/agentic/claude-integration';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -64,10 +64,6 @@ export async function POST(request: NextRequest) {
     // Store the result in the database if successful
     if (result.success && result.pattern) {
       try {
-        const supabase = createClient(
-          process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
         
         const { error: insertError } = await supabase
           .from('idea_heist_discoveries')

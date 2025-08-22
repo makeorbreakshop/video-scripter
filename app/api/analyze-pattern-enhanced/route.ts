@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { pineconeService } from '@/lib/pinecone-service';
@@ -54,10 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     console.log(`🔍 [Enhanced] Analyzing pattern for video: ${video_id}`);
 

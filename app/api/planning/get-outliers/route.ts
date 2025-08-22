@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Helper function to extract seconds from ISO 8601 duration
 function extractDurationSeconds(duration: string | null): number {
@@ -22,6 +18,7 @@ function extractDurationSeconds(duration: string | null): number {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { topic, timeframe } = await request.json()
 

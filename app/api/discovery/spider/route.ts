@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { headers } from 'next/headers';
 import { getNicheSeeds } from '@/lib/educational-niches';
 import { spawn } from 'child_process';
 import path from 'path';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { nicheId, config, mode = 'test' } = await request.json();
     
@@ -38,10 +39,6 @@ export async function POST(request: NextRequest) {
     }
     
     // Create supabase client to get user
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
         global: {
           headers: {
             authorization: `Bearer ${token}`

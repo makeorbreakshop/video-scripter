@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { channelId, channelTitle, action = 'add' } = await request.json();
 
@@ -13,10 +14,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role for admin operations
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     if (action === 'add') {
       // First check if channel exists
@@ -139,11 +136,8 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to list all institutional channels
 export async function GET() {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     const { data, error } = await supabase
       .from('channels')

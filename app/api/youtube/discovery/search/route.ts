@@ -4,12 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface SearchFilters {
   minSubscribers?: number;
@@ -20,6 +16,7 @@ interface SearchFilters {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     // Get statistics for search-based discovery
     const { data: stats, error } = await supabase
@@ -73,6 +70,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { searchTerm, filters = {}, maxResults = 50, searchType = 'channel' } = await request.json();
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { batchGenerateThumbnailEmbeddings } from '@/lib/thumbnail-embeddings';
 import { pineconeThumbnailService } from '@/lib/pinecone-thumbnail-service';
 
@@ -15,14 +15,11 @@ interface VideoData {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     console.log('📊 Getting thumbnail batch processing status for all years...');
     
     // Create admin client to access videos data
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get statistics for all videos since 2024
     const { data: stats, error: statsError } = await supabase
@@ -99,6 +96,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { 
       batchSize = 75, 
@@ -112,10 +110,6 @@ export async function POST(request: NextRequest) {
     console.log(`📦 Batch size: ${batchSize}, Start offset: ${startOffset}, Max videos: ${maxVideos || 'all'}`);
     
     // Create admin client to bypass RLS
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get videos from specified year range that need thumbnail processing
     let query = supabase

@@ -4,12 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 console.log('🔧 Supabase config check:', {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30) + '...',
@@ -24,6 +20,7 @@ const manualChannelIds: Record<string, string> = {
 };
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { channels } = await request.json();
 

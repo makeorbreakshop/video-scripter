@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Use the materialized view for accurate counts without 1000 row limit
     const { data: topics, error } = await supabase

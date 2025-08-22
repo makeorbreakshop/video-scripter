@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     
     // This endpoint recalculates the global performance envelope curves
     // In production, this would be a scheduled job
@@ -123,11 +120,8 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to check current envelope status
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     
     // Get envelope summary
     const { data: envelopeData, error } = await supabase

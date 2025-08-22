@@ -4,12 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface OrchestratorConfig {
   dailyQuota: {
@@ -52,6 +48,7 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
 };
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { 
       action = 'full_run',
@@ -427,6 +424,7 @@ async function logOrchestratorRun(summary: any) {
 
 // GET endpoint to check orchestrator status
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Get today's metrics
     const today = new Date().toISOString().split('T')[0];

@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     const { batchSize = 1000 } = await request.json();
 
@@ -64,6 +61,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
     // Check current baseline status
     const { data: needsProcessing } = await supabase

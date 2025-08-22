@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     
     // Get channel_id from query params
     const searchParams = request.nextUrl.searchParams;
@@ -98,11 +95,8 @@ export async function GET(request: NextRequest) {
 
 // POST endpoint to calculate baselines for multiple channels
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     const { channel_ids } = await request.json();
     
     if (!channel_ids || !Array.isArray(channel_ids)) {

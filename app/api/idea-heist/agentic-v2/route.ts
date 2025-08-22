@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { IdeaHeistAgent } from '@/lib/agentic/orchestrator/idea-heist-agent';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { isOpenAIConfigured } from '@/lib/agentic/openai-integration';
 import { createAgentLogger } from '@/lib/agentic/logger/agent-logger';
 
@@ -50,10 +50,6 @@ export async function POST(request: NextRequest) {
       }
       
       // Get Supabase client
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
       
       // Verify video exists
       const { data: video, error: videoError } = await supabase

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 interface PerformanceCategory {
   ratio: number;
@@ -22,11 +22,8 @@ function classifyPerformance(ratio: number): PerformanceCategory {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     
     // Get video_id from query params
     const searchParams = request.nextUrl.searchParams;
@@ -197,11 +194,8 @@ export async function GET(request: NextRequest) {
 
 // POST endpoint to classify multiple videos
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
     const { video_ids, update_database = false } = await request.json();
     
     if (!video_ids || !Array.isArray(video_ids)) {

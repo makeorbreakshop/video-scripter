@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export async function GET(request: NextRequest) {
-  try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -92,6 +88,7 @@ export async function GET(request: NextRequest) {
 
 // Get channel summary for a specific channel
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { channel_id } = await request.json();
     

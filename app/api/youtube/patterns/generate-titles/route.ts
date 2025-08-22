@@ -3,17 +3,13 @@ import { openai } from '@/lib/openai-client';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { pineconeService } from '@/lib/pinecone-service';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { searchLogger } from '@/lib/search-logger';
 import { deduplicatePatterns } from '@/lib/pattern-deduplication';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Type definitions
-interface VideoResult {
   video_id: string;
   title: string;
   channel_name: string;

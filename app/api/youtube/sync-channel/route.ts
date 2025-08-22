@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 /**
  * Channel Sync API
  * Fetches all videos from a YouTube channel and imports missing ones to the database
  */
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { accessToken, channelId = 'Make or Break Shop' } = await request.json();
 

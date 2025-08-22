@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 interface OutlierVideo {
   video_id: string;
@@ -76,10 +76,6 @@ export async function GET(request: NextRequest) {
     const days = daysMap[timeRange as keyof typeof daysMap] || 7;
 
     // Initialize Supabase client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     console.log(`🎯 Idea Radar: Finding outliers (${timeRange}, score>${minScore}, views>${minViews}, domain:${domain || 'all'}, randomize:${randomize})`);
 
@@ -292,14 +288,11 @@ export async function GET(request: NextRequest) {
 
 // Get unique domains for filtering
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { action } = await request.json();
     
     if (action === 'get-domains') {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
 
       const { data, error } = await supabase
         .from('videos')

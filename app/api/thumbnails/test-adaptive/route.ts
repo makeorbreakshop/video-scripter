@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { batchGenerateThumbnailEmbeddings } from '@/lib/thumbnail-embeddings';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { videoCount = 200 } = await request.json();
     
@@ -13,10 +14,6 @@ export async function POST(request: NextRequest) {
     const testStartTime = Date.now();
     
     // Create admin client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get unprocessed videos
     const { data: videos, error: videosError } = await supabase

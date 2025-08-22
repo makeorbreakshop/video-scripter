@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { openai } from '@/lib/openai-client';
 import { Pinecone } from '@pinecone-database/pinecone';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!
@@ -26,6 +22,7 @@ interface SearchResult {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { query, limit = 20, includeFormats = false } = await request.json();
 

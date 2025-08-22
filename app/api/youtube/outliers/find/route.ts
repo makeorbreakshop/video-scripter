@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai-client';
 import { pineconeService } from '@/lib/pinecone-service';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Type definitions
-interface VideoResult {
   video_id: string;
   title: string;
   channel_name: string;
@@ -163,6 +159,7 @@ async function searchVideos(query: string, limit: number = 100): Promise<VideoRe
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     const { concept, options = {} } = body;

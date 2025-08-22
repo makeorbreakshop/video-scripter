@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { openai } from '@/lib/openai-client';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { Pinecone } from '@pinecone-database/pinecone';
 
 // Initialize Pinecone
@@ -9,10 +9,6 @@ const pinecone = new Pinecone({
 });
 
 // Initialize Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: Request) {
   console.log('🚀 Pattern Search API called');

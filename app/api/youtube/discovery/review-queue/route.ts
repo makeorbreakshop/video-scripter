@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { searchParams } = new URL(request.url);
     const sortBy = searchParams.get('sortBy') || 'subscriber_count'; // subscriber_count, discovery_count, video_count
@@ -159,6 +156,7 @@ function calculateRelevanceScore(channel: any): number {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     const { channelId, action, reason } = body; // action: 'approve' | 'reject'

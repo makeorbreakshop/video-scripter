@@ -6,9 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { videoImportService, VideoImportRequest } from '../../../../lib/unified-video-import';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     
@@ -55,10 +56,6 @@ export async function POST(request: NextRequest) {
 
     if (useQueue) {
       // Use asynchronous queue system
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
 
       // Check if this is a channel import and if the channel already exists
       if (importRequest.source === 'competitor' && importRequest.channelIds?.length > 0) {

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { pineconeService } from '@/lib/pinecone-service';
 
 export async function GET(request: Request) {
+  const supabase = getSupabase();
   try {
     const { searchParams } = new URL(request.url);
     const videoId = searchParams.get('videoId');
@@ -16,10 +17,6 @@ export async function GET(request: Request) {
       );
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get the source video to find its title
     const { data: sourceVideo, error: sourceError } = await supabase

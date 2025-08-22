@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from '@/lib/thumbnail-embeddings';
 import { pineconeThumbnailService } from '@/lib/pinecone-thumbnail-service';
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { videoCount = 50, useAdaptiveRateLimit = true } = await request.json();
     
@@ -12,10 +13,6 @@ export async function POST(request: NextRequest) {
     const testStartTime = Date.now();
     
     // Create admin client to bypass RLS
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get most recent videos that need thumbnail processing
     const { data: videos, error: videosError } = await supabase

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { OpenAI } from 'openai';
 import { pineconeService } from '@/lib/vector-db-service';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { searchLogger } from '@/lib/search-logger';
 import { discoverPatternsWithClaude } from '@/lib/anthropic-api';
 
@@ -9,12 +9,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const body = await request.json();
     const { concept } = body;

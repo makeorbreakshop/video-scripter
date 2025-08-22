@@ -6,13 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { quotaTracker } from '@/lib/youtube-quota-tracker';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface YouTubeVideoResponse {
   items: Array<{
@@ -45,6 +41,7 @@ interface YouTubeVideoResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const { accessToken, maxResults = 50, publishedAfter } = await request.json();
 
@@ -325,6 +322,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     // Get info about current video count and discovery status
     const { data: videoStats, error } = await supabase

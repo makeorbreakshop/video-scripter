@@ -4,14 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { pineconeService } from '@/lib/pinecone-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface SearchSuggestion {
   term: string;
@@ -21,6 +17,7 @@ interface SearchSuggestion {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   try {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
