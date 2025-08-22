@@ -1015,14 +1015,13 @@ export default function ThumbnailBattlePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <h2 className="text-xl font-semibold mb-4">Welcome! What should we call you?</h2>
                 <input
                   type="text"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && createPlayer()}
-                  placeholder="Enter your name"
-                  className="w-full px-4 py-2 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#00ff00] mb-4"
+                  placeholder="What's your name?"
+                  className="w-full px-4 py-3 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#00ff00] mb-4 text-lg"
                   maxLength={30}
                   autoFocus
                 />
@@ -1032,7 +1031,7 @@ export default function ThumbnailBattlePage() {
                   disabled={!playerName.trim()}
                 >
                   {battleQueue.length > 0 ? (
-                    <>Start Playing</>
+                    <>Let's Battle →</>
                   ) : (
                     <>Loading game...</>
                   )}
@@ -1225,45 +1224,39 @@ export default function ThumbnailBattlePage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-10 text-center flex-shrink-0">
-                <h2 className="text-4xl font-bold mb-3">Leaderboard</h2>
-                <div className="flex gap-4 justify-center mb-4">
+                <h2 className="text-4xl font-bold mb-6">Leaderboard</h2>
+                <div className="flex gap-8 justify-center">
                   <button
-                    className={`px-4 py-2 rounded-lg transition-colors ${
+                    className={`text-lg font-semibold transition-colors ${
                       leaderboardType === 'players' 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                        ? 'text-white' 
+                        : 'text-white/40 hover:text-white/60'
                     }`}
                     onClick={() => {
                       setLeaderboardType('players');
                       fetchLeaderboard('players');
                     }}
                   >
-                    All-Time Best
+                    All-Time
                   </button>
                   <button
-                    className={`px-4 py-2 rounded-lg transition-colors ${
+                    className={`text-lg font-semibold transition-colors ${
                       leaderboardType === 'games' 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                        ? 'text-white' 
+                        : 'text-white/40 hover:text-white/60'
                     }`}
                     onClick={() => {
                       setLeaderboardType('games');
                       fetchLeaderboard('games');
                     }}
                   >
-                    Recent Games
+                    Recent
                   </button>
                 </div>
-                <button
-                  className="text-muted-foreground hover:text-foreground text-sm opacity-60"
-                  onClick={() => setShowLeaderboard(false)}
-                >
-                  click anywhere to close
-                </button>
               </div>
 
               {leaderboard.length > 0 ? (
-                <div className="font-mono text-xl space-y-3 overflow-y-auto flex-1 pr-2">
+                <div className="font-mono text-xl space-y-3 overflow-y-auto flex-1 scrollbar-hide">
                   {leaderboard.map((entry, index) => (
                     <div
                       key={index}
