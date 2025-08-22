@@ -86,8 +86,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-  }
-}
 
 // Get channel summary for a specific channel
 export async function POST(request: NextRequest) {
