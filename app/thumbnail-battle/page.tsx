@@ -301,7 +301,7 @@ export default function ThumbnailBattlePage() {
   };
 
   // Get next battle from queue or fetch new ones
-  const loadNewBattle = async (isInitial = false) => {
+  const loadNewBattle = async (isInitial = false): Promise<boolean> => {
     // Don't reset timer here - only reset when moving to next round
     
     if (!isInitial) {
@@ -325,6 +325,7 @@ export default function ThumbnailBattlePage() {
       if (!isInitial) {
         setTransitioning(false);
       }
+      return true; // Successfully loaded from queue
     } else {
       // Fallback: fetch directly if queue is empty
       try {
@@ -336,12 +337,17 @@ export default function ThumbnailBattlePage() {
         fetchMatchups(5).then(newMatchups => {
           setBattleQueue(newMatchups);
         });
-      } catch (error) {
-        console.error('Failed to load battle:', error);
-      } finally {
+        
         if (!isInitial) {
           setTransitioning(false);
         }
+        return true; // Successfully fetched new battle
+      } catch (error) {
+        console.error('Failed to load battle:', error);
+        if (!isInitial) {
+          setTransitioning(false);
+        }
+        return false; // Failed to load battle
       }
     }
   };
@@ -479,15 +485,23 @@ export default function ThumbnailBattlePage() {
   }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player, roundStartTime]); // ADD roundStartTime to dependencies!
 
   const handleNext = async () => {
+    console.log('[NEXT] Starting handleNext');
     // Clear results for new round
     setSelectedVideo(null);
     setIsCorrect(null);
     setLastPointsEarned(null); // Clear points display
     
     // Load new battle and transition
-    await loadNewBattle();
-    setGameState('playing');
-    // Timer will be reset by the useEffect when gameState changes to 'playing'
+    const success = await loadNewBattle();
+    console.log('[NEXT] Battle loaded:', success);
+    
+    if (success) {
+      console.log('[NEXT] Setting game state to playing');
+      setGameState('playing');
+      // Timer will be reset by the useEffect when gameState changes to 'playing'
+    } else {
+      console.log('[NEXT] Failed to load battle, cannot continue');
+    }
   };
 
   const handleRestart = async () => {
@@ -523,18 +537,23 @@ export default function ThumbnailBattlePage() {
 
   const handleStartGame = async () => {
     // Ensure we have a battle before starting
+    let hasLoadedBattle = !!battle;
+    
     if (!battle) {
       setTransitioning(true);
       const success = await loadNewBattle();
       setTransitioning(false);
       if (!success) {
         // If loading fails, try loading initial battles
-        await loadInitialBattles();
+        const fallbackSuccess = await loadInitialBattles();
+        hasLoadedBattle = fallbackSuccess;
+      } else {
+        hasLoadedBattle = true;
       }
     }
     
-    // Only transition if we now have a battle
-    if (battle || battleQueue.length > 0) {
+    // Transition to playing state - we either had a battle or just loaded one
+    if (hasLoadedBattle) {
       setGameState('playing');
     }
   };
