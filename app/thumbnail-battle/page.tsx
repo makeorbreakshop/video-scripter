@@ -168,11 +168,16 @@ export default function ThumbnailBattlePage() {
     // Load preview immediately for welcome screen (FAST)
     loadWelcomePreview();
     
-    // Start loading battles in background for the game
-    loadInitialBattles();
-    
-    // Check for existing player
-    checkExistingPlayer();
+    // Defer heavy operations to next tick to allow initial render
+    setTimeout(() => {
+      // Start loading battles in background for the game
+      loadInitialBattles();
+      
+      // Check for existing player after a small delay to prevent state change blocking
+      setTimeout(() => {
+        checkExistingPlayer();
+      }, 100);
+    }, 0);
     
     // Leaderboard loaded only on game over
   }, []);
@@ -375,6 +380,10 @@ export default function ThumbnailBattlePage() {
       const response = await fetch('/api/thumbnail-battle/preview');
       const data = await response.json();
       if (data && data.videoA && data.videoB) {
+        // Fix avatar URLs if they exist
+        if (data.channel?.channel_avatar) {
+          data.channel.channel_avatar = fixAvatarUrl(data.channel.channel_avatar);
+        }
         setWelcomePreview(data);
         console.log('[PREVIEW] Loaded welcome screen preview');
       }
@@ -1021,7 +1030,7 @@ export default function ThumbnailBattlePage() {
           >
             <div className="max-w-4xl w-full">
               {/* Thumbnail preview - uses fast preview endpoint or falls back to battleQueue */}
-              {welcomePreview || (battleQueue.length > 0 && battleQueue[0]) ? (
+              {(welcomePreview && welcomePreview.videoA && welcomePreview.videoB) || (battleQueue.length > 0 && battleQueue[0]) ? (
                 <motion.div 
                   className="flex items-center justify-center gap-10 mb-12"
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -1103,11 +1112,7 @@ export default function ThumbnailBattlePage() {
                   onClick={createPlayer}
                   disabled={!playerName.trim()}
                 >
-                  {battleQueue.length > 0 ? (
-                    <>Let's Battle</>
-                  ) : (
-                    <>Loading...</>
-                  )}
+                  Let's Battle
                 </button>
               </div>
             </div>
