@@ -295,7 +295,9 @@ export default function ThumbnailBattlePage() {
     if (matchups.length > 0) {
       setBattle(matchups[0]);
       setBattleQueue(matchups.slice(1));
+      return true;
     }
+    return false;
   };
 
   // Get next battle from queue or fetch new ones
