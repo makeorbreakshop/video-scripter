@@ -14,6 +14,7 @@ export function GoogleApiSettings() {
   const [testStatus, setTestStatus] = useState<null | "success" | "error">(null)
   const [testMessage, setTestMessage] = useState("")
   const [isTesting, setIsTesting] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
   const { toast } = useToast()
 
   // Load saved credentials on mount
@@ -22,10 +23,12 @@ export function GoogleApiSettings() {
       const savedApiKey = localStorage.getItem("YOUTUBE_API_KEY") || ""
       const savedClientId = localStorage.getItem("GOOGLE_CLIENT_ID") || ""
       const savedClientSecret = localStorage.getItem("GOOGLE_CLIENT_SECRET") || ""
+      const hasOAuthTokens = !!localStorage.getItem("youtube_oauth_tokens")
       
       setApiKey(savedApiKey)
       setClientId(savedClientId)
       setClientSecret(savedClientSecret)
+      setIsSignedIn(hasOAuthTokens)
     }
   }, [])
   
@@ -113,7 +116,10 @@ export function GoogleApiSettings() {
   
   // Sign out of Google (clear tokens only)
   const signOut = () => {
-    localStorage.removeItem("youtube_oauth_tokens")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("youtube_oauth_tokens")
+    }
+    setIsSignedIn(false)
     toast({
       title: "Signed out",
       description: "You've been signed out of your Google account.",
@@ -137,7 +143,9 @@ export function GoogleApiSettings() {
     const redirectUri = `${window.location.origin}/oauth-callback`
     const scope = "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl"
     const state = Math.random().toString(36).substring(2, 15)
-    localStorage.setItem("oauth_state", state)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("oauth_state", state)
+    }
     
     // Construct URL with force prompt to allow switching accounts
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth")
@@ -261,13 +269,13 @@ export function GoogleApiSettings() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm">
-              {localStorage.getItem("youtube_oauth_tokens") 
+              {isSignedIn 
                 ? "Currently signed in to YouTube" 
                 : "Not signed in to YouTube"}
             </p>
           </div>
           
-          {localStorage.getItem("youtube_oauth_tokens") ? (
+          {isSignedIn ? (
             <Button onClick={signOut} variant="outline" size="sm">
               Sign Out
             </Button>
