@@ -63,9 +63,9 @@ export default function OutliersPage() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-[#00ff00] font-bold drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]';
-    if (score >= 80) return 'text-yellow-400 font-semibold';
-    return 'text-red-500';
+    if (score >= 90) return 'text-[#00ff00] font-bold text-lg tabular-nums';
+    if (score >= 80) return 'text-yellow-400 font-semibold tabular-nums';
+    return 'text-red-500 tabular-nums';
   };
 
   return (
@@ -78,10 +78,10 @@ export default function OutliersPage() {
           transition={{ duration: 0.5 }}
           className="text-center py-12"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-white">
             A giant list of YouTube videos that actually worked.
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
             Stop guessing what works. Get instant access to 500,000+ viral videos with performance scores, 
             updated daily. One-time payment, lifetime access.
           </p>
@@ -101,7 +101,7 @@ export default function OutliersPage() {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     onClick={handleGetAccess}
-                    className="w-full bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold py-3 min-h-[44px] text-base transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-md"
+                    className="w-full bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold py-3 min-h-[44px] text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
                   >
                     Get MY Access — $99
                   </Button>
@@ -114,7 +114,7 @@ export default function OutliersPage() {
               <div className="bg-black/50 p-6 rounded-md border border-gray-800">
                 <p className="text-[#00ff00] mb-4">✓ Email saved: {email}</p>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button className="w-full bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold py-3 min-h-[44px] transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-md">
+                  <Button className="w-full bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold py-3 min-h-[44px] text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg">
                     Complete Payment with Stripe
                   </Button>
                 </motion.div>
@@ -129,8 +129,8 @@ export default function OutliersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="bg-gray-900/50 border-gray-800 p-8 max-w-3xl mx-auto hover:border-gray-700 transition-all duration-200">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6">Why I Made This</h2>
+          <Card className="bg-black/40 border-gray-800 p-8 max-w-3xl mx-auto hover:border-gray-700 transition-all duration-200">
+            <h2 className="text-3xl font-bold mb-6 text-white">Why I Made This</h2>
             <div className="space-y-4 text-gray-400">
               <p>
                 I spent months manually tracking successful YouTube videos in spreadsheets, 
@@ -155,11 +155,11 @@ export default function OutliersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-white">
             See What's Inside
           </h2>
           
-          <Card className="bg-black/50 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-200">
+          <Card className="bg-black/60 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-200">
             {/* Filter Bar */}
             <div className="p-4 border-b border-gray-800 flex gap-2 flex-wrap bg-gray-900/50">
               <select className="bg-black/50 text-gray-300 border border-gray-700 rounded-md px-3 py-2 hover:bg-black/70 transition-colors cursor-pointer">
@@ -174,7 +174,7 @@ export default function OutliersPage() {
                 <option>Last 24 Hours</option>
               </select>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold transition-all duration-200 shadow-[0_0_15px_rgba(0,255,0,0.3)] rounded-md">
+                <Button className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_15px_rgba(0,255,0,0.3)] rounded-lg">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh
                 </Button>
@@ -201,10 +201,10 @@ export default function OutliersPage() {
                 <table className="w-full">
                   <thead className="bg-black/70 border-b border-gray-800">
                     <tr>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Video</th>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Channel</th>
-                      <th className="text-right p-4 text-gray-400 font-semibold">Views</th>
-                      <th className="text-right p-4 text-gray-400 font-semibold">Score</th>
+                      <th className="text-left p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Video</th>
+                      <th className="text-left p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Channel</th>
+                      <th className="text-right p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Views</th>
+                      <th className="text-right p-4 text-gray-400 font-bold text-sm uppercase tracking-wider">Score</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -218,7 +218,7 @@ export default function OutliersPage() {
                       >
                         <td className="p-4 flex items-center gap-3">
                           <img src={video.thumbnail} alt="" className="w-20 h-12 rounded object-cover border border-gray-800" />
-                          <span className="text-gray-100 font-medium">{video.title}</span>
+                          <span className="text-white font-medium text-base">{video.title}</span>
                         </td>
                         <td className="p-4 text-gray-400">{video.channel}</td>
                         <td className="p-4 text-right text-gray-300 font-semibold">
@@ -258,7 +258,7 @@ export default function OutliersPage() {
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button 
                       onClick={() => document.getElementById('email-input')?.focus()}
-                      className="bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-md"
+                      className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
                     >
                       Unlock Full Access
                     </Button>
@@ -275,7 +275,7 @@ export default function OutliersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-white">
             Everything You Get
           </h2>
           
@@ -284,9 +284,9 @@ export default function OutliersPage() {
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="bg-gray-900/50 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
+              <Card className="bg-black/40 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
                 <Database className="w-8 h-8 text-[#00ff00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                <h3 className="text-lg font-semibold mb-2">500,000+ Videos</h3>
+                <h3 className="text-xl font-bold mb-2 text-white">500,000+ Videos</h3>
                 <p className="text-gray-400 text-sm">
                   Comprehensive database of viral videos with full metadata
                 </p>
@@ -297,9 +297,9 @@ export default function OutliersPage() {
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="bg-gray-900/50 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
+              <Card className="bg-black/40 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
                 <TrendingUp className="w-8 h-8 text-[#00ff00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                <h3 className="text-lg font-semibold mb-2">Performance Scores</h3>
+                <h3 className="text-xl font-bold mb-2 text-white">Performance Scores</h3>
                 <p className="text-gray-400 text-sm">
                   AI-analyzed scores showing why each video succeeded
                 </p>
@@ -310,9 +310,9 @@ export default function OutliersPage() {
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="bg-gray-900/50 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
+              <Card className="bg-black/40 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
                 <RefreshCw className="w-8 h-8 text-[#00ff00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                <h3 className="text-lg font-semibold mb-2">Daily Updates</h3>
+                <h3 className="text-xl font-bold mb-2 text-white">Daily Updates</h3>
                 <p className="text-gray-400 text-sm">
                   Fresh viral videos added automatically every single day
                 </p>
@@ -323,9 +323,9 @@ export default function OutliersPage() {
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="bg-gray-900/50 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
+              <Card className="bg-black/40 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
                 <CheckCircle className="w-8 h-8 text-[#00ff00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                <h3 className="text-lg font-semibold mb-2">One-Time Payment</h3>
+                <h3 className="text-xl font-bold mb-2 text-white">One-Time Payment</h3>
                 <p className="text-gray-400 text-sm">
                   No subscriptions. Pay once, access forever.
                 </p>
@@ -340,15 +340,15 @@ export default function OutliersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-white">
             Why One-Time Beats Monthly
           </h2>
           
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-gray-900/50 border-[#00ff00]/30 p-6 shadow-[0_0_20px_rgba(0,255,0,0.1)]">
-                <h3 className="text-xl font-semibold mb-4 text-[#00ff00]">Outliers Database</h3>
-                <div className="text-3xl font-bold mb-4">$99</div>
+              <Card className="bg-black/60 border-[#00ff00]/30 p-6 shadow-[0_0_20px_rgba(0,255,0,0.1)]">
+                <h3 className="text-2xl font-bold mb-4 text-[#00ff00]">Outliers Database</h3>
+                <div className="text-4xl font-bold mb-4 text-white">$99</div>
                 <p className="text-gray-400 mb-4">One-time payment</p>
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
@@ -374,9 +374,9 @@ export default function OutliersPage() {
                 </ul>
               </Card>
               
-              <Card className="bg-gray-900/30 border-gray-800 p-6 opacity-60">
-                <h3 className="text-xl font-semibold mb-4 text-gray-500">Typical Tools</h3>
-                <div className="text-3xl font-bold mb-4">$50-150</div>
+              <Card className="bg-black/30 border-gray-800 p-6 opacity-60">
+                <h3 className="text-2xl font-bold mb-4 text-gray-500">Typical Tools</h3>
+                <div className="text-4xl font-bold mb-4 text-white">$50-150</div>
                 <p className="text-gray-400 mb-4">Per month, forever</p>
                 <ul className="space-y-2 text-gray-500">
                   <li className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export default function OutliersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-white">
             Frequently Asked Questions
           </h2>
           
@@ -480,7 +480,7 @@ export default function OutliersPage() {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="text-center py-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white">
             Ready to Stop Guessing?
           </h2>
           <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
@@ -494,7 +494,7 @@ export default function OutliersPage() {
           >
             <Button 
               onClick={() => document.getElementById('email-input')?.focus()}
-              className="bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold py-3 px-8 min-h-[44px] text-base transition-all duration-200 shadow-[0_0_25px_rgba(0,255,0,0.4)] hover:shadow-[0_0_35px_rgba(0,255,0,0.6)] rounded-md"
+              className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold py-3 px-8 min-h-[44px] text-lg transition-all duration-200 shadow-[0_0_25px_rgba(0,255,0,0.4)] hover:shadow-[0_0_35px_rgba(0,255,0,0.6)] rounded-lg"
             >
               Unlock MY Vault — $99
             </Button>
@@ -520,7 +520,7 @@ export default function OutliersPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Card className="bg-gray-900 border-gray-800 p-6 max-w-md w-full relative shadow-[0_0_40px_rgba(0,255,0,0.2)]">
+              <Card className="bg-black/90 border-gray-800 p-6 max-w-md w-full relative shadow-[0_0_40px_rgba(0,255,0,0.2)]">
                 <button 
                   onClick={() => setShowEmailCapture(false)}
                   className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
@@ -530,7 +530,7 @@ export default function OutliersPage() {
                 
                 <Sparkles className="w-8 h-8 text-[#00ff00] mb-3 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
                 
-                <h3 className="text-xl font-semibold mb-2">
+                <h3 className="text-2xl font-bold mb-2 text-white">
                   Get 10 Free Viral Video Examples
                 </h3>
                 <p className="text-gray-400 mb-4">
@@ -547,7 +547,7 @@ export default function OutliersPage() {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     onClick={() => setShowEmailCapture(false)}
-                    className="w-full bg-[#00ff00] hover:bg-[#00ff00]/80 text-black font-bold transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-md"
+                    className="w-full bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] rounded-lg"
                   >
                     Send My Examples
                   </Button>
