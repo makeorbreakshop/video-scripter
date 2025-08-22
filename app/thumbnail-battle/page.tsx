@@ -82,29 +82,22 @@ export default function ThumbnailBattlePage() {
   const [totalGames, setTotalGames] = useState(0);
   const [correctPicks, setCorrectPicks] = useState(0);
   
-  // Image loading tracking for timing
-  const [imagesLoaded, setImagesLoaded] = useState({ a: false, b: false });
+  // Timing for speed-based scoring
   const [roundStartTime, setRoundStartTime] = useState<number | null>(null);
   const [lastPointsEarned, setLastPointsEarned] = useState<number | null>(null);
 
-  // Start timer when both images are loaded OR immediately if playing (for cached images)
+  // Start timer when game state changes to playing AND we have a new battle
   useEffect(() => {
-    if (gameState === 'playing' && !roundStartTime) {
-      // For cached images, they might already be loaded
-      // Start timer immediately or wait for images
-      if (imagesLoaded.a && imagesLoaded.b) {
-        setRoundStartTime(Date.now());
-      } else {
-        // Give images a chance to load, but start timer after a short delay anyway
-        const timeout = setTimeout(() => {
-          if (gameState === 'playing' && !roundStartTime) {
-            setRoundStartTime(Date.now());
-          }
-        }, 100);
-        return () => clearTimeout(timeout);
-      }
+    if (gameState === 'playing' && battle && !roundStartTime) {
+      // Small delay to ensure UI has transitioned
+      const timer = setTimeout(() => {
+        const now = Date.now();
+        setRoundStartTime(now);
+        console.log(`[TIMER] Started at ${new Date(now).toLocaleTimeString()}.${now % 1000}`);
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [imagesLoaded, gameState, roundStartTime]);
+  }, [gameState, battle, roundStartTime]);
 
   useEffect(() => {
     // Start loading battles immediately in background
@@ -251,8 +244,7 @@ export default function ThumbnailBattlePage() {
 
   // Get next battle from queue or fetch new ones
   const loadNewBattle = async (isInitial = false) => {
-    // Reset image loading and timer for new round
-    setImagesLoaded({ a: false, b: false });
+    // Reset timer for new round
     setRoundStartTime(null);
     
     if (!isInitial) {
@@ -337,7 +329,8 @@ export default function ThumbnailBattlePage() {
 
   const handleSelection = useCallback((selection: 'A' | 'B') => {
     if (gameState !== 'playing' || !battle) return;
-
+    
+    console.log(`[CLICK] Selected ${selection} at ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
     setSelectedVideo(selection);
     
     const winner = battle!.videoA.temporal_performance_score > battle!.videoB.temporal_performance_score ? 'A' : 'B';
@@ -356,12 +349,35 @@ export default function ThumbnailBattlePage() {
       // Calculate points based on decision time
       let pointsEarned = 0;
       if (roundStartTime) {
-        const decisionTimeMs = Date.now() - roundStartTime;
-        const clampedTime = Math.min(Math.max(decisionTimeMs, 250), 10000); // Clamp between 250ms and 10s
-        const timeBonus = 500 * (1 - clampedTime / 10000);
-        pointsEarned = Math.round(500 + timeBonus); // Base 500 + up to 500 time bonus
+        const clickTime = Date.now();
+        const decisionTimeMs = clickTime - roundStartTime;
+        const decisionTimeSeconds = decisionTimeMs / 1000;
+        console.log(`[TIMING] Decision time: ${decisionTimeSeconds.toFixed(2)} seconds (${decisionTimeMs}ms)`);
+        
+        // Simple formula: 
+        // - Under 0.5 seconds: 1000 points
+        // - 0.5 to 10 seconds: Linear decrease from 1000 to 500
+        // - Over 10 seconds: 500 points
+        
+        if (decisionTimeMs <= 500) {
+          // Grace period - full points
+          pointsEarned = 1000;
+        } else if (decisionTimeMs >= 10000) {
+          // Too slow - minimum points
+          pointsEarned = 500;
+        } else {
+          // Linear decrease from 1000 to 500 over 9.5 seconds (500ms to 10000ms)
+          const timeRange = 10000 - 500; // 9500ms range
+          const timeInRange = decisionTimeMs - 500; // How far into the range
+          const percentThroughRange = timeInRange / timeRange;
+          const pointsLost = 500 * percentThroughRange;
+          pointsEarned = Math.floor(1000 - pointsLost);
+        }
+        
+        console.log(`Points earned: ${pointsEarned}`);
       } else {
         pointsEarned = 500; // Fallback if timing failed
+        console.log('Timer failed, using fallback points');
       }
       
       setLastPointsEarned(pointsEarned);
@@ -385,11 +401,12 @@ export default function ThumbnailBattlePage() {
       // Lose a life
       const newLives = lives - 1;
       setLives(newLives);
+      setLastPointsEarned(null); // Clear points display on wrong answer
       
-      // Update player stats for loss
+      // Update player stats for loss (but keep current score!)
       if (player) {
         updatePlayerStats({
-          current_score: 0,
+          current_score: score, // Keep current score, don't reset to 0!
           total_battles: player.total_battles + 1,
           attempts_today: player.attempts_today + 1
         });
@@ -405,16 +422,16 @@ export default function ThumbnailBattlePage() {
     }
   }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player]);
 
-  const handleNext = () => {
-    // Clear results immediately for smooth transition
-    setGameState('playing');
+  const handleNext = async () => {
+    // Clear results and reset timer for new round
     setSelectedVideo(null);
     setIsCorrect(null);
+    setRoundStartTime(null); // Reset timer
+    setLastPointsEarned(null); // Clear points display
     
-    // Small delay to let the UI update before loading new data
-    setTimeout(() => {
-      loadNewBattle();
-    }, 100);
+    // Load new battle and transition
+    await loadNewBattle();
+    setGameState('playing');
   };
 
   const handleRestart = () => {
@@ -583,9 +600,6 @@ export default function ThumbnailBattlePage() {
             src={video.thumbnail_url} 
             alt={video.title}
             className="w-full h-full object-cover"
-            onLoad={() => {
-              setImagesLoaded(prev => ({ ...prev, [side.toLowerCase()]: true }));
-            }}
           />
           
           {/* Hover indicator for desktop */}

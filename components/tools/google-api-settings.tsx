@@ -18,20 +18,24 @@ export function GoogleApiSettings() {
 
   // Load saved credentials on mount
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("YOUTUBE_API_KEY") || ""
-    const savedClientId = localStorage.getItem("GOOGLE_CLIENT_ID") || ""
-    const savedClientSecret = localStorage.getItem("GOOGLE_CLIENT_SECRET") || ""
-    
-    setApiKey(savedApiKey)
-    setClientId(savedClientId)
-    setClientSecret(savedClientSecret)
+    if (typeof window !== 'undefined') {
+      const savedApiKey = localStorage.getItem("YOUTUBE_API_KEY") || ""
+      const savedClientId = localStorage.getItem("GOOGLE_CLIENT_ID") || ""
+      const savedClientSecret = localStorage.getItem("GOOGLE_CLIENT_SECRET") || ""
+      
+      setApiKey(savedApiKey)
+      setClientId(savedClientId)
+      setClientSecret(savedClientSecret)
+    }
   }, [])
   
   // Save credentials to localStorage
   const saveCredentials = () => {
-    localStorage.setItem("YOUTUBE_API_KEY", apiKey.trim())
-    localStorage.setItem("GOOGLE_CLIENT_ID", clientId.trim())
-    localStorage.setItem("GOOGLE_CLIENT_SECRET", clientSecret.trim())
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("YOUTUBE_API_KEY", apiKey.trim())
+      localStorage.setItem("GOOGLE_CLIENT_ID", clientId.trim())
+      localStorage.setItem("GOOGLE_CLIENT_SECRET", clientSecret.trim())
+    }
     
     toast({
       title: "Settings saved",
@@ -45,10 +49,12 @@ export function GoogleApiSettings() {
   
   // Clear all credentials
   const clearCredentials = () => {
-    localStorage.removeItem("YOUTUBE_API_KEY")
-    localStorage.removeItem("GOOGLE_CLIENT_ID")
-    localStorage.removeItem("GOOGLE_CLIENT_SECRET")
-    localStorage.removeItem("youtube_oauth_tokens")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("YOUTUBE_API_KEY")
+      localStorage.removeItem("GOOGLE_CLIENT_ID")
+      localStorage.removeItem("GOOGLE_CLIENT_SECRET")
+      localStorage.removeItem("youtube_oauth_tokens")
+    }
     
     setApiKey("")
     setClientId("")

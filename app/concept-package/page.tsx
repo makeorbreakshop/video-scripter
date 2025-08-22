@@ -318,6 +318,8 @@ export default function ConceptPackagePage() {
   // Load cached data on component mount
   useEffect(() => {
     const loadCachedData = () => {
+      if (typeof window === 'undefined') return;
+      
       try {
         let maxStep = 1;
         
@@ -396,49 +398,49 @@ export default function ConceptPackagePage() {
   // Save data to cache whenever it changes
   useEffect(() => {
     if (conceptJson) {
-      localStorage.setItem(CACHE_KEYS.conceptJson, conceptJson);
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.conceptJson, conceptJson);
     }
   }, [conceptJson]);
 
   useEffect(() => {
     if (searchResults.length > 0) {
-      localStorage.setItem(CACHE_KEYS.searchResults, JSON.stringify(searchResults));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.searchResults, JSON.stringify(searchResults));
     }
   }, [searchResults]);
 
   useEffect(() => {
     if (frameAnalysis) {
-      localStorage.setItem(CACHE_KEYS.frameAnalysis, JSON.stringify(frameAnalysis));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.frameAnalysis, JSON.stringify(frameAnalysis));
     }
   }, [frameAnalysis]);
 
   useEffect(() => {
     if (selectedChannel) {
-      localStorage.setItem(CACHE_KEYS.selectedChannel, JSON.stringify(selectedChannel));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.selectedChannel, JSON.stringify(selectedChannel));
     }
   }, [selectedChannel]);
 
   useEffect(() => {
     if (transcript) {
-      localStorage.setItem(CACHE_KEYS.transcript, transcript);
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.transcript, transcript);
     }
   }, [transcript]);
   
   useEffect(() => {
     if (frameAnalysisMeta) {
-      localStorage.setItem(CACHE_KEYS.frameAnalysisMeta, JSON.stringify(frameAnalysisMeta));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.frameAnalysisMeta, JSON.stringify(frameAnalysisMeta));
     }
   }, [frameAnalysisMeta]);
   
   useEffect(() => {
     if (Object.keys(generatedConceptsPerFrame).length > 0) {
-      localStorage.setItem(CACHE_KEYS.generatedConcepts, JSON.stringify(generatedConceptsPerFrame));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.generatedConcepts, JSON.stringify(generatedConceptsPerFrame));
     }
   }, [generatedConceptsPerFrame]);
 
   useEffect(() => {
     if (selectedConcepts.length > 0) {
-      localStorage.setItem(CACHE_KEYS.selectedConcepts, JSON.stringify(selectedConcepts));
+      typeof window !== "undefined" && localStorage.setItem(CACHE_KEYS.selectedConcepts, JSON.stringify(selectedConcepts));
     }
   }, [selectedConcepts]);
 

@@ -33,13 +33,15 @@ export default function ThumbnailBattlePage() {
   const [correctPicks, setCorrectPicks] = useState(0);
 
   useEffect(() => {
-    const saved = localStorage.getItem('thumbnailBattleHighScore');
-    const games = localStorage.getItem('thumbnailBattleTotalGames');
-    const correct = localStorage.getItem('thumbnailBattleCorrectPicks');
-    
-    if (saved) setHighScore(parseInt(saved));
-    if (games) setTotalGames(parseInt(games));
-    if (correct) setCorrectPicks(parseInt(correct));
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('thumbnailBattleHighScore');
+      const games = localStorage.getItem('thumbnailBattleTotalGames');
+      const correct = localStorage.getItem('thumbnailBattleCorrectPicks');
+      
+      if (saved) setHighScore(parseInt(saved));
+      if (games) setTotalGames(parseInt(games));
+      if (correct) setCorrectPicks(parseInt(correct));
+    }
     
     loadNewBattle();
   }, []);
@@ -85,8 +87,10 @@ export default function ThumbnailBattlePage() {
     const newCorrect = correctPicks + (correct ? 1 : 0);
     setTotalGames(newTotal);
     setCorrectPicks(newCorrect);
-    localStorage.setItem('thumbnailBattleTotalGames', newTotal.toString());
-    localStorage.setItem('thumbnailBattleCorrectPicks', newCorrect.toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('thumbnailBattleTotalGames', newTotal.toString());
+      localStorage.setItem('thumbnailBattleCorrectPicks', newCorrect.toString());
+    }
 
     if (correct) {
       const newStreak = streak + 1;
@@ -99,7 +103,9 @@ export default function ThumbnailBattlePage() {
       
       if (newStreak > highScore) {
         setHighScore(newStreak);
-        localStorage.setItem('thumbnailBattleHighScore', newStreak.toString());
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('thumbnailBattleHighScore', newStreak.toString());
+        }
       }
     } else {
       setTimeout(() => {
