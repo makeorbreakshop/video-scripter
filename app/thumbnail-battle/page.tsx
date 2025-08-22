@@ -867,8 +867,8 @@ export default function ThumbnailBattlePage() {
         onClick={onClick}
         disabled={gameState !== 'playing' || transitioning}
       >
-        {/* Large thumbnail with 16:9 aspect ratio - bigger on desktop */}
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-4 lg:mb-6">
+        {/* Thumbnail with full aspect ratio - just smaller on mobile */}
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-secondary mb-2 sm:mb-4 lg:mb-6">
           <img 
             src={video.thumbnail_url} 
             alt={video.title}
@@ -917,8 +917,8 @@ export default function ThumbnailBattlePage() {
           
         </div>
         
-        {/* Larger title with better typography - bigger on desktop */}
-        <h3 className="text-xl lg:text-2xl font-semibold leading-relaxed line-clamp-2">
+        {/* Responsive title - smaller on mobile to fit without scroll */}
+        <h3 className="text-sm sm:text-xl lg:text-2xl font-semibold leading-tight sm:leading-relaxed line-clamp-2">
           {video.title}
         </h3>
       </button>
@@ -1106,14 +1106,14 @@ export default function ThumbnailBattlePage() {
         ) : (
           // Game screen content
           <motion.main 
-            className="w-full mx-auto px-6 py-8 flex flex-col items-center"
+            className="w-full mx-auto px-4 sm:px-6 py-4 sm:py-8 flex flex-col items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
               {/* Channel info header */}
               {battle && battle.channel && (
-                <div className="flex items-center justify-center gap-3 mb-8">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-8 px-4">
                 {/* DEBUG: Show what we have */}
                 {console.log('[RENDER] Battle channel data:', {
                   avatar: battle.channel.channel_avatar,
@@ -1126,7 +1126,7 @@ export default function ThumbnailBattlePage() {
                       key={`avatar-${battle.matchup_id || battle.channel.channel_avatar}`}
                       src={fixAvatarUrl(battle.channel.channel_avatar) || ''}
                       alt={battle.channel.channel_title}
-                      className="w-12 h-12 rounded-full object-cover bg-gray-800"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover bg-gray-800 flex-shrink-0"
                       onError={(e) => {
                         console.log('[AVATAR ERROR] Failed to load:', battle.channel?.channel_avatar);
                         // Hide image and show fallback
@@ -1141,17 +1141,17 @@ export default function ThumbnailBattlePage() {
                         console.log('[AVATAR SUCCESS] Loaded:', battle.channel?.channel_avatar);
                       }}
                     />
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg font-bold text-white hidden">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm sm:text-lg font-bold text-white hidden flex-shrink-0">
                       {battle.channel.channel_title?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                   </>
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg font-bold text-white">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm sm:text-lg font-bold text-white flex-shrink-0">
                     {battle.channel.channel_title?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                 )}
-                <div>
-                  <h2 className="text-lg font-semibold">{battle.channel.channel_title}</h2>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base sm:text-lg font-semibold truncate">{battle.channel.channel_title}</h2>
                   <p className="text-xs text-muted-foreground">
                     {formatSubscriberCount(battle.channel.channel_subscriber_count)} subscribers
                   </p>
@@ -1159,8 +1159,8 @@ export default function ThumbnailBattlePage() {
               </div>
             )}
 
-            {/* Video comparison grid - centered and larger */}
-            <div className="grid md:grid-cols-2 gap-12 max-w-[1400px] w-full mx-auto mb-8 mt-8 px-4 lg:px-8">
+            {/* Video comparison - stacked on mobile, side-by-side on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-8 md:gap-12 max-w-[1400px] w-full mx-auto mb-4 sm:mb-8 mt-2 sm:mt-8 px-2 sm:px-4 lg:px-8">
               {battle && (
                 <>
                   <VideoCard 
@@ -1190,7 +1190,7 @@ export default function ThumbnailBattlePage() {
                 >
                   {(isCorrect || lives > 0) && (
                     <button 
-                      className="bg-[#00ff00] text-black rounded-lg py-3 px-8 font-semibold hover:bg-[#00ff00]/90 transition-colors inline-flex items-center gap-2 disabled:opacity-50"
+                      className="bg-[#00ff00] text-black rounded-lg py-2 sm:py-3 px-6 sm:px-8 text-sm sm:text-base font-semibold hover:bg-[#00ff00]/90 transition-colors inline-flex items-center gap-2 disabled:opacity-50"
                       onClick={handleNext}
                       disabled={transitioning}
                     >
