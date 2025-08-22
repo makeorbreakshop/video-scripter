@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    // Always redirect to dashboard for now
-    router.push("/dashboard")
+    // Redirect to thumbnail battle
+    router.push("/thumbnail-battle")
   }, [router])
 
   return (
