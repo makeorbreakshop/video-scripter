@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getMatchup } from '@/lib/thumbnail-battle-store';
+import { createClient } from '@supabase/supabase-js';
+
+function getSupabaseClient() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { matchup_id, selection, clicked_at } = body;
+    const { matchup_id, selection, clicked_at, session_id } = body;
     
     if (!matchup_id || !selection) {
       return NextResponse.json(
@@ -13,18 +23,36 @@ export async function POST(request: Request) {
       );
     }
     
-    // Get the stored matchup
-    const matchup = getMatchup(matchup_id);
+    const supabase = getSupabaseClient();
     
-    if (!matchup) {
+    // Get the stored matchup from database
+    const { data: matchup, error: fetchError } = await supabase
+      .from('thumbnail_battle_matchups')
+      .select('*')
+      .eq('matchup_id', matchup_id)
+      .single();
+    
+    if (fetchError || !matchup) {
+      console.error('Matchup not found:', fetchError);
       return NextResponse.json(
         { error: 'Invalid or expired matchup' },
         { status: 404 }
       );
     }
     
+    // Check if matchup has expired
+    if (new Date(matchup.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: 'Matchup has expired' },
+        { status: 404 }
+      );
+    }
+    
+    // Determine the winner based on scores
+    const winner = matchup.video_a_score > matchup.video_b_score ? 'A' : 'B';
+    
     // Check if answer is correct
-    const correct = selection === matchup.winner;
+    const correct = selection === winner;
     
     // Calculate points based on response time
     let points = 500; // Default points
@@ -50,15 +78,34 @@ export async function POST(request: Request) {
       points = 0;
     }
     
-    console.log(`[CHECK-ANSWER] Matchup ${matchup_id}: Selected ${selection}, Winner was ${matchup.winner}, Correct: ${correct}, Points: ${points}`);
+    // Update the matchup record with player's answer for analytics
+    if (session_id) {
+      const { error: updateError } = await supabase
+        .from('thumbnail_battle_matchups')
+        .update({
+          player_session_id: session_id,
+          player_selection: selection,
+          is_correct: correct,
+          response_time_ms: clicked_at || null,
+          answered_at: new Date().toISOString()
+        })
+        .eq('matchup_id', matchup_id);
+      
+      if (updateError) {
+        console.error('Failed to update matchup with player answer:', updateError);
+        // Continue anyway - this is just for analytics
+      }
+    }
+    
+    console.log(`[CHECK-ANSWER] Matchup ${matchup_id}: Selected ${selection}, Winner was ${winner}, Correct: ${correct}, Points: ${points}`);
     
     // Return the result with the scores now that they've made their choice
     return NextResponse.json({
       correct,
       points,
-      winner: matchup.winner,
-      videoA_score: matchup.videoA_score,
-      videoB_score: matchup.videoB_score
+      winner,
+      videoA_score: Number(matchup.video_a_score),
+      videoB_score: Number(matchup.video_b_score)
     });
     
   } catch (error) {

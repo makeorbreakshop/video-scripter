@@ -782,7 +782,7 @@ export default function ThumbnailBattlePage() {
 
   if (gameState === 'gameOver') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="min-h-screen bg-background flex flex-col items-center py-16 px-6">
         <motion.div
           className="w-full max-w-md flex flex-col items-center text-center"
           initial={{ scale: 0.9, opacity: 0 }}
@@ -791,9 +791,15 @@ export default function ThumbnailBattlePage() {
         >
           <h1 className="text-5xl font-bold mb-8">GAME OVER</h1>
           
-          {/* Leaderboard context - no scrolling */}
+          {/* Leaderboard context - scrollable container */}
           {leaderboardContext.length > 0 ? (
-            <div className="w-full mb-8">
+            <div 
+              className="w-full mb-8 overflow-y-auto" 
+              style={{ 
+                maxHeight: '400px',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
               <div className="font-mono text-lg space-y-2">
                 {leaderboardContext.map((entry) => (
                   <div
@@ -829,7 +835,7 @@ export default function ThumbnailBattlePage() {
           )}
           
           <button 
-            className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors"
+            className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors flex-shrink-0"
             onClick={handleRestart}
           >
             Play Again

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { storeMatchup } from '@/lib/thumbnail-battle-store';
 import crypto from 'crypto';
 
 function getSupabaseClient() {
@@ -27,9 +26,12 @@ function getBallparkSubs(count: number): number {
   return Math.round(count / 1000000) * 1000000;  // Round to nearest million
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const startTime = Date.now();
   console.log('API: Starting matchup generation');
+  
+  const { searchParams } = new URL(request.url);
+  const game_id = searchParams.get('game_id'); // Optional game_id for linking
   
   try {
     const supabase = getSupabaseClient();
@@ -98,10 +100,11 @@ export async function GET() {
       .single();
 
     // Enrich videos with channel data
-    // Fix avatar URL size - s800 doesn't work, use s88 instead
+    // Fix avatar URL size - only s88 and smaller work due to CORS restrictions
     let avatarUrl = channelData?.thumbnail_url || null;
-    if (avatarUrl && avatarUrl.includes('s800')) {
-      avatarUrl = avatarUrl.replace('s800', 's88');
+    if (avatarUrl) {
+      // Replace any size parameter with s88 (the largest that works)
+      avatarUrl = avatarUrl.replace(/s\d+-c/, 's88-c');
     }
     
     const channelInfo = {
@@ -176,17 +179,38 @@ export async function GET() {
     const finalVideoA = randomOrder ? videoA : videoB;
     const finalVideoB = randomOrder ? videoB : videoA;
     
-    // Generate unique matchup ID and store the answer
+    // Generate unique matchup ID and determine winner
     const matchupId = crypto.randomUUID();
     const winner = finalVideoA.temporal_performance_score > finalVideoB.temporal_performance_score ? 'A' : 'B';
+    const winnerId = winner === 'A' ? finalVideoA.id : finalVideoB.id;
     
-    // Store the matchup answer server-side
-    storeMatchup(
-      matchupId,
-      winner,
-      finalVideoA.temporal_performance_score,
-      finalVideoB.temporal_performance_score
-    );
+    // Store the matchup in database (10 minute expiry)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    // Prepare matchup data with optional game_id
+    const matchupData: any = {
+      matchup_id: matchupId,
+      video_a_id: finalVideoA.id,
+      video_b_id: finalVideoB.id,
+      video_a_score: finalVideoA.temporal_performance_score,
+      video_b_score: finalVideoB.temporal_performance_score,
+      winner_id: winnerId,
+      expires_at: expiresAt.toISOString()
+    };
+
+    // Link to game if game_id provided
+    if (game_id) {
+      matchupData.game_id = game_id;
+    }
+
+    const { error: insertError } = await supabase
+      .from('thumbnail_battle_matchups')
+      .insert(matchupData);
+    
+    if (insertError) {
+      console.error('Failed to store matchup:', insertError);
+      // Continue anyway - game can still work without storage
+    }
     
     // Format the response WITHOUT scores (secure version)
     const formatVideo = (video: any) => ({

@@ -1424,3 +1424,64 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - Fixed channel_id undefined bug: Added channel_id to OutlierVideo interface and API response
    - Corrected total count in randomized mode: Created `get_random_outlier_videos_with_data` RPC with accurate LEFT JOIN counting
    - Count now properly reflects institutional filtering: ~300 non-institutional videos vs incorrect 46,000+
+
+---
+
+## August 21, 2025
+
+14. **Idea Heist Performance Crisis & Random Pagination Research**
+   - Diagnosed ORDER BY random() timeout on 37K+ videos: COUNT(*) with LEFT JOIN taking 8+ seconds
+   - Researched industry patterns: Instagram/TikTok don't randomize per request, they pre-compute feeds and paginate
+   - Documented 5 approaches: random threshold (200ms), modulus shuffling, TABLESAMPLE, pre-filtered IDs, session feeds
+   - Key insight: Randomness happens once at feed generation, then simple ID queries handle pagination (50ms vs 8000ms)
+   - Solution direction: Pre-fetch filtered IDs with random sampling, then query specific IDs for instant loading
+
+15. **Video Import Pipeline 10x Optimization**
+   - Analyzed bottlenecks: YouTube API not limiting (500K videos/day capacity), Replicate CLIP was (20K/day max)
+   - Changed defaults: skipThumbnailEmbeddings=true, skipSummaries=true (removed 2 bottlenecks)
+   - Performance gain: 20,000 videos/day → 200,000+ videos/day (10x improvement)
+   - Still includes: metadata, title embeddings, topic/format classification, channel enrichment, baseline analytics
+   - Created test script verifying new defaults work with explicit enable option when needed
+
+16. **Thumbnail Battle Game Creation**
+   - Built educational game comparing video thumbnails to teach performance patterns
+   - Core mechanic: Show 2 thumbnails, guess which performed better vs channel baseline
+   - Technical: Used temporal_performance_score for fair comparison, 30+ day videos for stable metrics
+   - UI: Dark gradient design, glass morphism, Framer Motion animations, confetti celebrations
+   - Added real subscriber counts with ballpark formatting (300K, 1M, etc.)
+   - Implemented streak tracking, high score persistence, accuracy metrics
+
+17. **Discovery Import Bug Fix & Progress Logging**
+   - Fixed parameter mismatch: maxVideos → maxVideosPerChannel (was pulling 7000+ videos instead of 600)
+   - Added comprehensive progress logging to OpenAI embeddings (shows batch progress every 1-2 seconds)
+   - Lesson learned: Never kill "stuck" process without progress indicators - was actually working
+   - Before: 2-3 minutes of silence during batch processing. After: detailed progress every batch
+
+18. **Thumbnail Battle Same-Channel Comparison**
+   - Pivoted from cross-channel to same-channel comparisons for fairer evaluation
+   - Algorithm: Select channel with 10+ videos, pick high (>1.5x) vs low (<0.8x) performer
+   - Added time proximity matching (within 1 year) for temporal fairness
+   - Discovered 12.3 million possible matchups after filtering bad data
+   - Implemented 3-life system, simplified header to just score + lives
+
+19. **Thumbnail Battle UI Polish & Performance**
+   - Fixed channel avatars: YouTube s800 size doesn't work, must use s88 (CORS restriction)
+   - Removed all bouncing animations: Only opacity transitions, no y-axis movement
+   - Changed accent color to neon green (#00ff00), subtle grey overlays instead of jarring colors
+   - Simplified start screen: Just title + "Start" button, removed instructions
+   - Fixed transitions: No more full page reloads between rounds
+
+20. **Pre-fetch Queue System & Leaderboard**
+   - Implemented 5-battle pre-fetch queue: Instant transitions (0ms vs 400-1000ms)
+   - Auto-refills when queue drops to 2, maintains 3-5 ready battles
+   - Added arcade-style leaderboard: Player names, best streaks, session tracking
+   - Database schema: thumbnail_battle_players table with stats tracking
+   - Background loading: Battles fetch while player enters name
+
+21. **Vercel Deployment Battle**
+   - Root cause: 100+ API routes creating Supabase clients at module level (breaks when env vars not available during build)
+   - Vercel imports all files during build BEFORE runtime environment ready
+   - Created lazy initialization pattern: getSupabase() function delays client creation until runtime
+   - Fixed React 19 conflicts: Removed @react-three packages, updated date-fns
+   - Added localStorage window checks for SSR compatibility
+   - Successfully deployed after fixing 100+ files manually
