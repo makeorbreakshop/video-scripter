@@ -38,15 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create supabase client to get user
-        global: {
-          headers: {
-            authorization: `Bearer ${token}`
-          }
-        }
-      }
-    );
-    
+    // Get user from auth
     const { data: { user } } = await supabase.auth.getUser();
     
     console.log(`Starting educational discovery for niche: ${niche.name}`);

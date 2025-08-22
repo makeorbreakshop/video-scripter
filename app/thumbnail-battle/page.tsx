@@ -81,6 +81,30 @@ export default function ThumbnailBattlePage() {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [totalGames, setTotalGames] = useState(0);
   const [correctPicks, setCorrectPicks] = useState(0);
+  
+  // Image loading tracking for timing
+  const [imagesLoaded, setImagesLoaded] = useState({ a: false, b: false });
+  const [roundStartTime, setRoundStartTime] = useState<number | null>(null);
+  const [lastPointsEarned, setLastPointsEarned] = useState<number | null>(null);
+
+  // Start timer when both images are loaded OR immediately if playing (for cached images)
+  useEffect(() => {
+    if (gameState === 'playing' && !roundStartTime) {
+      // For cached images, they might already be loaded
+      // Start timer immediately or wait for images
+      if (imagesLoaded.a && imagesLoaded.b) {
+        setRoundStartTime(Date.now());
+      } else {
+        // Give images a chance to load, but start timer after a short delay anyway
+        const timeout = setTimeout(() => {
+          if (gameState === 'playing' && !roundStartTime) {
+            setRoundStartTime(Date.now());
+          }
+        }, 100);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [imagesLoaded, gameState, roundStartTime]);
 
   useEffect(() => {
     // Start loading battles immediately in background
@@ -227,6 +251,10 @@ export default function ThumbnailBattlePage() {
 
   // Get next battle from queue or fetch new ones
   const loadNewBattle = async (isInitial = false) => {
+    // Reset image loading and timer for new round
+    setImagesLoaded({ a: false, b: false });
+    setRoundStartTime(null);
+    
     if (!isInitial) {
       setTransitioning(true);
     }
@@ -325,7 +353,19 @@ export default function ThumbnailBattlePage() {
     setCorrectPicks(newCorrect);
 
     if (correct) {
-      const newScore = score + 1;
+      // Calculate points based on decision time
+      let pointsEarned = 0;
+      if (roundStartTime) {
+        const decisionTimeMs = Date.now() - roundStartTime;
+        const clampedTime = Math.min(Math.max(decisionTimeMs, 250), 10000); // Clamp between 250ms and 10s
+        const timeBonus = 500 * (1 - clampedTime / 10000);
+        pointsEarned = Math.round(500 + timeBonus); // Base 500 + up to 500 time bonus
+      } else {
+        pointsEarned = 500; // Fallback if timing failed
+      }
+      
+      setLastPointsEarned(pointsEarned);
+      const newScore = score + pointsEarned;
       setScore(newScore);
       
       if (newScore > highScore) {
@@ -543,6 +583,9 @@ export default function ThumbnailBattlePage() {
             src={video.thumbnail_url} 
             alt={video.title}
             className="w-full h-full object-cover"
+            onLoad={() => {
+              setImagesLoaded(prev => ({ ...prev, [side.toLowerCase()]: true }));
+            }}
           />
           
           {/* Hover indicator for desktop */}
@@ -556,7 +599,14 @@ export default function ThumbnailBattlePage() {
               {isSelected && (
                 <div className="mb-4">
                   {isCorrect ? (
-                    <Check className="w-16 h-16 text-[#00ff00]" />
+                    <>
+                      <Check className="w-16 h-16 text-[#00ff00] mx-auto" />
+                      {lastPointsEarned && (
+                        <div className="mt-2 text-2xl font-bold text-[#00ff00]">
+                          +{lastPointsEarned} points
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <X className="w-16 h-16 text-red-500" />
                   )}

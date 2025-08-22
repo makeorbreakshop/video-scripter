@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
+  try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -83,6 +84,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
   }
 }
 

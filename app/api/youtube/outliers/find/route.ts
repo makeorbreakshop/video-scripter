@@ -3,9 +3,7 @@ import { openai } from '@/lib/openai-client';
 import { pineconeService } from '@/lib/pinecone-service';
 import { getSupabase } from '@/lib/supabase-lazy';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+interface OutlierVideo {
   video_id: string;
   title: string;
   channel_name: string;

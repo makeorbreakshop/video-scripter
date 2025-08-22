@@ -7,9 +7,7 @@ import { getSupabase } from '@/lib/supabase-lazy';
 import { searchLogger } from '@/lib/search-logger';
 import { deduplicatePatterns } from '@/lib/pattern-deduplication';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+interface VideoMetadata {
   video_id: string;
   title: string;
   channel_name: string;
