@@ -3,15 +3,11 @@
  * Handles transformation and database operations for YouTube Analytics data
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from './supabase-lazy';
 import type { AnalyticsDataRow } from './youtube-analytics-api.ts';
 import { youtubeAnalyticsClient } from './youtube-analytics-api.ts';
 import type { ComprehensiveAnalyticsData } from './enhanced-youtube-analytics-api.ts';
 import { enhancedYouTubeAnalyticsClient } from './enhanced-youtube-analytics-api.ts';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Types for database operations - enhanced to match comprehensive schema
 export interface DailyAnalyticsRecord {
@@ -282,6 +278,7 @@ export class AnalyticsProcessor {
    * Get existing "Make or Break Shop" videos from database
    */
   async getMakeOrBreakShopVideos(): Promise<string[]> {
+    const supabase = getSupabase();
     try {
       // Query for videos from Make or Break Shop channel
       // We'll look for the channel ID or channel name in the database
@@ -504,7 +501,8 @@ export class AnalyticsProcessor {
     userId: string
   ): Promise<void> {
     if (records.length === 0) return;
-
+    
+    const supabase = getSupabase();
     try {
       // Note: We'll use upsert to handle duplicate dates
       // The unique constraint on (video_id, date) will prevent duplicates
