@@ -117,6 +117,7 @@ function LiveScoreDisplay({ startTime }: { startTime: number }) {
 export default function ThumbnailBattlePage() {
   const [battle, setBattle] = useState<Battle | null>(null);
   const [battleQueue, setBattleQueue] = useState<Battle[]>([]);
+  const [welcomePreview, setWelcomePreview] = useState<Battle | null>(null); // Separate preview for welcome
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [highScore, setHighScore] = useState(0);
@@ -164,7 +165,10 @@ export default function ThumbnailBattlePage() {
     const initSessionId = getSessionId();
     setSessionId(initSessionId);
     
-    // Start loading battles immediately in background
+    // Load preview immediately for welcome screen (FAST)
+    loadWelcomePreview();
+    
+    // Start loading battles in background for the game
     loadInitialBattles();
     
     // Check for existing player
@@ -363,6 +367,21 @@ export default function ThumbnailBattlePage() {
     validMatchups.forEach(preloadBattleImages);
     
     return validMatchups;
+  };
+
+  // Load preview for welcome screen (FAST - uses materialized view)
+  const loadWelcomePreview = async () => {
+    try {
+      const response = await fetch('/api/thumbnail-battle/preview');
+      const data = await response.json();
+      if (data && data.videoA && data.videoB) {
+        setWelcomePreview(data);
+        console.log('[PREVIEW] Loaded welcome screen preview');
+      }
+    } catch (error) {
+      console.error('Failed to load preview:', error);
+      // No big deal, welcome screen works without preview
+    }
   };
 
   // Load initial battles on mount (runs in background)
@@ -995,48 +1014,102 @@ export default function ThumbnailBattlePage() {
           <motion.div
             key="welcome"
             className="relative min-h-screen flex items-center justify-center p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="max-w-md w-full">
-              <motion.div
+            <div className="max-w-4xl w-full">
+              {/* Thumbnail preview - uses fast preview endpoint or falls back to battleQueue */}
+              {welcomePreview || (battleQueue.length > 0 && battleQueue[0]) ? (
+                <motion.div 
+                  className="flex items-center justify-center gap-10 mb-12"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
+                >
+                  <motion.div 
+                    className="relative w-96 aspect-video rounded-lg overflow-hidden bg-gray-800 shadow-2xl"
+                    initial={{ x: -100, rotate: 0 }}
+                    animate={{ x: 0, rotate: -2 }}
+                    transition={{ duration: 0.6, type: "spring" }}
+                    whileHover={{ rotate: 0, scale: 1.02 }}
+                  >
+                    <img 
+                      src={welcomePreview?.videoA.thumbnail_url || battleQueue[0]?.videoA.thumbnail_url} 
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                  <motion.span 
+                    className="text-3xl font-bold text-[#00ff00] z-10"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                  >
+                    VS
+                  </motion.span>
+                  <motion.div 
+                    className="relative w-96 aspect-video rounded-lg overflow-hidden bg-gray-800 shadow-2xl"
+                    initial={{ x: 100, rotate: 0 }}
+                    animate={{ x: 0, rotate: 2 }}
+                    transition={{ duration: 0.6, type: "spring" }}
+                    whileHover={{ rotate: 0, scale: 1.02 }}
+                  >
+                    <img 
+                      src={welcomePreview?.videoB.thumbnail_url || battleQueue[0]?.videoB.thumbnail_url} 
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                </motion.div>
+              ) : (
+                // Loading state - shows immediately while preview loads
+                <div className="flex items-center justify-center gap-10 mb-12 h-[216px]">
+                  <div className="relative w-96 aspect-video rounded-lg bg-gray-800 animate-pulse" />
+                  <span className="text-3xl font-bold text-gray-600">VS</span>
+                  <div className="relative w-96 aspect-video rounded-lg bg-gray-800 animate-pulse" />
+                </div>
+              )}
+
+              {/* Question with fade-in animation */}
+              <motion.div 
                 className="text-center mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <h1 className="text-5xl font-bold mb-2">Thumbnail Battle</h1>
-                <p className="text-lg text-muted-foreground">Can you spot the winner?</p>
+                <p className="text-3xl font-semibold">Can you spot the winner?</p>
               </motion.div>
 
-              <motion.div
-                className="bg-card rounded-lg border border-border p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
+              {/* Simple underline input field and narrower button */}
+              <div className="flex flex-col items-center space-y-6">
+                <label htmlFor="player-name" className="sr-only">Enter your name</label>
                 <input
+                  id="player-name"
                   type="text"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && createPlayer()}
-                  placeholder="What's your name?"
-                  className="w-full px-4 py-3 bg-secondary rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#00ff00] mb-4 text-lg"
+                  placeholder="Enter your name"
+                  className="px-2 py-2 bg-transparent border-0 border-b-2 border-gray-700 text-lg text-center text-white placeholder-gray-500 focus:outline-none focus:border-[#00ff00] transition-all duration-300"
+                  style={{ width: playerName ? `${Math.max(200, playerName.length * 12)}px` : '200px' }}
                   maxLength={30}
                   autoFocus
                 />
+
                 <button
-                  className="w-full bg-[#00ff00] text-black rounded-lg py-3 px-6 font-semibold hover:bg-[#00ff00]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="bg-[#00ff00] text-black rounded-lg py-3 px-12 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors disabled:opacity-50"
                   onClick={createPlayer}
                   disabled={!playerName.trim()}
                 >
                   {battleQueue.length > 0 ? (
-                    <>Let's Battle →</>
+                    <>Let's Battle</>
                   ) : (
-                    <>Loading game...</>
+                    <>Loading...</>
                   )}
                 </button>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         ) : gameState === 'start' ? (
