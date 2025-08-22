@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { videoClassificationService } from '@/lib/video-classification-service';
 import { pineconeService } from '@/lib/pinecone-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
+  const supabase = getSupabase();
   try {
     const { batchSize = 100, useLLMThreshold = 0.6 } = await request.json();
     

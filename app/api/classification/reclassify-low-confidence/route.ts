@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-lazy';
 import { llmFormatClassificationService } from '@/lib/llm-format-classification-service';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // State management
 let isRunning = false;
@@ -59,6 +54,7 @@ export async function POST(request: Request) {
 }
 
 async function processReclassification(confidenceThreshold: number) {
+  const supabase = getSupabase();
   console.log(`Starting reclassification for videos with confidence < ${confidenceThreshold}`);
   
   // Get count of low-confidence videos
