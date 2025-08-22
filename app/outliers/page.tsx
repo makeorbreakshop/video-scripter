@@ -223,7 +223,7 @@ export default function OutliersPage() {
               </p>
               <p>
                 The problem? Every tool that finds outliers costs like $97+ per month. Forever. 
-                And honestly, most of them suck. They show you maybe 50 videos and call it a day.
+                And honestly, most of them suck.
                 I tried tracking them manually in spreadsheets but that was a nightmare - took forever 
                 and I barely scratched the surface.
               </p>
@@ -252,26 +252,6 @@ export default function OutliersPage() {
           </h2>
           
           <Card className="bg-black/60 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-200">
-            {/* Filter Bar */}
-            <div className="p-4 border-b border-gray-800 flex gap-2 flex-wrap bg-gray-900/50">
-              <select className="bg-black/50 text-gray-300 border border-gray-700 rounded-md px-3 py-2 hover:bg-black/70 transition-colors cursor-pointer">
-                <option>All Categories</option>
-                <option>Tech</option>
-                <option>Gaming</option>
-                <option>Education</option>
-              </select>
-              <select className="bg-black/50 text-gray-300 border border-gray-700 rounded-md px-3 py-2 hover:bg-black/70 transition-colors cursor-pointer">
-                <option>Last 30 Days</option>
-                <option>Last 7 Days</option>
-                <option>Last 24 Hours</option>
-              </select>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-[#00ff00] hover:bg-[#00ff00]/90 text-black font-semibold text-lg transition-all duration-200 shadow-[0_0_15px_rgba(0,255,0,0.3)] rounded-lg">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
-              </motion.div>
-            </div>
 
             {/* Video Grid */}
             <div className="p-6">

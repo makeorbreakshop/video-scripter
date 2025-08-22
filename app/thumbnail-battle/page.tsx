@@ -153,10 +153,6 @@ export default function ThumbnailBattlePage() {
       // Start timer IMMEDIATELY when playing starts
       const now = Date.now();
       setRoundStartTime(now);
-      console.log(`[TIMER] Started at ${new Date(now).toLocaleTimeString()}.${now % 1000}`);
-      console.log(`[TIMER-DEBUG] Timer set to: ${now}, gameState: ${gameState}, battle exists: ${!!battle}`);
-    } else {
-      console.log(`[TIMER-DEBUG] Not starting timer - gameState: ${gameState}, battle exists: ${!!battle}`);
     }
   }, [gameState, battle]); // Add battle to dependencies for consistency
 
@@ -253,7 +249,6 @@ export default function ThumbnailBattlePage() {
         setGameStartTime(Date.now());
         setBattlesInCurrentGame(0);
         setWinsInCurrentGame(0);
-        console.log('[GAME] Created new game session:', data.game_id);
         return data.game_id;
       }
     } catch (error) {
@@ -279,7 +274,6 @@ export default function ThumbnailBattlePage() {
           is_game_over: isGameOver
         })
       });
-      console.log(`[GAME] Updated game ${currentGameId}: ${battlesInCurrentGame} battles, ${winsInCurrentGame} wins, ${lives} lives`);
     } catch (error) {
       console.error('Error updating game session:', error);
     }
@@ -361,7 +355,6 @@ export default function ThumbnailBattlePage() {
           data.channel.channel_avatar = fixAvatarUrl(data.channel.channel_avatar);
         }
         
-        console.log('[DEBUG] Fetched matchup channel avatar:', data?.channel?.channel_avatar);
         return data;
       } catch (error) {
         console.error('Failed to fetch matchup:', error);
@@ -389,7 +382,6 @@ export default function ThumbnailBattlePage() {
           data.channel.channel_avatar = fixAvatarUrl(data.channel.channel_avatar);
         }
         setWelcomePreview(data);
-        console.log('[PREVIEW] Loaded welcome screen preview');
       }
     } catch (error) {
       console.error('Failed to load preview:', error);
@@ -402,11 +394,6 @@ export default function ThumbnailBattlePage() {
     // Don't show loading spinner since this runs in background
     const matchups = await fetchMatchups(5);
     if (matchups.length > 0) {
-      console.log('[BATTLE SET] Setting initial battle:', {
-        hasChannel: !!matchups[0].channel,
-        channelAvatar: matchups[0].channel?.channel_avatar,
-        fullBattle: matchups[0]
-      });
       setBattle(matchups[0]);
       setBattleQueue(matchups.slice(1));
       return true;
@@ -424,12 +411,6 @@ export default function ThumbnailBattlePage() {
     
     // Use battle from queue if available
     if (battleQueue.length > 0) {
-      console.log('[BATTLE SET] Loading from queue:', {
-        hasChannel: !!battleQueue[0].channel,
-        channelAvatar: battleQueue[0].channel?.channel_avatar,
-        channelTitle: battleQueue[0].channel?.channel_title,
-        fullChannel: battleQueue[0].channel
-      });
       setBattle(battleQueue[0]);
       setBattleQueue(prev => prev.slice(1));
       
@@ -513,8 +494,6 @@ export default function ThumbnailBattlePage() {
   const handleSelection = useCallback(async (selection: 'A' | 'B') => {
     if (gameState !== 'playing' || !battle || !battle.matchup_id) return;
     
-    console.log(`[CLICK] Selected ${selection} at ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
-    console.log(`[DEBUG-CLICK] roundStartTime at click time: ${roundStartTime}`);
     setSelectedVideo(selection);
     
     // Call the secure check-answer API
@@ -559,7 +538,6 @@ export default function ThumbnailBattlePage() {
 
       if (correct) {
         const pointsEarned = result.points || 500;
-        console.log(`[POINTS] Server awarded: ${pointsEarned} points`);
         
         setLastPointsEarned(pointsEarned);
         const newScore = score + pointsEarned;
@@ -621,7 +599,6 @@ export default function ThumbnailBattlePage() {
   }, [gameState, battle, score, lives, highScore, totalGames, correctPicks, player, roundStartTime, sessionId]);
 
   const handleNext = async () => {
-    console.log('[NEXT] Starting handleNext');
     // Clear results for new round
     setSelectedVideo(null);
     setIsCorrect(null);
@@ -629,14 +606,11 @@ export default function ThumbnailBattlePage() {
     
     // Load new battle and transition
     const success = await loadNewBattle();
-    console.log('[NEXT] Battle loaded:', success);
     
     if (success) {
-      console.log('[NEXT] Setting game state to playing');
       setGameState('playing');
       // Timer will be reset by the useEffect when gameState changes to 'playing'
     } else {
-      console.log('[NEXT] Failed to load battle, cannot continue');
     }
   };
 
@@ -1195,12 +1169,6 @@ export default function ThumbnailBattlePage() {
               {/* Channel info header */}
               {battle && battle.channel && (
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-8 px-4">
-                {/* DEBUG: Show what we have */}
-                {console.log('[RENDER] Battle channel data:', {
-                  avatar: battle.channel.channel_avatar,
-                  title: battle.channel.channel_title,
-                  subs: battle.channel.channel_subscriber_count
-                })}
                 {battle.channel.channel_avatar ? (
                   <>
                     <img 
@@ -1209,7 +1177,6 @@ export default function ThumbnailBattlePage() {
                       alt={battle.channel.channel_title}
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover bg-gray-800 flex-shrink-0"
                       onError={(e) => {
-                        console.log('[AVATAR ERROR] Failed to load:', battle.channel?.channel_avatar);
                         // Hide image and show fallback
                         const img = e.target as HTMLImageElement;
                         img.style.display = 'none';
@@ -1217,9 +1184,6 @@ export default function ThumbnailBattlePage() {
                         if (fallback) {
                           fallback.classList.remove('hidden');
                         }
-                      }}
-                      onLoad={() => {
-                        console.log('[AVATAR SUCCESS] Loaded:', battle.channel?.channel_avatar);
                       }}
                     />
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm sm:text-lg font-bold text-white hidden flex-shrink-0">
