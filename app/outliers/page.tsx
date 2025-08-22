@@ -123,14 +123,18 @@ export default function OutliersPage() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 20) return 'bg-[#00ff00] text-black';
-    if (score >= 10) return 'bg-yellow-500 text-black';
-    if (score >= 5) return 'bg-orange-500 text-white';
-    return 'bg-red-500 text-white';
+    if (score >= 50) return 'bg-[#00ff00] text-black';
+    if (score >= 20) return 'bg-yellow-400 text-black';
+    if (score >= 10) return 'bg-orange-500 text-white';
+    return 'bg-gray-600 text-white';
   };
 
   const formatScore = (score: number) => {
-    return `${score}x`;
+    // Simplify scores - round to 1 decimal if under 10, whole numbers if over
+    if (score < 10) {
+      return `${score.toFixed(1)}x`;
+    }
+    return `${Math.round(score)}x`;
   };
 
   return (
@@ -249,23 +253,25 @@ export default function OutliersPage() {
             {/* Video Grid */}
             <div className="p-6">
               {loading ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {[...Array(12)].map((_, i) => (
                     <div key={i} className="bg-gray-800/40 rounded-lg overflow-hidden animate-pulse">
-                      <div className="aspect-video bg-gray-700" />
-                      <div className="p-4 space-y-3">
+                      <div className="aspect-video bg-gray-700 relative">
+                        <div className="absolute top-2 right-2 w-8 h-5 bg-gray-600 rounded" />
+                      </div>
+                      <div className="p-3 space-y-2">
+                        <div className="h-4 bg-gray-700 rounded w-full" />
                         <div className="h-4 bg-gray-700 rounded w-3/4" />
-                        <div className="h-3 bg-gray-700 rounded w-1/2" />
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center pt-1">
+                          <div className="h-3 bg-gray-700 rounded w-1/3" />
                           <div className="h-3 bg-gray-700 rounded w-1/4" />
-                          <div className="h-6 w-12 bg-gray-700 rounded-full" />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {displayedVideos.map((video, i) => (
                     <motion.div
                       key={i}
@@ -282,32 +288,24 @@ export default function OutliersPage() {
                           alt={video.title}
                           className="w-full h-full object-cover"
                         />
-                        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold ${getScoreColor(video.score)}`}>
+                        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold ${getScoreColor(video.score)}`}>
                           {formatScore(video.score)}
                         </div>
                       </div>
                       
                       {/* Card Content */}
-                      <div className="p-4">
-                        <h3 className="text-white font-medium text-sm line-clamp-2 mb-2 group-hover:text-[#00ff00] transition-colors">
+                      <div className="p-3">
+                        <h3 className="text-white font-medium text-sm line-clamp-2 mb-3 group-hover:text-[#00ff00] transition-colors leading-tight">
                           {video.title}
                         </h3>
                         
                         <div className="flex justify-between items-center text-xs text-gray-400">
-                          <span className="font-medium">{video.channel}</span>
-                          <span className="tabular-nums">{(video.views / 1000000).toFixed(1)}M views</span>
-                        </div>
-                        
-                        {/* Stats Bar */}
-                        <div className="mt-3 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
-                          <div className="flex gap-4 text-gray-500">
-                            <span>Viral</span>
-                            <span>Recent</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3 text-[#00ff00]" />
-                            <span className="text-[#00ff00] font-bold">{formatScore(video.score)}</span>
-                          </div>
+                          <span className="font-medium truncate pr-2">{video.channel}</span>
+                          <span className="tabular-nums text-gray-500 shrink-0">
+                            {video.views > 1000000 
+                              ? `${(video.views / 1000000).toFixed(1)}M` 
+                              : `${Math.round(video.views / 1000)}K`}
+                          </span>
                         </div>
                       </div>
                     </motion.div>
