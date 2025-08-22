@@ -302,12 +302,9 @@ export default function ThumbnailBattlePage() {
   };
 
   // Fetch leaderboard
-  const fetchLeaderboard = async (type: 'players' | 'games' = 'players') => {
+  const fetchLeaderboard = async () => {
     try {
-      const endpoint = type === 'games' 
-        ? '/api/thumbnail-battle/game-leaderboard?type=highest_scores&limit=100'
-        : '/api/thumbnail-battle/leaderboard?limit=100';
-      const response = await fetch(endpoint);
+      const response = await fetch('/api/thumbnail-battle/leaderboard?limit=100');
       const data = await response.json();
       if (data.leaderboard) {
         setLeaderboard(data.leaderboard);
@@ -691,7 +688,6 @@ export default function ThumbnailBattlePage() {
   };
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardType, setLeaderboardType] = useState<'players' | 'games'>('players');
   const [leaderboardContext, setLeaderboardContext] = useState<any[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
 
@@ -1143,7 +1139,7 @@ export default function ThumbnailBattlePage() {
                     className="text-gray-600 hover:text-[#00ff00] transition-colors text-xs uppercase tracking-wider"
                     onClick={() => {
                       setShowLeaderboard(true);
-                      fetchLeaderboard(leaderboardType);
+                      fetchLeaderboard();
                     }}
                   >
                     VIEW LEADERBOARD
@@ -1271,34 +1267,6 @@ export default function ThumbnailBattlePage() {
             >
               <div className="mb-10 text-center flex-shrink-0">
                 <h2 className="text-4xl font-bold mb-6">Leaderboard</h2>
-                <div className="flex gap-8 justify-center">
-                  <button
-                    className={`text-lg font-semibold transition-colors ${
-                      leaderboardType === 'players' 
-                        ? 'text-white' 
-                        : 'text-white/40 hover:text-white/60'
-                    }`}
-                    onClick={() => {
-                      setLeaderboardType('players');
-                      fetchLeaderboard('players');
-                    }}
-                  >
-                    All-Time
-                  </button>
-                  <button
-                    className={`text-lg font-semibold transition-colors ${
-                      leaderboardType === 'games' 
-                        ? 'text-white' 
-                        : 'text-white/40 hover:text-white/60'
-                    }`}
-                    onClick={() => {
-                      setLeaderboardType('games');
-                      fetchLeaderboard('games');
-                    }}
-                  >
-                    Recent
-                  </button>
-                </div>
               </div>
 
               {leaderboard.length > 0 ? (
@@ -1313,17 +1281,27 @@ export default function ThumbnailBattlePage() {
                         textShadow: index < 3 ? '0 0 10px rgba(0, 255, 0, 0.3)' : 'none'
                       }}
                     >
-                      <div className="flex items-center gap-6">
-                        <span className="w-10 text-right tabular-nums">
+                      <div className="grid grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-[3rem_1fr_auto_auto] gap-3 sm:gap-6 items-center w-full">
+                        <span className="text-right tabular-nums text-base sm:text-lg font-semibold">
                           {index + 1}.
                         </span>
-                        <span className="flex-1">
+                        <span className="truncate text-base sm:text-lg font-semibold min-w-0">
                           {entry.player_name}
                         </span>
+                        <span className="font-black tabular-nums text-base sm:text-lg text-right min-w-16">
+                          {entry.best_score.toLocaleString()}
+                        </span>
+                        <div className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-white/50 tabular-nums whitespace-nowrap">
+                          {new Date(entry.created_at).toLocaleDateString('en-US', { 
+                            month: 'numeric', 
+                            day: 'numeric' 
+                          })} {new Date(entry.created_at).toLocaleTimeString([], { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: false 
+                          })}
+                        </div>
                       </div>
-                      <span className="font-black tabular-nums">
-                        {entry.best_score.toLocaleString()}
-                      </span>
                     </div>
                   ))}
                 </div>
