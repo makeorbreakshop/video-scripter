@@ -939,43 +939,50 @@ export default function ThumbnailBattlePage() {
             exit={{ y: -100 }}
             transition={{ type: "spring", stiffness: 100 }}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-3">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 sm:py-3">
               <div className="flex items-center justify-between">
                 {/* Left side - Logo and live points */}
-                <div className="flex items-center gap-3 sm:gap-6">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Axe className="w-5 h-5 sm:w-6 sm:h-6 text-[#00ff00]" />
-                    <span className="text-sm sm:text-lg font-semibold hidden sm:inline">Thumbnail Battle</span>
+                <div className="flex items-center gap-2 sm:gap-6">
+                  <div className="flex items-center gap-1 sm:gap-3">
+                    <Axe className="w-4 h-4 sm:w-6 sm:h-6 text-[#00ff00]" />
+                    <span className="text-xs sm:text-lg font-semibold hidden sm:inline">Thumbnail Battle</span>
                   </div>
-                  {/* Live points display - only show during playing state */}
+                  {/* Live points display - hide on mobile when space is tight */}
                   {gameState === 'playing' && roundStartTime && (
-                    <LiveScoreDisplay startTime={roundStartTime} />
+                    <div className="hidden sm:block">
+                      <LiveScoreDisplay startTime={roundStartTime} />
+                    </div>
                   )}
                 </div>
                 
-                {/* Right side - Score, Best, Lives */}
-                <div className="flex items-center gap-3 sm:gap-6">
-                  <div className={`flex items-center gap-2 ${
+                {/* Right side - Score, Best, Lives - more compact on mobile */}
+                <div className="flex items-center gap-2 sm:gap-6">
+                  {/* Score - compact mobile display */}
+                  <div className={`flex items-center gap-1 ${
                     score >= 5 ? 'text-[#00ff00]' : ''
                   }`}>
                     <span className="text-xs uppercase tracking-wider hidden sm:inline">Score</span>
-                    <span className="font-bold text-base sm:text-sm">
+                    <span className="font-bold text-sm sm:text-base">
                       {score}
                     </span>
                   </div>
+                  
+                  {/* Best score - hide on mobile to save space */}
                   {player && player.best_score > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase tracking-wider hidden sm:inline">Best</span>
-                      <span className="font-bold text-base sm:text-sm">
+                    <div className="hidden sm:flex items-center gap-2">
+                      <span className="text-xs uppercase tracking-wider">Best</span>
+                      <span className="font-bold text-base">
                         {player.best_score}
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1">
+                  
+                  {/* Lives - smaller on mobile */}
+                  <div className="flex items-center gap-0.5 sm:gap-1">
                     {[...Array(3)].map((_, i) => (
                       <Heart 
                         key={i} 
-                        className={`w-5 h-5 sm:w-6 sm:h-6 transition-all ${
+                        className={`w-4 h-4 sm:w-6 sm:h-6 transition-all ${
                           i < lives 
                             ? 'text-[#00ff00] fill-[#00ff00]' 
                             : 'text-gray-600'
@@ -1265,7 +1272,14 @@ export default function ThumbnailBattlePage() {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-10 text-center flex-shrink-0">
+              <div className="mb-10 text-center flex-shrink-0 relative">
+                <button
+                  className="absolute top-0 right-0 p-2 text-white/60 hover:text-white transition-colors"
+                  onClick={() => setShowLeaderboard(false)}
+                  aria-label="Close leaderboard"
+                >
+                  <X className="w-6 h-6" />
+                </button>
                 <h2 className="text-4xl font-bold mb-6">Leaderboard</h2>
               </div>
 
