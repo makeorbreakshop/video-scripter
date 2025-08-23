@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 
+// Test players to filter out from leaderboards
+const TEST_PLAYERS = ['dev0', 'test', 'debug', 'admin'];
+
+function filterTestPlayers(leaderboard: any[]) {
+  return leaderboard?.filter(entry => 
+    !TEST_PLAYERS.some(testName => 
+      entry.player_name?.toLowerCase().includes(testName.toLowerCase())
+    )
+  );
+}
+
 export async function GET(request: Request) {
   const supabase = getSupabase();
   const { searchParams } = new URL(request.url);
@@ -83,12 +94,13 @@ export async function GET(request: Request) {
           source: 'player_record'
         })) || [];
 
-        // Combine and sort all entries
-        const allEntries = [...gameEntries, ...playerEntries]
+        // Combine, filter test players, and sort all entries
+        const allEntries = [...gameEntries, ...playerEntries];
+        const filteredEntries = filterTestPlayers(allEntries)
           .sort((a, b) => b.best_score - a.best_score)
           .slice(0, limit);
         
-        return NextResponse.json({ leaderboard: allEntries });
+        return NextResponse.json({ leaderboard: filteredEntries });
         break;
       
       case 'best_players':
@@ -153,7 +165,7 @@ export async function GET(request: Request) {
             game_duration_ms: game.game_duration_ms
           }));
           
-          return NextResponse.json({ leaderboard });
+          return NextResponse.json({ leaderboard: filterTestPlayers(leaderboard) });
         }
         
         // Format RPC data if it worked
@@ -169,7 +181,7 @@ export async function GET(request: Request) {
           game_duration_ms: game.game_duration_ms
         }));
         
-        return NextResponse.json({ leaderboard: recentLeaderboard });
+        return NextResponse.json({ leaderboard: filterTestPlayers(recentLeaderboard) });
         break;
 
       case 'today':
@@ -222,7 +234,7 @@ export async function GET(request: Request) {
       }));
     }
 
-    return NextResponse.json({ leaderboard });
+    return NextResponse.json({ leaderboard: filterTestPlayers(leaderboard) });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
