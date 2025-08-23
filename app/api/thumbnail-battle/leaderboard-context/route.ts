@@ -29,7 +29,6 @@ export async function GET(request: Request) {
         .from('thumbnail_battle_games')
         .select('player_name, final_score, ended_at, battles_played, battles_won')
         .not('ended_at', 'is', null)
-        .neq('player_name', 'dev0')  // Filter out test player
         .order('final_score', { ascending: false });
 
       if (fetchError) throw fetchError;
