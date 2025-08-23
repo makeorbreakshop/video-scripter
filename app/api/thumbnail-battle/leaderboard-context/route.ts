@@ -24,16 +24,38 @@ export async function GET(request: Request) {
       // Fallback to manual query if RPC doesn't exist
       console.log('RPC failed, using fallback query:', error);
       
-      // Manual fallback - less efficient but works
-      const { data: allScores, error: fetchError } = await supabase
-        .from('thumbnail_battle_games')
-        .select('player_name, final_score, ended_at, battles_played, battles_won')
-        .not('ended_at', 'is', null)
-        .order('final_score', { ascending: false });
+      // Manual fallback - query tables separately and join in JS
+      const [gamesResult, playersResult] = await Promise.all([
+        supabase
+          .from('thumbnail_battle_games')
+          .select('final_score, ended_at, battles_played, battles_won, player_session_id')
+          .not('ended_at', 'is', null)
+          .order('final_score', { ascending: false }),
+        supabase
+          .from('thumbnail_battle_players')
+          .select('session_id, player_name')
+      ]);
+
+      if (gamesResult.error) throw gamesResult.error;
+      if (playersResult.error) throw playersResult.error;
+
+      // Create a lookup map for players
+      const playerLookup = new Map();
+      playersResult.data?.forEach(player => {
+        playerLookup.set(player.session_id, player.player_name);
+      });
+
+      // Join games with player names
+      const allScores = gamesResult.data?.map(game => ({
+        ...game,
+        player_name: playerLookup.get(game.player_session_id) || 'Unknown'
+      })) || [];
+
+      const fetchError = null; // No error if we get here
 
       if (fetchError) throw fetchError;
 
-      // Find player's rank
+      // Find player's rank  
       const playerIndex = allScores?.findIndex(game => 
         game.player_name === playerName && game.final_score === finalScore
       ) ?? -1;
@@ -46,7 +68,7 @@ export async function GET(request: Request) {
       const start = Math.max(0, playerIndex - 5);
       const end = Math.min(allScores.length, playerIndex + 6);
       const contextData = allScores.slice(start, end).map((game, index) => ({
-        player_name: game.player_name,
+        player_name: game.player_name || 'Unknown',
         best_score: game.final_score,
         rank: start + index + 1,
         total_battles: game.battles_played,
