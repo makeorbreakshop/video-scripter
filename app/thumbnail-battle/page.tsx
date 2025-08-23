@@ -1390,7 +1390,7 @@ export default function ThumbnailBattlePage() {
                 <div className="font-mono text-xl space-y-3 overflow-y-auto flex-1 scrollbar-hide">
                   {leaderboard.map((entry, index) => (
                     <div
-                      key={index}
+                      key={`${entry.player_name}-${entry.best_score}-${entry.created_at}`}
                       className={`flex items-center justify-between ${
                         leaderboardType === 'best_games' && index < 3 ? 'text-[#00ff00]' : 'text-white/90'
                       } ${leaderboardType === 'best_games' && index === 0 ? 'text-2xl' : ''}`}
