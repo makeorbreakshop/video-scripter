@@ -1285,13 +1285,15 @@ export default function ThumbnailBattlePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             onClick={() => setShowLeaderboard(false)}
           >
             <motion.div
               className="max-w-lg w-full max-h-[90vh] flex flex-col"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.98, opacity: 0, y: 4 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 text-center flex-shrink-0 relative">
@@ -1351,16 +1353,18 @@ export default function ThumbnailBattlePage() {
                     <div
                       key={index}
                       className={`flex items-center justify-between ${
-                        index < 3 ? 'text-[#00ff00]' : 'text-white/90'
-                      } ${index === 0 ? 'text-2xl' : ''}`}
+                        leaderboardType === 'best_games' && index < 3 ? 'text-[#00ff00]' : 'text-white/90'
+                      } ${leaderboardType === 'best_games' && index === 0 ? 'text-2xl' : ''}`}
                       style={{
-                        textShadow: index < 3 ? '0 0 10px rgba(0, 255, 0, 0.3)' : 'none'
+                        textShadow: leaderboardType === 'best_games' && index < 3 ? '0 0 10px rgba(0, 255, 0, 0.3)' : 'none'
                       }}
                     >
-                      <div className="grid grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-[3rem_1fr_auto_auto] gap-3 sm:gap-6 items-center w-full">
-                        <span className="text-right tabular-nums text-base sm:text-lg font-semibold">
-                          {index + 1}.
-                        </span>
+                      <div className={`grid ${leaderboardType === 'recent' ? 'grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto]' : 'grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-[3rem_1fr_auto_auto]'} gap-3 sm:gap-6 items-center w-full`}>
+                        {leaderboardType !== 'recent' && (
+                          <span className="text-right tabular-nums text-base sm:text-lg font-semibold">
+                            {index + 1}.
+                          </span>
+                        )}
                         <span className="truncate text-base sm:text-lg font-semibold min-w-0">
                           {entry.player_name}
                         </span>
