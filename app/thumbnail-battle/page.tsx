@@ -216,8 +216,13 @@ export default function ThumbnailBattlePage() {
       if (data.player) {
         setPlayer(data.player);
         setGameState('start');
-        setScore(data.player.current_score);
+        setScore(0); // Always start new games at 0 score
         setHighScore(data.player.best_score);
+        
+        // Reset player's current_score in database to 0 when starting new game
+        updatePlayerStatsMutation.mutate({
+          current_score: 0
+        });
       }
     } catch (error) {
       console.error('Error checking player:', error);
@@ -596,7 +601,7 @@ export default function ThumbnailBattlePage() {
       setTotalGames(newTotal);
       setCorrectPicks(newCorrect);
       
-      // Update game session stats
+      // Update game session stats - only count battles that were actually answered
       setBattlesInCurrentGame(prev => prev + 1);
       if (correct) {
         setWinsInCurrentGame(prev => prev + 1);
