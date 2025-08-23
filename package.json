@@ -88,6 +88,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/typography": "latest",
+    "@tanstack/react-query": "^5.85.5",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "latest",
     "@tiptap/extension-heading": "latest",

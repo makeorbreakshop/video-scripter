@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Heart, Axe, Eye, X, Check, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface Video {
@@ -124,11 +125,21 @@ export default function ThumbnailBattlePage() {
   const [gameState, setGameState] = useState<'welcome' | 'start' | 'playing' | 'revealed' | 'gameOver'>('welcome');
   const [player, setPlayer] = useState<Player | null>(null);
   const [playerName, setPlayerName] = useState('');
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardCache, setLeaderboardCache] = useState<{
-    best_games?: LeaderboardEntry[];
-    recent?: LeaderboardEntry[];
-  }>({});
+  const queryClient = useQueryClient();
+  const [leaderboardType, setLeaderboardType] = useState<'best_games' | 'recent'>('best_games');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  
+  // React Query hook for leaderboard data
+  const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
+    queryKey: ['leaderboard', leaderboardType],
+    queryFn: async () => {
+      const response = await fetch(`/api/thumbnail-battle/leaderboard?type=${leaderboardType}&limit=100`);
+      const data = await response.json();
+      return data.leaderboard || [];
+    },
+    enabled: showLeaderboard || gameState === 'gameOver', // Only fetch when needed
+  });
+  
   // Leaderboard only shown on game over screen
   const [selectedVideo, setSelectedVideo] = useState<'A' | 'B' | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -283,11 +294,12 @@ export default function ThumbnailBattlePage() {
     }
   };
 
-  // Update player stats
-  const updatePlayerStats = async (updates: Partial<Player>) => {
-    if (!player) return;
-    
-    try {
+
+  // Mutation for updating player stats with optimistic updates
+  const updatePlayerStatsMutation = useMutation({
+    mutationFn: async (updates: Partial<Player>) => {
+      if (!player) throw new Error('No player found');
+      
       const response = await fetch('/api/thumbnail-battle/player', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -297,37 +309,79 @@ export default function ThumbnailBattlePage() {
         })
       });
       const data = await response.json();
-      if (data.player) {
-        setPlayer(data.player);
-      }
-    } catch (error) {
-      console.error('Error updating player:', error);
-    }
-  };
+      return data.player;
+    },
+    onMutate: async (updates) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['leaderboard'] });
 
-  // Fetch leaderboard with caching
-  const fetchLeaderboard = async (type: 'best_games' | 'recent' = leaderboardType) => {
-    // Check cache first for instant switching
-    if (leaderboardCache[type]) {
-      setLeaderboard(leaderboardCache[type]!);
-      return;
-    }
+      // Snapshot the previous value
+      const previousLeaderboards = {
+        best_games: queryClient.getQueryData(['leaderboard', 'best_games']),
+        recent: queryClient.getQueryData(['leaderboard', 'recent'])
+      };
 
-    try {
-      const response = await fetch(`/api/thumbnail-battle/leaderboard?type=${type}&limit=100`);
-      const data = await response.json();
-      if (data.leaderboard) {
-        setLeaderboard(data.leaderboard);
-        // Cache the result
-        setLeaderboardCache(prev => ({
-          ...prev,
-          [type]: data.leaderboard
-        }));
+      // Optimistically update leaderboard if this is a new high score
+      if (updates.best_score && player) {
+        const newEntry = {
+          player_name: player.player_name,
+          best_score: updates.best_score,
+          total_battles: updates.total_battles || player.total_battles,
+          total_wins: updates.total_wins || player.total_wins,
+          accuracy: updates.total_battles ? (updates.total_wins || 0) / updates.total_battles * 100 : 0,
+          created_at: new Date().toISOString()
+        };
+
+        // Update best_games leaderboard if new score would make it
+        const bestGamesData = queryClient.getQueryData(['leaderboard', 'best_games']) as LeaderboardEntry[] | undefined;
+        if (bestGamesData) {
+          const updatedBestGames = [...bestGamesData];
+          // Find if player already exists
+          const existingIndex = updatedBestGames.findIndex(entry => entry.player_name === player.player_name);
+          
+          if (existingIndex >= 0) {
+            // Update existing entry
+            updatedBestGames[existingIndex] = newEntry;
+          } else {
+            // Add new entry
+            updatedBestGames.push(newEntry);
+          }
+          
+          // Sort by best_score descending and limit to 100
+          updatedBestGames.sort((a, b) => b.best_score - a.best_score);
+          updatedBestGames.splice(100);
+          
+          queryClient.setQueryData(['leaderboard', 'best_games'], updatedBestGames);
+        }
+
+        // Always add to recent games
+        const recentData = queryClient.getQueryData(['leaderboard', 'recent']) as LeaderboardEntry[] | undefined;
+        if (recentData) {
+          const updatedRecent = [newEntry, ...recentData];
+          updatedRecent.splice(100); // Keep only last 100
+          queryClient.setQueryData(['leaderboard', 'recent'], updatedRecent);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+
+      // Return a context object with the snapshotted value
+      return { previousLeaderboards };
+    },
+    onError: (err, updates, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousLeaderboards) {
+        queryClient.setQueryData(['leaderboard', 'best_games'], context.previousLeaderboards.best_games);
+        queryClient.setQueryData(['leaderboard', 'recent'], context.previousLeaderboards.recent);
+      }
+      console.error('Error updating player:', err);
+    },
+    onSuccess: (updatedPlayer) => {
+      setPlayer(updatedPlayer);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we have correct data
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
     }
-  };
+  });
 
   // Fix avatar URL to use s88 (the largest size that works due to CORS)
   const fixAvatarUrl = (url: string | null): string | null => {
@@ -561,7 +615,7 @@ export default function ThumbnailBattlePage() {
         
         // Update player stats in database
         if (player) {
-          updatePlayerStats({
+          updatePlayerStatsMutation.mutate({
             current_score: newScore,
             best_score: Math.max(newScore, player.best_score),
             total_battles: player.total_battles + 1,
@@ -579,7 +633,7 @@ export default function ThumbnailBattlePage() {
         
         // Update player stats for loss (but keep current score!)
         if (player) {
-          updatePlayerStats({
+          updatePlayerStatsMutation.mutate({
             current_score: score, // Keep current score, don't reset to 0!
             total_battles: player.total_battles + 1,
             attempts_today: player.attempts_today + 1
@@ -596,7 +650,7 @@ export default function ThumbnailBattlePage() {
             setRoundStartTime(null);
             setLastPointsEarned(null);
             setGameState('gameOver');
-            fetchLeaderboard(); // Refresh leaderboard on game over
+            // Leaderboard will be fetched automatically by React Query when gameState changes
           }, 2000);
         } else {
           // Update game session progress (not over yet)
@@ -656,7 +710,7 @@ export default function ThumbnailBattlePage() {
     
     // Reset current streak for player
     if (player) {
-      updatePlayerStats({
+      updatePlayerStatsMutation.mutate({
         current_score: 0,
         attempts_today: player.attempts_today + 1
       });
@@ -702,10 +756,8 @@ export default function ThumbnailBattlePage() {
     setGameState('welcome');
   };
 
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardContext, setLeaderboardContext] = useState<any[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
-  const [leaderboardType, setLeaderboardType] = useState<'best_games' | 'recent'>('best_games');
 
   // Fetch leaderboard context when game ends
   useEffect(() => {
@@ -963,11 +1015,9 @@ export default function ThumbnailBattlePage() {
                     <Axe className="w-4 h-4 sm:w-6 sm:h-6 text-[#00ff00]" />
                     <span className="text-xs sm:text-lg font-semibold hidden sm:inline">Thumbnail Battle</span>
                   </div>
-                  {/* Live points display - hide on mobile when space is tight */}
+                  {/* Live points display - compact on mobile */}
                   {gameState === 'playing' && roundStartTime && (
-                    <div className="hidden sm:block">
-                      <LiveScoreDisplay startTime={roundStartTime} />
-                    </div>
+                    <LiveScoreDisplay startTime={roundStartTime} />
                   )}
                 </div>
                 
@@ -1162,13 +1212,7 @@ export default function ThumbnailBattlePage() {
                     className="text-gray-600 hover:text-[#00ff00] transition-colors text-xs uppercase tracking-wider"
                     onClick={() => {
                       setShowLeaderboard(true);
-                      // Load current tab immediately
-                      fetchLeaderboard();
-                      // Preload the other tab in background for instant switching
-                      const otherType = leaderboardType === 'best_games' ? 'recent' : 'best_games';
-                      if (!leaderboardCache[otherType]) {
-                        setTimeout(() => fetchLeaderboard(otherType), 100);
-                      }
+                      // React Query will automatically fetch the current leaderboardType
                     }}
                   >
                     VIEW LEADERBOARD
@@ -1316,12 +1360,7 @@ export default function ThumbnailBattlePage() {
                     }`}
                     onClick={() => {
                       setLeaderboardType('best_games');
-                      // Cache will handle instant switching
-                      if (leaderboardCache['best_games']) {
-                        setLeaderboard(leaderboardCache['best_games']);
-                      } else {
-                        fetchLeaderboard('best_games');
-                      }
+                      // React Query will automatically fetch if not cached
                     }}
                   >
                     Top Scores
@@ -1334,12 +1373,7 @@ export default function ThumbnailBattlePage() {
                     }`}
                     onClick={() => {
                       setLeaderboardType('recent');
-                      // Cache will handle instant switching
-                      if (leaderboardCache['recent']) {
-                        setLeaderboard(leaderboardCache['recent']);
-                      } else {
-                        fetchLeaderboard('recent');
-                      }
+                      // React Query will automatically fetch if not cached
                     }}
                   >
                     Recent Games
@@ -1347,7 +1381,11 @@ export default function ThumbnailBattlePage() {
                 </div>
               </div>
 
-              {leaderboard.length > 0 ? (
+              {leaderboardLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Loading...</p>
+                </div>
+              ) : leaderboard.length > 0 ? (
                 <div className="font-mono text-xl space-y-3 overflow-y-auto flex-1 scrollbar-hide">
                   {leaderboard.map((entry, index) => (
                     <div
@@ -1372,7 +1410,7 @@ export default function ThumbnailBattlePage() {
                           {entry.best_score.toLocaleString()}
                         </span>
                         <div className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-white/50 tabular-nums whitespace-nowrap">
-                          {new Date(entry.created_at).toLocaleDateString('en-US', { 
+                          {new Date(entry.created_at).toLocaleDateString([], { 
                             month: 'numeric', 
                             day: 'numeric' 
                           })} {new Date(entry.created_at).toLocaleTimeString([], { 
@@ -1387,7 +1425,7 @@ export default function ThumbnailBattlePage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>Loading...</p>
+                  <p>No results found</p>
                 </div>
               )}
             </motion.div>
