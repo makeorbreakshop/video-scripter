@@ -762,54 +762,15 @@ export default function ThumbnailBattlePage() {
   // Fetch leaderboard context when game ends
   useEffect(() => {
     if (gameState === 'gameOver' && player) {
-      // Fetch leaderboard to find player's position
-      fetch('/api/thumbnail-battle/leaderboard?limit=100')
+      const finalScore = Math.max(score, player.best_score || 0);
+      
+      // Use new leaderboard context API for accurate ranking
+      fetch(`/api/thumbnail-battle/leaderboard-context?player_name=${encodeURIComponent(player.player_name)}&final_score=${finalScore}`)
         .then(res => res.json())
         .then(data => {
-          if (data.leaderboard) {
-            // Find where the player's current score would rank
-            const finalScore = Math.max(score, player.best_score || 0);
-            let playerIndex = data.leaderboard.findIndex((entry: any) => 
-              finalScore > entry.best_score
-            );
-            
-            // If not found, they're at the end
-            if (playerIndex === -1) {
-              playerIndex = data.leaderboard.length;
-            }
-            
-            // Get 5 above and 5 below the player's position (11 total including player)
-            const start = Math.max(0, playerIndex - 5);
-            const end = Math.min(data.leaderboard.length, playerIndex + 6);
-            const snippet = data.leaderboard.slice(start, end).map((entry: any, idx: number) => ({
-              ...entry,
-              rank: start + idx + 1,
-              isCurrentPlayer: false
-            }));
-            
-            // Insert the player at their position if not already in list
-            const playerInList = snippet.find((e: any) => e.player_name === player.player_name);
-            if (!playerInList) {
-              snippet.splice(Math.min(playerIndex - start, snippet.length), 0, {
-                player_name: player.player_name,
-                best_score: finalScore,
-                rank: playerIndex + 1,
-                isCurrentPlayer: true
-              });
-              // Limit to 11 entries
-              if (snippet.length > 11) {
-                if (playerIndex - start > 5) {
-                  snippet.shift();
-                } else {
-                  snippet.pop();
-                }
-              }
-            } else {
-              playerInList.isCurrentPlayer = true;
-            }
-            
-            setLeaderboardContext(snippet);
-            setPlayerRank(playerIndex + 1);
+          if (data.leaderboard_context) {
+            setLeaderboardContext(data.leaderboard_context);
+            setPlayerRank(data.player_rank);
           }
         })
         .catch(console.error);
@@ -869,10 +830,10 @@ export default function ThumbnailBattlePage() {
                   <div
                     key={entry.rank}
                     className={`flex items-center justify-between px-2 ${
-                      entry.isCurrentPlayer ? 'text-[#00ff00]' : 'text-white/70'
+                      entry.is_current_player ? 'text-[#00ff00]' : 'text-white/70'
                     }`}
                     style={{
-                      textShadow: entry.isCurrentPlayer ? '0 0 10px rgba(0, 255, 0, 0.3)' : 'none'
+                      textShadow: entry.is_current_player ? '0 0 10px rgba(0, 255, 0, 0.3)' : 'none'
                     }}
                   >
                     <div className="flex items-center gap-4">
