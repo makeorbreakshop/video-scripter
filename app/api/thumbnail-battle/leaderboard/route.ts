@@ -2,13 +2,9 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 
 // Test players to filter out from leaderboards
-const TEST_PLAYERS = ['dev0', 'test', 'debug', 'admin'];
-
 function filterTestPlayers(leaderboard: any[]) {
   return leaderboard?.filter(entry => 
-    !TEST_PLAYERS.some(testName => 
-      entry.player_name?.toLowerCase().includes(testName.toLowerCase())
-    )
+    entry.player_name?.toLowerCase() !== 'dev0'
   );
 }
 
