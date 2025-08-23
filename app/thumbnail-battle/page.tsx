@@ -125,6 +125,10 @@ export default function ThumbnailBattlePage() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardCache, setLeaderboardCache] = useState<{
+    best_games?: LeaderboardEntry[];
+    recent?: LeaderboardEntry[];
+  }>({});
   // Leaderboard only shown on game over screen
   const [selectedVideo, setSelectedVideo] = useState<'A' | 'B' | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -301,13 +305,24 @@ export default function ThumbnailBattlePage() {
     }
   };
 
-  // Fetch leaderboard
-  const fetchLeaderboard = async () => {
+  // Fetch leaderboard with caching
+  const fetchLeaderboard = async (type: 'best_games' | 'recent' = leaderboardType) => {
+    // Check cache first for instant switching
+    if (leaderboardCache[type]) {
+      setLeaderboard(leaderboardCache[type]!);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/thumbnail-battle/leaderboard?limit=100');
+      const response = await fetch(`/api/thumbnail-battle/leaderboard?type=${type}&limit=100`);
       const data = await response.json();
       if (data.leaderboard) {
         setLeaderboard(data.leaderboard);
+        // Cache the result
+        setLeaderboardCache(prev => ({
+          ...prev,
+          [type]: data.leaderboard
+        }));
       }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
@@ -690,6 +705,7 @@ export default function ThumbnailBattlePage() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardContext, setLeaderboardContext] = useState<any[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
+  const [leaderboardType, setLeaderboardType] = useState<'best_games' | 'recent'>('best_games');
 
   // Fetch leaderboard context when game ends
   useEffect(() => {
@@ -1146,7 +1162,13 @@ export default function ThumbnailBattlePage() {
                     className="text-gray-600 hover:text-[#00ff00] transition-colors text-xs uppercase tracking-wider"
                     onClick={() => {
                       setShowLeaderboard(true);
+                      // Load current tab immediately
                       fetchLeaderboard();
+                      // Preload the other tab in background for instant switching
+                      const otherType = leaderboardType === 'best_games' ? 'recent' : 'best_games';
+                      if (!leaderboardCache[otherType]) {
+                        setTimeout(() => fetchLeaderboard(otherType), 100);
+                      }
                     }}
                   >
                     VIEW LEADERBOARD
@@ -1272,7 +1294,7 @@ export default function ThumbnailBattlePage() {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-10 text-center flex-shrink-0 relative">
+              <div className="mb-6 text-center flex-shrink-0 relative">
                 <button
                   className="absolute top-0 right-0 p-2 text-white/60 hover:text-white transition-colors"
                   onClick={() => setShowLeaderboard(false)}
@@ -1280,7 +1302,47 @@ export default function ThumbnailBattlePage() {
                 >
                   <X className="w-6 h-6" />
                 </button>
-                <h2 className="text-4xl font-bold mb-6">Leaderboard</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold mb-4">Leaderboard</h2>
+                
+                {/* Tabs - simple text approach */}
+                <div className="flex justify-center gap-6 mb-2">
+                  <button
+                    className={`text-sm font-medium transition-colors ${
+                      leaderboardType === 'best_games'
+                        ? 'text-[#00ff00]'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    onClick={() => {
+                      setLeaderboardType('best_games');
+                      // Cache will handle instant switching
+                      if (leaderboardCache['best_games']) {
+                        setLeaderboard(leaderboardCache['best_games']);
+                      } else {
+                        fetchLeaderboard('best_games');
+                      }
+                    }}
+                  >
+                    Top Scores
+                  </button>
+                  <button
+                    className={`text-sm font-medium transition-colors ${
+                      leaderboardType === 'recent'
+                        ? 'text-[#00ff00]'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    onClick={() => {
+                      setLeaderboardType('recent');
+                      // Cache will handle instant switching
+                      if (leaderboardCache['recent']) {
+                        setLeaderboard(leaderboardCache['recent']);
+                      } else {
+                        fetchLeaderboard('recent');
+                      }
+                    }}
+                  >
+                    Recent Games
+                  </button>
+                </div>
               </div>
 
               {leaderboard.length > 0 ? (
