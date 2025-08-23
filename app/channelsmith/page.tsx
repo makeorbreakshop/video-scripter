@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw, Loader2 } from "lucide-react";
+import { VideoCount } from '@/components/ui/video-count';
 
 interface OutlierVideo {
   video_id: string;
@@ -189,7 +190,7 @@ export default function ChannelSmithPage() {
                 <SelectItem value="10000">10,000+</SelectItem>
                 <SelectItem value="50000">50,000+</SelectItem>
                 <SelectItem value="100000">100,000+</SelectItem>
-                <SelectItem value="500000">500,000+</SelectItem>
+                <SelectItem value="500000"><VideoCount />+</SelectItem>
                 <SelectItem value="1000000">1,000,000+</SelectItem>
               </SelectContent>
             </Select>

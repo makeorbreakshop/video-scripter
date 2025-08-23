@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle, TrendingUp, Database, RefreshCw, Lock, Sparkles, X } from 'lucide-react';
+import { VideoCount } from '@/components/ui/video-count';
 import {
   Accordion,
   AccordionContent,
@@ -161,7 +162,7 @@ export default function OutliersPage() {
             A giant list of YouTube videos that actually worked.
           </h1>
           <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Stop guessing what works. Get instant access to 500,000+ viral videos with performance scores, 
+            Stop guessing what works. Get instant access to <VideoCount />+ viral videos with performance scores, 
             updated daily. One-time payment, lifetime access.
           </p>
           
@@ -293,22 +294,22 @@ export default function OutliersPage() {
                         </div>
                         
                         {/* Minimal content */}
-                        <div className="p-2">
+                        <div className="p-2 bg-black/90">
                           {/* Title only - single line */}
-                          <h3 className="text-[11px] text-zinc-300 truncate group-hover:text-zinc-100 transition-colors">
+                          <h3 className="text-xs text-white font-medium truncate group-hover:text-gray-100 transition-colors">
                             {video.title}
                           </h3>
                           
                           {/* Score and channel - super minimal */}
                           <div className="flex items-center justify-between mt-1">
-                            <span className="text-[9px] text-zinc-600 truncate max-w-[70%]">
+                            <span className="text-[10px] text-gray-400 truncate max-w-[70%]">
                               {video.channel}
                             </span>
                             {video.score >= 3 && (
-                              <span className={`text-[9px] font-medium ${
+                              <span className={`text-[10px] font-bold ${
                                 video.score >= 10 ? 'text-[#00ff00]' :
-                                video.score >= 5 ? 'text-yellow-500/80' :
-                                'text-zinc-500'
+                                video.score >= 5 ? 'text-yellow-400' :
+                                'text-gray-400'
                               }`}>
                                 {video.score >= 10 ? Math.round(video.score) : video.score.toFixed(1)}x
                               </span>
@@ -327,7 +328,7 @@ export default function OutliersPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-gray-500">
                   <Lock className="w-4 h-4" />
-                  <span>Showing 30 of 500,000+ videos</span>
+                  <span>Showing 30 of <VideoCount />+ videos</span>
                 </div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
@@ -359,7 +360,7 @@ export default function OutliersPage() {
             >
               <Card className="bg-black/40 border-gray-800 p-6 hover:border-[#00ff00]/30 hover:shadow-[0_0_20px_rgba(0,255,0,0.1)] transition-all duration-200 h-full">
                 <Database className="w-8 h-8 text-[#00ff00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]" />
-                <h3 className="text-xl font-bold mb-2 text-white">500,000+ Videos</h3>
+                <h3 className="text-xl font-bold mb-2 text-white"><VideoCount />+ Videos</h3>
                 <p className="text-gray-400 text-sm">
                   Comprehensive database of viral videos with full metadata
                 </p>
@@ -426,7 +427,7 @@ export default function OutliersPage() {
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-[#00ff00]" />
-                    <span>500,000+ viral videos</span>
+                    <span><VideoCount />+ viral videos</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-[#00ff00]" />
@@ -498,7 +499,7 @@ export default function OutliersPage() {
                 What exactly do I get access to?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                You get instant access to our database of 500,000+ YouTube videos that have gone viral. 
+                You get instant access to our database of <VideoCount />+ YouTube videos that have gone viral. 
                 Each entry includes the title, thumbnail, view count, channel info, and our proprietary 
                 performance score. New videos are added daily.
               </AccordionContent>
