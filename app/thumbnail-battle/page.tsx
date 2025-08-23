@@ -1180,6 +1180,7 @@ export default function ThumbnailBattlePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
+                  <Axe className="w-10 h-10 text-[#00ff00] mx-auto mb-4" />
                   <h1 className="text-5xl font-bold mb-4 tracking-tight">Thumbnail Battle</h1>
                   <div className="max-w-2xl mx-auto">
                     <p className="text-lg text-muted-foreground mb-3">
