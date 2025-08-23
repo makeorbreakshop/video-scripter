@@ -899,11 +899,15 @@ export default function ThumbnailBattlePage() {
           )}
           
           <button 
-            className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors"
+            className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors mb-4"
             onClick={handleRestart}
           >
             Play Again
           </button>
+          
+          <p className="text-sm text-muted-foreground">
+            25+ million battles await - can you beat your high score?
+          </p>
         </motion.div>
       </div>
     );
