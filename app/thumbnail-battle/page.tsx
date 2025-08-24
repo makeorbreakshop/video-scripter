@@ -764,14 +764,14 @@ export default function ThumbnailBattlePage() {
   const [leaderboardContext, setLeaderboardContext] = useState<any[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
 
-  // Fetch leaderboard context when game ends
+  // Fetch leaderboard context when game ends - use main leaderboard for accuracy
   useEffect(() => {
     if (gameState === 'gameOver' && player) {
       // Use the actual game score, not the best score
       const actualGameScore = score;
       
-      // Use new leaderboard context API for accurate ranking
-      fetch(`/api/thumbnail-battle/leaderboard-context?player_name=${encodeURIComponent(player.player_name)}&final_score=${actualGameScore}`)
+      // Use efficient ranking query to get player rank and context
+      fetch(`/api/thumbnail-battle/leaderboard-context?player_name=${encodeURIComponent(player.player_name)}&final_score=${actualGameScore}&use_games_table=true`)
         .then(res => res.json())
         .then(data => {
           if (data.leaderboard_context) {
@@ -781,7 +781,7 @@ export default function ThumbnailBattlePage() {
         })
         .catch(console.error);
     }
-  }, [gameState, player, score]);
+  }, [gameState, player, score, totalGames, correctPicks]);
 
   // Keyboard shortcuts
   useEffect(() => {

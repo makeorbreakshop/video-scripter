@@ -21,12 +21,12 @@ export async function GET(request: Request) {
     switch (type) {
       case 'best_games':
       default:
-        // Get actual game records, excluding timeout games
+        // Get game records only - all scores now migrated to games table
         const gameResult = await supabase
           .from('thumbnail_battle_games')
           .select(`
             final_score,
-            battles_played, 
+            battles_played,
             battles_won,
             ended_at,
             game_duration_ms,
@@ -35,11 +35,11 @@ export async function GET(request: Request) {
           .not('ended_at', 'is', null)
           .neq('is_timeout', true)
           .order('final_score', { ascending: false })
-          .limit(200); // Get more to allow for combined sorting
+          .limit(limit);
           
         if (gameResult.error) throw gameResult.error;
         
-        // Get player names for games
+        // Get player names for games  
         const gameSessionIds = gameResult.data?.map(g => g.player_session_id).filter(Boolean) || [];
         const gamePlayers = await supabase
           .from('thumbnail_battle_players')
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
         const gamePlayerMap = new Map(gamePlayers.data?.map(p => [p.session_id, p.player_name]) || []);
         
         // Convert games to leaderboard entries
-        const gameEntries = gameResult.data?.map(game => ({
+        const leaderboard = gameResult.data?.map(game => ({
           player_name: gamePlayerMap.get(game.player_session_id) || 'Unknown',
           best_score: game.final_score,
           total_battles: game.battles_played,
@@ -58,46 +58,10 @@ export async function GET(request: Request) {
           accuracy: game.battles_played > 0 
             ? Math.round((game.battles_won / game.battles_played) * 100)
             : 0,
-          game_duration_ms: game.game_duration_ms,
-          source: 'game'
+          game_duration_ms: game.game_duration_ms
         })) || [];
-
-        // Find players whose best scores aren't represented in game records
-        const playerResult = await supabase
-          .from('thumbnail_battle_players')
-          .select('session_id, player_name, best_score, total_battles, total_wins, created_at')
-          .gt('best_score', 0)
-          .order('best_score', { ascending: false });
-          
-        if (playerResult.error) throw playerResult.error;
-
-        // Add player records for scores not represented in games
-        const playerEntries = playerResult.data?.filter(player => {
-          // Only add if no game record exists with this score for this player
-          return !gameEntries.some(game => 
-            game.player_name === player.player_name && 
-            game.best_score === player.best_score
-          );
-        }).map(player => ({
-          player_name: player.player_name,
-          best_score: player.best_score,
-          total_battles: player.total_battles,
-          total_wins: player.total_wins,
-          created_at: player.created_at,
-          accuracy: player.total_battles > 0 
-            ? Math.round((player.total_wins / player.total_battles) * 100)
-            : 0,
-          game_duration_ms: null,
-          source: 'player_record'
-        })) || [];
-
-        // Combine, filter test players, and sort all entries
-        const allEntries = [...gameEntries, ...playerEntries];
-        const filteredEntries = filterTestPlayers(allEntries)
-          .sort((a, b) => b.best_score - a.best_score)
-          .slice(0, limit);
         
-        return NextResponse.json({ leaderboard: filteredEntries });
+        return NextResponse.json({ leaderboard: filterTestPlayers(leaderboard) });
         break;
       
       case 'best_players':
