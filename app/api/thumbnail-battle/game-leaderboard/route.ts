@@ -17,6 +17,7 @@ export async function GET(request: Request) {
           .from('thumbnail_battle_games')
           .select('*')
           .not('ended_at', 'is', null) // Only completed games
+          .neq('is_timeout', true) // Exclude timeout games
           .order('final_score', { ascending: false })
           .limit(limit);
         break;
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
           .from('thumbnail_battle_games')
           .select('*')
           .not('ended_at', 'is', null) // Only completed games
+          .neq('is_timeout', true) // Exclude timeout games
           .order('ended_at', { ascending: false })
           .limit(limit);
         break;
@@ -35,6 +37,7 @@ export async function GET(request: Request) {
           .from('thumbnail_battle_games')
           .select('*')
           .not('ended_at', 'is', null) // Only completed games
+          .neq('is_timeout', true) // Exclude timeout games
           .order('battles_won', { ascending: false })
           .limit(limit);
         break;

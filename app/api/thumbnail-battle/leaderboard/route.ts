@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     switch (type) {
       case 'best_games':
       default:
-        // Get actual game records
+        // Get actual game records, excluding timeout games
         const gameResult = await supabase
           .from('thumbnail_battle_games')
           .select(`
@@ -33,6 +33,7 @@ export async function GET(request: Request) {
             player_session_id
           `)
           .not('ended_at', 'is', null)
+          .neq('is_timeout', true)
           .order('final_score', { ascending: false })
           .limit(200); // Get more to allow for combined sorting
           
@@ -123,7 +124,7 @@ export async function GET(request: Request) {
         });
         
         if (recentRawError) {
-          // Fallback to manual query
+          // Fallback to manual query, excluding timeout games
           const recentResult = await supabase
             .from('thumbnail_battle_games')
             .select(`
@@ -135,6 +136,7 @@ export async function GET(request: Request) {
               player_session_id
             `)
             .not('ended_at', 'is', null)
+            .neq('is_timeout', true)
             .order('ended_at', { ascending: false })
             .limit(limit);
             
@@ -181,7 +183,7 @@ export async function GET(request: Request) {
         break;
 
       case 'today':
-        // Games played today
+        // Games played today, excluding timeout games
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         query = supabase
@@ -195,6 +197,7 @@ export async function GET(request: Request) {
             thumbnail_battle_players!inner(player_name)
           `)
           .not('ended_at', 'is', null)
+          .neq('is_timeout', true)
           .gte('ended_at', today.toISOString())
           .order('final_score', { ascending: false })
           .limit(limit);
