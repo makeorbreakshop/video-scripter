@@ -767,10 +767,11 @@ export default function ThumbnailBattlePage() {
   // Fetch leaderboard context when game ends
   useEffect(() => {
     if (gameState === 'gameOver' && player) {
-      const finalScore = Math.max(score, player.best_score || 0);
+      // Use the actual game score, not the best score
+      const actualGameScore = score;
       
       // Use new leaderboard context API for accurate ranking
-      fetch(`/api/thumbnail-battle/leaderboard-context?player_name=${encodeURIComponent(player.player_name)}&final_score=${finalScore}`)
+      fetch(`/api/thumbnail-battle/leaderboard-context?player_name=${encodeURIComponent(player.player_name)}&final_score=${actualGameScore}`)
         .then(res => res.json())
         .then(data => {
           if (data.leaderboard_context) {
