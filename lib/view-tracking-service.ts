@@ -436,23 +436,23 @@ export class ViewTrackingService {
     
     switch (priorityTier) {
       case 0: 
-        // Tier 0: Every 12 hours for ultra-fresh videos (Days 1-7)
-        nextDate.setHours(now.getHours() + 12);
-        break;
-      case 1: 
-        // Tier 1: Daily tracking (Days 8-30)
+        // Tier 0: Daily tracking (highest priority)
         nextDate.setDate(now.getDate() + 1);
         break;
+      case 1: 
+        // Tier 1: Every other day
+        nextDate.setDate(now.getDate() + 2);
+        break;
       case 2: 
-        // Tier 2: Every 3 days (Days 31-90)
-        nextDate.setDate(now.getDate() + 3);
+        // Tier 2: Every 4 days
+        nextDate.setDate(now.getDate() + 4);
         break;
       case 3: 
-        // Tier 3: Weekly (Days 91-365)
+        // Tier 3: Weekly (unchanged)
         nextDate.setDate(now.getDate() + 7);
         break;
       case 4: 
-        // Tier 4: Monthly (365+ days)
+        // Tier 4: Monthly (unchanged)
         nextDate.setDate(now.getDate() + 30);
         break;
       default: 

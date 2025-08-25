@@ -115,9 +115,9 @@ export async function GET(request: NextRequest) {
       today: todayCount ? Math.ceil(todayCount / 50) : 0,
       estimatedDaily: tierStatsArray ? tierStatsArray.reduce((sum, t) => {
         // Calculate based on NEW tracking frequency for each tier (0-4)
-        if (t.tier === 0) return sum + Math.ceil(t.count * 2);    // Every 12 hours = 2x daily
-        if (t.tier === 1) return sum + t.count;                   // Daily
-        if (t.tier === 2) return sum + Math.ceil(t.count / 3);    // Every 3 days
+        if (t.tier === 0) return sum + t.count;                   // Daily
+        if (t.tier === 1) return sum + Math.ceil(t.count / 2);    // Every other day
+        if (t.tier === 2) return sum + Math.ceil(t.count / 4);    // Every 4 days
         if (t.tier === 3) return sum + Math.ceil(t.count / 7);    // Weekly
         if (t.tier === 4) return sum + Math.ceil(t.count / 30);   // Monthly
         return sum;

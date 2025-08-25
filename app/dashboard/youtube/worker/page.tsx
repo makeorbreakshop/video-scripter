@@ -840,11 +840,11 @@ export default function WorkerDashboard() {
                             <div className="text-xs text-muted-foreground">Tier {tier.tier}</div>
                             <div className="text-lg font-bold">{tier.count.toLocaleString()}</div>
                             <div className="text-xs text-muted-foreground">
-                              {tier.tier === 0 ? 'Every 12 hours (Days 1-7)' :
-                               tier.tier === 1 ? 'Daily (Days 8-30)' : 
-                               tier.tier === 2 ? 'Every 3 days (Days 31-90)' : 
-                               tier.tier === 3 ? 'Weekly (Days 91-365)' : 
-                               tier.tier === 4 ? 'Monthly (365+ days)' : 
+                              {tier.tier === 0 ? 'Daily (highest priority)' :
+                               tier.tier === 1 ? 'Every other day' : 
+                               tier.tier === 2 ? 'Every 4 days' : 
+                               tier.tier === 3 ? 'Weekly' : 
+                               tier.tier === 4 ? 'Monthly' : 
                                'Unknown'}
                             </div>
                             {willTrack > 0 && (
