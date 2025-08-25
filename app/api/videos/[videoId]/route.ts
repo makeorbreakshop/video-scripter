@@ -309,6 +309,20 @@ export async function GET(
       }
     }
 
+    // Fetch view snapshots for the performance trajectory chart
+    const { data: snapshots, error: snapshotsError } = await supabase
+      .from('view_snapshots')
+      .select('*')
+      .eq('video_id', videoId)
+      .order('snapshot_date', { ascending: true });
+
+    if (snapshotsError) {
+      console.error('Error fetching view snapshots:', snapshotsError);
+    }
+
+    // Add snapshots to video data
+    video.view_snapshots = snapshots || [];
+
     return NextResponse.json(video);
   } catch (error) {
     console.error('Error fetching video:', error);

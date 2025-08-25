@@ -33,6 +33,7 @@ export async function GET(
     }
 
     // Build query - optimize by only selecting needed fields
+    const supabase = await getSupabase();
     let query = supabase
       .from('videos')
       .select(`

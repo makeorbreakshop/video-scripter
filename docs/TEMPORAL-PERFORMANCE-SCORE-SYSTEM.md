@@ -343,10 +343,16 @@ SELECT cron.schedule(
   $$SELECT recalculate_global_envelopes()$$
 );
 
--- 3. Sync view counts from snapshots
-CREATE TRIGGER sync_video_views
+-- 3. Sync view counts from snapshots (IMPLEMENTED AND ACTIVE)
+CREATE TRIGGER trigger_sync_video_view_count
 AFTER INSERT OR UPDATE ON view_snapshots
 FOR EACH ROW EXECUTE FUNCTION sync_video_view_count();
+
+-- Function automatically:
+-- 1. Updates videos.view_count with latest snapshot data
+-- 2. Recalculates temporal_performance_score using Day 30 estimates
+-- 3. Uses performance envelopes for curve-based calculations
+-- 4. Only updates if view count actually changed
 ```
 
 ## Real-World Example
@@ -487,7 +493,7 @@ ORDER BY avg_score DESC;
 - **Baseline Calculation**: ~100-200 videos/second
 - **Batch Import**: Handles 1,000+ videos without timeout
 - **View Tracking**: 2,000 API calls = 100,000 videos daily
-- **Score Recalculation**: Real-time via database triggers
+- **Score Recalculation**: ✅ WORKING - Real-time via `trigger_sync_video_view_count` database trigger
 
 ## Key Learnings & Best Practices
 
@@ -503,8 +509,14 @@ Raw percentile curves from 700K+ data points are too noisy. 7-day rolling averag
 ### 4. Batch Processing Strategy
 Single UPDATE statements with correlated subqueries are 100x more efficient than loops. Always process in batches, never iterate.
 
-### 5. View Tracking Integration
+### 5. View Tracking Integration ✅ IMPLEMENTED
 View snapshots must trigger main table updates. Without this, scores become stale as videos accumulate views.
+
+**CURRENT STATUS**: The `trigger_sync_video_view_count` trigger is ACTIVE and working:
+- Automatically updates `videos.view_count` from new `view_snapshots` 
+- Real-time recalculation of `temporal_performance_score` using Day 30 estimates
+- Uses performance envelopes for curve-based calculations
+- Performance scores update automatically as new views come in via view tracking
 
 ## Migration from Legacy System
 

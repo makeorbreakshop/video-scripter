@@ -138,13 +138,12 @@ export default function VideoDetailsPage() {
       const videoData = await videoResponse.json();
       console.log('Video data:', videoData);
       console.log('Performance metrics:', videoData.video_performance_metrics);
+      console.log('View snapshots from API:', videoData.view_snapshots);
       setVideo(videoData);
 
-      const snapshotsResponse = await fetch(`/api/videos/${videoId}/snapshots`);
-      if (snapshotsResponse.ok) {
-        const snapshotsData = await snapshotsResponse.json();
-        console.log('Snapshots data:', snapshotsData);
-        setSnapshots(snapshotsData.snapshots || []);
+      // Use snapshots from the video response instead of separate API call
+      if (videoData.view_snapshots) {
+        setSnapshots(videoData.view_snapshots);
       }
     } catch (error) {
       console.error('Error fetching video details:', error);
