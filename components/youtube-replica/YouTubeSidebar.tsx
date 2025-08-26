@@ -2,7 +2,7 @@
 
 export default function YouTubeSidebar() {
   return (
-    <aside className="w-60 h-full bg-white dark:bg-[#0f0f0f] border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+    <aside className="w-56 h-full bg-white dark:bg-[rgb(15,15,15)] border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
       <div className="py-2">
         {/* Home section */}
         <div className="px-3 mb-2">

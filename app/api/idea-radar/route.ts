@@ -11,6 +11,7 @@ interface OutlierVideo {
   title: string;
   channel_name: string;
   channel_id?: string;
+  channel_avatar_url?: string;
   thumbnail_url: string;
   score: number;
   domain: string;
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
       // Get the page of IDs we need
       const pageIds = shuffledIds.slice(offset, offset + limit);
       
-      // Step 2: Fetch full data for these IDs (instant ~10ms)
+      // Step 2: Fetch full data for these IDs using optimized RPC function
       const { data: videos, error: videosError } = await supabase.rpc('get_videos_by_id_list', {
         p_video_ids: pageIds
       });
@@ -138,6 +139,23 @@ export async function GET(request: NextRequest) {
       if (videosError) {
         console.error('❌ Failed to fetch video details:', videosError);
         throw videosError;
+      }
+      
+      // Step 2b: Batch fetch channel avatars (fast with index)
+      const channelIds = [...new Set((videos || []).map(v => v.channel_id).filter(Boolean))];
+      let channelAvatars: Record<string, string> = {};
+      
+      if (channelIds.length > 0) {
+        const { data: channels } = await supabase
+          .from('channels')
+          .select('channel_id, thumbnail_url')
+          .in('channel_id', channelIds);
+        
+        if (channels) {
+          channelAvatars = Object.fromEntries(
+            channels.filter(c => c.thumbnail_url).map(c => [c.channel_id, c.thumbnail_url])
+          );
+        }
       }
       
       // Step 3: Get approximate count for display
@@ -155,8 +173,9 @@ export async function GET(request: NextRequest) {
       const outliers: OutlierVideo[] = (videos || []).map(v => ({
         video_id: v.id,
         title: v.title,
-        channel_name: v.channel_title,
+        channel_name: v.channel_title || v.channel_name,
         channel_id: v.channel_id,
+        channel_avatar_url: channelAvatars[v.channel_id] || null,
         thumbnail_url: v.thumbnail_url,
         score: parseFloat(v.temporal_performance_score || v.outlier_score || '0'),
         domain: 'Unknown', // Will need to fetch separately if needed
@@ -238,13 +257,31 @@ export async function GET(request: NextRequest) {
         console.error('❌ Failed to fetch outliers:', error);
         throw error;
       }
+      
+      // Batch fetch channel avatars for non-randomized path
+      const channelIds = [...new Set((videos || []).map(v => v.channel_id).filter(Boolean))];
+      let channelAvatars: Record<string, string> = {};
+      
+      if (channelIds.length > 0) {
+        const { data: channels } = await supabase
+          .from('channels')
+          .select('channel_id, thumbnail_url')
+          .in('channel_id', channelIds);
+        
+        if (channels) {
+          channelAvatars = Object.fromEntries(
+            channels.filter(c => c.thumbnail_url).map(c => [c.channel_id, c.thumbnail_url])
+          );
+        }
+      }
 
       // Transform to response format
       const outliers: OutlierVideo[] = (videos || []).map(v => ({
         video_id: v.id,
         title: v.title,
         channel_name: v.channel_name,
-        channel_id: v.channel_id,  // Add channel_id to the response
+        channel_id: v.channel_id,
+        channel_avatar_url: channelAvatars[v.channel_id] || null,  // Add channel avatar
         thumbnail_url: v.thumbnail_url,
         score: parseFloat(v.temporal_performance_score),
         domain: v.topic_domain || 'Unknown',

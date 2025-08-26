@@ -29,6 +29,14 @@ export default function YouTubeGrid({ videos, className = '' }: YouTubeGridProps
           gap: 16px 20px;
           padding: 0 24px;
           margin-left: 0;
+          max-width: calc(100vw - 224px - 48px); /* Viewport - sidebar (224px) - padding (48px) */
+        }
+        
+        @media (max-width: 1600px) {
+          .youtube-video-grid {
+            grid-template-columns: repeat(4, 290px);
+            gap: 16px 16px;
+          }
         }
         
         @media (max-width: 1400px) {
@@ -37,16 +45,17 @@ export default function YouTubeGrid({ videos, className = '' }: YouTubeGridProps
           }
         }
         
-        @media (max-width: 1050px) {
+        @media (max-width: 1100px) {
           .youtube-video-grid {
             grid-template-columns: repeat(2, 305px);
           }
         }
         
-        @media (max-width: 700px) {
+        @media (max-width: 750px) {
           .youtube-video-grid {
             grid-template-columns: 1fr;
             padding: 0 16px;
+            max-width: none;
           }
         }
       `}</style>

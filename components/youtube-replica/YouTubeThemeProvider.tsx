@@ -49,7 +49,7 @@ export default function YouTubeThemeProvider({ children }: YouTubeThemeProviderP
       <div
         className={theme === 'dark' ? 'dark' : ''}
         style={{
-          '--yt-spec-base-background': theme === 'light' ? '#FFFFFF' : '#0F0F0F',
+          '--yt-spec-base-background': theme === 'light' ? '#FFFFFF' : 'rgb(15, 15, 15)',
           '--yt-spec-text-primary': theme === 'light' ? '#0F0F0F' : '#FFFFFF',
           '--yt-spec-text-secondary': theme === 'light' ? '#606060' : '#AAAAAA',
           '--yt-spec-text-disabled': theme === 'light' ? '#909090' : '#717171',
@@ -61,7 +61,7 @@ export default function YouTubeThemeProvider({ children }: YouTubeThemeProviderP
         <div 
           className="min-h-screen transition-colors duration-200"
           style={{
-            backgroundColor: theme === 'light' ? '#FFFFFF' : '#0F0F0F',
+            backgroundColor: theme === 'light' ? '#FFFFFF' : 'rgb(15, 15, 15)',
             color: theme === 'light' ? '#0F0F0F' : '#FFFFFF'
           }}
         >

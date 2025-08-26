@@ -61,7 +61,7 @@ export default function YouTubeVideoCard({
     >
       {/* Thumbnail Container - 305×172px (16:9 aspect ratio) */}
       <div className="relative w-full mb-3 overflow-hidden bg-gray-100 dark:bg-gray-800" style={{ borderRadius: '8px' }}>
-        <div className="aspect-video"> {/* 16:9 aspect ratio */}
+        <div className="aspect-video relative"> {/* 16:9 aspect ratio */}
           <Image
             src={thumbnail_url}
             alt={title}

@@ -65,7 +65,7 @@ function YouTubeDemoContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-[#0f0f0f]">
+    <div className="flex flex-col h-screen bg-white dark:bg-[rgb(15,15,15)]">
       {/* YouTube Header */}
       <YouTubeHeader />
       
@@ -74,7 +74,7 @@ function YouTubeDemoContent() {
         <YouTubeSidebar />
         
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-[#0f0f0f]">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-[rgb(15,15,15)]">
           {/* Video Grid - Homepage Style */}
           <div className="pt-6 pb-8">
             <YouTubeGrid videos={videos} />

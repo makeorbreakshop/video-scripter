@@ -6,7 +6,7 @@ export default function YouTubeHeader() {
   const { theme, toggleTheme } = useYouTubeTheme();
 
   return (
-    <header className="flex items-center h-14 px-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f]">
+    <header className="flex items-center h-14 px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[rgb(15,15,15)]">
       {/* Left side - Menu and Logo */}
       <div className="flex items-center gap-4 flex-shrink-0">
         {/* Hamburger Menu */}
@@ -30,16 +30,16 @@ export default function YouTubeHeader() {
       </div>
 
       {/* Center - Search */}
-      <div className="flex-1 max-w-2xl mx-4">
+      <div className="flex-1 max-w-2xl mx-6">
         <div className="flex items-center">
           <div className="flex-1 flex">
             <input
               type="text"
               placeholder="Search"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-full bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-1.5 border border-gray-300 dark:border-gray-700 rounded-l-full bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 text-sm"
             />
-            <button className="px-6 py-2 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <button className="px-5 py-1.5 border border-l-0 border-gray-300 dark:border-gray-700 rounded-r-full bg-gray-50 dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-gray-600">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
               </svg>
             </button>

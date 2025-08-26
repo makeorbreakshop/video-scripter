@@ -992,7 +992,7 @@ export default function ThumbnailBattlePage() {
                   )}
                 </div>
                 
-                {/* Right side - Score, Best, Lives - more compact on mobile */}
+                {/* Right side - Score, Best, Lives, User Nav - more compact on mobile */}
                 <div className="flex items-center gap-2 sm:gap-6">
                   {/* Score - compact mobile display */}
                   <div className={`flex items-center gap-1 ${
@@ -1027,6 +1027,7 @@ export default function ThumbnailBattlePage() {
                       />
                     ))}
                   </div>
+                  
                 </div>
               </div>
             </div>
@@ -1046,6 +1047,7 @@ export default function ThumbnailBattlePage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
+            
             <div className="max-w-4xl w-full">
               {/* Thumbnail preview - uses fast preview endpoint or falls back to battleQueue */}
               {(welcomePreview && welcomePreview.videoA && welcomePreview.videoB) || (battleQueue.length > 0 && battleQueue[0]) ? (
@@ -1177,6 +1179,7 @@ export default function ThumbnailBattlePage() {
                     {battle ? 'Battle!' : 'Loading...'}
                   </button>
                 </div>
+
 
                 {/* Bottom options */}
                 <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-8">
