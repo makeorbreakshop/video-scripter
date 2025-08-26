@@ -57,7 +57,7 @@ function YouTubeHeader() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <header className="flex items-center h-14 px-4 bg-[rgb(15,15,15)] border-b border-neutral-800">
+    <header className="flex items-center h-14 px-4 bg-[rgb(15,15,15)]">
       {/* Left - Menu & Logo */}
       <div className="flex items-center gap-4 flex-shrink-0">
         <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800 p-2 rounded-full">
@@ -131,7 +131,7 @@ function YouTubeHeader() {
 // YouTube Sidebar Component
 function YouTubeSidebar() {
   return (
-    <aside className="w-60 bg-[rgb(15,15,15)] border-r border-neutral-800">
+    <aside className="w-60 bg-[rgb(15,15,15)]">
       <ScrollArea className="h-full">
         <div className="py-2">
           {/* Main Navigation */}
@@ -302,12 +302,13 @@ function YouTubeSidebar() {
   );
 }
 
-// Idea Heist Filter Controls - YouTube Style (Controlled Component)
+// Idea Heist Filter Controls - YouTube Chip Style
 interface FilterProps {
   filters: {
     timeRange: string;
     minScore: string;
     minViews: string;
+    category: string;
   };
   onFiltersChange: (filters: any) => void;
   totalCount: number;
@@ -316,82 +317,125 @@ interface FilterProps {
 
 function IdeaHeistFilters({ filters, onFiltersChange, totalCount, onRefresh }: FilterProps) {
   return (
-    <div className="sticky top-0 bg-[rgb(15,15,15)] border-b border-neutral-800 z-10">
-      <div className="flex items-center gap-6 px-6 py-3 overflow-x-auto scrollbar-none">
-        {/* Time Range */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-neutral-300 text-sm font-medium">Time Range:</span>
-          <Select 
-            value={filters.timeRange} 
-            onValueChange={(value) => onFiltersChange({ timeRange: value })}
-          >
-            <SelectTrigger className="w-36 bg-neutral-800 border-neutral-700 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-neutral-800 border-neutral-700">
-              <SelectItem value="day" className="text-white hover:bg-neutral-700">Last 24 Hours</SelectItem>
-              <SelectItem value="week" className="text-white hover:bg-neutral-700">Last Week</SelectItem>
-              <SelectItem value="month" className="text-white hover:bg-neutral-700">Last Month</SelectItem>
-              <SelectItem value="quarter" className="text-white hover:bg-neutral-700">Last 3 Months</SelectItem>
-              <SelectItem value="halfyear" className="text-white hover:bg-neutral-700">Last 6 Months</SelectItem>
-              <SelectItem value="year" className="text-white hover:bg-neutral-700">Last Year</SelectItem>
-              <SelectItem value="twoyears" className="text-white hover:bg-neutral-700">Last 2 Years</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="sticky top-0 bg-[rgb(15,15,15)] z-10">
+      <div className="flex items-center gap-3 px-6 py-3">
+        {/* Filter Chips */}
+        <Select value={filters.timeRange} onValueChange={(value) => onFiltersChange({ timeRange: value })}>
+          <SelectTrigger className="w-auto h-8 px-3 py-0 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] border-0 rounded-full text-sm font-normal transition-colors">
+            <span className="text-white">
+              {filters.timeRange === 'day' && 'Last 24 Hours'}
+              {filters.timeRange === 'week' && 'Last Week'}
+              {filters.timeRange === 'month' && 'Last Month'}
+              {filters.timeRange === 'quarter' && 'Last 3 Months'}
+              {filters.timeRange === 'halfyear' && 'Last 6 Months'}
+              {filters.timeRange === 'year' && 'Last Year'}
+              {filters.timeRange === 'twoyears' && 'Last 2 Years'}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="bg-neutral-800 border-neutral-700">
+            <SelectItem value="day" className="text-white hover:bg-neutral-700">Last 24 Hours</SelectItem>
+            <SelectItem value="week" className="text-white hover:bg-neutral-700">Last Week</SelectItem>
+            <SelectItem value="month" className="text-white hover:bg-neutral-700">Last Month</SelectItem>
+            <SelectItem value="quarter" className="text-white hover:bg-neutral-700">Last 3 Months</SelectItem>
+            <SelectItem value="halfyear" className="text-white hover:bg-neutral-700">Last 6 Months</SelectItem>
+            <SelectItem value="year" className="text-white hover:bg-neutral-700">Last Year</SelectItem>
+            <SelectItem value="twoyears" className="text-white hover:bg-neutral-700">Last 2 Years</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {/* Min Score */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-neutral-300 text-sm font-medium">Min Score:</span>
-          <Select 
-            value={filters.minScore} 
-            onValueChange={(value) => onFiltersChange({ minScore: value })}
-          >
-            <SelectTrigger className="w-36 bg-neutral-800 border-neutral-700 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-neutral-800 border-neutral-700">
-              <SelectItem value="1.5" className="text-white hover:bg-neutral-700">1.5x (Above Average)</SelectItem>
-              <SelectItem value="2" className="text-white hover:bg-neutral-700">2x (Good)</SelectItem>
-              <SelectItem value="3" className="text-white hover:bg-neutral-700">3x (Very Good)</SelectItem>
-              <SelectItem value="5" className="text-white hover:bg-neutral-700">5x (Viral)</SelectItem>
-              <SelectItem value="10" className="text-white hover:bg-neutral-700">10x (Mega-viral)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={filters.minScore} onValueChange={(value) => onFiltersChange({ minScore: value })}>
+          <SelectTrigger className="w-auto h-8 px-3 py-0 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] border-0 rounded-full text-sm font-normal transition-colors">
+            <span className="text-white">
+              {filters.minScore === '1.5' && '1.5x Performance'}
+              {filters.minScore === '2' && '2x Performance'}
+              {filters.minScore === '3' && '3x Performance'}
+              {filters.minScore === '5' && '5x Performance'}
+              {filters.minScore === '10' && '10x Performance'}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="bg-neutral-800 border-neutral-700">
+            <SelectItem value="1.5" className="text-white hover:bg-neutral-700">1.5x Performance</SelectItem>
+            <SelectItem value="2" className="text-white hover:bg-neutral-700">2x Performance</SelectItem>
+            <SelectItem value="3" className="text-white hover:bg-neutral-700">3x Performance</SelectItem>
+            <SelectItem value="5" className="text-white hover:bg-neutral-700">5x Performance</SelectItem>
+            <SelectItem value="10" className="text-white hover:bg-neutral-700">10x Performance</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {/* Min Views */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-neutral-300 text-sm font-medium">Min Views:</span>
-          <Select 
-            value={filters.minViews} 
-            onValueChange={(value) => onFiltersChange({ minViews: value })}
-          >
-            <SelectTrigger className="w-32 bg-neutral-800 border-neutral-700 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-neutral-800 border-neutral-700">
-              <SelectItem value="100" className="text-white hover:bg-neutral-700">100+</SelectItem>
-              <SelectItem value="1000" className="text-white hover:bg-neutral-700">1,000+</SelectItem>
-              <SelectItem value="10000" className="text-white hover:bg-neutral-700">10,000+</SelectItem>
-              <SelectItem value="100000" className="text-white hover:bg-neutral-700">100,000+</SelectItem>
-              <SelectItem value="1000000" className="text-white hover:bg-neutral-700">1,000,000+</SelectItem>
-              <SelectItem value="10000000" className="text-white hover:bg-neutral-700">10,000,000+</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={filters.minViews} onValueChange={(value) => onFiltersChange({ minViews: value })}>
+          <SelectTrigger className="w-auto h-8 px-3 py-0 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] border-0 rounded-full text-sm font-normal transition-colors">
+            <span className="text-white">
+              {filters.minViews === '100' && '100+ views'}
+              {filters.minViews === '1000' && '1,000+ views'}
+              {filters.minViews === '10000' && '10,000+ views'}
+              {filters.minViews === '100000' && '100,000+ views'}
+              {filters.minViews === '1000000' && '1M+ views'}
+              {filters.minViews === '10000000' && '10M+ views'}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="bg-neutral-800 border-neutral-700">
+            <SelectItem value="100" className="text-white hover:bg-neutral-700">100+ views</SelectItem>
+            <SelectItem value="1000" className="text-white hover:bg-neutral-700">1,000+ views</SelectItem>
+            <SelectItem value="10000" className="text-white hover:bg-neutral-700">10,000+ views</SelectItem>
+            <SelectItem value="100000" className="text-white hover:bg-neutral-700">100,000+ views</SelectItem>
+            <SelectItem value="1000000" className="text-white hover:bg-neutral-700">1M+ views</SelectItem>
+            <SelectItem value="10000000" className="text-white hover:bg-neutral-700">10M+ views</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.category} onValueChange={(value) => onFiltersChange({ category: value })}>
+          <SelectTrigger className="w-auto h-8 px-3 py-0 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] border-0 rounded-full text-sm font-normal transition-colors">
+            <span className="text-white">
+              {filters.category === 'all' && 'All Categories'}
+              {filters.category === '27' && 'Education'}
+              {filters.category === '26' && 'Howto & Style'}
+              {filters.category === '22' && 'People & Blogs'}
+              {filters.category === '28' && 'Science & Tech'}
+              {filters.category === '24' && 'Entertainment'}
+              {filters.category === '17' && 'Sports'}
+              {filters.category === '2' && 'Autos & Vehicles'}
+              {filters.category === '20' && 'Gaming'}
+              {filters.category === '19' && 'Travel & Events'}
+              {filters.category === '10' && 'Music'}
+              {filters.category === '1' && 'Film & Animation'}
+              {filters.category === '25' && 'News & Politics'}
+              {filters.category === '29' && 'Nonprofits & Activism'}
+              {filters.category === '23' && 'Comedy'}
+              {filters.category === '15' && 'Pets & Animals'}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="bg-neutral-800 border-neutral-700">
+            <SelectItem value="all" className="text-white hover:bg-neutral-700">All Categories</SelectItem>
+            <SelectItem value="27" className="text-white hover:bg-neutral-700">Education</SelectItem>
+            <SelectItem value="26" className="text-white hover:bg-neutral-700">Howto & Style</SelectItem>
+            <SelectItem value="22" className="text-white hover:bg-neutral-700">People & Blogs</SelectItem>
+            <SelectItem value="28" className="text-white hover:bg-neutral-700">Science & Tech</SelectItem>
+            <SelectItem value="24" className="text-white hover:bg-neutral-700">Entertainment</SelectItem>
+            <SelectItem value="17" className="text-white hover:bg-neutral-700">Sports</SelectItem>
+            <SelectItem value="2" className="text-white hover:bg-neutral-700">Autos & Vehicles</SelectItem>
+            <SelectItem value="20" className="text-white hover:bg-neutral-700">Gaming</SelectItem>
+            <SelectItem value="19" className="text-white hover:bg-neutral-700">Travel & Events</SelectItem>
+            <SelectItem value="10" className="text-white hover:bg-neutral-700">Music</SelectItem>
+            <SelectItem value="1" className="text-white hover:bg-neutral-700">Film & Animation</SelectItem>
+            <SelectItem value="25" className="text-white hover:bg-neutral-700">News & Politics</SelectItem>
+            <SelectItem value="29" className="text-white hover:bg-neutral-700">Nonprofits & Activism</SelectItem>
+            <SelectItem value="23" className="text-white hover:bg-neutral-700">Comedy</SelectItem>
+            <SelectItem value="15" className="text-white hover:bg-neutral-700">Pets & Animals</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex-1" />
 
         {/* Results count and Refresh button */}
-        <div className="flex-1"></div>
-        <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex items-center gap-4">
           <span className="text-neutral-400 text-sm">
             {totalCount.toLocaleString()}+ results
           </span>
           <Button 
             onClick={onRefresh}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium"
+            className="h-8 px-3 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] rounded-full text-sm font-normal text-white transition-colors border-0"
           >
-            🔄 Refresh
+            Refresh
           </Button>
         </div>
       </div>
@@ -488,7 +532,8 @@ export default function YouTubeDemoV2() {
   const [filters, setFilters] = useState({
     timeRange: 'week',  // Default to Last Week like Idea Heist
     minScore: '3',      // 3x (Very Good)
-    minViews: '10000'   // 10,000+
+    minViews: '10000',  // 10,000+
+    category: 'all'     // All categories by default
   });
   const [totalCount, setTotalCount] = useState(0);
 
@@ -504,6 +549,11 @@ export default function YouTubeDemoV2() {
         randomize: 'true', // Use random mode like Idea Heist page
         offset: '0' // Start from beginning
       });
+      
+      // Add category filter if not 'all'
+      if (currentFilters.category && currentFilters.category !== 'all') {
+        params.set('category', currentFilters.category);
+      }
       
       // Note: The API automatically filters out institutional content (is_institutional = false)
       const response = await fetch(`/api/idea-radar?${params}`);

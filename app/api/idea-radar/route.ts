@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const randomize = searchParams.get('randomize') === 'true';
     const minViews = parseInt(searchParams.get('minViews') || '100000');
+    const category = searchParams.get('category');
 
     // Validate parameters
     if (minScore < 1 || minScore > 100) {
@@ -96,7 +97,8 @@ export async function GET(request: NextRequest) {
         p_min_views: minViews,
         p_days_ago: days,
         p_domain: domain || null,
-        p_sample_size: 500 // Get 500 IDs to shuffle through
+        p_sample_size: 500, // Get 500 IDs to shuffle through
+        p_category: category || null
       });
       
       if (idsError) {
@@ -131,7 +133,7 @@ export async function GET(request: NextRequest) {
       // Get the page of IDs we need
       const pageIds = shuffledIds.slice(offset, offset + limit);
       
-      // Step 2: Fetch full data for these IDs using optimized RPC function
+      // Step 2: Fetch full data for these IDs (instant ~10ms)
       const { data: videos, error: videosError } = await supabase.rpc('get_videos_by_id_list', {
         p_video_ids: pageIds
       });
@@ -221,6 +223,10 @@ export async function GET(request: NextRequest) {
       if (domain) {
         countQuery = countQuery.eq('topic_domain', domain);
       }
+      
+      if (category && category !== 'all') {
+        countQuery = countQuery.eq('metadata->category_id', category);
+      }
 
       const { count: totalCount, error: countError } = await countQuery;
       
@@ -249,6 +255,11 @@ export async function GET(request: NextRequest) {
       // Apply domain filter if specified
       if (domain) {
         query = query.eq('topic_domain', domain);
+      }
+      
+      // Apply category filter if specified
+      if (category && category !== 'all') {
+        query = query.eq('metadata->category_id', category);
       }
 
       const { data: videos, error } = await query;
