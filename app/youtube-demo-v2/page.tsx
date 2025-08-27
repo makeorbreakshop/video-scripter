@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface VideoData {
   id: string;
@@ -29,13 +30,20 @@ interface VideoData {
 // Helper functions
 function formatViewCount(count: number): string {
   if (count >= 1_000_000_000) {
-    return `${(count / 1_000_000_000).toFixed(1)}B`;
+    const val = count / 1_000_000_000;
+    return val % 1 === 0 ? `${Math.floor(val)}B` : `${val.toFixed(1)}B`;
   } else if (count >= 1_000_000) {
-    return `${(count / 1_000_000).toFixed(1)}M`;
+    const val = count / 1_000_000;
+    return val % 1 === 0 ? `${Math.floor(val)}M` : `${val.toFixed(1)}M`;
+  } else if (count >= 10_000) {
+    // For 10K+, no decimals
+    return `${Math.floor(count / 1_000)}K`;
   } else if (count >= 1_000) {
-    return `${(count / 1_000).toFixed(1)}K`;
+    // For 1K-9.9K, show one decimal if needed
+    const val = count / 1_000;
+    return val % 1 === 0 ? `${Math.floor(val)}K` : `${val.toFixed(1)}K`;
   }
-  return count.toString();
+  return count.toLocaleString(); // Add commas for numbers under 1000
 }
 
 function formatDuration(duration: string): string {
@@ -426,11 +434,8 @@ function IdeaHeistFilters({ filters, onFiltersChange, totalCount, onRefresh }: F
 
         <div className="flex-1" />
 
-        {/* Results count and Refresh button */}
+        {/* Refresh button */}
         <div className="flex items-center gap-4">
-          <span className="text-neutral-400 text-sm">
-            {totalCount.toLocaleString()}+ results
-          </span>
           <Button 
             onClick={onRefresh}
             className="h-8 px-3 bg-[rgb(39,39,39)] hover:bg-[rgb(48,48,48)] rounded-full text-sm font-normal text-white transition-colors border-0"
@@ -450,14 +455,38 @@ const fixAvatarUrl = (url: string | null | undefined): string | null => {
   return url.replace(/s\d+-c/, 's88-c');
 };
 
+// Video Card Skeleton - Loading placeholder with shimmer effect
+function VideoCardSkeleton() {
+  return (
+    <div className="group cursor-pointer w-full max-w-sm animate-pulse">
+      {/* Thumbnail Skeleton */}
+      <div className="relative mb-3 rounded-xl overflow-hidden">
+        <div className="aspect-video relative bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+      </div>
+      
+      {/* Video Info Skeleton - No avatar */}
+      <div className="px-1 space-y-2">
+        {/* Title Skeleton - 2 lines */}
+        <div className="space-y-1">
+          <div className="h-5 w-full rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+          <div className="h-5 w-3/4 rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+        </div>
+        {/* Channel Name Skeleton */}
+        <div className="h-4 w-32 rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+        {/* Views, Score and Date Skeleton */}
+        <div className="h-4 w-48 rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+      </div>
+    </div>
+  );
+}
+
 // Video Card Component - Idea Heist Style with YouTube Look
 function VideoCard({ video }: { video: VideoData }) {
   const formattedDate = formatDistanceToNow(new Date(video.published_at), { addSuffix: true });
   const performanceMultiplier = video.performance_ratio ? `${video.performance_ratio.toFixed(1)}x` : '';
-  const avatarUrl = fixAvatarUrl(video.channel_avatar_url);
   
   return (
-    <div className="group cursor-pointer w-full max-w-sm">
+    <div className="group cursor-pointer w-full max-w-sm animate-in fade-in duration-500">
       {/* Thumbnail Container */}
       <div className="relative mb-3 rounded-xl overflow-hidden bg-neutral-900">
         <div className="aspect-video relative">
@@ -468,57 +497,46 @@ function VideoCard({ video }: { video: VideoData }) {
             className="object-cover group-hover:scale-[1.02] transition-transform duration-200 ease-out"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
           />
-          {/* Performance Multiplier Badge - Top Left */}
-          {performanceMultiplier && (
-            <Badge className={`absolute top-2 left-2 text-xs px-2 py-1 rounded font-bold border-0 ${
-              video.performance_ratio! >= 10 ? 'bg-red-500 text-white' :
-              video.performance_ratio! >= 5 ? 'bg-orange-500 text-white' :
-              video.performance_ratio! >= 3 ? 'bg-yellow-500 text-black' :
-              'bg-green-500 text-white'
-            }`}>
-              {performanceMultiplier}
-            </Badge>
-          )}
         </div>
       </div>
       
-      {/* Video Info */}
-      <div className="flex gap-3">
-        {/* Channel Avatar */}
-        {avatarUrl ? (
-          <img 
-            src={avatarUrl} 
-            alt={video.channel_name}
-            className="w-9 h-9 rounded-full mt-0.5 flex-shrink-0 object-cover"
-            onError={(e) => {
-              // Hide broken image and show fallback
-              e.currentTarget.style.display = 'none';
-              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <div 
-          className="w-9 h-9 mt-0.5 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center text-white text-sm font-medium"
-          style={{ display: avatarUrl ? 'none' : 'flex' }}
-        >
-          {video.channel_name.charAt(0).toUpperCase()}
-        </div>
-        
-        {/* Text Content */}
-        <div className="flex-1 min-w-0">
-          {/* Title - always white, no outlier highlighting */}
-          <h3 className="text-[14px] font-medium line-clamp-2 leading-[20px] mb-1 text-white group-hover:text-neutral-300 transition-colors">
-            {video.title}
-          </h3>
-          {/* Channel Name */}
-          <p className="text-neutral-400 text-[12px] leading-[18px] mb-0.5 hover:text-white cursor-pointer transition-colors">
+      {/* Video Info - No avatar, just content */}
+      <div>
+        {/* Title - bolder, pure white, tighter line height */}
+        <h3 className="text-[14px] font-semibold line-clamp-2 leading-[18px] mb-1 text-white">
+          {video.title}
+        </h3>
+        {/* Channel Name with performance score and verified badge */}
+        <div className="flex items-center gap-1">
+          <p className="text-[#aaa] text-[12px] leading-[18px] hover:text-white cursor-pointer transition-colors">
             {video.channel_name}
           </p>
-          {/* Views and Date */}
-          <p className="text-neutral-400 text-[12px] leading-[18px]">
-            {formatViewCount(video.view_count)} views • {formattedDate}
-          </p>
+          {/* Show verified checkmark for channels with 1M+ views on this video */}
+          {video.view_count >= 1000000 && (
+            <svg className="w-3 h-3 text-[#aaa]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          )}
+          {/* Performance score next to channel */}
+          {performanceMultiplier && (
+            <>
+              <span className="text-[#aaa] text-[12px] mx-1">•</span>
+              <span className={`text-[12px] font-semibold ${
+                video.performance_ratio! >= 10 ? 'text-red-500' :
+                video.performance_ratio! >= 5 ? 'text-orange-500' :
+                video.performance_ratio! >= 3 ? 'text-yellow-500' :
+                'text-green-500'
+              }`}>
+                {performanceMultiplier}
+              </span>
+            </>
+          )}
+        </div>
+        {/* Views and Date only */}
+        <div className="text-[#aaa] text-[12px] leading-[18px]">
+          <span>{formatViewCount(video.view_count)} views</span>
+          <span className="mx-1">•</span>
+          <span>{formattedDate}</span>
         </div>
       </div>
     </div>
@@ -529,6 +547,7 @@ export default function YouTubeDemoV2() {
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filters, setFilters] = useState({
     timeRange: 'week',  // Default to Last Week like Idea Heist
     minScore: '3',      // 3x (Very Good)
@@ -536,18 +555,33 @@ export default function YouTubeDemoV2() {
     category: 'all'     // All categories by default
   });
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Lazy loading state
+  const [allVideoIds, setAllVideoIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [seenVideoIds, setSeenVideoIds] = useState<Set<string>>(new Set());
+  const VIDEOS_PER_PAGE = 20;
 
-  // Fetch videos function - Using Idea Radar API exactly like idea-heist-3step.html
-  const fetchVideos = async (currentFilters: typeof filters) => {
+  // Fetch videos using the existing API with larger limit
+  const fetchVideos = async (currentFilters: typeof filters, page: number = 0) => {
     try {
-      setLoading(true);
+      // Only set loading on initial fetch
+      if (page === 0) {
+        setLoading(true);
+        setVideos([]); // Clear existing videos on new search
+        setCurrentPage(0); // Reset pagination
+        setSeenVideoIds(new Set()); // Reset seen IDs
+      } else {
+        setLoadingMore(true);
+      }
+      
       const params = new URLSearchParams({
-        limit: '50',
+        limit: String(VIDEOS_PER_PAGE),
+        offset: String(page * VIDEOS_PER_PAGE),
         minViews: currentFilters.minViews,
         timeRange: currentFilters.timeRange,
         minScore: currentFilters.minScore,
-        randomize: 'true', // Use random mode like Idea Heist page
-        offset: '0' // Start from beginning
+        randomize: 'true', // Use random mode
       });
       
       // Add category filter if not 'all'
@@ -555,69 +589,155 @@ export default function YouTubeDemoV2() {
         params.set('category', currentFilters.category);
       }
       
-      // Note: The API automatically filters out institutional content (is_institutional = false)
       const response = await fetch(`/api/idea-radar?${params}`);
       const data = await response.json();
       
-      // Map the idea-radar response to our video format
+      // Transform and append videos
       if (data.outliers && Array.isArray(data.outliers)) {
-        // Transform outliers data to match our VideoData interface
-        const transformedVideos = data.outliers.map((video: any) => {
-          const transformed = {
-            id: video.video_id,
-            title: video.title,
-            thumbnail_url: video.thumbnail_url,
-            channel_name: video.channel_name,
-            channel_avatar_url: video.channel_avatar_url,
-            view_count: video.views,
-            published_at: new Date(Date.now() - (video.age_days * 24 * 60 * 60 * 1000)).toISOString(),
-            duration: 'PT10M', // Default duration since it's not in the response
-            performance_ratio: video.score,
-            formattedRatio: video.score ? video.score.toFixed(1) : '0.0',
-            isOutlier: video.score >= 3.0
-          };
-          // Debug log to check avatar URLs
-          if (video.channel_avatar_url) {
-            console.log(`Channel ${video.channel_name} has avatar: ${video.channel_avatar_url}`);
+        // Filter out duplicates
+        const newSeenIds = new Set(seenVideoIds);
+        const filteredVideos = data.outliers.filter((video: any) => {
+          if (newSeenIds.has(video.video_id)) {
+            console.log(`Filtering duplicate video: ${video.video_id}`);
+            return false;
           }
-          return transformed;
+          newSeenIds.add(video.video_id);
+          return true;
         });
-        setVideos(transformedVideos);
-        // Use the total from API response, or totalMatching, or fallback to outliers length
-        setTotalCount(data.total || data.totalMatching || transformedVideos.length);
-      } else {
-        // Handle error or empty response
-        console.log('No outliers found in response:', data);
+        
+        const transformedVideos = filteredVideos.map((video: any) => ({
+          id: video.video_id,
+          title: video.title,
+          thumbnail_url: video.thumbnail_url,
+          channel_name: video.channel_name,
+          channel_avatar_url: video.channel_avatar_url,
+          view_count: video.views,
+          published_at: new Date(Date.now() - (video.age_days * 24 * 60 * 60 * 1000)).toISOString(),
+          duration: 'PT10M',
+          performance_ratio: video.score,
+          formattedRatio: video.score ? video.score.toFixed(1) : '0.0',
+          isOutlier: video.score >= 3.0
+        }));
+        
+        // Update seen IDs state
+        setSeenVideoIds(newSeenIds);
+        
+        if (page === 0) {
+          setVideos(transformedVideos);
+        } else {
+          setVideos(prev => [...prev, ...transformedVideos]);
+        }
+        
+        // Set total count and hasMore flag
+        setTotalCount(data.total || 1000); // API returns up to 1000 shuffled IDs
+        setAllVideoIds(data.hasMore ? ['hasMore'] : []); // Use as a flag for more content
+        
+        // If we got duplicates, we might need to fetch more to fill the page
+        return data.outliers.length === VIDEOS_PER_PAGE && transformedVideos.length > 0; // Return if there might be more
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      if (page === 0) {
         setVideos([]);
         setTotalCount(0);
       }
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      setVideos([]);
-      setTotalCount(0);
+      return false;
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setInitialLoad(false);
+    }
+  };
+  
+  // Load more videos for infinite scroll
+  const loadMoreVideos = async () => {
+    if (loadingMore || loading) return;
+    
+    const nextPage = currentPage + 1;
+    const hasMore = await fetchVideos(filters, nextPage);
+    
+    if (hasMore) {
+      setCurrentPage(nextPage);
     }
   };
 
   // Initial load only
   useEffect(() => {
-    fetchVideos(filters);
+    fetchVideos(filters, 0);
   }, []); // Empty dependency - only run once on mount
+  
+  // Set up intersection observer for infinite scroll
+  useEffect(() => {
+    if (!loadingMore && !loading && videos.length > 0 && allVideoIds.length > 0) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            loadMoreVideos();
+          }
+        },
+        { threshold: 0.1, rootMargin: '200px' }
+      );
+      
+      const sentinel = document.getElementById('scroll-sentinel');
+      if (sentinel) {
+        observer.observe(sentinel);
+      }
+      
+      return () => observer.disconnect();
+    }
+  }, [videos, loadingMore, loading, currentPage, allVideoIds]);
 
   // Handle filter changes after initial load
   const handleFiltersChange = (newFilters: Partial<typeof filters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
-    fetchVideos(updatedFilters);
+    setAllVideoIds([]); // Reset the hasMore flag
+    setSeenVideoIds(new Set()); // Reset seen IDs
+    fetchVideos(updatedFilters, 0);
   };
 
 
+  // Show skeleton loading state during initial load
   if (initialLoad && loading) {
     return (
-      <div className="h-screen bg-[rgb(15,15,15)] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="h-screen bg-[rgb(15,15,15)] flex flex-col">
+        {/* Header */}
+        <YouTubeHeader />
+        
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar */}
+          <YouTubeSidebar />
+          
+          {/* Main Content with Skeleton */}
+          <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)]">
+            {/* Filters Skeleton */}
+            <div className="sticky top-0 bg-[rgb(15,15,15)] z-10">
+              <div className="flex items-center gap-3 px-6 py-3">
+                <Skeleton className="h-8 w-32 rounded-full bg-neutral-800" />
+                <Skeleton className="h-8 w-32 rounded-full bg-neutral-800" />
+                <Skeleton className="h-8 w-32 rounded-full bg-neutral-800" />
+                <Skeleton className="h-8 w-32 rounded-full bg-neutral-800" />
+                <div className="flex-1" />
+                <Skeleton className="h-8 w-20 rounded-full bg-neutral-800" />
+              </div>
+            </div>
+            
+            {/* Video Grid Skeleton */}
+            <div className="px-4 py-2">
+              <div className="video-grid grid gap-x-4 gap-y-8 max-w-none" style={{
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gridAutoRows: 'max-content'
+              }}>
+                {/* Show 12 skeleton cards for initial load */}
+                {Array.from({ length: 12 }).map((_, index) => (
+                  <VideoCardSkeleton key={`skeleton-${index}`} />
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -638,19 +758,53 @@ export default function YouTubeDemoV2() {
             filters={filters} 
             onFiltersChange={handleFiltersChange} 
             totalCount={totalCount}
-            onRefresh={() => fetchVideos(filters)}
+            onRefresh={() => {
+              setAllVideoIds([]); // Reset to allow more loading
+              setSeenVideoIds(new Set()); // Reset seen IDs
+              fetchVideos(filters, 0);
+            }}
           />
           
           {/* Video Grid - YouTube-accurate responsive layout */}
-          <div className="px-6 py-4">
-            <div className="video-grid grid gap-4 max-w-none" style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          <div className="px-4 py-2">
+            <div className="video-grid grid gap-x-4 gap-y-8 max-w-none" style={{
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gridAutoRows: 'max-content'
             }}>
-              {videos.map((video) => (
-                <VideoCard key={video.id} video={video} />
-              ))}
+              {/* Show skeletons when loading after filter change */}
+              {loading && videos.length === 0 ? (
+                Array.from({ length: 12 }).map((_, index) => (
+                  <VideoCardSkeleton key={`skeleton-${index}`} />
+                ))
+              ) : (
+                videos.map((video) => (
+                  <VideoCard key={video.id} video={video} />
+                ))
+              )}
             </div>
+            
+            {/* Scroll Sentinel for Infinite Scroll */}
+            {videos.length > 0 && allVideoIds.length > 0 && (
+              <div id="scroll-sentinel" className="py-4">
+                {loadingMore && (
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span className="text-sm text-neutral-400">Loading more videos</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* End of results message */}
+            {videos.length > 0 && allVideoIds.length === 0 && videos.length < totalCount && (
+              <div className="text-center py-8 text-neutral-400">
+                No more videos to load. Refresh to get new results.
+              </div>
+            )}
           </div>
         </main>
       </div>

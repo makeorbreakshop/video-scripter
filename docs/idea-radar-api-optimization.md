@@ -441,3 +441,166 @@ If issues arise:
 2. API code already handles fallback gracefully
 3. No frontend changes required for rollback
 4. Monitor logs for timeout patterns
+
+---
+
+## Implementation Status (December 26, 2024)
+
+### What We Actually Implemented
+
+#### Solution 2 - Pre-computed Random Column ✅ COMPLETED
+
+We successfully implemented the pre-computed random column approach:
+
+1. **Added random_sort column** to all 660K videos
+   - Script: `/scripts/random-sort-final.js`
+   - Used session-level timeout disabling to handle bulk update
+   - Successfully updated all rows with random values
+
+2. **Created B-tree index** on random_sort
+   - Script: `/scripts/create-random-index.js`
+   - Index: `idx_videos_random_sort` with WHERE clause for non-shorts, non-institutional
+   - Creation time: 24.37 seconds
+
+3. **Implemented time-based rotation** instead of true randomization
+   - Script: `/scripts/implement-discovery-function.js`
+   - Uses current minute to create rotating offset
+   - Different videos shown every minute without expensive randomization
+   ```sql
+   time_offset := (EXTRACT(EPOCH FROM NOW())::int / 60) % 1000 / 1000.0;
+   SELECT * FROM videos WHERE [filters] AND random_sort >= time_offset
+   ORDER BY random_sort LIMIT 50;
+   ```
+
+4. **Added category filtering support**
+   - Script: `/scripts/add-category-filter-to-function.js`
+   - Added YouTube category dropdown to frontend
+   - Filter by metadata->>'category_id'
+
+5. **Fixed institutional channel filtering**
+   - Script: `/scripts/fix-institutional-flags.js`
+   - Synced videos.is_institutional with channels.is_institutional
+   - Marked 25+ news channels as institutional (CBS News, USA TODAY, etc.)
+
+#### Initial Performance Results ✅
+
+After implementing the random_sort column with time-based rotation:
+
+| Filter Combination | Before | After |
+|-------------------|---------|--------|
+| Week, 3x, 100K+ views | 2-3 seconds | 0.48 seconds |
+| Month, 3x, 10K+ views | 8 seconds | 0.50 seconds |
+| 2 years, 1.5x, 100+ views | 15+ seconds (timeout) | 1.05 seconds |
+
+### Current Problem - Institutional Channel Check Bottleneck
+
+#### The Issue
+When we try to use the channels table for institutional filtering (for accuracy), performance degrades severely:
+
+```sql
+-- SLOW: Subquery approach (22+ seconds)
+AND v.channel_id NOT IN (
+  SELECT channel_id FROM channels WHERE is_institutional = true
+)
+
+-- SLOW: EXISTS approach (85+ seconds)
+AND NOT EXISTS (
+  SELECT 1 FROM channels c 
+  WHERE c.channel_id = v.channel_id 
+  AND c.is_institutional = true
+)
+
+-- FAST: Direct column (< 1 second)
+AND v.is_institutional = false
+```
+
+#### Root Cause Analysis
+
+The channels table lookup is slow because:
+1. **Subquery execution**: PostgreSQL executes the subquery for EVERY row being evaluated
+2. **No covering index**: Even though channel_id is indexed, the query still needs to check is_institutional
+3. **Large dataset**: With 660K videos, even a fast subquery adds up
+
+#### Performance Measurements
+
+Testing with `get_random_video_ids` function (2 years, 1.5x, 100+ views):
+
+| Approach | Time | Notes |
+|----------|------|-------|
+| Direct videos.is_institutional | 0.16s | Fast but requires syncing |
+| NOT IN (subquery) | 85s | Subquery for every row |
+| NOT EXISTS | 85s | Still evaluates per row |
+| LEFT JOIN + NULL check | Not tested | Might be faster |
+
+### Additional Issue - Count Function
+
+The `get_filtered_video_count` function was also using the slow subquery:
+- **Before fix**: 22 seconds
+- **After fix**: < 100ms (using videos.is_institutional directly)
+
+### Current Workaround
+
+We're currently using `v.is_institutional = false` directly from the videos table:
+- **Pros**: Fast performance (< 1 second for all queries)
+- **Cons**: Requires periodic syncing when channels table is updated
+- **Sync command**: `/scripts/fix-institutional-flags.js`
+
+### Potential Solutions
+
+#### Option 1: Automated Syncing (Recommended)
+Create a trigger to automatically sync institutional flags:
+
+```sql
+CREATE OR REPLACE FUNCTION sync_institutional_flag()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE videos 
+  SET is_institutional = NEW.is_institutional
+  WHERE channel_id = NEW.channel_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER channels_institutional_sync
+AFTER UPDATE OF is_institutional ON channels
+FOR EACH ROW EXECUTE FUNCTION sync_institutional_flag();
+```
+
+#### Option 2: Denormalized Materialized View
+Create a materialized view with pre-joined channel data:
+
+```sql
+CREATE MATERIALIZED VIEW mv_videos_with_channels AS
+SELECT v.*, c.is_institutional as channel_institutional
+FROM videos v
+JOIN channels c ON v.channel_id = c.channel_id;
+```
+
+#### Option 3: Composite Index on Channels
+Create a covering index for the lookup:
+
+```sql
+CREATE INDEX idx_channels_institutional_lookup 
+ON channels(channel_id, is_institutional) 
+WHERE is_institutional = true;
+```
+
+### Files Created During Implementation
+
+- `/scripts/random-sort-final.js` - Added random_sort column
+- `/scripts/create-random-index.js` - Created index
+- `/scripts/implement-discovery-function.js` - Time-based rotation
+- `/scripts/fix-function-use-channels-table.js` - Channels table check (slow)
+- `/scripts/fix-institutional-flags.js` - Sync institutional flags
+- `/scripts/add-category-filter-to-function.js` - Category support
+- `/scripts/fix-slow-count-function.js` - Fixed count function
+- `/scripts/fix-function-fast-institutional.js` - Use videos.is_institutional
+- `/scripts/optimize-with-channels-table.js` - EXISTS attempt (still slow)
+
+### Current Status
+
+✅ **Working**: API responds in < 1.5 seconds for all filter combinations
+✅ **Performance**: 15x improvement over original implementation  
+✅ **Features**: Category filtering, institutional filtering, time-based rotation
+⚠️ **Trade-off**: Using denormalized videos.is_institutional field for speed
+❓ **Decision Needed**: Implement trigger for auto-sync or keep manual sync?

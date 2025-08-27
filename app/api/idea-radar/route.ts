@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
         p_min_views: minViews,
         p_days_ago: days,
         p_domain: domain || null,
-        p_sample_size: 500, // Get 500 IDs to shuffle through
+        p_sample_size: 1000, // Get 1000 IDs to shuffle through (50 pages of content)
         p_category: category || null
       });
       
@@ -110,10 +110,6 @@ export async function GET(request: NextRequest) {
         console.log('No videos found matching filters');
         return NextResponse.json({
           outliers: [],
-          total: 0,
-          totalMatching: 0,
-          currentPage: 1,
-          pageSize: limit,
           hasMore: false,
           filters_applied: {
             time_range: timeRange,
@@ -160,17 +156,7 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Step 3: Get approximate count for display
-      const { data: totalCount, error: countError } = await supabase.rpc('get_filtered_video_count', {
-        p_outlier_score: Math.floor(minScore),
-        p_min_views: minViews,
-        p_days_ago: days,
-        p_domain: domain || null
-      });
-      
-      if (countError) {
-        console.error('Warning: Failed to get count:', countError);
-      }
+      // No count needed - removed for performance
       
       const outliers: OutlierVideo[] = (videos || []).map(v => ({
         video_id: v.id,
@@ -189,16 +175,11 @@ export async function GET(request: NextRequest) {
       }));
       
       const processingTime = Date.now() - startTime;
-      console.log(`✅ Found ${outliers.length} random outliers from ${totalCount || 'unknown'} total in ${processingTime}ms (FAST!)`);
+      console.log(`✅ Found ${outliers.length} random outliers in ${processingTime}ms`);
       
       return NextResponse.json({
         outliers,
-        total: totalCount || shuffledIds.length,
-        totalMatching: totalCount || shuffledIds.length,
-        currentPage: Math.floor(offset / limit) + 1,
-        pageSize: limit,
         hasMore: offset + limit < shuffledIds.length,
-        availableIds: shuffledIds.length, // How many IDs we have to paginate through
         filters_applied: {
           time_range: timeRange,
           min_score: minScore,
