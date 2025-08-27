@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import TranscriptTab from '@/components/youtube/TranscriptTab';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -137,19 +138,42 @@ function YouTubeHeader() {
 }
 
 // YouTube Sidebar Component
-function YouTubeSidebar() {
+function YouTubeSidebar({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
   return (
     <aside className="w-60 bg-[rgb(15,15,15)]">
       <ScrollArea className="h-full">
         <div className="py-2">
-          {/* Main Navigation - Only Home */}
+          {/* Main Navigation */}
           <div className="px-3 mb-2">
             <nav className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start text-white bg-neutral-800 hover:bg-neutral-700 px-3 py-2 rounded-lg">
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start px-3 py-2 rounded-lg ${
+                  activeTab === 'home' 
+                    ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
+                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                }`}
+                onClick={() => onTabChange('home')}
+              >
                 <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </svg>
                 Home
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start px-3 py-2 rounded-lg ${
+                  activeTab === 'transcript' 
+                    ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
+                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                }`}
+                onClick={() => onTabChange('transcript')}
+              >
+                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+                Transcribe
               </Button>
             </nav>
           </div>
@@ -393,6 +417,7 @@ function VideoCard({ video }: { video: VideoData }) {
 }
 
 export default function YouTubeDemoV2() {
+  const [activeTab, setActiveTab] = useState('home');
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -557,7 +582,7 @@ export default function YouTubeDemoV2() {
         
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          <YouTubeSidebar />
+          <YouTubeSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           
           {/* Main Content with Skeleton */}
           <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)]">
@@ -598,10 +623,12 @@ export default function YouTubeDemoV2() {
       
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <YouTubeSidebar />
+        <YouTubeSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)]">
+          {activeTab === 'home' ? (
+          <>
           {/* Idea Heist Filters - Pass filters, totalCount and refresh handler */}
           <IdeaHeistFilters 
             filters={filters} 
@@ -655,6 +682,10 @@ export default function YouTubeDemoV2() {
               </div>
             )}
           </div>
+          </>
+          ) : activeTab === 'transcript' ? (
+            <TranscriptTab />
+          ) : null}
         </main>
       </div>
     </div>
