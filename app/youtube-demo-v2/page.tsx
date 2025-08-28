@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import TranscriptTab from '@/components/youtube/TranscriptTab';
+import TranscriptTab from '@/components/youtube/TranscriptTabImproved';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
