@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ytdl from '@distube/ytdl-core';
 import OpenAI from 'openai';
-import { Readable } from 'stream';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,6 +22,68 @@ interface TranscriptSegment {
 
 export async function POST(request: NextRequest) {
   try {
+    const contentType = request.headers.get('content-type');
+    
+    // Handle file upload
+    if (contentType?.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const audioFile = formData.get('audio') as File;
+      const filename = formData.get('filename') as string;
+      
+      if (!audioFile) {
+        return NextResponse.json(
+          { error: 'No audio file provided' },
+          { status: 400 }
+        );
+      }
+
+      // Check file size (25MB limit for Whisper API)
+      if (audioFile.size > 25 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'File size exceeds 25MB limit' },
+          { status: 400 }
+        );
+      }
+
+      console.log(`🎵 Processing audio file: ${filename} (${(audioFile.size / (1024 * 1024)).toFixed(2)} MB)`);
+
+      // Transcribe the uploaded audio file
+      try {
+        const transcription = await openai.audio.transcriptions.create({
+          file: audioFile,
+          model: 'whisper-1',
+          response_format: 'verbose_json',
+          language: 'en'
+        });
+
+        const segments: TranscriptSegment[] = transcription.segments?.map((seg: any) => ({
+          text: seg.text,
+          start: seg.start,
+          duration: seg.end - seg.start
+        })) || [];
+
+        const fullText = transcription.text;
+
+        return NextResponse.json({
+          transcript: segments,
+          fullText,
+          chapters: [],
+          metadata: {
+            filename,
+            fileSize: audioFile.size,
+            duration: segments[segments.length - 1]?.start || 0
+          }
+        });
+      } catch (error) {
+        console.error('Whisper API error:', error);
+        return NextResponse.json(
+          { error: 'Failed to transcribe audio file' },
+          { status: 500 }
+        );
+      }
+    }
+    
+    // Handle YouTube URL (existing code)
     const { videoId, includeChapters = true } = await request.json();
 
     if (!videoId) {
@@ -80,10 +141,7 @@ export async function POST(request: NextRequest) {
 
     const durationInSeconds = parseDuration(contentDetails.duration);
 
-    // Remove duration check - we'll rely on the actual file size check instead
-    // The 25MB limit typically allows 1-2 hours depending on compression
-
-    console.log(`📥 Downloading audio from YouTube...`);
+    console.log(`📥 Downloading audio from YouTube (${Math.floor(durationInSeconds / 60)} minutes)...`);
 
     // Download audio from YouTube
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -91,7 +149,7 @@ export async function POST(request: NextRequest) {
     // Get video info first
     const info = await ytdl.getInfo(videoUrl);
     
-    // Filter for audio-only formats
+    // Get all audio formats and sort by quality (lowest first for smaller file size)
     const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
     
     if (audioFormats.length === 0) {
@@ -101,40 +159,127 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Download the audio stream
-    const audioStream = ytdl(videoUrl, {
-      quality: 'highestaudio',
-      filter: 'audioonly',
+    // Sort formats by bitrate (ascending) to get smallest file
+    const sortedFormats = audioFormats.sort((a, b) => {
+      const bitrateA = a.audioBitrate || a.bitrate || 999999;
+      const bitrateB = b.audioBitrate || b.bitrate || 999999;
+      return bitrateA - bitrateB;
     });
 
-    // Convert stream to buffer for Whisper API
-    const chunks: Buffer[] = [];
-    
-    await new Promise<void>((resolve, reject) => {
-      audioStream.on('data', (chunk) => {
-        chunks.push(Buffer.from(chunk));
-      });
-      
-      audioStream.on('end', () => {
-        resolve();
-      });
-      
-      audioStream.on('error', (error) => {
-        reject(error);
-      });
+    console.log(`📊 Available audio formats:`);
+    sortedFormats.slice(0, 5).forEach((format, i) => {
+      const bitrate = format.audioBitrate || format.bitrate || 'unknown';
+      const size = format.contentLength ? `${(parseInt(format.contentLength) / 1024 / 1024).toFixed(1)}MB` : 'unknown size';
+      console.log(`   ${i + 1}. Quality: ${format.audioQuality}, Bitrate: ${bitrate}, Size: ${size}`);
     });
 
-    const audioBuffer = Buffer.concat(chunks);
-    
-    console.log(`🎙️ Audio downloaded: ${(audioBuffer.length / 1024 / 1024).toFixed(2)}MB`);
+    // Try formats from lowest to highest quality until we find one under 25MB
+    let audioBuffer: Buffer | null = null;
+    let selectedFormat = null;
 
-    // Check size limit (25MB for Whisper)
-    const maxSize = 25 * 1024 * 1024; // 25MB
-    if (audioBuffer.length > maxSize) {
-      const sizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
+    for (const format of sortedFormats) {
+      try {
+        console.log(`🎵 Trying format: ${format.audioQuality || 'unknown'}, bitrate: ${format.audioBitrate || format.bitrate || 'unknown'}`);
+        
+        // If content length is available and it's over 25MB, skip
+        if (format.contentLength && parseInt(format.contentLength) > 25 * 1024 * 1024) {
+          console.log(`   ⚠️ Skipping - too large: ${(parseInt(format.contentLength) / 1024 / 1024).toFixed(1)}MB`);
+          continue;
+        }
+
+        // Download with this specific format
+        const audioStream = ytdl(videoUrl, {
+          format: format,
+          filter: 'audioonly',
+        });
+
+        const chunks: Buffer[] = [];
+        
+        await new Promise<void>((resolve, reject) => {
+          let totalSize = 0;
+          const maxSize = 25 * 1024 * 1024; // 25MB
+
+          audioStream.on('data', (chunk) => {
+            totalSize += chunk.length;
+            
+            // Stop if we exceed 25MB
+            if (totalSize > maxSize) {
+              audioStream.destroy();
+              reject(new Error('Stream exceeds 25MB'));
+              return;
+            }
+            
+            chunks.push(Buffer.from(chunk));
+          });
+          
+          audioStream.on('end', () => {
+            resolve();
+          });
+          
+          audioStream.on('error', (error) => {
+            reject(error);
+          });
+        });
+
+        audioBuffer = Buffer.concat(chunks);
+        selectedFormat = format;
+        console.log(`   ✅ Success! Downloaded ${(audioBuffer.length / 1024 / 1024).toFixed(2)}MB`);
+        break; // Found a working format
+
+      } catch (streamError) {
+        console.log(`   ❌ Failed: ${streamError instanceof Error ? streamError.message : 'Unknown error'}`);
+        continue; // Try next format
+      }
+    }
+
+    if (!audioBuffer) {
+      // If no format worked, try downloading with lowest quality as last resort
+      console.log(`⚠️ No suitable format found under 25MB, trying lowest quality...`);
+      
+      const audioStream = ytdl(videoUrl, {
+        quality: 'lowestaudio',
+        filter: 'audioonly',
+      });
+
+      const chunks: Buffer[] = [];
+      let totalSize = 0;
+      const maxSize = 25 * 1024 * 1024;
+      
+      await new Promise<void>((resolve, reject) => {
+        audioStream.on('data', (chunk) => {
+          totalSize += chunk.length;
+          
+          // Hard stop at 25MB
+          if (totalSize > maxSize) {
+            console.log(`⚠️ Audio exceeds 25MB limit at ${(totalSize / 1024 / 1024).toFixed(1)}MB`);
+            audioStream.destroy();
+            resolve(); // Resolve instead of reject to use partial data
+            return;
+          }
+          
+          chunks.push(Buffer.from(chunk));
+        });
+        
+        audioStream.on('end', () => {
+          resolve();
+        });
+        
+        audioStream.on('error', (error) => {
+          reject(error);
+        });
+      });
+
+      audioBuffer = Buffer.concat(chunks);
+    }
+    
+    const audioSize = audioBuffer.length / 1024 / 1024;
+    console.log(`🎙️ Final audio size: ${audioSize.toFixed(2)}MB`);
+
+    // Final check
+    if (audioSize > 25) {
       const duration = Math.floor(durationInSeconds / 60);
       return NextResponse.json(
-        { error: `Audio file too large (${sizeMB}MB). Maximum size is 25MB. This ${duration}-minute video exceeds the limit. Try a shorter video.` },
+        { error: `Audio file too large (${audioSize.toFixed(1)}MB). This ${duration}-minute video exceeds Whisper's 25MB limit. Please try a shorter video or one with lower audio quality.` },
         { status: 400 }
       );
     }

@@ -1533,3 +1533,50 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - **Solution**: Complete rewrite using direct iframe embedding with optimized parameters
    - Results: 90% code reduction, instant reliable playbook, zero console errors
    - Features: 30-second auto-limit, minimal controls, production-ready video preview system
+
+28. **Idea Radar Performance Crisis & Resolution (December 27, 2024)**
+   - Fixed critical 4-9 second response times with broad filters (timeouts on half-year/yearly views)
+   - Root cause: Missing `is_institutional = false` in composite index WHERE clause
+   - Solution: Created proper composite index `idx_videos_idea_radar_complete` (8.8MB)
+   - Converted function from SQL to PL/pgSQL with performance hints
+   - Results: **51x performance improvement** (4,500ms → 88ms for function execution)
+   - API response now under 700ms for ALL filter combinations (was timing out at 8+ seconds)
+   - Removed ORDER BY clause entirely for natural heap order (20x additional improvement)
+
+29. **Idea Radar UI Lazy Loading**
+   - Implemented infinite scroll with intersection observer
+   - Reduced initial load from 50 to 20 videos (60% reduction)
+   - Added duplicate prevention system with Set tracking
+   - Progressive loading prevents memory overload with 1000-video pools
+
+30. **YouTube Whisper Transcription Tool**
+   - Built standalone transcription tool in `/app/youtube-demo-v2`
+   - Uses OpenAI Whisper API with smart audio format selection
+   - Handles videos up to ~2 hours by iterating formats to stay under 25MB
+   - Features: Chapter detection, local caching (10 transcripts), multiple export formats
+   - Replaced ytdl-core with @distube/ytdl-core for reliability
+
+31. **YouTube Comments Download Feature**
+   - Added comments fetching to transcription tool (up to 1000 most relevant)
+   - Efficient API usage: 100 comments per call, 10 calls max
+   - Export formats: TXT (human-readable) and JSON (structured data)
+   - UI: Comments tab with rich display, creator badges, engagement metrics
+   - Tested with videos having 10M+ comments (fetches top 1000 by relevance)
+
+32. **Idea Radar Performance Fix (December 27, 2024)**
+   - Fixed 4-9 second timeouts on broad filters
+   - Created proper composite index with is_institutional filter
+   - 51x performance improvement (4,500ms → 88ms)
+   - Added lazy loading UI with infinite scroll
+
+33. **YouTube Transcription Tools (December 27, 2024)**  
+   - Built Whisper transcription with smart audio compression
+   - Added YouTube comments download (1000 most relevant)
+   - Handles videos up to 2 hours, exports to TXT/SRT/JSON
+
+34. **File Upload for Transcription (August 27, 2025)**
+   - Added MP3/audio file upload to YouTube transcription tool
+   - Supports .mp3, .m4a, .wav, .webm, .ogg files under 25MB
+   - Modified `/api/youtube/transcribe` to handle multipart form data
+   - Updated TranscriptTabImproved.tsx with toggle between URL and file upload modes
+   - Includes ffmpeg compression command reference for files >25MB

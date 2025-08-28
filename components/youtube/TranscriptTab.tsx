@@ -8,6 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   Download, 
   Copy, 
@@ -17,7 +23,8 @@ import {
   Hash,
   CheckCircle,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -55,9 +62,24 @@ interface CachedTranscript {
   cachedAt: string;
 }
 
+interface Comment {
+  id: string;
+  author: string;
+  authorChannelId?: string;
+  text: string;
+  likeCount: number;
+  publishedAt: string;
+  updatedAt: string;
+  replyCount: number;
+  isAuthorReply?: boolean;
+}
+
 export default function TranscriptTab() {
   const [url, setUrl] = useState('');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [inputMode, setInputMode] = useState<'url' | 'file'>('url');
   const [loading, setLoading] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
@@ -65,6 +87,8 @@ export default function TranscriptTab() {
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [fullText, setFullText] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsMetadata, setCommentsMetadata] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState('transcript');
   const [copied, setCopied] = useState(false);
@@ -212,6 +236,102 @@ export default function TranscriptTab() {
     }
   };
 
+  const handleTranscribeFile = async () => {
+    if (!audioFile) {
+      setError('Please select an audio file');
+      return;
+    }
+
+    // Check file size (25MB limit)
+    if (audioFile.size > 25 * 1024 * 1024) {
+      setError('File size exceeds 25MB limit. Please compress the audio file first.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+      formData.append('filename', audioFile.name);
+
+      const response = await fetch('/api/youtube/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to transcribe audio file');
+      }
+
+      const data = await response.json();
+      
+      // Set metadata for uploaded file
+      setMetadata({
+        title: audioFile.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        channel: 'Uploaded File',
+        duration: 0,
+        publishedAt: new Date().toISOString(),
+        thumbnailUrl: '',
+        viewCount: 0
+      });
+      
+      setTranscript(data.transcript);
+      setChapters(data.chapters || []);
+      setFullText(data.fullText);
+      setSuccess('Audio file transcribed successfully!');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchComments = async () => {
+    const videoId = extractVideoId(url);
+    if (!videoId) {
+      setError('Invalid YouTube URL');
+      return;
+    }
+
+    setLoadingComments(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const response = await fetch('/api/youtube/fetch-comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, maxComments: 1000 })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch comments');
+      }
+
+      const data = await response.json();
+      
+      setComments(data.comments);
+      setCommentsMetadata(data.metadata);
+      
+      if (data.comments.length === 0 && data.message) {
+        setSuccess(data.message);
+      } else {
+        setSuccess(`Fetched ${data.comments.length} comments (${data.metadata.apiCallsUsed} API calls used)`);
+      }
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred fetching comments');
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
   const handleCopy = () => {
     const textToCopy = chapters.length > 0 
       ? formatTranscriptWithChapters()
@@ -239,6 +359,58 @@ export default function TranscriptTab() {
         formatted += `\n[${currentChapter}]\n\n`;
       }
       formatted += `${segment.text} `;
+    });
+    
+    return formatted;
+  };
+
+  const handleDownloadComments = (format: 'txt' | 'json') => {
+    if (!comments || comments.length === 0) {
+      setError('No comments to download');
+      return;
+    }
+
+    let content = '';
+    let filename = `${metadata?.title || 'video'}-comments.${format}`;
+    
+    switch (format) {
+      case 'txt':
+        content = formatCommentsAsText();
+        break;
+      case 'json':
+        content = JSON.stringify({
+          metadata: commentsMetadata,
+          comments: comments
+        }, null, 2);
+        break;
+    }
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const formatCommentsAsText = (): string => {
+    let formatted = `YouTube Comments for: ${metadata?.title}\n`;
+    formatted += `Channel: ${metadata?.channel}\n`;
+    formatted += `Total Comments: ${commentsMetadata?.totalComments || 'Unknown'}\n`;
+    formatted += `Comments Fetched: ${comments.length}\n`;
+    formatted += '='.repeat(80) + '\n\n';
+    
+    comments.forEach((comment, index) => {
+      formatted += `#${index + 1} | ${comment.author}`;
+      if (comment.isAuthorReply) {
+        formatted += ' [CREATOR]';
+      }
+      formatted += `\n`;
+      formatted += `👍 ${comment.likeCount.toLocaleString()} likes | 💬 ${comment.replyCount} replies\n`;
+      formatted += `Posted: ${new Date(comment.publishedAt).toLocaleDateString()}\n`;
+      formatted += `${comment.text}\n`;
+      formatted += '-'.repeat(60) + '\n\n';
     });
     
     return formatted;
@@ -311,39 +483,116 @@ export default function TranscriptTab() {
             YouTube Whisper Transcription
           </h1>
           <p className="text-neutral-400">
-            Transcribe any YouTube video using OpenAI's Whisper (typically supports 1-2 hour videos)
+            Transcribe YouTube videos with Whisper AI - automatic audio compression for longer videos (up to ~90 minutes)
           </p>
         </div>
 
         {/* Input Section */}
         <Card className="bg-[rgb(39,39,39)] border-neutral-700 mb-6">
           <CardContent className="p-6">
-            <div className="flex gap-3">
-              <Input
-                type="text"
-                placeholder="Enter YouTube URL (e.g., https://youtube.com/watch?v=...)"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="flex-1 bg-neutral-800 border-neutral-600 text-white placeholder:text-neutral-500 focus:border-[#00ff00] focus:ring-[#00ff00]/20"
-              />
+            {/* Input Mode Tabs */}
+            <div className="flex gap-2 mb-4">
               <Button
-                onClick={handleTranscribe}
-                disabled={loading || !url}
-                className="bg-[#00ff00] text-black hover:bg-[#88ff00] font-semibold px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setInputMode('url')}
+                variant={inputMode === 'url' ? 'default' : 'outline'}
+                className={inputMode === 'url' 
+                  ? 'bg-[#00ff00] text-black hover:bg-[#88ff00]' 
+                  : 'border-neutral-600 text-neutral-400 hover:text-white hover:border-neutral-500'}
+                size="sm"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Transcribing...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Transcribe
-                  </>
-                )}
+                YouTube URL
+              </Button>
+              <Button
+                onClick={() => setInputMode('file')}
+                variant={inputMode === 'file' ? 'default' : 'outline'}
+                className={inputMode === 'file' 
+                  ? 'bg-[#00ff00] text-black hover:bg-[#88ff00]' 
+                  : 'border-neutral-600 text-neutral-400 hover:text-white hover:border-neutral-500'}
+                size="sm"
+              >
+                Upload Audio File
               </Button>
             </div>
+
+            {/* URL Input */}
+            {inputMode === 'url' ? (
+              <div className="flex gap-3">
+                <Input
+                  type="text"
+                  placeholder="Enter YouTube URL (e.g., https://youtube.com/watch?v=...)"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="flex-1 bg-neutral-800 border-neutral-600 text-white placeholder:text-neutral-500 focus:border-[#00ff00] focus:ring-[#00ff00]/20"
+                />
+                <Button
+                  onClick={handleTranscribe}
+                  disabled={loading || !url}
+                  className="bg-[#00ff00] text-black hover:bg-[#88ff00] font-semibold px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Transcribing...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Transcribe
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              /* File Upload Input */
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept=".mp3,.m4a,.wav,.webm,.ogg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 25 * 1024 * 1024) {
+                            setError('File size exceeds 25MB. Please compress it first using: ffmpeg -i input.mp3 -b:a 32k -ar 16000 -ac 1 output.mp3');
+                            setAudioFile(null);
+                          } else {
+                            setAudioFile(file);
+                            setError(null);
+                          }
+                        }
+                      }}
+                      className="bg-neutral-800 border-neutral-600 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#00ff00] file:text-black hover:file:bg-[#88ff00] file:cursor-pointer cursor-pointer"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleTranscribeFile}
+                    disabled={loading || !audioFile}
+                    className="bg-[#00ff00] text-black hover:bg-[#88ff00] font-semibold px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Transcribing...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4 mr-2" />
+                        Transcribe File
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {audioFile && (
+                  <div className="text-sm text-neutral-400">
+                    Selected: {audioFile.name} ({(audioFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </div>
+                )}
+                <div className="text-xs text-neutral-500">
+                  Max file size: 25MB. To compress: <code className="bg-neutral-800 px-1 rounded">ffmpeg -i input.mp3 -b:a 32k -ar 16000 -ac 1 output.mp3</code>
+                </div>
+              </div>
+            )}
 
             {/* Recent Transcripts Cache */}
             {cachedTranscripts.length > 0 && (
@@ -470,6 +719,54 @@ export default function TranscriptTab() {
                 <Download className="w-4 h-4 mr-2" />
                 Download JSON
               </Button>
+              
+              {comments.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="border-neutral-600 hover:bg-neutral-800 text-white"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Comments ({comments.length})
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-neutral-800 border-neutral-700">
+                    <DropdownMenuItem 
+                      onClick={() => handleDownloadComments('txt')}
+                      className="text-white hover:bg-neutral-700 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Download as TXT
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleDownloadComments('json')}
+                      className="text-white hover:bg-neutral-700 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download as JSON
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  onClick={handleFetchComments}
+                  disabled={loadingComments || !url}
+                  className="bg-[#00ff00] text-black hover:bg-[#88ff00] font-semibold disabled:opacity-50"
+                >
+                  {loadingComments ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Getting Comments...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Get Comments
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             {/* Transcript Tabs */}
@@ -496,6 +793,14 @@ export default function TranscriptTab() {
                   >
                     Timestamped
                   </TabsTrigger>
+                  {comments.length > 0 && (
+                    <TabsTrigger 
+                      value="comments" 
+                      className="flex-1 data-[state=active]:bg-[#00ff00]/10 data-[state=active]:text-[#00ff00]"
+                    >
+                      Comments ({comments.length})
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="transcript" className="p-6">
@@ -552,6 +857,60 @@ export default function TranscriptTab() {
                     ))}
                   </ScrollArea>
                 </TabsContent>
+
+                {comments.length > 0 && (
+                  <TabsContent value="comments" className="p-6">
+                    <ScrollArea className="h-[500px] w-full pr-4">
+                      <div className="space-y-4">
+                        {commentsMetadata && (
+                          <div className="mb-4 p-3 bg-neutral-800 rounded-lg">
+                            <div className="flex items-center justify-between text-sm text-neutral-400">
+                              <span>Total Comments: {commentsMetadata.totalComments?.toLocaleString()}</span>
+                              <span>Showing: {comments.length} most relevant</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {comments.map((comment, index) => (
+                          <div key={comment.id} className="border-b border-neutral-700 pb-4 last:border-0">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-10 h-10 bg-neutral-700 rounded-full flex items-center justify-center text-sm font-semibold text-[#00ff00]">
+                                {comment.author.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-white">
+                                    {comment.author}
+                                  </span>
+                                  {comment.isAuthorReply && (
+                                    <Badge className="bg-[#00ff00]/10 text-[#00ff00] border-[#00ff00]/20 text-xs">
+                                      Creator
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs text-neutral-500">
+                                    {formatDistanceToNow(new Date(comment.publishedAt), { addSuffix: true })}
+                                  </span>
+                                </div>
+                                <p className="text-neutral-300 mb-2 whitespace-pre-wrap" 
+                                   dangerouslySetInnerHTML={{ __html: comment.text }} />
+                                <div className="flex items-center gap-4 text-sm text-neutral-500">
+                                  <span className="flex items-center gap-1">
+                                    👍 {comment.likeCount.toLocaleString()}
+                                  </span>
+                                  {comment.replyCount > 0 && (
+                                    <span className="flex items-center gap-1">
+                                      💬 {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
               </Tabs>
             </Card>
           </>

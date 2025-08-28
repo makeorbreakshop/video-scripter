@@ -73,6 +73,8 @@ interface Comment {
 
 export default function TranscriptTabImproved() {
   const [url, setUrl] = useState('');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [inputMode, setInputMode] = useState<'url' | 'file'>('url');
   const [loading, setLoading] = useState(false);
   const [loadingComments, setLoadingComments] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -220,6 +222,62 @@ export default function TranscriptTabImproved() {
       setTimeout(() => setSuccess(null), 3000);
       
       saveToCache(videoId, data);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTranscribeFile = async () => {
+    if (!audioFile) {
+      setError('Please select an audio file');
+      return;
+    }
+
+    // Check file size (25MB limit)
+    if (audioFile.size > 25 * 1024 * 1024) {
+      setError('File size exceeds 25MB limit. Please compress the audio file first.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+      formData.append('filename', audioFile.name);
+
+      const response = await fetch('/api/youtube/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to transcribe audio file');
+      }
+
+      const data = await response.json();
+      
+      // Set metadata for uploaded file
+      setMetadata({
+        title: audioFile.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        channel: 'Uploaded File',
+        duration: 0,
+        publishedAt: new Date().toISOString(),
+        thumbnailUrl: '',
+        viewCount: 0
+      });
+      
+      setTranscript(data.transcript);
+      setChapters(data.chapters || []);
+      setFullText(data.fullText);
+      setSuccess('Audio file transcribed successfully!');
+      setTimeout(() => setSuccess(null), 3000);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -380,32 +438,110 @@ export default function TranscriptTabImproved() {
         {/* Input Section - Cleaner Card */}
         <Card className="bg-neutral-900/50 border-neutral-800 backdrop-blur-sm mb-8">
           <div className="p-6">
-            <div className="flex gap-3">
-              <Input
-                type="text"
-                placeholder="https://youtube.com/watch?v=..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="flex-1 bg-neutral-950 border-neutral-800 h-12 text-base 
-                         placeholder:text-neutral-600 focus:border-[#00ff00]/50 
-                         focus:ring-1 focus:ring-[#00ff00]/20 transition-all"
-              />
+            {/* Input Mode Tabs */}
+            <div className="flex gap-2 mb-4">
               <Button
-                onClick={handleTranscribe}
-                disabled={loading || !url}
-                className="bg-[#00ff00] text-black hover:bg-[#00ff00]/90 h-12 px-6 
-                         font-medium disabled:opacity-50 transition-all"
+                onClick={() => setInputMode('url')}
+                variant={inputMode === 'url' ? 'default' : 'outline'}
+                className={inputMode === 'url' 
+                  ? 'bg-[#00ff00] text-black hover:bg-[#00ff00]/90' 
+                  : 'border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-600'}
+                size="sm"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Transcribe'
-                )}
+                YouTube URL
+              </Button>
+              <Button
+                onClick={() => setInputMode('file')}
+                variant={inputMode === 'file' ? 'default' : 'outline'}
+                className={inputMode === 'file' 
+                  ? 'bg-[#00ff00] text-black hover:bg-[#00ff00]/90' 
+                  : 'border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-600'}
+                size="sm"
+              >
+                Upload Audio
               </Button>
             </div>
+
+            {/* URL Input */}
+            {inputMode === 'url' ? (
+              <div className="flex gap-3">
+                <Input
+                  type="text"
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="flex-1 bg-neutral-950 border-neutral-800 h-12 text-base 
+                           placeholder:text-neutral-600 focus:border-[#00ff00]/50 
+                           focus:ring-1 focus:ring-[#00ff00]/20 transition-all"
+                />
+                <Button
+                  onClick={handleTranscribe}
+                  disabled={loading || !url}
+                  className="bg-[#00ff00] text-black hover:bg-[#00ff00]/90 h-12 px-6 
+                           font-medium disabled:opacity-50 transition-all"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Transcribe'
+                  )}
+                </Button>
+              </div>
+            ) : (
+              /* File Upload Input */
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept=".mp3,.m4a,.wav,.webm,.ogg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 25 * 1024 * 1024) {
+                            setError('File exceeds 25MB. Compress with: ffmpeg -i input.mp3 -b:a 32k -ar 16000 -ac 1 output.mp3');
+                            setAudioFile(null);
+                          } else {
+                            setAudioFile(file);
+                            setError(null);
+                          }
+                        }
+                      }}
+                      className="bg-neutral-950 border-neutral-800 h-12 text-base 
+                               file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 
+                               file:text-sm file:font-medium file:bg-[#00ff00] file:text-black 
+                               hover:file:bg-[#00ff00]/90 file:cursor-pointer cursor-pointer"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleTranscribeFile}
+                    disabled={loading || !audioFile}
+                    className="bg-[#00ff00] text-black hover:bg-[#00ff00]/90 h-12 px-6 
+                             font-medium disabled:opacity-50 transition-all"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Transcribe File'
+                    )}
+                  </Button>
+                </div>
+                {audioFile && (
+                  <div className="text-sm text-neutral-400">
+                    Selected: {audioFile.name} ({(audioFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </div>
+                )}
+                <div className="text-xs text-neutral-500 bg-neutral-950 rounded p-2 font-mono">
+                  Max: 25MB | Compress: ffmpeg -i input.mp3 -b:a 32k -ar 16000 -ac 1 output.mp3
+                </div>
+              </div>
+            )}
 
             {/* Recent Transcripts - Cleaner Design */}
             {cachedTranscripts.length > 0 && (
