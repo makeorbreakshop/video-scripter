@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import TranscriptTab from '@/components/youtube/TranscriptTabImproved';
+import ThumbnailTab from '@/components/youtube/ThumbnailTab';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -174,6 +175,21 @@ function YouTubeSidebar({ activeTab, onTabChange }: { activeTab: string; onTabCh
                   <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
                 Transcribe
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start px-3 py-2 rounded-lg ${
+                  activeTab === 'thumbnail' 
+                    ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
+                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                }`}
+                onClick={() => onTabChange('thumbnail')}
+              >
+                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                </svg>
+                Thumbnail
               </Button>
             </nav>
           </div>
@@ -685,6 +701,8 @@ export default function YouTubeDemoV2() {
           </>
           ) : activeTab === 'transcript' ? (
             <TranscriptTab />
+          ) : activeTab === 'thumbnail' ? (
+            <ThumbnailTab />
           ) : null}
         </main>
       </div>
