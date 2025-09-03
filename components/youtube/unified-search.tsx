@@ -2,12 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Loader2, X, Filter, ChevronDown } from 'lucide-react';
+import { Search, Loader2, X, Filter, ChevronDown, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,18 +23,30 @@ import { UnifiedVideoCard } from './unified-video-card';
 import { useUnifiedSearch } from '@/hooks/use-unified-search';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+
+interface ChannelSuggestion {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+  subscriberCount: number;
+}
 
 export function UnifiedSearch() {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [suggestions, setSuggestions] = useState<ChannelSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsTimeoutRef = useRef<NodeJS.Timeout>();
   
   const {
     query,
     setQuery,
-    searchType,
-    setSearchType,
     results,
     loading,
     loadingMore,
@@ -52,16 +63,105 @@ export function UnifiedSearch() {
   } = useUnifiedSearch({
     debounceMs: 300,
     limit: 20,
+    type: 'all', // Always use 'all' search type
   });
+
+  // Fetch autocomplete suggestions
+  const fetchSuggestions = useCallback(async (searchQuery: string) => {
+    if (searchQuery.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    try {
+      const response = await fetch(`/api/search/autocomplete?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      setSuggestions(data.suggestions || []);
+      setShowSuggestions(data.suggestions && data.suggestions.length > 0);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, []);
 
   const handleSearch = (value: string) => {
     setInputValue(value);
     setQuery(value);
+    setShowSuggestions(false);
+  };
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    setSelectedSuggestionIndex(-1);
+    
+    // Clear existing timeout
+    if (suggestionsTimeoutRef.current) {
+      clearTimeout(suggestionsTimeoutRef.current);
+    }
+
+    // Debounce autocomplete suggestions
+    if (value.length >= 2) {
+      suggestionsTimeoutRef.current = setTimeout(() => {
+        fetchSuggestions(value);
+      }, 200);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+
+    // Still trigger main search with original debounce
+    setQuery(value);
+  };
+
+  const handleSuggestionClick = (suggestion: ChannelSuggestion) => {
+    const searchQuery = `channel: ${suggestion.name}`;
+    setInputValue(searchQuery);
+    setQuery(searchQuery);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[selectedSuggestionIndex]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }
   };
 
   const handleClearSearch = () => {
     setInputValue('');
     clearSearch();
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  // Format subscriber count
+  const formatSubscriberCount = (count: number) => {
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M subscribers`;
+    } else if (count >= 1000) {
+      return `${(count / 1000).toFixed(0)}K subscribers`;
+    }
+    return `${count} subscribers`;
   };
 
   // Intersection Observer for infinite scroll
@@ -110,9 +210,13 @@ export function UnifiedSearch() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder="Search videos, channels, or paste YouTube URL..."
                 value={inputValue}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => inputValue.length >= 2 && suggestions.length > 0 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="pl-10 pr-10"
                 title="Try: @channelname, views:>10000, date:30d, channel:name"
               />
@@ -126,6 +230,54 @@ export function UnifiedSearch() {
                   <X className="h-4 w-4" />
                 </Button>
               )}
+              
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-background border rounded-md shadow-lg z-50 overflow-hidden">
+                  <div className="py-1">
+                    {loadingSuggestions && (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin inline mr-2" />
+                        Loading suggestions...
+                      </div>
+                    )}
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={suggestion.id}
+                        className={`w-full px-3 py-2 flex items-center gap-3 hover:bg-accent transition-colors ${
+                          index === selectedSuggestionIndex ? 'bg-accent' : ''
+                        }`}
+                        onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSuggestionClick(suggestion);
+                        }}
+                      >
+                        {suggestion.thumbnail ? (
+                          <Image
+                            src={suggestion.thumbnail}
+                            alt={suggestion.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                        <div className="flex-1 text-left">
+                          <div className="text-sm font-medium">{suggestion.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatSubscriberCount(suggestion.subscriberCount)}
+                          </div>
+                        </div>
+                        <Search className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <Button
               variant="outline"
@@ -135,18 +287,6 @@ export function UnifiedSearch() {
             >
               <Filter className="h-4 w-4" />
             </Button>
-          </div>
-
-          {/* Search Type Tabs */}
-          <div className="mt-4">
-            <Tabs value={searchType} onValueChange={(v) => setSearchType(v as any)}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="videos">Videos</TabsTrigger>
-                <TabsTrigger value="channels">Channels</TabsTrigger>
-                <TabsTrigger value="semantic">Similar</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
 
           {/* Search Intent Badge */}
@@ -250,7 +390,7 @@ export function UnifiedSearch() {
       </Card>
 
       {/* Search Stats */}
-      {query && !loading && (
+      {query && !loading && results.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
             Found {totalResults} results
@@ -266,12 +406,19 @@ export function UnifiedSearch() {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Searching...</p>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                <p className="text-lg font-medium">Searching...</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {query && `Searching for "${query}"`}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Error State */}
@@ -293,7 +440,7 @@ export function UnifiedSearch() {
       )}
 
       {/* Results */}
-      {!loading && query && results.length === 0 && (
+      {!loading && !loadingMore && query && results.length === 0 && queryTime !== null && (
         <Card>
           <CardContent className="py-12 text-center">
             <div className="text-6xl mb-4">🔍</div>

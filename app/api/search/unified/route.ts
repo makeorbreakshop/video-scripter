@@ -102,21 +102,24 @@ export async function GET(request: NextRequest) {
     // Execute parallel searches based on type and intent
     const searchPromises: Promise<SearchResult[]>[] = [];
     
-    if (type === 'all' || type === 'videos') {
-      if (searchIntent.type === 'youtube_url' || searchIntent.type === 'video_id') {
-        searchPromises.push(searchDirectVideo(searchIntent.extractedId!));
-      } else {
-        searchPromises.push(searchVideosByKeyword(searchIntent.cleanQuery, mergedFilters, limit));
-        if (searchIntent.type !== 'channel' && searchIntent.cleanQuery.split(' ').length > 1) {
-          searchPromises.push(searchVideosBySemantic(searchIntent.cleanQuery, mergedFilters, limit));
+    // If channel operator is used, ONLY search channels
+    if (searchIntent.type === 'channel' || searchIntent.type === 'channel_prefix') {
+      searchPromises.push(searchChannels(searchIntent.cleanQuery, limit));
+    } 
+    // Otherwise, search based on type
+    else {
+      if (type === 'all' || type === 'videos') {
+        if (searchIntent.type === 'youtube_url' || searchIntent.type === 'video_id') {
+          searchPromises.push(searchDirectVideo(searchIntent.extractedId!));
+        } else {
+          searchPromises.push(searchVideosByKeyword(searchIntent.cleanQuery, mergedFilters, limit));
+          if (searchIntent.cleanQuery.split(' ').length > 1) {
+            searchPromises.push(searchVideosBySemantic(searchIntent.cleanQuery, mergedFilters, limit));
+          }
         }
       }
-    }
-    
-    if (type === 'all' || type === 'channels') {
-      if (searchIntent.type === 'channel' || searchIntent.type === 'channel_prefix') {
-        searchPromises.push(searchChannels(searchIntent.cleanQuery, limit));
-      } else if (type === 'channels' || type === 'all') {
+      
+      if (type === 'all' || type === 'channels') {
         // For 'all' searches, also search channels with the clean query
         searchPromises.push(searchChannels(searchIntent.cleanQuery, Math.floor(limit / 3))); // Get fewer channels for 'all'
       }
@@ -225,13 +228,12 @@ function parseSearchOperators(query: string): { cleanQuery: string; operators: S
     cleanQuery = cleanQuery.replace(fullMatch, '').trim();
   }
 
-  // Parse channel operator (channel:name)
-  const channelPattern = /channel:([^\s]+)/gi;
+  // Parse channel operator (channel:name) - capture everything after channel:
+  const channelPattern = /channel:(.+?)(?=\s+\w+:|$)/i;
   const channelMatch = cleanQuery.match(channelPattern);
   if (channelMatch) {
-    const [fullMatch, channelName] = channelMatch[0].match(/channel:([^\s]+)/i)!;
-    operators.channel = channelName;
-    cleanQuery = cleanQuery.replace(fullMatch, '').trim();
+    operators.channel = channelMatch[1].trim();
+    cleanQuery = cleanQuery.replace(channelMatch[0], '').trim();
   }
 
   return { cleanQuery, operators };
@@ -277,7 +279,7 @@ function detectSearchIntent(query: string): {
 }
 
 /**
- * Search videos by keyword using PostgreSQL full-text search
+ * Search videos by keyword using Pinecone semantic search with keyword filtering
  */
 async function searchVideosByKeyword(
   query: string, 
@@ -285,35 +287,72 @@ async function searchVideosByKeyword(
   limit: number
 ): Promise<SearchResult[]> {
   try {
-    let queryBuilder = supabase
-      .from('videos')
-      .select('*')
-      .textSearch('title', query, {
-        type: 'websearch',
-        config: 'english'
-      })
-      .limit(limit);
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return [];
 
-    // Apply filters
-    queryBuilder = applyVideoFilters(queryBuilder, filters);
+    // Check embedding cache first
+    const embeddingCacheKey = `embedding-${query}`;
+    let queryEmbedding = embedingCache.get(embeddingCacheKey);
+    
+    if (!queryEmbedding) {
+      // Generate query embedding
+      queryEmbedding = await generateQueryEmbedding(query, apiKey);
+      // Cache the embedding
+      embedingCache.set(embeddingCacheKey, queryEmbedding);
+    } else {
+      console.log(`🎯 Embedding cache hit for: "${query}"`);
+    }
+    
+    // Search in Pinecone - get more results to filter through
+    const searchResult = await pineconeService.searchSimilar(
+      queryEmbedding,
+      500, // Get top 500 to filter for keyword matches
+      0.3  // Lower threshold to get more candidates for keyword filtering
+    );
 
-    const { data, error } = await queryBuilder;
+    // Extract results and filter for keyword matches
+    const lowerQuery = query.toLowerCase();
+    let filteredVideos = searchResult.results.filter(video => {
+      const titleMatch = video.title.toLowerCase().includes(lowerQuery);
+      const channelMatch = video.channel_name?.toLowerCase().includes(lowerQuery);
+      return titleMatch || channelMatch;
+    });
+    
+    // Apply additional filters if needed
+    if (filters?.minViews || filters?.maxViews) {
+      filteredVideos = filteredVideos.filter(v => {
+        if (filters.minViews && v.view_count < filters.minViews) return false;
+        if (filters.maxViews && v.view_count > filters.maxViews) return false;
+        return true;
+      });
+    }
 
-    if (error) throw error;
+    // Sort by relevance (title matches score higher than channel matches)
+    filteredVideos.sort((a, b) => {
+      const aTitle = a.title.toLowerCase().includes(lowerQuery) ? 2 : 0;
+      const aChannel = a.channel_name?.toLowerCase().includes(lowerQuery) ? 1 : 0;
+      const bTitle = b.title.toLowerCase().includes(lowerQuery) ? 2 : 0;
+      const bChannel = b.channel_name?.toLowerCase().includes(lowerQuery) ? 1 : 0;
+      
+      const aScore = aTitle + aChannel + (a.similarity_score * 0.5);
+      const bScore = bTitle + bChannel + (b.similarity_score * 0.5);
+      
+      return bScore - aScore;
+    });
 
-    return (data || []).map(video => ({
-      id: video.id,
+    return filteredVideos.slice(0, limit).map(video => ({
+      id: video.video_id,
       type: 'video' as const,
       title: video.title,
       channel_id: video.channel_id,
       channel_name: video.channel_name,
       view_count: video.view_count,
       published_at: video.published_at,
-      performance_ratio: video.baseline_cpm_prediction_ratio || 1,
+      performance_ratio: video.performance_ratio,
       score: 0.8, // Base score for keyword matches
       match_type: 'keyword' as const,
-      thumbnail_url: `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`,
-      description: video.description
+      thumbnail_url: `https://i.ytimg.com/vi/${video.video_id}/hqdefault.jpg`,
+      description: null
     }));
   } catch (error) {
     console.error('Keyword search error:', error);
@@ -397,17 +436,25 @@ async function searchChannels(query: string, limit: number): Promise<SearchResul
       return cached;
     }
 
-    // Use optimized SQL function if available
-    const { data: channelResults, error: funcError } = await supabase
-      .rpc('search_channels', {
-        search_query: `%${query}%`,
-        result_limit: limit
-      });
+    // Use dedicated channels table for fast lookup
+    const supabase = getSupabase();
+    const { data: channelResults, error } = await supabase
+      .from('channels')
+      .select('channel_id, channel_name, thumbnail_url, subscriber_count, view_count, video_count')
+      .ilike('channel_name', `%${query}%`)
+      .order('subscriber_count', { ascending: false })
+      .limit(limit);
 
-    if (!funcError && channelResults && channelResults.length > 0) {
+    if (!error && channelResults && channelResults.length > 0) {
       console.log(`✅ Found ${channelResults.length} channels using optimized function`);
       
       const results = channelResults.map((channel: any) => {
+        // Fix avatar URL to use s88-c (largest size without CORS issues)
+        let avatarUrl = channel.thumbnail_url;
+        if (avatarUrl) {
+          avatarUrl = avatarUrl.replace(/s\d+-c/, 's88-c');
+        }
+        
         // Calculate relevance score
         let score = 0.5;
         const lowerQuery = query.toLowerCase();
@@ -427,9 +474,10 @@ async function searchChannels(query: string, limit: number): Promise<SearchResul
           title: channel.channel_name,
           channel_id: channel.channel_id,
           channel_name: channel.channel_name,
-          channel_thumbnail: channel.channel_thumbnail,
+          channel_thumbnail: avatarUrl, // Use the fixed avatar URL
+          subscriber_count: channel.subscriber_count,
           video_count: channel.video_count,
-          view_count: channel.total_views,
+          view_count: channel.view_count,
           score,
           match_type: 'channel' as const
         };
@@ -444,19 +492,22 @@ async function searchChannels(query: string, limit: number): Promise<SearchResul
       return results;
     }
     
-    // Fallback to original method if function doesn't exist or returns no results
-    console.log('⚠️ Falling back to original channel search method');
+    // No results found
+    console.log(`No channels found for query: "${query}"`);
+    return [];
     
-    // Search for channels by name
-    const { data: videos, error } = await supabase
+    // Original fallback code (disabled due to timeouts)
+    /*
+    const { data: channels, error } = await supabase
       .from('videos')
       .select('channel_id, channel_name')
       .ilike('channel_name', `%${query}%`)
-      .limit(1000); // Get enough to find unique channels
-
+      .limit(50);
+    
     if (error) throw error;
+    */
 
-    // Aggregate channels manually
+    // Aggregate channel data efficiently
     const channelMap = new Map<string, {
       channel_id: string;
       channel_name: string;
@@ -464,52 +515,17 @@ async function searchChannels(query: string, limit: number): Promise<SearchResul
       total_views: number;
     }>();
 
-    // Count videos per channel
-    const channelVideoCount = new Map<string, number>();
-    videos?.forEach(video => {
-      const count = channelVideoCount.get(video.channel_id) || 0;
-      channelVideoCount.set(video.channel_id, count + 1);
-    });
-
-    // Get unique channels
-    const uniqueChannels = new Map<string, { name: string; thumbnail?: string }>();
-    videos?.forEach(video => {
-      if (!uniqueChannels.has(video.channel_id)) {
-        uniqueChannels.set(video.channel_id, { name: video.channel_name, thumbnail: undefined });
-      }
-    });
-
-    // Get stats for each unique channel
-    const channelIds = Array.from(uniqueChannels.keys()).slice(0, limit);
-    
-    for (const channelId of channelIds) {
-      // Get video count, total views, and channel metadata for this channel
-      const { data: stats, error: statsError } = await supabase
-        .from('videos')
-        .select('view_count, metadata')
-        .eq('channel_id', channelId);
-
-      if (!statsError && stats && stats.length > 0) {
-        const totalViews = stats.reduce((sum, video) => sum + (video.view_count || 0), 0);
-        
-        // Try to get channel thumbnail from metadata
-        let channelThumbnail;
-        for (const video of stats) {
-          if (video.metadata?.channel_stats?.channel_thumbnail) {
-            channelThumbnail = video.metadata.channel_stats.channel_thumbnail;
-            break;
-          }
-        }
-        
-        channelMap.set(channelId, {
-          channel_id: channelId,
-          channel_name: uniqueChannels.get(channelId)?.name || '',
-          channel_thumbnail: channelThumbnail,
-          video_count: stats.length,
-          total_views: totalViews
+    // Process all videos in single pass - simplified without view counts
+    channels?.forEach(video => {
+      if (!channelMap.has(video.channel_id)) {
+        channelMap.set(video.channel_id, {
+          channel_id: video.channel_id,
+          channel_name: video.channel_name,
+          video_count: 1,
+          total_views: 0 // Skip view calculation for speed
         });
       }
-    }
+    });
 
     // Convert to search results and sort by relevance
     const results = Array.from(channelMap.values()).map(channel => {
@@ -558,6 +574,7 @@ async function searchChannels(query: string, limit: number): Promise<SearchResul
  */
 async function searchDirectVideo(videoId: string): Promise<SearchResult[]> {
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('videos')
       .select('*')

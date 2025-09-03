@@ -16,7 +16,7 @@ SET topic_niche =
     
     -- Technology
     WHEN topic_cluster_id IN (59,165,175,183) THEN 'Programming'
-    WHEN topic_cluster_id IN (12,41,114,143) THEN 'Photography & Video'
+    WHEN topic_cluster_id IN (12,41,114,1143) THEN 'Photography & Video'
     WHEN topic_cluster_id IN (112,132,155,159) THEN 'Electronics'
     WHEN topic_cluster_id IN (22,97) THEN '3D Printing'
     WHEN topic_cluster_id IN (17,202) THEN 'AI & Innovation'

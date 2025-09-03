@@ -1580,3 +1580,10 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - Modified `/api/youtube/transcribe` to handle multipart form data
    - Updated TranscriptTabImproved.tsx with toggle between URL and file upload modes
    - Includes ffmpeg compression command reference for files >25MB
+
+35. **Wistia Video Download & File Upload Completion (August 28, 2025)**
+   - Discovered Wistia HLS stream URLs: `https://fast.wistia.com/embed/medias/[VIDEO_ID].m3u8`
+   - Download command: `yt-dlp -x --audio-format mp3 --audio-quality 9 [URL]`
+   - Completed file upload feature in TranscriptTabImproved.tsx (production version)
+   - Added toggle between YouTube URL and file upload modes with validation
+   - Enables bulk transcript extraction from course videos

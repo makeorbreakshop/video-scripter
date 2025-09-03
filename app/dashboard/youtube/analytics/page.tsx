@@ -1,21 +1,16 @@
 /**
  * YouTube Search & Analytics Page
- * Unified search with packaging analysis and semantic search tabs
+ * Unified search interface for discovering videos
  */
 
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UnifiedSearch } from '@/components/youtube/unified-search';
-import { PackagingGrid } from '@/components/youtube/packaging-grid';
-import { PackagingFilters } from '@/components/youtube/packaging-filters';
-import { SemanticSearch } from '@/components/youtube/semantic-search';
 import { Card, CardContent } from '@/components/ui/card';
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SearchAnalyticsPage() {
-  const [activeTab, setActiveTab] = useState('discovery');
 
   return (
     <div className="flex-1 flex flex-col bg-background min-h-screen">
@@ -28,45 +23,12 @@ export default function SearchAnalyticsPage() {
           </p>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full max-w-[600px] grid-cols-3">
-            <TabsTrigger value="discovery">Discovery</TabsTrigger>
-            <TabsTrigger value="packaging">Packaging Analysis</TabsTrigger>
-            <TabsTrigger value="semantic">Semantic Search</TabsTrigger>
-          </TabsList>
-
-          {/* Discovery Tab - Unified Search */}
-          <TabsContent value="discovery" className="space-y-4">
-            <Suspense fallback={<SearchSkeleton />}>
-              <UnifiedSearch />
-            </Suspense>
-          </TabsContent>
-
-          {/* Packaging Analysis Tab */}
-          <TabsContent value="packaging" className="space-y-4">
-            {/* Filters */}
-            <Card>
-              <CardContent className="p-4">
-                <Suspense fallback={<FiltersSkeleton />}>
-                  <PackagingFilters />
-                </Suspense>
-              </CardContent>
-            </Card>
-
-            {/* Results Grid */}
-            <Suspense fallback={<GridSkeleton />}>
-              <PackagingGrid />
-            </Suspense>
-          </TabsContent>
-
-          {/* Semantic Search Tab */}
-          <TabsContent value="semantic" className="space-y-4">
-            <Suspense fallback={<SearchSkeleton />}>
-              <SemanticSearch />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+        {/* Unified Search - No tabs */}
+        <div className="space-y-4">
+          <Suspense fallback={<SearchSkeleton />}>
+            <UnifiedSearch />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

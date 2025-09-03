@@ -269,7 +269,7 @@ export default function TranscriptTabImproved() {
         channel: 'Uploaded File',
         duration: 0,
         publishedAt: new Date().toISOString(),
-        thumbnailUrl: '',
+        thumbnailUrl: '', // Keep empty string but handle with conditional rendering
         viewCount: 0
       });
       
@@ -563,11 +563,13 @@ export default function TranscriptTabImproved() {
                                hover:bg-neutral-900 transition-all text-left group"
                       onClick={() => loadFromCache(cached)}
                     >
-                      <img 
-                        src={cached.metadata.thumbnailUrl}
-                        alt=""
-                        className="w-20 h-12 object-cover rounded"
-                      />
+                      {cached.metadata.thumbnailUrl && (
+                        <img 
+                          src={cached.metadata.thumbnailUrl}
+                          alt=""
+                          className="w-20 h-12 object-cover rounded"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">
                           {cached.metadata.title}
@@ -605,17 +607,19 @@ export default function TranscriptTabImproved() {
             <Card className="bg-neutral-900/50 border-neutral-800 backdrop-blur-sm mb-6">
               <div className="p-6">
                 <div className="flex gap-6">
-                  <div className="relative group">
-                    <img 
-                      src={metadata.thumbnailUrl} 
-                      alt={metadata.title}
-                      className="w-64 h-36 object-cover rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 
-                                  transition-opacity rounded-lg flex items-center justify-center">
-                      <Play className="w-12 h-12 text-white" />
+                  {metadata.thumbnailUrl && (
+                    <div className="relative group">
+                      <img 
+                        src={metadata.thumbnailUrl} 
+                        alt={metadata.title}
+                        className="w-64 h-36 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 
+                                    transition-opacity rounded-lg flex items-center justify-center">
+                        <Play className="w-12 h-12 text-white" />
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex-1">
                     <h2 className="text-xl font-semibold mb-1">{metadata.title}</h2>
                     <p className="text-neutral-400 mb-4">{metadata.channel}</p>

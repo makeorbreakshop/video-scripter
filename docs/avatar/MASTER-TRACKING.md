@@ -13,12 +13,7 @@
 - **Time Span Covered**: 2020-2025 (INCLUDES FUTURE DATA! July-Aug 2025)
 - **CRITICAL**: Non-chronological sorting confirmed - pattern discovery unaffected
 
-### Top Videos Generating Comments (Running Total)
-1. What is the Best Laser Cutter and Engraver for You - 186 comments
-2. Is this the BEST budget Laser Engraver? Ortur Lase - 178 comments  
-3. Does a $200 Laser Engraver Make Sense in Your Shop - 70 comments
-4. Full Flight of Insta360 Weather Balloon Flight - 61 comments
-5. Did I Waste $1500 on a 50W Laser Cutter from China - 55 comments
+aste $1500 on a 50W Laser Cutter from China - 55 comments
 
 ### Pattern Frequency Tracking
 
