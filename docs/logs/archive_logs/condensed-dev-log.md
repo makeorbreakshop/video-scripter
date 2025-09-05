@@ -1587,3 +1587,20 @@ Video Scripter is a Next.js 15 application for analyzing YouTube videos and crea
    - Completed file upload feature in TranscriptTabImproved.tsx (production version)
    - Added toggle between YouTube URL and file upload modes with validation
    - Enables bulk transcript extraction from course videos
+
+36. **Search & Analytics Page Timeout Fix (September 3, 2025)**
+   - Fixed ILIKE queries timing out on 240k+ videos table (8+ second Supabase limit)
+   - Removed problematic Supabase text search, leveraged existing Pinecone infrastructure
+   - Hybrid approach: Get 500 candidates from Pinecone, filter for exact text matches
+   - Performance: Timeout (8+ seconds) → 5-7 seconds consistently
+   - Fixed UI loading states: Added queryTime check to prevent premature "No results" message
+   - Channel Search Operator: Added "channel:" operator for targeted searches (4,622 channels table)
+   - Removed tab navigation UI per user request for cleaner interface
+   - Key insight: 40 indexes on videos table but none for text search - Pinecone is the solution
+
+37. **YouTube Frame Capture Tool (September 3, 2025)**
+   - Built frame extraction tool in `/app/youtube-demo-v2` (Frame Capture tab)
+   - Server-side video download with ytdl-core to bypass cross-origin restrictions
+   - Features: Frame-by-frame navigation, keyboard shortcuts (C to capture, Shift+arrows for frames)
+   - Captures at full video resolution (up to 4K), PNG format with timestamp tracking
+   - Automatic server cleanup after 1 hour, gallery view with batch download

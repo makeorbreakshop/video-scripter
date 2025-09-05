@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import './styles.css';
 
 interface VideoData {
   id: string;
@@ -166,46 +167,16 @@ function YouTubeSidebar({ activeTab, onTabChange }: { activeTab: string; onTabCh
               <Button 
                 variant="ghost" 
                 className={`w-full justify-start px-3 py-2 rounded-lg ${
-                  activeTab === 'transcript' 
+                  activeTab === 'tools' 
                     ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
                     : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
                 }`}
-                onClick={() => onTabChange('transcript')}
+                onClick={() => onTabChange('tools')}
               >
                 <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
                 </svg>
-                Transcribe
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                className={`w-full justify-start px-3 py-2 rounded-lg ${
-                  activeTab === 'thumbnail' 
-                    ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-                }`}
-                onClick={() => onTabChange('thumbnail')}
-              >
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                </svg>
-                Thumbnail
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                className={`w-full justify-start px-3 py-2 rounded-lg ${
-                  activeTab === 'capture' 
-                    ? 'text-white bg-neutral-800 hover:bg-neutral-700' 
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-                }`}
-                onClick={() => onTabChange('capture')}
-              >
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-                </svg>
-                Frame Capture
+                YouTube Tools
               </Button>
             </nav>
           </div>
@@ -380,6 +351,86 @@ function VideoCardSkeleton() {
         <div className="h-4 w-32 rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
         {/* Views, Score and Date Skeleton */}
         <div className="h-4 w-48 rounded bg-gradient-to-r from-neutral-800 via-neutral-700 to-neutral-800 bg-[length:200%_100%] animate-shimmer" />
+      </div>
+    </div>
+  );
+}
+
+// YouTube Tools Component with Tabs
+interface YouTubeToolsProps {
+  sharedUrl?: string;
+  onUrlChange?: (url: string) => void;
+}
+
+function YouTubeTools({ sharedUrl, onUrlChange }: YouTubeToolsProps) {
+  const [activeToolTab, setActiveToolTab] = useState('transcript');
+  const [videoUrl, setVideoUrl] = useState(sharedUrl || '');
+
+  const handleUrlChange = (url: string) => {
+    setVideoUrl(url);
+    onUrlChange?.(url);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Tab Navigation - YouTube style chips */}
+      <div className="sticky top-0 bg-[rgb(15,15,15)] z-10 border-b border-neutral-800">
+        <div className="flex items-center gap-2 px-6 py-3">
+          <button
+            onClick={() => setActiveToolTab('transcript')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeToolTab === 'transcript'
+                ? 'bg-white text-black'
+                : 'bg-[rgb(39,39,39)] text-white hover:bg-[rgb(48,48,48)]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+              Transcript
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setActiveToolTab('thumbnail')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeToolTab === 'thumbnail'
+                ? 'bg-white text-black'
+                : 'bg-[rgb(39,39,39)] text-white hover:bg-[rgb(48,48,48)]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
+              Thumbnail
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setActiveToolTab('frames')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeToolTab === 'frames'
+                ? 'bg-white text-black'
+                : 'bg-[rgb(39,39,39)] text-white hover:bg-[rgb(48,48,48)]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
+              </svg>
+              Frame Capture
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Tool Content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden youtube-scrollbar">
+        {activeToolTab === 'transcript' && <TranscriptTab />}
+        {activeToolTab === 'thumbnail' && <ThumbnailTab />}
+        {activeToolTab === 'frames' && <FrameCaptureTab />}
       </div>
     </div>
   );
@@ -617,7 +668,7 @@ export default function YouTubeDemoV2() {
           <YouTubeSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           
           {/* Main Content with Skeleton */}
-          <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)]">
+          <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)] youtube-scrollbar">
             {/* Filters Skeleton */}
             <div className="sticky top-0 bg-[rgb(15,15,15)] z-10">
               <div className="flex items-center gap-3 px-6 py-3">
@@ -658,7 +709,7 @@ export default function YouTubeDemoV2() {
         <YouTubeSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)]">
+        <main className="flex-1 overflow-y-auto bg-[rgb(15,15,15)] youtube-scrollbar">
           {activeTab === 'home' ? (
           <>
           {/* Idea Heist Filters - Pass filters, totalCount and refresh handler */}
@@ -715,12 +766,8 @@ export default function YouTubeDemoV2() {
             )}
           </div>
           </>
-          ) : activeTab === 'transcript' ? (
-            <TranscriptTab />
-          ) : activeTab === 'thumbnail' ? (
-            <ThumbnailTab />
-          ) : activeTab === 'capture' ? (
-            <FrameCaptureTab />
+          ) : activeTab === 'tools' ? (
+            <YouTubeTools />
           ) : null}
         </main>
       </div>

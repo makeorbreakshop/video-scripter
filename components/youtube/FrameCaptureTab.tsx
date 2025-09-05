@@ -3,11 +3,12 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { 
   Play, 
   Pause, 
@@ -21,7 +22,10 @@ import {
   Download,
   Trash2,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  CheckCircle2,
+  Film
 } from 'lucide-react';
 
 interface CapturedFrame {
@@ -235,158 +239,159 @@ export default function FrameCaptureTab() {
   };
 
   return (
-    <div className="h-full bg-[rgb(15,15,15)] text-white" onKeyDown={handleKeyPress} tabIndex={0}>
-      <div className="flex h-full">
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* URL Input */}
-          <div className="p-4 border-b border-neutral-800">
-            <div className="flex gap-2 mb-3">
-              <Input
-                type="text"
-                placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=...)"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !isLoading && loadVideo()}
-                className="flex-1 bg-neutral-900 border-neutral-700 text-white"
-                disabled={isLoading}
-              />
-              <Button 
-                onClick={loadVideo}
-                disabled={isLoading || !videoUrl}
-                className="bg-red-600 hover:bg-red-700 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Downloading...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Download & Load
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Title and status */}
-            {videoTitle && (
-              <div className="text-sm text-neutral-400">
-                <p>
-                  <span className="font-medium">Video:</span> {videoTitle}
-                </p>
-                {videoQuality && (
-                  <p>
-                    <span className="font-medium">Quality:</span> <span className="text-green-400">{videoQuality}</span>
-                  </p>
-                )}
-              </div>
-            )}
-            
-            {error && (
-              <Alert className="mt-2 bg-red-950 border-red-800">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-red-200">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+    <div className="min-h-screen bg-neutral-950 text-white" onKeyDown={handleKeyPress} tabIndex={0}>
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Input Section - Match Transcript style */}
+        <div className="mb-8">
+          <div className="flex gap-3">
+            <Input
+              type="text"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !isLoading && loadVideo()}
+              disabled={isLoading}
+              className="flex-1 bg-neutral-900/50 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-green-500 h-12 px-4 text-base"
+            />
+            <Button 
+              onClick={loadVideo}
+              disabled={isLoading || !videoUrl}
+              className="bg-green-500 hover:bg-green-600 text-black font-medium min-w-[160px] h-12 text-base"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Loading
+                </>
+              ) : (
+                <>
+                  <Film className="w-4 h-4 mr-2" />
+                  Download & Load
+                </>
+              )}
+            </Button>
           </div>
 
-          {/* Instructions */}
-          {videoReady && (
-            <Alert className="m-4 bg-green-950 border-green-800">
-              <Camera className="h-4 w-4" />
-              <AlertDescription className="text-green-200">
-                <strong>Video ready!</strong> Navigate to any frame and press 'C' or click "Capture Frame".
-                <br />
-                <strong>Shortcuts:</strong> Space (play/pause) • Arrow keys (skip) • Shift+Arrow (frame by frame) • C (capture)
-              </AlertDescription>
+          {/* Video Info */}
+          {videoTitle && (
+            <div className="flex items-center gap-4 mt-4">
+              <Badge variant="secondary" className="bg-neutral-800 text-gray-300">
+                {videoTitle}
+              </Badge>
+              {videoQuality && (
+                <Badge variant="outline" className="border-green-500 text-green-500">
+                  Quality: {videoQuality}
+                </Badge>
+              )}
+            </div>
+          )}
+          
+          {error && (
+            <Alert className="mt-4 bg-red-950/50 border-red-900">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-red-400">{error}</AlertDescription>
             </Alert>
           )}
+        </div>
 
-          {/* Video Player */}
-          <div className="flex-1 relative bg-black">
-            {videoSource ? (
-              <video
-                ref={videoRef}
-                src={videoSource}
-                className="w-full h-full object-contain"
-                onLoadedMetadata={handleVideoLoaded}
-                onTimeUpdate={(e) => setCurrentTime((e.target as HTMLVideoElement).currentTime)}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onVolumeChange={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  setVolume(video.volume);
-                  setIsMuted(video.muted);
-                }}
-                onError={(e) => {
-                  console.error('Video error:', e);
-                  setError('Failed to load video. The file may be corrupted or in an unsupported format.');
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-neutral-500">
-                <div className="text-center">
-                  <Camera className="w-16 h-16 mx-auto mb-4" />
-                  <p>Enter a YouTube URL to get started</p>
-                  <p className="text-sm mt-2">The video will be downloaded for frame extraction</p>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Instructions Alert */}
+        {videoReady && (
+          <Alert className="mb-6 bg-green-950/50 border-green-900">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription className="text-green-400">
+              <strong>Video ready!</strong> Navigate to any frame and press 'C' or click "Capture Frame".
+              <br />
+              <strong>Shortcuts:</strong> Space (play/pause) • Arrow keys (skip) • Shift+Arrow (frame by frame) • C (capture)
+            </AlertDescription>
+          </Alert>
+        )}
 
-          {/* Controls */}
-          {videoReady && (
-            <div className="p-4 border-t border-neutral-800">
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <Slider
-                  value={[currentTime]}
-                  max={duration}
-                  step={0.001}
-                  onValueChange={(value) => seekTo(value[0])}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-neutral-400 mt-1">
-                  <span>{formatTime(currentTime)}</span>
-                  <span className="font-mono">{currentTime.toFixed(3)}s</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Video Player Card */}
+          <div className="lg:col-span-2">
+            <Card className="bg-neutral-900/50 border-neutral-800 h-full">
+              <CardContent className="p-0">
+                <div className="relative aspect-video bg-black rounded-t-lg overflow-hidden">
+                {videoSource ? (
+                  <video
+                    ref={videoRef}
+                    src={videoSource}
+                    className="w-full h-full object-contain"
+                    onLoadedMetadata={handleVideoLoaded}
+                    onTimeUpdate={(e) => setCurrentTime((e.target as HTMLVideoElement).currentTime)}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onVolumeChange={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      setVolume(video.volume);
+                      setIsMuted(video.muted);
+                    }}
+                    onError={(e) => {
+                      console.error('Video error:', e);
+                      setError('Failed to load video. The file may be corrupted or in an unsupported format.');
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-neutral-500">
+                    <div className="text-center p-12">
+                      <Camera className="w-16 h-16 mx-auto mb-4 text-neutral-600" />
+                      <p className="text-gray-400">Enter a YouTube URL to get started</p>
+                      <p className="text-sm mt-2 text-gray-500">The video will be downloaded for frame extraction</p>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Video Controls */}
+              {videoReady && (
+                <div className="p-4 bg-neutral-950 rounded-b-lg">
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <Slider
+                      value={[currentTime]}
+                      max={duration}
+                      step={0.001}
+                      onValueChange={(value) => seekTo(value[0])}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>{formatTime(currentTime)}</span>
+                      <span className="font-mono text-green-500">{currentTime.toFixed(3)}s</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                  </div>
 
               {/* Control Buttons */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Button 
                     size="icon" 
-                    variant="ghost" 
+                    variant="outline" 
                     onClick={skipBackward} 
-                    className="hover:bg-neutral-800"
+                    className="border-neutral-700 hover:bg-neutral-800 text-white"
                     title="Skip back 10s (←)"
                   >
-                    <SkipBack className="w-5 h-5" />
+                    <SkipBack className="w-4 h-4" />
                   </Button>
                   
                   <Button 
                     size="icon" 
                     onClick={togglePlay} 
-                    className="bg-white text-black hover:bg-neutral-200"
+                    className="bg-green-500 hover:bg-green-600 text-black"
                     title="Play/Pause (Space)"
                   >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                   </Button>
                   
                   <Button 
                     size="icon" 
-                    variant="ghost" 
+                    variant="outline" 
                     onClick={skipForward} 
-                    className="hover:bg-neutral-800"
+                    className="border-neutral-700 hover:bg-neutral-800 text-white"
                     title="Skip forward 10s (→)"
                   >
-                    <SkipForward className="w-5 h-5" />
+                    <SkipForward className="w-4 h-4" />
                   </Button>
                 </div>
 
@@ -397,9 +402,9 @@ export default function FrameCaptureTab() {
                       size="icon" 
                       variant="ghost" 
                       onClick={toggleMute} 
-                      className="hover:bg-neutral-800"
+                      className="hover:bg-neutral-800 text-gray-400 hover:text-white"
                     >
-                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </Button>
                     <div className="w-24">
                       <Slider
@@ -414,7 +419,7 @@ export default function FrameCaptureTab() {
                   {/* Capture Button */}
                   <Button 
                     onClick={captureFrame} 
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-green-500 hover:bg-green-600 text-black font-medium"
                     title="Capture frame (C)"
                   >
                     <Camera className="w-4 h-4 mr-2" />
@@ -464,87 +469,92 @@ export default function FrameCaptureTab() {
               </div>
             </div>
           )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Captured Frames Sidebar */}
-        <div className="w-96 border-l border-neutral-800 flex flex-col">
-          <div className="p-4 border-b border-neutral-800">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Captured Frames ({capturedFrames.length})</h3>
-              {capturedFrames.length > 0 && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={downloadAllFrames} 
-                  className="border-neutral-700 hover:bg-neutral-800"
-                >
-                  <Download className="w-4 h-4 mr-1" />
-                  Download All
-                </Button>
-              )}
-            </div>
-          </div>
+          {/* Captured Frames Gallery */}
+          <div className="lg:col-span-1">
+            <Card className="bg-neutral-900/50 border-neutral-800">
+              <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg text-white">Captured Frames ({capturedFrames.length})</CardTitle>
+                {capturedFrames.length > 0 && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={downloadAllFrames} 
+                    className="border-neutral-700 hover:bg-neutral-800 text-white"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    All
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
 
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {capturedFrames.length === 0 ? (
-                <div className="text-center text-neutral-500 py-8">
-                  <Camera className="w-12 h-12 mx-auto mb-3" />
-                  <p className="text-sm">No frames captured yet</p>
-                  <p className="text-xs mt-1">Press 'C' or click capture while video is loaded</p>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <div className="space-y-3">
+                  {capturedFrames.length === 0 ? (
+                    <div className="text-center text-gray-500 py-12">
+                      <Camera className="w-12 h-12 mx-auto mb-3 text-neutral-600" />
+                      <p className="text-sm text-gray-400">No frames captured yet</p>
+                      <p className="text-xs mt-1 text-gray-500">Press 'C' or click capture while video is loaded</p>
+                    </div>
+                  ) : (
+                    capturedFrames.map((frame) => (
+                      <div key={frame.id} className="bg-neutral-950 rounded-lg p-3 border border-neutral-800">
+                        <div className="relative aspect-video mb-2 bg-black rounded overflow-hidden">
+                          <img
+                            src={frame.dataUrl}
+                            alt={`Frame at ${frame.formattedTime}`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Badge variant="secondary" className="bg-neutral-800 text-gray-300">
+                              {frame.formattedTime}
+                            </Badge>
+                            <span className="text-xs text-gray-500 ml-2">
+                              {frame.width}×{frame.height}
+                            </span>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => downloadFrame(frame)}
+                              className="h-7 w-7 hover:bg-neutral-800 text-gray-400 hover:text-white"
+                              title="Download"
+                            >
+                              <Download className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => deleteFrame(frame.id)}
+                              className="h-7 w-7 hover:bg-neutral-800 hover:text-red-500"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              ) : (
-                capturedFrames.map((frame) => (
-                  <Card key={frame.id} className="bg-neutral-900 border-neutral-800">
-                    <CardContent className="p-3">
-                      <div className="relative aspect-video mb-2 bg-black rounded overflow-hidden">
-                        <img
-                          src={frame.dataUrl}
-                          alt={`Frame at ${frame.formattedTime}`}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Badge variant="secondary" className="bg-neutral-800">
-                            {frame.formattedTime}
-                          </Badge>
-                          <span className="text-xs text-neutral-500 ml-2">
-                            {frame.width}×{frame.height}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => downloadFrame(frame)}
-                            className="h-8 w-8 hover:bg-neutral-800"
-                            title="Download"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => deleteFrame(frame.id)}
-                            className="h-8 w-8 hover:bg-neutral-800 hover:text-red-500"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+        </div>
 
-      {/* Hidden canvas for frame extraction */}
-      <canvas ref={canvasRef} className="hidden" />
+        {/* Hidden canvas for frame extraction */}
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
     </div>
   );
 }

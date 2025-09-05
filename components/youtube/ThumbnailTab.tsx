@@ -1,14 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { Download } from 'lucide-react';
+import { 
+  Download, 
+  Loader2, 
+  Image as ImageIcon,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 export default function ThumbnailTab() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [thumbnailData, setThumbnailData] = useState<{
     videoId: string;
     title: string;
@@ -24,6 +36,7 @@ export default function ThumbnailTab() {
 
     setLoading(true);
     setError(null);
+    setSuccess(null);
     setThumbnailData(null);
 
     try {
@@ -42,6 +55,7 @@ export default function ThumbnailTab() {
       }
 
       setThumbnailData(data);
+      setSuccess('Thumbnail loaded successfully!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -90,48 +104,110 @@ export default function ThumbnailTab() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          placeholder="https://www.youtube.com/watch?v=..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="flex-1 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500"
-        />
-        <Button
-          onClick={fetchThumbnail}
-          disabled={loading}
-          className="bg-green-500 hover:bg-green-600 text-black font-medium"
-        >
-          {loading ? 'Loading...' : 'Get Thumbnail'}
-        </Button>
+    <div className="min-h-screen bg-neutral-950 text-white">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Input Section - Match Transcript style */}
+        <div className="mb-8">
+          <div className="flex gap-3">
+            <Input
+              type="text"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={loading}
+              className="flex-1 bg-neutral-900/50 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-green-500 h-12 px-4 text-base"
+            />
+            <Button
+              onClick={fetchThumbnail}
+              disabled={loading || !url.trim()}
+              className="bg-green-500 hover:bg-green-600 text-black font-medium min-w-[140px] h-12 text-base"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Get Thumbnail
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert className="mb-6 bg-red-950/50 border-red-900">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-red-400">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Success Alert */}
+        {success && !error && (
+          <Alert className="mb-6 bg-green-950/50 border-green-900">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription className="text-green-400">{success}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Thumbnail Display */}
+        {thumbnailData && (
+          <Card className="bg-neutral-900/50 border-neutral-800">
+            <CardHeader>
+              <div className="space-y-2">
+                <CardTitle className="text-xl text-white">{thumbnailData.title}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-neutral-800 text-gray-300">
+                    {thumbnailData.channel}
+                  </Badge>
+                  <Badge variant="outline" className="border-green-500 text-green-500">
+                    Video ID: {thumbnailData.videoId}
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="relative group">
+                <img
+                  src={thumbnailData.thumbnailUrl}
+                  alt={thumbnailData.title}
+                  className="w-full rounded-lg border border-neutral-800"
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <Button
+                    onClick={downloadThumbnail}
+                    size="lg"
+                    className="bg-green-500 hover:bg-green-600 text-black font-medium"
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    Download Full Resolution
+                  </Button>
+                </div>
+              </div>
+              
+              <Separator className="bg-neutral-800" />
+              
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-400">
+                  Maximum available resolution • JPG format
+                </div>
+                <Button
+                  onClick={downloadThumbnail}
+                  variant="outline"
+                  className="border-neutral-700 hover:bg-neutral-800 text-white"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Thumbnail
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
-          {error}
-        </div>
-      )}
-
-      {thumbnailData && (
-        <div className="space-y-4">
-          <img
-            src={thumbnailData.thumbnailUrl}
-            alt={thumbnailData.title}
-            className="w-full rounded-lg"
-          />
-          
-          <Button
-            onClick={downloadThumbnail}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download Thumbnail
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -419,22 +419,7 @@ export default function TranscriptTabImproved() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
-      {/* Clean Header */}
-      <div className="border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#00ff00]/10 rounded-lg">
-              <Sparkles className="w-6 h-6 text-[#00ff00]" />
-            </div>
-            <h1 className="text-2xl font-semibold">YouTube Transcript</h1>
-          </div>
-          <p className="text-neutral-400 text-sm">
-            AI-powered transcription with Whisper • Supports videos up to 90 minutes
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Input Section - Cleaner Card */}
         <Card className="bg-neutral-900/50 border-neutral-800 backdrop-blur-sm mb-8">
           <div className="p-6">
