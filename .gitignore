@@ -105,3 +105,5 @@ debug-*.js
 /logs/*.log
 .codex/
 chrome-extension/config.js
+
+data/thumbnails/
