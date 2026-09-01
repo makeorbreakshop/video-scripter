@@ -8,6 +8,7 @@
 
 import pg from 'pg';
 import { createClient } from '@supabase/supabase-js';
+import { day30Estimate, rawBaselineAt, baselineRatio, temporalScore } from './baselines/core';
 
 const { Pool } = pg;
 
@@ -44,43 +45,8 @@ export class TemporalBaselineProcessor {
   /**
    * Get Day 30 estimate for a video using closest snapshot or curve-based backfill
    */
-  private getDay30Estimate(
-    video: any, 
-    snapshots: Map<string, any[]>
-  ): number {
-    const day30Envelope = this.envelopes.get(30) || 29742;
-    
-    // Find snapshots for this video closest to Day 30
-    const videoSnapshots = snapshots.get(video.id) || [];
-    
-    if (videoSnapshots.length > 0) {
-      // Find snapshot closest to Day 30
-      let closestSnapshot = null;
-      let minDistance = Infinity;
-      
-      for (const snapshot of videoSnapshots) {
-        const distance = Math.abs(snapshot.days_since_published - 30);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestSnapshot = snapshot;
-        }
-      }
-      
-      if (closestSnapshot) {
-        // Use closest snapshot with curve adjustment
-        const daysAtSnapshot = closestSnapshot.days_since_published;
-        const curveAtSnapshot = this.envelopes.get(Math.min(daysAtSnapshot, 365)) || day30Envelope;
-        return closestSnapshot.view_count * (day30Envelope / curveAtSnapshot);
-      }
-    }
-    
-    // Fallback: use current views with curve adjustment
-    const currentAge = Math.floor(video.age_days);
-    const curveAtCurrent = this.envelopes.get(Math.min(currentAge, 365)) || day30Envelope;
-    
-    // If video is less than 30 days old, project forward
-    // If video is more than 30 days old, backfill to Day 30
-    return video.view_count * (day30Envelope / curveAtCurrent);
+  private getDay30Estimate(video: any, snapshots: Map<string, any[]>): number {
+    return day30Estimate(video.view_count, video.age_days, snapshots.get(video.id) || [], this.envelopes);
   }
 
   /**
@@ -91,49 +57,7 @@ export class TemporalBaselineProcessor {
     allVideos: any[], 
     currentIndex: number
   ): number {
-    // First video: baseline = its own Day 30 estimate
-    if (currentIndex === 0) {
-      return currentVideo.day30_estimate;
-    }
-    
-    // Get all previous videos
-    const previousVideos = allVideos.slice(0, currentIndex);
-    
-    // Calculate which videos were "mature" (>30 days old) at time of current video's publication
-    const currentPubDate = new Date(currentVideo.published_at);
-    const matureVideos = [];
-    
-    for (const prevVideo of previousVideos) {
-      const prevPubDate = new Date(prevVideo.published_at);
-      const daysDiff = (currentPubDate.getTime() - prevPubDate.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (daysDiff > 30) {
-        matureVideos.push(prevVideo);
-      }
-    }
-    
-    // Determine which videos to use for baseline
-    let videosForBaseline;
-    
-    if (currentIndex <= 10) {
-      // Videos 2-10: use all previous videos
-      videosForBaseline = previousVideos;
-    } else if (matureVideos.length >= 10) {
-      // Videos 11+: use last 10 mature videos
-      videosForBaseline = matureVideos.slice(-10);
-    } else {
-      // Not enough mature videos, use last 10 available
-      videosForBaseline = previousVideos.slice(-10);
-    }
-    
-    // Get Day 30 estimates for baseline videos
-    const day30Estimates = videosForBaseline.map(v => v.day30_estimate);
-    
-    // Calculate median
-    const median = this.calculateMedian(day30Estimates);
-    
-    // Ensure baseline is at least 1 to avoid division by zero
-    return Math.max(median, 1);
+    return rawBaselineAt(allVideos, currentIndex);
   }
 
   /**
@@ -272,16 +196,16 @@ export class TemporalBaselineProcessor {
           
           const video = allChannelVideos[videoIndex];
           
-          // Calculate temporal baseline using all previous videos
-          const baseline = this.calculateTemporalBaseline(video, allChannelVideos, videoIndex);
-          
-          // Calculate performance score (Day 30 estimate / baseline)
-          const score = video.day30_estimate / baseline;
-          
+          // UNIFIED CONVENTION (2026-09-01): store the dimensionless ratio,
+          // score = day30 / (ratio * globalP50Day30) == day30 / rawMedian.
+          const rawBaseline = this.calculateTemporalBaseline(video, allChannelVideos, videoIndex);
+          const ratio = baselineRatio(rawBaseline, this.envelopes);
+          const score = temporalScore(video.day30_estimate, ratio, this.envelopes);
+
           allUpdates.push({
             id: video.id,
-            baseline: Number(baseline),
-            score: Number(Math.min(score, 99999.999))
+            baseline: Number(ratio),
+            score: Number(score)
           });
         }
       }
