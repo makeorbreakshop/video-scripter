@@ -9,7 +9,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseUrl, getSupabaseServiceKey } from './env-config.ts';
+import { getSupabaseUrl, getSupabaseServiceKey } from './env-config';
 
 const supabaseUrl = getSupabaseUrl();
 const supabaseServiceKey = getSupabaseServiceKey();
@@ -29,6 +29,12 @@ export const supabaseAdmin = createClient(
   }
 );
 
+// Backwards-compatible server accessor used by API routes that should never
+// instantiate an anonymous client.
+export function getSupabase() {
+  return supabaseAdmin;
+}
+
 /**
  * Creates a fresh Supabase admin client
  * Useful when you need a client with specific settings or in environments
@@ -45,4 +51,4 @@ export function createAdminClient() {
       }
     }
   );
-} 
+}
