@@ -22,7 +22,7 @@
   }
   async function enqueue(items) {
     if (!items.length) return { ok: true, sent: 0 };
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue?on_conflict=kind,ref`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -50,7 +50,7 @@
 
   // chrome-extension/src/background.js
   chrome.runtime.onInstalled.addListener(() => {
-    chrome.alarms.create("flush", { periodInMinutes: 5 });
+    chrome.alarms.create("flush", { periodInMinutes: 1 });
   });
   chrome.alarms.onAlarm.addListener(async (a) => {
     if (a.name === "flush") {
@@ -67,5 +67,23 @@
     const parsed = parseYouTubeUrl(tab.url);
     if (!parsed) return;
     await bufferAdd({ ...parsed, source_url: tab.url.split("&")[0], mode: "passive" });
+  });
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === "feedIds" && Array.isArray(msg.ids)) {
+      (async () => {
+        for (const id of msg.ids.slice(0, 200)) {
+          if (/^[A-Za-z0-9_-]{6,20}$/.test(id)) {
+            await bufferAdd({ kind: "video", ref: id, source_url: `feed:${msg.page || ""}`, mode: "feed" });
+          }
+        }
+        const { pending = [] } = await chrome.storage.local.get("pending");
+        if (pending.length >= 15) {
+          try {
+            await flushBuffer();
+          } catch {
+          }
+        }
+      })();
+    }
   });
 })();

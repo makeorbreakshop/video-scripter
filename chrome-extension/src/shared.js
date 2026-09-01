@@ -21,7 +21,7 @@ export function parseYouTubeUrl(url) {
 
 export async function enqueue(items) {
   if (!items.length) return { ok: true, sent: 0 };
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue?on_conflict=kind,ref`, {
     method: 'POST',
     headers: {
       apikey: SUPABASE_ANON_KEY,
@@ -48,4 +48,12 @@ export async function flushBuffer() {
   const res = await enqueue(pending);
   if (res.ok) await chrome.storage.local.set({ pending: [], lastSync: Date.now() });
   return res;
+}
+
+export async function fetchQueue(limit = 12) {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/touch_queue?select=kind,ref,mode,processed_at,result&order=id.desc&limit=${limit}`,
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+  );
+  return res.ok ? res.json() : [];
 }

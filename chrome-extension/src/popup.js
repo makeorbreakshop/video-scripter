@@ -1,4 +1,4 @@
-import { parseYouTubeUrl, enqueue, flushBuffer } from './shared.js';
+import { parseYouTubeUrl, enqueue, flushBuffer, fetchQueue } from './shared.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -34,4 +34,22 @@ async function init() {
   };
 }
 
+async function renderQueue() {
+  try {
+    const rows = await fetchQueue(12);
+    document.getElementById('queue').innerHTML = rows
+      .map((r) => {
+        const done = r.processed_at ? '\u2705' : '\u23f3';
+        const label = (r.result || '').startsWith('already') ? 'known' :
+                      r.processed_at ? (r.result || 'done').split(':')[0] : 'queued';
+        return `<div>${done} <span style="color:#888">[${r.mode}]</span> ${r.ref} <span style="color:#6a6">${label}</span></div>`;
+      })
+      .join('') || '<div style="color:#777">empty</div>';
+  } catch {
+    document.getElementById('queue').textContent = 'queue unavailable';
+  }
+}
+
 init();
+renderQueue();
+setInterval(renderQueue, 5000);

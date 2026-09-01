@@ -22,7 +22,7 @@
   }
   async function enqueue(items) {
     if (!items.length) return { ok: true, sent: 0 };
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue?on_conflict=kind,ref`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -40,6 +40,13 @@
     const res = await enqueue(pending);
     if (res.ok) await chrome.storage.local.set({ pending: [], lastSync: Date.now() });
     return res;
+  }
+  async function fetchQueue(limit = 12) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/touch_queue?select=kind,ref,mode,processed_at,result&order=id.desc&limit=${limit}`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    return res.ok ? res.json() : [];
   }
 
   // chrome-extension/src/popup.js
@@ -72,5 +79,19 @@
       await refreshPending();
     };
   }
+  async function renderQueue() {
+    try {
+      const rows = await fetchQueue(12);
+      document.getElementById("queue").innerHTML = rows.map((r) => {
+        const done = r.processed_at ? "\u2705" : "\u23F3";
+        const label = (r.result || "").startsWith("already") ? "known" : r.processed_at ? (r.result || "done").split(":")[0] : "queued";
+        return `<div>${done} <span style="color:#888">[${r.mode}]</span> ${r.ref} <span style="color:#6a6">${label}</span></div>`;
+      }).join("") || '<div style="color:#777">empty</div>';
+    } catch {
+      document.getElementById("queue").textContent = "queue unavailable";
+    }
+  }
   init();
+  renderQueue();
+  setInterval(renderQueue, 5e3);
 })();

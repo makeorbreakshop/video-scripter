@@ -8,7 +8,7 @@ import path from 'path';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const ext = path.join(dir, '../chrome-extension');
 
-for (const entry of ['background', 'popup']) {
+for (const entry of ['background', 'popup', 'content']) {
   await build({
     entryPoints: [path.join(ext, `src/${entry}.js`)],
     bundle: true,
