@@ -2,8 +2,11 @@
 -- All corpus/background work observed in production runs as service_role. The
 -- only anonymous write retained is a validated Chrome-extension touch enqueue.
 BEGIN;
-SET LOCAL lock_timeout = '5s';
-SET LOCAL statement_timeout = '60s';
+-- The large videos table has continuous short-lived analytics readers. Once
+-- this AccessExclusive request is queued, new readers wait behind it and the
+-- metadata-only ALTER can complete as soon as existing readers drain.
+SET LOCAL lock_timeout = '120s';
+SET LOCAL statement_timeout = '150s';
 
 DO $hardening$
 DECLARE
