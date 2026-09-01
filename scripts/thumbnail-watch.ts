@@ -13,7 +13,13 @@ import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
 
 const maxVideos = parseInt(process.argv[2] || '25000', 10);
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 4,
+  // batch job: the target-selection query legitimately scans the 30-day window;
+  // the connection-level 2min statement_timeout was killing it (57014)
+  options: '-c statement_timeout=0',
+});
 const STORE = path.join(path.dirname(new URL(import.meta.url).pathname), '../data/thumbnails');
 
 const { rows: targets } = await pool.query(
