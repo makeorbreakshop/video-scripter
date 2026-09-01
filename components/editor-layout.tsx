@@ -8,7 +8,7 @@ import { ResourcePanel } from "@/components/resource-panel"
 import { ProjectManager, type Project } from "@/components/project-manager"
 import { WorkflowPhase, type Document, type DocumentType } from "@/types/workflow"
 import { Maximize2, SplitSquareVertical, SplitSquareHorizontal } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { workspaceApi } from "@/lib/workspace-api"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -113,29 +113,8 @@ export function EditorLayout() {
     setIsLoading(true)
 
     try {
-      console.log("Attempting to connect to Supabase:", 
-        supabase ? "Client initialized" : "Client missing",
-        user ? "User authenticated (ID: " + user.id + ")" : "No user"
-      )
-
-      // Fetch projects
-      console.log("Fetching projects");
-      const { data: projectsData, error: projectsError } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-        .limit(10)
-
-      if (projectsError) {
-        console.error("Project fetch error details:", {
-          code: projectsError.code,
-          message: projectsError.message,
-          details: projectsError.details,
-          hint: projectsError.hint
-        })
-        throw projectsError
-      }
+      console.log("Fetching authenticated workspace projects")
+      const projectsData = await workspaceApi.listProjects(10)
 
       console.log("Projects found:", projectsData?.length || 0);
 
@@ -153,6 +132,11 @@ export function EditorLayout() {
       }
 
       console.log("Successfully fetched project:", project.id)
+      setProjects(projectsData.map((item) => ({
+        ...item,
+        created_at: new Date(item.created_at),
+        updated_at: new Date(item.updated_at),
+      })))
       setCurrentProject(project)
 
       // Fetch documents for this project
@@ -192,69 +176,26 @@ export function EditorLayout() {
 
     try {
       console.log("Starting to create default project for user:", user.id)
-      const now = new Date().toISOString()
-
-      // Create a default project
-      console.log("Inserting default project into database")
-      const { data: projectData, error: projectError } = await supabase
-        .from("projects")
-        .insert({
-          name: "My First Project",
-          user_id: user.id,
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-
-      if (projectError) {
-        console.error("Error creating default project:", projectError)
-        throw projectError
-      }
-
-      if (!projectData || projectData.length === 0) {
-        console.error("No project data returned after insert")
-        throw new Error("Failed to create project - no data returned")
-      }
-
-      console.log("Default project created successfully:", projectData[0].id)
+      const workspace = await workspaceApi.createDefaultWorkspace("My First Project", scriptData)
+      console.log("Default project created successfully:", workspace.project.id)
       const project = {
-        ...projectData[0],
-        created_at: new Date(projectData[0].created_at),
-        updated_at: new Date(projectData[0].updated_at),
+        ...workspace.project,
+        created_at: new Date(workspace.project.created_at),
+        updated_at: new Date(workspace.project.updated_at),
       }
 
       setCurrentProject(project)
 
       // Create a default document
       console.log("Creating default document for project:", project.id)
-      const { data: docData, error: docError } = await supabase
-        .from("documents")
-        .insert({
-          title: "Personal Notes",
-          type: "notes",
-          content: "",
-          project_id: project.id,
-          user_id: user.id,
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-
-      if (docError) {
-        console.error("Error creating default document:", docError)
-        throw docError
-      }
-
-      if (!docData || docData.length === 0) {
-        console.error("No document data returned after insert")
-        throw new Error("Failed to create document - no data returned")
-      }
-
-      console.log("Default document created successfully:", docData[0].id)
+      console.log("Default document created successfully:", workspace.document.id)
       const document = {
-        ...docData[0],
-        createdAt: new Date(docData[0].created_at),
-        updatedAt: new Date(docData[0].updated_at),
+        id: workspace.document.id,
+        title: workspace.document.title,
+        type: workspace.document.type,
+        content: workspace.document.content,
+        createdAt: new Date(workspace.document.created_at),
+        updatedAt: new Date(workspace.document.updated_at),
       }
 
       setDocuments([document])
@@ -263,24 +204,6 @@ export function EditorLayout() {
         ...splitView,
         primaryDocId: document.id,
       })
-
-      // Create default script data
-      console.log("Creating default script data for project:", project.id)
-      const { data: scriptDataResult, error: scriptError } = await supabase
-        .from("script_data")
-        .insert({
-          project_id: project.id,
-          user_id: user.id,
-          data: scriptData,
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-
-      if (scriptError) {
-        console.error("Error creating default script data:", scriptError)
-        throw scriptError
-      }
 
       console.log("Default setup completed successfully")
       return project
@@ -295,14 +218,7 @@ export function EditorLayout() {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      if (error) throw error
+      const data = await workspaceApi.listDocuments(projectId)
 
       if (data) {
         const formattedDocs = data.map((doc) => ({
@@ -337,28 +253,12 @@ export function EditorLayout() {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
-        .from("script_data")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("user_id", user.id)
-        .single()
+      const data = await workspaceApi.getScriptData(projectId)
 
-      if (error) {
-        if (error.code === "PGRST116") {
-          // No script data found, create default
-          await supabase.from("script_data").insert({
-            project_id: projectId,
-            user_id: user.id,
-            data: scriptData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-        } else {
-          throw error
-        }
-      } else if (data) {
-        setScriptData(data.data)
+      if (!data) {
+        await workspaceApi.saveScriptData(projectId, scriptData)
+      } else {
+        setScriptData(data.data as typeof scriptData)
       }
     } catch (error) {
       console.error("Error fetching script data:", error)
@@ -375,16 +275,7 @@ export function EditorLayout() {
     setScriptData(updatedData)
 
     try {
-      const { error } = await supabase
-        .from("script_data")
-        .update({
-          data: updatedData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("project_id", currentProject.id)
-        .eq("user_id", user.id)
-
-      if (error) throw error
+      await workspaceApi.saveScriptData(currentProject.id, updatedData)
     } catch (error) {
       console.error("Error updating script data:", error)
       toast({
@@ -397,25 +288,13 @@ export function EditorLayout() {
     if (!user) return null
 
     try {
-      const now = new Date().toISOString()
+      const data = await workspaceApi.createProject(name)
 
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
-          name,
-          user_id: user.id,
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-
-      if (error) throw error
-
-      if (data && data[0]) {
+      if (data) {
         const newProject = {
-          ...data[0],
-          created_at: new Date(data[0].created_at),
-          updated_at: new Date(data[0].updated_at),
+          ...data,
+          created_at: new Date(data.created_at),
+          updated_at: new Date(data.updated_at),
         }
 
         setProjects([...projects, newProject])
@@ -497,27 +376,15 @@ export function EditorLayout() {
 
     try {
       console.log(`[Update Document] Saving to database...`);
-      // Create the update payload with proper values
-      const updatePayload: any = {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Ensure content is properly included in the database update
+      const updatePayload: { title?: string; type?: DocumentType; content?: string } = {};
+      if (updates.title !== undefined) updatePayload.title = updates.title;
+      if (updates.type !== undefined) updatePayload.type = updates.type;
       if (updates.content !== undefined) {
         updatePayload.content = updates.content;
         console.log(`[Update Document] Including content in DB update, length: ${updates.content.length}`);
       }
-      
-      const { error } = await supabase
-        .from("documents")
-        .update(updatePayload)
-        .eq("id", id);
 
-      if (error) {
-        console.error(`[Update Document] Error updating in database:`, error);
-        throw error;
-      }
+      await workspaceApi.updateDocument(id, updatePayload)
       
       console.log(`[Update Document] Successfully saved to database`);
     } catch (error) {
@@ -543,9 +410,7 @@ export function EditorLayout() {
     }
 
     try {
-      const { error } = await supabase.from("documents").delete().eq("id", id).eq("user_id", user.id)
-
-      if (error) throw error
+      await workspaceApi.deleteDocument(id)
 
       const newDocs = documents.filter((doc) => doc.id !== id)
       setDocuments(newDocs)
@@ -632,44 +497,19 @@ export function EditorLayout() {
 
     try {
       // Create in database with content
-      const { data, error } = await supabase
-        .from("documents")
-        .insert({
-          title,
-          type,
-          content: initialContent,
-          project_id: currentProject.id,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select();
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error("Document creation failed - no data returned");
-      }
+      const data = await workspaceApi.createDocument(currentProject.id, title, type, initialContent)
 
       // Create document object
       const newDocument: Document = {
-        id: data[0].id,
-        title: data[0].title,
-        type: data[0].type as DocumentType,
+        id: data.id,
+        title: data.title,
+        type: data.type as DocumentType,
         content: initialContent, // Use initialContent directly
-        createdAt: new Date(data[0].created_at),
-        updatedAt: new Date(data[0].updated_at),
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
         save: async function() {
           try {
-            const { error } = await supabase
-              .from("documents")
-              .update({
-                content: this.content,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", this.id);
-            
-            if (error) throw error;
+            await workspaceApi.updateDocument(this.id, { content: this.content })
             
             // Update state
             setDocuments(docs => 
@@ -979,4 +819,3 @@ export function EditorLayout() {
     </div>
   )
 }
-

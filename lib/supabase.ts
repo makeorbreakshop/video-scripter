@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseUrl, getSupabaseAnonKey } from './env-config.ts';
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceKey } from './env-config.ts';
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
 export function getSupabase() {
   if (!supabaseInstance) {
     const supabaseUrl = getSupabaseUrl();
-    const supabaseAnonKey = getSupabaseAnonKey();
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    const supabaseKey = typeof window === 'undefined' ? getSupabaseServiceKey() : getSupabaseAnonKey();
+    if (!supabaseKey) throw new Error('Missing Supabase key for the current runtime');
+    supabaseInstance = createClient(supabaseUrl, supabaseKey);
   }
   return supabaseInstance;
 }
@@ -24,4 +25,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
     return prop in instance;
   }
 });
-

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Folder, FolderPlus, Edit2, Trash2, X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
+import { workspaceApi } from "@/lib/workspace-api"
 import { useAuth } from "@/contexts/auth-context"
 
 export interface Project {
@@ -46,13 +46,7 @@ export function ProjectManager({ isOpen, onClose, currentProject, onOpenProject 
     setIsLoading(true)
 
     try {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      if (error) throw error
+      const data = await workspaceApi.listProjects()
 
       setProjects(
         data.map((project) => ({
@@ -81,25 +75,13 @@ export function ProjectManager({ isOpen, onClose, currentProject, onOpenProject 
     }
 
     try {
-      const now = new Date().toISOString()
+      const data = await workspaceApi.createProject(newProjectName)
 
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
-          name: newProjectName,
-          user_id: user.id,
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-
-      if (error) throw error
-
-      if (data && data[0]) {
+      if (data) {
         const newProject = {
-          ...data[0],
-          created_at: new Date(data[0].created_at),
-          updated_at: new Date(data[0].updated_at),
+          ...data,
+          created_at: new Date(data.created_at),
+          updated_at: new Date(data.updated_at),
         }
 
         setProjects([newProject, ...projects])
@@ -127,16 +109,7 @@ export function ProjectManager({ isOpen, onClose, currentProject, onOpenProject 
     }
 
     try {
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          name: editName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", editingProject.id)
-        .eq("user_id", user.id)
-
-      if (error) throw error
+      await workspaceApi.renameProject(editingProject.id, editName)
 
       setProjects(
         projects.map((project) =>
@@ -167,28 +140,7 @@ export function ProjectManager({ isOpen, onClose, currentProject, onOpenProject 
 
     if (window.confirm(`Are you sure you want to delete "${project.name}"? This action cannot be undone.`)) {
       try {
-        // Delete all documents associated with this project
-        const { error: docsError } = await supabase
-          .from("documents")
-          .delete()
-          .eq("project_id", project.id)
-          .eq("user_id", user.id)
-
-        if (docsError) throw docsError
-
-        // Delete script data associated with this project
-        const { error: scriptError } = await supabase
-          .from("script_data")
-          .delete()
-          .eq("project_id", project.id)
-          .eq("user_id", user.id)
-
-        if (scriptError) throw scriptError
-
-        // Delete the project
-        const { error } = await supabase.from("projects").delete().eq("id", project.id).eq("user_id", user.id)
-
-        if (error) throw error
+        await workspaceApi.deleteProject(project.id)
 
         setProjects(projects.filter((p) => p.id !== project.id))
 
@@ -315,4 +267,3 @@ export function ProjectManager({ isOpen, onClose, currentProject, onOpenProject 
     </Dialog>
   )
 }
-

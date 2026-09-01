@@ -7,7 +7,7 @@ import { AlignJustify, FileText, Loader2, Trash2, Youtube, FileDown, Clipboard, 
 import { useToast } from "@/components/ui/use-toast"
 import { DocumentType } from "@/types/workflow"
 import { getYoutubeTranscript } from "@/lib/youtube-transcript"
-import { supabase } from "@/lib/supabase"
+import { workspaceApi } from "@/lib/workspace-api"
 import { getYoutubeVideoMetadata } from "@/lib/youtube-utils"
 import { fetchYoutubeComments } from "@/lib/youtube-api"
 import Image from "next/image"
@@ -43,11 +43,6 @@ export default function VideoResearchToolImpl({
   isInsideScriptEditor = false,
   hideHeader = false,
 }: VideoResearchToolProps) {
-  // DEVELOPMENT ONLY: Default user ID for testing without authentication
-  // TODO: Remove this in production - all users should be properly authenticated
-  const DEVELOPMENT_USER_ID = "00000000-0000-0000-0000-000000000000"; // Fixed UUID for testing
-  const DEVELOPMENT_PROJECT_ID = "00000000-0000-0000-0000-000000000001"; // Fixed UUID for testing
-  
   // Log data structure and validate it on mount
   useEffect(() => {
     console.log('📊 VideoResearchTool mounted with data:', data);
@@ -89,8 +84,7 @@ export default function VideoResearchToolImpl({
     }
   }, [data, updateData]);
   
-  const effectiveUserId = userId || DEVELOPMENT_USER_ID;
-  const effectiveProjectId = projectId || DEVELOPMENT_PROJECT_ID;
+  const effectiveProjectId = projectId;
   
   // State for video URLs
   const [videoUrl, setVideoUrl] = useState("")
@@ -856,17 +850,6 @@ export default function VideoResearchToolImpl({
       return;
     }
     
-    // Check if userId is available
-    if (!effectiveUserId) {
-      console.error("❌ No user ID provided - can't create document");
-      toast({
-        title: "Error",
-        description: "User authentication required to create documents",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Set loading state
     setIsProcessingTranscripts(true);
     setShowExtraButtons(false);
@@ -1025,195 +1008,17 @@ ${combinedTranscript}`;
       setTranscriptContent(plainContent);
       setShowExtraButtons(true);
       
-      // DIRECT SUPABASE DOCUMENT CREATION
-      console.log('💾 Creating document directly in Supabase...');
-      
-      // Get current project information from Supabase directly
-      console.log('🔍 Getting current project information...');
-      
-      try {
-        // Query to get current user's active projects
-        const { data: currentProjects, error: projectsError } = await supabase
-          .from('projects')
-          .select('id, name, created_at')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (projectsError) {
-          console.error("❌ Error fetching projects:", projectsError);
-          throw new Error(`Couldn't get project info: ${projectsError.message}`);
-        }
-        
-        if (!currentProjects || currentProjects.length === 0) {
-          console.log("⚠️ No projects found in database, checking for current documents...");
-          
-          // Try to get project ID from an existing document
-          const { data: existingDocs, error: docsError } = await supabase
-            .from('documents')
-            .select('project_id')
-            .limit(1);
-          
-          if (docsError || !existingDocs || existingDocs.length === 0) {
-            console.log("⚠️ No project ID found from existing documents, using default project ID");
-            console.log(`🧪 Using fallback project ID: ${effectiveProjectId}`);
-            // Use the effective project ID as fallback
-            const doc = await createDocumentWithProjectId(effectiveProjectId, docTitle, plainContent);
-            
-            if (doc && Array.isArray(doc)) {
-              // If it's an array, use the first element
-              setLastCreatedDocId(doc[0]?.id || null);
-              setLastCreatedDocContent(plainContent);
-              
-              // Show a toast that analysis is now available
-              toast({
-                title: "Document Created",
-                description: "Document created successfully. You can now analyze it with AI.",
-              });
-            } else if (doc) {
-              // If it's a single object
-              setLastCreatedDocId(doc.id || null);
-              setLastCreatedDocContent(plainContent);
-              
-              // Show a toast that analysis is now available
-              toast({
-                title: "Document Created",
-                description: "Document created successfully. You can now analyze it with AI.",
-              });
-            }
-          }
-          
-          // Use project ID from existing document
-          if (existingDocs && existingDocs.length > 0 && existingDocs[0]?.project_id) {
-            const foundProjectId = existingDocs[0].project_id;
-            console.log(`✅ Found project ID from existing document: ${foundProjectId}`);
-            
-            // Create document with this project ID
-            const doc = await createDocumentWithProjectId(foundProjectId, docTitle, plainContent);
-            
-            if (doc && Array.isArray(doc)) {
-              // If it's an array, use the first element
-              setLastCreatedDocId(doc[0]?.id || null);
-              setLastCreatedDocContent(plainContent);
-              
-              // Show a toast that analysis is now available
-              toast({
-                title: "Document Created",
-                description: "Document created successfully. You can now analyze it with AI.",
-              });
-            } else if (doc) {
-              // If it's a single object
-              setLastCreatedDocId(doc.id || null);
-              setLastCreatedDocContent(plainContent);
-              
-              // Show a toast that analysis is now available
-              toast({
-                title: "Document Created",
-                description: "Document created successfully. You can now analyze it with AI.",
-              });
-            }
-          } else {
-            console.warn("No existing documents found to extract project ID");
-            // Use first project ID as fallback
-          }
-        } else {
-          // Use first project ID
-          const foundProjectId = currentProjects[0].id;
-          console.log(`✅ Found project ID from projects table: ${foundProjectId}`);
-          
-          // Create document with this project ID
-          const doc = await createDocumentWithProjectId(foundProjectId, docTitle, plainContent);
-          
-          if (doc && Array.isArray(doc)) {
-            // If it's an array, use the first element
-            setLastCreatedDocId(doc[0]?.id || null);
-            setLastCreatedDocContent(plainContent);
-            
-            // Show a toast that analysis is now available
-            toast({
-              title: "Document Created",
-              description: "Document created successfully. You can now analyze it with AI.",
-            });
-          } else if (doc) {
-            // If it's a single object
-            setLastCreatedDocId(doc.id || null);
-            setLastCreatedDocContent(plainContent);
-            
-            // Show a toast that analysis is now available
-            toast({
-              title: "Document Created",
-              description: "Document created successfully. You can now analyze it with AI.",
-            });
-          }
-        }
-      } catch (projectError) {
-        console.error("❌ Error finding project ID:", projectError);
-        
-        // Final fallback - try to use the documents list endpoint
-        try {
-          console.log("📄 Attempting to create document using documents API...");
-          
-          // Prepare document data without explicit project_id
-          const documentData = {
-            title: docTitle,
-            type: "research",
-            content: plainContent,
-            user_id: effectiveUserId,
-            project_id: effectiveProjectId, // Add the fallback project ID
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          
-          console.log('📄 Document data for fallback method:', JSON.stringify(documentData, null, 2));
-          
-          // Insert document and let Supabase server-side logic handle the project assignment
-          const { data: newDoc, error } = await supabase
-            .from("documents")
-            .insert(documentData)
-            .select();
-          
-          if (error) {
-            console.error("❌ Fallback document creation error:", error);
-            console.error("❌ Error details:", JSON.stringify(error, null, 2));
-            throw new Error(`Database insert error: ${error.message}`);
-          }
-          
-          if (!newDoc || newDoc.length === 0) {
-            console.error("❌ No document data returned from fallback method");
-            throw new Error("Document creation failed - no data returned");
-          }
-          
-          console.log(`✅ Document created with fallback method:`, newDoc);
-          
-          if (newDoc && Array.isArray(newDoc)) {
-            // If it's an array, use the first element
-            setLastCreatedDocId(newDoc[0]?.id || null);
-            setLastCreatedDocContent(plainContent);
-            
-            // Show a toast that analysis is now available
-            toast({
-              title: "Document Created",
-              description: "Document created successfully. You can now analyze it with AI.",
-            });
-          } else if (newDoc) {
-            // If it's a single object
-            // Ensure newDoc has an id property before accessing it
-            const docId = typeof newDoc === 'object' && newDoc !== null && 'id' in newDoc 
-              ? (newDoc as { id: string }).id 
-              : null;
-            
-            setLastCreatedDocId(docId);
-            setLastCreatedDocContent(plainContent);
-            
-            // Show a toast that analysis is now available
-            toast({
-              title: "Document Created",
-              description: "Document created successfully. You can now analyze it with AI.",
-            });
-          }
-        } catch (fallbackError) {
-          throw new Error(`All document creation methods failed: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-        }
-      }
+      console.log("💾 Creating document through the authenticated workspace API")
+      const currentProjects = await workspaceApi.listProjects(1)
+      const targetProjectId = effectiveProjectId || currentProjects[0]?.id ||
+        (await workspaceApi.createProject("Video Research")).id
+      const doc = await createDocumentWithProjectId(targetProjectId, docTitle, plainContent)
+      setLastCreatedDocId(doc.id)
+      setLastCreatedDocContent(plainContent)
+      toast({
+        title: "Document Created",
+        description: "Document created successfully. You can now analyze it with AI.",
+      })
     } catch (error) {
       console.error("🚨 Error creating direct document:", error);
       toast({
@@ -1266,38 +1071,17 @@ ${combinedTranscript}`;
   const createDocumentWithProjectId = async (projectId: string, title: string, content: string): Promise<any> => {
     console.log(`Creating document for project ${projectId}: "${title}" (${content.length} chars)`);
     
-    if (!effectiveUserId) {
-      throw new Error("User ID is required to create documents");
-    }
-
     try {
       // Clean up the transcript content for better formatting
       const cleanedContent = cleanupTranscriptContent(content);
       
       // Create in database
-      const { data, error } = await supabase
-        .from("documents")
-        .insert({
-          title,
-          type: "research",
-          content: cleanedContent,
-          project_id: projectId,
-          user_id: effectiveUserId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select();
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error("Failed to create document: No data returned");
-      }
+      const data = await workspaceApi.createDocument(projectId, title, "research", cleanedContent)
       
-      console.log(`Document created successfully:`, data[0]);
+      console.log(`Document created successfully:`, data);
       
       // Return the newly created document
-      return data[0];
+      return data;
     } catch (error) {
       console.error("Error creating document:", error);
       toast({
@@ -1605,15 +1389,6 @@ ${combinedTranscript}`;
   
   // Save AI analysis as a document
   const saveAnalysisAsDocument = async (content: string) => {
-    if (!effectiveUserId) {
-      toast({
-        title: "Error",
-        description: "User authentication required to create documents",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Create document title based on first video if available
     let docTitle = "AI Video Analysis";
     const firstUrl = localVideoUrls[0] || (data?.videoUrls && data.videoUrls[0]);
