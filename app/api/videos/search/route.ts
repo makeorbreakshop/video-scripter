@@ -6,9 +6,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const requestedLimit = Number.parseInt(searchParams.get('limit') || '20', 10);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 100)
+      : 20;
+    const normalizedQuery = query.trim().toLowerCase();
+    const candidateLimit = normalizedQuery ? 500 : limit;
     
-    let dbQuery = supabase
+    const { data: candidates, error } = await supabase
       .from('videos')
       .select(`
         id,
@@ -18,21 +23,13 @@ export async function GET(request: NextRequest) {
         published_at,
         format_type,
         topic_cluster_id,
-        topic_domain,
-        metadata
+        topic_domain
       `)
       .not('channel_name', 'is', null)
       .not('format_type', 'is', null)
       .not('topic_cluster_id', 'is', null)
-      .order('published_at', { ascending: false })
-      .limit(limit);
-
-    // Add search filter if query provided
-    if (query.trim()) {
-      dbQuery = dbQuery.or(`title.ilike.%${query}%,channel_name.ilike.%${query}%`);
-    }
-
-    const { data: videos, error } = await dbQuery;
+      .order('id', { ascending: true })
+      .limit(candidateLimit);
 
     if (error) {
       console.error('Database error:', error);
@@ -42,14 +39,37 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Keep arbitrary ILIKE input away from the full corpus. The bounded,
+    // primary-key-ordered candidate query stays below PostgREST's timeout.
+    const videos = (candidates || [])
+      .filter(video => !normalizedQuery ||
+        video.title?.toLowerCase().includes(normalizedQuery) ||
+        video.channel_name?.toLowerCase().includes(normalizedQuery))
+      .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))
+      .slice(0, limit);
+
+    const selectedIds = videos.map(video => video.id);
+    const { data: metadataRows, error: metadataError } = selectedIds.length
+      ? await supabase.from('videos').select('id, metadata').in('id', selectedIds)
+      : { data: [], error: null };
+
+    if (metadataError) {
+      console.error('Metadata lookup error:', metadataError);
+    }
+
+    const metadataById = new Map(
+      (metadataRows || []).map(row => [row.id, row.metadata])
+    );
+
     // Process videos to extract channel data
     const processedVideos = videos?.map(video => {
       let subscriberCount = null;
       
       // Try to extract subscriber count from metadata
       try {
-        if (video.metadata && typeof video.metadata === 'object') {
-          const metadata = video.metadata as any;
+        const videoMetadata = metadataById.get(video.id);
+        if (videoMetadata && typeof videoMetadata === 'object') {
+          const metadata = videoMetadata as any;
           if (metadata.channel_stats && metadata.channel_stats.subscriber_count) {
             subscriberCount = parseInt(metadata.channel_stats.subscriber_count);
           }
