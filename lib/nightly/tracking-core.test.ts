@@ -10,14 +10,15 @@ import path from 'path';
 describe('nextTrackDate', () => {
   const today = '2026-08-31';
   it('schedules by tier interval', () => {
-    expect(nextTrackDate(0, today)).toBe('2026-09-01'); // 12h -> next day at daily granularity
+    // DENSE MODE: tiers 0-3 daily during the modeling window, archive weekly
+    expect(nextTrackDate(0, today)).toBe('2026-09-01');
     expect(nextTrackDate(1, today)).toBe('2026-09-01');
-    expect(nextTrackDate(2, today)).toBe('2026-09-03');
-    expect(nextTrackDate(3, today)).toBe('2026-09-07');
-    expect(nextTrackDate(4, today)).toBe('2026-09-30');
+    expect(nextTrackDate(2, today)).toBe('2026-09-01');
+    expect(nextTrackDate(3, today)).toBe('2026-09-01');
+    expect(nextTrackDate(4, today)).toBe('2026-09-07');
   });
-  it('treats unknown tiers as monthly', () => {
-    expect(nextTrackDate(99, today)).toBe('2026-09-30');
+  it('treats unknown tiers as weekly (dense mode)', () => {
+    expect(nextTrackDate(99, today)).toBe('2026-09-07');
   });
 });
 
@@ -48,7 +49,7 @@ describe('buildSnapshotRows', () => {
     const b = buildSnapshotRows(apiItems, tracked, prev, today).find((r) => r.video_id === 'b')!;
     expect(b.view_count).toBe(0);
     expect(b.daily_views_rate).toBeNull();
-    expect(b.next_track_date).toBe('2026-09-07'); // tier 3 -> weekly, per-video not per-batch
+    expect(b.next_track_date).toBe('2026-09-01'); // tier 3 -> daily in dense mode
   });
 });
 

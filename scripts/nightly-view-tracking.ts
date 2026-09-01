@@ -25,12 +25,22 @@ const due = await pool.query(
 console.log(`Videos due for tracking: ${due.rows.length} (cap ${maxApiCalls * 50})`);
 
 let apiCalls = 0;
+let mainBucketCalls = 0;
 let written = 0;
 for (const batch of chunk(due.rows, 50)) {
   const ids = batch.map((r) => r.video_id);
-  const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`
+  // videos:batchGetStats lives in its own 10K-unit daily bucket (June 2026),
+  // keeping the main quota pool free for ingest/discovery. Fallback to
+  // videos.list (main bucket) if the endpoint ever misbehaves.
+  let res = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos:batchGetStats?part=statistics&id=${ids.join(',')}&key=${API_KEY}`
   );
+  if (!res.ok && res.status !== 403) {
+    res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`
+    );
+    mainBucketCalls++;
+  }
   apiCalls++;
   if (!res.ok) {
     console.error(`YouTube API error ${res.status}; stopping.`);
@@ -98,9 +108,10 @@ for (const batch of chunk(due.rows, 50)) {
 await pool.query(
   `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
    on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`,
-  [apiCalls]
+  [mainBucketCalls]
 ).catch((e) => console.warn('quota log skipped:', e.message));
-await pool.query(`insert into quota_ledger (category, units) values ('snapshots', $1)`, [apiCalls]).catch(() => {});
+await pool.query(`insert into quota_ledger (category, units) values ('snapshots-batch', $1)`, [apiCalls - mainBucketCalls]).catch(() => {});
+await pool.query(`insert into quota_ledger (category, units) values ('snapshots', $1)`, [mainBucketCalls]).catch(() => {});
 
-console.log(`Done. ${written} snapshots written, ${apiCalls} YouTube API units used.`);
+console.log(`Done. ${written} snapshots written, ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`);
 await pool.end();

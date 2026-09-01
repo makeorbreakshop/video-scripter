@@ -3,16 +3,19 @@
 // may touch the Supabase REST API — its egress is metered and once took down
 // production (2026-08-31 exceed_egress_quota incident). Direct Postgres only.
 
+// DENSE MODE (modeling window, Sept 2026): tiers 0-3 sampled daily to rebuild
+// the envelope/velocity/prediction models on unbiased dense data; archive weekly.
+// Revert to the envelope-derived schedule once models ship.
 export const TIER_INTERVAL_DAYS: Record<number, number> = {
-  0: 1, // 12-hour tier, tracked at daily granularity by the nightly run
+  0: 1,
   1: 1,
-  2: 3,
-  3: 7,
-  4: 30,
+  2: 1,
+  3: 1,
+  4: 7,
 };
 
 export function nextTrackDate(tier: number, today: string): string {
-  const days = TIER_INTERVAL_DAYS[tier] ?? 30;
+  const days = TIER_INTERVAL_DAYS[tier] ?? 7;
   const d = new Date(today + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().split('T')[0];
