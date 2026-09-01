@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
+import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 
 const maxChannels = parseInt(process.argv[2] || '0', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -62,26 +63,53 @@ async function drainTouchQueue(): Promise<number> {
     for (const c of d.items || []) meta.set(c.id, c);
   }
 
+  // "Tracked" = present in ANY registry (competitor, discovered, legacy
+  // channels, or the corpus itself). Enrolling across registries is the
+  // duplicate-tracking bug — see lib/nightly/enrollment-core.test.ts.
+  const known: KnownChannels = {
+    competitor: new Set(), discovered: new Set(), legacy: new Set(), withVideos: new Set(),
+  };
+  if (uniqueChannels.length) {
+    const [comp, disc, leg, wv] = await Promise.all([
+      pool.query(`select youtube_channel_id id from competitor_youtube_channels where youtube_channel_id = any($1)`, [uniqueChannels]),
+      pool.query(`select channel_id id from discovered_channels where channel_id = any($1)`, [uniqueChannels]),
+      pool.query(`select channel_id id from channels where channel_id = any($1)`, [uniqueChannels]),
+      pool.query(`select distinct channel_id id from videos where channel_id = any($1)`, [uniqueChannels]),
+    ]);
+    for (const r of comp.rows) known.competitor.add(r.id);
+    for (const r of disc.rows) known.discovered.add(r.id);
+    for (const r of leg.rows) known.legacy.add(r.id);
+    for (const r of wv.rows) known.withVideos.add(r.id);
+  }
+
+  const plan = planEnrollment(
+    [...resolved].map(([queueId, channelId]) => ({ queueId, channelId })),
+    known
+  );
+
   let enrolled = 0;
-  for (const [qid, chId] of resolved) {
-    const m = chId ? meta.get(chId) : null;
-    if (chId && m) {
-      const ins = await pool.query(
-        `insert into discovered_channels (channel_id, channel_title, channel_handle, subscriber_count, video_count, view_count, discovery_method)
-         values ($1,$2,$3,$4,$5,$6,'touch_queue') on conflict (channel_id) do nothing`,
-        [chId, m.snippet?.title || chId, m.snippet?.customUrl || null,
-         clampCount(parseInt(m.statistics?.subscriberCount || '0', 10)),
-         clampCount(parseInt(m.statistics?.videoCount || '0', 10)),
-         clampCount(parseInt(m.statistics?.viewCount || '0', 10))]
-      ).catch((e) => { console.error(`enroll ${chId}: ${e.message}`); return { rowCount: 0 }; });
-      if (ins.rowCount) enrolled++;
-    }
+  for (const chId of plan.toEnroll) {
+    const m = meta.get(chId);
+    if (!m) continue;
+    const ins = await pool.query(
+      `insert into discovered_channels (channel_id, channel_title, channel_handle, subscriber_count, video_count, view_count, discovery_method)
+       values ($1,$2,$3,$4,$5,$6,'touch_queue') on conflict (channel_id) do nothing`,
+      [chId, m.snippet?.title || chId, m.snippet?.customUrl || null,
+       clampCount(parseInt(m.statistics?.subscriberCount || '0', 10)),
+       clampCount(parseInt(m.statistics?.videoCount || '0', 10)),
+       clampCount(parseInt(m.statistics?.viewCount || '0', 10))]
+    ).catch((e) => { console.error(`enroll ${chId}: ${e.message}`); return { rowCount: 0 }; });
+    if (ins.rowCount) enrolled++;
+  }
+
+  for (const [qid, label] of plan.results) {
     await pool.query(
       `update touch_queue set processed_at = now(), result = $2 where id = $1`,
-      [qid, chId ? `enrolled:${chId}` : 'unresolved']
+      [qid, label]
     );
   }
-  console.log(`Touch queue: ${rows.length} processed, ${enrolled} new channels enrolled`);
+  const already = [...plan.results.values()].filter((v) => v.startsWith('already-tracked')).length;
+  console.log(`Touch queue: ${rows.length} processed, ${enrolled} new channels enrolled, ${already} already tracked`);
   return enrolled;
 }
 await drainTouchQueue();

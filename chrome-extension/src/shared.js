@@ -1,7 +1,7 @@
 // Shared helpers: URL parsing + queue sync. No page scraping — we only ever
 // capture IDs/handles from URLs; all real data comes from the official API
 // server-side.
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, LOCAL_API } from './config.js';
 
 export function parseYouTubeUrl(url) {
   try {
@@ -32,7 +32,7 @@ export async function enqueue(items) {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'resolution=ignore-duplicates',
+      Prefer: 'resolution=ignore-duplicates,return=minimal',
     },
     body: JSON.stringify(items),
   });
@@ -62,7 +62,13 @@ export async function flushBuffer() {
   return res;
 }
 
+// Local app first (direct Postgres, unmetered); Supabase REST only as a
+// fallback when the app isn't running.
 export async function fetchView(view, params = '') {
+  try {
+    const res = await fetch(`${LOCAL_API}/api/extension/view?name=${view}`);
+    if (res.ok) return res.json();
+  } catch { /* app down */ }
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${view}${params}`, {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
   });

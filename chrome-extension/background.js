@@ -35,7 +35,7 @@
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "resolution=ignore-duplicates"
+        Prefer: "resolution=ignore-duplicates,return=minimal"
       },
       body: JSON.stringify(items)
     });
@@ -65,6 +65,14 @@
     chrome.alarms.create("flush", { periodInMinutes: 1 });
     const cur = await chrome.storage.local.get("passive");
     if (!("passive" in cur)) await chrome.storage.local.set({ passive: true });
+    const tabs = await chrome.tabs.query({ url: "https://www.youtube.com/*" });
+    for (const t of tabs) {
+      if (!t.id) continue;
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["content.js"] });
+      } catch {
+      }
+    }
   });
   chrome.alarms.onAlarm.addListener(async (a) => {
     if (a.name === "flush") {

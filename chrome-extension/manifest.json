@@ -1,15 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Channel Ingest (personal)",
-  "version": "1.6.1",
+  "version": "1.8.0",
   "description": "Click to ingest YouTube channels/videos into the video-scripter tracker; optional passive logging of what you watch.",
   "permissions": [
     "storage",
     "tabs",
-    "alarms"
+    "alarms",
+    "scripting"
   ],
   "host_permissions": [
-    "https://mhzwrynnfphlxqcqytrj.supabase.co/*"
+    "https://mhzwrynnfphlxqcqytrj.supabase.co/*",
+    "http://localhost:3210/*"
   ],
   "background": {
     "service_worker": "background.js"

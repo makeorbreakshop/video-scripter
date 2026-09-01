@@ -6,6 +6,19 @@ chrome.runtime.onInstalled.addListener(async () => {
   chrome.alarms.create('flush', { periodInMinutes: 1 });
   const cur = await chrome.storage.local.get('passive');
   if (!('passive' in cur)) await chrome.storage.local.set({ passive: true });
+
+  // Re-inject the content script into every open YouTube tab. Without this,
+  // an extension reload orphans the scripts in existing tabs (YouTube is an
+  // SPA, so tabs rarely full-load) and badges silently die until a manual
+  // hard refresh. The content script's window.__ciVersion guard makes this
+  // idempotent.
+  const tabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
+  for (const t of tabs) {
+    if (!t.id) continue;
+    try {
+      await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['content.js'] });
+    } catch { /* chrome:// pages, discarded tabs */ }
+  }
 });
 
 chrome.alarms.onAlarm.addListener(async (a) => {

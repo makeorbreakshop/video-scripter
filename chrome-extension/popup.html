@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px -apple-system, sans-serif; width: 340px; margin: 0; padding: 0; background: #111; color: #eee; }
+  header { display:flex; justify-content:space-between; align-items:baseline; padding: 12px 14px 8px; }
+  header h1 { font-size: 14px; margin: 0; }
+  header h1 span { font-weight: 400; color: #777; font-size: 11px; margin-left: 6px; }
+  header .sub { font-size:11px; color:#888; font-variant-numeric: tabular-nums; }
+  nav { display:flex; border-bottom:1px solid #2a2a2a; }
+  nav button { flex:1; background:none; border:0; color:#888; padding:8px 0; font-size:12px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; }
+  nav button.on { color:#fff; border-bottom-color:#2e7d32; }
+  .tab { display:none; padding: 12px 14px; }
+  .tab.on { display:block; }
+  #ingest { width:100%; padding: 9px; border: 0; border-radius: 7px; font-weight: 600; cursor: pointer; background: #2e7d32; color: #fff; margin-bottom:8px; }
+  #no-page { color:#777; font-size:12px; margin-bottom:8px; }
+  .row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  #status { margin-top: 6px; color: #9e9; min-height: 14px; font-size: 11px; }
+  #detected { color: #aaa; word-break: break-all; font-size: 11px; margin-bottom:6px; }
+  .muted { color: #777; font-size: 10px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:6px; }
+  .stat { background:#1b1b1b; border-radius:7px; padding:7px 8px; }
+  .stat b { display:block; font-size:15px; color:#fff; font-variant-numeric: tabular-nums; }
+  .stat span { font-size:10px; color:#888; }
+  #chart { display:flex; align-items:flex-end; gap:2px; height:44px; margin-top:6px; }
+  #chart div { flex:1; background:#2e7d32; border-radius:2px 2px 0 0; min-height:2px; }
+  .list { max-height:220px; overflow-y:auto; font-size:11px; line-height:1.9; }
+  .list .nm { color:#ddd; }
+  .list .meta { color:#777; }
+  .dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+  .dot.ok { background:#2e7d32; } .dot.warn { background:#b26a00; } .dot.bad { background:#b33; } .dot.idle { background:#555; }
+  a { color:#6a6; font-size:10px; }
+  /* health tab */
+  .hrow { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid #1e1e1e; font-size:12px; }
+  .hrow:last-child { border-bottom:0; }
+  .hrow .k { color:#999; flex-shrink:0; }
+  .hrow .v { text-align:right; color:#ddd; font-variant-numeric: tabular-nums; }
+  .hrow .v small { display:block; color:#777; font-size:10px; }
+</style>
+</head>
+<body>
+  <header><h1>Channel Ingest<span id="ver"></span></h1><span class="sub" id="quota"></span></header>
+  <nav>
+    <button data-tab="ingest" class="on">Ingest</button>
+    <button data-tab="queue">Queue</button>
+    <button data-tab="stats">Stats</button>
+    <button data-tab="health">Health</button>
+  </nav>
+
+  <div class="tab on" id="tab-ingest">
+    <div id="detected" hidden></div>
+    <button id="ingest" hidden>Ingest</button>
+    <div id="no-page">Open a YouTube channel or video, then reopen this popup to ingest it directly.</div>
+    <div class="row">
+      <label for="passive" style="font-size:12px">Passive + feed logging</label>
+      <input type="checkbox" id="passive">
+    </div>
+    <div class="muted">Auto-captures every channel/video YouTube shows you. Syncs every minute.</div>
+    <div id="status"></div>
+  </div>
+
+  <div class="tab" id="tab-queue">
+    <div class="muted" style="margin-bottom:4px">channel candidates (from your browsing — not yet tracked)</div>
+    <div id="cands" class="list" style="max-height:130px;"></div>
+    <div class="row" style="margin:10px 0 4px"><span class="muted">recent activity</span><a id="sync" href="#">sync now</a></div>
+    <div id="queue" class="list" style="max-height:110px;"></div>
+  </div>
+
+  <div class="tab" id="tab-stats">
+    <div class="grid">
+      <div class="stat"><b id="s-ch">–</b><span>channels</span></div>
+      <div class="stat"><b id="s-vid">–</b><span>videos</span></div>
+      <div class="stat"><b id="s-snap">–</b><span>snaps today</span></div>
+    </div>
+    <div class="muted"><span id="s-q">–</span> queued · <span id="s-done">–</span> ingested today · <span id="s-cost"></span></div>
+    <div class="muted" style="margin-top:10px">videos added, last 14 days</div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="tab" id="tab-health">
+    <div id="health"></div>
+    <div id="health-hint" class="muted" style="margin-top:8px"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
