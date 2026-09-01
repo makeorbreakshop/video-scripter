@@ -5,7 +5,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
-import { chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
+import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
 
 const maxChannels = parseInt(process.argv[2] || '0', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -70,9 +70,9 @@ async function drainTouchQueue(): Promise<number> {
         `insert into discovered_channels (channel_id, channel_title, channel_handle, subscriber_count, video_count, view_count, discovery_method)
          values ($1,$2,$3,$4,$5,$6,'touch_queue') on conflict (channel_id) do nothing`,
         [chId, m.snippet?.title || chId, m.snippet?.customUrl || null,
-         parseInt(m.statistics?.subscriberCount || '0', 10),
-         parseInt(m.statistics?.videoCount || '0', 10),
-         parseInt(m.statistics?.viewCount || '0', 10)]
+         clampCount(parseInt(m.statistics?.subscriberCount || '0', 10)),
+         clampCount(parseInt(m.statistics?.videoCount || '0', 10)),
+         clampCount(parseInt(m.statistics?.viewCount || '0', 10))]
       ).catch((e) => { console.error(`enroll ${chId}: ${e.message}`); return { rowCount: 0 }; });
       if (ins.rowCount) enrolled++;
     }
@@ -155,9 +155,9 @@ for (const group of chunk(newIds, 50)) {
           sn.channelId,
           sn.channelTitle || '',
           sn.publishedAt,
-          parseInt(st.viewCount || '0', 10),
-          parseInt(st.likeCount || '0', 10),
-          parseInt(st.commentCount || '0', 10),
+          clampCount(parseInt(st.viewCount || '0', 10)),
+          clampCount(parseInt(st.likeCount || '0', 10)),
+          clampCount(parseInt(st.commentCount || '0', 10)),
           v.contentDetails?.duration || null,
           sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
         ]
@@ -166,7 +166,7 @@ for (const group of chunk(newIds, 50)) {
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
          values ($1, current_date, $2, $3, $4, (current_date - $5::date))
          on conflict (video_id, snapshot_date) do nothing`,
-        [v.id, parseInt(st.viewCount || '0', 10), parseInt(st.likeCount || '0', 10), parseInt(st.commentCount || '0', 10), sn.publishedAt]
+        [v.id, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)), clampCount(parseInt(st.commentCount || '0', 10)), sn.publishedAt]
       );
       await pool.query(
         `insert into view_tracking_priority (video_id, priority_tier, next_track_date)

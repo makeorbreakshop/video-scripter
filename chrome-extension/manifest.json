@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Channel Ingest (personal)",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Click to ingest YouTube channels/videos into the video-scripter tracker; optional passive logging of what you watch.",
   "permissions": [
     "storage",

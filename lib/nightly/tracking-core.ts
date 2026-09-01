@@ -64,15 +64,22 @@ export function buildSnapshotRows(
     rows.push({
       video_id: item.id,
       snapshot_date: today,
-      view_count: viewCount,
-      like_count: parseInt(stats.likeCount || '0', 10),
-      comment_count: parseInt(stats.commentCount || '0', 10),
+      view_count: clampCount(viewCount),
+      like_count: clampCount(parseInt(stats.likeCount || '0', 10)),
+      comment_count: clampCount(parseInt(stats.commentCount || '0', 10)),
       days_since_published: meta.days_since_published,
       daily_views_rate: dailyViewsRate,
       next_track_date: nextTrackDate(meta.priority_tier, today),
     });
   }
   return rows;
+}
+
+// Postgres count columns are int32; mega-videos (2B+ views) overflow them.
+// Clamp until the columns are widened to bigint.
+export const INT32_MAX = 2147483647;
+export function clampCount(n: number): number {
+  return Number.isFinite(n) ? Math.min(Math.max(0, Math.trunc(n)), INT32_MAX) : 0;
 }
 
 export function chunk<T>(arr: T[], size: number): T[][] {

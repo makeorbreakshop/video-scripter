@@ -50,10 +50,9 @@ export async function flushBuffer() {
   return res;
 }
 
-export async function fetchQueue(limit = 12) {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/touch_queue?select=kind,ref,mode,processed_at,result&order=id.desc&limit=${limit}`,
-    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-  );
+export async function fetchView(view, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${view}${params}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+  });
   return res.ok ? res.json() : [];
 }

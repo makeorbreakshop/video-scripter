@@ -5,7 +5,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
-import { chunk } from '../lib/nightly/tracking-core';
+import { clampCount, chunk } from '../lib/nightly/tracking-core';
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
@@ -28,14 +28,14 @@ async function insertVideo(v: any, tier = 1): Promise<boolean> {
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000')
      on conflict (id) do nothing`,
     [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId, sn.channelTitle || '',
-     sn.publishedAt, parseInt(st.viewCount || '0', 10), parseInt(st.likeCount || '0', 10),
-     parseInt(st.commentCount || '0', 10), v.contentDetails?.duration || null,
+     sn.publishedAt, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)),
+     clampCount(parseInt(st.commentCount || '0', 10)), v.contentDetails?.duration || null,
      sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null]
   );
   await pool.query(
     `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
      values ($1, current_date, $2, $3, $4, (current_date - $5::date)) on conflict do nothing`,
-    [v.id, parseInt(st.viewCount || '0', 10), parseInt(st.likeCount || '0', 10), parseInt(st.commentCount || '0', 10), sn.publishedAt]
+    [v.id, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)), clampCount(parseInt(st.commentCount || '0', 10)), sn.publishedAt]
   );
   await pool.query(
     `insert into view_tracking_priority (video_id, priority_tier, next_track_date)
@@ -117,9 +117,9 @@ for (const group of chunk(newChannels, 50)) {
       `insert into discovered_channels (channel_id, channel_title, channel_handle, subscriber_count, video_count, view_count, discovery_method)
        values ($1,$2,$3,$4,$5,$6,'touch_queue') on conflict (channel_id) do nothing`,
       [c.id, c.snippet?.title || c.id, c.snippet?.customUrl || null,
-       parseInt(c.statistics?.subscriberCount || '0', 10),
-       parseInt(c.statistics?.videoCount || '0', 10),
-       parseInt(c.statistics?.viewCount || '0', 10)]
+       clampCount(parseInt(c.statistics?.subscriberCount || '0', 10)),
+       clampCount(parseInt(c.statistics?.videoCount || '0', 10)),
+       clampCount(parseInt(c.statistics?.viewCount || '0', 10))]
     ).catch(() => ({ rowCount: 0 }));
     if (!ins.rowCount) continue;
     channelsEnrolled++;

@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import fs from 'fs';
 import pg from 'pg';
-import { chunk } from '../lib/nightly/tracking-core';
+import { clampCount, chunk } from '../lib/nightly/tracking-core';
 
 const maxPages = parseInt(process.argv[2] || '12', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -68,14 +68,14 @@ for (const group of chunk(missing, 50)) {
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000')
          on conflict (id) do nothing`,
         [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId, sn.channelTitle || '',
-         sn.publishedAt, parseInt(st.viewCount || '0', 10), parseInt(st.likeCount || '0', 10),
-         parseInt(st.commentCount || '0', 10), v.contentDetails?.duration || null,
+         sn.publishedAt, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)),
+         clampCount(parseInt(st.commentCount || '0', 10)), v.contentDetails?.duration || null,
          sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null]
       );
       await pool.query(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
          values ($1, current_date, $2, $3, $4, (current_date - $5::date)) on conflict do nothing`,
-        [v.id, parseInt(st.viewCount || '0', 10), parseInt(st.likeCount || '0', 10), parseInt(st.commentCount || '0', 10), sn.publishedAt]
+        [v.id, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)), clampCount(parseInt(st.commentCount || '0', 10)), sn.publishedAt]
       );
       await pool.query(
         `insert into view_tracking_priority (video_id, priority_tier, next_track_date)

@@ -41,24 +41,54 @@
     if (res.ok) await chrome.storage.local.set({ pending: [], lastSync: Date.now() });
     return res;
   }
-  async function fetchQueue(limit = 12) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/touch_queue?select=kind,ref,mode,processed_at,result&order=id.desc&limit=${limit}`,
-      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-    );
+  async function fetchView(view, params = "") {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${view}${params}`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
     return res.ok ? res.json() : [];
   }
 
   // chrome-extension/src/popup.js
   var $ = (id) => document.getElementById(id);
-  async function refreshPending() {
-    const { pending = [] } = await chrome.storage.local.get("pending");
-    $("pcount").textContent = pending.length;
+  var fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "K" : String(n ?? "\u2013");
+  async function renderStats() {
+    try {
+      const [stats] = await fetchView("ext_stats");
+      if (!stats) return;
+      $("s-ch").textContent = fmt(stats.channels_tracked);
+      $("s-vid").textContent = fmt(stats.videos_est);
+      $("s-snap").textContent = fmt(stats.snapshots_today);
+      $("s-q").textContent = stats.queue_pending;
+      $("s-done").textContent = stats.processed_today;
+      $("quota").textContent = `API ${stats.quota_today.toLocaleString()}/${stats.quota_limit.toLocaleString()}`;
+      const pct = Math.round(stats.quota_today / stats.quota_limit * 100);
+      $("s-cost").textContent = `quota ${pct}% used`;
+    } catch {
+    }
+  }
+  async function renderChart() {
+    try {
+      const days = await fetchView("ext_growth");
+      const max = Math.max(...days.map((d) => d.videos_added), 1);
+      $("chart").innerHTML = days.map((d) => `<div style="height:${Math.max(4, d.videos_added / max * 100)}%" title="${d.day}: ${d.videos_added}"></div>`).join("");
+    } catch {
+    }
+  }
+  async function renderQueue() {
+    try {
+      const rows = await fetchView("ext_recent");
+      $("queue").innerHTML = rows.map((r) => {
+        const icon = r.done ? "\u2705" : "\u23F3";
+        const label = (r.result || "").startsWith("already") ? "known" : r.done ? "in" : "queued";
+        return `<div>${icon} <span class="nm">${r.display_name}</span> <span style="color:#888">[${r.mode}]</span> <span style="color:#6a6">${label}</span></div>`;
+      }).join("") || '<div style="color:#777">empty</div>';
+    } catch {
+      $("queue").textContent = "queue unavailable";
+    }
   }
   async function init() {
     const { passive = false } = await chrome.storage.local.get("passive");
     $("passive").checked = passive;
-    await refreshPending();
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const parsed = tab?.url ? parseYouTubeUrl(tab.url) : null;
     if (parsed) {
@@ -68,30 +98,26 @@
       $("ingest").onclick = async () => {
         $("ingest").disabled = true;
         const res = await enqueue([{ ...parsed, source_url: tab.url.split("&")[0], mode: "click" }]);
-        $("status").textContent = res.ok ? "Queued \u2014 imported by tonight's run" : `Failed (${res.status})`;
+        $("status").textContent = res.ok ? "Queued \u2014 ingests within ~5 min" : `Failed (${res.status})`;
         $("ingest").disabled = false;
+        renderQueue();
       };
     }
     $("passive").onchange = (e) => chrome.storage.local.set({ passive: e.target.checked });
-    $("sync").onclick = async () => {
+    $("sync").onclick = async (e) => {
+      e.preventDefault();
       const res = await flushBuffer();
       $("status").textContent = res.ok ? `Synced ${res.sent}` : `Sync failed (${res.status})`;
-      await refreshPending();
+      renderQueue();
+      renderStats();
     };
   }
-  async function renderQueue() {
-    try {
-      const rows = await fetchQueue(12);
-      document.getElementById("queue").innerHTML = rows.map((r) => {
-        const done = r.processed_at ? "\u2705" : "\u23F3";
-        const label = (r.result || "").startsWith("already") ? "known" : r.processed_at ? (r.result || "done").split(":")[0] : "queued";
-        return `<div>${done} <span style="color:#888">[${r.mode}]</span> ${r.ref} <span style="color:#6a6">${label}</span></div>`;
-      }).join("") || '<div style="color:#777">empty</div>';
-    } catch {
-      document.getElementById("queue").textContent = "queue unavailable";
-    }
-  }
   init();
+  renderStats();
+  renderChart();
   renderQueue();
-  setInterval(renderQueue, 5e3);
+  setInterval(() => {
+    renderQueue();
+    renderStats();
+  }, 7e3);
 })();
