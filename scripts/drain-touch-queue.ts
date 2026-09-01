@@ -57,6 +57,19 @@ async function fetchVideos(ids: string[]): Promise<any[]> {
   return out;
 }
 
+// Budget guards: discovery has a daily cap so browsing can never starve the
+// snapshot/ingest machinery; a global floor protects the whole bucket.
+const DISCOVERY_DAILY_CAP = 2000;
+const GLOBAL_FLOOR = 9000; // stop all discovery once total quota passes this
+const [{ spent }] = (await pool.query(
+  `select coalesce(sum(units),0)::int as spent from quota_ledger where date=current_date and category='discovery'`
+)).rows;
+const [{ total }] = (await pool.query(
+  `select coalesce(quota_used,0)::int as total from youtube_quota_usage where date=current_date`
+)).rows;
+if (spent >= DISCOVERY_DAILY_CAP) { console.log(`discovery cap reached (${spent}/${DISCOVERY_DAILY_CAP}); queue holds until tomorrow`); await pool.end(); process.exit(0); }
+if (total >= GLOBAL_FLOOR) { console.log(`global quota floor reached (${total}); discovery paused`); await pool.end(); process.exit(0); }
+
 const { rows } = await pool.query(
   `select id, kind, ref, mode from touch_queue where processed_at is null order by id limit 1000`
 );
@@ -201,6 +214,7 @@ await pool.query(
   `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
    on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`, [quota]
 ).catch(() => {});
+await pool.query(`insert into quota_ledger (category, units) values ('discovery', $1)`, [quota]).catch(() => {});
 await pool.query(
   `insert into ext_growth_cache
      select import_date::date, count(*) from videos

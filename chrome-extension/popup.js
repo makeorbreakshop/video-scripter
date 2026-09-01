@@ -76,7 +76,7 @@
       $("s-snap").textContent = fmt(stats.snapshots_today);
       $("s-q").textContent = stats.queue_pending;
       $("s-done").textContent = stats.processed_today;
-      $("quota").textContent = `API ${stats.quota_today.toLocaleString()}/${stats.quota_limit.toLocaleString()}`;
+      $("quota").textContent = `API ${stats.quota_today.toLocaleString()}/${stats.quota_limit.toLocaleString()} \xB7 discovery ${stats.discovery_today}/${stats.discovery_cap}`;
       $("s-cost").textContent = `quota ${Math.round(stats.quota_today / stats.quota_limit * 100)}% used`;
     } catch {
     }

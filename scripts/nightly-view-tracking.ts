@@ -100,6 +100,7 @@ await pool.query(
    on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`,
   [apiCalls]
 ).catch((e) => console.warn('quota log skipped:', e.message));
+await pool.query(`insert into quota_ledger (category, units) values ('snapshots', $1)`, [apiCalls]).catch(() => {});
 
 console.log(`Done. ${written} snapshots written, ${apiCalls} YouTube API units used.`);
 await pool.end();
