@@ -16,7 +16,7 @@ import {
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 4,
+  max: 2, // session-mode pooler caps 15 clients org-wide; leave room for peers
 });
 // pgbouncer strips startup options; SET per connection instead (session pooler)
 pool.on('connect', (c) => { c.query('set statement_timeout = 0').catch(() => {}); });
