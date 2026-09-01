@@ -42,10 +42,13 @@
     return { ok: res.ok, sent: items.length, status: res.status };
   }
   async function flushBuffer() {
-    const { pending = [] } = await chrome.storage.local.get("pending");
+    const { pending = [], submitted = [] } = await chrome.storage.local.get(["pending", "submitted"]);
     if (!pending.length) return { ok: true, sent: 0 };
     const res = await enqueue(pending);
-    if (res.ok) await chrome.storage.local.set({ pending: [], lastSync: Date.now() });
+    if (res.ok) {
+      const merged = [...submitted, ...pending.map((p) => `${p.kind}:${p.ref}`)].slice(-5e3);
+      await chrome.storage.local.set({ pending: [], submitted: merged, lastSync: Date.now() });
+    }
     return res;
   }
   async function fetchView(view, params = "") {
