@@ -1,10 +1,20 @@
 import { betterAuth } from "better-auth"
+import { Pool } from "pg"
+
+const connectionString = process.env.DATABASE_POOLER_URL || process.env.DATABASE_URL
+
+if (!connectionString) {
+  throw new Error("DATABASE_POOLER_URL or DATABASE_URL is required for authentication")
+}
+
+const authPool = new Pool({
+  connectionString,
+  max: 2,
+  ssl: { rejectUnauthorized: false },
+})
 
 export const auth = betterAuth({
-  database: {
-    provider: "postgres",
-    url: process.env.DATABASE_URL!,
-  },
+  database: authPool,
   emailAndPassword: {
     enabled: true,
   },
