@@ -22,6 +22,13 @@
   }
   async function enqueue(items) {
     if (!items.length) return { ok: true, sent: 0 };
+    items = items.map((i) => ({
+      kind: i.kind,
+      ref: i.ref,
+      source_url: i.source_url || null,
+      mode: i.mode || "click",
+      hint: i.hint || null
+    }));
     const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue?on_conflict=kind,ref`, {
       method: "POST",
       headers: {
@@ -79,6 +86,13 @@
     } catch {
     }
   }
+  async function renderCandidates() {
+    try {
+      const rows = await fetchView("ext_candidates");
+      document.getElementById("cands").innerHTML = rows.map((r) => `<div>\u{1F50E} <span class="nm">${r.channel_title}</span> <span style="color:#888">${(r.subscriber_count / 1e3).toFixed(0)}K subs \xB7 seen ${r.seen_count}\xD7</span></div>`).join("") || '<div style="color:#777">none yet \u2014 browse YouTube with passive logging on</div>';
+    } catch {
+    }
+  }
   async function renderQueue() {
     try {
       const rows = await fetchView("ext_recent");
@@ -129,8 +143,10 @@
   renderStats();
   renderChart();
   renderQueue();
+  renderCandidates();
   setInterval(() => {
     renderQueue();
     renderStats();
+    renderCandidates();
   }, 7e3);
 })();

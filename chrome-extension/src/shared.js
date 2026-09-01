@@ -21,6 +21,11 @@ export function parseYouTubeUrl(url) {
 
 export async function enqueue(items) {
   if (!items.length) return { ok: true, sent: 0 };
+  // PostgREST bulk inserts require identical keys on every row
+  items = items.map((i) => ({
+    kind: i.kind, ref: i.ref, source_url: i.source_url || null,
+    mode: i.mode || 'click', hint: i.hint || null,
+  }));
   const res = await fetch(`${SUPABASE_URL}/rest/v1/touch_queue?on_conflict=kind,ref`, {
     method: 'POST',
     headers: {

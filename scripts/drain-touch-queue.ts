@@ -81,15 +81,53 @@ for (const h of rows.filter((x) => x.kind === 'handle')) {
   channelIds.set(h.id, res.ok ? ((await res.json()) as any).items?.[0]?.id || null : null);
 }
 
-// --- 2. Import unknown videos directly (feed/passive/click videos) ---
+// --- 2. Video rows: clicked videos import + enroll their channel.
+// Feed/passive videos are DISCOVERY SIGNALS ONLY: resolve to channel
+// candidates (dedupe against tracked channels); do not hoard the videos.
 let imported = 0;
+let candidatesSeen = 0;
+const candidateChannels = new Map<string, number>(); // channelId -> times seen this drain
 const vids = await fetchVideos(newVideoRows.map((r) => r.ref));
 for (const v of vids) {
-  // clicked videos also enroll their channel; feed videos just get tracked
-  const row0 = newVideoRows.find((r) => r.ref === v.id);
-  if (await insertVideo(v, row0?.mode === 'feed' ? 2 : 1)) imported++;
   const row = newVideoRows.find((r) => r.ref === v.id);
-  if (row?.mode === 'click' && v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
+  if (!row) continue;
+  if (row.mode === 'click') {
+    if (await insertVideo(v, 1)) imported++;
+    if (v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
+  } else if (v.snippet?.channelId) {
+    candidateChannels.set(v.snippet.channelId, (candidateChannels.get(v.snippet.channelId) || 0) + 1);
+  }
+}
+
+// Candidate upsert: only channels we don't already track
+if (candidateChannels.size) {
+  const candIds = [...candidateChannels.keys()];
+  const tracked = await pool.query(
+    `select channel_id as id from discovered_channels where channel_id = any($1)
+     union select youtube_channel_id from competitor_youtube_channels where youtube_channel_id = any($1)`,
+    [candIds]
+  );
+  const trackedSet = new Set(tracked.rows.map((r) => r.id));
+  const fresh = candIds.filter((c) => !trackedSet.has(c));
+  for (const group of chunk(fresh, 50)) {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${group.join(',')}&key=${API_KEY}`
+    );
+    quota++;
+    for (const c of (res.ok ? (((await res.json()) as any).items || []) : [])) {
+      await pool.query(
+        `insert into channel_candidates (channel_id, channel_title, subscriber_count, video_count, seen_count)
+         values ($1,$2,$3,$4,$5)
+         on conflict (channel_id) do update set
+           last_seen = now(), seen_count = channel_candidates.seen_count + $5,
+           channel_title = excluded.channel_title, subscriber_count = excluded.subscriber_count`,
+        [c.id, c.snippet?.title || c.id, clampCount(parseInt(c.statistics?.subscriberCount || '0', 10)),
+         clampCount(parseInt(c.statistics?.videoCount || '0', 10)), candidateChannels.get(c.id) || 1]
+      ).catch(() => {});
+      candidatesSeen++;
+    }
+  }
+  // already-tracked channels seen again: bump nothing, they're known
 }
 
 // --- 3. Enroll new channels + import their latest uploads immediately ---
@@ -145,7 +183,8 @@ for (const r of rows) {
   const ch = channelIds.get(r.id);
   const result =
     r.kind === 'video'
-      ? known.has(r.ref) ? 'already-tracked' : 'imported'
+      ? known.has(r.ref) ? 'already-tracked'
+        : r.mode === 'click' ? 'imported' : 'candidate-signal'
       : ch ? (existing.has(ch) ? `already-enrolled:${ch}` : `enrolled:${ch}`) : 'unresolved';
   await pool.query(`update touch_queue set processed_at = now(), result = $2 where id = $1`, [r.id, result]);
 }
@@ -161,6 +200,6 @@ await pool.query(
    on conflict (day) do update set videos_added = excluded.videos_added`
 ).catch(() => {});
 console.log(
-  `Drained ${rows.length} rows: ${imported} videos imported, ${channelsEnrolled} channels enrolled (+${channelVideos} of their videos), ${quota} quota units`
+  `Drained ${rows.length} rows: ${imported} clicked videos imported, ${candidatesSeen} channel candidates surfaced, ${channelsEnrolled} channels enrolled (+${channelVideos} videos), ${quota} quota units`
 );
 await pool.end();
