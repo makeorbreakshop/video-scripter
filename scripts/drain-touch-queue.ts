@@ -104,9 +104,9 @@ const vids = await fetchVideos(newVideoRows.map((r) => r.ref));
 for (const v of vids) {
   const row = newVideoRows.find((r) => r.ref === v.id);
   if (!row) continue;
-  if (row.mode === 'click') {
-    if (await insertVideo(v, 1)) imported++;
-    if (v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
+  if (row.mode === 'click' || row.mode === 'websub') {
+    if (await insertVideo(v, row.mode === 'websub' ? 0 : 1)) imported++;
+    if (row.mode === 'click' && v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
   } else if (v.snippet?.channelId) {
     candidateChannels.set(v.snippet.channelId, (candidateChannels.get(v.snippet.channelId) || 0) + 1);
   }
@@ -205,7 +205,7 @@ for (const r of rows) {
   const result =
     r.kind === 'video'
       ? known.has(r.ref) ? 'already-tracked'
-        : r.mode === 'click' ? 'imported' : 'candidate-signal'
+        : (r.mode === 'click' || r.mode === 'websub') ? 'imported' : 'candidate-signal'
       : ch ? (existing.has(ch) ? `already-enrolled:${ch}` : `enrolled:${ch}`) : 'unresolved';
   await pool.query(`update touch_queue set processed_at = now(), result = $2 where id = $1`, [r.id, result]);
 }
