@@ -17,6 +17,7 @@ function getPool() {
 
 const LOGS: { job: string; file: string }[] = [
   { job: 'ingest', file: 'daily-ingest-launchd.log' },
+  { job: 'launch track', file: 'launch-track-launchd.log' },
   { job: 'view tracking', file: 'view-tracking-launchd.log' },
   { job: 'thumbnail watch', file: 'thumbnail-watch-launchd.log' },
   { job: 'touch drain', file: 'touch-drain-launchd.log' },
@@ -98,6 +99,31 @@ export async function GET() {
       return !!m && Date.now() - new Date(m).getTime() < hours * 3600_000;
     };
 
+    // Launch-window tracker (15-min job, new tables) — only shown once its
+    // tables exist, so the dashboard stays truthful before it ships.
+    let launchJob: Record<string, unknown> | null = null;
+    const hasSamples = (await db.query(`select to_regclass('public.view_samples') r`)).rows[0].r;
+    if (hasSamples) {
+      const [days, recent] = await Promise.all([
+        db.query(
+          `select sampled_at::date::text as day, count(*)::int as n
+           from view_samples where sampled_at >= current_date - 13
+           group by 1 order by 1`
+        ),
+        db.query(
+          `select count(*)::int as n from view_samples where sampled_at >= now() - interval '30 minutes'`
+        ),
+      ]);
+      launchJob = {
+        job: 'launch track',
+        ok: freshWithin('launch track', 0.5) && recent.rows[0].n > 0,
+        lastRun: logFor('launch track')?.mtime ?? null,
+        today: dayN(days.rows, today),
+        unit: 'samples',
+        series: days.rows,
+      };
+    }
+
     // A job is "attention" when it hasn't produced output on schedule or its err log is non-empty.
     const jobs = [
       {
@@ -108,6 +134,7 @@ export async function GET() {
         unit: 'videos',
         series: ingested.rows,
       },
+      ...(launchJob ? [launchJob as never] : []),
       {
         job: 'view tracking',
         ok: freshWithin('view tracking', 26) && snapToday > 0,
