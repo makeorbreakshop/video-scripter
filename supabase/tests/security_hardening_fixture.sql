@@ -13,16 +13,19 @@ DECLARE
   object_name text;
 BEGIN
   FOREACH object_name IN ARRAY ARRAY[
-    'account', 'analyses', 'baseline_analytics', 'bertopic_clusters',
-    'channel_discovery', 'channel_performance_ratios', 'channels', 'chunks',
+    'account', 'analyses', 'baseline_analytics', 'baseline_recompute_progress',
+    'bertopic_clusters', 'channel_candidates', 'channel_discovery',
+    'channel_performance_ratios', 'channels', 'chunks',
     'comments', 'daily_analytics', 'discovery_edges', 'discovery_method_metrics',
     'discovery_metrics', 'discovery_search_queries', 'documents',
-    'format_detection_feedback', 'google_pse_quota', 'idea_heist_discoveries',
-    'old_patterns', 'patterns', 'performance_envelopes', 'projects', 'script_data',
+    'ext_growth_cache', 'format_detection_feedback', 'google_pse_quota',
+    'idea_heist_discoveries', 'old_patterns', 'patterns',
+    'performance_envelopes', 'projects', 'quota_ledger', 'script_data',
     'session', 'skyscraper_analyses', 'thumbnail_battle_games',
     'thumbnail_battle_matchups', 'topic_categories', 'topic_hierarchy_mapping',
     'verification', 'video_patterns', 'video_performance_metrics',
-    'video_processing_jobs', 'videos', 'view_snapshots', 'view_tracking_priority',
+    'thumbnail_versions', 'video_processing_jobs', 'videos', 'view_snapshots',
+    'view_tracking_priority',
     'youtube_comments', 'youtube_quota_calls', 'youtube_quota_usage'
   ] LOOP
     EXECUTE format('CREATE TABLE public.%I (id text PRIMARY KEY, user_id uuid)', object_name);
