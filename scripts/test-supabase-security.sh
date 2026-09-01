@@ -70,6 +70,7 @@ docker run --rm \
     psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/security_hardening_fixture.sql >/dev/null
     if [[ "$TEST_PHASE" == "after" ]]; then
       psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/20260901120000_security_hardening.sql >/dev/null
+      psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/migrations/20260901151000_complete_table_security_hardening.sql >/dev/null
     fi
     psql -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/security_hardening.test.sql
   '

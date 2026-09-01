@@ -3,16 +3,19 @@ DECLARE
   failures text[] := ARRAY[]::text[];
   object_name text;
   target_tables constant text[] := ARRAY[
-    'account', 'analyses', 'baseline_analytics', 'bertopic_clusters',
-    'channel_discovery', 'channel_performance_ratios', 'channels', 'chunks',
+    'account', 'analyses', 'baseline_analytics', 'baseline_recompute_progress',
+    'bertopic_clusters', 'channel_candidates', 'channel_discovery',
+    'channel_performance_ratios', 'channels', 'chunks',
     'comments', 'daily_analytics', 'discovery_edges', 'discovery_method_metrics',
     'discovery_metrics', 'discovery_search_queries', 'documents',
-    'format_detection_feedback', 'google_pse_quota', 'idea_heist_discoveries',
-    'old_patterns', 'patterns', 'performance_envelopes', 'projects', 'script_data',
+    'ext_growth_cache', 'format_detection_feedback', 'google_pse_quota',
+    'idea_heist_discoveries', 'old_patterns', 'patterns',
+    'performance_envelopes', 'projects', 'quota_ledger', 'script_data',
     'session', 'skyscraper_analyses', 'thumbnail_battle_games',
     'thumbnail_battle_matchups', 'topic_categories', 'topic_hierarchy_mapping',
     'touch_queue', 'verification', 'video_patterns', 'video_performance_metrics',
-    'video_processing_jobs', 'videos', 'view_snapshots', 'view_tracking_priority',
+    'thumbnail_versions', 'video_processing_jobs', 'videos', 'view_snapshots',
+    'view_tracking_priority',
     'youtube_comments', 'youtube_quota_calls', 'youtube_quota_usage'
   ];
   owner_tables constant text[] := ARRAY['chunks', 'documents', 'projects', 'script_data', 'videos'];
@@ -28,6 +31,24 @@ DECLARE
     'video_classification_stats', 'videos_2024_unprocessed'
   ];
 BEGIN
+  FOR object_name IN
+    SELECT c.relname
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind IN ('r', 'p')
+      AND NOT c.relrowsecurity
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend d
+        WHERE d.classid = 'pg_class'::regclass
+          AND d.objid = c.oid
+          AND d.deptype = 'e'
+      )
+  LOOP
+    failures := array_append(failures, object_name || ': public application table omitted from RLS inventory');
+  END LOOP;
+
   FOR object_name IN SELECT unnest(target_tables) LOOP
     IF NOT (SELECT c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = 'public' AND c.relname = object_name) THEN
