@@ -100,3 +100,8 @@ debug-*.js
 # System files
 .DS_Store
 *.swp
+
+# session/agent artifacts
+/logs/*.log
+.codex/
+chrome-extension/config.js
