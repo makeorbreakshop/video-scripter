@@ -2,8 +2,10 @@
 -- These worker/cache tables are accessed through direct PostgreSQL connections,
 -- so browser roles do not need any Data API privileges.
 BEGIN;
-SET LOCAL lock_timeout = '30s';
-SET LOCAL statement_timeout = '45s';
+-- thumbnail_versions has a continuous watcher. Queue behind its current read
+-- without terminating the worker, then complete the metadata-only ALTER.
+SET LOCAL lock_timeout = '120s';
+SET LOCAL statement_timeout = '150s';
 
 DO $hardening$
 DECLARE
