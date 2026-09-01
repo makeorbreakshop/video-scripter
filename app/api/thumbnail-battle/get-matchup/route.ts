@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { isBattleEligible, looksLikePlaceholderThumb } from '@/lib/thumbnail-battle/eligibility';
+
+// Reject matchup videos whose thumbnails are YouTube gray placeholders
+// (deleted videos, live-stream frames) — the blank-thumbnail bug.
+async function thumbIsBlank(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+    const len = res.headers.get('content-length');
+    return looksLikePlaceholderThumb(res.status, len ? parseInt(len, 10) : null);
+  } catch {
+    return false; // network hiccup: don't reject, the CDN is usually fine
+  }
+}
 
 function getSupabaseClient() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -113,7 +126,14 @@ export async function GET(request: Request) {
       channel_subscriber_count: getBallparkSubs(channelData?.subscriber_count || 0)
     };
 
-    const enrichedVideos = videos.map(v => ({
+    // Belt-and-braces eligibility (notably: no live streams — duration P0D
+    // rows serve gray feed-frames as thumbnails).
+    const eligible = videos.filter(isBattleEligible);
+    if (eligible.length < 2) {
+      return NextResponse.json({ error: 'Failed to get matchup' }, { status: 500 });
+    }
+
+    const enrichedVideos = eligible.map(v => ({
       ...v,
       ...channelInfo
     }));
@@ -173,6 +193,17 @@ export async function GET(request: Request) {
         [videoA, videoB] = shuffled.slice(0, 2);
       }
     }
+
+    // Serve-time blank check: swap out any gray-placeholder thumbnails
+    // (deleted videos / stream frames pass the DB filters but render blank).
+    let pair = [videoA, videoB];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const blanks = await Promise.all(pair.map((v) => thumbIsBlank(v.thumbnail_url)));
+      if (!blanks.some(Boolean)) break;
+      const pool = enrichedVideos.filter((v) => !pair.some((p) => p.id === v.id));
+      pair = pair.map((v, i) => (blanks[i] ? pool.shift() ?? v : v));
+    }
+    [videoA, videoB] = pair;
 
     // Randomly assign positions FIRST
     const randomOrder = Math.random() > 0.5;
