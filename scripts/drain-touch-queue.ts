@@ -127,7 +127,9 @@ if (candidateChannels.size) {
       candidatesSeen++;
     }
   }
-  // already-tracked channels seen again: bump nothing, they're known
+  // AUTO-ENROLL: feed-discovered untracked channels enter the same enrollment
+  // pipeline as clicked ones (metadata + latest 50 uploads + RSS from tonight).
+  for (const [i, c] of fresh.entries()) channelIds.set(-1000 - i, c);
 }
 
 // --- 3. Enroll new channels + import their latest uploads immediately ---
@@ -177,6 +179,12 @@ for (const group of chunk(newChannels, 50)) {
     }
   }
 }
+
+// candidates ledger reflects auto-enrollment
+await pool.query(
+  `update channel_candidates set status='enrolled'
+   where status='candidate' and channel_id in (select channel_id from discovered_channels)`
+).catch(() => {});
 
 // --- 4. Mark everything processed ---
 for (const r of rows) {

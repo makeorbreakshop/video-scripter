@@ -92,7 +92,7 @@
   async function renderCandidates() {
     try {
       const rows = await fetchView("ext_candidates");
-      document.getElementById("cands").innerHTML = rows.map((r) => `<div>\u{1F50E} <span class="nm">${r.channel_title}</span> <span style="color:#888">${(r.subscriber_count / 1e3).toFixed(0)}K subs \xB7 seen ${r.seen_count}\xD7</span></div>`).join("") || '<div style="color:#777">none yet \u2014 browse YouTube with passive logging on</div>';
+      document.getElementById("cands").innerHTML = rows.map((r) => `<div>${r.status === "enrolled" ? "\u2705" : "\u{1F50E}"} <span class="nm">${r.channel_title}</span> <span style="color:#888">${(r.subscriber_count / 1e3).toFixed(0)}K subs \xB7 seen ${r.seen_count}\xD7</span> <span style="color:#6a6">${r.status}</span></div>`).join("") || '<div style="color:#777">none yet \u2014 browse YouTube with passive logging on</div>';
     } catch {
     }
   }
