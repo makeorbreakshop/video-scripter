@@ -30,6 +30,9 @@ DECLARE
     'topic_distribution', 'topic_domain_summary', 'unprocessed_thumbnails',
     'video_classification_stats', 'videos_2024_unprocessed'
   ];
+  public_read_views constant text[] := ARRAY[
+    'ext_candidates', 'ext_growth', 'ext_recent', 'ext_stats'
+  ];
 BEGIN
   FOR object_name IN
     SELECT c.relname
@@ -101,6 +104,7 @@ BEGIN
      OR NOT has_column_privilege('anon', 'public.touch_queue', 'ref', 'INSERT')
      OR NOT has_column_privilege('anon', 'public.touch_queue', 'source_url', 'INSERT')
      OR NOT has_column_privilege('anon', 'public.touch_queue', 'mode', 'INSERT')
+     OR NOT has_column_privilege('anon', 'public.touch_queue', 'hint', 'INSERT')
      OR has_column_privilege('anon', 'public.touch_queue', 'processed_at', 'INSERT')
      OR has_column_privilege('anon', 'public.touch_queue', 'result', 'INSERT') THEN
     failures := array_append(failures, 'touch_queue: column-level insert contract');
@@ -111,6 +115,7 @@ BEGIN
       AND with_check LIKE '%source_url%'
       AND with_check LIKE '%passive%'
       AND with_check LIKE '%channel%'
+      AND with_check LIKE '%hint%'
   ) THEN
     failures := array_append(failures, 'touch_queue: validated ingress policy missing');
   END IF;
@@ -128,6 +133,36 @@ BEGIN
       failures := array_append(failures, object_name || ': anonymous view access remains');
     END IF;
   END LOOP;
+
+  FOR object_name IN SELECT unnest(public_read_views) LOOP
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace,
+      LATERAL unnest(coalesce(c.reloptions, ARRAY[]::text[])) option
+      WHERE n.nspname = 'public' AND c.relname = object_name
+        AND option IN ('security_invoker=on', 'security_invoker=true')
+    ) THEN
+      failures := array_append(failures, object_name || ': public report is not security_invoker');
+    END IF;
+    IF NOT has_table_privilege('anon', format('public.%I', object_name), 'SELECT') THEN
+      failures := array_append(failures, object_name || ': required extension read missing');
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = ANY(ARRAY[
+        'extension_candidates_report', 'extension_growth_report',
+        'extension_recent_report', 'extension_stats_report'
+      ])
+      AND NOT ('search_path=pg_catalog, public' = ANY(coalesce(p.proconfig, ARRAY[]::text[])))
+  ) THEN
+    failures := array_append(failures, 'extension reporting function search_path is mutable');
+  END IF;
 
   IF EXISTS (
     SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace

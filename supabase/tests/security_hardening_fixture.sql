@@ -57,8 +57,36 @@ CREATE TABLE public.touch_queue (
   mode text NOT NULL,
   seen_at timestamptz NOT NULL DEFAULT now(),
   processed_at timestamptz,
-  result text
+  result text,
+  hint text
 );
+
+ALTER TABLE public.channel_candidates
+  ADD COLUMN channel_id text,
+  ADD COLUMN channel_title text,
+  ADD COLUMN subscriber_count bigint,
+  ADD COLUMN video_count integer,
+  ADD COLUMN last_seen timestamptz,
+  ADD COLUMN seen_count integer,
+  ADD COLUMN status text;
+ALTER TABLE public.ext_growth_cache
+  ADD COLUMN day date,
+  ADD COLUMN videos_added integer;
+ALTER TABLE public.quota_ledger
+  ADD COLUMN date date,
+  ADD COLUMN category text,
+  ADD COLUMN units integer;
+ALTER TABLE public.videos ADD COLUMN channel_name text;
+ALTER TABLE public.view_snapshots ADD COLUMN snapshot_date date;
+ALTER TABLE public.youtube_quota_usage
+  ADD COLUMN date date,
+  ADD COLUMN quota_used integer;
+CREATE TABLE public.discovered_channels (
+  id uuid PRIMARY KEY,
+  channel_id varchar,
+  channel_title varchar
+);
+ALTER TABLE public.discovered_channels ENABLE ROW LEVEL SECURITY;
 
 DO $fixture$
 DECLARE
@@ -85,6 +113,36 @@ BEGIN
   END LOOP;
 END
 $fixture$;
+
+CREATE VIEW public.ext_candidates AS
+SELECT channel_id, channel_title, subscriber_count, video_count, seen_count, status
+FROM public.channel_candidates
+ORDER BY last_seen DESC
+LIMIT 20;
+CREATE VIEW public.ext_growth AS
+SELECT day, videos_added FROM public.ext_growth_cache ORDER BY day;
+CREATE VIEW public.ext_recent AS
+SELECT q.id, q.kind, q.ref, q.mode, q.processed_at IS NOT NULL AS done, q.result,
+       COALESCE(dc.channel_title, v.channel_name::varchar, q.hint::varchar, q.ref::varchar) AS display_name
+FROM public.touch_queue q
+LEFT JOIN public.discovered_channels dc
+  ON q.result = ('enrolled:' || dc.channel_id) OR q.result = ('already-enrolled:' || dc.channel_id)
+LEFT JOIN public.videos v ON q.kind = 'video' AND v.id = q.ref
+ORDER BY q.id DESC
+LIMIT 15;
+CREATE VIEW public.ext_stats AS
+SELECT
+  (SELECT count(*) FROM public.discovered_channels)
+    + (SELECT count(*) FROM public.competitor_youtube_channels) AS channels_tracked,
+  (SELECT reltuples::bigint FROM pg_class WHERE relname = 'videos') AS videos_est,
+  (SELECT count(*) FROM public.view_snapshots WHERE snapshot_date = CURRENT_DATE) AS snapshots_today,
+  (SELECT count(*) FROM public.touch_queue WHERE processed_at IS NULL) AS queue_pending,
+  (SELECT count(*) FROM public.touch_queue WHERE processed_at::date = CURRENT_DATE) AS processed_today,
+  (SELECT COALESCE(quota_used, 0) FROM public.youtube_quota_usage WHERE date = CURRENT_DATE) AS quota_today,
+  10000 AS quota_limit,
+  (SELECT COALESCE(sum(units), 0::bigint) FROM public.quota_ledger
+    WHERE date = CURRENT_DATE AND category = 'discovery') AS discovery_today,
+  2000 AS discovery_cap;
 
 CREATE FUNCTION public.refresh_dashboard_data() RETURNS integer
 LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;
