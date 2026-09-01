@@ -49,8 +49,10 @@
   }
 
   // chrome-extension/src/background.js
-  chrome.runtime.onInstalled.addListener(() => {
+  chrome.runtime.onInstalled.addListener(async () => {
     chrome.alarms.create("flush", { periodInMinutes: 1 });
+    const cur = await chrome.storage.local.get("passive");
+    if (!("passive" in cur)) await chrome.storage.local.set({ passive: true });
   });
   chrome.alarms.onAlarm.addListener(async (a) => {
     if (a.name === "flush") {
@@ -62,7 +64,7 @@
   });
   chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
     if (changeInfo.status !== "complete" || !tab.url) return;
-    const { passive = false } = await chrome.storage.local.get("passive");
+    const { passive = true } = await chrome.storage.local.get("passive");
     if (!passive) return;
     const parsed = parseYouTubeUrl(tab.url);
     if (!parsed) return;

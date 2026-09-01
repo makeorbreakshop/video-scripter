@@ -3,6 +3,14 @@ import { parseYouTubeUrl, enqueue, flushBuffer, fetchView } from './shared.js';
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : String(n ?? '–'));
 
+// tabs
+document.querySelectorAll('nav button').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
+  };
+});
+
 async function renderStats() {
   try {
     const [stats] = await fetchView('ext_stats');
@@ -13,8 +21,7 @@ async function renderStats() {
     $('s-q').textContent = stats.queue_pending;
     $('s-done').textContent = stats.processed_today;
     $('quota').textContent = `API ${stats.quota_today.toLocaleString()}/${stats.quota_limit.toLocaleString()}`;
-    const pct = Math.round((stats.quota_today / stats.quota_limit) * 100);
-    $('s-cost').textContent = `quota ${pct}% used`;
+    $('s-cost').textContent = `quota ${Math.round((stats.quota_today / stats.quota_limit) * 100)}% used`;
   } catch { /* offline */ }
 }
 
@@ -23,7 +30,7 @@ async function renderChart() {
     const days = await fetchView('ext_growth');
     const max = Math.max(...days.map((d) => d.videos_added), 1);
     $('chart').innerHTML = days
-      .map((d) => `<div style="height:${Math.max(4, (d.videos_added / max) * 100)}%" title="${d.day}: ${d.videos_added}"></div>`)
+      .map((d) => `<div style="height:${Math.max(4, (d.videos_added / max) * 100)}%" title="${d.day}: ${d.videos_added.toLocaleString()}"></div>`)
       .join('');
   } catch { /* offline */ }
 }
@@ -43,15 +50,25 @@ async function renderQueue() {
   }
 }
 
+async function findYouTubeTab() {
+  // popup may be a detached window (Dia); check last-focused, then any YT tab
+  const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  if (active?.url && parseYouTubeUrl(active.url)) return active;
+  const ytTabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
+  return ytTabs.find((t) => t.active && parseYouTubeUrl(t.url)) || ytTabs.find((t) => parseYouTubeUrl(t.url)) || null;
+}
+
 async function init() {
-  const { passive = false } = await chrome.storage.local.get('passive');
+  const { passive = true } = await chrome.storage.local.get('passive');
   $('passive').checked = passive;
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = await findYouTubeTab();
   const parsed = tab?.url ? parseYouTubeUrl(tab.url) : null;
   if (parsed) {
+    $('no-page').hidden = true;
+    $('detected').hidden = false;
+    $('ingest').hidden = false;
     $('detected').textContent = `${parsed.kind}: ${parsed.ref}`;
-    $('ingest').disabled = false;
     $('ingest').textContent = parsed.kind === 'video' ? 'Ingest video + its channel' : 'Ingest channel';
     $('ingest').onclick = async () => {
       $('ingest').disabled = true;

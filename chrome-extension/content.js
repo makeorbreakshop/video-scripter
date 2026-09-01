@@ -2,6 +2,8 @@
 (() => {
   // chrome-extension/src/content.js
   var seen = /* @__PURE__ */ new Set();
+  var observer = null;
+  var timer = null;
   function collectIds() {
     const found = [];
     for (const a of document.querySelectorAll('a[href*="/watch?v="]')) {
@@ -16,15 +18,25 @@
       });
     }
   }
-  async function start() {
-    const { passive = false } = await chrome.storage.local.get("passive");
-    if (!passive) return;
+  function startObserving() {
+    if (observer) return;
     collectIds();
-    const observer = new MutationObserver(() => {
-      clearTimeout(start._t);
-      start._t = setTimeout(collectIds, 1500);
+    observer = new MutationObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(collectIds, 1500);
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
-  start();
+  function stopObserving() {
+    observer?.disconnect();
+    observer = null;
+  }
+  chrome.storage.local.get("passive").then(({ passive = true }) => {
+    if (passive) startObserving();
+  });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && "passive" in changes) {
+      changes.passive.newValue ? startObserving() : stopObserving();
+    }
+  });
 })();

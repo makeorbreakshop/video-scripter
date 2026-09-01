@@ -86,7 +86,8 @@ let imported = 0;
 const vids = await fetchVideos(newVideoRows.map((r) => r.ref));
 for (const v of vids) {
   // clicked videos also enroll their channel; feed videos just get tracked
-  if (await insertVideo(v, 1)) imported++;
+  const row0 = newVideoRows.find((r) => r.ref === v.id);
+  if (await insertVideo(v, row0?.mode === 'feed' ? 2 : 1)) imported++;
   const row = newVideoRows.find((r) => r.ref === v.id);
   if (row?.mode === 'click' && v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
 }
@@ -152,6 +153,12 @@ for (const r of rows) {
 await pool.query(
   `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
    on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`, [quota]
+).catch(() => {});
+await pool.query(
+  `insert into ext_growth_cache
+     select import_date::date, count(*) from videos
+     where import_date >= current_date group by 1
+   on conflict (day) do update set videos_added = excluded.videos_added`
 ).catch(() => {});
 console.log(
   `Drained ${rows.length} rows: ${imported} videos imported, ${channelsEnrolled} channels enrolled (+${channelVideos} of their videos), ${quota} quota units`

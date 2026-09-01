@@ -1,8 +1,9 @@
-// Feed logger: collects video IDs from links rendered on YouTube pages
-// (home feed, search, related rail). IDs only — no titles, stats, or DOM
-// content; the backend fetches everything via the official API. Runs only
-// when passive logging is enabled.
+// Feed logger: collects video IDs from links rendered on YouTube pages.
+// IDs only — backend fetches all real data via the official API.
+// Reacts live to the passive toggle (no page reload needed). Default: ON.
 const seen = new Set();
+let observer = null;
+let timer = null;
 
 function collectIds() {
   const found = [];
@@ -18,15 +19,26 @@ function collectIds() {
   }
 }
 
-async function start() {
-  const { passive = false } = await chrome.storage.local.get('passive');
-  if (!passive) return;
+function startObserving() {
+  if (observer) return;
   collectIds();
-  const observer = new MutationObserver(() => {
-    clearTimeout(start._t);
-    start._t = setTimeout(collectIds, 1500);
+  observer = new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(collectIds, 1500);
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-start();
+function stopObserving() {
+  observer?.disconnect();
+  observer = null;
+}
+
+chrome.storage.local.get('passive').then(({ passive = true }) => {
+  if (passive) startObserving();
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && 'passive' in changes) {
+    changes.passive.newValue ? startObserving() : stopObserving();
+  }
+});

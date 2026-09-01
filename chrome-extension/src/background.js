@@ -2,8 +2,10 @@
 // (URL-level only) into a local buffer; flush to the touch_queue every 5 min.
 import { parseYouTubeUrl, bufferAdd, flushBuffer } from './shared.js';
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
   chrome.alarms.create('flush', { periodInMinutes: 1 });
+  const cur = await chrome.storage.local.get('passive');
+  if (!('passive' in cur)) await chrome.storage.local.set({ passive: true });
 });
 
 chrome.alarms.onAlarm.addListener(async (a) => {
@@ -14,7 +16,7 @@ chrome.alarms.onAlarm.addListener(async (a) => {
 
 chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
   if (changeInfo.status !== 'complete' || !tab.url) return;
-  const { passive = false } = await chrome.storage.local.get('passive');
+  const { passive = true } = await chrome.storage.local.get('passive');
   if (!passive) return;
   const parsed = parseYouTubeUrl(tab.url);
   if (!parsed) return;
