@@ -10,11 +10,12 @@
       const m = a.href.match(/[?&]v=([A-Za-z0-9_-]{6,20})/);
       if (m && !seen.has(m[1])) {
         seen.add(m[1]);
-        found.push(m[1]);
+        const hint = (a.getAttribute("title") || a.getAttribute("aria-label") || a.textContent || "").trim().slice(0, 80);
+        found.push({ id: m[1], hint });
       }
     }
     if (found.length) {
-      chrome.runtime.sendMessage({ type: "feedIds", ids: found, page: location.pathname }).catch?.(() => {
+      chrome.runtime.sendMessage({ type: "feedIds", items: found, page: location.pathname }).catch?.(() => {
       });
     }
   }

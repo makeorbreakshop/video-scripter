@@ -84,7 +84,7 @@
       const rows = await fetchView("ext_recent");
       $("queue").innerHTML = rows.map((r) => {
         const icon = r.done ? "\u2705" : "\u23F3";
-        const label = (r.result || "").startsWith("already") ? "known" : r.done ? "in" : "queued";
+        const label = (r.result || "").startsWith("already") ? "known" : r.done ? "in" : "importing soon";
         return `<div>${icon} <span class="nm">${r.display_name}</span> <span style="color:#888">[${r.mode}]</span> <span style="color:#6a6">${label}</span></div>`;
       }).join("") || '<div style="color:#777">empty</div>';
     } catch {

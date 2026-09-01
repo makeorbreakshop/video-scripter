@@ -71,11 +71,11 @@
     await bufferAdd({ ...parsed, source_url: tab.url.split("&")[0], mode: "passive" });
   });
   chrome.runtime.onMessage.addListener((msg) => {
-    if (msg?.type === "feedIds" && Array.isArray(msg.ids)) {
+    if (msg?.type === "feedIds" && Array.isArray(msg.items)) {
       (async () => {
-        for (const id of msg.ids.slice(0, 200)) {
-          if (/^[A-Za-z0-9_-]{6,20}$/.test(id)) {
-            await bufferAdd({ kind: "video", ref: id, source_url: `feed:${msg.page || ""}`, mode: "feed" });
+        for (const it of msg.items.slice(0, 200)) {
+          if (/^[A-Za-z0-9_-]{6,20}$/.test(it.id)) {
+            await bufferAdd({ kind: "video", ref: it.id, source_url: `feed:${msg.page || ""}`, mode: "feed", hint: it.hint || null });
           }
         }
         const { pending = [] } = await chrome.storage.local.get("pending");

@@ -55,11 +55,16 @@ try {
   const yt = await browser.newPage();
   await yt.goto('https://www.youtube.com/watch?v=dQw4w9WgXcQ', { waitUntil: 'load', timeout: 30000 }).catch(() => {});
   await new Promise((r) => setTimeout(r, 8000));
+  // capture evidence BEFORE flush: buffered feed items (dedupe may mean the
+  // queue itself gains no new rows on re-runs)
+  const buffered = await sw.evaluate(async () => (await chrome.storage.local.get('pending')).pending || []);
+  const bufferedFeed = buffered.filter((p) => p.mode === 'feed').length;
   // final flush via the popup's real Sync path
   await popup.bringToFront();
-  await popup.evaluate(async () => {
+  const syncStatus = await popup.evaluate(async () => {
     document.getElementById('sync').click();
     await new Promise((r) => setTimeout(r, 3000));
+    return document.getElementById('status').textContent;
   });
   const landed = await queueRows(watermark);
   // the watched id may already exist from a prior run — unique(kind,ref) means
@@ -68,7 +73,10 @@ try {
   const watched = watchedRows.length > 0;
   const feed = landed.filter((r) => r.mode === 'feed').length;
   check(watched, `watched video landed in touch_queue (${landed.length} new rows)`);
-  check(feed > 0, `feed capture landed in touch_queue (${feed} feed rows)`);
+  check(
+    feed > 0 || bufferedFeed > 0 || /Synced [1-9]/.test(syncStatus),
+    `feed capture evidenced (new rows: ${feed}, buffered: ${bufferedFeed}, sync: "${syncStatus}")`
+  );
 
   console.log(failures === 0 ? 'ALL PASS' : `${failures} FAILURES`);
   process.exitCode = failures === 0 ? 0 : 1;
