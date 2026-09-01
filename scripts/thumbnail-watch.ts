@@ -25,9 +25,11 @@ const { rows: targets } = await pool.query(
    left join latest l on l.video_id = v.id
    where v.published_at > now() - interval '30 days'
      and (
-       v.published_at > now() - interval '72 hours'                 -- hot window: every run
+       v.published_at > now() - interval '6 hours'                  -- launch window: every 5-min run
+       or (v.published_at > now() - interval '72 hours'
+           and (l.video_id is null or l.last_checked < now() - interval '25 minutes'))  -- hot: ~30 min
        or l.video_id is null                                        -- never checked
-       or l.last_checked < now() - interval '23 hours'              -- warm window: daily
+       or l.last_checked < now() - interval '23 hours'              -- warm: daily
      )
    order by v.published_at desc
    limit $1`,
