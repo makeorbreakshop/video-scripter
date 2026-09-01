@@ -66,6 +66,10 @@ try {
     await new Promise((r) => setTimeout(r, 3000));
     return document.getElementById('status').textContent;
   });
+  // 3b. On-page badges should render for known/captured videos
+  const badgeCount = await yt.evaluate(() => document.querySelectorAll('.ci-badge').length).catch(() => 0);
+  check(badgeCount > 0, `status badges painted on page (${badgeCount})`);
+
   const landed = await queueRows(watermark);
   // the watched id may already exist from a prior run — unique(kind,ref) means
   // re-capture correctly creates no new row; assert existence, not novelty
