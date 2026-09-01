@@ -9,6 +9,17 @@ fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
+if ! rg -q 'new Pool' lib/auth.ts ||
+   ! rg -q 'DATABASE_POOLER_URL.*DATABASE_URL' lib/auth.ts; then
+  echo "Better Auth is not using the supported Postgres pool adapter" >&2
+  exit 1
+fi
+
+if ! rg -q 'toNextJsHandler' 'app/api/auth/[...all]/route.ts'; then
+  echo "Better Auth route is not exporting Next.js-compatible handlers" >&2
+  exit 1
+fi
+
 for client_file in lib/supabase.ts lib/supabase-client.ts; do
   if ! rg -q "typeof window === 'undefined'.*getSupabaseServiceKey|getSupabaseServiceKey.*typeof window === 'undefined'" "$client_file"; then
     echo "$client_file does not select service_role for server execution" >&2
