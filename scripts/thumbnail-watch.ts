@@ -31,6 +31,7 @@ const { rows: targets } = await pool.query(
    select v.id from videos v
    left join latest l on l.video_id = v.id
    where v.published_at > now() - interval '30 days'
+     and coalesce(v.duration, '') <> 'P0D'  -- live/upcoming: hqdefault is a feed frame, not packaging
      and (
        v.published_at > now() - interval '6 hours'                  -- launch window: every 5-min run
        or (v.published_at > now() - interval '72 hours'

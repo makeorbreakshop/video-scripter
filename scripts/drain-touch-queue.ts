@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { clampCount, chunk } from '../lib/nightly/tracking-core';
+import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
@@ -146,17 +147,31 @@ if (candidateChannels.size) {
 }
 
 // --- 3. Enroll new channels + import their latest uploads immediately ---
+// Four-registry dedup via enrollment-core (fixes the double-tracking bug).
 const uniqueChannels = [...new Set([...channelIds.values()].filter(Boolean))] as string[];
-const existing = new Set<string>();
+const knownChannels: KnownChannels = {
+  competitor: new Set(), discovered: new Set(), legacy: new Set(), withVideos: new Set(),
+};
 if (uniqueChannels.length) {
-  const res = await pool.query(
-    `select channel_id from discovered_channels where channel_id = any($1)
-     union select youtube_channel_id from competitor_youtube_channels where youtube_channel_id = any($1)`,
-    [uniqueChannels]
-  );
-  res.rows.forEach((r) => existing.add(r.channel_id || r.youtube_channel_id));
+  const [comp, disc, leg, wv] = await Promise.all([
+    pool.query(`select youtube_channel_id id from competitor_youtube_channels where youtube_channel_id = any($1)`, [uniqueChannels]),
+    pool.query(`select channel_id id from discovered_channels where channel_id = any($1)`, [uniqueChannels]),
+    pool.query(`select channel_id id from channels where channel_id = any($1)`, [uniqueChannels]),
+    pool.query(`select distinct channel_id id from videos where channel_id = any($1)`, [uniqueChannels]),
+  ]);
+  comp.rows.forEach((r) => knownChannels.competitor.add(r.id));
+  disc.rows.forEach((r) => knownChannels.discovered.add(r.id));
+  leg.rows.forEach((r) => knownChannels.legacy.add(r.id));
+  wv.rows.forEach((r) => knownChannels.withVideos.add(r.id));
 }
-const newChannels = uniqueChannels.filter((c) => !existing.has(c));
+const plan = planEnrollment(
+  [...channelIds].map(([queueId, channelId]) => ({ queueId, channelId })),
+  knownChannels
+);
+const existing = new Set<string>(
+  uniqueChannels.filter((c) => !plan.toEnroll.includes(c))
+);
+const newChannels = plan.toEnroll;
 
 let channelsEnrolled = 0;
 let channelVideos = 0;
@@ -198,6 +213,31 @@ await pool.query(
   `update channel_candidates set status='enrolled'
    where status='candidate' and channel_id in (select channel_id from discovered_channels)`
 ).catch(() => {});
+
+// --- 3b. Live-stream maintenance: refresh duration on recent P0D videos so
+// ended streams (now VODs with a real thumbnail) rejoin the thumbnail watch.
+const { rows: liveRows } = await pool.query(
+  `select id from videos where duration = 'P0D' and published_at > now() - interval '30 days' limit 500`
+);
+if (liveRows.length) {
+  let refreshed = 0;
+  for (const group of chunk(liveRows.map((r) => r.id), 50)) {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${group.join(',')}&key=${API_KEY}`
+    );
+    quota++;
+    for (const v of (res.ok ? (((await res.json()) as any).items || []) : [])) {
+      const dur = v.contentDetails?.duration || null;
+      if (dur && dur !== 'P0D') {
+        await pool.query(`update videos set duration=$2, updated_at=now() where id=$1`, [v.id, dur]);
+        // wipe feed-frame garbage so the VOD baselines from its real thumbnail
+        await pool.query(`delete from thumbnail_versions where video_id=$1`, [v.id]);
+        refreshed++;
+      }
+    }
+  }
+  if (refreshed) console.log(`Live maintenance: ${refreshed} ended streams got real durations`);
+}
 
 // --- 4. Mark everything processed ---
 for (const r of rows) {
