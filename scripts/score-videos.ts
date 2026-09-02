@@ -92,6 +92,7 @@ async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
        join lateral (select p.id from videos p
                       where p.channel_id = v.channel_id and p.published_at < v.published_at
                         and coalesce(p.is_short,false)=false and coalesce(p.duration,'')<>'P0D'
+                        and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
                       order by p.published_at desc limit 10) p on true`,
     [ids]
   );
