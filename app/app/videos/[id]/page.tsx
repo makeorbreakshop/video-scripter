@@ -68,6 +68,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
       <section className="cs-section" style={{ marginTop: 18 }}>
         <VideoChart
           actuals={v.actuals}
+          publishedAt={v.publishedAt}
           curve={v.curve}
           projected={v.projected}
           markers={v.markers}

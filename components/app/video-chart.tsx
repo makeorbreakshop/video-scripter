@@ -65,6 +65,25 @@ export function fmtViews(v: number) {
   return v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(v >= 1e4 ? 0 : 1) + 'K' : String(Math.round(v));
 }
 
+const ET = 'America/New_York';
+function dateAtDay(publishedAt: string | Date | null | undefined, day: number): Date | null {
+  if (!publishedAt) return null;
+  const t0 = new Date(publishedAt).getTime();
+  return Number.isFinite(t0) ? new Date(t0 + day * 86_400_000) : null;
+}
+export function axisDate(publishedAt: string | Date | null | undefined, day: number, launch: boolean): string {
+  const d = dateAtDay(publishedAt, day);
+  if (!d) return dayLabel(day);
+  return launch
+    ? d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric' }).replace(',', '')
+    : d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
+}
+export function tooltipDate(publishedAt: string | Date | null | undefined, day: number): string {
+  const d = dateAtDay(publishedAt, day);
+  if (!d) return dayLabel(day);
+  return d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
+}
+
 export function dayLabel(d: number) {
   return d < 1 ? `${Math.round(d * 24)}h` : `day ${d < 10 ? d.toFixed(d % 1 ? 1 : 0) : Math.round(d)}`;
 }
@@ -81,8 +100,9 @@ const HOUR_TICKS = [0, 6, 12, 24, 48, 72];
 const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 550, 730, 1095];
 
 export function VideoChart({
-  actuals, curve, projected, markers, thumbUrls, score, defaultZoom = 'full', sparse = false,
+  actuals, curve, projected, markers, thumbUrls, score, defaultZoom = 'full', sparse = false, publishedAt,
 }: {
+  publishedAt?: string | Date | null;
   actuals: Actual[];
   curve: CurvePoint[];
   projected: ProjPoint[];
@@ -196,17 +216,23 @@ export function VideoChart({
           <XAxis
             dataKey="day" type="number" domain={[0, maxDay]} ticks={ticks} allowDataOverflow
             tick={{ fontSize: 11, fill: C.muted }} stroke={C.line}
-            tickFormatter={(d: number) => (launch || d < 1 ? `${Math.round(d * 24)}h` : `d${Math.round(d)}`)}
+            tickFormatter={(d: number) => axisDate(publishedAt, Number(d), launch)}
             minTickGap={12}
           />
           <YAxis tick={{ fontSize: 11, fill: C.muted }} stroke={C.line} width={52} tickFormatter={fmtViews} />
           <Tooltip
-            contentStyle={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8, fontSize: 12, color: C.ink }}
-            labelStyle={{ color: C.muted }}
-            labelFormatter={(d: number) => dayLabel(Number(d))}
-            formatter={(v: any, name: string) =>
-              Array.isArray(v) ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, name] : [fmtViews(Number(v)), name]
-            }
+            content={({ active, payload, label }: any) => {
+              if (!active || !payload?.length) return null;
+              const row = payload[0]?.payload || {};
+              const mine = row.views ?? row.implied ?? row.projected;
+              return (
+                <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.ink }}>
+                  <div style={{ color: C.muted, marginBottom: 4 }}>{tooltipDate(publishedAt, Number(label))}</div>
+                  {mine != null && <div style={{ color: C.accent, fontWeight: 600 }}>{fmtViews(Number(mine))} views</div>}
+                  {row.expected != null && <div style={{ color: C.muted }}>typical {fmtViews(Number(row.expected))}</div>}
+                </div>
+              );
+            }}
           />
           <Legend wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }} />
           {/* Recharts puts every declared series in the legend whether or not it has data, so

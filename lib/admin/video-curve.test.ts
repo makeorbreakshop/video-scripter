@@ -1,5 +1,5 @@
 import {
-  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge, longtailAt } from './video-curve';
+  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge, longtailAt, fitScale } from './video-curve';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -250,5 +250,21 @@ describe('curves past day 30', () => {
     const p = projectedCurve(3000, mult, 120, 40, 0, LT);
     const i = p.length - 1;
     expect(p[i].projected / e[i].expected).toBeCloseTo(3, 6);
+  });
+});
+
+describe('mergeActuals dedupe and fitScale', () => {
+  const pub = '2026-08-29T16:00:00Z';
+  it('drops a snapshot next to a sample and a repeated identical count', () => {
+    const out = mergeActuals(pub,
+      [{ at: '2026-09-01T12:00:00Z', views: 817000 }, { at: '2026-09-02T12:00:00Z', views: 817000 }],
+      [{ at: '2026-09-02T18:30:00Z', views: 884000 }]);
+    expect(out.map((a) => a.views)).toEqual([817000, 884000]);
+  });
+  it('fits the typical curve through the points', () => {
+    const mult = { 1: 0.87, 2: 0.61, 3: 0.45, 5: 0.30, 7: 0.22, 14: 0.096, 21: 0.038, 30: 0 } as any;
+    const pts = [1, 3, 5].map((day) => ({ day, views: 2 * expectedAt(1000, mult, day).expected }));
+    expect(fitScale(pts, 1000, mult)!).toBeCloseTo(2, 6);
+    expect(fitScale([], 1000, mult)).toBeNull();
   });
 });

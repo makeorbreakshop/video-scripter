@@ -140,7 +140,32 @@ export function mergeActuals(publishedAt: string | Date, snapshots: Point[], sam
   };
   for (const p of samples) add(p, 'sample');
   for (const p of snapshots) add(p, 'snapshot');
-  return [...byDay.values()].sort((a, b) => a.day - b.day);
+  const sorted = [...byDay.values()].sort((a, b) => a.day - b.day);
+  // Collapse noise: a snapshot within 12h of a real sample adds nothing, and a repeated
+  // identical count (a catalog re-read of an unchanged number) is not a second measurement.
+  return sorted.filter((a, i) => {
+    if (a.source === 'snapshot' && sorted.some((b) => b.source === 'sample' && Math.abs(b.day - a.day) < 0.5)) return false;
+    const prev = sorted[i - 1];
+    if (prev && prev.views === a.views && a.day - prev.day < 2) return false;
+    return true;
+  });
+}
+
+/**
+ * Fit the channel's typical curve to this video's measurements: the median ratio of measured
+ * views to typical views at the same age. The implied path is typical × that scale, so it passes
+ * through the points instead of only being pinned to the day-30 estimate.
+ */
+export function fitScale(actuals: { day: number; views: number }[], baseline: number | null | undefined, mult: Mult, lt?: Longtail | null): number | null {
+  if (baseline == null || !(baseline > 0)) return null;
+  const ratios = actuals
+    .filter((a) => a.day > 0.04 && a.views > 0)
+    .map((a) => a.views / expectedAt(baseline, mult, a.day, lt).expected)
+    .filter((r) => Number.isFinite(r) && r > 0)
+    .sort((a, b) => a - b);
+  if (!ratios.length) return null;
+  const mid = Math.floor(ratios.length / 2);
+  return ratios.length % 2 ? ratios[mid] : (ratios[mid - 1] + ratios[mid]) / 2;
 }
 
 type ThumbVer = { version: number; first_seen: string | Date };
