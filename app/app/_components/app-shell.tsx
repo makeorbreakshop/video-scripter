@@ -29,10 +29,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       <header className="cs-header">
         <div className="cs-wrap cs-header-in">
-          {/* Marquee strip: the cabinet header, static and small. */}
-          <Link href="/app/feed" className="cs-marquee">
-            <span className="cs-marquee-dot" />
+          {/* Wordmark plate: the one place the pixel face carries the product name. */}
+          <Link href="/app/feed" className="cs-marquee" aria-label="ChannelSmith — go to feed">
             CHANNELSMITH
+            <span className="cs-marquee-cursor" aria-hidden />
           </Link>
           <Nav className="cs-nav" />
           <div className="cs-header-right">

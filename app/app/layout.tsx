@@ -9,7 +9,8 @@ import AppShell from './_components/app-shell';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
-// The pixel face is for the score numerals and hi-score labels only — never body text.
+// The pixel face is for the wordmark, the score numerals, the NEW HIGH SCORE tag and the
+// onboarding step chips only — never body text, headings or labels.
 const pixel = Press_Start_2P({ subsets: ['latin'], weight: '400', variable: '--font-pixel', display: 'swap' });
 
 export const metadata: Metadata = {
