@@ -1,6 +1,7 @@
 'use client';
 // Two steps: your channel, then one competitor. Both use the same add-channel box;
-// the only difference is the role the channel is tracked under.
+// the only difference is the role the channel is tracked under. Neither is required —
+// a user who only watches other people's channels skips step 1 and still gets a feed.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -9,8 +10,10 @@ import AddChannel from './add-channel';
 export default function OnboardingClient({ initialTracked }: { initialTracked: { channel_id: string; role: string }[] }) {
   const router = useRouter();
   const [tracked, setTracked] = useState(initialTracked);
+  const [skippedSelf, setSkippedSelf] = useState(false);
   const hasSelf = tracked.some((t) => t.role === 'self');
-  const step: 1 | 2 = hasSelf ? 2 : 1;
+  const step: 1 | 2 = hasSelf || skippedSelf ? 2 : 1;
+  const hasAny = tracked.length > 0;
 
   async function added(channelId: string) {
     setTracked((t) => [...t, { channel_id: channelId, role: step === 1 ? 'self' : 'competitor' }]);
@@ -25,11 +28,11 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
         <span className="cs-step" data-on={step === 2}>2 ONE COMPETITOR</span>
       </div>
 
-      <h1 className="cs-h1">{step === 1 ? 'Add your channel' : 'Add one competitor'}</h1>
+      <h1 className="cs-h1">{step === 1 ? 'Add your channel' : 'Add a channel to watch'}</h1>
       <p className="cs-sub" style={{ marginBottom: 16 }}>
         {step === 1
-          ? 'We use your channel to set the baseline every score is measured against.'
-          : 'Pick the channel you measure yourself against. You can add more later.'}
+          ? 'Optional — you can track other people’s channels without one of your own.'
+          : 'Pick a channel you want to keep an eye on. You can add more later.'}
       </p>
 
       <AddChannel
@@ -42,7 +45,15 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
       />
 
       <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
-        {step === 2 && <Link className="cs-btn" href="/app/feed">Skip for now</Link>}
+        {step === 1 ? (
+          <button type="button" className="cs-btn" onClick={() => setSkippedSelf(true)}>
+            I don’t have a channel, skip
+          </button>
+        ) : (
+          <Link className="cs-btn" href={hasAny ? '/app/feed' : '/app/channels'}>
+            {hasAny ? 'Skip for now' : 'Skip'}
+          </Link>
+        )}
         <span className="cs-hiscore">step {step} of 2</span>
       </div>
     </div>
