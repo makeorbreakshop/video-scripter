@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { channelDetail } from '@/lib/admin/queries';
+import { channelDetail, channelScores } from '@/lib/admin/queries';
 import { n, compact, ago, etDate, score } from '@/lib/admin/format';
 import { Stat, Spark, Section, Th, Td, VideoLink, Yt, TierBadge } from '@/components/admin/ui';
 
@@ -8,11 +8,12 @@ export const dynamic = 'force-dynamic';
 
 export default async function ChannelPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { channel, videos, snapDays } = await channelDetail(id);
+  const [{ channel, videos, snapDays }, scores] = await Promise.all([channelDetail(id), channelScores(id)]);
   if (!channel) notFound();
+  const scoreOf = new Map(scores.map((s) => [s.video_id, s]));
 
   const recent = videos.filter((v) => Date.now() - new Date(v.published_at).getTime() < 30 * 86400000);
-  const scored = recent.filter((v) => v.temporal_performance_score != null);
+  const scored = recent.filter((v) => scoreOf.get(v.id)?.score != null);
   const changes = videos.reduce((a, v) => a + Math.max(0, v.thumb_versions - 1), 0);
   const snaps30 = snapDays.reduce((a, d) => a + d.n, 0);
 
@@ -37,14 +38,14 @@ export default async function ChannelPage({ params }: { params: Promise<{ id: st
       </div>
 
       {scored.length > 0 && (
-        <Section title="Outliers, last 30 days" right="temporal score, channel-relative · directional until baseline unification lands">
+        <Section title="Outliers, last 30 days" right="model v3 score · projected day-30 vs channel baseline">
           <div className="flex flex-wrap gap-2">
             {[...scored]
-              .sort((a, b) => Number(b.temporal_performance_score) - Number(a.temporal_performance_score))
+              .sort((a, b) => (scoreOf.get(b.id)?.score ?? 0) - (scoreOf.get(a.id)?.score ?? 0))
               .slice(0, 6)
               .map((v) => (
                 <div key={v.id} className="w-64 rounded border border-border p-2 text-xs">
-                  <div className="text-sm font-semibold tabular-nums">{score(v.temporal_performance_score)}</div>
+                  <div className="text-sm font-semibold tabular-nums">{scoreOf.get(v.id)!.score!.toFixed(1)}× <span className="text-[10px] font-normal text-muted-foreground">{scoreOf.get(v.id)!.confidence}</span></div>
                   <div className="mt-1 line-clamp-2"><VideoLink id={v.id} title={v.title} /></div>
                   <div className="mt-1 text-muted-foreground">{compact(v.view_count)} views · {ago(v.published_at)}</div>
                 </div>
@@ -76,7 +77,7 @@ export default async function ChannelPage({ params }: { params: Promise<{ id: st
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">{etDate(v.published_at)}</Td>
                 <Td className="text-right tabular-nums">{compact(v.view_count)}</Td>
-                <Td className="text-right tabular-nums">{score(v.temporal_performance_score)}</Td>
+                <Td className="text-right tabular-nums">{scoreOf.get(v.id)?.score != null ? scoreOf.get(v.id)!.score!.toFixed(1) + '×' : <span className="text-muted-foreground">{scoreOf.get(v.id)?.confidence ?? '–'}</span>}</Td>
                 <Td className="text-right"><TierBadge tier={v.priority_tier} /></Td>
                 <Td className="text-right tabular-nums">{v.snapshots}</Td>
                 <Td className="text-right tabular-nums">

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { videoDetail, describeHistory } from '@/lib/admin/queries';
+import { videoDetail, describeHistory, videoScore } from '@/lib/admin/queries';
 import { n, compact, ago, etDate, etDateTime, score, ageDays } from '@/lib/admin/format';
 import { Stat, Section, ChannelLink, TierBadge } from '@/components/admin/ui';
 import { SnapshotChart } from '@/components/admin/snapshot-chart';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { video: v, snapshots, versions } = await videoDetail(id);
+  const [{ video: v, snapshots, versions }, sc] = await Promise.all([videoDetail(id), videoScore(id)]);
   if (!v) notFound();
 
   const hist = describeHistory(versions, v.duration === 'P0D');
@@ -41,7 +41,11 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Views" value={compact(v.view_count)} sub={`${compact(v.like_count)} likes · ${compact(v.comment_count)} comments`} />
-        <Stat label="Temporal score" value={score(v.temporal_performance_score)} sub="channel-relative · directional" />
+        <Stat
+          label="Score (model v3)"
+          value={sc?.score != null ? sc.score.toFixed(1) + '×' : sc ? sc.confidence : '–'}
+          sub={sc ? `${sc.confidence} · same-age ${sc.same_age_ratio != null ? sc.same_age_ratio.toFixed(1) + '×' : '–'} · projected d30 ${compact(Math.round(sc.est30))} vs baseline ${sc.baseline != null ? compact(Math.round(sc.baseline)) : '–'} (n=${sc.n_baseline}) · scored ${ago(sc.scored_at)}` : 'not scored yet (hourly job, videos ≤60d)'}
+        />
         <Stat
           label="Tracking"
           value={<TierBadge tier={v.priority_tier} />}
