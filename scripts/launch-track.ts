@@ -61,13 +61,20 @@ const reentered = await pool.query(
 );
 if (reentered.rowCount) log(`re-entered ${reentered.rowCount} videos after thumbnail change`);
 
-// --- 3. Title checks via channel RSS (hourly per launch-phase video, zero quota) ---
+// --- 3. Title checks via channel RSS (zero quota): hourly for launch-window and user-tracked videos, daily for the rest under 30 days ---
 const titleDue = await pool.query(
   `select s.video_id, s.channel_id, v.title
      from track_schedule s join videos v on v.id = s.video_id
-    where s.phase = 'launch' and s.channel_id is not null
-      and (s.last_title_check is null or s.last_title_check < now() - interval '60 minutes')
-    limit 2000`
+    left join channel_tracking ct on ct.channel_id = s.channel_id
+    where s.channel_id is not null
+      and v.published_at > now() - interval '30 days'
+      and coalesce(v.is_short, false) = false
+      -- launch window and user-tracked channels hourly; the rest of the recent corpus daily.
+      -- RSS lists a channel's last 15 uploads, so one free fetch covers them all.
+      and (s.last_title_check is null
+           or s.last_title_check < now() - (case when s.phase = 'launch' or ct.lane = 'user' then interval '60 minutes' else interval '24 hours' end))
+    order by (s.phase = 'launch' or ct.lane = 'user') desc, s.last_title_check nulls first
+    limit 3000`
 );
 type TitleRow = { video_id: string; channel_id: string; title: string };
 const byChannel = new Map<string, { video_id: string; title: string }[]>();

@@ -146,3 +146,15 @@ describe('outlierEvents', () => {
     expect(flagged.size).toBe(0);
   });
 });
+
+describe('outlier timing', () => {
+  const row = (o: any) => ({ video_id: 'v', channel_id: 'c', score: 3, est30: 3, baseline: 1, confidence: 'confirmed', ...o });
+  it('a backfilled video lands its score on the publish day', () => {
+    const [e] = outlierEvents([row({ published_at: '2026-08-29T16:00:00Z', import_date: '2026-09-02T18:00:00Z', scored_at: '2026-09-02T18:44:00Z' })], new Set());
+    expect(e.at.toISOString()).toBe('2026-08-29T16:00:00.000Z');
+  });
+  it('a live-tracked video keeps the moment it crossed the line', () => {
+    const [e] = outlierEvents([row({ published_at: '2026-09-01T16:00:00Z', import_date: '2026-09-01T16:10:00Z', scored_at: '2026-09-02T14:00:00Z' })], new Set());
+    expect(e.at.toISOString()).toBe('2026-09-02T14:00:00.000Z');
+  });
+});

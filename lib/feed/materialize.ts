@@ -142,6 +142,7 @@ export interface ScoreRow {
   confidence: string;
   scored_at: Date | string;
   published_at?: Date | string | null;
+  import_date?: Date | string | null;
 }
 
 /**
@@ -159,8 +160,13 @@ export function outlierEvents(rows: ScoreRow[], alreadyFlagged: Set<string>): Fe
     // final score on an old video) the day it would have been confirmed, publish + 30 days.
     const scored = new Date(r.scored_at);
     const published = r.published_at ? new Date(r.published_at) : null;
-    const at = published && scored.getTime() - published.getTime() > 35 * 86_400_000
-      ? new Date(published.getTime() + 30 * 86_400_000)
+    const imported = r.import_date ? new Date(r.import_date) : null;
+    const DAY = 86_400_000;
+    // A backfilled video (imported long after publish, scored right after import) is not news
+    // on the day we caught up: its score joins the publish-day card.
+    const backfilled = published && imported && imported.getTime() - published.getTime() > DAY && scored.getTime() - imported.getTime() < DAY;
+    const at = backfilled ? published!
+      : published && scored.getTime() - published.getTime() > 35 * DAY ? new Date(published.getTime() + 30 * DAY)
       : scored;
     seen.add(r.video_id);
     out.push({
