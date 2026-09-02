@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -865,16 +866,30 @@ export default function ThumbnailBattlePage() {
             </div>
           )}
           
-          <button 
+          <button
             className="bg-[#00ff00] text-black rounded-lg py-3 px-8 text-lg font-semibold hover:bg-[#00ff00]/90 transition-colors mb-4"
             onClick={handleRestart}
           >
             Play Again
           </button>
-          
-          <p className="text-sm text-muted-foreground">
+
+          <p className="text-sm text-muted-foreground mb-8">
             25+ million battles await - can you beat your high score?
           </p>
+
+          <div className="w-full border border-white/10 rounded-lg p-6 text-left">
+            <p className="text-lg font-semibold mb-1">Now track the channels you're beating</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              See every thumbnail swap and title change your competitors make, and whether it worked.
+            </p>
+            <Link
+              href="/app"
+              className="inline-block bg-[#00ff00] text-black rounded-lg py-2 px-6 text-sm font-semibold hover:bg-[#00ff00]/90 transition-colors"
+            >
+              Start tracking
+            </Link>
+            <p className="text-xs text-muted-foreground mt-3">Free for 2 channels.</p>
+          </div>
         </motion.div>
       </div>
     );
