@@ -151,8 +151,20 @@ export function VideoChart({
     }
     return out;
   }, [shown, maxDay, minDay, launch]);
-  // More than a few ticks and their labels start colliding; the ticks stay, the words go.
-  const labelClusters = clusters.length <= 3;
+  // Labels collide when two changes sit close together on a narrow chart, so a cluster keeps
+  // its word only if it is far enough from the last labelled one. The ticks always stay.
+  const labelled = useMemo(() => {
+    const span = Math.max(maxDay - (launch ? minDay : 0), 0.01);
+    const keep = new Set<string>();
+    let lastAt = -Infinity;
+    for (const cl of clusters) {
+      if (keep.size >= 3) break;
+      if (cl.day - lastAt < span * 0.14) continue;
+      keep.add(cl.keys[0]);
+      lastAt = cl.day;
+    }
+    return keep;
+  }, [clusters, maxDay, minDay, launch]);
   // The implied path only exists when there is a projection to scale; without one a sparse
   // video still gets its own line through whatever points it has.
   const implied = sparse && projected.length > 0;
@@ -259,7 +271,7 @@ export function VideoChart({
                 stroke={color}
                 strokeWidth={on ? 2 : 1}
                 strokeOpacity={on ? 0.9 : 0.25}
-                label={labelClusters || on
+                label={labelled.has(cl.keys[0]) || on
                   ? ({ value: label, fontSize: 10, fill: color, position: 'insideTopRight', dx: 4, dy: 6,
                       onMouseEnter: () => setHovered(cl.keys[0]), onMouseLeave: () => setHovered(null) } as any)
                   : undefined}
