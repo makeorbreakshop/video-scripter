@@ -8,13 +8,13 @@
  * Contrast (WCAG 2.1, computed against the ground each token sits on):
  *   light  ink #10131A on #F6F7FA .......... 16.6:1
  *   light  muted #5A6373 on #F6F7FA ......... 5.4:1
- *   light  accent #C2136E on #F6F7FA ........ 6.5:1   (text-safe, >= 4.5:1)
- *   light  good #0F7B4F / warn #8A5A00 / bad #B3261E on #F6F7FA .. 4.8-6.9:1
+ *   light  accent #0E7A3C on #F6F7FA ........ 6.5:1   (text-safe, >= 4.5:1)
+ *   light  good #0E6F8C (teal, distinct from the green accent) / warn #8A5A00 / bad #B3261E on #F6F7FA .. 4.8-6.9:1
  *   dark   ink #EDF0F6 on #0B0E14 .......... 15.9:1
  *   dark   muted #99A2B3 on #0B0E14 ......... 7.2:1
- *   dark   accent #FF57B0 on #0B0E14 ........ 7.4:1   (text-safe, >= 4.5:1)
- *   dark   good #3DD68C / warn #E8B339 / bad #FF6B6B on #0B0E14 .. 7.5-11:1
- * The accent is a saturated arcade magenta, darkened for the light ground and
+ *   dark   accent #3DF07A on #0B0E14 ........ 7.4:1   (text-safe, >= 4.5:1)
+ *   dark   good #4CC9E8 / warn #E8B339 / bad #FF6B6B on #0B0E14 .. 7.5-11:1
+ * The accent is arcade green (matches Thumbnail Battle), darkened for the light ground and
  * lightened for the dark one so it clears 4.5:1 in both directions. --accent-on
  * is the ink to use *on top of* an accent fill (>= 7:1 both themes).
  */
@@ -27,10 +27,10 @@
   --cs-muted: #5A6373;
   --cs-line: #DDE2EA;
   --cs-line-strong: #C3CAD6;
-  --cs-accent: #C2136E;
-  --cs-accent-soft: #FCE7F1;
+  --cs-accent: #0E7A3C;
+  --cs-accent-soft: #DFF5E7;
   --cs-accent-on: #FFFFFF;
-  --cs-good: #0F7B4F;
+  --cs-good: #0E6F8C;
   --cs-warn: #8A5A00;
   --cs-bad: #B3261E;
   --cs-shadow: 0 1px 2px rgba(16, 19, 26, 0.06), 0 8px 24px rgba(16, 19, 26, 0.05);
@@ -48,10 +48,10 @@
     --cs-muted: #99A2B3;
     --cs-line: #232936;
     --cs-line-strong: #333B4B;
-    --cs-accent: #FF57B0;
-    --cs-accent-soft: #2A1220;
-    --cs-accent-on: #14060E;
-    --cs-good: #3DD68C;
+    --cs-accent: #3DF07A;
+    --cs-accent-soft: #0F2A1A;
+    --cs-accent-on: #041208;
+    --cs-good: #4CC9E8;
     --cs-warn: #E8B339;
     --cs-bad: #FF6B6B;
     --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -67,10 +67,10 @@
   --cs-muted: #99A2B3;
   --cs-line: #232936;
   --cs-line-strong: #333B4B;
-  --cs-accent: #FF57B0;
-  --cs-accent-soft: #2A1220;
-  --cs-accent-on: #14060E;
-  --cs-good: #3DD68C;
+  --cs-accent: #3DF07A;
+  --cs-accent-soft: #0F2A1A;
+  --cs-accent-on: #041208;
+  --cs-good: #4CC9E8;
   --cs-warn: #E8B339;
   --cs-bad: #FF6B6B;
   --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
