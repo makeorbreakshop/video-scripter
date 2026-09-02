@@ -1,9 +1,11 @@
 // Thumbnail change watcher: detects packaging swaps (manual changes and
 // Test & Compare winners) by polling YouTube's image CDN — ZERO Data API quota.
-// Watch policy: videos published <72h ago every run (30-min LaunchAgent),
-// 3-30 days old once per day. Every distinct image version is hashed and
-// archived to data/thumbnails/ so packaging history is preserved.
-// Usage: npx tsx scripts/thumbnail-watch.ts [maxVideos]
+// Watch policy lives in lib/thumbs/watch-policy.ts: launch <6h every run, hot 6-72h
+// every ~30 min, warm 3-30d daily, cool 30-90d weekly, cold >90d monthly. Every distinct
+// image version is hashed and archived to data/thumbnails/ so packaging history is preserved.
+// Hot tiers are selected first and long-tail work is separately capped, so the long tail
+// can never crowd the launch window out of the per-run budget.
+// Usage: npx tsx scripts/thumbnail-watch.ts [maxVideos] [--dry] [--long-tail]
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
@@ -14,8 +16,18 @@ import { chunk } from '../lib/nightly/tracking-core';
 import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
+import {
+  HOT_TARGETS_SQL,
+  LONG_TAIL_TARGETS_SQL,
+  TIER_COUNTS_SQL,
+  LONG_TAIL_MAX_PER_RUN,
+  isLongTailRun,
+} from '../lib/thumbs/watch-policy';
 
-const maxVideos = parseInt(process.argv[2] || '25000', 10);
+const args = process.argv.slice(2);
+const dry = args.includes('--dry');
+const forceLongTail = args.includes('--long-tail');
+const maxVideos = parseInt(args.find((a) => /^\d+$/.test(a)) || '25000', 10);
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 4,
@@ -26,28 +38,32 @@ const pool = new pg.Pool({
 pool.on('connect', (c) => { c.query('set statement_timeout = 0').catch(() => {}); });
 const STORE = path.join(path.dirname(new URL(import.meta.url).pathname), '../data/thumbnails');
 
-const { rows: targets } = await pool.query(
-  `with latest as (
-     select distinct on (video_id) video_id, last_checked
-     from thumbnail_versions order by video_id, version desc
-   )
-   select v.id from videos v
-   left join latest l on l.video_id = v.id
-   where v.published_at > now() - interval '30 days'
-     and coalesce(v.duration, '') <> 'P0D'  -- live/upcoming: hqdefault is a feed frame, not packaging
-     and coalesce(v.is_short, false) = false
-     and not (coalesce(v.duration, '') ~ '^PT(([0-5]?[0-9])S|1M([0-2]S)?)$')  -- <=62s = Shorts even when is_short is unset
-     and (
-       v.published_at > now() - interval '6 hours'                  -- launch window: every 5-min run
-       or (v.published_at > now() - interval '72 hours'
-           and (l.video_id is null or l.last_checked < now() - interval '25 minutes'))  -- hot: ~30 min
-       or l.video_id is null                                        -- never checked
-       or l.last_checked < now() - interval '23 hours'              -- warm: daily
-     )
-   order by v.published_at desc
-   limit $1`,
-  [maxVideos]
-);
+if (dry) {
+  const { rows } = await pool.query(TIER_COUNTS_SQL);
+  const order = ['launch', 'hot', 'warm', 'cool', 'cold'];
+  console.log('tier    total      due now');
+  for (const t of order) {
+    const r = rows.find((x: any) => x.tier === t);
+    console.log(`${t.padEnd(8)}${String(r?.total ?? 0).padStart(8)}${String(r?.due ?? 0).padStart(13)}`);
+  }
+  console.log(`(long tail cap ${LONG_TAIL_MAX_PER_RUN}/run, runs hourly; long-tail slot now: ${isLongTailRun(new Date())})`);
+  await pool.end();
+  process.exit(0);
+}
+
+// Hot tiers first: they always get the budget they need.
+const { rows: hot } = await pool.query(HOT_TARGETS_SQL, [maxVideos]);
+let targets = hot;
+// Long tail fills whatever is left, capped, and only on the first LaunchAgent slot of the hour
+// (its anti-join spans ~850K rows; this DB has had IO incidents).
+if (isLongTailRun(new Date()) || forceLongTail) {
+  const budget = Math.min(LONG_TAIL_MAX_PER_RUN, Math.max(0, maxVideos - hot.length));
+  if (budget > 0) {
+    const { rows: tail } = await pool.query(LONG_TAIL_TARGETS_SQL, [budget]);
+    targets = hot.concat(tail);
+    console.log(`Hot tiers: ${hot.length}; long tail: ${tail.length}`);
+  }
+}
 console.log(`Watching ${targets.length} videos`);
 
 let checked = 0;

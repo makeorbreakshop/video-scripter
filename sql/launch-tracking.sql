@@ -46,3 +46,11 @@ create index if not exists idx_thumbver_phash on thumbnail_versions (video_id, p
 -- 2026-09-02: R2 archive tracking
 alter table thumbnail_versions add column if not exists r2_uploaded_at timestamptz;
 create index if not exists idx_thumbver_r2_pending on thumbnail_versions (first_seen desc) where r2_uploaded_at is null;
+
+-- 2026-09-02: long-tail thumbnail watch (30-90d weekly, >90d monthly). Without this the
+-- long-tail target query seq-scans ~560K videos (11.6s, ~190K blocks read); with it the
+-- planner walks published_at backwards from the 30-day boundary and stops at the LIMIT
+-- (0.47s, ~600 blocks). Predicate matches lib/thumbs/watch-policy.ts eligibility exactly.
+create index concurrently if not exists idx_videos_longtail_watch
+  on videos (published_at desc)
+  where coalesce(is_short, false) = false and coalesce(duration, '') <> 'P0D';
