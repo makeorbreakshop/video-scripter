@@ -74,7 +74,7 @@ const titleDue = await pool.query(
       and (s.last_title_check is null
            or s.last_title_check < now() - (case when s.phase = 'launch' or ct.lane = 'user' then interval '60 minutes' else interval '24 hours' end))
     order by (s.phase = 'launch' or ct.lane = 'user') desc, s.last_title_check nulls first
-    limit 3000`
+    limit 400`
 );
 type TitleRow = { video_id: string; channel_id: string; title: string };
 const byChannel = new Map<string, { video_id: string; title: string }[]>();
