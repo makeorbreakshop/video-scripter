@@ -21,9 +21,18 @@ export interface GlobalParams {
   mult: Record<number, number>;
   // per day bucket: Q quantile edges and the median residual log-error in each bin
   qBins: Record<number, { edges: number[]; resid: number[] }>;
+  // long-tail table: median lifetime_views / v30 by age bucket (see fitLongTail)
+  longtail?: LongtailTable;
   fittedAt: string;
   nVideos: number;
 }
+
+// Age buckets (days since publish) for the long-tail multiplier. The last one is open-ended.
+export const LONGTAIL_AGES = [60, 90, 180, 365, 730, 1500] as const;
+
+// mult[i] is the median lifetime_views / v30 for videos whose age falls in bucket i;
+// monotone non-decreasing and >= 1 (a video never loses views). n[i] is the fit support.
+export interface LongtailTable { ages: number[]; mult: number[]; n: number[] }
 
 export const K_SHRINK = (t: number) => (t <= 2 ? 2 : 1);
 
@@ -65,6 +74,7 @@ export interface ScoreInput {
   priorMultLogs: number[];    // channel priors: log(v30 / v_t) at ~this bucket (<=10)
   priorV30: number[];         // channel priors: day-30 views (<=10)
   priorSameAge: number[];     // channel priors: views at the same age (<=10)
+  priorsFromLifetime?: number; // how many of priorV30 came from lifetime/long-tail normalization
   params: GlobalParams;
 }
 
@@ -77,6 +87,7 @@ export interface ScoreOutput {
   score: number | null;
   sameAgeRatio: number | null;
   nSameAge: number;
+  priorsFromLifetime: number;
   confidence: 'insufficient' | 'early' | 'likely' | 'confirmed';
 }
 
@@ -94,9 +105,13 @@ export function scoreVideo(inp: ScoreInput): ScoreOutput {
   const sameMed = inp.priorSameAge.length >= 3 ? median(inp.priorSameAge) : null;
   const score = baseline && baseline > 0 ? est30 / baseline : null;
   const sameAgeRatio = sameMed && sameMed > 0 ? inp.vt / sameMed : null;
+  // A baseline needs >=3 priors; below that we do not claim to know how the channel performs.
   const confidence =
-    score == null && sameAgeRatio == null ? 'insufficient' : inp.day < 3 ? 'early' : inp.day < 7 ? 'likely' : 'confirmed';
-  return { bucket, q, est30, baseline, nBaseline: inp.priorV30.length, score, sameAgeRatio, nSameAge: inp.priorSameAge.length, confidence };
+    inp.priorV30.length < 3 ? 'insufficient' : inp.day < 3 ? 'early' : inp.day < 7 ? 'likely' : 'confirmed';
+  return {
+    bucket, q, est30, baseline, nBaseline: inp.priorV30.length, score, sameAgeRatio,
+    nSameAge: inp.priorSameAge.length, priorsFromLifetime: inp.priorsFromLifetime ?? 0, confidence,
+  };
 }
 
 // ---- fitting (used by the nightly --fit) ----
@@ -131,4 +146,75 @@ export function fitParams(rows: FitRow[], fittedAt = new Date().toISOString()): 
     }
   }
   return { mult, qBins, fittedAt, nVideos: rows.length };
+}
+
+// ---- long tail (used by --fit and by --final / sparse-channel baselines) ----
+//
+// Most channels are not densely tracked, so a prior video often has no day-27..33 snapshot --
+// only a current lifetime view_count. The long-tail table converts one into the other:
+// for videos that have BOTH a day-30 truth and a current count, the median lifetime/v30 by age.
+// It is monotone non-decreasing in age and never below 1.
+export interface LongtailRow { age: number; v30: number; lifetime: number }
+
+export function longtailBucket(age: number, ages: readonly number[] = LONGTAIL_AGES): number {
+  let i = -1;
+  for (let k = 0; k < ages.length; k++) if (age >= ages[k]) i = k;
+  return i; // -1 when younger than the first bucket
+}
+
+export function fitLongTail(rows: LongtailRow[], ages: readonly number[] = LONGTAIL_AGES, minRows = 20): LongtailTable {
+  const mult: number[] = [];
+  const n: number[] = [];
+  let last = 1;
+  for (let i = 0; i < ages.length; i++) {
+    const rs = rows.filter(
+      (r) => r.v30 > 0 && r.lifetime > 0 && Number.isFinite(r.age) && longtailBucket(r.age, ages) === i
+    );
+    n.push(rs.length);
+    const m = rs.length >= minRows ? median(rs.map((r) => r.lifetime / r.v30)) : null;
+    // thin buckets carry the previous value forward; monotone and never below 1
+    last = Math.max(m ?? last, last, 1);
+    mult.push(last);
+  }
+  return { ages: [...ages], mult, n };
+}
+
+// Multiplier at an arbitrary age: log-linear between bucket edges, clamped at both ends.
+export function longtailAt(t: LongtailTable | undefined | null, age: number): number {
+  if (!t || !t.ages.length || !t.mult.length) return 1;
+  if (!(age > 0)) return t.mult[0];
+  if (age <= t.ages[0]) return t.mult[0];
+  const lastI = t.ages.length - 1;
+  if (age >= t.ages[lastI]) return t.mult[lastI];
+  for (let i = 1; i <= lastI; i++) {
+    if (age <= t.ages[i]) {
+      const x0 = Math.log(t.ages[i - 1]), x1 = Math.log(t.ages[i]), x = Math.log(age);
+      return t.mult[i - 1] + ((t.mult[i] - t.mult[i - 1]) * (x - x0)) / (x1 - x0);
+    }
+  }
+  return t.mult[lastI];
+}
+
+// Minimum age at which a lifetime count may stand in for a day-30 snapshot.
+export const MIN_LIFETIME_AGE = 45;
+
+export interface V30Estimate { v30: number; fromLifetime: boolean }
+
+// Day-30 views for any video: the real snapshot when we have one, else the current
+// lifetime count divided back down the long-tail curve. Null when neither applies.
+export function estimateV30(
+  snapshotV30: number | null | undefined,
+  viewCount: number | null | undefined,
+  ageDays: number,
+  longtail: LongtailTable | undefined | null,
+  minAge = MIN_LIFETIME_AGE
+): V30Estimate | null {
+  if (snapshotV30 != null && snapshotV30 > 0 && Number.isFinite(snapshotV30)) {
+    return { v30: snapshotV30, fromLifetime: false };
+  }
+  if (viewCount != null && viewCount > 0 && Number.isFinite(viewCount) && ageDays >= minAge) {
+    const m = longtailAt(longtail, ageDays);
+    if (m > 0) return { v30: viewCount / m, fromLifetime: true };
+  }
+  return null;
 }

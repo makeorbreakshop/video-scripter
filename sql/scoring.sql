@@ -30,3 +30,7 @@ create table if not exists video_scores (
 create index if not exists idx_video_scores_score on video_scores (score desc nulls last);
 create index if not exists idx_video_scores_ratio on video_scores (same_age_ratio desc nulls last);
 create index if not exists idx_video_scores_channel on video_scores (channel_id, scored_at desc);
+
+-- 2026-09-02: baselines may now be built from lifetime counts normalized down the
+-- long-tail curve when a prior has no day-27..33 snapshot. Track how many did.
+alter table video_scores add column if not exists priors_from_lifetime integer not null default 0;

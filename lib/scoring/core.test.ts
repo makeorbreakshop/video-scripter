@@ -1,4 +1,4 @@
-import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, GlobalParams } from './core';
+import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams } from './core';
 
 const params: GlobalParams = {
   mult: { 1: Math.log(2.2), 2: Math.log(1.9), 3: Math.log(1.4), 5: Math.log(1.25), 7: Math.log(1.12), 14: Math.log(1.05), 21: Math.log(1.02), 30: 0 },
@@ -99,5 +99,79 @@ describe('fitParams', () => {
     expect(median([3, 1, 2])).toBe(2);
     expect(median([4, 1, 3, 2])).toBe(2.5);
     expect(median([])).toBeNull();
+  });
+});
+
+describe('fitLongTail / longtailAt / estimateV30', () => {
+  // synthetic corpus: lifetime = v30 * trueMult(bucket), with noise-free medians
+  const trueMult: Record<number, number> = { 60: 1.2, 90: 1.4, 180: 1.8, 365: 2.5, 730: 3.2, 1500: 4.0 };
+  const rows: { age: number; v30: number; lifetime: number }[] = [];
+  for (const [ageStr, m] of Object.entries(trueMult)) {
+    const age = Number(ageStr) + 5;
+    for (let i = 0; i < 40; i++) rows.push({ age, v30: 1000 + i, lifetime: (1000 + i) * m });
+  }
+  const t = fitLongTail(rows);
+
+  test('buckets ages and recovers the median multiplier per bucket', () => {
+    expect(t.ages).toEqual([60, 90, 180, 365, 730, 1500]);
+    expect(t.n).toEqual([40, 40, 40, 40, 40, 40]);
+    t.mult.forEach((m, i) => expect(m).toBeCloseTo(trueMult[t.ages[i]], 6));
+  });
+
+  test('is monotone non-decreasing and never below 1', () => {
+    const noisy = fitLongTail([
+      ...Array.from({ length: 30 }, () => ({ age: 70, v30: 100, lifetime: 300 })),   // 3.0
+      ...Array.from({ length: 30 }, () => ({ age: 100, v30: 100, lifetime: 150 })),  // 1.5, would dip
+      ...Array.from({ length: 30 }, () => ({ age: 200, v30: 100, lifetime: 50 })),   // 0.5, would dip
+    ]);
+    expect(noisy.mult).toEqual([3, 3, 3, 3, 3, 3]);
+    const low = fitLongTail(Array.from({ length: 30 }, () => ({ age: 70, v30: 100, lifetime: 40 })));
+    expect(low.mult[0]).toBe(1);                       // clamped up from 0.4
+  });
+
+  test('thin buckets carry the previous value forward', () => {
+    const sparse = fitLongTail([
+      ...Array.from({ length: 30 }, () => ({ age: 70, v30: 100, lifetime: 120 })),
+      ...Array.from({ length: 3 }, () => ({ age: 100, v30: 100, lifetime: 900 })),   // below minRows
+    ]);
+    expect(sparse.mult[0]).toBe(1.2);
+    expect(sparse.mult[1]).toBe(1.2);
+    expect(sparse.n[1]).toBe(3);
+  });
+
+  test('longtailAt interpolates in log(age) and clamps at both ends', () => {
+    expect(longtailAt(t, 10)).toBeCloseTo(1.2, 6);
+    expect(longtailAt(t, 60)).toBeCloseTo(1.2, 6);
+    expect(longtailAt(t, 5000)).toBeCloseTo(4.0, 6);
+    const mid = longtailAt(t, 120);
+    expect(mid).toBeGreaterThan(1.4);
+    expect(mid).toBeLessThan(1.8);
+    // exactly halfway in log space between 90 and 180
+    expect(longtailAt(t, Math.sqrt(90 * 180))).toBeCloseTo((1.4 + 1.8) / 2, 6);
+    expect(longtailAt(undefined, 300)).toBe(1);
+  });
+
+  test('estimateV30 prefers the snapshot, falls back to lifetime, else null', () => {
+    expect(estimateV30(5000, 90000, 400, t)).toEqual({ v30: 5000, fromLifetime: false });
+    const est = estimateV30(null, 9000, 365, t)!;
+    expect(est.fromLifetime).toBe(true);
+    expect(est.v30).toBeCloseTo(9000 / 2.5, 6);
+    expect(estimateV30(null, 9000, 30, t)).toBeNull();   // too young to normalize
+    expect(estimateV30(null, 0, 400, t)).toBeNull();
+    expect(estimateV30(0, 9000, 50, t)!.fromLifetime).toBe(true); // age 50 >= 45, clamped mult
+  });
+});
+
+describe('confidence with lifetime-derived baselines', () => {
+  test("'insufficient' only below 3 priors, regardless of same-age history", () => {
+    const base = { vt: 1000, day: 20, snaps: [{ day: 1, views: 500 }, { day: 20, views: 1000 }], priorMultLogs: [], priorSameAge: [], params };
+    expect(scoreVideo({ ...base, priorV30: [900, 1000, 1100] }).confidence).toBe('confirmed');
+    expect(scoreVideo({ ...base, priorV30: [900, 1000] }).confidence).toBe('insufficient');
+    expect(scoreVideo({ ...base, priorV30: [900, 1000], priorSameAge: [1, 2, 3] }).confidence).toBe('insufficient');
+  });
+  test('priorsFromLifetime is carried through to the output', () => {
+    const out = scoreVideo({ vt: 1000, day: 20, snaps: [], priorMultLogs: [], priorV30: [900, 1000, 1100], priorSameAge: [], priorsFromLifetime: 2, params });
+    expect(out.priorsFromLifetime).toBe(2);
+    expect(out.nBaseline).toBe(3);
   });
 });
