@@ -1,4 +1,4 @@
-import { dhashFromGray, dhashFromRgb, downsampleGray, hamming, isSameImage, labelByPhash, DHASH_W, DHASH_H, SAME_IMAGE_MAX_DISTANCE } from './phash';
+import { dhashFromGray, dhashFromRgb, downsampleGray, hamming, isSameImage, labelByPhash, DHASH_W, DHASH_H, SAME_IMAGE_MAX_DISTANCE, isPillarboxed } from './phash';
 
 // synthetic 90x80 grayscale "image": a horizontal gradient with a bright block
 function makeImage(opts: { blockX?: number; noise?: number; offset?: number } = {}) {
@@ -83,5 +83,19 @@ describe('isSamePicture (combined rule)', () => {
   });
   test('meanAbsDiff', () => {
     expect(meanAbsDiff([0, 10, 20], [1, 12, 17])).toBeCloseTo(2, 6);
+  });
+});
+
+describe('isPillarboxed', () => {
+  const W = 64, H = 36;
+  const frame = (fill: (x: number, y: number) => number) => { const g = new Uint8Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) g[y * W + x] = fill(x, y); return g; };
+  it('detects black pillars around a bright centre', () => {
+    expect(isPillarboxed(frame((x) => (x < 12 || x >= 52 ? 4 : 140)))).toBe(true);
+  });
+  it('rejects a normal landscape thumbnail', () => {
+    expect(isPillarboxed(frame((x) => 60 + (x % 50)))).toBe(false);
+  });
+  it('rejects an all-dark thumbnail (dark scene, not pillars)', () => {
+    expect(isPillarboxed(frame(() => 8))).toBe(false);
   });
 });

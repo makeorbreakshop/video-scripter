@@ -13,7 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
-import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
+import { phashFromJpeg, pixelMeanDiff, pillarboxedJpeg } from '../lib/thumbs/decode';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
 import {
@@ -69,6 +69,7 @@ console.log(`Watching ${targets.length} videos`);
 let checked = 0;
 let changes = 0;
 let news = 0;
+let shorts = 0;
 for (const group of chunk(targets, 20)) {
   await Promise.all(
     group.map(async ({ id }) => {
@@ -86,6 +87,12 @@ for (const group of chunk(targets, 20)) {
         );
         if (cur.length && cur[0].sha256 === sha) {
           await pool.query(`update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`, [id, cur[0].version]);
+          return;
+        }
+        // First capture of a vertical (pillarboxed) thumbnail: it is a Short. Flag it and stop watching.
+        if (!cur.length && (await pillarboxedJpeg(buf).catch(() => false))) {
+          await pool.query(`update videos set is_short = true where id = $1`, [id]);
+          shorts++;
           return;
         }
         // Different bytes: only a CHANGE if the picture itself differs (CDN re-encodes flip sha256 with the same image).
@@ -117,5 +124,5 @@ for (const group of chunk(targets, 20)) {
     })
   );
 }
-console.log(`Done. ${checked} checked, ${news} first-captures, ${changes} CHANGES detected.`);
+console.log(`Done. ${checked} checked, ${news} first-captures, ${changes} CHANGES detected, ${shorts} flagged as Shorts.`);
 await pool.end();

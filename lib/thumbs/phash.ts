@@ -106,3 +106,20 @@ export function isSamePicture(dhashA: string | null | undefined, dhashB: string 
   if (d <= AMBIGUOUS_MAX_DISTANCE && meanDiff != null && meanDiff < SAME_PIXEL_MAX_MEAN_DIFF) return true;
   return false;
 }
+
+/**
+ * Vertical (Shorts) videos get a 16:9 thumbnail with black pillars on both sides. Duration no
+ * longer separates Shorts (up to 3 minutes since late 2024), so the picture is the reliable tell.
+ * Input: the 64x36 grayscale; the outer 18% of columns must be near-black while the middle is not.
+ */
+export function isPillarboxed(gray: ArrayLike<number>, w = SMALL_W, h = SMALL_H): boolean {
+  const band = Math.max(1, Math.round(w * 0.18));
+  let side = 0, sideN = 0, mid = 0, midN = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const v = gray[y * w + x];
+      if (x < band || x >= w - band) { side += v; sideN++; } else if (x > w * 0.35 && x < w * 0.65) { mid += v; midN++; }
+    }
+  }
+  return side / sideN < 18 && mid / midN > 40;
+}
