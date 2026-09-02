@@ -5,10 +5,10 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { requireAppUser } from '@/lib/app/session';
-import { channelHeader, channelVideos, isTracked, parseSort, GRID_PAGE } from '@/lib/app/channel-page';
-import { compact, etDate, n } from '@/lib/admin/format';
+import { channelHeader, channelVideos, channelVideoCount, isTracked, parseSort, parseRange, GRID_PAGE } from '@/lib/app/channel-page';
+import { compact, n } from '@/lib/admin/format';
 import { ChannelAvatar } from '@/components/app/avatar';
-import { VideoGrid, VideoGridStyles, SortTabs, LoadMore } from '@/components/app/video-grid';
+import { VideoGrid, VideoGridStyles, FilterBar, LoadMore } from '@/components/app/video-grid';
 import { TrackButton } from '@/components/app/track-button';
 
 export const dynamic = 'force-dynamic';
@@ -26,13 +26,15 @@ export default async function AppChannelPage({
   if (!user) redirect('/sign-in');
 
   const sort = parseSort(sp.sort);
+  const range = parseRange(sp.range);
   const asked = parseInt(Array.isArray(sp.n) ? sp.n[0] ?? '' : sp.n ?? '', 10);
   const limit = Number.isFinite(asked) ? Math.min(Math.max(asked, GRID_PAGE), MAX_ROWS) : GRID_PAGE;
 
-  const [header, page, tracked] = await Promise.all([
+  const [header, page, tracked, total] = await Promise.all([
     channelHeader(id),
-    channelVideos(id, sort, limit, 0),
+    channelVideos(id, sort, limit, 0, range),
     isTracked(user.id, id),
+    channelVideoCount(id, range),
   ]);
   if (!header) notFound();
 
@@ -41,26 +43,19 @@ export default async function AppChannelPage({
       <VideoGridStyles />
       <style>{`
         .ch-head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 14px; }
-        .ch-stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 22px; }
-        .ch-stat { border: 1px solid var(--cs-line); border-radius: var(--cs-radius);
-                   background: var(--cs-surface); padding: 12px; }
-        .ch-stat-v { font-family: var(--font-mono), monospace; font-variant-numeric: tabular-nums;
-                     font-size: 18px; font-weight: 600; margin-top: 4px; }
-        .ch-bar { display: flex; align-items: center; justify-content: space-between;
-                  gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-        @media (min-width: 720px) { .ch-stats { grid-template-columns: repeat(4, minmax(0,1fr)); } }
       `}</style>
 
       <div className="ch-head">
         <ChannelAvatar src={header.avatarUrl} name={header.name} size={56} />
         <div style={{ minWidth: 0 }}>
-          <div className="cs-hiscore">channel</div>
           <h1 className="cs-h1">{header.name}</h1>
           <p className="cs-sub">
             {header.subscriberCount != null && (
               <><span className="cs-num">{compact(header.subscriberCount)}</span> subscribers · </>
             )}
-            tracked since <span className="cs-num">{header.trackedSince ? etDate(header.trackedSince) : '–'}</span>
+            <span className="cs-num">{n(header.videoCount)}</span> videos
+            {header.baseline != null && <> · baseline <span className="cs-num">{compact(Math.round(header.baseline))}</span> views at day 30</>}
+            {header.overCount ? <> · <span className="cs-num">{header.overCount}</span> beat 2×</> : null}
           </p>
         </div>
         <div style={{ marginLeft: 'auto' }}>
@@ -68,40 +63,10 @@ export default async function AppChannelPage({
         </div>
       </div>
 
-      <div className="ch-stats">
-        <div className="ch-stat">
-          <div className="cs-stat-l">Videos</div>
-          <div className="ch-stat-v">{n(header.videoCount)}</div>
-        </div>
-        <div className="ch-stat">
-          <div className="cs-stat-l">Baseline</div>
-          <div className="ch-stat-v">{header.baseline != null ? compact(Math.round(header.baseline)) : '–'}</div>
-          <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 3 }}>median day-30 views</div>
-        </div>
-        <div className="ch-stat">
-          <div className="cs-stat-l">Beat 2×</div>
-          <div className="ch-stat-v" style={{ color: header.overShare && header.overShare >= 0.2 ? 'var(--cs-good)' : undefined }}>
-            {header.overShare != null ? `${Math.round(header.overShare * 100)}%` : '–'}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 3 }}>
-            {header.overCount} of {header.scoredCount} scored
-          </div>
-        </div>
-        <div className="ch-stat">
-          <div className="cs-stat-l">Showing</div>
-          <div className="ch-stat-v">{page.videos.length} of {n(header.videoCount)}</div>
-          <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 3 }}>
-            {sort === 'published' ? 'newest first' : sort === 'views' ? 'most viewed first' : 'highest score first'}
-          </div>
-        </div>
-      </div>
-
-      <div className="ch-bar">
-        <SortTabs channelId={header.channelId} sort={sort} n={limit} />
-      </div>
+      <FilterBar channelId={header.channelId} sort={sort} range={range} showing={page.videos.length} total={total} />
 
       <VideoGrid videos={page.videos} />
-      {page.hasMore && limit < MAX_ROWS && <LoadMore channelId={header.channelId} sort={sort} n={limit} />}
+      {page.hasMore && limit < MAX_ROWS && <LoadMore channelId={header.channelId} sort={sort} n={limit} range={range} />}
 
       <p style={{ fontSize: 12, marginTop: 24 }}>
         <Link href="/app/channels" style={{ color: 'var(--cs-muted)' }}>← all channels</Link>

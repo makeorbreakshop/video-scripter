@@ -29,6 +29,22 @@ export const SORTS: Record<SortKey, string> = {
 };
 export const GRID_PAGE = 60;
 
+export type RangeKey = 'all' | '30d' | '90d' | '1y';
+const RANGE_INTERVAL: Record<RangeKey, string | null> = { all: null, '30d': '30 days', '90d': '90 days', '1y': '1 year' };
+export function parseRange(value: string | string[] | null | undefined): RangeKey {
+  const v = Array.isArray(value) ? value[0] : value;
+  return v === '30d' || v === '90d' || v === '1y' ? v : 'all';
+}
+function rangeClause(range: RangeKey): string {
+  const iv = RANGE_INTERVAL[range];
+  return iv ? ` and v.published_at >= now() - interval '${iv}'` : '';
+}
+/** How many of the channel's videos fall in the range (for "showing N of M"). */
+export async function channelVideoCount(channelId: string, range: RangeKey): Promise<number> {
+  const rows = await q<{ n: number }>(`select count(*)::int as n from videos v where v.channel_id = $1${rangeClause(range)}`, [channelId]);
+  return rows[0]?.n ?? 0;
+}
+
 /**
  * Newest-first is the default. Score used to be, which reads as "videos missing" on a
  * channel we have not scored yet: every row ties at NULL, so the order looks arbitrary and
@@ -110,7 +126,8 @@ export async function channelVideos(
   channelId: string,
   sort: SortKey = 'score',
   limit = GRID_PAGE,
-  offset = 0
+  offset = 0,
+  range: RangeKey = 'all'
 ): Promise<{ videos: GridVideo[]; hasMore: boolean }> {
   const rows = await q<any>(
     `select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url,
@@ -132,7 +149,7 @@ export async function channelVideos(
                 (array_agg(title order by version desc))[2] as prev_title
            from title_versions t where t.video_id = v.id
        ) tt on true
-      where v.channel_id = $1
+      where v.channel_id = $1${rangeClause(range)}
       order by ${SORTS[sort]}
       limit $2 offset $3`,
     [channelId, limit + 1, offset]

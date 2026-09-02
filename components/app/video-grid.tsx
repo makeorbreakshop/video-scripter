@@ -3,69 +3,52 @@
 
 import Link from 'next/link';
 import type { GridVideo, SortKey } from '@/lib/app/channel-page';
-import { GRID_PAGE } from '@/lib/app/channel-page';
+import { GRID_PAGE, type RangeKey } from '@/lib/app/channel-page';
 import { compact, etDate, ago } from '@/lib/admin/format';
 import { Thumb } from './thumb';
 
 const SORT_LABELS: [SortKey, string][] = [
-  ['score', 'Score'],
   ['published', 'Newest'],
+  ['score', 'Score'],
   ['views', 'Views'],
 ];
 
-/**
- * Score in the pixel face, the one arcade note in the design. An outlier (>= 2x) gets the
- * accent frame and a larger numeral; an unscored video gets a muted dash, never a zero.
- */
+/** Score as plain text: accent and bold at 2x and up, muted otherwise, a dash when unscored. */
 export function ScoreChip({ score, size = 'sm' }: { score: number | null; size?: 'sm' | 'lg' }) {
-  if (score == null) {
-    return (
-      <span
-        className="cs-score"
-        title="not enough data to score this video yet"
-        style={{ background: 'var(--cs-surface-2)', color: 'var(--cs-muted)', borderColor: 'var(--cs-line)', fontSize: size === 'lg' ? 12 : 9 }}
-      >
-        –
-      </span>
-    );
-  }
+  const fontSize = size === 'lg' ? 16 : 12;
+  if (score == null) return <span className="cs-num" title="not enough data to score this video yet" style={{ fontSize, color: 'var(--cs-muted)' }}>–</span>;
   const outlier = score >= 2;
-  const fontSize = size === 'lg' ? (outlier ? 22 : 15) : outlier ? 12 : 9;
   return (
-    <span
-      className="cs-score"
-      title={`${score.toFixed(2)}× the channel's baseline`}
-      style={
-        outlier
-          ? { fontSize, padding: size === 'lg' ? '12px 14px 10px' : '7px 9px 6px' }
-          : { fontSize, background: 'var(--cs-surface-2)', color: 'var(--cs-muted)', borderColor: 'var(--cs-line)' }
-      }
-    >
+    <span className="cs-num" title={`${score.toFixed(2)}× the channel's baseline`}
+      style={{ fontSize, fontWeight: outlier ? 700 : 500, color: outlier ? 'var(--cs-accent)' : 'var(--cs-muted)' }}>
       {score.toFixed(1)}×
     </span>
   );
 }
 
-export function SortTabs({ channelId, sort, n }: { channelId: string; sort: SortKey; n: number }) {
+const RANGE_LABELS: [RangeKey, string][] = [['all', 'All time'], ['1y', 'Past year'], ['90d', '90 days'], ['30d', '30 days']];
+
+export function FilterBar({ channelId, sort, range, showing, total }: { channelId: string; sort: SortKey; range: RangeKey; showing: number; total: number }) {
+  const href = (s: SortKey, r: RangeKey) => `/app/channels/${channelId}?sort=${s}${r !== 'all' ? `&range=${r}` : ''}`;
   return (
-    <div className="cs-chips" style={{ marginBottom: 0 }}>
-      {SORT_LABELS.map(([key, label]) => (
-        <Link
-          key={key}
-          href={`/app/channels/${channelId}?sort=${key}${n !== GRID_PAGE ? `&n=${n}` : ''}`}
-          className="cs-chip"
-          data-on={sort === key}
-          aria-current={sort === key ? 'true' : undefined}
-        >
-          {label}
-        </Link>
-      ))}
+    <div className="vg-bar">
+      <div className="cs-chips" style={{ marginBottom: 0 }}>
+        {SORT_LABELS.map(([key, label]) => (
+          <Link key={key} href={href(key, range)} className="cs-chip" data-on={sort === key} aria-current={sort === key ? 'true' : undefined}>{label}</Link>
+        ))}
+      </div>
+      <div className="cs-chips" style={{ marginBottom: 0 }}>
+        {RANGE_LABELS.map(([key, label]) => (
+          <Link key={key} href={href(sort, key)} className="cs-chip" data-on={range === key} aria-current={range === key ? 'true' : undefined}>{label}</Link>
+        ))}
+      </div>
+      <span className="vg-meta" style={{ marginLeft: 'auto' }}>showing <span className="cs-num">{showing}</span> of <span className="cs-num">{total}</span></span>
     </div>
   );
 }
 
 function Packaging({ v }: { v: GridVideo }) {
-  if (!v.swaps) return <span className="vg-meta">no swaps</span>;
+  if (!v.swaps) return null;
   const label = `${v.swaps} swap${v.swaps === 1 ? '' : 's'}${v.last_change ? ` · ${ago(v.last_change)}` : ''}`;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -87,13 +70,13 @@ function Packaging({ v }: { v: GridVideo }) {
 export function VideoGridStyles() {
   return (
     <style>{`
-      .vg-grid { display: grid; grid-template-columns: 1fr; gap: 14px; list-style: none; margin: 0; padding: 0; }
+      .vg-grid { display: grid; grid-template-columns: 1fr; gap: 24px 18px; list-style: none; margin: 0; padding: 0; }
       @media (min-width: 640px) { .vg-grid { grid-template-columns: repeat(2, 1fr); } }
-      @media (min-width: 1200px) { .vg-grid { grid-template-columns: repeat(4, 1fr); } }
-      .vg-tile { border: 1px solid var(--cs-line); border-radius: var(--cs-radius);
-                 background: var(--cs-surface); padding: 10px; min-width: 0; }
-      .vg-tile:hover { border-color: var(--cs-line-strong); }
-      .vg-title { font-size: 13px; font-weight: 550; line-height: 1.35; margin: 8px 0 0;
+      @media (min-width: 1100px) { .vg-grid { grid-template-columns: repeat(3, 1fr); } }
+      .vg-tile { min-width: 0; }
+      .vg-tile img { border-radius: var(--cs-radius); }
+      .vg-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 4px 0 18px; }
+      .vg-title { font-size: 14px; font-weight: 550; line-height: 1.35; margin: 10px 0 0;
                   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       .vg-tile:hover .vg-title { color: var(--cs-accent); }
       .vg-meta { font-size: 11px; color: var(--cs-muted); }
@@ -128,10 +111,10 @@ export function VideoGrid({ videos }: { videos: GridVideo[] }) {
   );
 }
 
-export function LoadMore({ channelId, sort, n }: { channelId: string; sort: SortKey; n: number }) {
+export function LoadMore({ channelId, sort, n, range = 'all' }: { channelId: string; sort: SortKey; n: number; range?: RangeKey }) {
   return (
     <div className="cs-center">
-      <Link href={`/app/channels/${channelId}?sort=${sort}&n=${n + GRID_PAGE}`} className="cs-btn">
+      <Link href={`/app/channels/${channelId}?sort=${sort}${range !== 'all' ? `&range=${range}` : ''}&n=${n + GRID_PAGE}`} className="cs-btn">
         Load more
       </Link>
     </div>
