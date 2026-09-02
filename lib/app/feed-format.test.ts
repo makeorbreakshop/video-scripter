@@ -64,7 +64,7 @@ describe('compactNumber', () => {
 describe('feedRowView', () => {
   it('renders an upload with the single stored thumbnail', () => {
     const v = feedRowView(event());
-    expect(v.label).toBe('UPLOAD');
+    expect(v.label).toBeNull(); // the thumbnail, channel and time already say "upload"
     expect(v.headline).toBe('A title');
     expect(v.thumbs).toHaveLength(1);
     expect(v.href).toBe('/app/videos/vid00000001');
@@ -136,5 +136,63 @@ describe('feedQuery / parseFeedParams round trip', () => {
     const parsed = parseFeedParams(new URLSearchParams('types=nope,upload&limit=-4'));
     expect(parsed.limit).toBe(25);
     expect(parsed.types).toEqual(['upload']);
+  });
+});
+
+describe('feed timestamps and day grouping', () => {
+  const { etTimestamp, etDayKey, dayDividerLabel, groupByDay } = require('./feed-format');
+
+  it('renders the event time absolutely, in ET', () => {
+    // 2026-08-29T17:57:00Z is 1:57 PM in New York (EDT).
+    expect(etTimestamp('2026-08-29T17:57:00.000Z')).toBe('Aug 29 · 1:57 PM ET');
+  });
+  it('is empty rather than "Invalid Date" for junk', () => {
+    expect(etTimestamp(null)).toBe('');
+    expect(etTimestamp('not a date')).toBe('');
+    expect(etDayKey(undefined)).toBe('');
+  });
+  it('keys a late-evening ET event to the ET day, not the UTC one', () => {
+    // 2026-08-30T02:30:00Z is still Aug 29 in New York.
+    expect(etDayKey('2026-08-30T02:30:00.000Z')).toBe('2026-08-29');
+  });
+
+  const NOW = new Date('2026-09-02T16:00:00.000Z'); // Sep 2 in ET
+  it('names today and yesterday, and dates everything else', () => {
+    expect(dayDividerLabel('2026-09-02T15:00:00.000Z', NOW)).toBe('Today');
+    expect(dayDividerLabel('2026-09-01T15:00:00.000Z', NOW)).toBe('Yesterday');
+    expect(dayDividerLabel('2026-08-30T15:00:00.000Z', NOW)).toMatch(/Aug 30/);
+    expect(dayDividerLabel('2025-08-30T15:00:00.000Z', NOW)).toMatch(/2025/);
+  });
+
+  it('groups contiguous runs of the same ET day, keeping order', () => {
+    const g = groupByDay([
+      { at: '2026-09-02T15:00:00.000Z' },
+      { at: '2026-09-02T12:00:00.000Z' },
+      { at: '2026-09-01T12:00:00.000Z' },
+    ]);
+    expect(g.map((d: any) => [d.key, d.events.length])).toEqual([
+      ['2026-09-02', 2], ['2026-09-01', 1],
+    ]);
+  });
+  it('handles an empty page', () => {
+    expect(groupByDay([])).toEqual([]);
+  });
+});
+
+describe('upload rows do not say the same thing twice', () => {
+  const { feedRowView } = require('./feed-format');
+  const ev = (o: any = {}) => ({
+    id: '1', type: 'upload', at: '2026-08-29T17:57:00.000Z', channel_id: 'UC1', channel_name: 'MOBS',
+    video_id: 'v1', video_title: 'A title', thumbnail_url: 'https://t/1.jpg', published_at: null, payload: {}, ...o,
+  });
+  it('drops the type tag and the "New upload" line, and goes large', () => {
+    const v = feedRowView(ev());
+    expect(v.label).toBeNull();
+    expect(v.detail).toBeNull();
+    expect(v.thumbSize).toBe('large');
+  });
+  it('keeps a tag for events whose kind is not obvious', () => {
+    expect(feedRowView(ev({ type: 'thumbnail_change', payload: { version: 2 } })).label).toBe('THUMB SWAP');
+    expect(feedRowView(ev({ type: 'thumbnail_change', payload: { version: 2 } })).thumbSize).toBe('small');
   });
 });

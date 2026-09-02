@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FeedRow from './feed-row';
 import InsertCoin from './insert-coin';
-import { FILTER_CHIPS, feedQuery, type FeedEventLike } from '@/lib/app/feed-format';
+import { FILTER_CHIPS, dayDividerLabel, feedQuery, groupByDay, type FeedEventLike } from '@/lib/app/feed-format';
 
 const PAGE = 25;
 
@@ -11,13 +11,16 @@ export interface FeedClientProps {
   initialCursor: string | null;
   /** False when the user tracks no channels — then no amount of paging will help. */
   hasChannels: boolean;
+  /** channel_id -> avatar url. Every event comes from a tracked channel, so one map covers every page. */
+  avatars?: Record<string, string>;
 }
 
-export default function FeedClient({ initialEvents, initialCursor, hasChannels }: FeedClientProps) {
+export default function FeedClient({ initialEvents, initialCursor, hasChannels, avatars = {} }: FeedClientProps) {
   const [events, setEvents] = useState(initialEvents);
   const [cursor, setCursor] = useState(initialCursor);
   const [types, setTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
   // Guards against a stale filter's response overwriting a newer one.
@@ -32,8 +35,12 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels }
       const body = await res.json().catch(() => ({}));
       if (id !== requestId.current) return;
       if (!res.ok) throw new Error(body?.error || 'Could not load the feed.');
-      setEvents((prev) => (replace ? body.events : [...prev, ...body.events]));
+      const page: FeedEventLike[] = body.events || [];
+      setEvents((prev) => (replace ? page : [...prev, ...page]));
       setCursor(body.next_cursor ?? null);
+      // Only a page that came back genuinely empty proves there is nothing older; a
+      // null cursor alongside rows just means this page was the last one we asked for.
+      if (!page.length && !body.next_cursor) setExhausted(true);
     } catch (e: any) {
       if (id === requestId.current) setError(e.message || 'Could not load the feed.');
     } finally {
@@ -46,6 +53,7 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels }
     setTypes(next);
     setEvents([]);
     setCursor(null);
+    setExhausted(false);
     load(next, null, true);
   };
   const onChip = (type: string) =>
@@ -80,14 +88,21 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels }
       {error && <div className="cs-note" data-tone="bad" style={{ marginBottom: 12 }}>{error}</div>}
 
       {events.length === 0 && !loading ? (
-        <InsertCoin title="NO EVENTS" action="ADD A CHANNEL">
+        <InsertCoin title="Nothing here yet" action="Add a channel">
           {types.length
             ? 'Nothing of that kind yet. Clear the filter, or give the watcher a day.'
             : 'Your channels have not moved yet. New events land here as they are detected.'}
         </InsertCoin>
       ) : (
         <div className="cs-feed">
-          {events.map((e) => <FeedRow key={e.id} event={e} />)}
+          {groupByDay(events).map((day) => (
+            <section key={day.key}>
+              <h2 className="cs-day">{dayDividerLabel(day.events[0].at)}</h2>
+              {day.events.map((e) => (
+                <FeedRow key={e.id} event={e} avatarUrl={e.channel_id ? avatars[e.channel_id] : null} />
+              ))}
+            </section>
+          ))}
           {loading && [0, 1, 2].map((i) => <div key={`sk-${i}`} className="cs-skel" />)}
         </div>
       )}
@@ -98,8 +113,8 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels }
           <button type="button" className="cs-btn" onClick={() => load(types, cursor, false)}>Load more</button>
         </div>
       )}
-      {!cursor && events.length > 0 && (
-        <div className="cs-center"><span className="cs-hiscore">&mdash; end of feed &mdash;</span></div>
+      {exhausted && events.length > 0 && (
+        <div className="cs-center"><span className="cs-hiscore">nothing older</span></div>
       )}
     </>
   );

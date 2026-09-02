@@ -34,6 +34,55 @@ export function relativeTime(at: string | Date, now: Date = new Date()): string 
   return new Date(t).toISOString().slice(0, 10);
 }
 
+const ET = 'America/New_York';
+
+/**
+ * Absolute, unambiguous event time in Brandon's timezone: "Aug 29 · 1:57 PM ET".
+ * The feed is a history, so the row leads with when a thing actually happened; the
+ * relative form ("3d") stays in the title attribute.
+ */
+export function etTimestamp(at: string | Date | null | undefined): string {
+  if (!at) return '';
+  const d = at instanceof Date ? at : new Date(at);
+  if (Number.isNaN(d.getTime())) return '';
+  const date = d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
+  const time = d.toLocaleTimeString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' });
+  return `${date} · ${time} ET`;
+}
+
+/** ET calendar day, as YYYY-MM-DD — the key rows are grouped under. */
+export function etDayKey(at: string | Date | null | undefined): string {
+  if (!at) return '';
+  const d = at instanceof Date ? at : new Date(at);
+  if (Number.isNaN(d.getTime())) return '';
+  // en-CA gives ISO-shaped dates, which sort and compare as strings.
+  return d.toLocaleDateString('en-CA', { timeZone: ET });
+}
+
+/** Heading for a day divider: Today / Yesterday / "Saturday, Aug 30, 2026". */
+export function dayDividerLabel(at: string | Date, now: Date = new Date()): string {
+  const key = etDayKey(at);
+  if (!key) return '';
+  if (key === etDayKey(now)) return 'Today';
+  if (key === etDayKey(new Date(now.getTime() - DAY))) return 'Yesterday';
+  const d = at instanceof Date ? at : new Date(at);
+  const opts: Intl.DateTimeFormatOptions = { timeZone: ET, weekday: 'long', month: 'short', day: 'numeric' };
+  if (key.slice(0, 4) !== etDayKey(now).slice(0, 4)) opts.year = 'numeric';
+  return d.toLocaleDateString('en-US', opts);
+}
+
+/** Split an already-sorted feed page into contiguous day runs, newest first. */
+export function groupByDay<T extends { at: string }>(events: T[]): Array<{ key: string; events: T[] }> {
+  const out: Array<{ key: string; events: T[] }> = [];
+  for (const e of events || []) {
+    const key = etDayKey(e.at);
+    const last = out[out.length - 1];
+    if (last && last.key === key) last.events.push(e);
+    else out.push({ key, events: [e] });
+  }
+  return out;
+}
+
 /** "3.2 hours after publish" style qualifier; null when we do not know the publish time. */
 export function sincePublish(hours: number | null | undefined): string | null {
   if (hours === null || hours === undefined || !Number.isFinite(hours)) return null;
@@ -71,8 +120,11 @@ export function compactNumber(n: number | null | undefined): string {
 // ------------------------------------------------------------------- rows ----
 
 export interface FeedRowView {
-  /** Short all-caps tag shown on the left of the middle column. */
-  label: string;
+  /**
+   * Short tag for the kind of event — null for an upload, whose thumbnail, channel and
+   * timestamp already say what it is. A label plus a "New upload" line said it twice.
+   */
+  label: string | null;
   /** One line saying what changed. */
   headline: string;
   /** Optional supporting line (old title, timing, baseline). */
@@ -82,6 +134,8 @@ export interface FeedRowView {
   score: number | null;
   highScore: boolean;
   href: string | null;
+  /** 'large' is the YouTube-home card an upload gets; everything else stays compact. */
+  thumbSize: 'large' | 'small';
 }
 
 export const TYPE_LABELS: Record<string, string> = {
@@ -108,11 +162,15 @@ export function feedRowView(e: FeedEventLike): FeedRowView {
     score: null,
     highScore: false,
     href,
+    thumbSize: 'small',
   };
 
   switch (e.type) {
     case 'upload':
-      base.detail = 'New upload';
+      // No tag and no "New upload" line: the big thumbnail, the channel and the publish
+      // time already read as "this channel posted this then".
+      base.label = null;
+      base.thumbSize = 'large';
       return base;
 
     case 'thumbnail_change':
