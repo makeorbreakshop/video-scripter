@@ -81,3 +81,28 @@ export function labelByPhash<T extends { phash?: string | null; sha256: string }
     return { ...v, label: String.fromCharCode(65 + idx), repeat };
   });
 }
+
+// ---- second signal: mean absolute pixel difference on a small grayscale (64x36) ----
+// Measured on the archive: CDN re-renders with dHash 7-10 have mean diff 0.4-0.5/255; real subtle variants
+// with dHash 7-12 have mean diff 12-22. So the combined rule is:
+//   same picture  <=>  dhash <= SAME_IMAGE_MAX_DISTANCE
+//                  OR (dhash <= AMBIGUOUS_MAX_DISTANCE AND meanAbsDiff < SAME_PIXEL_MAX_MEAN_DIFF)
+export const AMBIGUOUS_MAX_DISTANCE = 16;
+export const SAME_PIXEL_MAX_MEAN_DIFF = 4;
+export const SMALL_W = 64;
+export const SMALL_H = 36;
+
+export function meanAbsDiff(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  if (a.length !== b.length || !a.length) throw new Error('size mismatch');
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s / a.length;
+}
+
+export function isSamePicture(dhashA: string | null | undefined, dhashB: string | null | undefined, meanDiff: number | null | undefined): boolean {
+  if (!dhashA || !dhashB) return false;
+  const d = hamming(dhashA, dhashB);
+  if (d <= SAME_IMAGE_MAX_DISTANCE) return true;
+  if (d <= AMBIGUOUS_MAX_DISTANCE && meanDiff != null && meanDiff < SAME_PIXEL_MAX_MEAN_DIFF) return true;
+  return false;
+}

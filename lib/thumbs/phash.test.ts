@@ -65,3 +65,23 @@ describe('labelByPhash', () => {
     expect(labeled.map((l) => l.label).join('')).toBe('ABA');
   });
 });
+
+import { isSamePicture, meanAbsDiff } from './phash';
+
+describe('isSamePicture (combined rule)', () => {
+  const h0 = '0000000000000000', h9 = '00000000000001ff' /* 9 bits */, h20 = '00000000000fffff' /* 20 bits */;
+  test('small hash distance is the same picture regardless of pixels', () => {
+    expect(isSamePicture(h0, '000000000000000f', 30)).toBe(true);
+  });
+  test('ambiguous hash distance is decided by the pixel difference', () => {
+    expect(isSamePicture(h0, h9, 0.4)).toBe(true);    // CDN re-render
+    expect(isSamePicture(h0, h9, 12.5)).toBe(false);  // real subtle variant (AI LABS case)
+    expect(isSamePicture(h0, h9, null)).toBe(false);  // no pixel evidence -> treat as change
+  });
+  test('large hash distance is always a change', () => {
+    expect(isSamePicture(h0, h20, 0.1)).toBe(false);
+  });
+  test('meanAbsDiff', () => {
+    expect(meanAbsDiff([0, 10, 20], [1, 12, 17])).toBeCloseTo(2, 6);
+  });
+});

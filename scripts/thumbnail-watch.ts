@@ -11,8 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
-import { phashFromJpeg } from '../lib/thumbs/decode';
-import { isSameImage } from '../lib/thumbs/phash';
+import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
+import { isSamePicture } from '../lib/thumbs/phash';
 
 const maxVideos = parseInt(process.argv[2] || '25000', 10);
 const pool = new pg.Pool({
@@ -73,7 +73,12 @@ for (const group of chunk(targets, 20)) {
         }
         // Different bytes: only a CHANGE if the picture itself differs (CDN re-encodes flip sha256 with the same image).
         const phash = await phashFromJpeg(buf);
-        if (cur.length && isSameImage(cur[0].phash, phash)) {
+        let meanDiff: number | null = null;
+        if (cur.length) {
+          const prevFile = path.join(STORE, `${id}_v${cur[0].version}.jpg`);
+          if (fs.existsSync(prevFile)) { try { meanDiff = await pixelMeanDiff(fs.readFileSync(prevFile), buf); } catch { /* keep null */ } }
+        }
+        if (cur.length && isSamePicture(cur[0].phash, phash, meanDiff)) {
           await pool.query(`update thumbnail_versions set last_checked=now(), phash=coalesce(phash,$3) where video_id=$1 and version=$2`, [id, cur[0].version, phash]);
           return;
         }

@@ -7,13 +7,23 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
-import { phashFromJpeg } from '../lib/thumbs/decode';
-import { isSameImage } from '../lib/thumbs/phash';
+import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
+import { isSamePicture } from '../lib/thumbs/phash';
 
 const COLLAPSE = process.argv.includes('--collapse');
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 300000').catch(() => {}); });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
+
+// 0. repair: rows whose storage_path file version disagrees with the row's version (earlier renumbering) -> rename file
+const misaligned = (await pool.query(`select id, video_id, version, storage_path from thumbnail_versions where storage_path is not null and storage_path !~ ('_v' || version || '\\.jpg$')`)).rows as any[];
+let repaired = 0;
+for (const r of misaligned) {
+  const from = path.join(process.cwd(), r.storage_path), to = path.join(process.cwd(), `data/thumbnails/${r.video_id}_v${r.version}.jpg`);
+  if (fs.existsSync(from) && !fs.existsSync(to)) { fs.renameSync(from, to); repaired++; }
+  if (fs.existsSync(to)) await pool.query(`update thumbnail_versions set storage_path = $1 where id = $2`, [`data/thumbnails/${r.video_id}_v${r.version}.jpg`, r.id]);
+}
+log(`repair: ${misaligned.length} misaligned rows, ${repaired} files renamed`);
 
 // 1. backfill phash from the local archive
 const missing = (await pool.query(`select id, video_id, version, storage_path from thumbnail_versions where phash is null order by video_id, version`)).rows as any[];
@@ -44,7 +54,16 @@ if (COLLAPSE) {
     const keep: any[] = []; const drop: any[] = [];
     for (const v of vs) {
       const last = keep[keep.length - 1];
-      const same = last && (v.phash && last.phash ? isSameImage(v.phash, last.phash) : v.sha256 === last.sha256);
+      let same = false;
+      if (last) {
+        if (v.sha256 === last.sha256) same = true;
+        else if (v.phash && last.phash) {
+          let md: number | null = null;
+          const fa = path.join(process.cwd(), `data/thumbnails/${vid}_v${last.version}.jpg`), fb = path.join(process.cwd(), `data/thumbnails/${vid}_v${v.version}.jpg`);
+          if (fs.existsSync(fa) && fs.existsSync(fb)) { try { md = await pixelMeanDiff(fs.readFileSync(fa), fs.readFileSync(fb)); } catch { /* null */ } }
+          same = isSamePicture(last.phash, v.phash, md);
+        }
+      }
       (same ? drop : keep).push(v);
     }
     if (!drop.length) continue;
@@ -54,7 +73,13 @@ if (COLLAPSE) {
       await client.query(`delete from thumbnail_versions where id = any($1::bigint[])`, [drop.map((d) => d.id)]);
       // renumber kept versions 1..n (two-phase to dodge the unique (video_id, version) constraint)
       for (let i = 0; i < keep.length; i++) await client.query(`update thumbnail_versions set version = $1 where id = $2`, [-(i + 1), keep[i].id]);
-      for (let i = 0; i < keep.length; i++) await client.query(`update thumbnail_versions set version = $1 where id = $2`, [i + 1, keep[i].id]);
+      for (let i = 0; i < keep.length; i++) {
+        const from = path.join(process.cwd(), `data/thumbnails/${vid}_v${keep[i].version}.jpg`), to = path.join(process.cwd(), `data/thumbnails/${vid}_v${i + 1}.jpg`);
+        if (keep[i].version !== i + 1 && fs.existsSync(from)) { try { fs.renameSync(from, to + '.tmp'); } catch { /* ignore */ } }
+        await client.query(`update thumbnail_versions set version = $1, storage_path = $3 where id = $2`, [i + 1, keep[i].id, `data/thumbnails/${vid}_v${i + 1}.jpg`]);
+      }
+      for (let i = 0; i < keep.length; i++) { const t = path.join(process.cwd(), `data/thumbnails/${vid}_v${i + 1}.jpg.tmp`); if (fs.existsSync(t)) fs.renameSync(t, t.replace(/\.tmp$/, '')); }
+      for (const d of drop) { const f = path.join(process.cwd(), `data/thumbnails/${vid}_v${d.version}.jpg`); if (fs.existsSync(f)) { try { fs.unlinkSync(f); } catch { /* ignore */ } } }
       await client.query(`update track_schedule set last_version_seen = least(last_version_seen, $1) where video_id = $2`, [keep.length, vid]);
       await client.query('commit');
       deleted += drop.length; videosTouched++;
