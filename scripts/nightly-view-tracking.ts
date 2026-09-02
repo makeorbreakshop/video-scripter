@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { buildSnapshotRows, chunk, TrackedVideo, PrevSnapshot } from '../lib/nightly/tracking-core';
+import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 
 const maxApiCalls = parseInt(process.argv[2] || '2000', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -63,7 +64,12 @@ for (const batch of chunk(due.rows, 50)) {
 
   const rows = buildSnapshotRows(data.items || [], tracked, prev, today);
   if (rows.length === 0) continue;
+  // Deterministic lock order across concurrent writers (launch-track, drain).
+  rows.sort((a, b) => (a.video_id < b.video_id ? -1 : a.video_id > b.video_id ? 1 : 0));
 
+  // Retry the whole batch transaction on deadlock (40P01) instead of dying —
+  // the 2026-09-02 03:30 run exited after 33 snapshots on one deadlock.
+  await withDeadlockRetry(async () => {
   const client = await pool.connect();
   try {
     await client.query('begin');
@@ -97,11 +103,12 @@ for (const batch of chunk(due.rows, 50)) {
     await client.query('commit');
     written += rows.length;
   } catch (e) {
-    await client.query('rollback');
+    await client.query('rollback').catch(() => {});
     throw e;
   } finally {
     client.release();
   }
+  });
   if (written % 5000 < 50) console.log(`Progress: ${written} snapshots, ${apiCalls} API calls`);
 }
 

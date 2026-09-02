@@ -7,6 +7,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { clampCount, chunk } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
+import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
@@ -22,6 +23,14 @@ function isShortDuration(dur: string | null | undefined): boolean {
 async function insertVideo(v: any, tier = 1): Promise<boolean> {
   if (isShortDuration(v.contentDetails?.duration)) return false;
   const sn = v.snippet || {}; const st = v.statistics || {};
+  // Deadlock-retried: the videos insert fires sync_institutional triggers that
+  // can deadlock against concurrent launch-track/nightly-tracking writers
+  // (observed 40P01 overnight 2026-09-02).
+  await withDeadlockRetry(() => insertVideoOnce(v, tier, sn, st));
+  return true;
+}
+
+async function insertVideoOnce(v: any, tier: number, sn: any, st: any): Promise<void> {
   await pool.query(
     `insert into videos (id, title, description, channel_id, channel_name, published_at,
                          view_count, like_count, comment_count, duration, thumbnail_url,
@@ -43,7 +52,6 @@ async function insertVideo(v: any, tier = 1): Promise<boolean> {
      values ($1, $2, current_date + 1) on conflict (video_id) do nothing`,
     [v.id, tier]
   );
-  return true;
 }
 
 async function fetchVideos(ids: string[]): Promise<any[]> {
