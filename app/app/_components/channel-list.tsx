@@ -1,9 +1,11 @@
 'use client';
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AddChannel from './add-channel';
+import { ChannelAvatar } from '@/components/app/avatar';
 import {
-  backfillNote, channelStats, roleLabel, usageView, type ChannelRowLike,
+  channelStats, planLabel, roleLabel, usageView, type ChannelRowLike,
 } from '@/lib/app/channel-view';
 import type { PlanLimits, PlanName } from '@/lib/app/plans';
 
@@ -49,31 +51,6 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
     }
   }
 
-  async function setWatched(id: string, next: boolean) {
-    const before = rows;
-    setPending(id);
-    setError(null);
-    setRows((r) => r.map((c) => (c.channel_id === id ? { ...c, watched_closely: next } : c)));
-    try {
-      const row = before.find((c) => c.channel_id === id);
-      const res = await fetch('/api/app/channels', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ channel_id: id, role: row?.role || 'competitor', watched_closely: next }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || 'Could not change that setting.');
-      }
-      router.refresh();
-    } catch (e: any) {
-      setRows(before);
-      setError(e.message);
-    } finally {
-      setPending(null);
-    }
-  }
-
   const trackedIds = rows.map((r) => r.channel_id);
 
   return (
@@ -81,11 +58,11 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
       <div className="cs-page-head">
         <div>
           <h1 className="cs-h1">Channels</h1>
-          <p className="cs-sub">Everything you track. Watched-closely channels get denser sampling.</p>
+          <p className="cs-sub">Everything you track.</p>
         </div>
         <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-          <div className="cs-hiscore">{plan} plan</div>
-          <div className="cs-num" style={{ fontSize: 13 }}>{view.tracked} channels</div>
+          <div className="cs-hiscore">{planLabel(plan)} plan</div>
+          <div className="cs-num" style={{ fontSize: 13 }}>{rows.length} channels</div>
         </div>
       </div>
 
@@ -93,7 +70,7 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
         <div className="cs-section">
           {view.atTrackedLimit ? (
             <div className="cs-note" data-tone="accent">
-              You are using all {limits.tracked} channels on the {plan} plan. Remove one, or upgrade to track more.
+              You are using all {limits.tracked} channels on the {planLabel(plan)} plan. Remove one, or upgrade to track more.
             </div>
           ) : (
             <AddChannel trackedIds={trackedIds} onAdded={refresh} />
@@ -105,60 +82,48 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
 
       {rows.length === 0 ? (
         <div className="cs-empty">
-          <div className="cs-coin">NO CHANNELS</div>
-          <div className="cs-coin-sub">&gt;&gt; ADD ONE ABOVE &lt;&lt;</div>
+          <div className="cs-coin">No channels yet</div>
+          <div className="cs-coin-sub">Add one above</div>
           <p>Start with your own channel, then add the competitor you measure yourself against.</p>
         </div>
       ) : (
         <div className="cs-grid">
-          {rows.map((c) => {
-            const note = backfillNote(c);
-            return (
-              <div className="cs-card" key={c.channel_id}>
-                <div className="cs-card-head">
-                  <div className="cs-card-thumb">
-                    {c.thumbnail_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.thumbnail_url} alt="" loading="lazy" referrerPolicy="no-referrer" />
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+          {rows.map((c) => (
+            <div className="cs-card" key={c.channel_id}>
+              <div className="cs-card-head">
+                <Link href={`/app/channels/${c.channel_id}`} aria-label={c.name || c.channel_id}>
+                  <ChannelAvatar src={c.avatar_url} name={c.name} size={48} />
+                </Link>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Link href={`/app/channels/${c.channel_id}`}>
                     <p className="cs-card-name">{c.name || c.channel_id}</p>
-                    <div style={{ display: 'flex', gap: 6, marginTop: 5, flexWrap: 'wrap' }}>
-                      <span className="cs-badge" data-tone={c.role === 'self' ? 'accent' : undefined}>{roleLabel(c.role)}</span>
-                      {c.lane && <span className="cs-badge">{c.lane} lane</span>}
-                    </div>
-                    {note && <div className="cs-pick-meta" style={{ marginTop: 5 }}>{note}</div>}
+                  </Link>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 5, flexWrap: 'wrap' }}>
+                    <span className="cs-badge" data-case="sentence" data-tone={c.role === 'self' ? 'accent' : undefined}>{roleLabel(c.role)}</span>
                   </div>
                 </div>
-
-                <div className="cs-stats">
-                  {channelStats(c).map((s) => (
-                    <div key={s.label}>
-                      <div className="cs-stat-v">{s.value}</div>
-                      <div className="cs-stat-l">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {!readOnly && (
-                  <div className="cs-card-foot">
-                    <label className="cs-switch">
-                      <span className="cs-switch-track" data-on={c.watched_closely}><span className="cs-switch-knob" /></span>
-                      <input type="checkbox" checked={c.watched_closely} disabled={pending === c.channel_id}
-                             onChange={(e) => setWatched(c.channel_id, e.target.checked)}
-                             style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />
-                      watched closely
-                    </label>
-                    <button type="button" className="cs-btn" data-variant="danger" style={{ marginLeft: 'auto' }}
-                            disabled={pending === c.channel_id} onClick={() => remove(c.channel_id, c.name)}>
-                      Remove
-                    </button>
-                  </div>
-                )}
               </div>
-            );
-          })}
+
+              <div className="cs-stats">
+                {channelStats(c).map((s) => (
+                  <div key={s.label}>
+                    <div className="cs-stat-v">{s.value}</div>
+                    <div className="cs-stat-l">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {!readOnly && (
+                <div className="cs-card-foot">
+                  <Link className="cs-btn" href={`/app/channels/${c.channel_id}`}>Open</Link>
+                  <button type="button" className="cs-btn" data-variant="danger" style={{ marginLeft: 'auto' }}
+                          disabled={pending === c.channel_id} onClick={() => remove(c.channel_id, c.name)}>
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </>

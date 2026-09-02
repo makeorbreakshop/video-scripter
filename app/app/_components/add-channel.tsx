@@ -7,6 +7,7 @@ import {
   addChannelMode, addChannelError, markAlreadyTracked, type PickerItem,
 } from '@/lib/app/channel-view';
 import { compactNumber } from '@/lib/app/feed-format';
+import { ChannelAvatar } from '@/components/app/avatar';
 
 const DEBOUNCE_MS = 250;
 
@@ -146,11 +147,12 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
               disabled={r.already || adding !== null}
               onClick={() => add(r.channel_id)}
             >
+              <ChannelAvatar src={r.avatar_url} name={r.name} size={32} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="cs-pick-name">{r.name}</div>
                 <div className="cs-pick-meta">
                   {compactNumber(r.video_count)} videos
-                  {r.tracked_lane ? ' · already in our corpus' : ''}
+                  {r.tracked_lane ? ' · we already have its videos' : ''}
                 </div>
               </div>
               {r.already
@@ -164,11 +166,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
       {resolved && (
         <div className="cs-card" style={{ marginTop: 10 }}>
           <div className="cs-card-head">
-            {resolved.thumbnail_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={resolved.thumbnail_url} alt="" width={48} height={48}
-                   style={{ borderRadius: '50%', flex: 'none' }} referrerPolicy="no-referrer" />
-            )}
+            <ChannelAvatar src={resolved.thumbnail_url} name={resolved.name} size={48} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="cs-card-name">{resolved.name}</p>
               <div className="cs-pick-meta">

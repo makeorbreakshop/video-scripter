@@ -30,6 +30,7 @@ export interface ChannelRowLike {
   lane: string | null;
   backfill_status: string | null;
   thumbnail_url: string | null;
+  avatar_url: string | null;
   video_count: number;
   baseline: number | null;
   outliers: number;
@@ -52,16 +53,7 @@ export function channelStats(row: ChannelRowLike, now: Date = new Date()): Stat[
 }
 
 export function roleLabel(role: string): string {
-  return role === 'self' ? 'YOUR CHANNEL' : 'COMPETITOR';
-}
-
-/** Backfill states worth telling the user about; everything else is silent. */
-export function backfillNote(row: ChannelRowLike): string | null {
-  const s = (row.backfill_status || '').toLowerCase();
-  if (s === 'queued') return 'Back catalog queued';
-  if (s === 'running') return 'Back catalog importing…';
-  if (s === 'failed') return 'Back catalog import failed';
-  return null;
+  return role === 'self' ? 'Your channel' : 'Competitor';
 }
 
 export interface UsageView {
@@ -70,6 +62,13 @@ export interface UsageView {
   atTrackedLimit: boolean;
   atWatchedLimit: boolean;
   trackedPct: number;
+  unlimited: boolean;
+}
+
+/** The plan name as a reader sees it. */
+export function planLabel(plan: PlanName | string): string {
+  const p = String(plan || '').toLowerCase();
+  return p === 'owner' ? 'Owner' : p === 'pro' ? 'Pro' : 'Free';
 }
 
 /** Plan usage for the channels header and the settings page. */
@@ -78,12 +77,17 @@ export function usageView(
 ): UsageView {
   const tracked = usage?.tracked ?? 0;
   const watched = usage?.watched_closely ?? 0;
+  // The owner plan's limits are Infinity: "3 / Infinity" and a 0%-forever meter are worse
+  // than no number at all, so an unlimited plan just reports the count.
+  const trackedUnlimited = !Number.isFinite(limits.tracked);
+  const watchedUnlimited = !Number.isFinite(limits.watchedClosely);
   return {
-    tracked: `${tracked} / ${limits.tracked}`,
-    watched: `${watched} / ${limits.watchedClosely}`,
+    tracked: trackedUnlimited ? `${tracked} · unlimited` : `${tracked} / ${limits.tracked}`,
+    watched: watchedUnlimited ? `${watched} · unlimited` : `${watched} / ${limits.watchedClosely}`,
     atTrackedLimit: tracked >= limits.tracked,
     atWatchedLimit: watched >= limits.watchedClosely,
-    trackedPct: limits.tracked > 0 ? Math.min(100, Math.round((tracked / limits.tracked) * 100)) : 0,
+    trackedPct: trackedUnlimited ? 0 : limits.tracked > 0 ? Math.min(100, Math.round((tracked / limits.tracked) * 100)) : 0,
+    unlimited: trackedUnlimited,
   };
 }
 
@@ -91,7 +95,10 @@ export function usageView(
  * Merge the tracked-channel ids into search results so the picker can show an
  * "already tracked" state instead of letting the user add a duplicate.
  */
-export interface SearchResultLike { channel_id: string; name: string; video_count: number; tracked_lane: string | null }
+export interface SearchResultLike {
+  channel_id: string; name: string; video_count: number;
+  tracked_lane: string | null; avatar_url?: string | null;
+}
 export interface PickerItem extends SearchResultLike { already: boolean }
 
 export function markAlreadyTracked(results: SearchResultLike[], trackedIds: Iterable<string>): PickerItem[] {

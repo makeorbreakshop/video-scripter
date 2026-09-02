@@ -1,5 +1,5 @@
 import {
-  addChannelMode, channelStats, roleLabel, backfillNote, usageView,
+  addChannelMode, channelStats, roleLabel, planLabel, usageView,
   markAlreadyTracked, addChannelError, MIN_SEARCH_LEN,
 } from './channel-view';
 import { PLANS } from './plans';
@@ -7,7 +7,7 @@ import { PLANS } from './plans';
 const NOW = new Date('2026-09-02T12:00:00.000Z');
 const row = (o: Partial<any> = {}) => ({
   channel_id: 'UCaaaaaaaaaaaaaaaaaaaaaa', name: 'Chan', role: 'competitor', watched_closely: false,
-  added_at: NOW.toISOString(), lane: 'user', backfill_status: null, thumbnail_url: null,
+  added_at: NOW.toISOString(), lane: 'user', backfill_status: null, thumbnail_url: null, avatar_url: null,
   video_count: 1240, baseline: 52000, outliers: 3, last_packaging_change: null, ...o,
 });
 
@@ -40,14 +40,15 @@ describe('channelStats', () => {
 });
 
 describe('labels', () => {
-  it('distinguishes the user own channel', () => {
-    expect(roleLabel('self')).toBe('YOUR CHANNEL');
-    expect(roleLabel('competitor')).toBe('COMPETITOR');
+  it('names the two roles in plain words, with no lane or tier language', () => {
+    expect(roleLabel('self')).toBe('Your channel');
+    expect(roleLabel('competitor')).toBe('Competitor');
   });
-  it('only speaks up about backfill states that matter', () => {
-    expect(backfillNote(row({ backfill_status: 'queued' }))).toBe('Back catalog queued');
-    expect(backfillNote(row({ backfill_status: 'done' }))).toBeNull();
-    expect(backfillNote(row())).toBeNull();
+  it('capitalises the plan for display', () => {
+    expect(planLabel('owner')).toBe('Owner');
+    expect(planLabel('pro')).toBe('Pro');
+    expect(planLabel('free')).toBe('Free');
+    expect(planLabel('nonsense')).toBe('Free');
   });
 });
 
@@ -63,14 +64,24 @@ describe('usageView', () => {
     const v = usageView('pro', PLANS.pro, { tracked: 5, watched_closely: 1 });
     expect(v.atTrackedLimit).toBe(false);
     expect(v.trackedPct).toBe(20);
+    expect(v.unlimited).toBe(false);
+  });
+  it('never renders Infinity or a stuck meter on the unlimited plan', () => {
+    const v = usageView('owner', PLANS.owner, { tracked: 3, watched_closely: 2 });
+    expect(v.tracked).toBe('3 · unlimited');
+    expect(v.watched).toBe('2 · unlimited');
+    expect(v.tracked).not.toMatch(/Infinity/);
+    expect(v.atTrackedLimit).toBe(false);
+    expect(v.unlimited).toBe(true);
+    expect(v.trackedPct).toBe(0);
   });
 });
 
 describe('markAlreadyTracked', () => {
   it('marks results the user already has', () => {
     const out = markAlreadyTracked(
-      [{ channel_id: 'UC1', name: 'a', video_count: 1, tracked_lane: 'corpus' },
-       { channel_id: 'UC2', name: 'b', video_count: 2, tracked_lane: null }],
+      [{ channel_id: 'UC1', name: 'a', video_count: 1, tracked_lane: 'corpus', avatar_url: null },
+       { channel_id: 'UC2', name: 'b', video_count: 2, tracked_lane: null, avatar_url: null }],
       ['UC2']
     );
     expect(out.map((r) => r.already)).toEqual([false, true]);

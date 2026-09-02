@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { usageView } from '@/lib/app/channel-view';
+import { planLabel, usageView } from '@/lib/app/channel-view';
 import { relativeTime } from '@/lib/app/feed-format';
 import type { PlanLimits, PlanName } from '@/lib/app/plans';
 
@@ -84,20 +84,21 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
         <h2>Plan</h2>
         <div className="cs-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="cs-badge" data-tone="accent">{plan}</span>
+            <span className="cs-badge" data-tone="accent">{planLabel(plan)}</span>
             <span className="cs-hiscore">current plan</span>
           </div>
           <div className="cs-kv" style={{ marginTop: 10 }}>
             <span className="cs-kv-l">Tracked channels</span><span className="cs-num">{view.tracked}</span>
           </div>
-          <div className="cs-meter"><div className="cs-meter-fill" style={{ width: `${view.trackedPct}%` }} /></div>
-          <div className="cs-kv" style={{ marginTop: 8 }}>
-            <span className="cs-kv-l">Watched closely</span><span className="cs-num">{view.watched}</span>
-          </div>
-          <div className="cs-card-foot">
-            <button type="button" className="cs-btn" disabled title="Stripe coming">Manage billing</button>
-            <span className="cs-pick-meta">Stripe coming — plans are set by hand for now.</span>
-          </div>
+          {!view.unlimited && (
+            <div className="cs-meter"><div className="cs-meter-fill" style={{ width: `${view.trackedPct}%` }} /></div>
+          )}
+          {!view.unlimited && (
+            <div className="cs-card-foot">
+              <button type="button" className="cs-btn" disabled title="Stripe coming">Manage billing</button>
+              <span className="cs-pick-meta">Stripe coming — plans are set by hand for now.</span>
+            </div>
+          )}
         </div>
       </section>
 
