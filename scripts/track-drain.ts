@@ -7,7 +7,7 @@ import pg from 'pg';
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 const run = (args: string[]) => { console.log('>', args.join(' ')); try { console.log(execFileSync('npx', ['tsx', ...args], { encoding: 'utf8', timeout: 20 * 60_000 }).trim().split('\n').slice(-2).join('\n')); } catch (e: any) { console.error('failed:', (e.stdout || '').toString().slice(-300), (e.stderr || '').toString().slice(-300)); } };
 // 1. catalogs for queued jobs (budgeted inside the script)
-run(['scripts/backfill-catalog.ts']);
+run(['scripts/backfill-catalog.ts', '--budget', '3000', '--jobs', '60']); // gap-year catch-up for legacy channels rides this queue
 // 2. channel identity for any tracked channel missing it
 run(['scripts/channel-meta-backfill.ts']);
 // 3. scores: user-lane channels whose videos older than 60d have no final score yet
