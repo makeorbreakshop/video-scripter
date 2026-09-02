@@ -9,6 +9,7 @@ import { videoPage as adminVideoPage, type VideoPageData } from '../admin/querie
 import {
   mergeActuals, expectedCurve, projectedCurve, packagingMarkers,
   type Actual, type CurvePoint, type ProjPoint, type Marker,
+  expectedAtAge,
 } from '../admin/video-curve';
 import { thumbUrl } from '../thumbs/storage';
 import { experiments, type Experiment } from './experiment';
@@ -17,6 +18,8 @@ export type ThumbVersionView = { version: number; first_seen: string; url: strin
 export type TitleVersionView = { version: number; title: string; first_seen: string };
 
 export type VideoPageView = {
+  ageDays: number;
+  pace: number | null; // views now ÷ what a typical video on the channel has at this age
   id: string;
   title: string;
   channelId: string;
