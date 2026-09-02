@@ -253,3 +253,17 @@ curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
 Feed events are materialized every 5 minutes from the watcher and scorer output, so a thumbnail
 swap typically appears within about 10 minutes of us noticing it. Scores are recomputed hourly.
 Polling `/feed` more than once a minute will not show you anything new.
+
+
+## Added 2026-09-02 (evening)
+
+- `GET /channels/:id/videos` now accepts `since` and `until` (ISO dates on publish time), returns the same `score` object as `/videos/:id`, and adds `packaging: { thumbnail_changes, title_changes, last_change }` per video. Shorts are excluded.
+- `GET /feed` accepts `since=<ISO>` for polling clients.
+- `GET /videos/:id` adds `experiments[]`: for each packaging change, views/hour before vs after and a verdict (`helped`, `hurt`, `no clear effect`, `too early`).
+- `GET /search?q=` finds channels across the whole library.
+- `GET /outliers?since=&min_score=&limit=&channels=` lists videos beating their channel baseline (likely/confirmed), library-wide or for a channel list. Default: last 90 days, score >= 2.
+
+Example, "what is working in my niche this quarter":
+```bash
+curl -H "Authorization: Bearer $KEY" "https://www.channelsmith.com/api/v1/outliers?since=2026-06-01&min_score=2&limit=50"
+```

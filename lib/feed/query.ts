@@ -32,6 +32,8 @@ export interface FeedOptions {
   limit?: number;
   /** Restrict to these event types; empty or omitted means all. */
   types?: string[] | null;
+  /** Only events at or after this ISO timestamp (polling clients). */
+  since?: string | null;
 }
 
 export interface Cursor { at: string; id: string }
@@ -87,6 +89,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
         and coalesce(v.is_short, false) = false
         ${cursor ? `and (e.at, e.id) < ($3::timestamptz, $4::bigint)` : ''}
         ${types ? `and e.type = any($${cursor ? 5 : 3}::text[])` : ''}
+        ${opts.since ? `and e.at >= $${(cursor ? 5 : 3) + (types ? 1 : 0)}::timestamptz` : ''}
       order by e.at desc, e.id desc
       limit $2`,
     [
@@ -94,6 +97,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
       limit + 1,
       ...(cursor ? [cursor.at, cursor.id] : []),
       ...(types ? [types] : []),
+      ...(opts.since ? [opts.since] : []),
     ]
   );
 

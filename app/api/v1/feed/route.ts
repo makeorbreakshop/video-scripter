@@ -1,4 +1,4 @@
-// GET /api/v1/feed?cursor=&limit=&types= — the calling key's activity stream.
+// GET /api/v1/feed?cursor=&limit=&types=&since= — the calling key's activity stream (since: ISO time, for polling).
 import { NextResponse } from 'next/server';
 import { feedFor, MAX_LIMIT, DEFAULT_LIMIT, FEED_TYPES } from '@/lib/feed/query';
 import { withApiKey, intParam, listParam } from '@/lib/api/v1';
@@ -12,6 +12,7 @@ export const GET = withApiKey(async (req, caller) => {
     cursor: url.searchParams.get('cursor'),
     limit: intParam(url, 'limit', DEFAULT_LIMIT, MAX_LIMIT),
     types: listParam(url, 'types'),
+    since: url.searchParams.get('since'),
   });
   return NextResponse.json({
     events: page.events.map((e) => ({

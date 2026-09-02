@@ -91,3 +91,13 @@ export function listParam(url: URL, name: string): string[] | null {
   const cleaned = all.map((v) => v.trim()).filter(Boolean);
   return cleaned.length ? cleaned : null;
 }
+
+/** One score shape everywhere (same as /videos/:id). */
+export function scoreShape(r: any) {
+  return {
+    model_version: r.model_version, scored_at: r.scored_at, snapshot_day: r.snapshot_day, views: r.score_views ?? r.views,
+    est30: r.est30, baseline: r.baseline, n_baseline: r.n_baseline, score: r.score,
+    same_age_ratio: r.same_age_ratio, n_same_age: r.n_same_age, confidence: r.confidence,
+  };
+}
+

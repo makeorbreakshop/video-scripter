@@ -9,9 +9,13 @@ export const dynamic = 'force-dynamic';
 export const GET = withApiKey(async (_req, caller) => {
   const rows = await q(
     `select uc.channel_id, uc.role, uc.watched_closely, uc.added_at,
-            c.channel_name, c.channel_handle, c.thumbnail_url, c.subscriber_count, c.video_count
+            coalesce(m.title, c.channel_name, (select v.channel_name from videos v where v.channel_id = uc.channel_id limit 1)) as channel_name,
+            c.channel_handle, coalesce(m.avatar_url, c.thumbnail_url) as thumbnail_url,
+            coalesce(m.subscriber_count, c.subscriber_count) as subscriber_count,
+            coalesce(m.video_count, c.video_count, (select count(*)::int from videos v where v.channel_id = uc.channel_id)) as video_count
        from user_channels uc
        left join channels c on c.channel_id = uc.channel_id
+       left join channel_meta m on m.channel_id = uc.channel_id
       where uc.user_id = $1
       order by uc.added_at desc`,
     [caller.userId]

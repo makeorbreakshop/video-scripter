@@ -1,7 +1,7 @@
-// GET /api/v1/channels/:id/videos?sort=score|published|views&limit=
+// GET /api/v1/channels/:id/videos?sort=score|published|views&limit=&since=&until=  (since/until: ISO dates on published_at)
 import { NextResponse } from 'next/server';
 import { q } from '@/lib/admin/db';
-import { withApiKey, jsonError, intParam } from '@/lib/api/v1';
+import { withApiKey, jsonError, intParam, scoreShape } from '@/lib/api/v1';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,16 +26,25 @@ export const GET = withApiKey(async (req, _caller, ctx: { params: Promise<{ id: 
   const order = ORDERS[sort];
   if (!order) return jsonError(400, 'bad_request', `Unknown sort "${sort}". Use score, published or views.`);
   const limit = intParam(url, 'limit', 50, MAX_LIMIT);
+  const since = url.searchParams.get('since'); const until = url.searchParams.get('until');
+  const ISO = /^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$/;
+  if ((since && !ISO.test(since)) || (until && !ISO.test(until))) return jsonError(400, 'bad_request', 'since/until must be ISO dates.');
 
   const rows = await q<any>(
     `select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url, v.duration, v.is_short,
-            s.score, s.est30, s.baseline, s.confidence, s.same_age_ratio
+            s.model_version, s.scored_at, s.snapshot_day, s.views as score_views, s.est30, s.baseline, s.n_baseline,
+            s.score, s.same_age_ratio, s.n_same_age, s.confidence,
+            (select count(*)::int from thumbnail_versions t where t.video_id = v.id and t.version > 1) as thumbnail_changes,
+            (select count(*)::int from title_versions t where t.video_id = v.id and t.version > 1) as title_changes,
+            greatest((select max(first_seen) from thumbnail_versions t where t.video_id = v.id and t.version > 1),
+                     (select max(first_seen) from title_versions t where t.video_id = v.id and t.version > 1)) as last_packaging_change
        from videos v
        left join video_scores s on s.video_id = v.id
-      where v.channel_id = $1 and v.published_at is not null
+      where v.channel_id = $1 and v.published_at is not null and coalesce(v.is_short, false) = false
+        ${since ? 'and v.published_at >= $3::timestamptz' : ''} ${until ? `and v.published_at <= $${since ? 4 : 3}::timestamptz` : ''}
       order by ${order}
       limit $2`,
-    [id, limit]
+    [id, limit, ...(since ? [since] : []), ...(until ? [until] : [])]
   );
 
   return NextResponse.json({
@@ -49,13 +58,8 @@ export const GET = withApiKey(async (req, _caller, ctx: { params: Promise<{ id: 
       thumbnail_url: v.thumbnail_url,
       duration: v.duration,
       is_short: v.is_short ?? false,
-      score: v.score == null ? null : {
-        score: v.score,
-        est30: v.est30,
-        baseline: v.baseline,
-        same_age_ratio: v.same_age_ratio,
-        confidence: v.confidence,
-      },
+      packaging: { thumbnail_changes: v.thumbnail_changes, title_changes: v.title_changes, last_change: v.last_packaging_change },
+      score: v.score == null ? null : scoreShape(v),
     })),
   });
 });
