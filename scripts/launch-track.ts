@@ -1,5 +1,7 @@
-// Launch-window tracker. Runs every 15 min via LaunchAgent com.mfm.video-scripter-launch-track.
+// Launch-window tracker. Runs every 5 min via LaunchAgent com.mfm.video-scripter-launch-track.
 //  - enrolls videos published in the last 30 days into track_schedule (launch window = first 24h)
+//  - samples on a log-spaced ladder (see lib/nightly/launch-core.ts): standard 5/15/30 min over
+//    0-1h/1-6h/6-24h; dense-tier channels 5/15/30 min over 0-2h/2-24h/24-72h
 //  - samples due videos via videos:batchGetStats (separate 10K-unit bucket) -> view_samples,
 //    and rolls the latest sample of the day into view_snapshots (daily truth for scoring/admin)
 //  - re-enters a video into the launch window when scripts/thumbnail-watch.ts records a new
@@ -12,9 +14,13 @@ import pg from 'pg';
 import { chunk, clampCount } from '../lib/nightly/tracking-core';
 import {
   nextCheck, reenter, launchUntilFor, titleCheckDue, parseRssTitles, daysSincePublished,
+  changeAtFromLaunchUntil, type Tier,
 } from '../lib/nightly/launch-core';
 
-const maxCalls = parseInt(process.argv[2] || '400', 10); // per run; 96 runs/day
+// Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
+// 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
+// bucket) while leaving ~5x headroom over the ~5 calls/run the schedule actually needs.
+const maxCalls = parseInt(process.argv[2] || '25', 10); // per run; 288 runs/day
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
@@ -116,9 +122,34 @@ for (const group of chunk([...byChannel.entries()], 10)) {
 }
 if (titleDue.rowCount) log(`title checks: ${titleDue.rowCount} videos over ${byChannel.size} feeds, ${titleChanges} changes`);
 
-// --- 4. Sample due videos ---
+// --- 4. Dense-tier lookup: ONE query per run, not one per video ---
+// Dense = any channel with a packaging change in the trailing 60 days, or any individual video
+// that has already had one (repeat changers are live A/B tests and the highest-value curves).
+const denseRows = await pool.query(
+  `with changed as (
+     select t.video_id from thumbnail_versions t
+      where t.version > 1 and t.first_seen > now() - interval '60 days'
+     union
+     select ti.video_id from title_versions ti
+      where ti.version > 1 and ti.first_seen > now() - interval '60 days')
+   select 'v' as kind, c.video_id as id from changed c
+   union
+   select 'c' as kind, v.channel_id as id from changed c join videos v on v.id = c.video_id
+    where v.channel_id is not null`
+);
+const denseVideos = new Set<string>();
+const denseChannels = new Set<string>();
+for (const r of denseRows.rows as { kind: string; id: string }[]) {
+  (r.kind === 'v' ? denseVideos : denseChannels).add(r.id);
+}
+log(`dense tier: ${denseChannels.size} channels, ${denseVideos.size} videos`);
+const tierOf = (videoId: string, channelId: string | null): Tier =>
+  denseVideos.has(videoId) || (channelId && denseChannels.has(channelId)) ? 'dense' : 'standard';
+
+// --- 5. Sample due videos ---
 const due = await pool.query(
-  `select video_id, published_at, launch_until, last_views
+  `select video_id, channel_id, published_at, last_views,
+          case when entered_reason in ('thumbnail_change', 'title_change') then launch_until end as change_until
      from track_schedule where next_check <= now()
     order by phase = 'launch' desc, next_check asc
     limit $1`,
@@ -126,8 +157,12 @@ const due = await pool.query(
 );
 log(`due: ${due.rowCount} videos (cap ${maxCalls * 50})`);
 
-type DueRow = { video_id: string; published_at: string; launch_until: string | null; last_views: number | null };
+type DueRow = {
+  video_id: string; channel_id: string | null; published_at: string;
+  change_until: string | null; last_views: number | null;
+};
 let calls = 0, mainCalls = 0, samples = 0;
+const tierSamples: Record<Tier, number> = { standard: 0, dense: 0 };
 for (const batch of chunk(due.rows as DueRow[], 50)) {
   const ids = batch.map((r) => r.video_id);
   let res: Response | null = null;
@@ -183,10 +218,17 @@ for (const batch of chunk(due.rows as DueRow[], 50)) {
            view_count = excluded.view_count, like_count = excluded.like_count, comment_count = excluded.comment_count`,
         [it.id, today, views, likes, comments, daysSincePublished(published, now)]
       );
+      const tier = tierOf(it.id, m.channel_id);
       const nx = nextCheck(
-        { published_at: published, launch_until: m.launch_until ? new Date(m.launch_until) : null, last_views: views },
+        {
+          published_at: published,
+          change_at: changeAtFromLaunchUntil(m.change_until ? new Date(m.change_until) : null),
+          tier,
+          last_views: views,
+        },
         now
       );
+      tierSamples[tier]++;
       await client.query(
         `update track_schedule set phase = $1, next_check = $2, checks = checks + 1, last_sample_at = $3,
                 last_views = $4, updated_at = now() where video_id = $5`,
@@ -219,7 +261,14 @@ for (const batch of chunk(due.rows as DueRow[], 50)) {
   }
 }
 
-await pool.query(`insert into quota_ledger (category, units) values ('launch-track-batch', $1)`, [calls - mainCalls]).catch(() => {});
+// Ledger holds the exact batch-bucket units spent; the per-tier split is logged for attribution
+// (units are per 50-id call, so the tier share is samples/50).
+const batchUnits = calls - mainCalls;
+await pool.query(`insert into quota_ledger (category, units) values ('launch-track-batch', $1)`, [batchUnits]).catch(() => {});
+log(
+  `units: ${batchUnits} batch (standard ~${(tierSamples.standard / 50).toFixed(2)} from ` +
+  `${tierSamples.standard} samples, dense ~${(tierSamples.dense / 50).toFixed(2)} from ${tierSamples.dense} samples)`
+);
 if (mainCalls) {
   await pool.query(`insert into quota_ledger (category, units) values ('launch-track', $1)`, [mainCalls]).catch(() => {});
   await pool.query(
