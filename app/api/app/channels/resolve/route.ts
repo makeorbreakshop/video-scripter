@@ -1,5 +1,5 @@
 // POST /api/app/channels/resolve  { input }
-//   -> { ref, channel, suggestions }
+//   -> { ref, channel, suggestions }   (channel null + suggestions = close matches for a bad handle)
 // Parses any URL/@handle/UC id/video link/free text. URL-ish inputs cost 1-2
 // YouTube units (logged to quota_ledger as 'app-resolve'); free text costs none
 // and returns local search suggestions instead.
@@ -20,7 +20,9 @@ export async function POST(req: Request) {
 
   try {
     const out = await resolveInput(input);
-    if (out.ref.kind !== 'search' && !out.channel) {
+    // A miss with close local matches is still a useful answer (a mistyped @handle);
+    // only a miss with nothing to offer is a 404.
+    if (out.ref.kind !== 'search' && !out.channel && out.suggestions.length === 0) {
       return Response.json({ ...out, error: 'channel not found' }, { status: 404 });
     }
     return Response.json(out);

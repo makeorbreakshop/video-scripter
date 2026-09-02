@@ -214,6 +214,8 @@ await pool.query(
   [apiCalls]
 ).catch((e) => console.warn('quota log skipped:', e.message));
 await pool.query(`insert into quota_ledger (category, units) values ('ingest', $1)`, [apiCalls]).catch(() => {});
+// Fold tonight's new channels/videos into the add-channel search view (sql/channel-directory.sql).
+await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
 
 console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.`);
 await pool.end();

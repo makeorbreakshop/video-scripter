@@ -1,7 +1,8 @@
 'use client';
 // The add-channel box, shared by /app/channels and /app/onboarding.
-// Free text searches the channels we already know (no YouTube quota); a URL, @handle,
-// video link or UC id goes to /resolve (1-2 units) and comes back as a confirm card.
+// Free text fuzzy-searches the channels we already know (no YouTube quota); a URL, @handle,
+// video link or UC id goes to /resolve, which answers known handles locally, asks YouTube for
+// new ones (1-2 units), and returns close local matches when a handle is mistyped.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   addChannelMode, addChannelError, markAlreadyTracked, type PickerItem,
@@ -37,6 +38,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [upgrade, setUpgrade] = useState(false);
   const requestId = useRef(0);
 
@@ -54,6 +56,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
   useEffect(() => {
     const raw = input.trim();
     setError(null);
+    setNote(null);
     setUpgrade(false);
     if (mode === 'idle') { setResults([]); setResolved(null); setBusy(false); return; }
 
@@ -71,9 +74,11 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
           const { res, body } = await post('/api/app/channels/resolve', { input: raw });
           if (id !== requestId.current) return;
           if (!res.ok) throw Object.assign(new Error(), { status: res.status, body });
-          setResults([]);
           setResolved(body?.channel || null);
-          if (!body?.channel) setError('No channel found for that link.');
+          // A handle we could not match exactly still gets the closest channels we know.
+          setResults(markAlreadyTracked(body?.suggestions || [], trackedIds));
+          if (!body?.channel && !(body?.suggestions || []).length) setError('No channel found for that link.');
+          else if (!body?.channel) setNote('No exact match for that handle — closest channels we know:');
         }
       } catch (e: any) {
         if (id !== requestId.current) return;
@@ -100,7 +105,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
         setError(addChannelError(res.status, body));
         return;
       }
-      setInput(''); setResults([]); setResolved(null);
+      setInput(''); setResults([]); setResolved(null); setNote(null);
       await onAdded(channelId);
     } catch {
       setError('Could not reach the server. Try again.');
@@ -122,7 +127,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
         aria-label="Add a channel"
       />
       <div className="cs-sub" style={{ minHeight: 18, marginTop: 6 }}>
-        {busy ? 'Searching…' : mode === 'resolve' ? 'Looks like a channel link — we will look it up.' : ''}
+        {busy ? 'Searching…' : note ? note : mode === 'resolve' && !resolved && !results.length ? 'Looks like a channel link — we will look it up.' : ''}
       </div>
 
       {error && (
@@ -151,6 +156,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="cs-pick-name">{r.name}</div>
                 <div className="cs-pick-meta">
+                  {r.handle ? `@${r.handle} · ` : ''}
                   {compactNumber(r.video_count)} videos
                   {r.tracked_lane ? ' · we already have its videos' : ''}
                 </div>

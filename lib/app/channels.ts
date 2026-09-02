@@ -59,7 +59,9 @@ const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, video_count::int a
  * (sql/channel-directory.sql). Ranked: exact handle, then name/handle prefix,
  * then the squashed name prefix ("iliketomakestuff" -> "I Like To Make Stuff"),
  * then substring, then trigram similarity for typos; ties break on video count.
- * No YouTube quota.
+ * Every WHERE arm is an indexable operator (%, <%, like, ilike) so the GIN trigram
+ * indexes serve it — EXPLAIN showed a seq scan at 80ms with word_similarity() as a
+ * function call. No YouTube quota.
  */
 export async function searchTracked(query: string, limit = 20): Promise<ChannelSearchResult[]> {
   const t = searchTerms(query);
@@ -73,7 +75,7 @@ export async function searchTracked(query: string, limit = 20): Promise<ChannelS
          or norm like $2 || '%'
          or norm % $2
          or name % $1
-         or word_similarity($1, name) > 0.55
+         or $1 <% name
       order by
         (handle = $3) desc,
         (lower(name) like $1 || '%' or handle like $1 || '%') desc,

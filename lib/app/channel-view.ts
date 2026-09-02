@@ -97,7 +97,7 @@ export function usageView(
  */
 export interface SearchResultLike {
   channel_id: string; name: string; video_count: number;
-  tracked_lane: string | null; avatar_url?: string | null;
+  tracked_lane: string | null; avatar_url?: string | null; handle?: string | null;
 }
 export interface PickerItem extends SearchResultLike { already: boolean }
 
