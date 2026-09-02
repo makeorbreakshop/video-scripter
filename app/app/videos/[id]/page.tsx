@@ -81,14 +81,14 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           sub={sc ? `${confidenceWord(sc.confidence)} · measured at ${Number(sc.day) < 1 ? `${Math.round(Number(sc.day) * 24)}h` : `day ${Number(sc.day).toFixed(1)}`}` : 'not scored yet'}
         />
         <Stat
-          label="Projected day 30"
+          label={v.ageDays >= 30 ? 'Day 30 views' : 'Projected day 30'}
           value={sc ? compact(Math.round(sc.est30)) : '–'}
-          sub={sc?.baseline != null ? `vs ${compact(Math.round(sc.baseline))} typical for this channel` : 'no channel baseline yet'}
+          sub={sc?.baseline != null ? `${v.ageDays >= 30 ? 'estimated · ' : ''}vs ${compact(Math.round(sc.baseline))} typical for this channel` : 'no channel baseline yet'}
         />
         <Stat
-          label="vs channel at same age"
-          value={sc?.same_age_ratio != null ? `${sc.same_age_ratio.toFixed(1)}×` : <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--cs-muted)', fontFamily: 'inherit' }}>no channel data at this age</span>}
-          sub={sc?.same_age_ratio != null ? `median of ${sc.n_same_age} earlier videos` : undefined}
+          label="Right now vs channel"
+          value={sc?.same_age_ratio != null ? `${sc.same_age_ratio.toFixed(1)}×` : v.pace != null ? `${v.pace.toFixed(1)}×` : '–'}
+          sub={sc?.same_age_ratio != null ? `measured · median of ${sc.n_same_age} earlier videos at this age` : v.pace != null ? `${compact(v.views)} views vs what this channel typically has by ${v.ageDays >= 30 ? 'day 30' : v.ageDays < 1 ? `${Math.round(v.ageDays * 24)}h` : `day ${Math.round(v.ageDays)}`}` : 'no channel baseline yet'}
         />
         <Stat
           label="Measurements"

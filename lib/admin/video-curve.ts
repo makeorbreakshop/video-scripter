@@ -133,3 +133,14 @@ export function packagingMarkers(publishedAt: string | Date, thumbs: ThumbVer[],
   }
   return out.sort((a, b) => a.day - b.day);
 }
+
+/**
+ * What a typical video on this channel would have at `ageDays`, from the baseline and the
+ * fitted growth curve. Past day 30 the curve is flat at the baseline (the fit ends there), so
+ * this is a floor for older videos rather than a lifetime estimate.
+ */
+export function expectedAtAge(baseline: number | null | undefined, mult: Mult, ageDays: number): number | null {
+  if (baseline == null || !(baseline > 0)) return null;
+  const m = ageDays >= 30 ? 0 : multAt(mult, Math.max(ageDays, 0.04));
+  return baseline * Math.exp(-m);
+}

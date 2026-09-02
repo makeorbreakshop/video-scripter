@@ -1,6 +1,5 @@
 import {
-  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY,
-} from './video-curve';
+  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY,, expectedAtAge } from './video-curve';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -196,5 +195,17 @@ describe('packagingMarkers', () => {
       [{ version: 2, first_seen: '2026-08-05T00:00:00Z' }],
       [{ version: 1, title: 'A', first_seen: '2026-07-31T00:00:00Z' }, { version: 2, title: 'B', first_seen: '2026-08-02T00:00:00Z' }]);
     expect(m.map((x) => [x.kind, x.day])).toEqual([['title', 1], ['thumb', 4]]);
+  });
+});
+
+describe('expectedAtAge', () => {
+  const mult = { 1: 0.87, 2: 0.61, 3: 0.45, 5: 0.30, 7: 0.22, 14: 0.096, 21: 0.038, 30: 0 } as any;
+  it('is the baseline at and after day 30', () => {
+    expect(expectedAtAge(1000, mult, 30)).toBeCloseTo(1000, 6);
+    expect(expectedAtAge(1000, mult, 68)).toBeCloseTo(1000, 6);
+  });
+  it('is below the baseline early on and null without a baseline', () => {
+    expect(expectedAtAge(1000, mult, 1)!).toBeLessThan(500);
+    expect(expectedAtAge(null, mult, 1)).toBeNull();
   });
 });

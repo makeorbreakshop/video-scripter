@@ -75,6 +75,8 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     channelName: v.channel_name,
     publishedAt: new Date(v.published_at).toISOString(),
     views: Number(v.view_count ?? 0),
+    ageDays,
+    pace: (() => { const exp = expectedAtAge(score?.baseline ?? null, mult, ageDays); const views = Number(v.view_count ?? 0); return exp && views > 0 ? views / exp : null; })(),
     thumbUrl: latest != null ? thumbUrls[latest] : v.thumbnail_url ?? null,
     score,
     actuals,
