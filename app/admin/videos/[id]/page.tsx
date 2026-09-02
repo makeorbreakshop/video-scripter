@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { videoPage } from '@/lib/admin/queries';
-import { n, compact, ago, etDateTime, ageDays } from '@/lib/admin/format';
+import { n, compact, ago, etDateTime, ageDays, ageLabel } from '@/lib/admin/format';
 import { Stat, Section, ChannelLink, TierBadge } from '@/components/admin/ui';
 import { SnapshotChart } from '@/components/admin/snapshot-chart';
 import { ThumbImg } from '@/components/admin/thumb-img';
 import { thumbUrl } from '@/lib/thumbs/storage';
-import { mergeActuals, expectedCurve, packagingMarkers } from '@/lib/admin/video-curve';
+import { mergeActuals, expectedCurve, projectedCurve, packagingMarkers } from '@/lib/admin/video-curve';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,12 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const markers = packagingMarkers(v.published_at, thumbs, titles);
   const maxDay = Math.max(30, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays(v.published_at) ?? 0);
   const curve = expectedCurve(sc?.baseline ?? null, mult, maxDay);
+  const projected = sc ? projectedCurve(sc.est30, mult, maxDay) : [];
+  // Freshness is whichever series ran last: daily snapshots or the 15-minute launch samples.
+  const lastSeen = [snapshots[snapshots.length - 1]?.at, samples[samples.length - 1]?.at]
+    .filter(Boolean)
+    .map((x) => new Date(x as string).getTime())
+    .sort((a, b) => b - a)[0];
   const thumbUrls: Record<number, string> = {};
   for (const t of thumbs) thumbUrls[t.version] = thumbUrl(id, t.version) ?? `/api/admin/thumb/${id}/${t.version}`;
   const latest = thumbs.length ? thumbs[thumbs.length - 1].version : null;
@@ -43,7 +49,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
             <a href={`https://youtu.be/${id}`} target="_blank" rel="noreferrer" className="text-xs font-normal text-muted-foreground hover:underline">yt ↗</a>
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            {id} · published {etDateTime(v.published_at)} ET · {ageDays(v.published_at)}d old · {n(v.view_count)} views
+            {id} · published {etDateTime(v.published_at)} ET · {ageLabel(v.published_at)} · {n(v.view_count)} views
             {v.format_type && <> · {v.format_type}</>}{v.topic_niche && <> · {v.topic_niche}</>}{v.is_short && <> · short</>}
           </p>
         </div>
@@ -68,16 +74,16 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         <Stat
           label="Tracking"
           value={<TierBadge tier={v.priority_tier} />}
-          sub={`${snapshots.length} snapshots · ${samples.length} samples · last ${v.last_tracked ? ago(v.last_tracked) : '–'}`}
+          sub={`${snapshots.length} snapshots · ${samples.length} samples · last ${lastSeen ? ago(new Date(lastSeen)) : '–'}`}
         />
       </div>
 
       <Section
         title="Views since publish"
-        right={curve.length ? 'dashed = expected from channel baseline · band = model error · amber = thumbnail, blue = title' : 'no baseline: expected curve unavailable'}
+        right={curve.length ? 'dashed = channel baseline · band = model error · amber = thumbnail, blue = title' : 'no baseline: expected curve unavailable'}
       >
         <div className="rounded-lg border border-border p-3">
-          <SnapshotChart actuals={actuals} curve={curve} markers={markers} thumbUrls={thumbUrls} />
+          <SnapshotChart actuals={actuals} curve={curve} projected={projected} markers={markers} thumbUrls={thumbUrls} score={sc?.score ?? null} />
         </div>
       </Section>
 

@@ -1,5 +1,5 @@
 import {
-  multAt, aleAt, expectedAt, expectedCurve, mergeActuals, packagingMarkers, ALE_BY_DAY,
+  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY,
 } from './video-curve';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
@@ -69,6 +69,47 @@ describe('expectedCurve', () => {
   test('returns nothing without a baseline', () => {
     expect(expectedCurve(null, MULT, 30)).toEqual([]);
     expect(expectedCurve(0, MULT, 30)).toEqual([]);
+  });
+});
+
+describe('curveDays', () => {
+  test('starts at 0, ends at maxDay and is strictly increasing', () => {
+    const d = curveDays(30);
+    expect(d[0]).toBe(0);
+    expect(d[d.length - 1]).toBe(30);
+    for (let i = 1; i < d.length; i++) expect(d[i]).toBeGreaterThan(d[i - 1]);
+  });
+  test('is denser early than late, so the launch window is readable', () => {
+    const d = curveDays(30);
+    const early = d.filter((x) => x <= 3).length;
+    const late = d.filter((x) => x > 15).length;
+    expect(early).toBeGreaterThan(late);
+  });
+});
+
+describe('projectedCurve', () => {
+  test('has the baseline shape and lands on est30 at day 30', () => {
+    const c = projectedCurve(2000, MULT, 30);
+    expect(c[c.length - 1].day).toBe(30);
+    expect(c[c.length - 1].projected).toBeCloseTo(2000, 6);
+    expect(c[0].projected).toBeCloseTo(2000 * Math.exp(-MULT[1]), 6);
+  });
+  test('is the baseline curve scaled by the score, so the gap at any day is the score', () => {
+    const base = expectedCurve(1000, MULT, 30);
+    const proj = projectedCurve(1800, MULT, 30);
+    expect(proj).toHaveLength(base.length);
+    for (let i = 0; i < base.length; i++) {
+      expect(proj[i].day).toBe(base[i].day);
+      expect(proj[i].projected / base[i].expected).toBeCloseTo(1.8, 9);
+    }
+  });
+  test('stays flat at est30 past day 30', () => {
+    const c = projectedCurve(2000, MULT, 60);
+    expect(c[c.length - 1].projected).toBeCloseTo(2000, 6);
+  });
+  test('returns nothing without an est30', () => {
+    expect(projectedCurve(null, MULT, 30)).toEqual([]);
+    expect(projectedCurve(0, MULT, 30)).toEqual([]);
   });
 });
 

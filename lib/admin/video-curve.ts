@@ -9,6 +9,7 @@
 
 export type Mult = Record<number, number>;
 export type CurvePoint = { day: number; expected: number; lo: number; hi: number };
+export type ProjPoint = { day: number; projected: number };
 export type Actual = { day: number; views: number; source: 'snapshot' | 'sample'; at: string };
 export type Marker = {
   kind: 'thumb' | 'title';
@@ -56,15 +57,28 @@ export function expectedAt(baseline: number, mult: Mult, day: number): CurvePoin
   return { day, expected, lo: expected * Math.exp(-a), hi: expected * Math.exp(a) };
 }
 
-// ~60 points, denser early (even in log(day+1)) so the launch window is readable.
+// ~60 sample days, denser early (even in log(day+1)) so the launch window is readable.
+// Both curves share these days so the chart can zip them into one row per day.
+export function curveDays(maxDay: number, steps = 60): number[] {
+  const end = Math.max(1, maxDay);
+  const hi = Math.log(end + 1);
+  const out: number[] = [];
+  for (let i = 0; i <= steps; i++) out.push(Math.exp((hi * i) / steps) - 1);
+  out[0] = 0;
+  out[out.length - 1] = end;
+  return out;
+}
+
+// What a video that ends up exactly on the channel baseline looks like along the way.
 export function expectedCurve(baseline: number | null | undefined, mult: Mult, maxDay: number, steps = 60): CurvePoint[] {
   if (!baseline || baseline <= 0 || !Number.isFinite(baseline)) return [];
-  const hi = Math.log(Math.max(1, maxDay) + 1);
-  const out: CurvePoint[] = [];
-  for (let i = 0; i <= steps; i++) out.push(expectedAt(baseline, mult, Math.exp((hi * i) / steps) - 1));
-  out[0] = expectedAt(baseline, mult, 0);
-  out[out.length - 1] = expectedAt(baseline, mult, Math.max(1, maxDay));
-  return out;
+  return curveDays(maxDay, steps).map((d) => expectedAt(baseline, mult, d));
+}
+
+// This video's own projection: the same shape, scaled so it lands on est30 at day 30.
+export function projectedCurve(est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60): ProjPoint[] {
+  if (!est30 || est30 <= 0 || !Number.isFinite(est30)) return [];
+  return curveDays(maxDay, steps).map((d) => ({ day: d, projected: est30 * Math.exp(-multAt(mult, d)) }));
 }
 
 type Point = { at: string | Date; views: number };
