@@ -143,12 +143,14 @@ export function mergeActuals(publishedAt: string | Date, snapshots: Point[], sam
   const sorted = [...byDay.values()].sort((a, b) => a.day - b.day);
   // Collapse noise: a snapshot within 12h of a real sample adds nothing, and a repeated
   // identical count (a catalog re-read of an unchanged number) is not a second measurement.
-  return sorted.filter((a, i) => {
-    if (a.source === 'snapshot' && sorted.some((b) => b.source === 'sample' && Math.abs(b.day - a.day) < 0.5)) return false;
-    const prev = sorted[i - 1];
-    if (prev && prev.views === a.views && a.day - prev.day < 2) return false;
-    return true;
-  });
+  const kept: Actual[] = [];
+  for (const a of sorted) {
+    if (a.source === 'snapshot' && sorted.some((b) => b.source === 'sample' && Math.abs(b.day - a.day) < 0.5)) continue;
+    const last = kept[kept.length - 1];
+    if (last && last.views === a.views && a.day - last.day < 2) continue;
+    kept.push(a);
+  }
+  return kept;
 }
 
 /**

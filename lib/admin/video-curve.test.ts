@@ -255,6 +255,12 @@ describe('curves past day 30', () => {
 
 describe('mergeActuals dedupe and fitScale', () => {
   const pub = '2026-08-29T16:00:00Z';
+  it('keeps a sample whose identical snapshot was already dropped', () => {
+    const out = mergeActuals(pub,
+      [{ at: '2026-09-01T12:00:00Z', views: 816558 }, { at: '2026-09-02T12:00:00Z', views: 884332 }],
+      [{ at: '2026-09-01T18:00:00Z', views: 816558 }]);
+    expect(out.map((a) => [a.source, a.views])).toEqual([['sample', 816558], ['snapshot', 884332]]);
+  });
   it('drops a snapshot next to a sample and a repeated identical count', () => {
     const out = mergeActuals(pub,
       [{ at: '2026-09-01T12:00:00Z', views: 817000 }, { at: '2026-09-02T12:00:00Z', views: 817000 }],
