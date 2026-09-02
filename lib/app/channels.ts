@@ -247,9 +247,9 @@ function fromDirectory(r: ChannelSearchResult): ResolvedChannel {
 
 // ----------------------------------------------------------------- track ----
 
-// A tracked channel gets its whole upload history: playlistItems is 1 unit per 50 videos, so even
-// a 5,000-video channel is ~200 units, paced by the drain's daily budget.
-export const BACKFILL_DEPTH = 100_000;
+// A tracked channel gets its last year of uploads, capped at 300 videos (a daily uploader is
+// already 365). The walk stops early at videos we already have. ~2 units per 50 videos.
+export const BACKFILL_DEPTH = 300;
 const SYSTEM_USER = '00000000-0000-0000-0000-000000000000';
 
 export class PlanLimitError extends Error {

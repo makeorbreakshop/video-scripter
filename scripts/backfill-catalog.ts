@@ -30,7 +30,8 @@ const flag = (name: string) => process.argv.includes(`--${name}`);
 
 const DRY = flag('dry');
 const ONLY_CHANNEL = arg('channel');
-const DEPTH = parseInt(arg('depth') || '100000', 10); // default: the whole catalog
+const DEPTH = parseInt(arg('depth') || '300', 10);
+const MAX_AGE_MS = 365 * 86_400_000; // never walk past a year of uploads
 const BUDGET = parseInt(arg('budget') || '1500', 10);
 const MAX_JOBS = parseInt(arg('jobs') || '5', 10);
 
@@ -118,10 +119,20 @@ async function backfillChannel(channelId: string, depth: number): Promise<Outcom
                 `&key=${API_KEY}${pageToken ? `&pageToken=${pageToken}` : ''}`;
     const d = await ytJson(url);
     pages++;
+    const pageIds: string[] = [];
+    let tooOld = false;
     for (const it of d.items || []) {
       const id = it.contentDetails?.videoId;
-      if (id && seen.length < depth) seen.push(id);
+      const pub = it.contentDetails?.videoPublishedAt ? Date.parse(it.contentDetails.videoPublishedAt) : NaN;
+      if (Number.isFinite(pub) && Date.now() - pub > MAX_AGE_MS) { tooOld = true; break; }
+      if (id && seen.length < depth) { seen.push(id); pageIds.push(id); }
     }
+    // Stop early when a whole page is already in the library: the rest is older and known.
+    if (pageIds.length) {
+      const { rows } = await pool.query(`select count(*)::int as n from videos where id = any($1)`, [pageIds]);
+      if (rows[0].n === pageIds.length && pages > 1) break;
+    }
+    if (tooOld) break;
     pageToken = d.nextPageToken;
     if (!pageToken) break;
     await sleep(PAGE_SLEEP_MS);
