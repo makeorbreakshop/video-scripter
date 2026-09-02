@@ -46,6 +46,9 @@ export type Experiment = {
   verdict: Verdict;
   /** 'samples' = 15-minute launch samples; 'daily' = daily snapshots (coarser, wider windows). */
   resolution: 'samples' | 'daily' | null;
+  /** Changes inside CLUSTER_HOURS of each other are judged as one experiment; this is how many. */
+  changes: number;
+  versions: number[];
 };
 
 /**
@@ -83,6 +86,18 @@ export function verdictFor(before: Window, after: Window, minPoints = MIN_SAMPLE
  * packagingMarkers() so thumbnail and title changes bound each other's windows.
  */
 const DAILY_WINDOW_HOURS = 7 * 24;
+export const CLUSTER_HOURS = 3; // a burst of swaps has no measurements between them: judge the burst
+
+function clusterMarkers(markers: Marker[]): Marker[][] {
+  const sorted = [...markers].sort((a, b) => a.day - b.day);
+  const out: Marker[][] = [];
+  for (const m of sorted) {
+    const last = out[out.length - 1];
+    if (last && new Date(m.at).getTime() - new Date(last[last.length - 1].at).getTime() <= CLUSTER_HOURS * HOUR) last.push(m);
+    else out.push([m]);
+  }
+  return out;
+}
 
 export function experiments(
   publishedAt: string | Date,
@@ -94,36 +109,41 @@ export function experiments(
 ): Experiment[] {
   const t0 = new Date(publishedAt).getTime();
   if (!Number.isFinite(t0) || !markers.length) return [];
-  const sorted = [...markers].sort((a, b) => a.day - b.day);
-  const times = sorted.map((m) => new Date(m.at).getTime());
+  const clusters = clusterMarkers(markers);
+  const starts = clusters.map((c) => new Date(c[0].at).getTime());
+  const ends = clusters.map((c) => new Date(c[c.length - 1].at).getTime());
   // Publish is a real data point: zero views at t0. It lets a change in the first days get a
   // "before" rate from daily data alone.
   const dailyPts: Sample[] = [{ at: new Date(t0).toISOString(), views: 0 }, ...daily, ...samples];
 
-  return sorted.map((m, i) => {
-    const at = times[i];
-    const prev = i > 0 ? times[i - 1] : t0;
-    const next = i < times.length - 1 ? times[i + 1] : now;
+  return clusters.map((cl, i) => {
+    const m = cl[cl.length - 1];
+    const at = starts[i];
+    const atEnd = ends[i];
+    const prev = i > 0 ? ends[i - 1] : t0;
+    const next = i < clusters.length - 1 ? starts[i + 1] : now;
     let back = Math.min(WINDOW_HOURS * HOUR, Math.max(0, at - prev));
-    let fwd = Math.min(WINDOW_HOURS * HOUR, Math.max(0, next - at));
+    let fwd = Math.min(WINDOW_HOURS * HOUR, Math.max(0, next - atEnd));
     let before = vphIn(samples, at - back, at);
-    let after = vphIn(samples, at, at + fwd);
+    let after = vphIn(samples, atEnd, atEnd + fwd);
     let { ratio, verdict } = verdictFor(before, after);
     let resolution: Experiment['resolution'] = verdict === 'too early' ? null : 'samples';
     if (verdict === 'too early' && daily.length) {
       back = Math.min(DAILY_WINDOW_HOURS * HOUR, Math.max(0, at - prev));
-      fwd = Math.min(DAILY_WINDOW_HOURS * HOUR, Math.max(0, next - at));
+      fwd = Math.min(DAILY_WINDOW_HOURS * HOUR, Math.max(0, next - atEnd));
       const b = vphIn(dailyPts, at - back, at);
-      const a = vphIn(dailyPts, at, at + fwd);
+      const a = vphIn(dailyPts, atEnd, atEnd + fwd);
       const v = verdictFor(b, a, 2); // daily data: two points a side is a real rate
       if (v.verdict !== 'too early') { before = b; after = a; ratio = v.ratio; verdict = v.verdict; resolution = 'daily'; }
     }
     return {
       resolution,
+      changes: cl.length,
+      versions: cl.map((x) => x.version),
       kind: m.kind,
       version: m.version,
-      fromVersion: m.fromVersion,
-      from: m.from,
+      fromVersion: cl[0].fromVersion,
+      from: cl[0].from,
       to: m.to,
       at: m.at,
       day: m.day,

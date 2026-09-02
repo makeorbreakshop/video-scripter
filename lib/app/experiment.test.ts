@@ -88,19 +88,20 @@ describe('experiments', () => {
   });
 
   it('shrinks the windows to the neighbouring changes so two swaps do not share data', () => {
-    const ms = [marker({ day: 2 / 24, version: 2 }), marker({ day: 4 / 24, version: 3 })];
+    // 4h apart: beyond CLUSTER_HOURS, so they are two experiments that bound each other.
+    const ms = [marker({ day: 2 / 24, version: 2 }), marker({ day: 6 / 24, version: 3 })];
     const [a, b] = experiments(T0, ramp(0, 20, 100), ms);
     expect(a.windowBeforeHours).toBeCloseTo(2, 6); // publish -> first change
-    expect(a.windowAfterHours).toBeCloseTo(2, 6);  // first change -> second change
-    expect(b.windowBeforeHours).toBeCloseTo(2, 6);
+    expect(a.windowAfterHours).toBeCloseTo(4, 6);  // first change -> second change
+    expect(b.windowBeforeHours).toBeCloseTo(4, 6);
     expect(b.windowAfterHours).toBe(WINDOW_HOURS);
   });
 
   it('bounds a title change by the neighbouring thumbnail change too', () => {
-    const ms = [marker({ day: 3 / 24, kind: 'title', version: 2 }), marker({ day: 4 / 24, kind: 'thumb', version: 2 })];
+    const ms = [marker({ day: 3 / 24, kind: 'title', version: 2 }), marker({ day: 8 / 24, kind: 'thumb', version: 2 })];
     const [title] = experiments(T0, ramp(0, 20, 100), ms);
     expect(title.kind).toBe('title');
-    expect(title.windowAfterHours).toBeCloseTo(1, 6);
+    expect(title.windowAfterHours).toBeCloseTo(5, 6);
   });
 
   it('returns nothing when there are no packaging changes', () => {
@@ -131,5 +132,20 @@ describe('daily fallback', () => {
     const [e] = experiments(pub, [], [marker], Date.parse('2026-09-01T18:00:00Z'), [{ at: '2026-08-30T12:00:00Z', views: 100000 }]);
     expect(e.verdict).toBe('too early');
     expect(e.resolution).toBeNull();
+  });
+});
+
+describe('clustered changes', () => {
+  const pub = '2026-09-01T16:00:00Z';
+  const mk = (v: number, at: string) => ({ kind: 'thumb', version: v, fromVersion: v - 1, from: null, to: null, at, day: (Date.parse(at) - Date.parse(pub)) / 86400000 } as any);
+  it('judges five swaps inside an hour as one experiment with a before and an after', () => {
+    const markers = [mk(2, '2026-09-01T19:20:00Z'), mk(3, '2026-09-01T19:36:00Z'), mk(4, '2026-09-01T19:41:00Z'), mk(5, '2026-09-01T20:13:00Z'), mk(6, '2026-09-01T20:19:00Z')];
+    const samples: any[] = [];
+    for (let h = 0; h <= 30; h += 0.25) samples.push({ at: new Date(Date.parse(pub) + h * 3600e3).toISOString(), views: h < 4.3 ? 20000 * h : 86000 + 40000 * (h - 4.3) });
+    const out = experiments(pub, samples, markers, Date.parse('2026-09-03T00:00:00Z'));
+    expect(out).toHaveLength(1);
+    expect(out[0].changes).toBe(5);
+    expect(out[0].versions).toEqual([2, 3, 4, 5, 6]);
+    expect(out[0].verdict).toBe('helped');
   });
 });
