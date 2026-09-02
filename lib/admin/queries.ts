@@ -1,6 +1,7 @@
 // All admin SQL lives here so the CLI (next step) can reuse the same functions.
 import { unstable_cache } from 'next/cache';
 import { q, one } from './db';
+import { labelByPhash } from '../thumbs/phash';
 
 export type DayCount = { day: string; n: number };
 
@@ -66,7 +67,7 @@ export async function overview() {
   return { totals, ingest14, snaps14, thumbs14, queue, quota, tiers, changes7: changes7?.n ?? 0 };
 }
 
-export type ThumbVersion = { version: number; sha256: string; first_seen: string; last_checked: string };
+export type ThumbVersion = { version: number; sha256: string; phash?: string | null; first_seen: string; last_checked: string };
 export type ThumbHistory = {
   video_id: string;
   title: string;
@@ -89,25 +90,22 @@ export async function thumbnailHistories(limit = 100, channelId?: string, includ
        order by last_change desc limit $1)
      select c.video_id, c.last_change, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count,
             (v.duration = 'P0D') as is_live,
-            (select json_agg(json_build_object('version', t.version, 'sha256', t.sha256,
+            (select json_agg(json_build_object('version', t.version, 'sha256', t.sha256, 'phash', t.phash,
                                                'first_seen', t.first_seen, 'last_checked', t.last_checked)
                              order by t.version)
              from thumbnail_versions t where t.video_id = c.video_id) as versions
      from changed c join videos v on v.id = c.video_id
-     ${includeLive ? '' : "where coalesce(v.duration, '') <> 'P0D'"}
+     where coalesce(v.is_short, false) = false and not (coalesce(v.duration,'') ~ '^PT(([0-5]?[0-9])S|1M([0-2]S)?)$')
+       ${includeLive ? '' : "and coalesce(v.duration, '') <> 'P0D'"}
      order by c.last_change desc`,
     channelId ? [limit, channelId] : [limit]
   );
 }
 
 // Label each distinct image A, B, C… in order of first appearance so a rotation reads "A → B → A → B".
+// Distinct images by perceptual identity (falls back to sha256 when a version has no phash yet).
 export function labelVersions(versions: ThumbVersion[]) {
-  const seen = new Map<string, string>();
-  return versions.map((v) => {
-    const repeat = seen.has(v.sha256);
-    if (!repeat) seen.set(v.sha256, String.fromCharCode(65 + seen.size));
-    return { ...v, label: seen.get(v.sha256)!, repeat };
-  });
+  return labelByPhash(versions);
 }
 
 // "A → B → A → B" plus a one-word read of what it probably is.
@@ -235,7 +233,7 @@ export async function videoDetail(id: string) {
       [id]
     ),
     q<{ version: number; sha256: string; bytes: number; first_seen: string; last_checked: string }>(
-      `select version, sha256, bytes, first_seen, last_checked
+      `select version, sha256, phash, bytes, first_seen, last_checked
        from thumbnail_versions where video_id = $1 order by version`,
       [id]
     ),

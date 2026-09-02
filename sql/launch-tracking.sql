@@ -38,3 +38,7 @@ create table if not exists title_versions (
   first_seen timestamptz not null default now(),
   primary key (video_id, version)
 );
+
+-- 2026-09-02: perceptual identity for thumbnail versions (CDN re-encodes flip sha256 without changing the picture)
+alter table thumbnail_versions add column if not exists phash text;
+create index if not exists idx_thumbver_phash on thumbnail_versions (video_id, phash);

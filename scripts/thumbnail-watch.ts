@@ -11,6 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
+import { phashFromJpeg } from '../lib/thumbs/decode';
+import { isSameImage } from '../lib/thumbs/phash';
 
 const maxVideos = parseInt(process.argv[2] || '25000', 10);
 const pool = new pg.Pool({
@@ -32,6 +34,8 @@ const { rows: targets } = await pool.query(
    left join latest l on l.video_id = v.id
    where v.published_at > now() - interval '30 days'
      and coalesce(v.duration, '') <> 'P0D'  -- live/upcoming: hqdefault is a feed frame, not packaging
+     and coalesce(v.is_short, false) = false
+     and not (coalesce(v.duration, '') ~ '^PT(([0-5]?[0-9])S|1M([0-2]S)?)$')  -- <=62s = Shorts even when is_short is unset
      and (
        v.published_at > now() - interval '6 hours'                  -- launch window: every 5-min run
        or (v.published_at > now() - interval '72 hours'
@@ -60,23 +64,26 @@ for (const group of chunk(targets, 20)) {
         checked++;
         const sha = crypto.createHash('sha256').update(buf).digest('hex');
         const { rows: cur } = await pool.query(
-          `select version, sha256 from thumbnail_versions where video_id=$1 order by version desc limit 1`,
+          `select version, sha256, phash from thumbnail_versions where video_id=$1 order by version desc limit 1`,
           [id]
         );
         if (cur.length && cur[0].sha256 === sha) {
-          await pool.query(
-            `update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`,
-            [id, cur[0].version]
-          );
+          await pool.query(`update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`, [id, cur[0].version]);
+          return;
+        }
+        // Different bytes: only a CHANGE if the picture itself differs (CDN re-encodes flip sha256 with the same image).
+        const phash = await phashFromJpeg(buf);
+        if (cur.length && isSameImage(cur[0].phash, phash)) {
+          await pool.query(`update thumbnail_versions set last_checked=now(), phash=coalesce(phash,$3) where video_id=$1 and version=$2`, [id, cur[0].version, phash]);
           return;
         }
         const version = cur.length ? cur[0].version + 1 : 1;
         const file = path.join(STORE, `${id}_v${version}.jpg`);
         fs.writeFileSync(file, buf);
         await pool.query(
-          `insert into thumbnail_versions (video_id, version, sha256, bytes, storage_path)
-           values ($1,$2,$3,$4,$5) on conflict do nothing`,
-          [id, version, sha, buf.length, path.relative(process.cwd(), file)]
+          `insert into thumbnail_versions (video_id, version, sha256, bytes, storage_path, phash)
+           values ($1,$2,$3,$4,$5,$6) on conflict do nothing`,
+          [id, version, sha, buf.length, path.relative(process.cwd(), file), phash]
         );
         if (version === 1) news++;
         else {
