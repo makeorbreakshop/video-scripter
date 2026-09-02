@@ -13,7 +13,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
-import { phashFromJpeg, pixelMeanDiff, pillarboxedJpeg } from '../lib/thumbs/decode';
+import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
+import { isShortByCdn } from '../lib/thumbs/shorts';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
 import {
@@ -89,8 +90,8 @@ for (const group of chunk(targets, 20)) {
           await pool.query(`update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`, [id, cur[0].version]);
           return;
         }
-        // First capture of a vertical (pillarboxed) thumbnail: it is a Short. Flag it and stop watching.
-        if (!cur.length && (await pillarboxedJpeg(buf).catch(() => false))) {
+        // First capture: ask the CDN whether this is a Short (vertical variant exists). Flag it and stop watching.
+        if (!cur.length && (await isShortByCdn(id)) === true) {
           await pool.query(`update videos set is_short = true where id = $1`, [id]);
           shorts++;
           return;
