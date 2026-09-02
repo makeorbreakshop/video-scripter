@@ -47,3 +47,11 @@ describe('canWatchMoreClosely', () => {
     expect(canWatchMoreClosely('free', 1).reason).toContain('1 closely watched channel.');
   });
 });
+
+describe('owner plan', () => {
+  it('never limits tracking or close watching', () => {
+    expect(canTrackMore('owner', 10_000).ok).toBe(true);
+    expect(canWatchMoreClosely('owner', 10_000).ok).toBe(true);
+    expect(normalizePlan('owner')).toBe('owner');
+  });
+});

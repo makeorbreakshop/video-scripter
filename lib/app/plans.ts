@@ -1,6 +1,6 @@
 // Plan limits for ChannelSmith. Free is the friend-tester tier from the MVP
 // plan (self + one competitor); pro is the proposed $19/mo tier.
-export type PlanName = 'free' | 'pro';
+export type PlanName = 'free' | 'pro' | 'owner';
 
 export interface PlanLimits {
   tracked: number;        // total channels in user_channels
@@ -10,6 +10,7 @@ export interface PlanLimits {
 export const PLANS: Record<PlanName, PlanLimits> = {
   free: { tracked: 2, watchedClosely: 1 },
   pro: { tracked: 25, watchedClosely: 10 },
+  owner: { tracked: Number.POSITIVE_INFINITY, watchedClosely: Number.POSITIVE_INFINITY }, // Brandon; no limits
 };
 
 /** Unknown/missing plan names fall back to free — never to the generous tier. */
