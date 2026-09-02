@@ -102,6 +102,9 @@ export function VideoChart({
   if (!actuals.length && !curve.length) {
     return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;
   }
+  // A channel with no baseline yet has no expected curve and no band. Draw the actual
+  // series on its own and say so, rather than leaving the reader to wonder what is missing.
+  const noBaseline = !curve.length;
 
   const launch = zoom === '72h';
   const rows = launch ? all.filter((r) => r.day <= 3) : all;
@@ -201,6 +204,12 @@ export function VideoChart({
         </ComposedChart>
       </ResponsiveContainer>
       </div>
+
+      {noBaseline && (
+        <p style={{ color: 'var(--cs-muted)', fontSize: 12, marginTop: 8 }}>
+          Baseline not available yet — showing this video&rsquo;s own views.
+        </p>
+      )}
 
       {hoveredMarker && (
         <div className="cs-note" style={{ marginTop: 10 }}>
