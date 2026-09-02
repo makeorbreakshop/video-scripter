@@ -1,7 +1,7 @@
 // Presentation logic for the ChannelSmith feed. Pure functions only — the feed row
 // components render what these return, so the wording and thresholds are testable
 // without mounting React or touching the database.
-import { FEED_TYPES } from '../feed/query';
+import { FEED_TYPES } from '../feed/event-types';
 
 export interface FeedEventLike {
   id: string;

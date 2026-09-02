@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { listUserChannels } from '@/lib/app/channels';
 import { planUsage } from '@/lib/app/users';
 import { requireAppUser } from '@/lib/app/session';
-import ChannelsClient from '../_components/channels-client';
+import ChannelsClient from '../_components/channel-list';
 
 export const dynamic = 'force-dynamic';
 

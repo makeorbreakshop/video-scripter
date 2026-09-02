@@ -1,6 +1,10 @@
 // Reading the feed. Keyset pagination on (at desc, id desc) — offsets drift as the materializer
 // inserts underneath a scrolling reader, and get slower the further down you go.
 import { q } from '../admin/db';
+import { FEED_TYPES } from './event-types';
+
+export { FEED_TYPES };
+export type { FeedEventType } from './event-types';
 
 export const DEFAULT_LIMIT = 50;
 export const MAX_LIMIT = 200;
@@ -53,8 +57,6 @@ export function clampLimit(limit: number | undefined | null): number {
   return Math.min(Math.floor(limit), MAX_LIMIT);
 }
 
-/** Types the feed knows about; anything else is dropped rather than passed to the query. */
-export const FEED_TYPES = ['upload', 'thumbnail_change', 'ab_rotation', 'title_change', 'outlier'];
 
 export function normalizeTypes(types: string[] | null | undefined): string[] | null {
   if (!types || !types.length) return null;

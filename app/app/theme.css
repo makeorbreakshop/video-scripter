@@ -54,7 +54,7 @@
     --cs-good: #3DD68C;
     --cs-warn: #E8B339;
     --cs-bad: #FF6B6B;
-    --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     --cs-scanline: rgba(0, 0, 0, 0.45);
   }
 }
@@ -73,7 +73,7 @@
   --cs-good: #3DD68C;
   --cs-warn: #E8B339;
   --cs-bad: #FF6B6B;
-  --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   --cs-scanline: rgba(0, 0, 0, 0.45);
 }
 
@@ -212,11 +212,13 @@
   opacity: 0.5;
 }
 .cs-newhigh {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 1.4;
+  display: inline-flex; align-items: center; gap: 4px; vertical-align: 1px; margin-left: 7px;
+  font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 1;
   color: var(--cs-accent-on); background: var(--cs-accent);
   padding: 4px 5px 3px; border-radius: 4px; white-space: nowrap;
 }
+/* Press Start 2P has no star glyph, so the star falls back to the UI face. */
+.cs-newhigh .cs-star { font-family: var(--font-inter), sans-serif; font-size: 9px; }
 
 /* ---------------------------------------------------------------- empty --- */
 
@@ -249,6 +251,7 @@
 /* -------------------------------------------------------------- controls -- */
 
 .cs-btn {
+  white-space: nowrap;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 7px 13px; border-radius: 8px; border: 1px solid var(--cs-line);
   background: var(--cs-surface); font-size: 13px; font-weight: 550; cursor: pointer;

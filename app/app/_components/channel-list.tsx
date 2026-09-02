@@ -106,7 +106,7 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
       {rows.length === 0 ? (
         <div className="cs-empty">
           <div className="cs-coin">NO CHANNELS</div>
-          <div className="cs-coin-sub">&#9662; ADD ONE ABOVE &#9662;</div>
+          <div className="cs-coin-sub">&gt;&gt; ADD ONE ABOVE &lt;&lt;</div>
           <p>Start with your own channel, then add the competitor you measure yourself against.</p>
         </div>
       ) : (

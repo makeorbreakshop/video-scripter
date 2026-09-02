@@ -15,7 +15,7 @@ export default function InsertCoin({
   return (
     <div className="cs-empty">
       <div className="cs-coin">{title}</div>
-      <div className="cs-coin-sub">&#9662; {action} &#9662;</div>
+      <div className="cs-coin-sub">&gt;&gt; {action} &lt;&lt;</div>
       <p>{children ?? 'Track a channel and every upload, thumbnail swap, title edit and outlier lands here.'}</p>
       <div style={{ marginTop: 18 }}>
         <Link className="cs-btn" data-variant="primary" href={href}>{action.toLowerCase().replace(/^./, (c) => c.toUpperCase())}</Link>

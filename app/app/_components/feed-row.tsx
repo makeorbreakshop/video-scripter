@@ -23,13 +23,15 @@ export default function FeedRow({ event, now }: { event: FeedEventLike; now?: Da
 
       <div className="cs-row-body">
         <span className="cs-tag" data-type={event.type}>{v.label}</span>
+        {v.highScore && (
+          <span className="cs-newhigh"><span className="cs-star">&#9733;</span> NEW HIGH SCORE</span>
+        )}
         <p className="cs-title">{v.headline}</p>
         {v.detail && <div className="cs-detail" title={v.detail}>{v.detail}</div>}
         {event.channel_name && <div className="cs-channel">{event.channel_name}</div>}
       </div>
 
       <div className="cs-row-right">
-        {v.highScore && <span className="cs-newhigh">&#9733; NEW<br />HIGH SCORE</span>}
         {v.score !== null && (
           <span className="cs-score" title={`${v.score}x the channel baseline`}>{formatScore(v.score)}</span>
         )}
