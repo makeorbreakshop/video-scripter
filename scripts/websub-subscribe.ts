@@ -25,11 +25,18 @@ let channels = [...new Set(rows.map((r) => r.id))];
 if (maxChannels > 0) channels = channels.slice(0, maxChannels);
 console.log(`Subscribing ${channels.length} channels via ${CALLBACK}`);
 
+// Paced: 10 concurrent + 300ms between batches. An unpaced 20-wide burst got
+// ~10% of POSTs rejected by pubsubhubbub at 1,025 channels (measured
+// 2026-09-01: 96 and 107 rejects on two runs; the paced shape went
+// 1,025/1,025). Non-2xx responses are logged per channel for diagnosis.
 let ok = 0;
 let fail = 0;
-for (const group of chunk(channels, 20)) {
+const failures: string[] = [];
+const groups = chunk(channels, 10);
+for (let i = 0; i < groups.length; i++) {
+  if (i > 0) await new Promise((r) => setTimeout(r, 300));
   await Promise.all(
-    group.map(async (ch) => {
+    groups[i].map(async (ch) => {
       const params = new URLSearchParams({
         'hub.mode': 'subscribe',
         'hub.topic': `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${ch}`,
@@ -45,10 +52,20 @@ for (const group of chunk(channels, 20)) {
           body: params.toString(),
           signal: AbortSignal.timeout(15000),
         });
-        res.status === 202 || res.status === 204 ? ok++ : fail++;
-      } catch { fail++; }
+        if (res.status === 202 || res.status === 204) {
+          ok++;
+        } else {
+          fail++;
+          const body = (await res.text().catch(() => '')).slice(0, 120);
+          failures.push(`${ch}: HTTP ${res.status} ${body}`);
+        }
+      } catch (e) {
+        fail++;
+        failures.push(`${ch}: ${e instanceof Error ? e.message : 'fetch error'}`);
+      }
     })
   );
 }
+for (const f of failures) console.error(`REJECTED ${f}`);
 console.log(`Done. ${ok} accepted, ${fail} failed.`);
 await pool.end();
