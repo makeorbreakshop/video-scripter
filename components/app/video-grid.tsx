@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { GridVideo, SortKey } from '@/lib/app/channel-page';
 import { GRID_PAGE } from '@/lib/app/channel-page';
 import { compact, etDate, ago } from '@/lib/admin/format';
+import { Thumb } from './thumb';
 
 const SORT_LABELS: [SortKey, string][] = [
   ['score', 'Score'],
@@ -71,11 +72,9 @@ function Packaging({ v }: { v: GridVideo }) {
       <span className="vg-meta" style={{ color: 'var(--cs-warn)', flex: 'none' }}>{label}</span>
       {v.prevThumbUrl ? (
         <span style={{ display: 'flex', alignItems: 'center', gap: 3, flex: 'none' }} title="previous → current thumbnail">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={v.prevThumbUrl} alt="previous thumbnail" className="vg-mini" style={{ opacity: 0.65 }} />
+          <Thumb src={v.prevThumbUrl} alt="previous thumbnail" style={{ width: 34, opacity: 0.65 }} />
           <span aria-hidden className="cs-arrow" style={{ fontSize: 10 }}>→</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={v.thumbUrl} alt="current thumbnail" className="vg-mini" />
+          <Thumb src={v.thumbUrl} alt="current thumbnail" style={{ width: 34 }} />
         </span>
       ) : v.title_prev ? (
         <span className="vg-meta vg-clip" title={`${v.title_prev} → ${v.title_latest}`}>title rewritten</span>
@@ -94,15 +93,11 @@ export function VideoGridStyles() {
       .vg-tile { border: 1px solid var(--cs-line); border-radius: var(--cs-radius);
                  background: var(--cs-surface); padding: 10px; min-width: 0; }
       .vg-tile:hover { border-color: var(--cs-line-strong); }
-      .vg-tile img.vg-cover { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px;
-                              display: block; background: var(--cs-surface-2); }
       .vg-title { font-size: 13px; font-weight: 550; line-height: 1.35; margin: 8px 0 0;
                   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       .vg-tile:hover .vg-title { color: var(--cs-accent); }
       .vg-meta { font-size: 11px; color: var(--cs-muted); }
       .vg-clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-      .vg-mini { width: 34px; aspect-ratio: 16/9; object-fit: cover; border-radius: 3px;
-                 border: 1px solid var(--cs-line); display: block; }
       .vg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
     `}</style>
   );
@@ -115,8 +110,7 @@ export function VideoGrid({ videos }: { videos: GridVideo[] }) {
       {videos.map((v) => (
         <li key={v.id} className="vg-tile">
           <Link href={`/app/videos/${v.id}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={v.thumbUrl} alt="" className="vg-cover" />
+            <Thumb src={v.thumbUrl} alt="" style={{ width: '100%' }} />
             <h3 className="vg-title">{v.title}</h3>
           </Link>
           <div className="vg-foot">

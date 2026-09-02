@@ -4,12 +4,13 @@
 // videoPage() query and lib/admin/video-curve.ts rather than restating either.
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { loadVideoPage, confidenceWord } from '@/lib/app/video-page';
+import { loadVideoPage, confidenceWord, archiveFallbackUrl } from '@/lib/app/video-page';
 import { n, compact, etDateTime, ageLabel, ago } from '@/lib/admin/format';
 import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
 import { PackagingTimeline } from '@/components/app/packaging-timeline';
 import { ExperimentCard } from '@/components/app/experiment-card';
 import { ScoreChip } from '@/components/app/video-grid';
+import { Thumb } from '@/components/app/thumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,12 +54,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
 
       <div className="vp-head">
         <div className="vp-cover-wrap">
-          {v.thumbUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={v.thumbUrl} alt="" className="vp-cover" />
-          ) : (
-            <div className="vp-cover" />
-          )}
+          <Thumb src={v.thumbUrl} alt="" style={{ width: '100%', borderRadius: 'var(--cs-radius)' }} />
         </div>
         <div style={{ minWidth: 0 }}>
           <Link href={`/app/channels/${v.channelId}`} style={{ color: 'var(--cs-accent)', fontSize: 12, fontWeight: 600 }}>
@@ -126,7 +122,9 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
       {v.experiments.length > 0 && (
         <section className="cs-section">
           <h2>What each change did</h2>
-          <ul style={{ display: 'grid', gap: 10, listStyle: 'none', margin: 0, padding: 0 }}>
+          {/* minmax(0,1fr): an auto grid column is sized to its widest item's max-content, which a
+              wide experiment row would push past the viewport on a phone. */}
+          <ul style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, listStyle: 'none', margin: 0, padding: 0 }}>
             {v.experiments.map((e) => (
               <ExperimentCard key={`${e.kind}-${e.version}`} e={e} thumbUrls={v.thumbUrls} />
             ))}
@@ -145,11 +143,13 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           <ol className="vp-versions">
             {v.thumbs.map((t) => (
               <li key={t.version}>
-                <span className="cs-thumb" style={{ display: 'block', width: '100%' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={t.url} alt={`thumbnail v${t.version}`} />
-                  <span className="cs-thumb-cap">v{t.version}</span>
-                </span>
+                <Thumb
+                  src={t.url}
+                  fallbackSrc={archiveFallbackUrl(v.id, t.version)}
+                  alt={`thumbnail v${t.version}`}
+                  caption={`v${t.version}`}
+                  style={{ width: '100%' }}
+                />
                 <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 5 }}>
                   <span className="cs-num">{etDateTime(t.first_seen)}</span> ET
                 </div>
@@ -167,10 +167,10 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {v.titles.map((t) => (
               <div key={t.version} className="cs-kv">
-                <span className="cs-kv-l" style={{ flex: 'none', width: 150 }}>
+                <span className="cs-kv-l" style={{ flex: 'none' }}>
                   v{t.version} · <span className="cs-num">{etDateTime(t.first_seen)}</span> ET
                 </span>
-                <span style={{ textAlign: 'right' }}>{t.title}</span>
+                <span style={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere' }}>{t.title}</span>
               </div>
             ))}
           </ol>

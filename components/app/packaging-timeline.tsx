@@ -10,6 +10,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Marker } from '@/lib/admin/video-curve';
 import { markerKey, useMarkerHover } from './video-chart';
+import { Thumb } from './thumb';
 
 const HOUR = 3_600_000;
 const ET = 'America/New_York';
@@ -191,13 +192,7 @@ export function PackagingTimeline({
                   {[m.fromVersion, m.version].map((v, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, flex: 1 }}>
                       {i === 1 && <span aria-hidden className="cs-arrow">→</span>}
-                      <span className="cs-thumb" style={{ display: 'block', width: '100%' }}>
-                        {v != null && thumbUrls[v] ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={thumbUrls[v]} alt={`thumbnail v${v}`} />
-                        ) : null}
-                        <span className="cs-thumb-cap">v{v}</span>
-                      </span>
+                      <Thumb src={v != null ? thumbUrls[v] : null} alt={`thumbnail v${v}`} caption={`v${v}`} style={{ width: '100%' }} />
                     </div>
                   ))}
                 </div>

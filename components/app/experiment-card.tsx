@@ -6,6 +6,7 @@
 
 import type { Experiment, Verdict } from '@/lib/app/experiment';
 import { markerKey, useMarkerHover } from './video-chart';
+import { Thumb } from './thumb';
 
 const VERDICT: Record<Verdict, { label: string; color: string }> = {
   helped: { label: 'helped', color: 'var(--cs-good)' },
@@ -62,17 +63,12 @@ export function ExperimentCard({ e, thumbUrls }: { e: Experiment; thumbUrls: Rec
           {[e.fromVersion, e.version].map((nv, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {i === 1 && <span aria-hidden className="cs-arrow">→</span>}
-              <span className="cs-thumb" style={{ display: 'block', width: 96 }}>
-                {nv != null && thumbUrls[nv] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={thumbUrls[nv]} alt={`thumbnail v${nv}`} />
-                ) : null}
-              </span>
+              <Thumb src={nv != null ? thumbUrls[nv] : null} alt={`thumbnail v${nv}`} style={{ width: 96 }} />
             </div>
           ))}
         </div>
       ) : (
-        <div style={{ flex: 1, minWidth: 180, fontSize: 11 }}>
+        <div style={{ flex: 1, minWidth: 140, fontSize: 11 }}>
           <div style={{ color: 'var(--cs-muted)', textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.from}</div>
           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.to}</div>
         </div>

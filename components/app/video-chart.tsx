@@ -12,6 +12,7 @@ import {
   Area, ComposedChart, Line, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Legend,
 } from 'recharts';
 import type { Actual, CurvePoint, Marker, ProjPoint } from '@/lib/admin/video-curve';
+import { Thumb } from './thumb';
 
 export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
@@ -33,7 +34,8 @@ export function useMarkerHover() {
 
 // Recharts writes colours into SVG attributes, where var() is unreliable, so read the theme's
 // tokens once and again whenever the theme flips (the header toggle sets data-cs-theme).
-const FALLBACK = { ink: '#10131A', muted: '#5A6373', line: '#DDE2EA', accent: '#C2136E', surface: '#FFFFFF' };
+// Only used for the first paint before the effect reads the real tokens; theme.css is the source of truth.
+const FALLBACK = { ink: '#10131A', muted: '#5A6373', line: '#DDE2EA', accent: '#0E7A3C', surface: '#FFFFFF' };
 
 export function useThemeColors() {
   const [c, setC] = useState(FALLBACK);
@@ -123,6 +125,9 @@ export function VideoChart({
         ))}
       </div>
 
+      {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
+          screen is wider than the chart and would stretch the whole page. Clip it here. */}
+      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={rows} margin={{ top: 20, right: 58, left: 4, bottom: 0 }}>
           <XAxis
@@ -139,7 +144,7 @@ export function VideoChart({
               name === 'band' ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, 'expected range'] : [fmtViews(Number(v)), name]
             }
           />
-          <Legend wrapperStyle={{ fontSize: 11, color: C.muted }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }} />
           <Area dataKey="band" name="band" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
           <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
           <Line dataKey="projected" name="projected" connectNulls dot={false} stroke={C.accent} strokeWidth={1} strokeOpacity={0.5} isAnimationActive={false} />
@@ -195,6 +200,7 @@ export function VideoChart({
           })}
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
 
       {hoveredMarker && (
         <div className="cs-note" style={{ marginTop: 10 }}>
@@ -206,13 +212,7 @@ export function VideoChart({
               {[hoveredMarker.fromVersion, hoveredMarker.version].map((v, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {i === 1 && <span aria-hidden className="cs-arrow">→</span>}
-                  <span className="cs-thumb" style={{ width: 160 }}>
-                    {v != null && thumbUrls[v] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumbUrls[v]} alt={`thumbnail v${v}`} />
-                    ) : null}
-                    <span className="cs-thumb-cap">v{v}</span>
-                  </span>
+                  <Thumb src={v != null ? thumbUrls[v] : null} alt={`thumbnail v${v}`} caption={`v${v}`} style={{ width: 160 }} />
                 </div>
               ))}
             </div>
