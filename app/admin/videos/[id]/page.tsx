@@ -4,6 +4,7 @@ import { videoDetail, describeHistory } from '@/lib/admin/queries';
 import { n, compact, ago, etDate, etDateTime, score, ageDays } from '@/lib/admin/format';
 import { Stat, Section, ChannelLink, TierBadge } from '@/components/admin/ui';
 import { SnapshotChart } from '@/components/admin/snapshot-chart';
+import { ThumbImg } from '@/components/admin/thumb-img';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,8 +64,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         <div className="flex flex-wrap gap-4">
           {hist.labeled.map((x) => (
             <figure key={x.version} className="w-64">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/api/admin/thumb/${id}/${x.version}`} alt={`v${x.version}`} className={`aspect-video w-full rounded object-cover ${x.repeat ? 'opacity-60' : ''}`} />
+              <ThumbImg src={`/api/admin/thumb/${id}/${x.version}`} alt={`v${x.version}`} dim={x.repeat} />
               <figcaption className="mt-1 text-[11px] text-muted-foreground">
                 <span className="font-medium text-foreground">v{x.version} · image {x.label}</span>{x.repeat && ' (again)'} · first seen {etDateTime(x.first_seen)} · last checked {ago(x.last_checked)}
               </figcaption>
