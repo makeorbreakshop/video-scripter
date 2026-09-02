@@ -10,6 +10,8 @@ import { versionThumbUrl } from './video-page';
 export type ChannelHeader = {
   channelId: string;
   name: string;
+  avatarUrl: string | null;
+  subscriberCount: number | null;
   trackedSince: string | null;
   videoCount: number;
   baseline: number | null;
@@ -21,15 +23,20 @@ export type ChannelHeader = {
 export type SortKey = 'score' | 'published' | 'views';
 export const SORTS: Record<SortKey, string> = {
   // NULLS LAST everywhere: an unscored video is not a zero-scoring video.
-  score: 's.score desc nulls last, v.published_at desc',
+  score: 's.score desc nulls last, v.published_at desc nulls last',
   published: 'v.published_at desc nulls last',
   views: 'v.view_count desc nulls last',
 };
-export const GRID_PAGE = 48;
+export const GRID_PAGE = 60;
 
+/**
+ * Newest-first is the default. Score used to be, which reads as "videos missing" on a
+ * channel we have not scored yet: every row ties at NULL, so the order looks arbitrary and
+ * the tail of the catalogue sits behind "Load more" for no visible reason.
+ */
 export function parseSort(value: string | string[] | null | undefined): SortKey {
   const v = Array.isArray(value) ? value[0] : value;
-  return v === 'published' || v === 'views' ? v : 'score';
+  return v === 'score' || v === 'views' ? v : 'published';
 }
 
 export type GridVideo = {
@@ -52,7 +59,9 @@ export type GridVideo = {
 export async function channelHeader(channelId: string): Promise<ChannelHeader | null> {
   const row = await one<any>(
     `select v.channel_id,
-            max(v.channel_name) as name,
+            coalesce(max(cm.title), max(v.channel_name)) as name,
+            max(cm.avatar_url) as avatar_url,
+            max(cm.subscriber_count) as subscriber_count,
             min(v.import_date) as tracked_since,
             count(*)::int as video_count,
             (select percentile_cont(0.5) within group (order by s.baseline)
@@ -62,6 +71,7 @@ export async function channelHeader(channelId: string): Promise<ChannelHeader | 
             (select count(*)::int from video_scores s
               where s.channel_id = $1 and s.score >= 2 and s.confidence <> 'insufficient') as over_count
        from videos v
+       left join channel_meta cm on cm.channel_id = v.channel_id
       where v.channel_id = $1
       group by v.channel_id`,
     [channelId]
@@ -72,6 +82,8 @@ export async function channelHeader(channelId: string): Promise<ChannelHeader | 
   return {
     channelId: row.channel_id,
     name: row.name,
+    avatarUrl: row.avatar_url ?? null,
+    subscriberCount: row.subscriber_count != null ? Number(row.subscriber_count) : null,
     trackedSince: row.tracked_since ? new Date(row.tracked_since).toISOString() : null,
     videoCount: Number(row.video_count ?? 0),
     baseline: row.baseline != null ? Number(row.baseline) : null,

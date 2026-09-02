@@ -7,6 +7,7 @@ import { notFound, redirect } from 'next/navigation';
 import { requireAppUser } from '@/lib/app/session';
 import { channelHeader, channelVideos, isTracked, parseSort, GRID_PAGE } from '@/lib/app/channel-page';
 import { compact, etDate, n } from '@/lib/admin/format';
+import { ChannelAvatar } from '@/components/app/avatar';
 import { VideoGrid, VideoGridStyles, SortTabs, LoadMore } from '@/components/app/video-grid';
 import { TrackButton } from '@/components/app/track-button';
 
@@ -39,7 +40,7 @@ export default async function AppChannelPage({
     <>
       <VideoGridStyles />
       <style>{`
-        .ch-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin-bottom: 14px; }
+        .ch-head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 14px; }
         .ch-stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 22px; }
         .ch-stat { border: 1px solid var(--cs-line); border-radius: var(--cs-radius);
                    background: var(--cs-surface); padding: 12px; }
@@ -51,10 +52,14 @@ export default async function AppChannelPage({
       `}</style>
 
       <div className="ch-head">
+        <ChannelAvatar src={header.avatarUrl} name={header.name} size={56} />
         <div style={{ minWidth: 0 }}>
           <div className="cs-hiscore">channel</div>
           <h1 className="cs-h1">{header.name}</h1>
           <p className="cs-sub">
+            {header.subscriberCount != null && (
+              <><span className="cs-num">{compact(header.subscriberCount)}</span> subscribers · </>
+            )}
             tracked since <span className="cs-num">{header.trackedSince ? etDate(header.trackedSince) : '–'}</span>
           </p>
         </div>
@@ -84,8 +89,10 @@ export default async function AppChannelPage({
         </div>
         <div className="ch-stat">
           <div className="cs-stat-l">Showing</div>
-          <div className="ch-stat-v">{page.videos.length}</div>
-          <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 3 }}>sorted by {sort}</div>
+          <div className="ch-stat-v">{page.videos.length} of {n(header.videoCount)}</div>
+          <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 3 }}>
+            {sort === 'published' ? 'newest first' : sort === 'views' ? 'most viewed first' : 'highest score first'}
+          </div>
         </div>
       </div>
 
