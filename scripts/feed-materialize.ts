@@ -186,8 +186,8 @@ const titleSource: Source = {
 const outlierSource: Source = {
   name: 'video_scores',
   read: (c) => q(
-    `select video_id, channel_id, score, est30, baseline, confidence, scored_at
-       from video_scores
+    `select s.video_id, s.channel_id, s.score, s.est30, s.baseline, s.confidence, s.scored_at, v.published_at
+       from video_scores s join videos v on v.id = s.video_id
       where scored_at >= $1 and (scored_at > $1 or video_id > $2)
         and score >= $3 and confidence = any($4)
       order by scored_at, video_id

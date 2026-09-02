@@ -155,80 +155,59 @@
 .cs-chip[data-on="true"] { background: var(--cs-accent); border-color: var(--cs-accent); color: var(--cs-accent-on); }
 
 /* ----------------------------------------------------------------- feed --- */
-
-.cs-feed { border: 1px solid var(--cs-line); border-radius: var(--cs-radius); background: var(--cs-surface); overflow: hidden; }
+/* A real feed: standalone items with air between them, no container box, no chips. */
+.cs-feed { display: flex; flex-direction: column; gap: 10px; }
 .cs-row {
-  display: flex; gap: 14px; align-items: flex-start;
-  padding: 12px 14px; border-bottom: 1px solid var(--cs-line);
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 16px; border: 1px solid var(--cs-line); border-radius: 10px; background: var(--cs-surface);
 }
-.cs-row:last-child { border-bottom: 0; }
-.cs-row:hover { background: var(--cs-surface-2); }
+.cs-row:hover { border-color: var(--cs-line-strong); }
 
-.cs-thumbs { display: flex; align-items: center; gap: 6px; flex: none; }
-.cs-thumb { position: relative; width: 128px; aspect-ratio: 16 / 9; flex: none;
-  background: var(--cs-surface-2); border-radius: 6px; overflow: hidden; border: 1px solid var(--cs-line); }
+.cs-thumbs { display: flex; align-items: center; gap: 8px; flex: none; }
+.cs-thumb { position: relative; width: 200px; aspect-ratio: 16 / 9; flex: none;
+  background: var(--cs-surface-2); border-radius: 8px; overflow: hidden; }
 .cs-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* An upload is the headline event: give it a card-sized thumbnail. */
-.cs-thumbs[data-size="large"] .cs-thumb { width: 320px; border-radius: 8px; }
+.cs-thumbs[data-size="large"] .cs-thumb { width: 360px; border-radius: 10px; }
 .cs-thumb-cap {
-  position: absolute; left: 4px; bottom: 4px; padding: 2px 4px; border-radius: 3px;
-  background: rgba(0,0,0,0.68); color: #fff; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  position: absolute; left: 6px; bottom: 6px; padding: 2px 6px; border-radius: 4px;
+  background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
 }
-.cs-arrow { color: var(--cs-muted); font-size: 13px; flex: none; }
+.cs-arrow { color: var(--cs-muted); font-size: 16px; flex: none; }
 
-.cs-row-body { min-width: 0; flex: 1; }
-/* Who and when, before what — the row reads as a history entry, not an alert. */
+.cs-row-body { min-width: 0; flex: 1; padding-top: 2px; }
 .cs-byline {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  color: var(--cs-muted); font-size: 12px; margin-bottom: 5px;
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  color: var(--cs-muted); font-size: 13px; margin-bottom: 6px;
 }
 .cs-byline-name { color: var(--cs-ink); font-weight: 600; }
-.cs-tag {
-  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
-  color: var(--cs-muted); text-transform: uppercase;
-  border: 1px solid var(--cs-line); border-radius: 4px; padding: 2px 5px;
-}
-.cs-tag[data-type="outlier"] { color: var(--cs-accent); border-color: color-mix(in srgb, var(--cs-accent) 40%, transparent); }
-.cs-tag[data-type="thumbnail_change"], .cs-tag[data-type="ab_rotation"] { color: var(--cs-warn); border-color: color-mix(in srgb, var(--cs-warn) 40%, transparent); }
+.cs-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--cs-muted); }
+.cs-tag[data-type="outlier"] { color: var(--cs-accent); }
+.cs-tag[data-type="thumbnail_change"], .cs-tag[data-type="ab_rotation"], .cs-tag[data-type="title_change"] { color: var(--cs-warn); }
 .cs-title {
-  font-size: 14px; font-weight: 550; line-height: 1.35; margin: 0;
+  font-size: 16px; font-weight: 600; line-height: 1.35; margin: 0;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.cs-title[data-size="large"] { font-size: 16px; font-weight: 600; }
+.cs-title[data-size="large"] { font-size: 18px; }
 .cs-row:hover .cs-title { color: var(--cs-accent); }
-.cs-detail { color: var(--cs-muted); font-size: 12px; margin-top: 3px;
+.cs-detail { color: var(--cs-muted); font-size: 13px; margin-top: 5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.cs-row-right { display: flex; align-items: center; gap: 8px; flex: none; align-self: center; }
+.cs-row-right { display: flex; align-items: center; gap: 8px; flex: none; align-self: flex-start; }
 
-/* Day divider: a quiet heading between runs of rows from the same ET day. */
+/* Day divider: quiet text between runs of rows from the same ET day. */
 .cs-day {
-  margin: 0; padding: 7px 14px; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--cs-muted); background: var(--cs-surface-2);
-  border-bottom: 1px solid var(--cs-line);
+  margin: 14px 0 4px; padding: 0 2px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--cs-muted);
 }
 
-/* Score chip: the one place the pixel face and the CRT scanlines appear. */
+/* Score: plain mono text, accent when it clears 2x. */
 .cs-score {
-  position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 7px 9px 6px; border-radius: 6px;
+  display: inline-flex; align-items: baseline; padding: 4px 8px; border-radius: 6px;
   background: var(--cs-accent-soft); color: var(--cs-accent);
-  border: 1px solid color-mix(in srgb, var(--cs-accent) 35%, transparent);
-  font-family: var(--font-pixel), monospace; font-size: 10px; line-height: 1;
+  font-family: var(--font-mono), monospace; font-size: 15px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.cs-score::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom, var(--cs-scanline) 0 1px, transparent 1px 3px);
-  opacity: 0.5;
-}
-.cs-newhigh {
-  display: inline-flex; align-items: center; gap: 4px; vertical-align: 1px; margin-left: 7px;
-  font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 1;
-  color: var(--cs-accent-on); background: var(--cs-accent);
-  padding: 4px 5px 3px; border-radius: 4px; white-space: nowrap;
-}
+.cs-newhigh { display: none; }
 /* Press Start 2P has no star glyph, so the star falls back to the UI face. */
 .cs-newhigh .cs-star { font-family: var(--font-inter), sans-serif; font-size: 9px; }
 

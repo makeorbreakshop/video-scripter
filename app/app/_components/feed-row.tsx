@@ -45,7 +45,6 @@ export default function FeedRow({ event, now, avatarUrl }: { event: FeedEventLik
       {v.score !== null && (
         <div className="cs-row-right">
           <span className="cs-score" title={`${v.score}x the channel baseline`}>{formatScore(v.score)}</span>
-          {v.highScore && <span className="cs-newhigh"><span className="cs-star">&#9733;</span> NEW HIGH SCORE</span>}
         </div>
       )}
     </>

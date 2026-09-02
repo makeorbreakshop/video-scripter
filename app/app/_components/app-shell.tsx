@@ -45,6 +45,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="cs-wrap cs-main">{children}</main>
+      <footer className="cs-wrap" style={{ padding: '28px 0 40px', fontSize: 11, color: 'var(--cs-muted)', display: 'flex', gap: 14 }}>
+        <span>ChannelSmith</span>
+        <span className="cs-num" title={process.env.NEXT_PUBLIC_BUILD_TIME}>build {process.env.NEXT_PUBLIC_BUILD_SHA}</span>
+        <a href="/docs/api" style={{ color: 'inherit' }}>API</a><a href="/privacy" style={{ color: 'inherit' }}>Privacy</a><a href="/terms" style={{ color: 'inherit' }}>Terms</a>
+      </footer>
     </ThemeProvider>
   );
 }

@@ -6,7 +6,10 @@ try {
 }
 
 /** @type {import('next').NextConfig} */
+import { execSync } from 'node:child_process';
+const sha = (process.env.VERCEL_GIT_COMMIT_SHA || (() => { try { return execSync('git rev-parse HEAD').toString().trim(); } catch { return 'dev'; } })()).slice(0, 7);
 const nextConfig = {
+  env: { NEXT_PUBLIC_BUILD_SHA: sha, NEXT_PUBLIC_BUILD_TIME: new Date().toISOString() },
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -141,6 +141,7 @@ export interface ScoreRow {
   baseline: number | null;
   confidence: string;
   scored_at: Date | string;
+  published_at?: Date | string | null;
 }
 
 /**
@@ -154,7 +155,13 @@ export function outlierEvents(rows: ScoreRow[], alreadyFlagged: Set<string>): Fe
     if (seen.has(r.video_id)) continue;
     if (r.score == null || r.score < OUTLIER_MIN_SCORE) continue;
     if (!(OUTLIER_CONFIDENCES as readonly string[]).includes(r.confidence)) continue;
-    const at = new Date(r.scored_at);
+    // News time: when the video crossed the line if we were watching, otherwise (a backfilled
+    // final score on an old video) the day it would have been confirmed, publish + 30 days.
+    const scored = new Date(r.scored_at);
+    const published = r.published_at ? new Date(r.published_at) : null;
+    const at = published && scored.getTime() - published.getTime() > 35 * 86_400_000
+      ? new Date(published.getTime() + 30 * 86_400_000)
+      : scored;
     seen.add(r.video_id);
     out.push({
       type: 'outlier',
