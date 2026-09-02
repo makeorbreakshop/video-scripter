@@ -60,7 +60,7 @@ export function Td({ children, className }: { children?: React.ReactNode; classN
 
 export function VideoLink({ id, title }: { id: string; title: string }) {
   return (
-    <Link href={`/admin/videos/${id}`} className="hover:underline" title={title}>
+    <Link href={`/admin/videos/${id}`} prefetch={false} className="hover:underline" title={title}>
       {title.length > 70 ? title.slice(0, 70) + '…' : title}
     </Link>
   );
@@ -68,7 +68,7 @@ export function VideoLink({ id, title }: { id: string; title: string }) {
 
 export function ChannelLink({ id, name }: { id: string; name: string }) {
   return (
-    <Link href={`/admin/channels/${id}`} className="text-muted-foreground hover:text-foreground hover:underline">
+    <Link href={`/admin/channels/${id}`} prefetch={false} className="text-muted-foreground hover:text-foreground hover:underline">
       {name || id}
     </Link>
   );

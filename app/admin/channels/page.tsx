@@ -42,7 +42,7 @@ export default async function Channels({ searchParams }: { searchParams: Promise
           {rows.map((r) => (
             <tr key={r.channel_id} className="border-t border-border/60">
               <Td>
-                <Link href={`/admin/channels/${r.channel_id}`} className="hover:underline">{r.channel_name || r.channel_id}</Link>
+                <Link href={`/admin/channels/${r.channel_id}`} prefetch={false} className="hover:underline">{r.channel_name || r.channel_id}</Link>
               </Td>
               <Td className="text-right tabular-nums">{n(r.videos_30d)}</Td>
               {q && <Td className="text-right tabular-nums">{n(r.videos_total)}</Td>}

@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <nav className="flex gap-4 text-sm text-muted-foreground">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="hover:text-foreground">
+              <Link key={n.href} href={n.href} prefetch={false} className="hover:text-foreground">
                 {n.label}
               </Link>
             ))}
