@@ -30,7 +30,7 @@ const flag = (name: string) => process.argv.includes(`--${name}`);
 
 const DRY = flag('dry');
 const ONLY_CHANNEL = arg('channel');
-const DEPTH = parseInt(arg('depth') || '300', 10);
+const DEPTH = parseInt(arg('depth') || '100000', 10); // default: the whole catalog
 const BUDGET = parseInt(arg('budget') || '1500', 10);
 const MAX_JOBS = parseInt(arg('jobs') || '5', 10);
 
