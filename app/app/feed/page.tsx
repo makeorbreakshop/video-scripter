@@ -20,7 +20,7 @@ export default async function FeedPage() {
   if (!hasChannels) redirect('/app/onboarding');
 
   const [page, avatars] = await Promise.all([
-    feedFor(user.id, { limit: 25 }),
+    feedFor(user.id, { limit: 60 }),
     avatarsFor(tracked.map((t) => t.channel_id)),
   ]);
 

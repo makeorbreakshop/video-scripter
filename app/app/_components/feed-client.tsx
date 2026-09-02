@@ -1,10 +1,10 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import FeedRow from './feed-row';
+import FeedCard from './feed-card';
 import InsertCoin from './insert-coin';
-import { FILTER_CHIPS, dayDividerLabel, feedQuery, groupByDay, type FeedEventLike } from '@/lib/app/feed-format';
+import { FILTER_CHIPS, dayDividerLabel, feedQuery, groupCards, type FeedEventLike } from '@/lib/app/feed-format';
 
-const PAGE = 25;
+const PAGE = 60;
 
 export interface FeedClientProps {
   initialEvents: FeedEventLike[];
@@ -95,11 +95,11 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels, 
         </InsertCoin>
       ) : (
         <div className="cs-feed">
-          {groupByDay(events).map((day) => (
+          {groupCards(events).map((day) => (
             <section key={day.key}>
-              <h2 className="cs-day">{dayDividerLabel(day.events[0].at)}</h2>
-              {day.events.map((e) => (
-                <FeedRow key={e.id} event={e} avatarUrl={e.channel_id ? avatars[e.channel_id] : null} />
+              <h2 className="cs-day">{dayDividerLabel(day.cards[0].at)}</h2>
+              {day.cards.map((c) => (
+                <FeedCard key={c.key} card={c} avatarUrl={c.channel_id ? avatars[c.channel_id] : null} />
               ))}
             </section>
           ))}

@@ -252,3 +252,53 @@ export function parseFeedParams(sp: URLSearchParams): { cursor: string | null; l
     types: types.length ? [...new Set(types)] : null,
   };
 }
+
+// ------------------------------------------------------------------ cards ----
+/**
+ * One card per video per ET day. A burst of thumbnail tests on one video is one card that
+ * lists the versions; a later change on another day is a new card under that day.
+ */
+export interface FeedCard {
+  key: string;
+  video_id: string | null;
+  channel_id: string | null;
+  channel_name: string | null;
+  title: string;
+  thumbnail_url: string | null;
+  href: string | null;
+  /** latest activity in the day, drives ordering */
+  at: string;
+  uploadedAt: string | null;       // set when the day includes the upload itself
+  thumbSwaps: Array<{ url: string; version: number | null; at: string; rotation: boolean }>;
+  titleChange: { from: string | null; to: string } | null;
+  score: number | null;
+  events: FeedEventLike[];
+}
+
+export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards: FeedCard[] }> {
+  return groupByDay(events).map((day) => {
+    const byVideo = new Map<string, FeedCard>();
+    for (const e of day.events) {
+      const k = e.video_id || e.id;
+      const p = e.payload || {};
+      let c = byVideo.get(k);
+      if (!c) {
+        c = { key: `${day.key}:${k}`, video_id: e.video_id, channel_id: e.channel_id, channel_name: e.channel_name,
+              title: e.video_title || str(p.title) || str(p.new_title) || 'Untitled video', thumbnail_url: e.thumbnail_url,
+              href: e.video_id ? `/app/videos/${e.video_id}` : null, at: e.at, uploadedAt: null, thumbSwaps: [], titleChange: null, score: null, events: [] };
+        byVideo.set(k, c);
+      }
+      c.events.push(e);
+      if (e.at > c.at) c.at = e.at;
+      if (e.type === 'upload') c.uploadedAt = e.at;
+      if (e.type === 'thumbnail_change' || e.type === 'ab_rotation') {
+        const url = str(p.after_url) || e.thumbnail_url; if (url) c.thumbSwaps.push({ url, version: num(p.version), at: e.at, rotation: e.type === 'ab_rotation' });
+      }
+      if (e.type === 'title_change') c.titleChange = { from: str(p.old_title), to: str(p.new_title) || c.title };
+      if (e.type === 'outlier') c.score = num(p.score);
+    }
+    const cards = [...byVideo.values()].sort((a, b) => (a.at < b.at ? 1 : -1));
+    for (const c of cards) c.thumbSwaps.sort((a, b) => (a.at < b.at ? -1 : 1));
+    return { key: day.key, cards };
+  });
+}

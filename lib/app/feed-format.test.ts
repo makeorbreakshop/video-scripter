@@ -1,7 +1,6 @@
 import {
   relativeTime, sincePublish, formatScore, isHighScore, compactNumber,
-  feedRowView, toggleType, feedQuery, parseFeedParams, HIGH_SCORE_AT, FILTER_CHIPS,
-} from './feed-format';
+  feedRowView, toggleType, feedQuery, parseFeedParams, HIGH_SCORE_AT, FILTER_CHIPS, groupCards, type FeedEventLike } from './feed-format';
 
 const NOW = new Date('2026-09-02T12:00:00.000Z');
 const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString();
@@ -194,5 +193,29 @@ describe('upload rows do not say the same thing twice', () => {
   it('keeps a tag for events whose kind is not obvious', () => {
     expect(feedRowView(ev({ type: 'thumbnail_change', payload: { version: 2 } })).label).toBe('THUMB SWAP');
     expect(feedRowView(ev({ type: 'thumbnail_change', payload: { version: 2 } })).thumbSize).toBe('small');
+  });
+});
+
+describe('groupCards', () => {
+  const ev = (o: Partial<FeedEventLike>): FeedEventLike => ({ id: Math.random().toString(36).slice(2), type: 'upload', at: '2026-09-01T16:00:00.000Z', channel_id: 'c', channel_name: 'C', video_id: 'v', video_title: 'T', thumbnail_url: 'u', published_at: null, payload: {}, ...o });
+  it('collapses a burst of thumbnail events on one video into one card with the versions in order', () => {
+    const days = groupCards([
+      ev({ type: 'ab_rotation', at: '2026-09-01T20:19:00.000Z', payload: { after_url: 'v6', version: 6 } }),
+      ev({ type: 'thumbnail_change', at: '2026-09-01T19:20:00.000Z', payload: { after_url: 'v2', version: 2 } }),
+      ev({ type: 'upload', at: '2026-09-01T16:00:00.000Z' }),
+    ]);
+    expect(days).toHaveLength(1);
+    expect(days[0].cards).toHaveLength(1);
+    const c = days[0].cards[0];
+    expect(c.uploadedAt).toBe('2026-09-01T16:00:00.000Z');
+    expect(c.thumbSwaps.map((t) => t.version)).toEqual([2, 6]);
+    expect(c.at).toBe('2026-09-01T20:19:00.000Z');
+  });
+  it('a change on another day is a separate card', () => {
+    const days = groupCards([
+      ev({ type: 'thumbnail_change', at: '2026-09-09T15:00:00.000Z', payload: { after_url: 'v7', version: 7 } }),
+      ev({ type: 'upload', at: '2026-09-01T16:00:00.000Z' }),
+    ]);
+    expect(days.map((d) => d.cards.length)).toEqual([1, 1]);
   });
 });
