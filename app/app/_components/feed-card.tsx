@@ -17,11 +17,11 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
   const hero = (swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url) || cdn;
   const body = (
     <>
-      <div className="cs-card-media">
+      <div className="cs-fcard-media">
         <Thumb src={hero} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
-        {card.score !== null && <span className="cs-score cs-card-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>}
+        {card.score !== null && <span className="cs-score cs-fcard-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>}
       </div>
-      <div className="cs-card-body">
+      <div className="cs-fcard-body">
         <div className="cs-byline">
           <ChannelAvatar src={avatarUrl} name={card.channel_name} size={20} />
           {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
@@ -48,5 +48,5 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
       </div>
     </>
   );
-  return card.href ? <Link className="cs-card" href={card.href}>{body}</Link> : <div className="cs-card">{body}</div>;
+  return card.href ? <Link className="cs-fcard" href={card.href}>{body}</Link> : <div className="cs-fcard">{body}</div>;
 }
