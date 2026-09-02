@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type React from 'react';
+import { UserButton } from '@clerk/nextjs';
 
 export const metadata = { title: 'ChannelSmith Admin' };
 
@@ -33,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="w-40 rounded border border-border bg-transparent px-2 py-1 text-xs"
             />
           </form>
+          <UserButton />
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>

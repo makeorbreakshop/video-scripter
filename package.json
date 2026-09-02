@@ -51,6 +51,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
     "@anthropic-ai/sdk": "^0.39.0",
+    "@clerk/nextjs": "^7.8.4",
     "@distube/ytdl-core": "^4.16.12",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@headlessui/react": "^2.2.0",
