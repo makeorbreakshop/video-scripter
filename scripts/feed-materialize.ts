@@ -122,6 +122,7 @@ function uploadSource(column: 'published_at' | 'import_date'): Source {
       `select id as video_id, channel_id, title, published_at, import_date
          from videos
         where ${column} >= $1 and (${column} > $1 or id > $2) and ${column} <= now() and published_at is not null
+              and coalesce(is_short, false) = false and coalesce(duration, '') <> 'P0D'
               ${freshOnly}
         order by ${column}, id
         limit ${BATCH}`,

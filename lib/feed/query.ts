@@ -84,6 +84,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
   const rows = await q<FeedRow>(
     `${SELECT}
       where e.channel_id = any($1)
+        and coalesce(v.is_short, false) = false
         ${cursor ? `and (e.at, e.id) < ($3::timestamptz, $4::bigint)` : ''}
         ${types ? `and e.type = any($${cursor ? 5 : 3}::text[])` : ''}
       order by e.at desc, e.id desc
