@@ -107,3 +107,6 @@ debug-*.js
 chrome-extension/config.js
 
 data/thumbnails/
+
+# API key plaintext, written once at creation and never committed
+.secrets/

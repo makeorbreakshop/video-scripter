@@ -2,6 +2,11 @@
 // Public: everything else (Thumbnail Battle, marketing pages, extension + websub ingestion routes).
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
+// The public API authenticates itself with bearer API keys (lib/api/v1.ts), so Clerk must not
+// touch it: a session cookie is not how an agent or a curl call talks to /api/v1, and letting
+// Clerk redirect these to a sign-in page would turn a 401 into an HTML 302.
+const isPublicApi = createRouteMatcher(['/api/v1(.*)']);
+
 const isProtected = createRouteMatcher([
   '/admin(.*)',
   '/app(.*)',
@@ -16,6 +21,7 @@ const isProtected = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  if (isPublicApi(req)) return;
   if (isProtected(req)) await auth.protect();
 });
 
