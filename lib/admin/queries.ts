@@ -287,6 +287,8 @@ export type VideoPageData = {
   titles: { version: number; title: string; first_seen: string }[];
   score: OutlierRow | null;
   mult: Record<number, number>;
+  /** Fitted growth past day 30, so an old video's chart is not flat at the baseline. */
+  longtail: { ages: number[]; mult: number[] } | null;
 };
 
 export async function videoPage(id: string): Promise<VideoPageData> {
@@ -312,9 +314,10 @@ export async function videoPage(id: string): Promise<VideoPageData> {
     ),
     q<any>(`select version, title, first_seen from title_versions where video_id = $1 order by version`, [id]),
     one<OutlierRow>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
-    one<{ mult: Record<number, number> }>(
-      `select params->'mult' as mult from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+    one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null }>(
+      `select params->'mult' as mult, params->'longtail' as longtail
+       from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
     ),
   ]);
-  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {} };
+  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {}, longtail: params?.longtail ?? null };
 }

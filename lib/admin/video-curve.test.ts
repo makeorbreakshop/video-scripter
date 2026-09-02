@@ -1,5 +1,5 @@
 import {
-  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge } from './video-curve';
+  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge, longtailAt } from './video-curve';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -200,12 +200,55 @@ describe('packagingMarkers', () => {
 
 describe('expectedAtAge', () => {
   const mult = { 1: 0.87, 2: 0.61, 3: 0.45, 5: 0.30, 7: 0.22, 14: 0.096, 21: 0.038, 30: 0 } as any;
-  it('is the baseline at and after day 30', () => {
+  it('is the baseline at day 30 and keeps rising after it with the long tail', () => {
     expect(expectedAtAge(1000, mult, 30)).toBeCloseTo(1000, 6);
+    expect(expectedAtAge(1000, mult, 68, LT)).toBeGreaterThan(1000);
+    expect(expectedAtAge(1000, mult, 68, LT)).toBeLessThan(1130);
+    expect(expectedAtAge(1000, mult, 365, LT)).toBeCloseTo(1300, 0);
+  });
+  it('is flat at the baseline past day 30 when no long tail was fitted', () => {
     expect(expectedAtAge(1000, mult, 68)).toBeCloseTo(1000, 6);
   });
   it('is below the baseline early on and null without a baseline', () => {
     expect(expectedAtAge(1000, mult, 1)!).toBeLessThan(500);
     expect(expectedAtAge(null, mult, 1)).toBeNull();
+  });
+});
+
+
+const LT = { ages: [60, 90, 180, 365, 730, 1500], mult: [1.086, 1.121, 1.121, 1.3, 1.3, 1.3] };
+
+describe('longtailAt', () => {
+  it('is 1 up to day 30 and at the first fitted age matches the fit', () => {
+    expect(longtailAt(LT, 10)).toBe(1);
+    expect(longtailAt(LT, 30)).toBe(1);
+    expect(longtailAt(LT, 60)).toBeCloseTo(1.086, 6);
+  });
+  it('interpolates in log(day) between fitted ages and is monotonic', () => {
+    const v = longtailAt(LT, 45);
+    expect(v).toBeGreaterThan(1);
+    expect(v).toBeLessThan(1.086);
+    expect(longtailAt(LT, 200)).toBeGreaterThan(longtailAt(LT, 90));
+  });
+  it('is flat past the last fitted age and 1 when no long tail exists', () => {
+    expect(longtailAt(LT, 5000)).toBeCloseTo(1.3, 6);
+    expect(longtailAt(null, 400)).toBe(1);
+  });
+});
+
+describe('curves past day 30', () => {
+  const mult = { 1: 0.87, 14: 0.096, 30: 0 } as any;
+  it('draws the typical curve out to the video age instead of stopping flat', () => {
+    const c = expectedCurve(1000, mult, 120, 40, 0, LT);
+    const last = c[c.length - 1];
+    expect(last.day).toBeCloseTo(120, 6);
+    expect(last.expected).toBeGreaterThan(1000);
+    expect(last.hi).toBeGreaterThan(last.expected);
+  });
+  it('scales the implied path by the same long tail so the ratio stays the score', () => {
+    const e = expectedCurve(1000, mult, 120, 40, 0, LT);
+    const p = projectedCurve(3000, mult, 120, 40, 0, LT);
+    const i = p.length - 1;
+    expect(p[i].projected / e[i].expected).toBeCloseTo(3, 6);
   });
 });

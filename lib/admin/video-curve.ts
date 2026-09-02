@@ -8,6 +8,8 @@
 // and the band is the model's own median absolute log error at that age: expected * exp(±ale).
 
 export type Mult = Record<number, number>;
+/** Fitted long tail past day 30: `mult[i]` is views at `ages[i]` as a multiple of day-30 views. */
+export type Longtail = { ages: number[]; mult: number[] };
 export type CurvePoint = { day: number; expected: number; lo: number; hi: number };
 export type ProjPoint = { day: number; projected: number };
 export type Actual = { day: number; views: number; source: 'snapshot' | 'sample'; at: string };
@@ -45,6 +47,33 @@ function interp(pts: [number, number][], day: number, extrapolateLow = false): n
 }
 
 // Remaining log growth to day 30 at `day`, interpolated between the fitted buckets in log(day+1).
+/**
+ * Growth past day 30, as a multiple of day-30 views. The fit ends at day 30, so a video's life
+ * after that is described by score_params.params.longtail: 1.0 at day 30 rising to ~1.3 by
+ * year one. Interpolated in log(day) between the fitted ages; flat past the last one.
+ */
+export function longtailAt(lt: Longtail | null | undefined, day: number): number {
+  if (day <= 30) return 1;
+  const pts: [number, number][] = [[30, 1]];
+  const ages = lt?.ages ?? [], mult = lt?.mult ?? [];
+  for (let i = 0; i < ages.length; i++) {
+    const a = Number(ages[i]), m = Number(mult[i]);
+    if (Number.isFinite(a) && Number.isFinite(m) && a > 30 && m > 0) pts.push([a, m]);
+  }
+  pts.sort((a, b) => a[0] - b[0]);
+  if (pts.length < 2) return 1;
+  if (day >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  const x = Math.log(day);
+  for (let i = 1; i < pts.length; i++) {
+    const [d0, v0] = pts[i - 1], [d1, v1] = pts[i];
+    if (day <= d1) {
+      const x0 = Math.log(d0), x1 = Math.log(d1);
+      return v0 + ((v1 - v0) * (x - x0)) / (x1 - x0);
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
 export function multAt(mult: Mult, day: number): number {
   const pts = Object.entries(mult)
     .map(([d, v]) => [Number(d), Number(v)] as [number, number])
@@ -59,8 +88,10 @@ export function aleAt(day: number): number {
   return interp(ALE_BY_DAY, day);
 }
 
-export function expectedAt(baseline: number, mult: Mult, day: number): CurvePoint {
-  const expected = baseline * Math.exp(-multAt(mult, day));
+export function expectedAt(baseline: number, mult: Mult, day: number, lt?: Longtail | null): CurvePoint {
+  const expected = day > 30
+    ? baseline * longtailAt(lt, day)
+    : baseline * Math.exp(-multAt(mult, day));
   const a = aleAt(day);
   return { day, expected, lo: expected * Math.exp(-a), hi: expected * Math.exp(a) };
 }
@@ -79,15 +110,18 @@ export function curveDays(maxDay: number, steps = 60, minDay = 0): number[] {
 }
 
 // What a video that ends up exactly on the channel baseline looks like along the way.
-export function expectedCurve(baseline: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0): CurvePoint[] {
+export function expectedCurve(baseline: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0, lt?: Longtail | null): CurvePoint[] {
   if (!baseline || baseline <= 0 || !Number.isFinite(baseline)) return [];
-  return curveDays(maxDay, steps, minDay).map((d) => expectedAt(baseline, mult, d));
+  return curveDays(maxDay, steps, minDay).map((d) => expectedAt(baseline, mult, d, lt));
 }
 
 // This video's own projection: the same shape, scaled so it lands on est30 at day 30.
-export function projectedCurve(est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0): ProjPoint[] {
+export function projectedCurve(est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0, lt?: Longtail | null): ProjPoint[] {
   if (!est30 || est30 <= 0 || !Number.isFinite(est30)) return [];
-  return curveDays(maxDay, steps, minDay).map((d) => ({ day: d, projected: est30 * Math.exp(-multAt(mult, d)) }));
+  return curveDays(maxDay, steps, minDay).map((d) => ({
+    day: d,
+    projected: d > 30 ? est30 * longtailAt(lt, d) : est30 * Math.exp(-multAt(mult, d)),
+  }));
 }
 
 type Point = { at: string | Date; views: number };
@@ -135,12 +169,12 @@ export function packagingMarkers(publishedAt: string | Date, thumbs: ThumbVer[],
 }
 
 /**
- * What a typical video on this channel would have at `ageDays`, from the baseline and the
- * fitted growth curve. Past day 30 the curve is flat at the baseline (the fit ends there), so
- * this is a floor for older videos rather than a lifetime estimate.
+ * What a typical video on this channel would have at `ageDays`: the fitted growth curve up to
+ * day 30, then the fitted long tail. This is the denominator of the "right now" pace, and it
+ * keeps rising past day 30 instead of sitting flat at the baseline.
  */
-export function expectedAtAge(baseline: number | null | undefined, mult: Mult, ageDays: number): number | null {
+export function expectedAtAge(baseline: number | null | undefined, mult: Mult, ageDays: number, lt?: Longtail | null): number | null {
   if (baseline == null || !(baseline > 0)) return null;
-  const m = ageDays >= 30 ? 0 : multAt(mult, Math.max(ageDays, 0.04));
-  return baseline * Math.exp(-m);
+  if (ageDays > 30) return baseline * longtailAt(lt, ageDays);
+  return baseline * Math.exp(-multAt(mult, Math.max(ageDays, 0.04)));
 }
