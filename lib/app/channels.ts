@@ -10,6 +10,7 @@ import { planUsage } from './users';
 import {
   ChannelRef, CHANNEL_ID_RE, bareHandle, parseChannelInput, uploadsPlaylistId,
 } from './channels-core';
+import { metaFromListItem, saveChannelMeta } from './channel-meta';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
@@ -45,6 +46,7 @@ export interface ChannelSearchResult {
   name: string;
   video_count: number;
   tracked_lane: 'corpus' | 'user' | null;
+  avatar_url: string | null;
 }
 
 /**
@@ -85,6 +87,7 @@ export async function searchTracked(query: string, limit = 20): Promise<ChannelS
      )
      select d.channel_id,
             d.name,
+            cm.avatar_url,
             coalesce(vc.n, 0)::int as video_count,
             case when ct.lane is not null then ct.lane
                  when cy.youtube_channel_id is not null then 'corpus'
@@ -95,6 +98,7 @@ export async function searchTracked(query: string, limit = 20): Promise<ChannelS
           select count(*)::int as n from videos v where v.channel_id = d.channel_id
        ) vc on true
        left join channel_tracking ct on ct.channel_id = d.channel_id
+       left join channel_meta cm on cm.channel_id = d.channel_id
        left join competitor_youtube_channels cy on cy.youtube_channel_id = d.channel_id
       order by video_count desc, d.name asc
       limit $2`,
@@ -127,7 +131,10 @@ async function fetchChannel(param: 'id' | 'forHandle', value: string) {
   const d = await ytJson(
     `${YT}/channels?part=snippet,statistics,contentDetails&${param}=${encodeURIComponent(value)}&key=${apiKey()}`
   );
-  return d.items?.[0] || null;
+  const item = d.items?.[0] || null;
+  // The response is already paid for; caching its identity here is what feeds the avatars.
+  if (item) await saveChannelMeta([metaFromListItem(item)]);
+  return item;
 }
 
 /** videos.list for a video id -> its channel id. 1 unit. */
@@ -434,6 +441,7 @@ export interface UserChannelRow {
   lane: string | null;
   backfill_status: string | null;
   thumbnail_url: string | null;
+  avatar_url: string | null;
   video_count: number;
   baseline: number | null;
   outliers: number;
@@ -449,14 +457,16 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             uc.added_at,
             ct.lane,
             ct.backfill_status,
-            v.name,
+            coalesce(cm.title, v.name) as name,
             v.thumbnail_url,
+            cm.avatar_url,
             coalesce(v.video_count, 0)::int as video_count,
             s.baseline,
             coalesce(s.outliers, 0)::int as outliers,
             ch.last_packaging_change
        from user_channels uc
        left join channel_tracking ct on ct.channel_id = uc.channel_id
+       left join channel_meta cm on cm.channel_id = uc.channel_id
        left join lateral (
           select count(*)::int as video_count,
                  max(vv.channel_name) as name,
@@ -466,7 +476,7 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
        ) v on true
        left join lateral (
           select percentile_cont(0.5) within group (order by vs.baseline) as baseline,
-                 count(*) filter (where vs.score >= 2) as outliers
+                 count(*) filter (where vs.score >= 2 and vs.confidence <> 'insufficient') as outliers
             from video_scores vs where vs.channel_id = uc.channel_id
        ) s on true
        left join lateral (
