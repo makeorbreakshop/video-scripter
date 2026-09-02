@@ -103,6 +103,8 @@ export function VideoChart({
     for (const p of projected) if (p.day >= lastDay) at(p.day).projected = p.projected;
     if (clean.length) at(lastDay).projected = clean[clean.length - 1].views; // projection continues from the last real point
     for (const a of clean) at(a.day).views = a.views;
+    // Every video has zero views at publish: anchor the typical curve there so the axis starts at 0h.
+    if (curve.length && !byDay.has(0)) Object.assign(at(0), { expected: 0, band: [0, 0] as [number, number] });
     return [...byDay.values()].sort((a, b) => a.day - b.day);
   }, [actuals, curve, projected]);
 
@@ -116,7 +118,7 @@ export function VideoChart({
   const launch = zoom === '72h';
   const rows = launch ? all.filter((r) => r.day <= 3) : all;
   const maxDay = launch ? 3 : Math.max(...all.map((r) => r.day), 1);
-  const minDay = rows.length ? rows[0].day : 0;
+  const minDay = 0;
   const endBaseline = launch || !curve.length ? null : curve[curve.length - 1];
   const endProjected = launch || !projected.length ? null : projected[projected.length - 1];
   const shown = markers.filter((m) => !launch || m.day <= 3);
@@ -152,7 +154,7 @@ export function VideoChart({
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={rows} margin={{ top: 20, right: 58, left: 4, bottom: 0 }}>
           <XAxis
-            dataKey="day" type="number" domain={[launch ? minDay : 0, maxDay]} ticks={ticks} allowDataOverflow
+            dataKey="day" type="number" domain={[0, maxDay]} ticks={ticks} allowDataOverflow
             tick={{ fontSize: 11, fill: C.muted }} stroke={C.line}
             tickFormatter={(d: number) => (launch || d < 1 ? `${Math.round(d * 24)}h` : `d${Math.round(d)}`)}
           />
