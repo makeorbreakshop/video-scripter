@@ -24,10 +24,18 @@ export type Marker = {
 // Backtested median absolute log error of the v3 blend, by age in days.
 export const ALE_BY_DAY: [number, number][] = [[1, 0.26], [3, 0.18], [7, 0.1], [14, 0.05]];
 
-function interp(pts: [number, number][], day: number): number {
+function interp(pts: [number, number][], day: number, extrapolateLow = false): number {
   if (!pts.length) return 0;
   const x = Math.log(Math.max(0, day) + 1);
-  if (x <= Math.log(pts[0][0] + 1)) return pts[0][1];
+  if (x <= Math.log(pts[0][0] + 1)) {
+    // Below the first fitted bucket, carry the first segment's slope on rather than sitting flat:
+    // a flat clamp would draw the launch hours as a straight line at expected(d1).
+    if (!extrapolateLow || pts.length < 2) return pts[0][1];
+    const [d0, v0] = pts[0], [d1, v1] = pts[1];
+    const x0 = Math.log(d0 + 1), x1 = Math.log(d1 + 1);
+    const m = v0 + ((v1 - v0) * (x - x0)) / (x1 - x0);
+    return Math.max(m, pts[0][1]); // more growth left than at d1, never less
+  }
   for (let i = 1; i < pts.length; i++) {
     const [d0, v0] = pts[i - 1], [d1, v1] = pts[i];
     const x0 = Math.log(d0 + 1), x1 = Math.log(d1 + 1);
@@ -44,7 +52,7 @@ export function multAt(mult: Mult, day: number): number {
     .sort((a, b) => a[0] - b[0]);
   if (!pts.length) return 0;
   if (day >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
-  return interp(pts, day);
+  return interp(pts, day, true);
 }
 
 export function aleAt(day: number): number {
@@ -59,26 +67,27 @@ export function expectedAt(baseline: number, mult: Mult, day: number): CurvePoin
 
 // ~60 sample days, denser early (even in log(day+1)) so the launch window is readable.
 // Both curves share these days so the chart can zip them into one row per day.
-export function curveDays(maxDay: number, steps = 60): number[] {
-  const end = Math.max(1, maxDay);
+export function curveDays(maxDay: number, steps = 60, minDay = 0): number[] {
+  const end = Math.max(minDay + 1e-9, maxDay);
+  const lo = Math.log(Math.max(0, minDay) + 1);
   const hi = Math.log(end + 1);
   const out: number[] = [];
-  for (let i = 0; i <= steps; i++) out.push(Math.exp((hi * i) / steps) - 1);
-  out[0] = 0;
+  for (let i = 0; i <= steps; i++) out.push(Math.exp(lo + ((hi - lo) * i) / steps) - 1);
+  out[0] = minDay;
   out[out.length - 1] = end;
   return out;
 }
 
 // What a video that ends up exactly on the channel baseline looks like along the way.
-export function expectedCurve(baseline: number | null | undefined, mult: Mult, maxDay: number, steps = 60): CurvePoint[] {
+export function expectedCurve(baseline: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0): CurvePoint[] {
   if (!baseline || baseline <= 0 || !Number.isFinite(baseline)) return [];
-  return curveDays(maxDay, steps).map((d) => expectedAt(baseline, mult, d));
+  return curveDays(maxDay, steps, minDay).map((d) => expectedAt(baseline, mult, d));
 }
 
 // This video's own projection: the same shape, scaled so it lands on est30 at day 30.
-export function projectedCurve(est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60): ProjPoint[] {
+export function projectedCurve(est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, minDay = 0): ProjPoint[] {
   if (!est30 || est30 <= 0 || !Number.isFinite(est30)) return [];
-  return curveDays(maxDay, steps).map((d) => ({ day: d, projected: est30 * Math.exp(-multAt(mult, d)) }));
+  return curveDays(maxDay, steps, minDay).map((d) => ({ day: d, projected: est30 * Math.exp(-multAt(mult, d)) }));
 }
 
 type Point = { at: string | Date; views: number };

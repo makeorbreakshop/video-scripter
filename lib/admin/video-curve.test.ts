@@ -14,12 +14,20 @@ describe('multAt', () => {
     expect(m4).toBeLessThan(MULT[3]);
     expect(m4).toBeGreaterThan(MULT[5]);
     let prev = Infinity;
-    for (let d = 0.1; d <= 30; d += 0.1) { const m = multAt(MULT, d); expect(m).toBeLessThanOrEqual(prev + 1e-12); prev = m; }
+    for (let d = 0.01; d <= 30; d += 0.01) { const m = multAt(MULT, d); expect(m).toBeLessThanOrEqual(prev + 1e-12); prev = m; }
   });
-  test('clamps below the first bucket and at/after day 30', () => {
-    expect(multAt(MULT, 0)).toBeCloseTo(MULT[1], 12);
-    expect(multAt(MULT, 0.5)).toBeCloseTo(MULT[1], 12);
+  test('extrapolates below day 1 along the d1 -> d2 slope, so the launch hours are not flat', () => {
+    const x = (d: number) => Math.log(d + 1);
+    const slope = (MULT[2] - MULT[1]) / (x(2) - x(1));
+    expect(multAt(MULT, 0.5)).toBeCloseTo(MULT[1] + slope * (x(0.5) - x(1)), 12);
+    expect(multAt(MULT, 0.5)).toBeGreaterThan(MULT[1]);
+    expect(multAt(MULT, 1 / 24)).toBeGreaterThan(multAt(MULT, 0.5));
+  });
+  test('clamps at/after day 30', () => {
     expect(multAt(MULT, 45)).toBe(0);
+  });
+  test('falls back to the flat clamp when there is only one bucket to work from', () => {
+    expect(multAt({ 1: 0.9 }, 0.2)).toBeCloseTo(0.9, 12);
   });
   test('empty params mean no remaining growth', () => { expect(multAt({}, 3)).toBe(0); });
 });
@@ -37,6 +45,14 @@ describe('aleAt', () => {
 });
 
 describe('expectedAt', () => {
+  test('rises through the launch hours instead of sitting flat below day 1', () => {
+    const h1 = expectedAt(1000, MULT, 1 / 24).expected;
+    const h12 = expectedAt(1000, MULT, 0.5).expected;
+    const d1 = expectedAt(1000, MULT, 1).expected;
+    expect(h1).toBeGreaterThan(0);
+    expect(h1).toBeLessThan(h12);
+    expect(h12).toBeLessThan(d1);
+  });
   test('expected(day) = baseline * exp(-m(day)), so expected(30) = baseline', () => {
     expect(expectedAt(1000, MULT, 30).expected).toBeCloseTo(1000, 6);
     expect(expectedAt(1000, MULT, 1).expected).toBeCloseTo(1000 * Math.exp(-MULT[1]), 6);
@@ -73,7 +89,13 @@ describe('expectedCurve', () => {
 });
 
 describe('curveDays', () => {
-  test('starts at 0, ends at maxDay and is strictly increasing', () => {
+  test('starts at minDay, ends at maxDay and is strictly increasing', () => {
+    const d = curveDays(30, 60, 1 / 24);
+    expect(d[0]).toBe(1 / 24);
+    expect(d[d.length - 1]).toBe(30);
+    for (let i = 1; i < d.length; i++) expect(d[i]).toBeGreaterThan(d[i - 1]);
+  });
+  test('defaults to starting at day 0', () => {
     const d = curveDays(30);
     expect(d[0]).toBe(0);
     expect(d[d.length - 1]).toBe(30);
@@ -87,12 +109,23 @@ describe('curveDays', () => {
   });
 });
 
+describe('curve starts', () => {
+  test('both curves honour a minDay so they begin at the first actual point', () => {
+    const b = expectedCurve(1000, MULT, 3, 60, 1 / 48);
+    const p = projectedCurve(1800, MULT, 3, 60, 1 / 48);
+    expect(b[0].day).toBe(1 / 48);
+    expect(p[0].day).toBe(1 / 48);
+    expect(b[b.length - 1].day).toBe(3);
+  });
+});
+
 describe('projectedCurve', () => {
   test('has the baseline shape and lands on est30 at day 30', () => {
     const c = projectedCurve(2000, MULT, 30);
     expect(c[c.length - 1].day).toBe(30);
     expect(c[c.length - 1].projected).toBeCloseTo(2000, 6);
-    expect(c[0].projected).toBeCloseTo(2000 * Math.exp(-MULT[1]), 6);
+    expect(c[0].day).toBe(0);
+    expect(c[0].projected).toBeLessThan(2000 * Math.exp(-MULT[1])); // day 0 sits below the d1 value
   });
   test('is the baseline curve scaled by the score, so the gap at any day is the score', () => {
     const base = expectedCurve(1000, MULT, 30);

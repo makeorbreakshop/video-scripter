@@ -18,8 +18,10 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const actuals = mergeActuals(v.published_at, snapshots, samples);
   const markers = packagingMarkers(v.published_at, thumbs, titles);
   const maxDay = Math.max(30, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays(v.published_at) ?? 0);
-  const curve = expectedCurve(sc?.baseline ?? null, mult, maxDay);
-  const projected = sc ? projectedCurve(sc.est30, mult, maxDay) : [];
+  // Curves start at the first actual point (or 1h, whichever is earlier) so the launch hours are drawn.
+  const startDay = Math.min(actuals.length ? actuals[0].day : 1 / 24, 1 / 24);
+  const curve = expectedCurve(sc?.baseline ?? null, mult, maxDay, 60, startDay);
+  const projected = sc ? projectedCurve(sc.est30, mult, maxDay, 60, startDay) : [];
   // Freshness is whichever series ran last: daily snapshots or the 15-minute launch samples.
   const lastSeen = [snapshots[snapshots.length - 1]?.at, samples[samples.length - 1]?.at]
     .filter(Boolean)
@@ -59,7 +61,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         <Stat
           label="Score (model v3)"
           value={sc?.score != null ? sc.score.toFixed(1) + '×' : '–'}
-          sub={sc ? `${sc.confidence} · at day ${Number(sc.day).toFixed(1)} · scored ${ago(sc.scored_at)}` : 'not scored (hourly job covers videos ≤60d)'}
+          sub={sc ? `${sc.confidence} · at day ${Number(sc.day).toFixed(1)} · scored ${ago(sc.scored_at)}` : 'no score: older than 60 days'}
         />
         <Stat
           label="Projected d30 vs baseline"
@@ -67,9 +69,15 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
           sub={sc ? `channel baseline from n=${sc.n_baseline} priors` : ''}
         />
         <Stat
-          label="Same-age ratio"
-          value={sc?.same_age_ratio != null ? sc.same_age_ratio.toFixed(1) + '×' : '–'}
-          sub={sc ? `vs n=${sc.n_same_age} priors at this age` : ''}
+          label="vs channel at same age"
+          value={
+            sc?.same_age_ratio != null ? (
+              sc.same_age_ratio.toFixed(1) + '×'
+            ) : (
+              <span className="text-base font-normal text-muted-foreground">no channel data at this age</span>
+            )
+          }
+          sub={sc?.same_age_ratio != null ? `median of n=${sc.n_same_age} prior videos` : ''}
         />
         <Stat
           label="Tracking"
@@ -83,7 +91,15 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         right={curve.length ? 'dashed = channel baseline · band = model error · amber = thumbnail, blue = title' : 'no baseline: expected curve unavailable'}
       >
         <div className="rounded-lg border border-border p-3">
-          <SnapshotChart actuals={actuals} curve={curve} projected={projected} markers={markers} thumbUrls={thumbUrls} score={sc?.score ?? null} />
+          <SnapshotChart
+            actuals={actuals}
+            curve={curve}
+            projected={projected}
+            markers={markers}
+            thumbUrls={thumbUrls}
+            score={sc?.score ?? null}
+            defaultZoom={(ageDays(v.published_at) ?? 99) < 3 ? '72h' : '30d'}
+          />
         </div>
       </Section>
 
