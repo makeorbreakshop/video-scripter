@@ -243,17 +243,54 @@ export async function videoDetail(id: string) {
   return { video, snapshots, versions };
 }
 
-// Channel-relative outliers among recent videos: score is temporal_performance_score
-// (directional only until the baseline-unit unification lands).
-export async function recentOutliers(days = 14, limit = 40) {
-  return q<any>(
-    `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count,
-            v.temporal_performance_score
-     from videos v
-     where v.published_at > now() - ($1 || ' days')::interval
-       and v.temporal_performance_score is not null and v.is_short = false
-       and coalesce(v.is_institutional,false) = false
-     order by v.temporal_performance_score desc limit $2`,
-    [days, limit]
+// Channel-relative outliers among recent videos, computed live from snapshots (the validated
+// "same-age ratio": this video's latest snapshot vs the median of the channel's last <=10 prior
+// videos at the same age, >=3 comparables). Confidence by age: <3d early, 3-6d likely, >=7d confirmed.
+// Heavy query (~10-20s), cached 15 min. Replaces the legacy temporal_performance_score (unit bug, capped).
+export type OutlierRow = {
+  id: string; title: string; channel_id: string; channel_name: string; published_at: string;
+  day: number; views: number; ch_median: number; n: number; ratio: number;
+};
+
+async function recentOutliersUncached(days: number, limit: number, minMedian: number) {
+  return q<OutlierRow>(
+    `with recent as (
+       select v.id, v.channel_id, v.channel_name, v.title, v.published_at
+       from videos v
+       where v.published_at > now() - ($1 || ' days')::interval
+         and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D' and coalesce(v.is_institutional,false)=false),
+     latest as (
+       select distinct on (s.video_id) s.video_id, s.days_since_published as d, s.view_count as vt
+       from view_snapshots s join recent r on r.id = s.video_id
+       where s.days_since_published between 1 and 30 and s.view_count > 0
+       order by s.video_id, s.snapshot_date desc),
+     priors as (
+       select r.id as video_id, p.id as prior_id
+       from recent r join lateral (
+         select p.id from videos p
+         where p.channel_id = r.channel_id and p.published_at < r.published_at and coalesce(p.is_short,false)=false
+         order by p.published_at desc limit 10) p on true),
+     comps as (
+       select l.video_id, percentile_cont(0.5) within group (order by s.view_count) as med, count(*)::int as n
+       from latest l join priors pr on pr.video_id = l.video_id
+       join view_snapshots s on s.video_id = pr.prior_id
+         and abs(s.days_since_published - l.d) <= greatest(1, l.d / 4) and s.view_count > 0
+       group by l.video_id)
+     select r.id, r.title, r.channel_id, r.channel_name, r.published_at,
+            l.d as day, l.vt as views, round(c.med)::int as ch_median, c.n,
+            round((l.vt / c.med)::numeric, 2)::float as ratio
+     from recent r join latest l on l.video_id = r.id join comps c on c.video_id = r.id
+     where c.n >= 3 and c.med >= $3
+     order by ratio desc limit $2`,
+    [days, limit, minMedian]
   );
+}
+const cachedOutliers = unstable_cache(recentOutliersUncached, ['admin-outliers-v2'], { revalidate: 900 });
+
+export async function recentOutliers(days = 14, limit = 60, minMedian = 100) {
+  return cachedOutliers(days, limit, minMedian);
+}
+
+export function confidenceForDay(day: number) {
+  return day < 3 ? 'early' : day < 7 ? 'likely' : 'confirmed';
 }
