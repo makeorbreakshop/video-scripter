@@ -276,3 +276,45 @@ export async function channelScores(channelId: string) {
     `select video_id, score, same_age_ratio, confidence, snapshot_day as day from video_scores where channel_id = $1`, [channelId]
   );
 }
+
+// Everything the admin video page needs: the video, both actual series, packaging history,
+// the stored model-v3 score, and the fitted global multipliers that draw the expected curve.
+export type VideoPageData = {
+  video: any;
+  snapshots: { at: string; views: number; days_since_published: number; like_count: number; comment_count: number }[];
+  samples: { at: string; views: number }[];
+  thumbs: { version: number; first_seen: string; last_checked: string; phash: string | null; r2_uploaded_at: string | null }[];
+  titles: { version: number; title: string; first_seen: string }[];
+  score: OutlierRow | null;
+  mult: Record<number, number>;
+};
+
+export async function videoPage(id: string): Promise<VideoPageData> {
+  const [video, snapshots, samples, thumbs, titles, score, params] = await Promise.all([
+    one<any>(
+      `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.like_count,
+              v.comment_count, v.duration, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
+              p.priority_tier, p.last_tracked, p.next_track_date
+       from videos v left join view_tracking_priority p on p.video_id = v.id where v.id = $1`,
+      [id]
+    ),
+    q<any>(
+      `select (snapshot_date::timestamptz + interval '12 hours') as at, view_count as views,
+              days_since_published, like_count, comment_count
+       from view_snapshots where video_id = $1 order by snapshot_date`,
+      [id]
+    ),
+    q<any>(`select sampled_at as at, view_count as views from view_samples where video_id = $1 order by sampled_at`, [id]),
+    q<any>(
+      `select version, first_seen, last_checked, phash, r2_uploaded_at
+       from thumbnail_versions where video_id = $1 order by version`,
+      [id]
+    ),
+    q<any>(`select version, title, first_seen from title_versions where video_id = $1 order by version`, [id]),
+    one<OutlierRow>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
+    one<{ mult: Record<number, number> }>(
+      `select params->'mult' as mult from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+    ),
+  ]);
+  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {} };
+}
