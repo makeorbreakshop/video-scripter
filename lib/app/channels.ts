@@ -3,6 +3,7 @@
 //
 // Direct Postgres only (lib/admin/db.ts) — never supabase-js (2026-08-31
 // org-wide egress incident). Every YouTube API unit is written to quota_ledger.
+import { channelMeta } from './channel-meta';
 import { q, one } from '../admin/db';
 import { chunk, clampCount, parseRssVideoIds } from '../nightly/tracking-core';
 import { canTrackMore, canWatchMoreClosely } from './plans';
@@ -11,6 +12,7 @@ import {
   ChannelRef, CHANNEL_ID_RE, bareHandle, parseChannelInput, uploadsPlaylistId,
 } from './channels-core';
 import { metaFromListItem, saveChannelMeta } from './channel-meta';
+import { searchTerms, normalizeName } from './channel-search';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
@@ -47,63 +49,74 @@ export interface ChannelSearchResult {
   video_count: number;
   tracked_lane: 'corpus' | 'user' | null;
   avatar_url: string | null;
+  handle: string | null;
 }
 
+const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, video_count::int as video_count, tracked_lane`;
+
 /**
- * Search the channels we already know about. pg_trgm is NOT installed on this
- * database, so this is a case-insensitive PREFIX match backed by the
- * text_pattern_ops indexes in sql/app-users.sql (plus the existing
- * idx_channels_channel_name_lower). Sources: videos.channel_name, the
- * discovered_channels registry, and the legacy channels registry;
- * competitor_youtube_channels supplies the corpus lane flag.
+ * Search the channels we already know about, from the channel_directory view
+ * (sql/channel-directory.sql). Ranked: exact handle, then name/handle prefix,
+ * then the squashed name prefix ("iliketomakestuff" -> "I Like To Make Stuff"),
+ * then substring, then trigram similarity for typos; ties break on video count.
+ * No YouTube quota.
  */
 export async function searchTracked(query: string, limit = 20): Promise<ChannelSearchResult[]> {
-  const term = (query || '').trim().toLowerCase();
-  if (term.length < 2) return [];
-  const like = term.replace(/[%_\\]/g, '\\$&') + '%';
+  const t = searchTerms(query);
+  if (!t) return [];
   const cap = Math.min(Math.max(limit, 1), 50);
-
   return q<ChannelSearchResult>(
-    `with matches as (
-        select channel_id, channel_name as name from (
-          select distinct channel_id, channel_name from videos
-           where lower(channel_name) like $1 and channel_id is not null
-           limit 200
-        ) v
-        union
-        select channel_id, name from (
-          select channel_id, channel_title as name from discovered_channels
-           where lower(channel_title) like $1 limit 100
-        ) d
-        union
-        select channel_id, name from (
-          select channel_id, channel_name as name from channels
-           where lower(channel_name) like $1 limit 100
-        ) c
-     ),
-     dedup as (
-        select distinct on (channel_id) channel_id, name
-          from matches where channel_id like 'UC%' order by channel_id, name
-     )
-     select d.channel_id,
-            d.name,
-            cm.avatar_url,
-            coalesce(vc.n, 0)::int as video_count,
-            case when ct.lane is not null then ct.lane
-                 when cy.youtube_channel_id is not null then 'corpus'
-                 when vc.n > 0 then 'corpus'
-                 else null end as tracked_lane
-       from dedup d
-       left join lateral (
-          select count(*)::int as n from videos v where v.channel_id = d.channel_id
-       ) vc on true
-       left join channel_tracking ct on ct.channel_id = d.channel_id
-       left join channel_meta cm on cm.channel_id = d.channel_id
-       left join competitor_youtube_channels cy on cy.youtube_channel_id = d.channel_id
-      order by video_count desc, d.name asc
-      limit $2`,
-    [like, cap]
+    `select ${DIRECTORY_COLS}
+       from channel_directory
+      where handle = $3
+         or name ilike '%' || $1 || '%'
+         or norm like $2 || '%'
+         or norm % $2
+         or name % $1
+         or word_similarity($1, name) > 0.55
+      order by
+        (handle = $3) desc,
+        (lower(name) like $1 || '%' or handle like $1 || '%') desc,
+        (norm like $2 || '%') desc,
+        greatest(similarity(norm, $2), similarity(name, $1), word_similarity($1, name)) desc,
+        video_count desc,
+        name asc
+      limit $4`,
+    [t.text, t.norm, t.handle, cap]
   );
+}
+
+/** One channel by exact handle (no '@', any case), or null. */
+export async function findByHandle(handle: string): Promise<ChannelSearchResult | null> {
+  const h = bareHandle(handle).toLowerCase();
+  if (!h) return null;
+  return one<ChannelSearchResult>(
+    `select ${DIRECTORY_COLS} from channel_directory where handle = $1 limit 1`, [h]
+  );
+}
+
+/** Rebuild every directory row from the registries (one set-based upsert). Never throws. */
+export async function refreshChannelDirectory(): Promise<number> {
+  const row = await one<{ n: number }>(`select refresh_channel_directory() as n`).catch((e) => {
+    console.error('refreshChannelDirectory:', e.message);
+    return null;
+  });
+  return row?.n ?? 0;
+}
+
+/** Put one freshly resolved channel into the directory so it is searchable immediately. */
+export async function upsertDirectoryRow(ch: ResolvedChannel): Promise<void> {
+  const name = ch.name || ch.channel_id;
+  await q(
+    `insert into channel_directory (channel_id, name, norm, handle, avatar_url, video_count, tracked_lane)
+     values ($1, $2, $3, $4, $5, 0, 'user')
+     on conflict (channel_id) do update
+       set name = excluded.name, norm = excluded.norm,
+           handle = coalesce(excluded.handle, channel_directory.handle),
+           avatar_url = coalesce(excluded.avatar_url, channel_directory.avatar_url),
+           tracked_lane = 'user', refreshed_at = now()`,
+    [ch.channel_id, name, normalizeName(name), ch.handle ? bareHandle(ch.handle).toLowerCase() : null, ch.thumbnail_url]
+  ).catch((e) => console.error('upsertDirectoryRow:', e.message));
 }
 
 // --------------------------------------------------------------- resolve ----
@@ -204,7 +217,30 @@ export async function resolveInput(input: string) {
   if (ref.kind === 'search') {
     return { ref, channel: null, suggestions: await searchTracked(ref.value) };
   }
+  if (ref.kind === 'handle') {
+    // A handle we already hold answers locally, for free. YouTube only sees new ones;
+    // when it has never heard of the handle either, the fuzzy local search is the answer
+    // ("@ilikemakestuff" -> I Like To Make Stuff).
+    const local = await findByHandle(ref.value);
+    if (local) return { ref, channel: fromDirectory(local), suggestions: [] as ChannelSearchResult[] };
+    const channel = await resolveChannel(ref);
+    return { ref, channel, suggestions: channel ? [] : await searchTracked(ref.value) };
+  }
   return { ref, channel: await resolveChannel(ref), suggestions: [] as ChannelSearchResult[] };
+}
+
+function fromDirectory(r: ChannelSearchResult): ResolvedChannel {
+  return {
+    channel_id: r.channel_id,
+    name: r.name,
+    handle: r.handle ? `@${r.handle}` : null,
+    thumbnail_url: r.avatar_url,
+    subscriber_count: null,
+    video_count: r.video_count,
+    uploads_playlist_id: uploadsPlaylistId(r.channel_id),
+    units: 0,
+    known: true,
+  };
 }
 
 // ----------------------------------------------------------------- track ----
@@ -376,6 +412,12 @@ export async function trackChannel(
   let enrolled = false;
   let fastSynced = 0;
   let units = 0;
+  // A channel we already had in the library never went through resolve, so it has no
+  // channel_meta (avatar, subscribers). Fetch it once (1 unit) so the UI has an identity.
+  if (!(await channelMeta(channelId))) {
+    const r = await resolveChannel({ kind: 'id', value: channelId }).catch(() => null);
+    if (r) units += r.units; // resolveChannel saves channel_meta itself
+  }
   const known = await isKnownChannel(channelId);
   if (!known) {
     const resolved = opts.resolved ?? (await resolveChannel({ kind: 'id', value: channelId }));
@@ -383,6 +425,7 @@ export async function trackChannel(
       units += opts.resolved ? 0 : resolved.units;
       await enrollChannel(resolved);
       enrolled = true;
+      await upsertDirectoryRow(resolved); // searchable now, not after tonight's rebuild
       const sync = await fastSync(channelId);
       fastSynced = sync.inserted;
       units += sync.units;

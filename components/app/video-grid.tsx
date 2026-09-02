@@ -94,7 +94,7 @@ export function VideoGrid({ videos }: { videos: GridVideo[] }) {
       {videos.map((v) => (
         <li key={v.id} className="vg-tile">
           <Link href={`/app/videos/${v.id}`}>
-            <Thumb src={v.thumbUrl} alt="" style={{ width: '100%' }} />
+            <Thumb src={v.thumbUrl} fallbackSrc={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} alt="" style={{ width: '100%' }} />
             <h3 className="vg-title">{v.title}</h3>
           </Link>
           <div className="vg-foot">
