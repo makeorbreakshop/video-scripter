@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
 import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
 import { isSamePicture } from '../lib/thumbs/phash';
+import { uploadThumb } from '../lib/thumbs/storage';
 
 const maxVideos = parseInt(process.argv[2] || '25000', 10);
 const pool = new pg.Pool({
@@ -85,10 +86,11 @@ for (const group of chunk(targets, 20)) {
         const version = cur.length ? cur[0].version + 1 : 1;
         const file = path.join(STORE, `${id}_v${version}.jpg`);
         fs.writeFileSync(file, buf);
+        const uploaded = await uploadThumb(id, version, buf).catch(() => false);
         await pool.query(
-          `insert into thumbnail_versions (video_id, version, sha256, bytes, storage_path, phash)
-           values ($1,$2,$3,$4,$5,$6) on conflict do nothing`,
-          [id, version, sha, buf.length, path.relative(process.cwd(), file), phash]
+          `insert into thumbnail_versions (video_id, version, sha256, bytes, storage_path, phash, r2_uploaded_at)
+           values ($1,$2,$3,$4,$5,$6, case when $7 then now() end) on conflict do nothing`,
+          [id, version, sha, buf.length, path.relative(process.cwd(), file), phash, uploaded]
         );
         if (version === 1) news++;
         else {

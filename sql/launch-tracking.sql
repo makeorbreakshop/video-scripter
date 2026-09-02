@@ -42,3 +42,7 @@ create table if not exists title_versions (
 -- 2026-09-02: perceptual identity for thumbnail versions (CDN re-encodes flip sha256 without changing the picture)
 alter table thumbnail_versions add column if not exists phash text;
 create index if not exists idx_thumbver_phash on thumbnail_versions (video_id, phash);
+
+-- 2026-09-02: R2 archive tracking
+alter table thumbnail_versions add column if not exists r2_uploaded_at timestamptz;
+create index if not exists idx_thumbver_r2_pending on thumbnail_versions (first_seen desc) where r2_uploaded_at is null;

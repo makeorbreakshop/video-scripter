@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "channelsmith-thumbs",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "r2_buckets": [{ "binding": "THUMBS", "bucket_name": "channelsmith-thumbnails" }],
+  "observability": { "enabled": true }
+}

@@ -2,6 +2,7 @@ import { thumbnailHistories, describeHistory } from '@/lib/admin/queries';
 import { compact, etDateTime, ago } from '@/lib/admin/format';
 import { VideoLink, ChannelLink, Yt } from '@/components/admin/ui';
 import { ThumbImg } from '@/components/admin/thumb-img';
+import { thumbUrl } from '@/lib/thumbs/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,7 +66,7 @@ export default async function ThumbnailChanges({ searchParams }: { searchParams:
               <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
                 {h.labeled.map((v, i) => (
                   <figure key={v.version} className="w-44 shrink-0">
-                    <ThumbImg src={`/api/admin/thumb/${r.video_id}/${v.version}`} alt={`v${v.version} image ${v.label}`} dim={v.repeat} />
+                    <ThumbImg src={thumbUrl(r.video_id, v.version) ?? `/api/admin/thumb/${r.video_id}/${v.version}`} fallbackSrc={`/api/admin/thumb/${r.video_id}/${v.version}`} alt={`v${v.version} image ${v.label}`} dim={v.repeat} />
                     <figcaption className="mt-1 text-[11px] text-muted-foreground">
                       <span className="font-medium text-foreground">v{v.version} · {v.label}</span>
                       {v.repeat && ' (again)'} · {etDateTime(v.first_seen)} ·{' '}
