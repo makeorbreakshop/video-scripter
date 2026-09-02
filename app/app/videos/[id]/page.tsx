@@ -28,8 +28,11 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
         .vp-head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
         .vp-th { width: 200px; flex: none; }
         .vp-verdict { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 0; }
+        /* Accent is the channel's own good news; a video under its channel's normal gets the
+           ordinary ink, not a green that would contradict the sentence beside it. */
         .vp-big { font-family: var(--font-mono), monospace; font-size: 44px; font-weight: 700;
-                  line-height: 1; letter-spacing: -0.02em; color: var(--cs-accent); }
+                  line-height: 1; letter-spacing: -0.02em; color: var(--cs-ink); }
+        .vp-big[data-over="true"] { color: var(--cs-accent); }
         .vp-said { font-size: 14px; color: var(--cs-muted); max-width: 60ch; }
         @media (max-width: 719px) {
           .vp-head { flex-direction: column; gap: 12px; }
@@ -57,7 +60,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
       </div>
 
       <p className="vp-verdict">
-        {vd.big && <span className="vp-big">{vd.big}</span>}
+        {vd.big && <span className="vp-big" data-over={vd.over}>{vd.big}</span>}
         <span className="vp-said">{vd.under}</span>
       </p>
       {vd.aside && <p className="cs-sub" style={{ marginTop: 6 }}>{vd.aside}</p>}

@@ -147,7 +147,7 @@ export function confidenceWord(confidence: string | null | undefined): string {
  * a video past day 30 is judged on where it is now (the day-30 score is history, and is kept
  * as the comparable figure); a young one is judged on where day 30 is heading.
  */
-export function verdict(v: VideoPageView): { big: string | null; under: string; aside: string | null } {
+export function verdict(v: VideoPageView): { big: string | null; under: string; aside: string | null; over: boolean } {
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
   const sc = v.score;
   const conf = sc?.confidence ? confidenceWord(sc.confidence) : null;
@@ -158,6 +158,7 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
   if (v.headline === 'now' && v.pace != null && v.expectedNow != null) {
     return {
       big: pct(v.pace),
+      over: v.pace >= 1,
       under: `${fmt(v.views)} views — a typical ${v.channelName} video has about ${fmt(Math.round(v.expectedNow))} by now`,
       // The day-30 score is the comparable number, but when it rounds to the same ratio as the
       // pace above it, repeating it says nothing.
@@ -167,6 +168,7 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
   if (sc?.score != null && sc.baseline != null) {
     return {
       big: pct(Number(sc.score)),
+      over: Number(sc.score) >= 1,
       under: `on track for about ${fmt(Math.round(sc.est30))} views by day 30, against ${fmt(Math.round(sc.baseline))} for a normal ${v.channelName} video`,
       // When the two ratios round the same the pace sentence would just repeat the headline,
       // so only the confidence survives.
@@ -177,6 +179,7 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
   }
   return {
     big: null,
+    over: false,
     under: `${fmt(v.views)} views. There is not enough history on ${v.channelName} yet to say what normal looks like.`,
     aside: null,
   };
