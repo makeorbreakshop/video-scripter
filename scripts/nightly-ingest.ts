@@ -215,6 +215,12 @@ await pool.query(
 ).catch((e) => console.warn('quota log skipped:', e.message));
 await pool.query(`insert into quota_ledger (category, units) values ('ingest', $1)`, [apiCalls]).catch(() => {});
 // Fold tonight's new channels/videos into the add-channel search view (sql/channel-directory.sql).
+// Owner analytics (per-day views, AVD, subs) for channels connected via Google OAuth — see
+// scripts/owned-analytics-sync.ts. Best effort: a failure there must not fail the ingest.
+try {
+  const { execFileSync } = await import('node:child_process');
+  execFileSync('npx', ['tsx', 'scripts/owned-analytics-sync.ts', '--days', '45'], { stdio: 'inherit', timeout: 10 * 60_000 });
+} catch (e: any) { console.error('owned-analytics-sync:', e.message); }
 await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
 
 console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.`);

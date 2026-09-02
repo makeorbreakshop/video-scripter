@@ -19,10 +19,13 @@ export interface SettingsClientProps {
   limits: PlanLimits;
   usage: { tracked: number; watched_closely: number };
   keys: KeyRow[];
+  /** Channels the user has connected with Google OAuth (owner analytics). */
+  youtube?: { channel_id: string; channel_title: string | null; connected_at: string; last_synced_at: string | null; last_error: string | null }[];
+  youtubeStatus?: string | null;
   readOnly?: boolean;
 }
 
-export default function SettingsClient({ profile, plan, limits, usage, keys, readOnly }: SettingsClientProps) {
+export default function SettingsClient({ profile, plan, limits, usage, keys, readOnly, youtube = [], youtubeStatus }: SettingsClientProps) {
   const [rows, setRows] = useState(keys);
   const [label, setLabel] = useState('');
   const [plaintext, setPlaintext] = useState<string | null>(null);
@@ -100,6 +103,37 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
             </div>
           )}
         </div>
+      </section>
+
+      <section className="cs-section">
+        <h2>YouTube</h2>
+        <p className="cs-sub" style={{ marginBottom: 10 }}>
+          Connect a channel you own to read its private analytics: per-day views, average view duration and
+          subscribers gained. That is the signal that sharpens the day-3 outlier call for your own uploads.
+        </p>
+        {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginBottom: 10 }}>Connected. The first sync runs tonight.</div>}
+        {youtubeStatus && youtubeStatus !== 'connected' && (
+          <div className="cs-note" data-tone="bad" style={{ marginBottom: 10 }}>
+            {youtubeStatus === 'denied' ? 'You cancelled the Google prompt.' : youtubeStatus === 'nochannel' ? 'That Google account does not own a YouTube channel.' : 'Could not finish connecting. Try again.'}
+          </div>
+        )}
+        {youtube.map((c) => (
+          <div key={c.channel_id} className="cs-kv">
+            <span>
+              {c.channel_title || c.channel_id}
+              <span className="cs-pick-meta" style={{ marginLeft: 8 }}>
+                {c.last_error ? `sync failed: ${c.last_error}` : c.last_synced_at ? `synced ${new Date(c.last_synced_at).toLocaleDateString()}` : 'not synced yet'}
+              </span>
+            </span>
+            {!readOnly && (
+              <button type="button" className="cs-btn" data-variant="danger"
+                      onClick={async () => { await fetch('/api/app/youtube/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ channel_id: c.channel_id }) }); location.reload(); }}>
+                Disconnect
+              </button>
+            )}
+          </div>
+        ))}
+        {!readOnly && <a className="cs-btn" data-variant="primary" href="/api/app/youtube/connect" style={{ marginTop: 10, display: 'inline-block' }}>{youtube.length ? 'Connect another channel' : 'Connect YouTube'}</a>}
       </section>
 
       <section className="cs-section">
