@@ -20,7 +20,10 @@ export async function GET(_: Request, ctx: { params: Promise<{ video: string; ve
   const fileExists = await fs.stat(file).then((s) => s.isFile()).catch(() => false);
   let latestVersion: number | null = null;
   if (!fileExists) {
-    const row = await one<{ v: number }>(`select max(version)::int as v from thumbnail_versions where video_id = $1`, [video]).catch(() => null);
+    const row = await one<{ v: number }>(`select max(version)::int as v from thumbnail_versions where video_id = $1`, [video]).catch((e) => {
+      console.error('thumb latest-version lookup failed', video, e instanceof Error ? e.message : e);
+      return null;
+    });
     latestVersion = row?.v ?? null;
   }
   const src = resolveThumbSource({ videoId: video, version: v, latestVersion, fileExists });

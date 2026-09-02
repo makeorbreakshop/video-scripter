@@ -22,6 +22,8 @@ export function resolveThumbSource(args: {
   fileExists: boolean;
 }): ThumbSource {
   if (args.fileExists) return { kind: 'file', path: archivePath(args.videoId, args.version) };
-  if (args.latestVersion == null || args.version >= args.latestVersion) return { kind: 'redirect', url: ytCdnUrl(args.videoId) };
+  // Only the latest version is byte-identical to the CDN. If we could not learn the latest version, the CDN is
+  // only safe for version 1 of an unversioned video; otherwise prefer a placeholder over the wrong picture.
+  if (args.latestVersion != null ? args.version >= args.latestVersion : args.version === 1) return { kind: 'redirect', url: ytCdnUrl(args.videoId) };
   return { kind: 'missing' };
 }

@@ -1,7 +1,7 @@
 // All admin SQL lives here so the CLI (next step) can reuse the same functions.
 import { unstable_cache } from 'next/cache';
 import { q, one } from './db';
-import { labelByPhash } from '../thumbs/phash';
+import { labelByPhash, hamming } from '../thumbs/phash';
 
 export type DayCount = { day: string; n: number };
 
@@ -115,9 +115,14 @@ export function describeHistory(versions: ThumbVersion[], isLive = false) {
   const labeled = labelVersions(versions);
   const distinct = new Set(labeled.map((l) => l.label)).size;
   const repeats = labeled.filter((l) => l.repeat).length;
+  // Near-duplicate consecutive versions (same design re-exported / re-graded) are a minor change, not a swap.
+  const maxDist = labeled.slice(1).reduce((m, v, i) => {
+    const prev = labeled[i];
+    return v.phash && prev.phash ? Math.max(m, hamming(v.phash, prev.phash)) : 64;
+  }, 0);
   const kind = isLive
     ? 'live stream frames'
-    : repeats > 0 ? 'test rotation' : distinct > 2 ? 'multiple swaps' : 'single swap';
+    : repeats > 0 ? 'test rotation' : distinct > 2 ? 'multiple swaps' : maxDist <= 24 ? 'minor re-export' : 'single swap';
   return { labeled, distinct, kind, pattern: labeled.map((l) => l.label).join(' → ') };
 }
 

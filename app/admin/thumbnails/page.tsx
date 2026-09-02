@@ -17,6 +17,7 @@ const KIND_CLS: Record<string, string> = {
   'single swap': 'bg-amber-500/15 text-amber-400',
   'multiple swaps': 'bg-fuchsia-500/15 text-fuchsia-400',
   'live stream frames': 'bg-muted text-muted-foreground',
+  'minor re-export': 'bg-muted text-muted-foreground',
 };
 
 export default async function ThumbnailChanges({ searchParams }: { searchParams: Promise<{ channel?: string; live?: string }> }) {

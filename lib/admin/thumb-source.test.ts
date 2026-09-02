@@ -18,10 +18,11 @@ describe('resolveThumbSource', () => {
     expect(resolveThumbSource({ ...base, version: 1, fileExists: false })).toEqual({ kind: 'missing' });
   });
 
-  test('unknown latest version (no rows) still redirects to CDN so a current image shows', () => {
+  test('unknown latest version: only version 1 may fall back to the CDN, never an older version', () => {
     expect(resolveThumbSource({ videoId: 'abc123XYZ_-', version: 1, latestVersion: null, fileExists: false })).toEqual({
       kind: 'redirect',
       url: ytCdnUrl('abc123XYZ_-'),
     });
+    expect(resolveThumbSource({ videoId: 'abc123XYZ_-', version: 2, latestVersion: null, fileExists: false })).toEqual({ kind: 'missing' });
   });
 });

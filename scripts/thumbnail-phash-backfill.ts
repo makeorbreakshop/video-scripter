@@ -78,8 +78,8 @@ if (COLLAPSE) {
         if (keep[i].version !== i + 1 && fs.existsSync(from)) { try { fs.renameSync(from, to + '.tmp'); } catch { /* ignore */ } }
         await client.query(`update thumbnail_versions set version = $1, storage_path = $3 where id = $2`, [i + 1, keep[i].id, `data/thumbnails/${vid}_v${i + 1}.jpg`]);
       }
-      for (let i = 0; i < keep.length; i++) { const t = path.join(process.cwd(), `data/thumbnails/${vid}_v${i + 1}.jpg.tmp`); if (fs.existsSync(t)) fs.renameSync(t, t.replace(/\.tmp$/, '')); }
       for (const d of drop) { const f = path.join(process.cwd(), `data/thumbnails/${vid}_v${d.version}.jpg`); if (fs.existsSync(f)) { try { fs.unlinkSync(f); } catch { /* ignore */ } } }
+      for (let i = 0; i < keep.length; i++) { const t = path.join(process.cwd(), `data/thumbnails/${vid}_v${i + 1}.jpg.tmp`); if (fs.existsSync(t)) fs.renameSync(t, t.replace(/\.tmp$/, '')); }
       await client.query(`update track_schedule set last_version_seen = least(last_version_seen, $1) where video_id = $2`, [keep.length, vid]);
       await client.query('commit');
       deleted += drop.length; videosTouched++;
