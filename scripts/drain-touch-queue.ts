@@ -65,8 +65,12 @@ const GLOBAL_FLOOR = 9000; // stop all discovery once total quota passes this
 const [{ spent }] = (await pool.query(
   `select coalesce(sum(units),0)::int as spent from quota_ledger where date=current_date and category='discovery'`
 )).rows;
+// Scalar subquery: always returns exactly one row, even before the Pacific-
+// midnight reset cron has seeded today's youtube_quota_usage row (a bare
+// WHERE date=current_date returns ZERO rows 7 PM–3 AM ET and the destructure
+// crashed every 5-min run in that window).
 const [{ total }] = (await pool.query(
-  `select coalesce(quota_used,0)::int as total from youtube_quota_usage where date=current_date`
+  `select coalesce((select quota_used from youtube_quota_usage where date=current_date), 0)::int as total`
 )).rows;
 if (spent >= DISCOVERY_DAILY_CAP) { console.log(`discovery cap reached (${spent}/${DISCOVERY_DAILY_CAP}); queue holds until tomorrow`); await pool.end(); process.exit(0); }
 if (total >= GLOBAL_FLOOR) { console.log(`global quota floor reached (${total}); discovery paused`); await pool.end(); process.exit(0); }
