@@ -9,7 +9,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
-  Area, ComposedChart, Line, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Legend,
+  Area, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Legend,
 } from 'recharts';
 import type { Actual, CurvePoint, Marker, ProjPoint } from '@/lib/admin/video-curve';
 import { Thumb } from './thumb';
@@ -94,8 +94,15 @@ export function VideoChart({
     const byDay = new Map<number, Row>();
     const at = (d: number) => { let r = byDay.get(d); if (!r) { r = { day: d }; byDay.set(d, r); } return r; };
     for (const c of curve) Object.assign(at(c.day), { expected: c.expected, band: [c.lo, c.hi] as [number, number] });
-    for (const p of projected) at(p.day).projected = p.projected;
-    for (const a of actuals) at(a.day).views = a.views;
+    const clean = actuals.filter((a, i, arr) => {
+      const prev = arr[i - 1], next = arr[i + 1];
+      const spike = prev && next && a.views > prev.views * 1.03 && a.views > next.views * 1.03;
+      return !spike;
+    });
+    const lastDay = clean.length ? clean[clean.length - 1].day : 0;
+    for (const p of projected) if (p.day >= lastDay) at(p.day).projected = p.projected;
+    if (clean.length) at(lastDay).projected = clean[clean.length - 1].views; // projection continues from the last real point
+    for (const a of clean) at(a.day).views = a.views;
     return [...byDay.values()].sort((a, b) => a.day - b.day);
   }, [actuals, curve, projected]);
 
@@ -117,6 +124,17 @@ export function VideoChart({
     ? HOUR_TICKS.map((h) => h / 24).filter((t) => t >= minDay - 1e-9)
     : DAY_TICKS.filter((t) => t <= maxDay);
   const hoveredMarker = markers.find((m) => markerKey(m) === hovered) ?? null;
+  // Changes inside ~2% of the visible range share one tick, so a burst of tests reads as one event.
+  const clusters = useMemo(() => {
+    const span = Math.max(maxDay - (launch ? minDay : 0), 0.01);
+    const out: Array<{ day: number; n: number; keys: string[]; kinds: Set<string> }> = [];
+    for (const m of [...shown].sort((a, b) => a.day - b.day)) {
+      const last = out[out.length - 1];
+      if (last && m.day - last.day < span * 0.02) { last.n++; last.keys.push(markerKey(m)); last.kinds.add(m.kind); }
+      else out.push({ day: m.day, n: 1, keys: [markerKey(m)], kinds: new Set([m.kind]) });
+    }
+    return out;
+  }, [shown, maxDay, minDay, launch]);
 
   return (
     <div>
@@ -144,15 +162,14 @@ export function VideoChart({
             labelStyle={{ color: C.muted }}
             labelFormatter={(d: number) => dayLabel(Number(d))}
             formatter={(v: any, name: string) =>
-              name === 'band' ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, 'expected range'] : [fmtViews(Number(v)), name]
+              name === 'band' ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, 'typical range'] : [fmtViews(Number(v)), name]
             }
           />
           <Legend wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }} />
           <Area dataKey="band" name="band" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
           <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
-          <Line dataKey="projected" name="projected" connectNulls dot={false} stroke={C.accent} strokeWidth={1} strokeOpacity={0.5} isAnimationActive={false} />
-          <Line dataKey="views" name="actual views" connectNulls dot={launch ? { r: 2 } : false} stroke={C.accent} strokeWidth={2} isAnimationActive={false} />
-          <Scatter dataKey="views" fill={C.accent} shape="circle" legendType="none" isAnimationActive={false} />
+          <Line dataKey="projected" name="projected" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
+          <Line dataKey="views" name="this video" connectNulls dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
 
           {endBaseline && (
             <ReferenceDot
@@ -174,30 +191,19 @@ export function VideoChart({
             />
           )}
 
-          {shown.map((m, i) => {
-            const key = markerKey(m);
-            const on = hovered === key;
-            const color = m.kind === 'thumb' ? C.accent : C.ink;
+          {clusters.map((cl) => {
+            const on = cl.keys.some((k) => k === hovered);
+            const color = cl.kinds.has('thumb') ? C.accent : C.ink;
+            const label = cl.n === 1 ? (cl.kinds.has('thumb') ? 'swap' : 'title') : `${cl.n} swaps`;
             return (
               <ReferenceLine
-                key={key}
-                x={m.day}
+                key={cl.keys[0]}
+                x={cl.day}
                 stroke={color}
-                strokeDasharray="3 3"
-                strokeWidth={on ? 2.5 : 1}
-                strokeOpacity={hovered && !on ? 0.3 : 1}
-                label={{
-                  value: m.kind === 'thumb' ? `t${m.version}` : `T${m.version}`,
-                  fontSize: 10,
-                  fontWeight: on ? 700 : 400,
-                  fill: color,
-                  position: 'top',
-                  // stagger, so a burst of changes inside one hour stays readable
-                  dy: (i % 3) * 12,
-                  dx: ((i % 3) - 1) * 14,
-                  onMouseEnter: () => setHovered(key),
-                  onMouseLeave: () => setHovered(null),
-                } as any}
+                strokeWidth={on ? 2 : 1}
+                strokeOpacity={on ? 0.9 : 0.25}
+                label={{ value: label, fontSize: 10, fill: color, position: 'insideTopRight', dx: 4, dy: 6,
+                  onMouseEnter: () => setHovered(cl.keys[0]), onMouseLeave: () => setHovered(null) } as any}
               />
             );
           })}
