@@ -46,7 +46,7 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
 
       <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
         {step === 1 ? (
-          <button type="button" className="cs-btn" onClick={() => setSkippedSelf(true)}>
+          <button type="button" className="cs-link" style={{ background: 'none', border: 0, color: 'var(--cs-muted)', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }} onClick={() => setSkippedSelf(true)}>
             I don’t have a channel, skip
           </button>
         ) : (

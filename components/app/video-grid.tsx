@@ -18,9 +18,10 @@ export function ScoreChip({ score, size = 'sm' }: { score: number | null; size?:
   const fontSize = size === 'lg' ? 16 : 12;
   if (score == null) return <span className="cs-num" title="not enough data to score this video yet" style={{ fontSize, color: 'var(--cs-muted)' }}>–</span>;
   const outlier = score >= 2;
+  const color = outlier ? 'var(--cs-accent)' : score < 1 ? 'var(--cs-warn)' : 'var(--cs-ink)';
   return (
-    <span className="cs-num" title={`${score.toFixed(2)}× the channel's baseline`}
-      style={{ fontSize, fontWeight: outlier ? 700 : 500, color: outlier ? 'var(--cs-accent)' : 'var(--cs-muted)' }}>
+    <span className="cs-num" title={`${score.toFixed(2)}× the channel's baseline${score < 1 ? ' (below its usual)' : ''}`}
+      style={{ fontSize, fontWeight: outlier ? 700 : 600, color }}>
       {score.toFixed(1)}×
     </span>
   );

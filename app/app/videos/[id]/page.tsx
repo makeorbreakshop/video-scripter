@@ -119,13 +119,13 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
         </div>
       </section>
 
-      {v.experiments.length > 0 && (
+      {v.experiments.some((e) => e.verdict !== 'too early') && (
         <section className="cs-section">
           <h2>What each change did</h2>
           {/* minmax(0,1fr): an auto grid column is sized to its widest item's max-content, which a
               wide experiment row would push past the viewport on a phone. */}
           <ul style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, listStyle: 'none', margin: 0, padding: 0 }}>
-            {v.experiments.map((e) => (
+            {v.experiments.filter((e) => e.verdict !== 'too early').map((e) => (
               <ExperimentCard key={`${e.kind}-${e.version}`} e={e} thumbUrls={v.thumbUrls} />
             ))}
           </ul>
@@ -136,6 +136,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           </p>
         </section>
       )}
+      {v.thumbs.length > 1 && (
 
       <section className="cs-section">
         <h2>Thumbnail versions {v.thumbs.length > 0 && <span style={{ fontWeight: 400, color: 'var(--cs-muted)' }}>· {v.thumbs.length} archived</span>}</h2>
@@ -159,7 +160,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
         ) : (
           <p style={{ fontSize: 13, color: 'var(--cs-muted)' }}>No archived versions yet.</p>
         )}
-      </section>
+      </section>)}
 
       <section className="cs-section">
         <h2>Title history</h2>

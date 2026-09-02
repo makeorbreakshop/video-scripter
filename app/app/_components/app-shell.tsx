@@ -12,6 +12,7 @@ const NAV = [
 
 function Nav({ className }: { className: string }) {
   const path = usePathname() || '';
+  if (path.startsWith('/app/onboarding')) return null;
   return (
     <nav className={className}>
       {NAV.map((n) => (

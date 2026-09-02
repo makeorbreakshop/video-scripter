@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
 import { etTimestamp, formatScore, relativeTime } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
+import { Thumb } from '@/components/app/thumb';
 
 /**
  * One video, one day. The card is the video (thumbnail, title, channel, when); everything
@@ -12,11 +13,12 @@ import { ChannelAvatar } from '@/components/app/avatar';
 export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarUrl?: string | null; now?: Date }) {
   const swaps = card.thumbSwaps;
   const rotations = swaps.filter((s) => s.rotation).length;
-  const hero = swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url;
+  const cdn = card.video_id ? `https://i.ytimg.com/vi/${card.video_id}/hqdefault.jpg` : null;
+  const hero = (swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url) || cdn;
   const body = (
     <>
       <div className="cs-card-media">
-        {hero && /* eslint-disable-next-line @next/next/no-img-element */ <img src={hero} alt="" loading="lazy" referrerPolicy="no-referrer" />}
+        <Thumb src={hero} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
         {card.score !== null && <span className="cs-score cs-card-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>}
       </div>
       <div className="cs-card-body">
