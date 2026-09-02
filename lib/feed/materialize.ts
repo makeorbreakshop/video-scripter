@@ -32,10 +32,10 @@ export interface UploadRow {
 export function uploadEvents(rows: UploadRow[]): FeedEvent[] {
   return rows.map((r) => {
     const published = new Date(r.published_at);
-    const imported = r.import_date ? new Date(r.import_date) : null;
-    // The feed is a "what happened" stream: an old video imported today is news today, but a
-    // video published after we imported it (backfilled catalog) keeps its publish time.
-    const at = imported && imported > published ? imported : published;
+    // An upload happened when it was published, never when we imported it. The feed is a
+    // reverse-chronological history of the tracked channels, so backfilled videos slot into
+    // their real place in time.
+    const at = published;
     return {
       type: 'upload' as const,
       channel_id: r.channel_id ?? null,

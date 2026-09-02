@@ -205,6 +205,23 @@ const outlierSource: Source = {
   },
 };
 
+// User-tracked channels get their whole upload history in the feed (reverse-chronological
+// timeline), not just what arrived after tracking. Bounded per run; idempotent via dedupe_key.
+async function backfillUserChannelUploads(): Promise<number> {
+  const rows = await q(
+    `select v.id as video_id, v.channel_id, v.title, v.published_at, v.import_date
+       from videos v
+       join channel_tracking ct on ct.channel_id = v.channel_id and ct.lane = 'user'
+      where v.published_at is not null and coalesce(v.is_short, false) = false and coalesce(v.duration, '') <> 'P0D'
+        and not exists (select 1 from feed_events f where f.type = 'upload' and f.video_id = v.id)
+      order by v.published_at desc
+      limit 5000`,
+    []
+  );
+  if (!rows.length) return 0;
+  return insertEvents(uploadEvents(rows));
+}
+
 async function main() {
   if (sinceArg != null) {
     const start = new Date(Date.now() - sinceArg * 86_400_000);
@@ -221,6 +238,7 @@ async function main() {
 
   // Sequential on purpose: one pool, one small DB, and this box shares it with the watcher.
   const sources: Source[] = [uploadSource('published_at'), uploadSource('import_date'), thumbnailSource, titleSource, outlierSource];
+
   const totals = new Map<string, number>();
   for (const s of sources) {
     // A single pass keeps each launchd run bounded; --catch-up drains a cold-start backlog.
@@ -237,6 +255,8 @@ async function main() {
   );
   log(`wrote: ${[...totals].map(([k, v]) => `${k}=${v}`).join(' ')}`);
   log(`feed_events in the last 7 days: ${counts.map((c) => `${c.type}=${c.n}`).join(' ') || 'none'}`);
+  const backfilled = DRY ? 0 : await backfillUserChannelUploads();
+  if (backfilled) log(`user-channel upload history: +${backfilled}`);
 }
 
 main()

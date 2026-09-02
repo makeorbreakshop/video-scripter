@@ -20,11 +20,9 @@ describe('uploadEvents', () => {
     expect(e.payload).toEqual({ title: 'Hello', published_at: PUB });
   });
 
-  it('fires at import time for a back-catalog video imported later', () => {
+  it('keeps the publish time for a back-catalog video imported later', () => {
     const [e] = uploadEvents([row({ published_at: '2024-01-01T00:00:00.000Z', import_date: PUB })]);
-    expect(e.at).toEqual(T(PUB));
-    // ...but the dedupe key stays tied to the publish time, so a re-import is not a second event.
-    expect(e.dedupe_key).toBe('upload:v1:2024-01-01T00:00:00.000Z');
+    expect(e.at.toISOString()).toBe('2024-01-01T00:00:00.000Z');
   });
 
   it('ignores an import_date that precedes publish', () => {
