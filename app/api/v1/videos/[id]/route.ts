@@ -59,10 +59,11 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
   // What each packaging change did to views: views/hour before vs after, with a plain verdict.
   const samplesForExp = curve.filter((c: any) => c.source === 'sample').map((c: any) => ({ at: new Date(new Date(video.published_at).getTime() + c.day * 86_400_000), views: c.views }));
   const markers = packagingMarkers(video.published_at, thumbs, titles);
-  const exps = experiments(video.published_at, samplesForExp, markers, Date.now());
+  const dailyForExp = curve.filter((c: any) => c.source === 'snapshot').map((c: any) => ({ at: new Date(new Date(video.published_at).getTime() + c.day * 86_400_000), views: c.views }));
+  const exps = experiments(video.published_at, samplesForExp, markers, Date.now(), dailyForExp);
   void mergeActuals;
   return NextResponse.json({
-    experiments: exps.map((e: any) => ({ kind: e.kind, version: e.version, at: e.at, before_vph: e.before?.vph ?? null, after_vph: e.after?.vph ?? null, ratio: e.ratio ?? null, verdict: e.verdict })),
+    experiments: exps.map((e: any) => ({ kind: e.kind, version: e.version, at: e.at, resolution: e.resolution, before_vph: e.before?.vph ?? null, after_vph: e.after?.vph ?? null, ratio: e.ratio ?? null, verdict: e.verdict })),
     video: {
       id: video.id,
       title: video.title,

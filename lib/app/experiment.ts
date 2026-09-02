@@ -44,6 +44,8 @@ export type Experiment = {
   windowAfterHours: number;
   ratio: number | null;
   verdict: Verdict;
+  /** 'samples' = 15-minute launch samples; 'daily' = daily snapshots (coarser, wider windows). */
+  resolution: 'samples' | 'daily' | null;
 };
 
 /**
@@ -65,8 +67,8 @@ export function vphIn(samples: Sample[], from: number, to: number): Window {
   return { vph: Math.max(0, (last.v - first.v) / span), n: inWindow.length, hours };
 }
 
-export function verdictFor(before: Window, after: Window): { ratio: number | null; verdict: Verdict } {
-  if (before.vph == null || after.vph == null || before.n < MIN_SAMPLES || after.n < MIN_SAMPLES) {
+export function verdictFor(before: Window, after: Window, minPoints = MIN_SAMPLES): { ratio: number | null; verdict: Verdict } {
+  if (before.vph == null || after.vph == null || before.n < minPoints || after.n < minPoints) {
     return { ratio: before.vph != null && after.vph != null && before.vph > 0 ? after.vph / before.vph : null, verdict: 'too early' };
   }
   if (before.vph <= 0) return { ratio: null, verdict: 'too early' };
@@ -80,27 +82,44 @@ export function verdictFor(before: Window, after: Window): { ratio: number | nul
  * One experiment per packaging change, in chronological order. `markers` comes from
  * packagingMarkers() so thumbnail and title changes bound each other's windows.
  */
+const DAILY_WINDOW_HOURS = 7 * 24;
+
 export function experiments(
   publishedAt: string | Date,
   samples: Sample[],
   markers: Marker[],
-  now: number = Date.now()
+  now: number = Date.now(),
+  /** Daily snapshots: the fallback when a change has no 15-minute samples around it. */
+  daily: Sample[] = []
 ): Experiment[] {
   const t0 = new Date(publishedAt).getTime();
   if (!Number.isFinite(t0) || !markers.length) return [];
   const sorted = [...markers].sort((a, b) => a.day - b.day);
   const times = sorted.map((m) => new Date(m.at).getTime());
+  // Publish is a real data point: zero views at t0. It lets a change in the first days get a
+  // "before" rate from daily data alone.
+  const dailyPts: Sample[] = [{ at: new Date(t0).toISOString(), views: 0 }, ...daily, ...samples];
 
   return sorted.map((m, i) => {
     const at = times[i];
     const prev = i > 0 ? times[i - 1] : t0;
     const next = i < times.length - 1 ? times[i + 1] : now;
-    const back = Math.min(WINDOW_HOURS * HOUR, Math.max(0, at - prev));
-    const fwd = Math.min(WINDOW_HOURS * HOUR, Math.max(0, next - at));
-    const before = vphIn(samples, at - back, at);
-    const after = vphIn(samples, at, at + fwd);
-    const { ratio, verdict } = verdictFor(before, after);
+    let back = Math.min(WINDOW_HOURS * HOUR, Math.max(0, at - prev));
+    let fwd = Math.min(WINDOW_HOURS * HOUR, Math.max(0, next - at));
+    let before = vphIn(samples, at - back, at);
+    let after = vphIn(samples, at, at + fwd);
+    let { ratio, verdict } = verdictFor(before, after);
+    let resolution: Experiment['resolution'] = verdict === 'too early' ? null : 'samples';
+    if (verdict === 'too early' && daily.length) {
+      back = Math.min(DAILY_WINDOW_HOURS * HOUR, Math.max(0, at - prev));
+      fwd = Math.min(DAILY_WINDOW_HOURS * HOUR, Math.max(0, next - at));
+      const b = vphIn(dailyPts, at - back, at);
+      const a = vphIn(dailyPts, at, at + fwd);
+      const v = verdictFor(b, a, 2); // daily data: two points a side is a real rate
+      if (v.verdict !== 'too early') { before = b; after = a; ratio = v.ratio; verdict = v.verdict; resolution = 'daily'; }
+    }
     return {
+      resolution,
       kind: m.kind,
       version: m.version,
       fromVersion: m.fromVersion,

@@ -124,7 +124,7 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     // so it tracks the measurements; the headline score still comes from the model.
     projected: score ? projectedCurve((() => { const k = fitScale(actuals, score.baseline, mult, longtail); return k && score.baseline != null ? score.baseline * k : score.est30; })(), mult, maxDay, 60, startDay, longtail) : [],
     markers,
-    experiments: experiments(v.published_at, samples, markers, now),
+    experiments: experiments(v.published_at, samples, markers, now, snapshots.map((p: any) => ({ at: new Date(new Date(p.at).getTime()).toISOString(), views: p.views }))),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),
     titles: titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() })),
     thumbUrls,

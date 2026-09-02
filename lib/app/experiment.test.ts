@@ -114,3 +114,22 @@ describe('experiments', () => {
     expect(e.day).toBeCloseTo(8 / 24, 6);
   });
 });
+
+describe('daily fallback', () => {
+  const pub = '2026-08-29T16:00:00Z';
+  const marker = { kind: 'thumb', version: 2, fromVersion: 1, from: null, to: null, at: '2026-09-01T16:00:00Z', day: 3 } as any;
+  it('judges a change from daily snapshots when there are no launch samples', () => {
+    const daily = [
+      { at: '2026-08-30T12:00:00Z', views: 100000 }, { at: '2026-08-31T12:00:00Z', views: 150000 }, { at: '2026-09-01T12:00:00Z', views: 200000 },
+      { at: '2026-09-02T12:00:00Z', views: 320000 }, { at: '2026-09-03T12:00:00Z', views: 440000 },
+    ];
+    const [e] = experiments(pub, [], [marker], Date.parse('2026-09-04T00:00:00Z'), daily);
+    expect(e.resolution).toBe('daily');
+    expect(e.verdict).toBe('helped');
+  });
+  it('stays too early with nothing on one side', () => {
+    const [e] = experiments(pub, [], [marker], Date.parse('2026-09-01T18:00:00Z'), [{ at: '2026-08-30T12:00:00Z', views: 100000 }]);
+    expect(e.verdict).toBe('too early');
+    expect(e.resolution).toBeNull();
+  });
+});
