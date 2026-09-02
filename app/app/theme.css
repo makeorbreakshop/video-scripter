@@ -1,0 +1,326 @@
+/*
+ * ChannelSmith app theme. Two grounds, one accent, restrained arcade character.
+ *
+ * The theme is chosen by [data-cs-theme] on <html> (set by the inline script in
+ * app/app/layout.tsx before paint, and by the header toggle afterwards). With no
+ * attribute we follow prefers-color-scheme, so a first visit matches the OS.
+ *
+ * Contrast (WCAG 2.1, computed against the ground each token sits on):
+ *   light  ink #10131A on #F6F7FA .......... 16.6:1
+ *   light  muted #5A6373 on #F6F7FA ......... 5.4:1
+ *   light  accent #C2136E on #F6F7FA ........ 6.5:1   (text-safe, >= 4.5:1)
+ *   light  good #0F7B4F / warn #8A5A00 / bad #B3261E on #F6F7FA .. 4.8-6.9:1
+ *   dark   ink #EDF0F6 on #0B0E14 .......... 15.9:1
+ *   dark   muted #99A2B3 on #0B0E14 ......... 7.2:1
+ *   dark   accent #FF57B0 on #0B0E14 ........ 7.4:1   (text-safe, >= 4.5:1)
+ *   dark   good #3DD68C / warn #E8B339 / bad #FF6B6B on #0B0E14 .. 7.5-11:1
+ * The accent is a saturated arcade magenta, darkened for the light ground and
+ * lightened for the dark one so it clears 4.5:1 in both directions. --accent-on
+ * is the ink to use *on top of* an accent fill (>= 7:1 both themes).
+ */
+
+:root {
+  --cs-ground: #F6F7FA;        /* near-white, slight cool bias */
+  --cs-surface: #FFFFFF;
+  --cs-surface-2: #EEF1F6;
+  --cs-ink: #10131A;
+  --cs-muted: #5A6373;
+  --cs-line: #DDE2EA;
+  --cs-line-strong: #C3CAD6;
+  --cs-accent: #C2136E;
+  --cs-accent-soft: #FCE7F1;
+  --cs-accent-on: #FFFFFF;
+  --cs-good: #0F7B4F;
+  --cs-warn: #8A5A00;
+  --cs-bad: #B3261E;
+  --cs-shadow: 0 1px 2px rgba(16, 19, 26, 0.06), 0 8px 24px rgba(16, 19, 26, 0.05);
+  --cs-scanline: rgba(16, 19, 26, 0.16);
+  --cs-radius: 10px;
+  --cs-max: 1120px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-cs-theme="light"]) {
+    --cs-ground: #0B0E14;      /* near-black, same cool bias */
+    --cs-surface: #12161F;
+    --cs-surface-2: #1A1F2B;
+    --cs-ink: #EDF0F6;
+    --cs-muted: #99A2B3;
+    --cs-line: #232936;
+    --cs-line-strong: #333B4B;
+    --cs-accent: #FF57B0;
+    --cs-accent-soft: #2A1220;
+    --cs-accent-on: #14060E;
+    --cs-good: #3DD68C;
+    --cs-warn: #E8B339;
+    --cs-bad: #FF6B6B;
+    --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --cs-scanline: rgba(0, 0, 0, 0.45);
+  }
+}
+
+:root[data-cs-theme="dark"] {
+  --cs-ground: #0B0E14;
+  --cs-surface: #12161F;
+  --cs-surface-2: #1A1F2B;
+  --cs-ink: #EDF0F6;
+  --cs-muted: #99A2B3;
+  --cs-line: #232936;
+  --cs-line-strong: #333B4B;
+  --cs-accent: #FF57B0;
+  --cs-accent-soft: #2A1220;
+  --cs-accent-on: #14060E;
+  --cs-good: #3DD68C;
+  --cs-warn: #E8B339;
+  --cs-bad: #FF6B6B;
+  --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --cs-scanline: rgba(0, 0, 0, 0.45);
+}
+
+/* ------------------------------------------------------------------ base -- */
+
+.cs-app {
+  min-height: 100vh;
+  background: var(--cs-ground);
+  color: var(--cs-ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.cs-app *, .cs-app *::before, .cs-app *::after { box-sizing: border-box; }
+.cs-app a { color: inherit; text-decoration: none; }
+.cs-app button { font: inherit; color: inherit; }
+.cs-num { font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+.cs-pixel { font-family: var(--font-pixel), var(--font-mono), monospace; letter-spacing: 0.02em; }
+
+.cs-wrap { max-width: var(--cs-max); margin: 0 auto; padding: 0 20px; }
+.cs-main { padding: 24px 0 80px; }
+
+/* ---------------------------------------------------------------- header -- */
+
+.cs-header {
+  position: sticky; top: 0; z-index: 30;
+  background: color-mix(in srgb, var(--cs-ground) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--cs-line);
+}
+.cs-header-in { display: flex; align-items: center; gap: 18px; height: 56px; }
+
+/* Marquee strip: the product name in the pixel face on an accent plate, the way
+   a cabinet header would carry it. Static — no animation, no glow. */
+.cs-marquee {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 10px 6px; border-radius: 6px;
+  background: var(--cs-accent); color: var(--cs-accent-on);
+  font-family: var(--font-pixel), monospace; font-size: 10px; line-height: 1;
+  white-space: nowrap; flex: none;
+}
+.cs-marquee-dot { width: 6px; height: 6px; background: var(--cs-accent-on); opacity: 0.75; }
+
+.cs-nav { display: flex; gap: 4px; margin-left: 4px; }
+.cs-nav a {
+  padding: 6px 11px; border-radius: 999px; color: var(--cs-muted);
+  font-weight: 500; font-size: 13px;
+}
+.cs-nav a:hover { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-nav a[data-active="true"] { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.cs-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--cs-line); background: var(--cs-surface);
+  cursor: pointer;
+}
+.cs-icon-btn:hover { border-color: var(--cs-line-strong); }
+
+/* ----------------------------------------------------------------- page --- */
+
+.cs-page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.cs-h1 { font-size: 20px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.cs-sub { color: var(--cs-muted); font-size: 13px; margin: 2px 0 0; }
+.cs-hiscore {
+  font-family: var(--font-pixel), monospace; font-size: 8px; line-height: 1;
+  color: var(--cs-muted); letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- chips --- */
+
+.cs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.cs-chip {
+  border: 1px solid var(--cs-line); background: var(--cs-surface);
+  color: var(--cs-muted); border-radius: 999px; padding: 5px 11px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer;
+}
+.cs-chip:hover { border-color: var(--cs-line-strong); color: var(--cs-ink); }
+.cs-chip[data-on="true"] { background: var(--cs-accent); border-color: var(--cs-accent); color: var(--cs-accent-on); }
+
+/* ----------------------------------------------------------------- feed --- */
+
+.cs-feed { border: 1px solid var(--cs-line); border-radius: var(--cs-radius); background: var(--cs-surface); overflow: hidden; }
+.cs-row {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 14px; border-bottom: 1px solid var(--cs-line);
+}
+.cs-row:last-child { border-bottom: 0; }
+.cs-row:hover { background: var(--cs-surface-2); }
+
+.cs-thumbs { display: flex; align-items: center; gap: 6px; flex: none; }
+.cs-thumb { position: relative; width: 128px; aspect-ratio: 16 / 9; flex: none;
+  background: var(--cs-surface-2); border-radius: 6px; overflow: hidden; border: 1px solid var(--cs-line); }
+.cs-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-thumb-cap {
+  position: absolute; left: 4px; bottom: 4px; padding: 2px 4px; border-radius: 3px;
+  background: rgba(0,0,0,0.68); color: #fff; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cs-arrow { color: var(--cs-muted); font-size: 13px; flex: none; }
+
+.cs-row-body { min-width: 0; flex: 1; }
+.cs-tag {
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--cs-muted); text-transform: uppercase; margin-bottom: 3px;
+}
+.cs-tag[data-type="outlier"] { color: var(--cs-accent); }
+.cs-tag[data-type="thumbnail_change"], .cs-tag[data-type="ab_rotation"] { color: var(--cs-warn); }
+.cs-tag[data-type="upload"] { color: var(--cs-good); }
+.cs-title {
+  font-size: 14px; font-weight: 550; line-height: 1.35; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cs-row:hover .cs-title { color: var(--cs-accent); }
+.cs-detail { color: var(--cs-muted); font-size: 12px; margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-channel { color: var(--cs-muted); font-size: 12px; margin-top: 2px; }
+
+.cs-row-right { display: flex; align-items: center; gap: 10px; flex: none; align-self: center; }
+.cs-time { color: var(--cs-muted); font-size: 12px; min-width: 34px; text-align: right; }
+
+/* Score chip: the one place the pixel face and the CRT scanlines appear. */
+.cs-score {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 7px 9px 6px; border-radius: 6px;
+  background: var(--cs-accent-soft); color: var(--cs-accent);
+  border: 1px solid color-mix(in srgb, var(--cs-accent) 35%, transparent);
+  font-family: var(--font-pixel), monospace; font-size: 10px; line-height: 1;
+}
+.cs-score::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom, var(--cs-scanline) 0 1px, transparent 1px 3px);
+  opacity: 0.5;
+}
+.cs-newhigh {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 1.4;
+  color: var(--cs-accent-on); background: var(--cs-accent);
+  padding: 4px 5px 3px; border-radius: 4px; white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- empty --- */
+
+.cs-empty {
+  border: 1px dashed var(--cs-line-strong); border-radius: var(--cs-radius);
+  background: var(--cs-surface); padding: 56px 24px; text-align: center;
+}
+.cs-coin { font-family: var(--font-pixel), monospace; font-size: 16px; line-height: 1.8; color: var(--cs-accent); }
+.cs-coin-sub { font-family: var(--font-pixel), monospace; font-size: 9px; line-height: 2; color: var(--cs-muted); margin-top: 10px; }
+.cs-empty p { color: var(--cs-muted); margin: 16px auto 0; max-width: 380px; font-size: 13px; }
+
+/* --------------------------------------------------------------- cards ---- */
+
+.cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.cs-card {
+  border: 1px solid var(--cs-line); border-radius: var(--cs-radius);
+  background: var(--cs-surface); padding: 14px; box-shadow: var(--cs-shadow);
+}
+.cs-card-head { display: flex; gap: 12px; align-items: flex-start; }
+.cs-card-thumb { width: 96px; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden;
+  background: var(--cs-surface-2); border: 1px solid var(--cs-line); flex: none; }
+.cs-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-card-name { font-weight: 600; font-size: 14px; margin: 0; }
+.cs-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;
+  border-top: 1px solid var(--cs-line); padding-top: 10px; }
+.cs-stat-v { font-family: var(--font-mono), monospace; font-size: 14px; font-variant-numeric: tabular-nums; }
+.cs-stat-l { font-size: 10px; color: var(--cs-muted); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 1px; }
+.cs-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+/* -------------------------------------------------------------- controls -- */
+
+.cs-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 13px; border-radius: 8px; border: 1px solid var(--cs-line);
+  background: var(--cs-surface); font-size: 13px; font-weight: 550; cursor: pointer;
+}
+.cs-btn:hover:not(:disabled) { border-color: var(--cs-line-strong); background: var(--cs-surface-2); }
+.cs-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cs-btn[data-variant="primary"] { background: var(--cs-accent); border-color: var(--cs-accent); color: var(--cs-accent-on); }
+.cs-btn[data-variant="primary"]:hover:not(:disabled) { filter: brightness(1.07); background: var(--cs-accent); }
+.cs-btn[data-variant="danger"] { color: var(--cs-bad); }
+
+.cs-input {
+  width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 14px;
+  border: 1px solid var(--cs-line); background: var(--cs-surface); color: var(--cs-ink);
+}
+.cs-input::placeholder { color: var(--cs-muted); }
+.cs-input:focus { outline: 2px solid var(--cs-accent); outline-offset: -1px; border-color: var(--cs-accent); }
+
+.cs-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--cs-muted); cursor: pointer; }
+.cs-switch-track { width: 32px; height: 18px; border-radius: 999px; background: var(--cs-line-strong); position: relative; transition: background .12s; flex: none; }
+.cs-switch-track[data-on="true"] { background: var(--cs-accent); }
+.cs-switch-knob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .12s; }
+.cs-switch-track[data-on="true"] .cs-switch-knob { transform: translateX(14px); }
+
+.cs-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  padding: 3px 6px; border-radius: 4px; background: var(--cs-surface-2); color: var(--cs-muted); }
+.cs-badge[data-tone="accent"] { background: var(--cs-accent-soft); color: var(--cs-accent); }
+.cs-badge[data-tone="good"] { color: var(--cs-good); }
+
+.cs-note { border-radius: 8px; padding: 10px 12px; font-size: 13px; border: 1px solid var(--cs-line); background: var(--cs-surface-2); }
+.cs-note[data-tone="bad"] { color: var(--cs-bad); border-color: color-mix(in srgb, var(--cs-bad) 40%, transparent); background: color-mix(in srgb, var(--cs-bad) 8%, transparent); }
+.cs-note[data-tone="accent"] { color: var(--cs-accent); border-color: color-mix(in srgb, var(--cs-accent) 40%, transparent); background: var(--cs-accent-soft); }
+
+/* ------------------------------------------------------------ add channel - */
+
+.cs-picker { border: 1px solid var(--cs-line); border-radius: var(--cs-radius); background: var(--cs-surface); margin-top: 10px; overflow: hidden; }
+.cs-pick {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 10px 12px; border: 0; border-bottom: 1px solid var(--cs-line); background: none; cursor: pointer;
+}
+.cs-pick:last-child { border-bottom: 0; }
+.cs-pick:hover:not(:disabled) { background: var(--cs-surface-2); }
+.cs-pick:disabled { cursor: default; opacity: 0.75; }
+.cs-pick-name { font-weight: 550; font-size: 13px; }
+.cs-pick-meta { color: var(--cs-muted); font-size: 12px; }
+
+/* ---------------------------------------------------------------- misc ---- */
+
+.cs-section { margin-bottom: 26px; }
+.cs-section h2 { font-size: 14px; font-weight: 650; margin: 0 0 10px; }
+.cs-kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--cs-line); font-size: 13px; }
+.cs-kv:last-child { border-bottom: 0; }
+.cs-kv-l { color: var(--cs-muted); }
+.cs-meter { height: 6px; border-radius: 999px; background: var(--cs-surface-2); overflow: hidden; margin-top: 8px; }
+.cs-meter-fill { height: 100%; background: var(--cs-accent); }
+.cs-steps { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; }
+.cs-step { font-family: var(--font-pixel), monospace; font-size: 8px; color: var(--cs-muted); padding: 6px 8px 5px; border: 1px solid var(--cs-line); border-radius: 5px; }
+.cs-step[data-on="true"] { color: var(--cs-accent-on); background: var(--cs-accent); border-color: var(--cs-accent); }
+.cs-skel { height: 88px; border-bottom: 1px solid var(--cs-line); background: linear-gradient(90deg, var(--cs-surface) 25%, var(--cs-surface-2) 50%, var(--cs-surface) 75%); background-size: 400% 100%; animation: cs-shimmer 1.3s infinite; }
+@keyframes cs-shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
+.cs-center { display: flex; justify-content: center; padding: 18px 0; }
+.cs-code { font-family: var(--font-mono), monospace; font-size: 12px; background: var(--cs-surface-2);
+  border: 1px solid var(--cs-line); border-radius: 6px; padding: 10px 12px; word-break: break-all; }
+
+@media (max-width: 640px) {
+  .cs-wrap { padding: 0 14px; }
+  .cs-header-in { height: 52px; gap: 10px; }
+  .cs-nav { display: none; }
+  .cs-nav-mobile { display: flex; gap: 4px; padding-bottom: 10px; overflow-x: auto; }
+  .cs-thumb { width: 92px; }
+  .cs-row { gap: 10px; padding: 10px; }
+  .cs-grid { grid-template-columns: 1fr; }
+  .cs-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 641px) { .cs-nav-mobile { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cs-skel { animation: none; } }
