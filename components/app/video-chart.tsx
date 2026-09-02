@@ -11,7 +11,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   Area, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Legend,
 } from 'recharts';
-import type { Actual, CurvePoint, Marker, ProjPoint } from '@/lib/admin/video-curve';
+import { aleAt, type Actual, type CurvePoint, type Marker, type ProjPoint } from '@/lib/admin/video-curve';
 import { Thumb } from './thumb';
 
 export function markerKey(m: { kind: string; version: number }) {
@@ -69,14 +69,19 @@ export function dayLabel(d: number) {
   return d < 1 ? `${Math.round(d * 24)}h` : `day ${d < 10 ? d.toFixed(d % 1 ? 1 : 0) : Math.round(d)}`;
 }
 
-export type Zoom = '72h' | '30d';
-type Row = { day: number; expected?: number; band?: [number, number]; projected?: number; views?: number };
+export type Zoom = '72h' | 'full';
+type Row = {
+  day: number;
+  expected?: number; band?: [number, number];
+  projected?: number; implied?: number; impliedBand?: [number, number];
+  views?: number; dot?: number;
+};
 
 const HOUR_TICKS = [0, 6, 12, 24, 48, 72];
-const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90];
+const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 550, 730, 1095];
 
 export function VideoChart({
-  actuals, curve, projected, markers, thumbUrls, score, defaultZoom = '30d',
+  actuals, curve, projected, markers, thumbUrls, score, defaultZoom = 'full', sparse = false,
 }: {
   actuals: Actual[];
   curve: CurvePoint[];
@@ -85,6 +90,8 @@ export function VideoChart({
   thumbUrls: Record<number, string>;
   score: number | null;
   defaultZoom?: Zoom;
+  /** Too few real points to read a shape: draw the implied path across the whole range. */
+  sparse?: boolean;
 }) {
   const { hovered, setHovered } = useMarkerHover();
   const [zoom, setZoom] = useState<Zoom>(defaultZoom);
@@ -100,20 +107,27 @@ export function VideoChart({
       return !spike;
     });
     const lastDay = clean.length ? clean[clean.length - 1].day : 0;
-    for (const p of projected) if (p.day >= lastDay) at(p.day).projected = p.projected;
-    if (clean.length) at(lastDay).projected = clean[clean.length - 1].views; // projection continues from the last real point
-    for (const a of clean) at(a.day).views = a.views;
+    if (sparse && projected.length) {
+      // One or two snapshots draw no shape. The implied path is this video's own score applied
+      // to the channel's typical curve — the path that ends where the video actually is — so it
+      // runs the whole range with the model's error band, and the real points sit on it as dots.
+      for (const p of projected) {
+        const a = aleAt(p.day);
+        Object.assign(at(p.day), {
+          implied: p.projected,
+          impliedBand: [p.projected * Math.exp(-a), p.projected * Math.exp(a)] as [number, number],
+        });
+      }
+    } else {
+      for (const p of projected) if (p.day >= lastDay) at(p.day).projected = p.projected;
+      if (clean.length) at(lastDay).projected = clean[clean.length - 1].views;
+      for (const a of clean) at(a.day).views = a.views;
+    }
+    for (const a of clean) at(a.day).dot = a.views;
     // Every video has zero views at publish: anchor the typical curve there so the axis starts at 0h.
     if (curve.length && !byDay.has(0)) Object.assign(at(0), { expected: 0, band: [0, 0] as [number, number] });
     return [...byDay.values()].sort((a, b) => a.day - b.day);
-  }, [actuals, curve, projected]);
-
-  if (!actuals.length && !curve.length) {
-    return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;
-  }
-  // A channel with no baseline yet has no expected curve and no band. Draw the actual
-  // series on its own and say so, rather than leaving the reader to wonder what is missing.
-  const noBaseline = !curve.length;
+  }, [actuals, curve, projected, sparse]);
 
   const launch = zoom === '72h';
   const rows = launch ? all.filter((r) => r.day <= 3) : all;
@@ -124,7 +138,7 @@ export function VideoChart({
   const shown = markers.filter((m) => !launch || m.day <= 3);
   const ticks = launch
     ? HOUR_TICKS.map((h) => h / 24).filter((t) => t >= minDay - 1e-9)
-    : DAY_TICKS.filter((t) => t <= maxDay);
+    : DAY_TICKS.filter((t) => t <= maxDay * 1.001);
   const hoveredMarker = markers.find((m) => markerKey(m) === hovered) ?? null;
   // Changes inside ~2% of the visible range share one tick, so a burst of tests reads as one event.
   const clusters = useMemo(() => {
@@ -137,16 +151,30 @@ export function VideoChart({
     }
     return out;
   }, [shown, maxDay, minDay, launch]);
+  // More than a few ticks and their labels start colliding; the ticks stay, the words go.
+  const labelClusters = clusters.length <= 3;
+  // The implied path only exists when there is a projection to scale; without one a sparse
+  // video still gets its own line through whatever points it has.
+  const implied = sparse && projected.length > 0;
+
+  if (!actuals.length && !curve.length) {
+    return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;
+  }
+  // A channel with no baseline yet has no expected curve and no band. Draw the actual
+  // series on its own and say so, rather than leaving the reader to wonder what is missing.
+  const noBaseline = !curve.length;
 
   return (
     <div>
-      <div className="cs-chips" style={{ marginBottom: 10 }}>
-        {(['72h', '30d'] as Zoom[]).map((z) => (
-          <button key={z} type="button" className="cs-chip" data-on={zoom === z} aria-pressed={zoom === z} onClick={() => setZoom(z)}>
-            {z === '72h' ? 'First 72h' : '30 days'}
-          </button>
-        ))}
-      </div>
+      {defaultZoom === '72h' && (
+        <div className="cs-chips" style={{ marginBottom: 10 }}>
+          {(['72h', 'full'] as Zoom[]).map((z) => (
+            <button key={z} type="button" className="cs-chip" data-on={zoom === z} aria-pressed={zoom === z} onClick={() => setZoom(z)}>
+              {z === '72h' ? 'First 72h' : 'Since publish'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
           screen is wider than the chart and would stretch the whole page. Clip it here. */}
@@ -157,6 +185,7 @@ export function VideoChart({
             dataKey="day" type="number" domain={[0, maxDay]} ticks={ticks} allowDataOverflow
             tick={{ fontSize: 11, fill: C.muted }} stroke={C.line}
             tickFormatter={(d: number) => (launch || d < 1 ? `${Math.round(d * 24)}h` : `d${Math.round(d)}`)}
+            minTickGap={12}
           />
           <YAxis tick={{ fontSize: 11, fill: C.muted }} stroke={C.line} width={52} tickFormatter={fmtViews} />
           <Tooltip
@@ -164,25 +193,51 @@ export function VideoChart({
             labelStyle={{ color: C.muted }}
             labelFormatter={(d: number) => dayLabel(Number(d))}
             formatter={(v: any, name: string) =>
-              name === 'band' ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, 'typical range'] : [fmtViews(Number(v)), name]
+              Array.isArray(v) ? [`${fmtViews(v[0])} – ${fmtViews(v[1])}`, name] : [fmtViews(Number(v)), name]
             }
           />
           <Legend wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }} />
-          <Area dataKey="band" name="band" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
-          <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
-          <Line dataKey="projected" name="projected" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
-          <Line dataKey="views" name="this video" connectNulls dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
+          {/* Recharts puts every declared series in the legend whether or not it has data, so
+              each one is mounted only in the states where it actually draws something. */}
+          {curve.length > 0 && (
+            <Area dataKey="band" name="typical range" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
+          )}
+          {implied && (
+            <Area dataKey="impliedBand" name="likely range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.1} isAnimationActive={false} legendType="none" />
+          )}
+          {curve.length > 0 && (
+            <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
+          )}
+          {implied && (
+            <Line dataKey="implied" name="implied path" connectNulls dot={false} stroke={C.accent} strokeWidth={1.5} strokeDasharray="6 4" isAnimationActive={false} />
+          )}
+          {!implied && projected.length > 0 && (
+            <Line dataKey="projected" name="expected from here" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
+          )}
+          {!implied && (
+            <Line dataKey="views" name="this video" connectNulls dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
+          )}
+          {/* The real measurements as points — a video with one or two snapshots is otherwise a
+              model path with nothing of its own on it. */}
+          {implied && (
+            <Line
+              dataKey="dot" name="measured" connectNulls={false} stroke={C.accent} strokeWidth={0} isAnimationActive={false}
+              legendType="circle"
+              dot={{ r: 3.5, fill: C.accent, stroke: C.surface, strokeWidth: 1.5 }}
+              activeDot={{ r: 4, fill: C.accent }}
+            />
+          )}
 
           {endBaseline && (
             <ReferenceDot
               x={endBaseline.day} y={endBaseline.expected} r={3} fill={C.muted} stroke="none" isFront
-              label={{ value: fmtViews(endBaseline.expected), fontSize: 11, fill: C.muted, position: 'left', offset: 8 }}
+              label={{ value: fmtViews(endBaseline.expected), fontSize: 11, fill: C.muted, position: 'left', offset: 10, dy: 12 }}
             />
           )}
           {endProjected && (
             <ReferenceDot
               x={endProjected.day} y={endProjected.projected} r={3} fill={C.accent} stroke="none" isFront
-              label={{ value: fmtViews(endProjected.projected), fontSize: 11, fill: C.accent, position: 'left', offset: 8 }}
+              label={{ value: fmtViews(endProjected.projected), fontSize: 11, fill: C.accent, position: 'left', offset: 10, dy: -12 }}
             />
           )}
           {endBaseline && endProjected && score != null && (
@@ -204,8 +259,10 @@ export function VideoChart({
                 stroke={color}
                 strokeWidth={on ? 2 : 1}
                 strokeOpacity={on ? 0.9 : 0.25}
-                label={{ value: label, fontSize: 10, fill: color, position: 'insideTopRight', dx: 4, dy: 6,
-                  onMouseEnter: () => setHovered(cl.keys[0]), onMouseLeave: () => setHovered(null) } as any}
+                label={labelClusters || on
+                  ? ({ value: label, fontSize: 10, fill: color, position: 'insideTopRight', dx: 4, dy: 6,
+                      onMouseEnter: () => setHovered(cl.keys[0]), onMouseLeave: () => setHovered(null) } as any)
+                  : undefined}
               />
             );
           })}
