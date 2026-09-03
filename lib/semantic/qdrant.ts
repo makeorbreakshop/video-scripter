@@ -144,7 +144,7 @@ export class SemanticQdrant {
   async query<Payload>(
     collection: string,
     vector: number[],
-    options: { limit?: number; filter?: QdrantFilter; scoreThreshold?: number; withVector?: boolean } = {},
+    options: { limit?: number; filter?: QdrantFilter; scoreThreshold?: number; withVector?: boolean; exact?: boolean } = {},
   ): Promise<Array<QdrantSearchHit<Payload>>> {
     const response = await this.request<{ result: { points: Array<QdrantSearchHit<Payload>> } }>(
       `/collections/${collection}/points/query`,
@@ -155,6 +155,7 @@ export class SemanticQdrant {
           limit: options.limit ?? 20,
           with_payload: true,
           with_vector: options.withVector ?? false,
+          ...(options.exact == null ? {} : { params: { exact: options.exact } }),
           ...(options.filter ? { filter: options.filter } : {}),
           ...(options.scoreThreshold == null ? {} : { score_threshold: options.scoreThreshold }),
         }),

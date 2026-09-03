@@ -25,6 +25,7 @@ import {
 
 interface VideoRow extends VideoPayloadRow {
   description: string | null;
+  published_at: Date;
   updated_at: Date;
 }
 
@@ -66,7 +67,7 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
 
   while (options.limit == null || selected < options.limit) {
     const pageLimit = Math.min(READ_BATCH_SIZE, options.limit == null ? READ_BATCH_SIZE : options.limit - selected);
-    const result = await db().query<VideoRow>(
+    const rows = (await db().query<VideoRow>(
       `${VIDEO_SELECT}
         where v.published_at > $1
           and coalesce(v.is_short, false) = false and v.duration <> 'P0D'
@@ -75,11 +76,11 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
         order by v.published_at, v.id
         limit $5`,
       [options.since, cursorPublished, cursorId, options.updatedSince ?? null, pageLimit],
-    );
-    if (!result.rows.length) break;
-    selected += result.rows.length;
-    const hashes = await currentHashes('video', result.rows.map((row) => row.id));
-    const prepared: PreparedVideo[] = result.rows.map((row) => {
+    )).rows as VideoRow[];
+    if (!rows.length) break;
+    selected += rows.length;
+    const hashes = await currentHashes('video', rows.map((row) => row.id));
+    const prepared: PreparedVideo[] = rows.map((row) => {
       const document = buildVideoDocument({
         title: row.title,
         channelName: row.channel_name,
@@ -91,11 +92,11 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
 
     toEmbed.push(...prepared);
 
-    const last = result.rows[result.rows.length - 1];
+    const last: VideoRow = rows[rows.length - 1];
     cursorPublished = last.published_at;
     cursorId = last.id;
     console.log(`videos: scanned=${selected} changed=${toEmbed.length}`);
-    if (result.rows.length < pageLimit) break;
+    if (rows.length < pageLimit) break;
   }
 
   const estimate = estimateEmbeddingRun(toEmbed.map((item) => item.document));

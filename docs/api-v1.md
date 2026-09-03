@@ -254,6 +254,78 @@ Feed events are materialized every 5 minutes from the watcher and scorer output,
 swap typically appears within about 10 minutes of us noticing it. Scores are recomputed hourly.
 Polling `/feed` more than once a minute will not show you anything new.
 
+## Semantic retrieval (30-day v1 window)
+
+Semantic results cover long-form videos published in the rolling 30-day window and the channels
+represented by those videos. `similarity` is the raw cosine score from `text-embedding-3-small`
+(512 dimensions). It is useful only for ranking results within `videos_v1` or `channels_v1`; it is
+not a probability or confidence score and must not be displayed as a percentage.
+
+Every retrieval response includes `requested_mode`, `effective_mode`, `degraded`, normalized
+`filters`, and `coverage`. Results include a stable `id`, one-based `rank`, retrieval `source`, and
+bounded `match_evidence`; embedded documents are never returned. When semantic infrastructure is
+unavailable, semantic-only routes return `503 semantic_unavailable`. Hybrid `/search` continues
+lexically and truthfully reports `effective_mode: "lexical"` and `degraded: true`.
+
+### `GET /similar/videos/{id}`
+
+```bash
+curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
+  "https://channelsmith.com/api/v1/similar/videos/MpGDoiSH_PQ?limit=20&exclude_channel=true&since=2026-08-03"
+```
+
+Returns the embedded source video and semantic neighbours. `exclude_channel` defaults to `true`.
+`since` is optional ISO time. Each neighbour includes the standard v1 score object, `similarity`,
+`rank`, `source: "semantic"`, and evidence such as matched topic niches. An unembedded id returns
+404.
+
+### `GET /similar/channels/{id}`
+
+```bash
+curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
+  "https://channelsmith.com/api/v1/similar/channels/UCjWkNxpp3UHdEavpM_19--Q?limit=20&min_subscribers=10000&max_subscribers=500000&lane=corpus&exclude_ids=UCother"
+```
+
+Optional Qdrant-indexed filters are `min_subscribers`, `max_subscribers`, `lane=user|corpus`, and
+`exclude_ids` (comma-separated or repeated, capped at 100). Results expose subscriber count, top
+niches, baseline, outlier rate, tracked state, and compact semantic match evidence.
+
+### `GET /search`
+
+```bash
+curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
+  "https://channelsmith.com/api/v1/search?q=laser%20engraver&mode=hybrid&limit=20&min_subscribers=10000&lane=corpus&niche=Laser%20Engraving"
+```
+
+`mode` is `hybrid` (default), `semantic`, or `lexical`. Hybrid uses reciprocal-rank fusion. The
+subscriber, lane, niche, and exclusion filters are applied to both retrieval legs before fusion.
+Per-result `source` is `semantic`, `lexical`, or `both`; lexical-only results omit `similarity`.
+
+Fallback response excerpt:
+
+```json
+{
+  "requested_mode": "hybrid",
+  "effective_mode": "lexical",
+  "degraded": true,
+  "filters": { "min_subscribers": null, "max_subscribers": null, "lane": null, "niche": null, "exclude_ids": [] },
+  "coverage": { "collection": "channels_v1", "version": "v1", "dimensions": 512 },
+  "channels": [{ "id": "UC...", "rank": 1, "source": "lexical", "match_evidence": { "semantic_fields": [], "lexical_fields": ["name"], "matched_niches": [] } }]
+}
+```
+
+### `GET /outliers?topic=`
+
+```bash
+curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
+  "https://channelsmith.com/api/v1/outliers?topic=air%20fryer%20recipes&since=2026-08-03&min_score=2&limit=20&max_per_channel=1"
+```
+
+With `topic`, the route semantically ranks embedded outliers and adds `rank`, `similarity`,
+`source`, and `match_evidence`. `max_per_channel` defaults to 1, is capped at 20, and accepts 0 to
+disable diversity grouping. Without `topic`, `/outliers` retains its existing SQL-ranked behavior
+and does not accept `max_per_channel`.
+
 
 ## Added 2026-09-02 (evening)
 
