@@ -47,7 +47,7 @@ for (const c of connections) {
         await new Promise((r) => setTimeout(r, 2000));
         return fetchDaily(token, ids, iso(start), iso(end));
       });
-      if (!dry) written += await saveDaily(rows); else written += rows.length;
+      if (!dry) written += await saveDaily(rows, c.channel_id); else written += rows.length;
     }
     total += written;
     if (!dry) await markSynced(c.user_id, c.channel_id, null);

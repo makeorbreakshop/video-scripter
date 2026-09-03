@@ -109,7 +109,12 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
         <h2>YouTube</h2>
         <p className="cs-sub" style={{ marginBottom: 10 }}>
           Connect a channel you own to read its private analytics: per-day views, average view duration and
-          subscribers gained. That is the signal that sharpens the day-3 outlier call for your own uploads.
+          subscribers gained. We do not request revenue or earnings data.
+        </p>
+        <p className="cs-sub" style={{ marginBottom: 10 }}>
+          Your numbers stay private to your account. We also use them in aggregate, combined with other
+          connected channels and never identifying yours, to calibrate the performance benchmarks everyone
+          sees. Disconnecting deletes the analytics we stored for that channel.
         </p>
         {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginBottom: 10 }}>Connected. The first sync runs tonight.</div>}
         {youtubeStatus && youtubeStatus !== 'connected' && (
@@ -127,8 +132,12 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
             </span>
             {!readOnly && (
               <button type="button" className="cs-btn" data-variant="danger"
-                      onClick={async () => { await fetch('/api/app/youtube/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ channel_id: c.channel_id }) }); location.reload(); }}>
-                Disconnect
+                      onClick={async () => {
+                  if (!confirm(`Disconnect ${c.channel_title || c.channel_id}? This also deletes the analytics we stored for it.`)) return;
+                  await fetch('/api/app/youtube/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ channel_id: c.channel_id }) });
+                  location.reload();
+                }}>
+                Disconnect and delete data
               </button>
             )}
           </div>

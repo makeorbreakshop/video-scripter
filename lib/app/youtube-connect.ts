@@ -4,6 +4,7 @@
 // Pure pieces (auth URL, callback parsing, analytics row mapping) are separated from the
 // network/database pieces so they can be unit tested.
 import { q, one } from '../admin/db';
+import { encryptSecret, decryptSecret } from './crypto';
 
 export const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
@@ -113,7 +114,7 @@ export async function saveConnection(c: { userId: string; channelId: string; cha
      on conflict (user_id, channel_id) do update
        set channel_title = excluded.channel_title, refresh_token = excluded.refresh_token,
            scopes = excluded.scopes, connected_at = now(), last_error = null`,
-    [c.userId, c.channelId, c.channelTitle, c.refreshToken, c.scopes]
+    [c.userId, c.channelId, c.channelTitle, encryptSecret(c.refreshToken), c.scopes]
   );
 }
 
@@ -133,7 +134,9 @@ export async function listConnections(userId: string): Promise<ConnectionView[]>
 }
 
 export async function allConnections(): Promise<Connection[]> {
-  return q<Connection>(`select * from youtube_connections order by connected_at`);
+  const rows = await q<Connection>(`select * from youtube_connections order by connected_at`);
+  // Tokens are stored encrypted (lib/app/crypto.ts); legacy plaintext passes through.
+  return rows.map((r) => ({ ...r, refresh_token: decryptSecret(r.refresh_token) }));
 }
 
 export async function markSynced(userId: string, channelId: string, error: string | null): Promise<void> {
@@ -153,7 +156,7 @@ export const DAILY_METRICS = [
 ] as const;
 
 export interface DailyRow {
-  video_id: string; date: string;
+  video_id: string; date: string; channel_id?: string | null;
   views: number; engaged_views: number | null; estimated_minutes_watched: number; average_view_duration: number;
   average_view_percentage: number; likes: number; dislikes: number; comments: number; shares: number;
   subscribers_gained: number; subscribers_lost: number;
@@ -210,20 +213,20 @@ export async function fetchDaily(accessToken: string, videoIds: string[], startD
 
 /** Upsert into daily_analytics (unique video_id, date), in batches under Postgres's parameter cap. */
 export const SAVE_BATCH = 500;
-export async function saveDaily(rows: DailyRow[]): Promise<number> {
+export async function saveDaily(rows: DailyRow[], channelId?: string): Promise<number> {
   if (!rows.length) return 0;
-  const cols = ['video_id','date','views','engaged_views','estimated_minutes_watched','average_view_duration','average_view_percentage','likes','dislikes','comments','shares','subscribers_gained','subscribers_lost'] as const;
+  const cols = ['video_id','date','channel_id','views','engaged_views','estimated_minutes_watched','average_view_duration','average_view_percentage','likes','dislikes','comments','shares','subscribers_gained','subscribers_lost'] as const;
   for (let b = 0; b < rows.length; b += SAVE_BATCH) {
     const batch = rows.slice(b, b + SAVE_BATCH);
     const values: any[] = []; const tuples: string[] = [];
     batch.forEach((r, i) => {
       tuples.push(`(${cols.map((_, j) => `$${i * cols.length + j + 1}`).join(',')})`);
-      for (const c of cols) values.push((r as any)[c]);
+      for (const c of cols) values.push(c === 'channel_id' ? (r.channel_id ?? channelId ?? null) : (r as any)[c]);
     });
     await q(
       `insert into daily_analytics (${cols.join(',')}) values ${tuples.join(',')}
        on conflict (video_id, date) do update set
-         ${cols.slice(2).map((c) => `${c} = excluded.${c}`).join(', ')}, updated_at = now()`,
+         ${cols.filter((c) => c !== 'video_id' && c !== 'date').map((c) => `${c} = excluded.${c}`).join(', ')}, updated_at = now()`,
       values
     );
   }

@@ -67,14 +67,14 @@ describe('saveDaily', () => {
     expect(mq).toHaveBeenCalledTimes(1);
     const [sql, params] = mq.mock.calls[0];
     expect(sql).toMatch(/on conflict \(video_id, date\) do update/);
-    expect(params).toHaveLength(26);
+    expect(params).toHaveLength(28); // 14 columns x 2 rows, incl. channel_id
   });
   it('splits large loads into batches so one statement never exceeds the parameter cap', async () => {
     const row = { video_id: 'a', date: '2026-09-01', views: 1, engaged_views: null, estimated_minutes_watched: 2, average_view_duration: 3, average_view_percentage: 4, likes: 5, dislikes: 0, comments: 6, shares: 7, subscribers_gained: 8, subscribers_lost: 0 };
     const rows = Array.from({ length: SAVE_BATCH * 2 + 1 }, (_, i) => ({ ...row, video_id: `v${i}` }));
     expect(await saveDaily(rows)).toBe(rows.length);
     expect(mq).toHaveBeenCalledTimes(3);
-    expect(mq.mock.calls[0][1]).toHaveLength(SAVE_BATCH * 13);
+    expect(mq.mock.calls[0][1]).toHaveLength(SAVE_BATCH * 14);
   });
 });
 

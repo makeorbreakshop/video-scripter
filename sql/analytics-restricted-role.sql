@@ -1,0 +1,23 @@
+-- OPTIONAL, and deliberately not applied automatically.
+--
+-- The app currently connects as `postgres`, which has BYPASSRLS, so the policies in
+-- sql/analytics-privacy.sql are inert. This creates a role that does NOT bypass them, so the
+-- database itself enforces the ownership boundary rather than only the application layer.
+--
+-- Rolling this out:
+--   1. Apply this file, setting a real password.
+--   2. Point the web app's DATABASE_URL / DATABASE_POOLER_URL at channelsmith_app.
+--   3. Per request, before reading: select set_config('app.user_id', $1, true);
+--      Background jobs instead use: select set_config('app.service', 'on', true);
+--   4. Leave the local dev connection as postgres so development is unaffected.
+--
+-- Do not apply on a whim: every query path must set one of those settings or reads return
+-- nothing, which is the point, but it will surface any code path that forgot.
+
+-- create role channelsmith_app login password 'CHANGE-ME' nobypassrls;
+-- grant connect on database postgres to channelsmith_app;
+-- grant usage on schema public to channelsmith_app;
+-- grant select, insert, update, delete on all tables in schema public to channelsmith_app;
+-- grant usage, select on all sequences in schema public to channelsmith_app;
+-- alter default privileges in schema public
+--   grant select, insert, update, delete on tables to channelsmith_app;
