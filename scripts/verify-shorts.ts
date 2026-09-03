@@ -29,7 +29,7 @@ const chFilter = CHANNELS.length ? 'and v.channel_id = any($3)' : '';
 const rows: { id: string }[] = (await pool.query(
   `select v.id from videos v
     where v.shorts_checked_at is null
-      and (${ONLY_FLAGGED ? 'false' : `(v.duration ~ '^PT[0-9HMS]+$' and extract(epoch from v.duration::interval) <= $1)`}
+      and (${ONLY_FLAGGED ? '($1::int < 0)' : `(v.duration ~ '^PT[0-9HMS]+$' and extract(epoch from v.duration::interval) <= $1)`}
            or v.is_short = true)
       and v.published_at > now() - ($2 || ' months')::interval
       ${chFilter}
