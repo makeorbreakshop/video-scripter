@@ -1,0 +1,9 @@
+{
+  "run_recipe_version": "semantic-eval-v4-candidates-1",
+  "status": "invalidated",
+  "reason": "Query embeddings were regenerated on replay, and small floating-point differences changed dense candidate ranks. Revision 2 freezes query vectors before retrieval.",
+  "original_run_id": "7c6b35750a9783f4de18ef3d87a22a176fffe6c2220ec59d229fcf0d95ed446b",
+  "original_rankings_hash": "f20f37521e0e4cf8d4943f05b0cb3616a2273aa8668fa9d8005b2514f740e7d4",
+  "replay_rankings_hash": "955b8e2ed8e2f8b6b01d368bf01153da9fd88c70b4b7521306f7acff1298e1d2",
+  "preserved_artifact": "candidate-runs-v1-unfrozen-query-vectors.json.gz"
+}

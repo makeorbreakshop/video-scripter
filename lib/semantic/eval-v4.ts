@@ -87,6 +87,12 @@ export interface CandidateRun {
   candidates: RankedCandidate[];
 }
 
+export interface CandidateRankingRun {
+  task_id: string;
+  system: string;
+  candidates: Array<{ entity_id: string; rank: number; raw_score?: number | null }>;
+}
+
 export interface BlindCandidate {
   blind_id: string;
   task_id: string;
@@ -352,4 +358,17 @@ export function pendingDocuments<T extends { id: string; hash: string }>(
   existingHashes: ReadonlyMap<string, string>,
 ): T[] {
   return documents.filter((document) => existingHashes.get(document.id) !== document.hash);
+}
+
+export function candidateRankingsHash(runs: CandidateRankingRun[]): string {
+  const rankings = [...runs]
+    .sort((left, right) => left.task_id.localeCompare(right.task_id) || left.system.localeCompare(right.system))
+    .map((run) => ({
+      task_id: run.task_id,
+      system: run.system,
+      candidates: [...run.candidates]
+        .sort((left, right) => left.rank - right.rank || left.entity_id.localeCompare(right.entity_id))
+        .map(({ entity_id, rank }) => ({ entity_id, rank })),
+    }));
+  return createHash('sha256').update(canonicalJson(rankings)).digest('hex');
 }

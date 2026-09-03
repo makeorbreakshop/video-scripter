@@ -39,6 +39,7 @@ The goal is evidence about retrieval quality, not completion of a predetermined 
 - The score backfill produced versioned mature-window coverage and is reusable.
 - Title-only dense similarity is an inexpensive control but did not show useful product quality.
 - The 498-item thumbnail pilot shows enough visual signal to retain as an optional visual-intent retriever; it does not yet prove product quality.
+- Query embeddings must be frozen for replayable evaluation. Regenerating the same OpenAI query embeddings produced small floating-point differences that changed close-neighbor ranks; revision-4 candidate recipe 2 snapshots those vectors and records their hash.
 
 ### 3.2 What is retired from evaluation
 
@@ -178,7 +179,7 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
 - [x] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
 - [x] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2 (9,385 videos and 3,544 channels reconciled in Qdrant; estimated clean-run cost $0.06083).
-- [ ] Run lexical, dense, and RRF candidate generation; write immutable run artifacts.
+- [x] Run lexical, dense, and RRF candidate generation; write immutable run artifacts (all 48 task/system rankings reproduced exactly after freezing query vectors).
 - [ ] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet.
 - [ ] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
 - [ ] Independently review the artifacts against this PRD. Do not expose endpoints.

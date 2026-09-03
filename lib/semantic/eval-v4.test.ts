@@ -3,6 +3,7 @@ import {
   CorpusEligibilityRow,
   V4Task,
   buildBlindPool,
+  candidateRankingsHash,
   freezeV4CorpusManifest,
   freezeV4TaskManifest,
   isEligibleCorpusRow,
@@ -182,6 +183,26 @@ describe('semantic v4 materialization resume', () => {
     ];
     expect(pendingDocuments(documents, new Map([['a', 'same'], ['b', 'old']])))
       .toEqual([documents[1], documents[2]]);
+  });
+});
+
+describe('semantic v4 candidate reproducibility', () => {
+  test('hashes task/system ids and ranks while ignoring scores and latency', () => {
+    const first = candidateRankingsHash([{ task_id: 'task', system: 'dense', candidates: [
+      { entity_id: 'a', rank: 1, raw_score: 0.9 },
+      { entity_id: 'b', rank: 2, raw_score: 0.8 },
+    ] }]);
+    const scoreOnlyChange = candidateRankingsHash([{ task_id: 'task', system: 'dense', candidates: [
+      { entity_id: 'a', rank: 1, raw_score: 0.1 },
+      { entity_id: 'b', rank: 2, raw_score: 0.2 },
+    ] }]);
+    const rankChange = candidateRankingsHash([{ task_id: 'task', system: 'dense', candidates: [
+      { entity_id: 'b', rank: 1 },
+      { entity_id: 'a', rank: 2 },
+    ] }]);
+
+    expect(scoreOnlyChange).toBe(first);
+    expect(rankChange).not.toBe(first);
   });
 });
 
