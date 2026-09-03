@@ -1,222 +1,214 @@
-# PRD: Semantic layer v2 — retrieve, route, rerank, transfer
+# PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
-Owner: Brandon Cullum. Implementer: Codex. Reviewer: Claude Code.
-Status: revision 3, Phase 0 scoring backfill gate added. Date: 2026-09-03. Supersedes the open items of `2026-09-02-semantic-layer-v1.md`; v1 infrastructure (Qdrant, `videos_v1`, `channels_v1`, `embeddings_v1`, sync LaunchAgent, cost ledger) stays and is reused.
+Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
+Status: revision 4, implementation-ready. Date: 2026-09-03.
+Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
-Revision 3 incorporates Codex's scoring-coverage audit and Phase 0 implementation. The 4,357 outlier count is a current-score coverage artifact, not a valid year-wide outlier universe until scores are backfilled or the experiment is narrowed to the scored recent window.
+Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
 
-Research basis: `~/shared-memory/knowledge/projects/video-scripter/2026-09-03-sota-semantic-retrieval-research.md` (§4, §6, §9). v1 results: `docs/prd/2026-09-02-semantic-eval.md`, `docs/prd/2026-09-03-thumbnail-vector-eval.md`, and the assumption audit in shared-memory.
+Research context: `~/shared-memory/knowledge/projects/video-scripter/2026-09-03-sota-semantic-retrieval-research.md` and `~/shared-memory/knowledge/projects/video-scripter/2026-09-03-semantic-sol-reaudit.md`.
 
-## 1. Why v2
+## 1. Outcome
 
-v1 proved the plumbing (48,905 videos + 4,087 channels embedded for $0.23) and disproved the method: single-vector nearest neighbour plus RRF fails every usefulness bar (best 3.16/6, outlier lift 1.12×, topical outliers P@20 0.25, analogue nDCG 0.108). The failure is structural:
+Establish whether ChannelSmith can retrieve useful videos and channels from the existing metadata—without transcripts—using a small, representative, blind evaluation.
 
-- Production systems are candidate generation → fusion → learned rerank → business rules. Single-vector NN is a demo.
-- "Proven ideas from other niches" has a published recipe (purpose/mechanism split) that lifts precision from ~0.63 to ~0.92, and it is what our 2025 Idea Heist did.
-- LLM enrichment is cheap at 2026 batch prices; the population that needs it is small (§6.2).
-- The v1 gold set was seeded from the incumbent SQL search and judged in a fixed order, so it could not adjudicate anything.
+The first deliverable is one end-to-end vertical slice:
 
-v2 fixes the evaluation, then adds the missing stages in the order the evidence supports. Nothing is exposed until §8 gates pass.
+1. a fixed set of 12–20 real product tasks;
+2. a versioned, quality-guarded one-year outlier corpus;
+3. lexical and OpenAI dense candidate retrieval over title plus cleaned description;
+4. a blind pooled judgment record;
+5. held-out ranking and coverage results that determine the next engineering step.
 
-## 2. Product jobs
+The goal is evidence about retrieval quality, not completion of a predetermined architecture.
 
-| # | Job | Lane | Query shape |
-|---|---|---|---|
-| J1 | "Find channel X" (known item) | identity | short, lexical |
-| J2 | "Channels like mine" | channel-similar | channel id |
-| J3 | "Videos like this one" | video-similar | video id |
-| J4 | "What is beating baseline in <topic>" | topical-outliers | free text |
-| J5 | "Proven ideas from other niches that would transfer to my channel" | analogue | channel id (+ optional video id) |
+## 2. Non-goals and protected behavior
 
-v1 measured that one global fusion weight cannot serve J1 and J5 at once. That is the justification for intent routing (§5.1).
+- No transcripts, new summaries, GraphRAG, ColBERT primary index, embedding-provider bake-off, fine-tuning, GPU service, Pinecone, or full-corpus thumbnail backfill.
+- No corpus-wide facet extraction, BERTopic rewrite, named-vector expansion, channel clustering, reranker, or Doc2Query until the vertical slice identifies that specific need.
+- No v2 endpoint exposure. Existing `/api/v1` behavior and Qdrant-down lexical fallback remain unchanged.
+- No Supabase JS or REST for bulk work. Use direct Postgres through `DATABASE_URL` and `pg`, batches of at most 5,000 ids, indexed predicates, and the 45-second statement timeout.
+- No claim that an LLM-generated label is ground truth. Labels are bounded relevance judgments with provenance.
+- No push, deployment, or production migration.
 
-## 3. Live data facts (verified 2026-09-03)
+## 3. Prior learnings
 
-| Fact | Value |
-|---|---|
-| Long-form videos published in last 365 days | about 167K |
-| …with a `video_scores` row before Phase 0 | about 66K |
-| …with a numeric score before Phase 0 | about 19.5K |
-| …score ≥ 2 and confidence likely/confirmed before Phase 0 | about **4.35K** across about **1.7K** channels |
-| `bertopic_clusters` rows | 1,108 = 892 (2025-07-11 run) + 216 (2025-08-03 run) |
-| Centroid provenance columns | none (`cluster_id, topic_name, parent_topic, grandparent_topic, centroid_embedding, video_count, created_at, updated_at`) |
-| `topic_niche` on videos in the 30-day window | null |
+### 3.1 What remains valid
 
-Consequences: the apparent outlier pool is heavily biased toward recently scored videos. Facet extraction and analogue evaluation must not treat the 365-day pool as representative until Phase 0 produces a versioned coverage manifest, or until the experiment is explicitly narrowed to the scored recent window. The centroids cannot be assumed to share a representation with `videos_v1` vectors.
+- Local Qdrant, OpenAI 512-dimensional embeddings, direct-Postgres sync, cost logging, and degraded lexical fallback work.
+- The score backfill produced versioned mature-window coverage and is reusable.
+- Title-only dense similarity is an inexpensive control but did not show useful product quality.
+- The 498-item thumbnail pilot shows enough visual signal to retain as an optional visual-intent retriever; it does not yet prove product quality.
 
-## 4. Scope
+### 3.2 What is retired from evaluation
 
-In:
-1. Phase 0 scoring backfill using direct Postgres only (§4.1).
-2. Evaluation protocol, incremental (§5). Query sets and rubric are frozen first; systems join the pool as they are built.
-3. BERTopic centroid audit and shadow topic assignment (§7.1).
-4. Indexed full-text ranking over title + cleaned description (§6.2).
-5. Fusion comparison: RRF, per-lane weighted RRF, DBSF, tuned linear (§6.2).
-6. Intent routing with per-lane parameters (§6.1).
-7. Local cross-encoder reranker experiments, title-only and enriched (§6.3).
-8. Facet extraction pilot (200 items), then the outlier pool plus tracked-channel history (§7.2).
-9. Named aspect vectors, job-specific channel medoids, analogue composite tuned on a dev split (§8).
-10. Verification pass with backfill on the analogue lane only (§8.4).
-11. Cheap controls: topic-centroid subtraction, Doc2Query in a separate collection (§7.3).
+- v1 channel truth was partly produced by SQL substring search and contains false positives.
+- The revision-3 J2/J3/J5 seeds selected the missing-metadata tail; the J4 “zero coverage” result measured exact equality against empty topic columns, not semantic corpus coverage.
+- The 204 facet rows were sampled from raw score ratios. Only 19 met the live endpoint’s baseline safeguards, and inspected output included a semantic hallucination.
+- The stored channel prototypes came from a greedy threshold selector, not Ward clustering or true medoids.
+- `detopic` is a title-vector placeholder.
 
-Out (v3 or never): GraphRAG; ColBERT as a primary index; contrastive fine-tuning (no interaction data yet; recipe in research §3 for later); a GPU box; full-corpus thumbnail backfill (thumbnail lane stays separate, never averaged with text); challenger embedding models.
+These are negative findings and scaffolding, not inputs to the new scorecard.
 
-## 4.1 Phase 0 scoring backfill gate
+## 4. Canonical data contracts
 
-The semantic v2 enrichment depends on outlier status. Before using a 365-day outlier pool, run `scripts/semantic/backfill-scores.ts`:
+The library contains about 901K videos. The vertical slice deliberately uses the smaller rolling one-year long-form population and does not describe it as the whole library.
 
-1. Dry-run first: `npx tsx scripts/semantic/backfill-scores.ts --min-age-days 60`.
-2. Check Supabase org usage before the full write. The job uses direct Postgres, but the org-level blast radius rule still applies.
-3. Write in bounded batches only after the usage check: `npx tsx scripts/semantic/backfill-scores.ts --write --min-age-days 60 --batch-size 500`.
-4. Use model version `v3.1-semantic-backfill-2026-09` and source params from `v3.0` unless a newly fitted parameter set is explicitly created.
-5. Keep the checkpoint file under `tmp/semantic-score-backfill-state.json`; reruns resume unless `--force` is passed.
-6. Acceptance: coverage by age band is reported before and after. The 61-180d and 181-365d bands must have numeric-score coverage comparable enough for the eval window, or the eval must be narrowed and labelled as recent-window only.
-7. No facet extraction, analogue candidate generation, or 365-day outlier claims may run before this gate passes.
+The video candidate universe serves J3, J4, and J5. A video must satisfy all of the following:
 
-## 5. Evaluation protocol (incremental)
+- published in the rolling last 365 days;
+- not a Short and not zero-duration;
+- non-empty title;
+- `coalesce(videos.is_institutional, false) = false`; `videos.is_institutional` is authoritative for this experiment and null means not marked institutional, matching the current application guard;
+- a `video_scores` row with `score >= 2` and confidence `likely` or `confirmed`;
+- `n_baseline >= 5` and `baseline >= 5000`;
+- stable `video_id` and `channel_id`.
 
-5.1 Freeze first, before any system is built:
-- Query sets per job (below), stored as JSON under `docs/prd/semantic-eval-v2/queries/`, versioned, never regenerated by a retriever.
-- Judging rubric per job, stored alongside.
-- Judge configuration and calibration procedure.
+Expected size as of September 3 is approximately 10.6K videos. The build must record the exact SQL predicate, score-model versions, row count, distinct-channel count, time boundary, source hashes, and creation time in the corpus manifest. It must not silently substitute the raw ~25.8K `score >= 2` population.
 
-5.2 Query sets, authored without running any system under test:
-- J1: 60 channel names Brandon types from memory + 40 handle/URL variants. Truth is one canonical exact target per query. No judging needed.
-- J2: 50 seed channels stratified by `topic_domain` (where present) and subscriber band. Truth: pooled judgment, "would a creator of the seed channel say these compete or overlap usefully" on 0–3.
-- J3: 50 seed videos, same stratification. Truth: pooled judgment graded separately on topic (0–3), packaging (0–3), format (0–3). Report each.
-- J4: 40 topic strings. First count corpus coverage; exclude topics with fewer than 20 outliers across fewer than 3 channels in the window and report the exclusions. Truth: on-topic / off-topic on the pool.
-- J5: 30 seed channels. Truth: `creative_adaptation | direct_application | background | none` per candidate. Only `creative_adaptation` is a hit; `direct_application` reported as copying.
+Its retrieval document is exactly:
 
-Same topic and subscriber band may generate *candidates* for J2/J3 pools. They are never truth.
+```text
+title: <title>
+channel: <channel name>
+description: <cleaned description, with links, affiliate disclosures, and repeated boilerplate removed>
+```
 
-5.3 Pooling, incremental:
-1. Run the v1 systems (trigram SQL, dense, v1 hybrid) plus 20 stratified random items per query; pool top-100 each; judge.
-2. Each new system (BM25, each fusion variant, each reranker, facet composite) is added to the pool when it exists; only newly introduced candidates are judged.
-3. The final cross-system table is produced once all systems exist. Intermediate tables are labelled as partial.
+Performance fields stay in payloads for filtering/evidence and are not embedded.
 
-5.4 Judging:
-- Presentation order randomized per item; system identity hidden.
-- LLM judge: two provider families (OpenAI + Gemini satisfies independence; Claude optional). Temperature 0. Graded per rubric.
-- Calibration: Brandon labels ~120 items concentrated on J3, J4, J5 (about 40 each; J1 is deterministic, J2 gets a 20-item spot check). Agreement statistics: quadratic-weighted κ for the ordinal 0–3 jobs; Krippendorff's α (nominal) for the J5 typology; bootstrap 95% CIs on both. Gate: weighted κ ≥ 0.70 (J3, J4) and α ≥ 0.667 (J5), or the LLM judge is not used for that job and human-only numbers are reported on the subset.
+The channel candidate universe serves J1 and J2. It is the frozen intersection of channel ids present in `channel_directory`, `channel_meta`, and `channels_v1` at `as_of`. Every selected channel must have a non-empty name, non-null subscriber count, and at least five eligible long-form videos in the 365-day window. J1 targets must be present in this universe. The channel document uses the existing v1 recipe—channel name plus representative recent titles and available topic/niche strings—and its exact hash is recorded. J1 lexical search uses name/handle fields but is filtered to the same frozen ids; J2 lexical ranking and dense ranking use the same channel documents. No video-to-channel aggregation is performed at query time.
 
-5.5 Metrics: Recall@100 (candidate generation) and nDCG@20 (ranking) reported separately per job with bootstrap 95% CIs over queries; paired permutation test for deltas. A delta under 0.02 nDCG on these set sizes is reported as noise, not as a ranking.
+The two entity universes are intentionally different because known-channel retrieval and outlier-video retrieval are different product jobs. Comparisons are valid within a lane; metrics are never averaged across channel and video entities into one headline score.
 
-5.6 Output: `docs/prd/semantic-eval-v2/*.json` is the record; `docs/prd/2026-09-XX-semantic-eval-v2.md` is generated from it and never hand-edited. Archive `2026-09-02-semantic-eval.md` as stale.
+## 5. Product tasks and split
 
-## 6. Retrieval pipeline
+Freeze 16 tasks before running any retriever:
 
-6.1 Intent routing. `lib/semantic/route.ts`: explicit `mode` wins; else id-only → J2/J3; short q matching a channel-name trigram ≥ 0.6 → J1; `/outliers?topic=` → J4; `/ideas` → J5. Per-lane parameters (sources, fusion method, weights, thresholds) live in `score_params.params.semantic_v2.lanes`.
+| Lane | Count | Task form | Judgment |
+|---|---:|---|---|
+| J1 known channel | 2 | exact name/handle | canonical channel id |
+| J2 similar channel | 3 | “find channels useful to a creator like this channel” | 0–3 useful overlap |
+| J3 similar video | 3 | “find videos similar in topic or packaging to this seed” | topic and packaging scored separately, 0–3 |
+| J4 topical outliers | 4 | “find current outliers about this subject” | binary on-topic plus valid-outlier check |
+| J5 cross-niche inspiration | 4 | “find proven ideas whose framing could transfer to this creator” | `creative_adaptation`, `direct_application`, `background`, or `none` |
 
-6.2 Candidate generation and fusion:
-- Sources: full-text ranking over `title + cleaned description` (`tsvector` + `ts_rank_cd`, or ParadeDB `pg_search` if it installs cleanly and is explicitly recorded), dense `videos_v1`/`channels_v1`, and for J4/J5 a payload-filtered dense query (`is_outlier = true`, `published_at` range).
-- Fusion is an experiment, not a decision. Rows in the eval: plain RRF (k per Qdrant guidance, tune on dev split), per-lane weighted RRF, DBSF, and a linear combination of min-max scores tuned on a dev split of the judged queries (held-out split reported). The eval picks per lane.
-- Output: top 50 with per-source scores kept on the object for the reranker and for API evidence.
+Task language is authored from the product job, user/tracked channels, and recognizable creator workflows—not from any system’s search results. IDs may be resolved through exact indexed database lookups after the task is written. Seeds must be non-institutional, have usable titles/channel identity, and avoid the missing-metadata tail.
 
-6.3 Reranker experiments. `lib/semantic/rerank.ts`, ONNX Runtime int8, budget top-50 under 300 ms on the Mac (measure and record):
-- Baseline: `cross-encoder/ms-marco-MiniLM-L6-v2`, pair text `query ⟂ title | channel_name`.
-- Enriched: `jina-reranker-v2-base-multilingual` or `mxbai-rerank-base-v2`, pair text = lane intent phrase + title + cleaned description (first 300 chars, links/affiliate boilerplate stripped) + channel + facets when present.
-- Query text for id-based lanes: J3 uses the seed video's title + cleaned description (+ facets when present); J2 uses the seed channel's medoid titles joined.
-- Gate: beats the chosen fusion order on nDCG@20 with a CI excluding zero for J3 and J4, else off. Off-the-shelf cross-encoders have been measured to hurt out of domain; expect the title-only baseline to fail and the enriched variant to be the real test.
+The manifest explicitly assigns eight tasks to `dev` and eight to `heldout`, balanced across the lanes as far as the small sample allows. System selection and any weights use `dev` only. Baseline configurations are frozen, then `heldout` is run once for the decision report. Any challenger authorized by that report requires a new frozen confirmation set; the original held-out tasks may be used only as diagnostic development evidence after they are opened.
 
-## 7. Document enrichment
+## 6. Candidate systems
 
-7.1 Centroid audit, then shadow assignment (no canonical writes):
-1. Isolate the 216 rows from 2025-08-03. Recover their document recipe from the historical notes (30% title / 70% summary is the recorded blend) and their embedding model; if either cannot be established from code or notes, the centroids are treated as unproven.
-2. For the 892 July rows, record hierarchy quality (`niche_-1`, `domain_-1` placeholders) and the 694 clusters with fewer than 5 sources; they are excluded from assignment.
-3. Assign the nearest of the 216 to a judged sample of 300 recent videos and measure accuracy against Brandon/LLM topic labels. The cosine threshold is chosen on that sample, not preset.
-4. Write to a shadow table `video_topic_assignments_v2 (video_id, cluster_id, cosine, method, assigned_at)`. `videos.topic_*` is not overwritten until accuracy is measured and accepted.
-5. If provenance cannot be proven or accuracy is poor, rebuild topics: cluster `videos_v1` vectors (HDBSCAN or k-means at ~300–500 clusters over the 30-day window), label clusters with c-TF-IDF keywords plus an LLM label (about $0.10), version them as `topic_clusters_v2` with model, recipe and dims recorded.
+Every system in a lane searches the same versioned entity universe and returns up to 100 unique candidates with stable ids, ranks, raw scores, document hashes, and latency.
 
-7.2 Facet extraction. `scripts/semantic/extract-facets.ts`:
-- Pilot: 200 items from the outlier pool, OpenAI cheapest tier. Brandon reviews 40. Proceed only if he accepts the pilot.
-- Population after pilot: the Phase 0 versioned scored outliers in the accepted window plus recent history (last 50 long-form videos) for every tracked/user-lane channel. Extend only after measuring purpose/topic coverage gaps per J5 seed.
-- Model: cheapest tier that passes the pilot (`gpt-5-nano` first, then `gemini-2.5-flash-lite`, then Haiku 4.5). Batch API, prompt cached, v1 cost gate (`--max-usd` default $10 for this job).
-- Input per video: title, channel name, cleaned description (links, affiliate disclosures, boilerplate stripped), topic label if any. **Do not include score, baseline or view counts**; selection already implies outlier status and performance must not bias the semantic representation.
-- Output schema (terse, ≤ 80 output tokens, `null`/`unknown` permitted):
-  ```json
-  {
-    "niche": "laser engraving",
-    "purpose": "prove a cheap tool matches an expensive one",
-    "purpose_abstract": "underdog beats incumbent on a measurable task",
-    "mechanism": "side-by-side test with a price reveal",
-    "mechanism_abstract": "head-to-head comparison with a stake",
-    "packaging_claim": "claims comparable quality at lower price",
-    "evidence_status": "packaging_only",
-    "hook_device": "price_reveal",
-    "format": "comparison",
-    "confidence": "medium"
-  }
-  ```
-  The `*_abstract` fields are mandatory (the abstraction step in the analogy literature; without it extraction yields surface matches). `packaging_claim` is what the title/description promises; it is never presented as verified content. `evidence_status` is always `packaging_only` in v2.
-- Storage: `video_facets (video_id, model, prompt_version, source_hash, facets jsonb, confidence, retry_count, extracted_at)`. Re-extract on source_hash change.
-- Embed `purpose_abstract`, `mechanism_abstract`, `niche` separately (`text-embedding-3-small`, 512-d).
+1. `lexical_bm25`: local BM25-style ranking over the lane’s documents. J1 also searches name/handle and receives an explicit exact-match boost.
+2. `openai_dense`: `text-embedding-3-small`, 512 dimensions, cosine distance over the lane’s recorded document recipe.
+3. `rrf_control`: unweighted reciprocal-rank fusion of the first two systems. It is a control, not an assumed winner.
+4. `thumbnail_visual` only for a task explicitly marked visual and only when its seed/corpus coverage is reported. It never enters a nonvisual task silently.
 
-7.3 Cheap controls, in parallel with 7.2:
-- Topic-centroid subtraction (`v' = v − proj(v, c_topic)`) or LEACE, stored as named vector `detopic`. Only meaningful once 7.1 yields trusted topics.
-- Doc2Query: 3 short queries per video for the 30-day window (~$3), indexed in a separate collection `queries_v2` pointing to `video_id`. Never appended to the title vector.
+The initial slice does not add a reranker. It first determines whether failure is candidate generation or ordering.
 
-## 8. Aspect vectors and the analogue lane
+## 7. Blind pooled evaluation
 
-8.1 Qdrant: new collection `videos_v2` with named vectors `title`, `purpose`, `mechanism`, `niche`, `detopic`; `hnsw_config.m = 0` on vectors used only for rescoring; v1 payload indexes carried over. Migration documented.
+For each task, union all systems’ top 100, deduplicate by stable id, and randomize with a fixed seed. The judging view must omit system identity, system rank, score, outlier ratio, and popularity signals. It includes only the task/seed and candidate title, channel, cleaned description, thumbnail when the lane requires it, and stable blind id.
 
-8.2 Channel medoids, job-specific. `build-channel-prototypes.ts` (rewrite):
-- Topic medoids (J2): Ward clustering over `title` vectors, last 90 days or last 50 videos, α tuned on the J2 dev split, cap 8, medoid per cluster, recency-weighted importance `Σ e^(−λΔt)`, λ initial 0.01/day, tuned.
-- Purpose medoids (J5): same procedure over `purpose` vectors, for channels with facets.
-- Stored as `channel_prototypes (channel_id, kind, video_id, importance, cluster_size, built_at)`. J2 queries the 3 highest-importance topic medoids, merges round-robin with dedup; the `channels_v1` mean vector stays as an eval baseline row.
+Codex performs the bulk rubric judgments in two independently shuffled passes. A disagreement triggers a third shuffled adjudication pass. Ordinal J2/J3 labels use the median of the three scores; binary J4 uses majority vote. J5 uses a category only when at least two passes agree; otherwise it remains `unresolved`. Brandon receives a 15–20-item packet containing all unresolved top-10 items first, then a fixed-seed sample of other disagreements and decision-boundary cases. This spot check calibrates “useful transfer” and is not a request to label the corpus.
 
-8.3 Analogue retrieval (J5), structure fixed, constants tuned:
-1. Candidate generation: for each purpose medoid of the seed, top-200 by `purpose` cosine, filtered to outliers in window. Union. Report pool size per seed; below 30 is "insufficient coverage" and is returned truthfully.
-2. Features per candidate: purpose similarity, niche similarity to seed, mechanism similarity to the nearest seed video, log(score), recency.
-3. Composite: linear combination with a **partial-match** shaping on purpose (penalise above a cap). All weights, the cap and the niche/mechanism cut-offs are parameters in `score_params` tuned on the J5 dev split and reported with the held-out result. Revision 1's constants (60th/80th percentile, 0.85 cap) are starting values only.
-4. Diversify: MAX-MIN dispersion on `mechanism` over the top 30.
-5. Evidence per hit: the seed medoid it matched, purpose/mechanism strings, niche distance, score. No bare cosine percentages.
+J5 metrics are reported as lower/upper sensitivity bounds when unresolved labels remain: unresolved is non-relevant in the lower bound and relevant in the upper bound. No J5 winner or gate pass may be claimed if unresolved top-10 labels remain or the gate conclusion differs between bounds.
 
-8.4 Verification pass (J5 only), with backfill:
-- Send the top 30 with the seed summary to an LLM; per candidate return `{ verdict: creative_adaptation|direct_application|background|none, mapping }`.
-- Accept `creative_adaptation`; walk down until 10 accepted or the pool is exhausted; report the shortfall.
-- Generate the two diversified transfer suggestions **only for accepted candidates**, in a second call, so the model cannot rationalise a weak match with an attractive transfer.
-- Budget 4 s and under $0.02 per query; every call logged to `semantic_cost_ledger`.
+Judgment files record rubric version, judge/model identity, input hash, output, confidence, and timestamp. A candidate introduced by another system is judged once per pass and reused across comparisons.
 
-## 9. Gates (measured by §5, held-out split)
+Report separately:
 
-| Job | Metric | v1 | Gate |
-|---|---|---|---|
-| J1 | MRR | ~0.80 | ≥ 0.85, no regression vs trigram |
-| J2 | nDCG@20 vs pooled judgment | not measured cleanly | ≥ 0.55 |
-| J3 | nDCG@20 (topic), packaging and format reported | — | ≥ 0.50 topic |
-| J4 | P@20 on-topic outliers | 0.25 | ≥ 0.60 with trusted topics; ≥ 0.70 with facets |
-| J5 | creative_adaptation share of returned | 0.108 nDCG binary | ≥ 0.40 with direct_application ≤ 0.20 |
-| Reranker | Δ nDCG@20 over chosen fusion, J3 + J4 | — | > 0, CI excludes zero, else off |
-| Judge | weighted κ (J3, J4) / α (J5) vs Brandon | — | ≥ 0.70 / ≥ 0.667 |
+- pooled relevant coverage at 100 for each system (recall relative to the judged union, explicitly named as pooled recall);
+- nDCG@20 and precision@10;
+- J3 topic and packaging scores separately;
+- J4 invalid-outlier rate;
+- J5 creative-adaptation precision and direct-application/copying rate;
+- p50/p95 latency and zero-result rate;
+- bootstrap 95% confidence intervals over tasks, labeled descriptive because the sample is small.
 
-No v2 route is exposed, even behind a flag, until J1, J4 and J5 pass on the held-out split. All v2 endpoints stay local until then.
+No metric may treat unjudged candidates as relevant. The report includes pool depth and overlap so incompleteness is visible.
 
-## 10. Cost and infra
+## 8. Decision tree
 
-- Facets: pilot under $0.20; outlier pool + tracked history under $2; Doc2Query ~$3; topic relabel ~$0.10; verification under $0.02/query. Hard cap $25 for this PRD without asking Brandon.
-- Compute: everything on the Mac; reranker via ONNX on CPU; `videos_v2` with five 512-d named vectors on ~60K videos is under 1 GB.
-- No new services beyond v1. The hourly LaunchAgent gains facet extraction and shadow topic assignment for new outliers.
+The held-out result diagnoses and selects the next experiment; it does not evaluate that challenger:
 
-## 11. Work order
+1. If no system surfaces useful candidates in the top 100, stop ranking work. Improve document cleaning/recipe, query expansion, or add a new retriever on a bounded cohort.
+2. If useful candidates are in the pool but below the top 20, develop one local cross-encoder on the original dev tasks, freeze it, and evaluate it on a new confirmation set. Keep it only if confirmation nDCG improves with no unacceptable latency increase.
+3. If J5 candidates are topically plausible but not transferable, dynamically extract purpose/mechanism for the seed and pooled candidates, then have an LLM verify the mapping. Develop on the original dev tasks and precompute facets only if the challenger wins on a new confirmation set.
+4. If channel results collapse multiple real modes into an average, then test multiple representative prototypes. Implement true clustering/medoids only against this observed failure.
+5. If visual tasks fail in text but thumbnail candidates work, expand the thumbnail cohort separately.
 
-Phase 0, factual repair (days 1–2): run the scoring backfill gate (§4.1) or narrow the eval window truthfully; schemas (`video_topic_assignments_v2`, `video_facets`, `channel_prototypes`, `queries_v2`, `videos_v2`), idempotent; centroid audit (§7.1 steps 1–2); freeze query sets and rubrics; commit the uncommitted `eval-semantic.ts` work or discard it.
-Phase 1, evaluation and cheap baselines (week 1): pooled incremental eval with v1 rows; Brandon's calibration session; BM25 index; fusion comparison; title-only and enriched reranker rows; shadow topic assignment accuracy.
-Phase 2, enrichment (week 2): facet pilot → Brandon review → outlier pool + tracked history; controls (§7.3); J4 re-measured.
-Phase 3, analogue (week 3): `videos_v2`, purpose/topic medoids, composite tuned on dev split, verification with backfill; J2/J3/J5 measured on held-out.
-Phase 4, exposure decision: only after gates pass, commit endpoint changes locally, verify, leave for Brandon's review.
+BERTopic assignment, de-topic vectors, Doc2Query, provider bake-offs, and corpus-wide enrichment remain parked until a measured failure maps to them.
 
-## 12. Rules for the implementer
+## 9. Acceptance contract
 
-- Direct Postgres via `pg` only; never the Supabase JS client. Batch reads ≤ 5,000 ids, indexed predicates, statement timeout respected.
-- Every LLM/embedding call goes through the cost gate and the ledger; print the day's total at the end of each run.
-- **Commit locally as you go. Never push.** Brandon reviews and pushes.
-- No v2 route is reachable from the deployed app or exposed behind flags before §9 passes.
-- Report failures as failures. A gate that does not pass is a result; do not loosen the gate.
-- Eval markdown is generated from JSON; regenerate, do not edit.
-- Log each session to `~/shared-memory/memory/YYYY-MM-DD.md`; update `PROJECTS.md` when status changes.
+### Corpus and integrity
 
-## 13. Decisions taken from Codex's review
+- Each entity manifest contains only rows satisfying §4 and includes exact reproducibility metadata.
+- A test rejects low-baseline, insufficient-baseline, institutional, Short, zero-duration, missing-id, and out-of-window rows.
+- Bulk reads use direct `pg`; an egress guard rejects Supabase clients/REST in semantic scripts.
 
-1. Facet population: Phase 0 versioned scored outliers in the accepted window plus recent history for tracked channels. Not 47K arbitrary recent videos, and not an unbackfilled 365-day pool.
-2. Brandon's labelling session: yes, ~120 items focused on J3, J4, J5.
-3. Foreplay and Motion: one hour of review before the facet vocabulary is frozen, to learn how working creative teams name hooks, concepts and formats. Not to copy architecture. Output: a short note in `docs/prd/semantic-eval-v2/creative-vocab.md` and any additions to the `hook_device`/`format` enums.
+### Evaluation
+
+- Exactly 16 tasks are frozen before retrieval and include a fixed dev/held-out assignment.
+- A validation test rejects missing seed metadata, duplicate ids, unsupported lanes, missing rubrics, or a changed manifest hash.
+- Blind pool artifacts cannot reveal source system, ranks, scores, or performance metadata to the judge.
+- Candidate runs are reproducible from the applicable entity-universe and task manifests.
+- Generated reports distinguish pooled recall from exhaustive recall and dev from held-out.
+
+### Continue/stop gate
+
+The project may proceed to one conditional challenger only if the held-out data identifies a specific failure from §8. The challenger must be evaluated on a newly frozen confirmation set. A production-route proposal requires all of the following on that untouched confirmation set:
+
+- J1 MRR does not regress more than 0.02 from lexical;
+- J4 precision@10 is at least 0.60 with zero invalid-outlier results;
+- J5 creative-adaptation precision@10 is at least 0.30 and direct-application rate is at most 0.20;
+- the chosen semantic/hybrid system improves confirmation-set nDCG@20 by at least 0.05 over lexical on at least one non-J1 lane without a material regression on the others measured on that same confirmation set;
+- Brandon’s spot check exposes no rubric-level mismatch that invalidates the bulk judgments.
+
+Failure is a valid result. Do not weaken a gate to continue.
+
+## 10. Work units
+
+- [x] Complete the versioned score backfill and verify direct-Postgres operation.
+- [x] Establish the v1 OpenAI/Qdrant control, local thumbnail pilot, cost ledger, sync, and Qdrant-down fallback.
+- [x] Re-audit v1/v2 evidence and quarantine invalid truth/prototype artifacts.
+- [ ] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
+- [ ] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
+- [ ] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2.
+- [ ] Run lexical, dense, and RRF candidate generation; write immutable run artifacts.
+- [ ] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet.
+- [ ] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
+- [ ] Independently review the artifacts against this PRD. Do not expose endpoints.
+
+## 11. Verification handoff
+
+Required deterministic checks:
+
+```bash
+npx jest lib/semantic --runInBand
+npx tsc --noEmit
+```
+
+Required real-path evidence:
+
+- direct-Postgres corpus build completes under the 45-second statement timeout with no REST traffic;
+- exact corpus counts independently reconcile to the manifest;
+- Qdrant-down behavior remains lexical and reports degradation;
+- rerunning candidate generation with unchanged manifests produces identical ids/ranks, apart from recorded latency;
+- a fresh-context reviewer can regenerate the report from JSON without hand editing it.
+
+## 12. Risks, rollback, and budgets
+
+- The one-year boundary moves with time. Every run freezes its `as_of` timestamp and uses it for all SQL predicates.
+- Pooled judgments are incomplete truth. The report must call them pooled recall and show random/novel-candidate coverage; it cannot claim exhaustive recall.
+- Codex self-judging can be biased. Two shuffled passes, disagreement surfacing, and Brandon’s small spot check are required before a product claim.
+- The initial evaluation may be underpowered. Confidence intervals remain visible; a small apparent delta is not a win.
+- New artifacts use versioned collection/file names and can be deleted without affecting `videos_v1`, `channels_v1`, or existing APIs.
+- Initial-slice OpenAI hard cap: $2. Total revision-4 hard cap: $5 without asking Brandon.
+- Never print secrets. Never push.
+
+## 13. Immediate execution boundary
+
+Begin with the first unchecked work unit and proceed serially through the frozen manifests and candidate run. Stop before bulk LLM judging only if the blind pool cannot be proven clean or the cost gate would be exceeded. Stop all endpoint work until §9 passes.
