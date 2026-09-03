@@ -20,7 +20,15 @@ const end = new Date(); end.setUTCDate(end.getUTCDate() - 1);      // Analytics 
 const start = new Date(end); start.setUTCDate(start.getUTCDate() - days);
 
 let total = 0;
-for (const c of await allConnections()) {
+// One row per (user, channel), so the same owned channel can appear twice if two accounts
+// connected it. The analytics are identical, so sync each channel once, newest grant first.
+const all = await allConnections();
+const seen = new Set<string>();
+const connections = [...all]
+  .sort((a, b) => +new Date(b.connected_at) - +new Date(a.connected_at))
+  .filter((c) => !seen.has(c.channel_id) && seen.add(c.channel_id));
+if (connections.length < all.length) console.log(`${all.length - connections.length} duplicate channel grant(s) skipped`);
+for (const c of connections) {
   const label = `${c.channel_title || c.channel_id}`;
   try {
     const token = await accessTokenFromRefresh(c.refresh_token);
