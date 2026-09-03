@@ -10,6 +10,10 @@
 -->
 <plist version="1.0"><dict>
   <key>Label</key><string>com.mfm.channelsmith-backfill</string>
+  <!-- launchd starts with a minimal PATH, so npx cannot find node (exit 127). Match the
+       other video-scripter agents and put Homebrew's bin first. -->
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
   <key>ProgramArguments</key>
   <array>
     <string>/opt/homebrew/bin/npx</string>
