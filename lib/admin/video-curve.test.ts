@@ -1,5 +1,5 @@
 import {
-  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge, longtailAt, fitScale } from './video-curve';
+  multAt, aleAt, expectedAt, expectedCurve, projectedCurve, curveDays, mergeActuals, packagingMarkers, ALE_BY_DAY, expectedAtAge, longtailAt, fitScale, forecastCurve } from './video-curve';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -272,5 +272,23 @@ describe('mergeActuals dedupe and fitScale', () => {
     const pts = [1, 3, 5].map((day) => ({ day, views: 2 * expectedAt(1000, mult, day).expected }));
     expect(fitScale(pts, 1000, mult)!).toBeCloseTo(2, 6);
     expect(fitScale([], 1000, mult)).toBeNull();
+  });
+});
+
+describe('forecastCurve', () => {
+  const mult = { 1: Math.log(2.27), 3: Math.log(1.52), 7: Math.log(1.22), 14: Math.log(1.09), 30: 0 };
+  it('starts at the current measurement and lands on est30 at day 30', () => {
+    const pts = forecastCurve(950_000, 0.75, 2_300_000, mult, 30, 60, null);
+    expect(pts[0].day).toBeCloseTo(0.75);
+    expect(pts[0].projected).toBeCloseTo(950_000);
+    const end = pts[pts.length - 1];
+    expect(end.day).toBeCloseTo(30);
+    expect(end.projected).toBeCloseTo(2_300_000, -2);
+    for (let i = 1; i < pts.length; i++) expect(pts[i].projected).toBeGreaterThanOrEqual(pts[i - 1].projected - 1e-6);
+  });
+  it('never dips below the current measurement even when est30 is lower', () => {
+    const pts = forecastCurve(500_000, 2, 400_000, mult, 30, 40, null);
+    expect(pts[0].projected).toBeCloseTo(500_000);
+    expect(pts[pts.length - 1].projected).toBeCloseTo(400_000, -2);
   });
 });

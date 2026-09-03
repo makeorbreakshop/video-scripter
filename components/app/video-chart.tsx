@@ -224,7 +224,7 @@ export function VideoChart({
             content={({ active, payload, label }: any) => {
               if (!active || !payload?.length) return null;
               const row = payload[0]?.payload || {};
-              const mine = row.views ?? row.implied ?? row.projected;
+              const mine = row.dot ?? row.views ?? row.projected ?? row.implied;
               return (
                 <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.ink }}>
                   <div style={{ color: C.muted, marginBottom: 4 }}>{tooltipDate(publishedAt, Number(label))}</div>

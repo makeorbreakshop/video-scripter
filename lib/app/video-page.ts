@@ -7,7 +7,7 @@
 // the result to the page as plain serialisable data.
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
 import {
-  mergeActuals, expectedCurve, projectedCurve, packagingMarkers,
+  mergeActuals, expectedCurve, projectedCurve, forecastCurve, packagingMarkers,
   type Actual, type CurvePoint, type ProjPoint, type Marker,
   expectedAtAge, fitScale } from '../admin/video-curve';
 import { thumbUrl } from '../thumbs/storage';
@@ -120,9 +120,15 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     score,
     actuals,
     curve: expectedCurve(score?.baseline ?? null, mult, maxDay, 60, startDay, longtail),
-    // The drawn path is the channel's typical curve fitted through this video's own points,
-    // so it tracks the measurements; the headline score still comes from the model.
-    projected: score ? projectedCurve((() => { const k = fitScale(actuals, score.baseline, mult, longtail); return k && score.baseline != null ? score.baseline * k : score.est30; })(), mult, maxDay, 60, startDay, longtail) : [],
+    // With a real shape to read, the forecast starts at the latest measurement and lands on the
+    // headline est30, so the drawn line continues the measured one and ends on the number the
+    // page quotes. A sparse video (<=3 points) instead gets the channel's typical curve fitted
+    // through whatever points it has, drawn across the whole range.
+    projected: score
+      ? actuals.length > 3
+        ? forecastCurve(actuals[actuals.length - 1].views, actuals[actuals.length - 1].day, score.est30, mult, maxDay, 60, longtail)
+        : projectedCurve((() => { const k = fitScale(actuals, score.baseline, mult, longtail); return k && score.baseline != null ? score.baseline * k : score.est30; })(), mult, maxDay, 60, startDay, longtail)
+      : [],
     markers,
     experiments: experiments(v.published_at, samples, markers, now, snapshots.map((p: any) => ({ at: new Date(new Date(p.at).getTime()).toISOString(), views: p.views }))),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),
@@ -171,11 +177,14 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
       under: `on track for about ${fmt(Math.round(sc.est30))} views by day 30, against ${fmt(Math.round(sc.baseline))} for a normal ${v.channelName} video`,
-      // When the two ratios round the same the pace sentence would just repeat the headline,
-      // so only the confidence survives.
-      aside: v.pace != null && pct(v.pace) !== pct(Number(sc.score))
-        ? `${pct(v.pace)} the channel's usual pace right now${conf ? ` · ${conf} read` : ''}`
-        : conf ? `${conf} read` : null,
+      // One multiplier per page. The "right now" line gives the reader the raw counts behind
+      // the chart (measured line vs typical band at this age), not a second, different ratio.
+      aside: [
+        v.expectedNow != null
+          ? `${fmt(v.views)} views so far · a typical ${v.channelName} video has about ${fmt(Math.round(v.expectedNow))} at this age`
+          : `${fmt(v.views)} views so far`,
+        conf ? `${conf} read` : null,
+      ].filter(Boolean).join(' · '),
     };
   }
   return {

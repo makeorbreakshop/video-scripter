@@ -124,6 +124,31 @@ export function projectedCurve(est30: number | null | undefined, mult: Mult, max
   }));
 }
 
+/**
+ * The forecast from where the video is NOW: starts at the latest measurement and lands on the
+ * model's day-30 estimate, following the channel's typical shape for the growth still to come.
+ * (The old scaled-curve projection did not pass through the current point, so the drawn line
+ * jumped away from the measured one, and its end label disagreed with the headline est30.)
+ *   f(d) = share of the typical remaining growth that has happened by day d
+ *   views(d) = viewsNow * (est30 / viewsNow) ^ f(d)         for dayNow <= d <= 30
+ *   views(d) = est30 * longtail(d)                           for d > 30
+ */
+export function forecastCurve(viewsNow: number, dayNow: number, est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, lt?: Longtail | null): ProjPoint[] {
+  if (!(viewsNow > 0) || !est30 || est30 <= 0 || !Number.isFinite(est30) || !(dayNow >= 0)) return [];
+  if (dayNow >= 30) {
+    const base = viewsNow / longtailAt(lt, dayNow);
+    return curveDays(maxDay, steps, dayNow).map((d) => ({ day: d, projected: base * longtailAt(lt, Math.max(d, dayNow)) }));
+  }
+  const gNow = multAt(mult, Math.max(dayNow, 0.04)); // log growth still to come at dayNow
+  const ratio = est30 / viewsNow;
+  return curveDays(maxDay, steps, dayNow).map((d) => {
+    if (d <= dayNow) return { day: d, projected: viewsNow };
+    if (d >= 30) return { day: d, projected: est30 * longtailAt(lt, d) };
+    const f = gNow > 0 ? 1 - multAt(mult, d) / gNow : 1;
+    return { day: d, projected: viewsNow * Math.pow(ratio, Math.min(Math.max(f, 0), 1)) };
+  });
+}
+
 type Point = { at: string | Date; views: number };
 
 // Daily snapshots + 15-minute launch samples on one days-since-publish axis. Snapshot wins on a tie.
