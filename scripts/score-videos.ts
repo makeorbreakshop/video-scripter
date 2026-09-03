@@ -19,6 +19,7 @@ import {
   scoreVideo, fitParams, fitLongTail, estimateV30, longtailAt, bucketFor, growthExponent,
   median, GlobalParams, LongtailRow, MODEL_VERSION, Snapshot, FitRow, DAY_BUCKETS, MIN_LIFETIME_AGE,
   priorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, type PriorEstimate,
+  fitLaunchLadder, fittedBuckets, bucketTolerance, HOUR_BUCKETS, type LaunchRow,
 } from '../lib/scoring/core';
 
 const FIT = process.argv.includes('--fit');
@@ -154,10 +155,39 @@ async function fit() {
   }
   const params = fitParams(fitRows);
   params.longtail = await fitLongtailTable();
+  // Launch ladder: hour buckets chained through day 1 from the 5-minute samples (see core).
+  const launch = fitLaunchLadder(await launchRows(), params.mult[1] ?? 0);
+  Object.assign(params.mult, launch.mult);
+  (params as any).launch = { n: launch.n, fittedAt: new Date().toISOString() };
+  log(`fit: launch ladder ${HOUR_BUCKETS.map((b) => `${Math.round(b * 24)}h x${launch.mult[b] != null ? Math.exp(launch.mult[b]).toFixed(2) : '-'} (n=${launch.n[b]})`).join('  ')}`);
   await pool.query(`insert into score_params (model_version, n_videos, params) values ($1, $2, $3)`, [MODEL_VERSION, ids.length, JSON.stringify(params)]);
   log(`fit: stored params from ${fitRows.length} (video, bucket) rows; mult=${JSON.stringify(Object.fromEntries(Object.entries(params.mult).map(([k, v]) => [k, Number(Math.exp(v).toFixed(2))])))}`);
   const lt = params.longtail;
   log(`fit: longtail ${lt.ages.map((a, i) => `${a}d x${lt.mult[i].toFixed(2)} (n=${lt.n[i]})`).join('  ')}`);
+}
+
+// Launch rows: for every long-form video published in the last 30 days that has a 5-minute
+// sample inside its first day AND a count near 24h, one row per early sample: (hours, v_h, v_1).
+async function launchRows(): Promise<LaunchRow[]> {
+  const rows = await q(
+    `with lf as (
+       select v.id, v.published_at from videos v
+        where v.published_at > now() - interval '30 days' and ${longformSql('v')}),
+     obs as (
+       select s.video_id, extract(epoch from (s.sampled_at - lf.published_at))/3600.0 as hours, s.view_count
+         from view_samples s join lf on lf.id = s.video_id where s.view_count > 0
+       union all
+       select s.video_id, extract(epoch from (s.snapshot_date::timestamptz + interval '12 hours' - lf.published_at))/3600.0, s.view_count
+         from view_snapshots s join lf on lf.id = s.video_id where s.view_count > 0),
+     d1 as (
+       select distinct on (video_id) video_id, view_count as v1
+         from obs where hours between 21 and 27 order by video_id, abs(hours - 24))
+     select o.hours, o.view_count as vh, d1.v1
+       from obs o join d1 on d1.video_id = o.video_id
+      where o.hours > 0 and o.hours < 20`
+  );
+  log(`fit: launch ladder fed by ${rows.length} (sample, day-1) pairs`);
+  return rows.map((r: any) => ({ hours: Number(r.hours), vh: Number(r.vh), v1: Number(r.v1) }));
 }
 
 // Long-tail table: every video with BOTH a day-27..33 snapshot and a later view count at
@@ -226,8 +256,8 @@ async function score() {
       const snaps = rec.get(t.id);
       if (!snaps?.length) continue;
       const latest = snaps[snaps.length - 1];
-      const bucket = bucketFor(latest.day);
-      const tol = bucket <= 3 ? 1 : bucket <= 7 ? 2 : 3;
+      const bucket = bucketFor(latest.day, fittedBuckets(params));
+      const tol = bucketTolerance(bucket);
       const priorMultLogs: number[] = []; const priorV30s: number[] = []; const priorSameAge: number[] = [];
       let fromLifetime = 0, projected = 0;
       for (const pid of priorsOf.get(t.id) ?? []) {

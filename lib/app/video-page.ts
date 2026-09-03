@@ -89,7 +89,8 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   // still speak to. Past a year the long tail is flat, so today is the end of the chart.
   const horizonDay = [30, 60, 90, 180, 365].find((d) => d > ageDays) ?? ageDays;
   const maxDay = Math.max(horizonDay, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays);
-  // Start the curves at the first actual point, or one hour, so the launch window is drawn.
+  // Curves start at the first actual point or one hour: the launch ladder (hour buckets fitted
+  // from the 5-minute samples, see lib/scoring/core fitLaunchLadder) gives the first day a shape.
   const startDay = Math.min(actuals.length ? actuals[0].day : 1 / 24, 1 / 24);
 
   const thumbUrls: Record<number, string> = {};
@@ -166,7 +167,7 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
     return {
       big: pct(v.pace),
       over: v.pace >= 1,
-      under: `${fmt(v.views)} views — a typical ${v.channelName} video has about ${fmt(Math.round(v.expectedNow))} by now`,
+      under: `${fmt(v.views)} views · typical ${fmt(Math.round(v.expectedNow))} by now`,
       // The day-30 score is the comparable number, but when it rounds to the same ratio as the
       // pace above it, repeating it says nothing.
       aside: day30 && !day30.startsWith(pct(v.pace)) ? day30 : null,
@@ -176,23 +177,23 @@ export function verdict(v: VideoPageView): { big: string | null; under: string; 
     return {
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
-      under: `on track for about ${fmt(Math.round(sc.est30))} views by day 30, against ${fmt(Math.round(sc.baseline))} for a normal ${v.channelName} video`,
-      // One multiplier per page. The "right now" line gives the reader the raw counts behind
-      // the chart (measured line vs typical band at this age), not a second, different ratio.
-      aside: [
-        v.expectedNow != null
-          ? `${fmt(v.views)} views so far · a typical ${v.channelName} video has about ${fmt(Math.round(v.expectedNow))} at this age`
-          : `${fmt(v.views)} views so far`,
-        conf ? `${conf} read` : null,
-      ].filter(Boolean).join(' · '),
+      under: `on pace for ${fmt(Math.round(sc.est30))} by day 30 · typical ${fmt(Math.round(sc.baseline))}`,
+      // One multiplier per page, and only numbers the headline is made of. The measured count
+      // and the read's confidence are the whole second line.
+      aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
     };
   }
   return {
     big: null,
     over: false,
-    under: `${fmt(v.views)} views. There is not enough history on ${v.channelName} yet to say what normal looks like.`,
+    under: `${fmt(v.views)} views at ${age(v.ageDays)} · not enough ${v.channelName} history for a baseline yet`,
     aside: null,
   };
+}
+
+function age(days: number): string {
+  if (days < 2) return `${Math.max(1, Math.round(days * 24))}h`;
+  return `${Math.round(days)}d`;
 }
 
 function fmt(n: number): string {

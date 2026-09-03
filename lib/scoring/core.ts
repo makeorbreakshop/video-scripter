@@ -14,6 +14,10 @@
 export const MODEL_VERSION = 'v3.0';
 export const DAY_BUCKETS = [1, 2, 3, 5, 7, 14, 21, 30] as const;
 export type DayBucket = (typeof DAY_BUCKETS)[number];
+// Launch ladder: sub-day buckets (in days) fitted from the 5-minute launch samples, chained
+// through day 1 -> mult[h] = median log(v_day1 / v_h) + mult[1]. See fitLaunchLadder.
+export const HOUR_BUCKETS = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24, 18 / 24] as const;
+export const ALL_BUCKETS: readonly number[] = [...HOUR_BUCKETS, ...DAY_BUCKETS];
 
 export interface Snapshot { day: number; views: number }          // day = days since publish (float ok)
 export interface GlobalParams {
@@ -36,10 +40,28 @@ export interface LongtailTable { ages: number[]; mult: number[]; n: number[] }
 
 export const K_SHRINK = (t: number) => (t <= 2 ? 2 : 1);
 
-export function bucketFor(day: number): DayBucket {
-  let best: DayBucket = DAY_BUCKETS[0];
-  for (const b of DAY_BUCKETS) if (Math.abs(b - day) < Math.abs(best - day)) best = b;
+// Nearest fitted bucket. From day 1 on, nearest in days (the validated v3 behaviour). Inside
+// the first day, nearest in log-age so 3h snaps to the 4h bucket rather than to day 1. Only
+// buckets present in `available` count, so an unfitted hour ladder falls back to day 1.
+export function bucketFor(day: number, available: readonly number[] = ALL_BUCKETS): number {
+  const d = Math.max(day, 1 / 48);
+  const pool = d >= 1 ? available.filter((b) => b >= 1) : available;
+  const cands = pool.length ? pool : available;
+  const dist = (b: number) => (d >= 1 ? Math.abs(b - d) : Math.abs(Math.log(b) - Math.log(d)));
+  let best = cands[0];
+  for (const b of cands) if (dist(b) < dist(best)) best = b;
   return best;
+}
+
+/** Buckets a params table actually has multipliers for (hour buckets appear once fitted). */
+export function fittedBuckets(params: GlobalParams): number[] {
+  return ALL_BUCKETS.filter((b) => params.mult[b] != null);
+}
+
+/** Snapshot-matching tolerance (days) around a bucket: a quarter of the age inside day 1. */
+export function bucketTolerance(bucket: number): number {
+  if (bucket < 1) return Math.max(bucket * 0.25, 1 / 48);
+  return bucket <= 3 ? 1 : bucket <= 7 ? 2 : 3;
 }
 
 export function median(xs: number[]): number | null {
@@ -80,7 +102,7 @@ export interface ScoreInput {
 }
 
 export interface ScoreOutput {
-  bucket: DayBucket;
+  bucket: number;
   q: number | null;
   est30: number;
   baseline: number | null;
@@ -94,7 +116,7 @@ export interface ScoreOutput {
 }
 
 export function scoreVideo(inp: ScoreInput): ScoreOutput {
-  const bucket = bucketFor(inp.day);
+  const bucket = bucketFor(inp.day, fittedBuckets(inp.params));
   const g = inp.params.mult[bucket] ?? 0;
   const n = inp.priorMultLogs.length;
   const chm = n ? median(inp.priorMultLogs)! : g;
@@ -119,6 +141,31 @@ export function scoreVideo(inp: ScoreInput): ScoreOutput {
 
 // ---- fitting (used by the nightly --fit) ----
 export interface FitRow { bucket: number; vt: number; v30: number; q: number | null }
+
+/**
+ * Launch ladder. Inside the first day no video has a day-30 truth yet (sampling began
+ * 2026-09-01), but thousands have a day-1 count, and day 1 -> 30 is already fitted. So each
+ * hour bucket is chained: mult[h] = median log(v_day1 / v_h) + mult[1]. Buckets with fewer
+ * than `minRows` observations are left out (the scorer then falls back to the day-1 bucket).
+ * Monotone: an earlier hour never has less growth left than a later one.
+ */
+export interface LaunchRow { hours: number; vh: number; v1: number }
+export function fitLaunchLadder(rows: LaunchRow[], day1Mult: number, minRows = 50): { mult: Record<number, number>; n: Record<number, number> } {
+  const mult: Record<number, number> = {}; const n: Record<number, number> = {};
+  const fitted: number[] = [];
+  for (const b of HOUR_BUCKETS) {
+    const hb = b * 24; const tol = Math.max(hb * 0.15, 0.25);
+    const rs = rows.filter((r) => r.vh > 0 && r.v1 > 0 && Math.abs(r.hours - hb) <= tol);
+    n[b] = rs.length;
+    if (rs.length < minRows) continue;
+    const m = median(rs.map((r) => Math.log(r.v1 / r.vh)))! + day1Mult;
+    mult[b] = Math.max(m, day1Mult); // never less growth left than at day 1
+    fitted.push(b);
+  }
+  // monotone non-increasing in age: walk from the latest hour back to the earliest
+  for (let i = fitted.length - 2; i >= 0; i--) mult[fitted[i]] = Math.max(mult[fitted[i]], mult[fitted[i + 1]]);
+  return { mult, n };
+}
 
 export function fitParams(rows: FitRow[], fittedAt = new Date().toISOString()): GlobalParams {
   const mult: Record<number, number> = {};

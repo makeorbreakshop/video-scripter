@@ -1,4 +1,4 @@
-import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams, logMultTo30, longtailFrom30, priorV30, publishGapDays, priorWindow } from './core';
+import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams, logMultTo30, longtailFrom30, priorV30, publishGapDays, priorWindow, DAY_BUCKETS, HOUR_BUCKETS, fitLaunchLadder, fittedBuckets, bucketTolerance } from './core';
 
 const params: GlobalParams = {
   mult: { 1: Math.log(2.2), 2: Math.log(1.9), 3: Math.log(1.4), 5: Math.log(1.25), 7: Math.log(1.12), 14: Math.log(1.05), 21: Math.log(1.02), 30: 0 },
@@ -9,7 +9,7 @@ const params: GlobalParams = {
 
 describe('bucketFor', () => {
   test('snaps to the nearest schedule day', () => {
-    expect(bucketFor(0.6)).toBe(1);
+    expect(bucketFor(0.6, DAY_BUCKETS)).toBe(1);
     expect(bucketFor(4)).toBe(3);
     expect(bucketFor(6)).toBe(5);
     expect(bucketFor(11)).toBe(14);
@@ -237,5 +237,50 @@ describe('prior day-30 estimation (baseline from young priors)', () => {
     expect(priorWindow(14)).toBe(10);
     expect(priorWindow(null)).toBe(15);
     expect(publishGapDays([0, day])).toBeNull();
+  });
+});
+
+describe('launch ladder (sub-day buckets)', () => {
+  const day1 = Math.log(2.27);
+  const rows = (hours: number, ratio: number, n: number) => Array.from({ length: n }, (_, i) => ({ hours: hours + (i % 3) * 0.05, vh: 1000, v1: 1000 * ratio }));
+  it('chains each hour bucket through day 1 and keeps the ladder monotone', () => {
+    const r = [...rows(1, 8, 60), ...rows(4, 3, 60), ...rows(12, 1.5, 60), ...rows(18, 1.2, 60)];
+    const { mult, n } = fitLaunchLadder(r, day1);
+    expect(n[1 / 24]).toBe(60);
+    expect(Math.exp(mult[1 / 24])).toBeCloseTo(8 * 2.27, 1);
+    expect(Math.exp(mult[12 / 24])).toBeCloseTo(1.5 * 2.27, 1);
+    expect(mult[1 / 24]).toBeGreaterThanOrEqual(mult[4 / 24]);
+    expect(mult[4 / 24]).toBeGreaterThanOrEqual(mult[12 / 24]);
+    expect(mult[12 / 24]).toBeGreaterThanOrEqual(mult[18 / 24]);
+    expect(mult[2 / 24]).toBeUndefined(); // no rows near 2h
+  });
+  it('drops a bucket below minRows and never reports less growth than day 1', () => {
+    const { mult } = fitLaunchLadder([...rows(1, 8, 10), ...rows(18, 0.9, 60)], day1);
+    expect(mult[1 / 24]).toBeUndefined();
+    expect(mult[18 / 24]).toBeCloseTo(day1, 6);
+  });
+  it('bucketFor picks the nearest bucket in log-age, only among fitted buckets', () => {
+    expect(bucketFor(3 / 24)).toBeCloseTo(4 / 24, 9);
+    expect(bucketFor(0.5)).toBeCloseTo(12 / 24, 9);
+    expect(bucketFor(0.5, DAY_BUCKETS)).toBe(1);
+    expect(bucketFor(0.9)).toBe(1);
+    expect(bucketFor(20)).toBe(21);
+  });
+  it('scoreVideo uses the hour multiplier when fitted, else falls back to the day-1 bucket', () => {
+    const base: GlobalParams = { mult: { 1: Math.log(2.27), 3: Math.log(1.52), 30: 0 }, qBins: {}, fittedAt: 'x', nVideos: 0 };
+    const without = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorSameAge: [], params: base });
+    expect(without.bucket).toBe(1);
+    expect(without.est30).toBeCloseTo(22700, 0);
+    const withLadder: GlobalParams = { ...base, mult: { ...base.mult, [12 / 24]: Math.log(3.4) } };
+    const w = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorSameAge: [], params: withLadder });
+    expect(w.bucket).toBeCloseTo(12 / 24, 9);
+    expect(w.est30).toBeCloseTo(34000, 0);
+    expect(fittedBuckets(withLadder)).toEqual([12 / 24, 1, 3, 30]);
+  });
+  it('bucketTolerance is a quarter of the age inside day 1', () => {
+    expect(bucketTolerance(12 / 24)).toBeCloseTo(0.125, 9);
+    expect(bucketTolerance(1 / 24)).toBeCloseTo(1 / 48, 9);
+    expect(bucketTolerance(3)).toBe(1);
+    expect(bucketTolerance(14)).toBe(3);
   });
 });
