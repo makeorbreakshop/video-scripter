@@ -126,7 +126,7 @@ export function extractChannelTitles(document: string, expectedChannelName: stri
   if (lines[0] !== expectedChannelName.normalize('NFKC').trim()) {
     throw new Error('frozen channel identity does not match the requested seed channel');
   }
-  if (lines.length < 21) throw new Error('frozen channel document must contain exactly 20 representative titles');
+  if (lines.length !== 21) throw new Error('frozen channel document must contain exactly 20 representative titles');
   return lines.slice(1, 21);
 }
 
@@ -180,22 +180,27 @@ function diversify(rows: PackagingTransferRanking[]): PackagingTransferRanking[]
   const remaining = [...rows];
   const selected: PackagingTransferRanking[] = [];
   const channelCounts = new Map<string, number>();
+  const maximumSimilarity = new Map(rows.map((row) => [row.entity_id, 0]));
   while (remaining.length) {
     const eligible = remaining.filter((row) => (channelCounts.get(row.channel_id) ?? 0)
       < PACKAGING_TRANSFER_CONFIG.diversity.max_per_channel_before_backfill);
     const pool = eligible.length ? eligible : remaining;
     const winner = [...pool].sort((left, right) => {
-      const penalty = (row: PackagingTransferRanking) => selected.reduce((maximum, prior) => Math.max(maximum,
-        packagingSimilarity(row.title, prior.title)), 0);
       const leftScore = PACKAGING_TRANSFER_CONFIG.diversity.relevance_weight * left.score
-        - PACKAGING_TRANSFER_CONFIG.diversity.similarity_weight * penalty(left);
+        - PACKAGING_TRANSFER_CONFIG.diversity.similarity_weight * (maximumSimilarity.get(left.entity_id) ?? 0);
       const rightScore = PACKAGING_TRANSFER_CONFIG.diversity.relevance_weight * right.score
-        - PACKAGING_TRANSFER_CONFIG.diversity.similarity_weight * penalty(right);
+        - PACKAGING_TRANSFER_CONFIG.diversity.similarity_weight * (maximumSimilarity.get(right.entity_id) ?? 0);
       return rightScore - leftScore || left.entity_id.localeCompare(right.entity_id);
     })[0];
     selected.push(winner);
     channelCounts.set(winner.channel_id, (channelCounts.get(winner.channel_id) ?? 0) + 1);
     remaining.splice(remaining.findIndex((row) => row.entity_id === winner.entity_id), 1);
+    for (const row of remaining) {
+      maximumSimilarity.set(row.entity_id, Math.max(
+        maximumSimilarity.get(row.entity_id) ?? 0,
+        packagingSimilarity(row.title, winner.title),
+      ));
+    }
   }
   return selected.map((row, index) => ({ ...row, rank: index + 1 }));
 }
@@ -250,6 +255,7 @@ export function rankPackagingTransfer(
 }
 
 export interface PackagingTransferGateMetrics {
+  task_id?: string;
   lower_precision_at_k: number;
   direct_application_rate_at_k: number;
   creative_hits_at_k: number;
@@ -257,11 +263,29 @@ export interface PackagingTransferGateMetrics {
   unique_channels_at_10: number;
 }
 
-export function packagingTransferGate(tasks: PackagingTransferGateMetrics[]): { passed: boolean; failures: string[] } {
+export function packagingTransferGate(
+  tasks: PackagingTransferGateMetrics[],
+  options: { expected_task_ids?: string[] } = {},
+): { passed: boolean; failures: string[] } {
   if (!tasks.length) throw new Error('at least one task is required for the packaging gate');
+  const metricKeys: Array<Exclude<keyof PackagingTransferGateMetrics, 'task_id'>> = [
+    'lower_precision_at_k', 'direct_application_rate_at_k', 'creative_hits_at_k',
+    'unresolved_at_k', 'unique_channels_at_10',
+  ];
+  if (tasks.some((task) => metricKeys.some((key) => !Number.isFinite(task[key])))) {
+    throw new Error('packaging gate metrics must be finite');
+  }
+  if (options.expected_task_ids) {
+    const actual = tasks.map((task) => task.task_id ?? '').sort();
+    const expected = [...options.expected_task_ids].sort();
+    if (new Set(actual).size !== actual.length || new Set(expected).size !== expected.length
+      || actual.length !== expected.length || actual.some((id, index) => id !== expected[index])) {
+      throw new Error('packaging gate task coverage does not match the expected unique task ids');
+    }
+  }
   const failures: string[] = [];
   tasks.forEach((task, index) => {
-    const prefix = `task ${index + 1}`;
+    const prefix = task.task_id ?? `task ${index + 1}`;
     if (task.lower_precision_at_k < 0.3) failures.push(`${prefix}: lower_precision_at_k ${task.lower_precision_at_k} < 0.3`);
     if (task.direct_application_rate_at_k > 0.2) {
       failures.push(`${prefix}: direct_application_rate_at_k ${task.direct_application_rate_at_k} > 0.2`);

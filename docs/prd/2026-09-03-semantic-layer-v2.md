@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 5 programmatic cross-topic packaging experiment active after the independently reviewed revision-4 stop. Date: 2026-09-03.
+Status: revision 5 programmatic cross-topic packaging experiment completed and stopped after failing the fixed gate. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -272,17 +272,27 @@ Define all recipes and weights in one versioned config before reading resolved j
 2. `cross_topic`: diagnostic ablation adding inverse frozen-document affinity;
 3. `cross_topic_diverse`: the sole eligible primary, frozen as 0.60 document novelty + 0.25 title-form compatibility + 0.15 outlier proof, followed by deterministic diversification using 0.85 relevance minus 0.15 maximum raw-title-or-title-form similarity, with at most two results per source channel before deterministic backfill.
 
-Run all three against the exact 149-candidate maker pool and 163-candidate technology pool. Stable entity id is the final tie-break. Evaluate only after all rankings and their input/config hashes are frozen. Report lower/upper creative precision@10, lower/upper nDCG@20, direct-application rate@10, unresolved top-10 count, creative hits per task, latency, and feature-ablation deltas.
+Run all three against the exact 149-candidate maker pool and 163-candidate technology pool. Stable entity id is the final tie-break. Evaluate only after all rankings and their input/config hashes are frozen. Report strict creative precision@10 and nDCG@20, the corresponding sensitivity calculation with unresolved items treated as relevant, direct-application rate@10, unresolved top-10 count, creative hits per task, latency, and feature-ablation deltas. Do not call the unresolved-as-relevant nDCG an upper bound because its larger ideal denominator can make the normalized value lower.
 
 The primary may advance only if each task has lower creative precision@10 of at least 0.30, direct-application rate@10 of at most 0.20, at least one creative hit, zero unresolved top-10 results, and at least eight distinct source channels in its top 10. A dev pass authorizes only one newly frozen confirmation set; it does not authorize endpoints or corpus-wide indexing. If the primary fails, stop before historical weak-label mining or learned ranking and report that deterministic metadata features are insufficient. Ablations cannot rescue or replace a failed primary.
 
-Budget: $0 paid model cost and no production writes. Qdrant reads are restricted to the 312 frozen candidate-task pairs and two seed channels. All generated artifacts are write-once or self-hashed and remain under `docs/prd/semantic-eval-v4/programmatic/`.
+Budget: $0 paid model cost and no production writes. Qdrant reads are restricted to the 304 unique videos in the 312 frozen candidate-task pairs, the two seed channels, and the 141 unique candidate source channels. All generated artifacts are write-once or self-hashed and remain under `docs/prd/semantic-eval-v4/programmatic/`.
 
 ### 16.3 Work units
 
-- [ ] Add failing pure tests for title normalization, title-form features, topic-penalized scoring, finite inputs, deterministic tie-breaking, channel caps, and diversity selection.
-- [ ] Implement the smallest reusable programmatic feature/ranking module and make the focused tests pass.
-- [ ] Freeze exact programmatic inputs and a pre-judgment variant config with complete upstream hashes and no label/rank/score leakage.
-- [ ] Run the fixed variants, then evaluate them against the existing resolved dev judgments and generate a reproducible report.
-- [ ] Run the full semantic Jest suite, touched-file TypeScript, artifact replay, and an independent fresh-context review.
-- [ ] Apply the gate literally: freeze one confirmation recipe only after a pass; otherwise record the stop without endpoints, full-corpus work, or historical weak-label mining.
+- [x] Add failing pure tests for title normalization, title-form features, document-novelty scoring, finite inputs, deterministic tie-breaking, channel caps, and diversity selection.
+- [x] Implement the smallest reusable programmatic feature/ranking module and make the focused tests pass.
+- [x] Freeze exact programmatic inputs and a pre-judgment variant config with complete upstream hashes and no label/rank/score leakage.
+- [x] Run the fixed variants, then evaluate them against the existing resolved dev judgments and generate a reproducible report.
+- [x] Run the full semantic Jest suite, touched-file TypeScript, artifact replay, and an independent fresh-context review.
+- [x] Apply the gate literally: freeze one confirmation recipe only after a pass; otherwise record the stop without endpoints, full-corpus work, or historical weak-label mining.
+
+### 16.4 Result
+
+The sole eligible primary failed and no confirmation set was opened. `cross_topic_diverse` reached lower creative precision@10 of 0.60 for Make or Break Shop and 0.40 for Marques Brownlee, a large improvement over title-form-only at 0.10 and 0.00. It still failed the unchanged gate: Make or Break Shop had three unresolved top-10 items; Marques Brownlee had a 0.40 direct-application rate and one unresolved top-10 item. Diagnostic variants cannot rescue the primary.
+
+Coverage was complete for all 304 candidate video vectors. Frozen source-channel vectors existed for 121 of 141 unique source channels and used the documented candidate-vector fallback otherwise. The 498-item thumbnail pilot overlapped 0 of 304 candidates. Exact blind and vector document hashes matched for all 312 task-candidate pairs. Local replay took about 1.1 seconds, added $0 paid model cost, and left total semantic spend conservatively bounded at $0.898715.
+
+The input, config, and rankings were frozen before the reporting script loaded resolved judgments. However, an independent design subagent proposed the source-channel feature after inspecting dev-label behavior, so this result is explicitly exploratory rather than a clean blind estimate. Since the primary failed anyway, the stop is unchanged: no endpoint, corpus-wide packaging index, historical weak-label miner, or learned ranker ships from revision 5. Full tables and artifact links are in `docs/prd/2026-09-03-semantic-programmatic.md`.
+
+A separate fresh-context reviewer reproduced the source hashes, exact blind bindings, live loopback-Qdrant affinities, all six rankings, all metrics, the literal gate failures, and the cost total. Its two non-blocking provenance/gate-hardening findings were fixed before completion. The final semantic suite passes 18 suites / 97 tests, and the strict touched-file TypeScript check is clean. Repository-wide `tsc --noEmit` remains red on extensive pre-existing app, worker, and stale `.next/types` errors outside this work.

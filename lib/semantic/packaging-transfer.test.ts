@@ -46,6 +46,8 @@ describe('programmatic packaging transfer', () => {
       .toThrow(/channel identity/i);
     expect(() => extractChannelTitles('Make or Break Shop\nOnly one title', 'Make or Break Shop'))
       .toThrow(/exactly 20/i);
+    expect(() => extractChannelTitles(['Make or Break Shop', ...titles, 'trailing niche'].join('\n'), 'Make or Break Shop'))
+      .toThrow(/exactly 20/i);
   });
 
   test('computes exact cosine similarity and rejects invalid vectors', () => {
@@ -147,5 +149,10 @@ describe('programmatic packaging transfer', () => {
       passed: false,
       failures: ['task 2: unresolved_at_k 1 > 0'],
     });
+    expect(() => packagingTransferGate([
+      { ...passing, task_id: 'maker' }, { ...passing, task_id: 'maker' },
+    ], { expected_task_ids: ['maker', 'tech'] })).toThrow(/task coverage/i);
+    expect(() => packagingTransferGate([{ ...passing, lower_precision_at_k: Number.NaN }]))
+      .toThrow(/finite/i);
   });
 });

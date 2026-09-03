@@ -162,8 +162,8 @@ export class SemanticQdrant {
     });
   }
 
-  async point<Payload>(collection: string, rawId: string): Promise<QdrantSearchHit<Payload> & { vector: number[] }> {
-    const response = await this.request<{ result: QdrantSearchHit<Payload> & { vector: number[] } }>(
+  async point<Payload>(collection: string, rawId: string): Promise<QdrantRetrievedPoint<Payload> & { vector: number[] }> {
+    const response = await this.request<{ result: QdrantRetrievedPoint<Payload> & { vector: number[] } }>(
       `/collections/${collection}/points/${uuid5ForId(rawId)}?with_payload=true&with_vector=true`,
     );
     return response.result;

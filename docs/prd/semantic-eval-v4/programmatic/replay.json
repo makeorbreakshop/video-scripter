@@ -1,0 +1,11 @@
+{
+  "content_hash": "defe74684716c72402e8d1d32a402057f1ad6732ec4435549c0474225e99ffdd",
+  "body": {
+    "version": 1,
+    "verified_at": "2026-09-03T18:12:11.034Z",
+    "elapsed_ms": 1061.186958,
+    "input_content_hash": "be09a6744b1c6424e068af1935803ef1533499945e6469b06fd8fb89bb0d9958",
+    "config_content_hash": "f0034751ab067617f3313b9ff88e0d375caa4ea9bbf09e05b455c84b98a9ac14",
+    "rankings_content_hash": "149be88bbc30d1e3611c170031acd73e2cd548dd9114a0097ee7b02554c71d05"
+  }
+}
