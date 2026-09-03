@@ -1,9 +1,9 @@
 # PRD: Semantic layer v2 — retrieve, route, rerank, transfer
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: Claude Code.
-Status: revision 2, ready for implementation. Date: 2026-09-03. Supersedes the open items of `2026-09-02-semantic-layer-v1.md`; v1 infrastructure (Qdrant, `videos_v1`, `channels_v1`, `embeddings_v1`, sync LaunchAgent, cost ledger) stays and is reused.
+Status: revision 3, Phase 0 scoring backfill gate added. Date: 2026-09-03. Supersedes the open items of `2026-09-02-semantic-layer-v1.md`; v1 infrastructure (Qdrant, `videos_v1`, `channels_v1`, `embeddings_v1`, sync LaunchAgent, cost ledger) stays and is reused.
 
-Revision 2 incorporates Codex's review of revision 1. Corrections: outlier population is 4,357 not 180K; BERTopic centroids have unproven provenance; evaluation is incremental not blocking-on-nonexistent-systems; J2/J3 truth is pooled judgment not centroid proxies; fusion method and analogue thresholds are tuned on a dev split, not dictated; facet "proof" becomes "packaging claim"; verification backfills from top 30; no pushes and no early endpoints.
+Revision 3 incorporates Codex's scoring-coverage audit and Phase 0 implementation. The 4,357 outlier count is a current-score coverage artifact, not a valid year-wide outlier universe until scores are backfilled or the experiment is narrowed to the scored recent window.
 
 Research basis: `~/shared-memory/knowledge/projects/video-scripter/2026-09-03-sota-semantic-retrieval-research.md` (§4, §6, §9). v1 results: `docs/prd/2026-09-02-semantic-eval.md`, `docs/prd/2026-09-03-thumbnail-vector-eval.md`, and the assumption audit in shared-memory.
 
@@ -34,30 +34,44 @@ v1 measured that one global fusion weight cannot serve J1 and J5 at once. That i
 
 | Fact | Value |
 |---|---|
-| Long-form videos published in last 365 days | 167,452 |
-| …with a `video_scores` row | 66,066 |
-| …score ≥ 2 and confidence likely/confirmed (the outlier pool) | **4,357** across **1,710** channels |
+| Long-form videos published in last 365 days | about 167K |
+| …with a `video_scores` row before Phase 0 | about 66K |
+| …with a numeric score before Phase 0 | about 19.5K |
+| …score ≥ 2 and confidence likely/confirmed before Phase 0 | about **4.35K** across about **1.7K** channels |
 | `bertopic_clusters` rows | 1,108 = 892 (2025-07-11 run) + 216 (2025-08-03 run) |
 | Centroid provenance columns | none (`cluster_id, topic_name, parent_topic, grandparent_topic, centroid_embedding, video_count, created_at, updated_at`) |
 | `topic_niche` on videos in the 30-day window | null |
 
-Consequences: facet extraction over the outlier pool costs under $1; the analogue candidate pool is thin (4.4K sources) and coverage must be measured per seed; the centroids cannot be assumed to share a representation with `videos_v1` vectors.
+Consequences: the apparent outlier pool is heavily biased toward recently scored videos. Facet extraction and analogue evaluation must not treat the 365-day pool as representative until Phase 0 produces a versioned coverage manifest, or until the experiment is explicitly narrowed to the scored recent window. The centroids cannot be assumed to share a representation with `videos_v1` vectors.
 
 ## 4. Scope
 
 In:
-1. Evaluation protocol, incremental (§5). Query sets and rubric are frozen first; systems join the pool as they are built.
-2. BERTopic centroid audit and shadow topic assignment (§7.1).
-3. Indexed BM25 over title + cleaned description (§6.2).
-4. Fusion comparison: RRF, per-lane weighted RRF, DBSF, tuned linear (§6.2).
-5. Intent routing with per-lane parameters (§6.1).
-6. Local cross-encoder reranker experiments, title-only and enriched (§6.3).
-7. Facet extraction pilot (200 items), then the outlier pool plus tracked-channel history (§7.2).
-8. Named aspect vectors, job-specific channel medoids, analogue composite tuned on a dev split (§8).
-9. Verification pass with backfill on the analogue lane only (§8.4).
-10. Cheap controls: topic-centroid subtraction, Doc2Query in a separate collection (§7.3).
+1. Phase 0 scoring backfill using direct Postgres only (§4.1).
+2. Evaluation protocol, incremental (§5). Query sets and rubric are frozen first; systems join the pool as they are built.
+3. BERTopic centroid audit and shadow topic assignment (§7.1).
+4. Indexed full-text ranking over title + cleaned description (§6.2).
+5. Fusion comparison: RRF, per-lane weighted RRF, DBSF, tuned linear (§6.2).
+6. Intent routing with per-lane parameters (§6.1).
+7. Local cross-encoder reranker experiments, title-only and enriched (§6.3).
+8. Facet extraction pilot (200 items), then the outlier pool plus tracked-channel history (§7.2).
+9. Named aspect vectors, job-specific channel medoids, analogue composite tuned on a dev split (§8).
+10. Verification pass with backfill on the analogue lane only (§8.4).
+11. Cheap controls: topic-centroid subtraction, Doc2Query in a separate collection (§7.3).
 
 Out (v3 or never): GraphRAG; ColBERT as a primary index; contrastive fine-tuning (no interaction data yet; recipe in research §3 for later); a GPU box; full-corpus thumbnail backfill (thumbnail lane stays separate, never averaged with text); challenger embedding models.
+
+## 4.1 Phase 0 scoring backfill gate
+
+The semantic v2 enrichment depends on outlier status. Before using a 365-day outlier pool, run `scripts/semantic/backfill-scores.ts`:
+
+1. Dry-run first: `npx tsx scripts/semantic/backfill-scores.ts --min-age-days 60`.
+2. Check Supabase org usage before the full write. The job uses direct Postgres, but the org-level blast radius rule still applies.
+3. Write in bounded batches only after the usage check: `npx tsx scripts/semantic/backfill-scores.ts --write --min-age-days 60 --batch-size 500`.
+4. Use model version `v3.1-semantic-backfill-2026-09` and source params from `v3.0` unless a newly fitted parameter set is explicitly created.
+5. Keep the checkpoint file under `tmp/semantic-score-backfill-state.json`; reruns resume unless `--force` is passed.
+6. Acceptance: coverage by age band is reported before and after. The 61-180d and 181-365d bands must have numeric-score coverage comparable enough for the eval window, or the eval must be narrowed and labelled as recent-window only.
+7. No facet extraction, analogue candidate generation, or 365-day outlier claims may run before this gate passes.
 
 ## 5. Evaluation protocol (incremental)
 
@@ -94,7 +108,7 @@ Same topic and subscriber band may generate *candidates* for J2/J3 pools. They a
 6.1 Intent routing. `lib/semantic/route.ts`: explicit `mode` wins; else id-only → J2/J3; short q matching a channel-name trigram ≥ 0.6 → J1; `/outliers?topic=` → J4; `/ideas` → J5. Per-lane parameters (sources, fusion method, weights, thresholds) live in `score_params.params.semantic_v2.lanes`.
 
 6.2 Candidate generation and fusion:
-- Sources: BM25 over `title + cleaned description` (ParadeDB `pg_search` if it installs cleanly, else `tsvector` + `ts_rank_cd`; record which), dense `videos_v1`/`channels_v1`, and for J4/J5 a payload-filtered dense query (`is_outlier = true`, `published_at` range).
+- Sources: full-text ranking over `title + cleaned description` (`tsvector` + `ts_rank_cd`, or ParadeDB `pg_search` if it installs cleanly and is explicitly recorded), dense `videos_v1`/`channels_v1`, and for J4/J5 a payload-filtered dense query (`is_outlier = true`, `published_at` range).
 - Fusion is an experiment, not a decision. Rows in the eval: plain RRF (k per Qdrant guidance, tune on dev split), per-lane weighted RRF, DBSF, and a linear combination of min-max scores tuned on a dev split of the judged queries (held-out split reported). The eval picks per lane.
 - Output: top 50 with per-source scores kept on the object for the reranker and for API evidence.
 
@@ -115,7 +129,7 @@ Same topic and subscriber band may generate *candidates* for J2/J3 pools. They a
 
 7.2 Facet extraction. `scripts/semantic/extract-facets.ts`:
 - Pilot: 200 items from the outlier pool, OpenAI cheapest tier. Brandon reviews 40. Proceed only if he accepts the pilot.
-- Population after pilot: the 4,357 scored outliers (365 days) plus recent history (last 50 long-form videos) for every tracked/user-lane channel. Extend only after measuring purpose/topic coverage gaps per J5 seed.
+- Population after pilot: the Phase 0 versioned scored outliers in the accepted window plus recent history (last 50 long-form videos) for every tracked/user-lane channel. Extend only after measuring purpose/topic coverage gaps per J5 seed.
 - Model: cheapest tier that passes the pilot (`gpt-5-nano` first, then `gemini-2.5-flash-lite`, then Haiku 4.5). Batch API, prompt cached, v1 cost gate (`--max-usd` default $10 for this job).
 - Input per video: title, channel name, cleaned description (links, affiliate disclosures, boilerplate stripped), topic label if any. **Do not include score, baseline or view counts**; selection already implies outlier status and performance must not bias the semantic representation.
 - Output schema (terse, ≤ 80 output tokens, `null`/`unknown` permitted):
@@ -185,7 +199,7 @@ No v2 route is exposed, even behind a flag, until J1, J4 and J5 pass on the held
 
 ## 11. Work order
 
-Phase 0, factual repair (days 1–2): schemas (`video_topic_assignments_v2`, `video_facets`, `channel_prototypes`, `queries_v2`, `videos_v2`), idempotent; centroid audit (§7.1 steps 1–2); freeze query sets and rubrics; commit the uncommitted `eval-semantic.ts` work or discard it.
+Phase 0, factual repair (days 1–2): run the scoring backfill gate (§4.1) or narrow the eval window truthfully; schemas (`video_topic_assignments_v2`, `video_facets`, `channel_prototypes`, `queries_v2`, `videos_v2`), idempotent; centroid audit (§7.1 steps 1–2); freeze query sets and rubrics; commit the uncommitted `eval-semantic.ts` work or discard it.
 Phase 1, evaluation and cheap baselines (week 1): pooled incremental eval with v1 rows; Brandon's calibration session; BM25 index; fusion comparison; title-only and enriched reranker rows; shadow topic assignment accuracy.
 Phase 2, enrichment (week 2): facet pilot → Brandon review → outlier pool + tracked history; controls (§7.3); J4 re-measured.
 Phase 3, analogue (week 3): `videos_v2`, purpose/topic medoids, composite tuned on dev split, verification with backfill; J2/J3/J5 measured on held-out.
@@ -203,6 +217,6 @@ Phase 4, exposure decision: only after gates pass, commit endpoint changes local
 
 ## 13. Decisions taken from Codex's review
 
-1. Facet population: 365-day scored outliers (4,357) plus recent history for tracked channels. Not 47K arbitrary recent videos.
+1. Facet population: Phase 0 versioned scored outliers in the accepted window plus recent history for tracked channels. Not 47K arbitrary recent videos, and not an unbackfilled 365-day pool.
 2. Brandon's labelling session: yes, ~120 items focused on J3, J4, J5.
 3. Foreplay and Motion: one hour of review before the facet vocabulary is frozen, to learn how working creative teams name hooks, concepts and formats. Not to copy architecture. Output: a short note in `docs/prd/semantic-eval-v2/creative-vocab.md` and any additions to the `hook_device`/`format` enums.
