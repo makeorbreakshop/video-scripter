@@ -199,6 +199,78 @@ export interface ThumbnailEmbeddingOutput {
   rows: ThumbnailEmbeddingRow[];
 }
 
+export interface ThumbnailRetrievalNeighbor {
+  id: string;
+  channelId: string;
+  title: string;
+  score: number;
+}
+
+export interface ThumbnailRetrievalPair {
+  seedChannelId: string;
+  seedTitle: string;
+  visual: ThumbnailRetrievalNeighbor[];
+  visualTitle: ThumbnailRetrievalNeighbor[];
+}
+
+function roundMetric(value: number): number {
+  return Number(value.toFixed(4));
+}
+
+function titleTokens(value: string): Set<string> {
+  return new Set(value.toLowerCase().match(/[a-z0-9]+/g)?.filter((token) => token.length > 1) ?? []);
+}
+
+function titleTokenJaccard(left: string, right: string): number {
+  const leftTokens = titleTokens(left);
+  const rightTokens = titleTokens(right);
+  const union = new Set([...leftTokens, ...rightTokens]);
+  if (!union.size) return 0;
+  let intersection = 0;
+  for (const token of leftTokens) if (rightTokens.has(token)) intersection += 1;
+  return intersection / union.size;
+}
+
+export function summarizeThumbnailRetrieval(pairs: ThumbnailRetrievalPair[]) {
+  if (!pairs.length) {
+    return {
+      seeds: 0,
+      overlapAtK: 0,
+      visual: { crossChannelRate: 0, meanTitleTokenOverlap: 0 },
+      visualTitle: { crossChannelRate: 0, meanTitleTokenOverlap: 0 },
+    };
+  }
+  let overlap = 0;
+  let overlapDenominator = 0;
+  const representation = (name: 'visual' | 'visualTitle') => {
+    let neighbors = 0;
+    let crossChannel = 0;
+    let titleOverlap = 0;
+    for (const pair of pairs) {
+      for (const neighbor of pair[name]) {
+        neighbors += 1;
+        if (neighbor.channelId !== pair.seedChannelId) crossChannel += 1;
+        titleOverlap += titleTokenJaccard(pair.seedTitle, neighbor.title);
+      }
+    }
+    return {
+      crossChannelRate: roundMetric(neighbors ? crossChannel / neighbors : 0),
+      meanTitleTokenOverlap: roundMetric(neighbors ? titleOverlap / neighbors : 0),
+    };
+  };
+  for (const pair of pairs) {
+    const visualIds = new Set(pair.visual.map((item) => item.id));
+    overlap += pair.visualTitle.filter((item) => visualIds.has(item.id)).length;
+    overlapDenominator += Math.min(pair.visual.length, pair.visualTitle.length);
+  }
+  return {
+    seeds: pairs.length,
+    overlapAtK: roundMetric(overlapDenominator ? overlap / overlapDenominator : 0),
+    visual: representation('visual'),
+    visualTitle: representation('visualTitle'),
+  };
+}
+
 function assertVector(value: unknown, name: string, dimensions: number): asserts value is number[] {
   if (!Array.isArray(value) || value.length !== dimensions || value.some((item) => !Number.isFinite(item))) {
     throw new Error(`${name} must contain ${dimensions} finite numbers`);

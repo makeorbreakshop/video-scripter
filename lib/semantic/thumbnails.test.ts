@@ -1,6 +1,7 @@
 import {
   mapThumbnailPayload,
   selectThumbnailCohort,
+  summarizeThumbnailRetrieval,
   thumbnailCollectionConfig,
   thumbnailQueryBody,
   validateThumbnailEmbeddingOutput,
@@ -134,5 +135,25 @@ describe('thumbnail payload and Qdrant contracts', () => {
       ...valid,
       rows: [{ ...valid.rows[0], visualTitle: [1] }],
     }, 2)).toThrow('visualTitle');
+  });
+
+  test('summarizes representation overlap without treating cosine as a relevance label', () => {
+    expect(summarizeThumbnailRetrieval([{
+      seedChannelId: 'seed-channel',
+      seedTitle: 'Laser engraver buying guide',
+      visual: [
+        { id: 'a', channelId: 'other', title: 'Workshop lighting setup', score: 0.9 },
+        { id: 'b', channelId: 'seed-channel', title: 'Camera review', score: 0.8 },
+      ],
+      visualTitle: [
+        { id: 'b', channelId: 'seed-channel', title: 'Camera review', score: 0.95 },
+        { id: 'c', channelId: 'other-2', title: 'Best laser engraver review', score: 0.85 },
+      ],
+    }])).toEqual({
+      seeds: 1,
+      overlapAtK: 0.5,
+      visual: { crossChannelRate: 0.5, meanTitleTokenOverlap: 0 },
+      visualTitle: { crossChannelRate: 0.5, meanTitleTokenOverlap: 0.1667 },
+    });
   });
 });
