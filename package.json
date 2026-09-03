@@ -45,6 +45,7 @@
     "test:system": "dotenv -e .env -- tsx tests/run-all-tests.ts",
     "test:health": "dotenv -e .env -- tsx tests/system-health-check.ts",
     "sync:owned": "tsx scripts/owned-analytics-sync.ts",
+    "sync:app-user": "tsx scripts/sync-app-user.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
