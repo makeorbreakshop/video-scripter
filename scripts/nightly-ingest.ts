@@ -215,14 +215,19 @@ await pool.query(
 ).catch((e) => console.warn('quota log skipped:', e.message));
 await pool.query(`insert into quota_ledger (category, units) values ('ingest', $1)`, [apiCalls]).catch(() => {});
 // Fold tonight's new channels/videos into the add-channel search view (sql/channel-directory.sql).
-// Owner analytics (per-day views, AVD, subs) for channels connected via Google OAuth — see
-// scripts/owned-analytics-sync.ts. Best effort: a failure there must not fail the ingest.
-try {
+// Owner analytics (per-day views, AVD, subs) for channels connected via Google OAuth, then the
+// avatar fallback copies. Best effort: a failure in either must not fail the ingest.
+// launchd runs this with a bare PATH, so spawn the repo's own tsx via the current node binary
+// rather than relying on `npx` being findable.
+{
   const { execFileSync } = await import('node:child_process');
-  execFileSync('npx', ['tsx', 'scripts/owned-analytics-sync.ts', '--days', '45'], { stdio: 'inherit', timeout: 10 * 60_000 });
-  // Avatar copies for the hotlink fallback (downloads, no API).
-  execFileSync('npx', ['tsx', 'scripts/avatar-cache-sync.ts'], { stdio: 'inherit', timeout: 10 * 60_000 });
-} catch (e: any) { console.error('owned-analytics-sync:', e.message); }
+  const tsx = new URL('../node_modules/tsx/dist/cli.mjs', import.meta.url).pathname;
+  for (const args of [['scripts/owned-analytics-sync.ts', '--days', '45'], ['scripts/avatar-cache-sync.ts']]) {
+    try {
+      execFileSync(process.execPath, [tsx, ...args], { stdio: 'inherit', timeout: 15 * 60_000, cwd: new URL('..', import.meta.url).pathname });
+    } catch (e: any) { console.error(`${args[0]}: ${e.message}`); }
+  }
+}
 await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
 
 console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.`);

@@ -62,11 +62,22 @@ await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
   for (let r = queue.shift(); r; r = queue.shift()) await one(r);
 }));
 
-console.log(`copied ${ok}, ${dead} dead urls (need a meta refresh), ${failed} other failures`);
-if (dead) {
-  // Clear the stale url in both places so `channel-meta-backfill --blank-avatars` picks these up next.
-  await q(`update channel_meta set avatar_url = null where channel_id = any($1)`, [deadIds]);
+console.log(`copied ${ok}, ${dead} dead url${dead === 1 ? '' : 's'}, ${failed} other failure${failed === 1 ? '' : 's'}`);
+if (dead && !dry) {
+  // Remember the dead url as "handled" so a nightly run does not retry it forever (the
+  // directory keeps re-supplying it from the legacy channels table). A genuinely new url
+  // differs from what we recorded, so it gets another try.
+  for (const id of deadIds) {
+    const url = rows.find((r) => r.channel_id === id)!.avatar_url;
+    await q(
+      `insert into channel_meta (channel_id, avatar_url, avatar_cached_at, avatar_cached_url, fetched_at)
+       values ($1, null, now(), $2, now())
+       on conflict (channel_id) do update
+         set avatar_url = null, avatar_cached_at = now(), avatar_cached_url = excluded.avatar_cached_url`,
+      [id, url]
+    );
+  }
   await q(`update channel_directory set avatar_url = null where channel_id = any($1)`, [deadIds]);
-  console.log(`cleared ${dead} stale avatar_url${dead === 1 ? '' : 's'}; run: npx tsx scripts/channel-meta-backfill.ts --blank-avatars`);
+  console.log(`marked ${dead} rotated url${dead === 1 ? '' : 's'}; refresh them with: npx tsx scripts/channel-meta-backfill.ts --blank-avatars`);
 }
 await getPool().end();
