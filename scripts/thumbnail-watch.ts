@@ -22,7 +22,7 @@ import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
 import { isShortByRedirect } from '../lib/thumbs/shorts';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
-import { recordTitleChange } from '../lib/rss/title-change';
+import { recordTitleChange, recordTitleObservations } from '../lib/rss/title-change';
 import {
   HOT_TARGETS_SQL,
   LONG_TAIL_TARGETS_SQL,
@@ -38,7 +38,12 @@ const forceLongTail = args.includes('--long-tail');
 // Subset gate: while the two-lane watcher is on trial, only watch_subset channels get the new
 // (much denser) cadence. Everything else keeps exactly the cadence it had before.
 const subset = args.includes('--subset') || process.env.WATCH_SUBSET === '1';
-const maxVideos = parseInt(args.find((a) => /^\d+$/.test(a)) || '25000', 10);
+// Per-run cap. The full ladder's steady-state demand is ~6,000 targets per 5-minute tick
+// (launch 1,295 every run + hot/3 + warm/6 + steady/24 off the 2026-09-03 tier counts).
+// Measured the same day: 28.8 checks/s with the ETag path (5,288 targets in 183.7 s), so 6,000
+// lands at ~3.5 min and leaves headroom inside the tick. The long tail draws from the same
+// budget (see below), so a long-tail hour cannot push the run over.
+const maxVideos = parseInt(args.find((a) => /^\d+$/.test(a)) || '6000', 10);
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 4,
@@ -82,7 +87,9 @@ let changes = 0;
 let news = 0;
 let shorts = 0;
 let notModified = 0;
-for (const group of chunk(targets, 20)) {
+// Concurrency 50 (was 20): with the ETag path most checks are a bodyless 304, so the run is
+// latency-bound, not bandwidth-bound. Measured 2026-09-03: 4,000 targets took 152.8 s at 20.
+for (const group of chunk(targets, 50)) {
   await Promise.all(
     group.map(async ({ id }) => {
       try {
@@ -165,7 +172,7 @@ console.log(
 const OEMBED_MIN_AGE = "interval '14 days'";
 const OEMBED_MAX_AGE = "interval '90 days'";
 const { rows: oembedTargets } = await pool.query(
-  `select v.id, v.title, v.published_at from videos v
+  `select v.id, v.title, v.published_at, v.title_observed_at from videos v
     where v.id = any($2)
       and v.published_at <= now() - ${OEMBED_MIN_AGE}
       and v.published_at > now() - ${OEMBED_MAX_AGE}
@@ -181,8 +188,10 @@ const { rows: oembedTargets } = await pool.query(
 );
 let oembedChecked = 0;
 let oembedTitleChanges = 0;
+let oembedTitleSyncs = 0;
+const oembedSeen: string[] = [];
 for (const group of chunk(oembedTargets, 20)) {
-  await Promise.all(group.map(async (v: { id: string; title: string; published_at: string }) => {
+  await Promise.all(group.map(async (v: { id: string; title: string; published_at: string; title_observed_at: string | null }) => {
     try {
       const res = await fetch(
         `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${v.id}&format=json`,
@@ -191,14 +200,28 @@ for (const group of chunk(oembedTargets, 20)) {
       if (!res.ok) return; // 401/404 = private or deleted; nothing to compare against
       oembedChecked++;
       const live = ((await res.json()) as { title?: string }).title;
-      if (!live || !v.title || live === v.title) return;
-      await recordTitleChange(pool, v.id, v.title, live, v.published_at, new Date());
-      oembedTitleChanges++;
-      console.log(`TITLE CHANGE (oEmbed) ${v.id}: "${v.title}" -> "${live}"`);
+      if (!live || !v.title) return;
+      // Every look counts as evidence, changed or not — the CHANGE/SYNC rule reads it later.
+      oembedSeen.push(v.id);
+      if (live === v.title) return;
+      const r = await recordTitleChange(
+        pool, v.id, v.title, live, v.published_at, new Date(), v.title_observed_at
+      );
+      if (r.kind === 'change') {
+        oembedTitleChanges++;
+        console.log(`TITLE CHANGE (oEmbed) ${v.id}: "${v.title}" -> "${live}"`);
+      } else {
+        oembedTitleSyncs++;  // no recent evidence of the old title: sync it, do not report it
+      }
     } catch { /* transient */ }
   }));
 }
+// Bump the observation stamp for everything we actually looked at (changed rows already did it).
+await recordTitleObservations(pool, oembedSeen, new Date());
 if (oembedTargets.length) {
-  console.log(`oEmbed titles: ${oembedChecked}/${oembedTargets.length} checked, ${oembedTitleChanges} changes.`);
+  console.log(
+    `oEmbed titles: ${oembedChecked}/${oembedTargets.length} checked, ` +
+    `${oembedTitleChanges} changes, ${oembedTitleSyncs} synced (no evidence of the old title).`
+  );
 }
 await pool.end();

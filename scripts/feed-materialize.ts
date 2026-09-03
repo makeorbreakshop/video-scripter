@@ -65,8 +65,15 @@ async function insertEvents(events: FeedEvent[]): Promise<number> {
   for (let i = 0; i < events.length; i += 500) {
     const batch = events.slice(i, i + 500);
     const rows = await q(
-      `insert into feed_events (type, channel_id, video_id, at, payload, dedupe_key)
-       select * from unnest($1::text[], $2::text[], $3::text[], $4::timestamptz[], $5::jsonb[], $6::text[])
+      // is_longform is denormalized onto the event so the feed read never has to join videos
+      // before its LIMIT (lib/feed/query.ts). Computed here from the video row rather than in
+      // lib/feed/materialize.ts because only two of the five sources carry duration/is_short.
+      // scripts/verify-shorts.ts re-stamps it when a video's Short status is later resolved.
+      `insert into feed_events (type, channel_id, video_id, at, payload, dedupe_key, is_longform)
+       select u.type, u.channel_id, u.video_id, u.at, u.payload, u.dedupe_key,
+              coalesce((select ${longformSql('v')} from videos v where v.id = u.video_id), false)
+         from unnest($1::text[], $2::text[], $3::text[], $4::timestamptz[], $5::jsonb[], $6::text[])
+              as u(type, channel_id, video_id, at, payload, dedupe_key)
        on conflict (dedupe_key) do nothing
        returning 1`,
       [
@@ -177,6 +184,9 @@ const titleSource: Source = {
        join videos v on v.id = t.video_id
        left join title_versions p on p.video_id = t.video_id and p.version = t.version - 1
       where t.first_seen >= $1 and (t.first_seen > $1 or (t.video_id || ':' || t.version) > $2) and t.version > 1
+        -- backfill rows are syncs, not news: we had no recent evidence of the old title, so the
+        -- change could have happened any time (lib/rss/title-change.ts, classifyTitleDiff)
+        and t.backfill = false
       order by t.first_seen, row_id
       limit ${BATCH}`,
     [c.at, c.id]

@@ -9,6 +9,7 @@ import {
   decodeEntities,
   isUpdatedSince,
   shouldProcessEntries,
+  isNewUpload,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -201,6 +202,25 @@ describe('the 60-day dormancy rule end to end', () => {
     expect(isDue({ rss_state: 'woken', rss_last_polled: null }, NOW)).toBe(true);
     expect(isDue({ rss_state: 'woken', rss_last_polled: ago(mins(16)) }, NOW)).toBe(true);
     expect(isDue({ rss_state: 'woken', rss_last_polled: ago(mins(2)) }, NOW)).toBe(false);
+  });
+});
+
+describe('isNewUpload (what belongs in the touch queue)', () => {
+  it('queues a genuinely new upload', () => {
+    expect(isNewUpload(ago(hours(2)).toISOString(), NOW)).toBe(true);
+    expect(isNewUpload(ago(days(6.9)).toISOString(), NOW)).toBe(true);
+  });
+
+  // The first full-corpus pass queued 17,864 ids; a 50-id sample was 94% Shorts/clips and 58%
+  // older than a month. Old catalogue entries are a backfill question, not discovery.
+  it('skips old catalogue entries the feed happens to still list', () => {
+    expect(isNewUpload(ago(days(7.1)).toISOString(), NOW)).toBe(false);
+    expect(isNewUpload(ago(days(400)).toISOString(), NOW)).toBe(false);
+  });
+
+  it('skips an entry with no published date rather than guessing', () => {
+    expect(isNewUpload(null, NOW)).toBe(false);
+    expect(isNewUpload(undefined, NOW)).toBe(false);
   });
 });
 

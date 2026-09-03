@@ -71,6 +71,9 @@ const titleReentered = await pool.query(
      select t.video_id, max(t.version) as v from title_versions t
      join track_schedule s on s.video_id = t.video_id
      where t.version > 1 and t.first_seen > now() - interval '2 days'
+       -- backfill rows are syncs, not news (lib/rss/title-change.ts): a title that drifted while
+       -- nobody was looking must not re-open the 5-minute ladder and burn stats quota
+       and t.backfill = false
      group by t.video_id)
    update track_schedule s
       set phase = 'launch', launch_until = now() + interval '24 hours', next_check = now(),

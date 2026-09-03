@@ -22,7 +22,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
-import { recordTitleChange } from '../lib/rss/title-change';
+import { recordTitleChange, recordTitleObservations, classifyTitleDiff } from '../lib/rss/title-change';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -30,6 +30,7 @@ import {
   perRunCap,
   isUpdatedSince,
   shouldProcessEntries,
+  isNewUpload,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -91,7 +92,7 @@ type DueChannel = {
 };
 
 let ok200 = 0, notModified = 0, sameBody = 0, errors = 0;
-let newVideos = 0, titleChanges = 0, descChanges = 0, dueNow = 0, samples = 0;
+let newVideos = 0, titleChanges = 0, titleSyncs = 0, descChanges = 0, dueNow = 0, samples = 0, skippedOld = 0;
 
 /**
  * Everything one channel's feed implies, written in a handful of set-based statements.
@@ -106,17 +107,20 @@ async function handleEntries(channelId: string, entries: RssEntry[]) {
   if (!entries.length) return;
   const ids = entries.map((e) => e.video_id);
   const { rows: known } = await pool.query(
-    `select id, title, description, published_at from videos where id = any($1)`, [ids]
+    `select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [ids]
   );
-  const byId = new Map<string, { id: string; title: string | null; description: string | null; published_at: Date | null }>(
-    known.map((r: any) => [r.id, r])
-  );
+  type Known = { id: string; title: string | null; description: string | null; published_at: Date | null; title_observed_at: Date | null };
+  const byId = new Map<string, Known>(known.map((r: any) => [r.id, r]));
 
   // 1. Unknown video ids: hand them to the touch queue. Never insert straight into videos.
   // mode 'websub' is what makes the drainer import them as real uploads (tier 0); the source_url
   // is deliberately NOT the `websub:UC...` marker, which is the drainer's wake-up signal —
   // re-waking a channel we polled a second ago would poll it every tick until its backlog cleared.
-  const unknown = ids.filter((id) => !byId.has(id));
+  // Only genuinely new uploads. An old catalogue entry we never ingested is a backfill
+  // question, not discovery — see isNewUpload for the numbers that forced this.
+  const unknown = entries.filter((e) => !byId.has(e.video_id) && isNewUpload(e.published, now))
+    .map((e) => e.video_id);
+  skippedOld += ids.filter((id) => !byId.has(id)).length - unknown.length;
   if (unknown.length) {
     const ins = await pool.query(
       `insert into touch_queue (kind, ref, source_url, mode)
@@ -151,13 +155,21 @@ async function handleEntries(channelId: string, entries: RssEntry[]) {
   });
   for (const e of changed) {
     const cur = byId.get(e.video_id)!;
-    await recordTitleChange(pool, e.video_id, cur.title!, e.title, cur.published_at, now);
-    titleChanges++;
-    log(`TITLE CHANGE ${e.video_id}: "${cur.title}" -> "${e.title}"`);
+    const r = await recordTitleChange(
+      pool, e.video_id, cur.title!, e.title, cur.published_at, now, cur.title_observed_at
+    );
+    if (r.kind === 'change') {
+      titleChanges++;
+      log(`TITLE CHANGE ${e.video_id}: "${cur.title}" -> "${e.title}"`);
+    } else {
+      titleSyncs++;   // no feed event, no re-entry: we had no recent evidence of the old title
+    }
   }
   const changedSet = new Set(changed.map((e) => e.video_id));
   const unchangedIds = present.map((e) => e.video_id).filter((id) => !changedSet.has(id));
   if (unchangedIds.length) {
+    // Every observation counts, changed or not: this is the evidence the CHANGE/SYNC rule reads.
+    await recordTitleObservations(pool, unchangedIds, now);
     await pool.query(
       `update track_schedule set last_title_check = now() where video_id = any($1)`, [unchangedIds]
     ).catch(() => {});
@@ -174,30 +186,37 @@ async function handleEntries(channelId: string, entries: RssEntry[]) {
     const latest = new Map<string, { version: number; sha256: string }>(
       dv.map((r: any) => [r.video_id, { version: r.version, sha256: r.sha256 }])
     );
-    const rows: { id: string; version: number; sha: string; text: string; seen: Date; isChange: boolean }[] = [];
+    const rows: { id: string; version: number; sha: string; text: string; seen: Date; isChange: boolean; backfill: boolean }[] = [];
     for (const e of withDesc) {
       const cur = byId.get(e.video_id)!;
       const feedSha = sha(e.description!);
       const prev = latest.get(e.video_id);
+      // Same CHANGE/SYNC rule as titles: without recent evidence of the old description, a
+      // difference is a first observation, not news. Descriptions emit no feed events yet, but
+      // the backfill flag keeps the archive honest for when they do.
+      const kind = classifyTitleDiff(
+        { publishedAt: cur.published_at, titleObservedAt: cur.title_observed_at }, now
+      );
+      const isSync = kind === 'sync';
       if (!prev) {
-        // Baseline what we already held as v1, then the feed's text as v2 if it differs.
+        // The v1 row is always a baseline of what we already held, never a change.
         const base = cur.description ?? '';
-        rows.push({ id: e.video_id, version: 1, sha: sha(base), text: base, seen: cur.published_at ?? now, isChange: false });
+        rows.push({ id: e.video_id, version: 1, sha: sha(base), text: base, seen: cur.published_at ?? now, isChange: false, backfill: true });
         if (sha(base) !== feedSha) {
-          rows.push({ id: e.video_id, version: 2, sha: feedSha, text: e.description!, seen: now, isChange: true });
+          rows.push({ id: e.video_id, version: 2, sha: feedSha, text: e.description!, seen: now, isChange: !isSync, backfill: isSync });
         }
       } else if (prev.sha256 !== feedSha) {
-        rows.push({ id: e.video_id, version: prev.version + 1, sha: feedSha, text: e.description!, seen: now, isChange: true });
-        log(`DESCRIPTION CHANGE ${e.video_id} -> v${prev.version + 1}`);
+        rows.push({ id: e.video_id, version: prev.version + 1, sha: feedSha, text: e.description!, seen: now, isChange: !isSync, backfill: isSync });
+        if (!isSync) log(`DESCRIPTION CHANGE ${e.video_id} -> v${prev.version + 1}`);
       }
     }
     if (rows.length) {
       await pool.query(
-        `insert into description_versions (video_id, version, sha256, description, first_seen)
-         select * from unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::timestamptz[])
+        `insert into description_versions (video_id, version, sha256, description, first_seen, backfill)
+         select * from unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::timestamptz[], $6::boolean[])
          on conflict do nothing`,
         [rows.map((r) => r.id), rows.map((r) => r.version), rows.map((r) => r.sha),
-         rows.map((r) => r.text), rows.map((r) => r.seen)]
+         rows.map((r) => r.text), rows.map((r) => r.seen), rows.map((r) => r.backfill)]
       );
       descChanges += rows.filter((r) => r.isChange).length;
     }
@@ -280,7 +299,8 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
 
 log(
   `done: ${ok200} x 200 (${sameBody} identical body), ${notModified} x 304, ${errors} errors; ` +
-  `${newVideos} new videos queued, ${titleChanges} title changes, ${descChanges} description changes, ` +
+  `${newVideos} new videos queued (${skippedOld} older unknown entries skipped), ${titleChanges} title changes (${titleSyncs} synced, no evidence of the old title), ` +
+  `${descChanges} description changes, ` +
   `${dueNow} marked due-now for the CDN watcher, ${samples} rss_samples`
 );
 await pool.end();

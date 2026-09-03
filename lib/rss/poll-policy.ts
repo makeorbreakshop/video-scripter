@@ -30,6 +30,8 @@ export const RSS_POLICY = {
   timeoutMs: 10_000,
   /** LaunchAgent tick. The poller itself enforces the per-channel interval. */
   runIntervalSec: 300,
+  /** How recent a feed entry must be to count as a new upload worth queueing. */
+  newUploadWindowDays: 7,
   /** Hard ceiling on channels touched in one run, whatever the stagger says. Set above the
    * corpus's own stagger number (ceil(5,803 / 3) = 1,935) so the 15-minute active cadence is
    * actually achieved rather than silently stretched — at 600 it was a ~38-minute cadence. */
@@ -103,6 +105,25 @@ export function perRunCap(
 ): number {
   const slots = Math.max(1, Math.floor(intervalSec / runIntervalSec));
   return Math.min(RSS_POLICY.maxPerRun, Math.max(1, Math.ceil(totalChannels / slots)));
+}
+
+/**
+ * Only genuinely NEW uploads belong in the touch queue. A channel's last-15 feed also lists
+ * older catalogue entries we never ingested, and enqueueing those is not discovery — it is an
+ * unbudgeted backfill. Measured 2026-09-03 on the first full-corpus pass: of 50 sampled queued
+ * ids, 47 were <=180s (Shorts or clips the corpus deliberately excludes) and 29 were over a
+ * month old. Each one still costs a videos.list slot in the drainer before being thrown away.
+ *
+ * Same evidence window as the title rule: an upload published inside it is news; anything older
+ * that we do not already have is a backfill question, not the watcher's job.
+ */
+export function isNewUpload(
+  published: string | null | undefined,
+  now: Date = new Date(),
+  windowDays: number = RSS_POLICY.newUploadWindowDays
+): boolean {
+  if (!published) return false;
+  return now.getTime() - new Date(published).getTime() < windowDays * 86_400_000;
 }
 
 /**
