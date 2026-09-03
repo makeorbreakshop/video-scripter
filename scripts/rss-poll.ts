@@ -1,28 +1,40 @@
 // Channel RSS poller — the free lane's "when did it change?" detector. ZERO Data API quota.
 // Plan: docs/plans/2026-09-03-two-lane-watcher.md section 1. Policy (pure, tested) lives in
-// lib/rss/poll-policy.ts; this file is I/O only.
+// lib/rss/poll-policy.ts and lib/rss/title-change.ts; this file is I/O only.
 //
-// Per due channel, one GET of youtube.com/feeds/videos.xml?channel_id=... (last 15 uploads):
-//   * new video id  -> touch_queue in 'websub' mode; the drainer imports it (never insert here)
-//   * title diff    -> title_versions + videos.title + track_schedule re-entry (feed-materialize
-//                      turns the title_versions row into the title_change feed event)
-//   * desc diff     -> description_versions (no feed event; out of scope in the plan)
-//   * <updated> newer than our last thumbnail look -> mark the video due NOW for the CDN watcher
-//   * views/likes   -> rss_samples (free dense trace; view_samples stays the source of truth)
+// A tick is four phases, and NO phase interleaves network with database work:
+//
+//   1. SELECT   which channels are due (one query).
+//   2. FETCH    every due feed concurrently. Zero DB calls inside this loop.
+//   3. SNAPSHOT one set-based read of everything the diff needs, keyed on the video ids the
+//               feeds actually mentioned: current title, latest description hash, latest
+//               title_versions version, title_observed_at, latest thumbnail last_checked.
+//   4. DIFF + FLUSH   diff entirely in memory, then write each table once in ~5K chunks.
+//
+// Why: the previous shape did a burst of set-based statements PER CHANNEL, inside the fetch
+// loop. Measured 2026-09-03 at full corpus, that was ~0.40 s/channel — 1,935 channels took
+// 474-518 s and 950 took 376-390 s, all overrunning the 300 s LaunchAgent interval.
+//
+// Durability: if the flush fails, the whole buffer is written to logs/rss-poll-pending.ndjson
+// and the NEXT tick replays it before fetching anything. A tick therefore never silently loses
+// a change it detected.
 //
 // MEASURED 2026-09-03: this feed sends no ETag and no Last-Modified, so the conditional-request
-// path below effectively never fires. "Unchanged" is therefore decided by hashing the body
-// (rss_body_sha), which still skips all the per-entry work. See the run counters.
+// path never fires. "Unchanged" is decided by hashing the body (rss_body_sha), which skips the
+// whole diff for that channel.
 //
 // Direct Postgres only (2026-08-31 egress rule).
 // Usage: npx tsx scripts/rss-poll.ts [maxChannels] [--subset] [--dry] [--seed]
-//        WATCH_SUBSET=1 npx tsx scripts/rss-poll.ts
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
-import { recordTitleChange, recordTitleObservations, classifyTitleDiff } from '../lib/rss/title-change';
+import { withDeadlockRetry } from '../lib/nightly/pg-retry';
+import { reenter } from '../lib/nightly/launch-core';
+import { classifyTitleDiff, titleVersionPlan } from '../lib/rss/title-change';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -31,6 +43,7 @@ import {
   isUpdatedSince,
   shouldProcessEntries,
   isNewUpload,
+  isSampleWorthy,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -45,18 +58,176 @@ const subset = args.includes('--subset') || process.env.WATCH_SUBSET === '1';
 const forceSeed = args.includes('--seed');
 const maxChannels = parseInt(args.find((a) => /^\d+$/.test(a)) || '0', 10) || null;
 
-// max 8: the poller runs `concurrency` channels at once and each does a short burst of
-// set-based statements; 4 connections serialised those bursts into a queue at full corpus.
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 8 });
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 // pgbouncer strips startup options, so SET per connection like the other batch scripts.
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
 const now = new Date();
-const log = (m: string) => console.log(`${now.toISOString()} ${m}`);
+const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const sha = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
+const secs = (from: number) => ((Date.now() - from) / 1000).toFixed(1);
+const PENDING = path.join(process.cwd(), 'logs', 'rss-poll-pending.ndjson');
+/** Rows per INSERT. 5K keeps each statement well under the pooler's parameter ceiling. */
+const CHUNK = 5000;
+/**
+ * How stale an observation stamp may get before we rewrite it. The CHANGE/SYNC rule only needs
+ * evidence inside a 7-day window, so re-stamping the same ~50K videos every 5 minutes is pure
+ * write amplification — it was the bulk of a 178.9 s flush. An hour keeps the evidence
+ * effectively fresh and makes the steady-state stamp update touch almost nothing.
+ */
+const STAMP_MAX_AGE = "interval '1 hour'";
 
-// --- Seed / refresh channel state from the videos table ---
-// Cheap under --subset (52 channels). In full mode the group-by covers the whole corpus, so it
-// only runs on the first LaunchAgent slot of the hour unless --seed forces it.
+// ---------------------------------------------------------------- buffers
+
+interface Buffers {
+  samples: { video_id: string; at: string; views: number | null; likes: number | null }[];
+  /** Videos whose title we looked at, changed or not. This is the evidence the 7-day rule reads. */
+  observed: string[];
+  titleVersions: { video_id: string; version: number; title: string; first_seen: string; backfill: boolean }[];
+  videoTitles: { video_id: string; title: string }[];
+  /** Real changes only: re-open the stats lane's 5-minute ladder. */
+  reentries: string[];
+  /** Syncs and unchanged: just stamp that we looked. */
+  titleChecks: string[];
+  descVersions: { video_id: string; version: number; sha256: string; description: string; first_seen: string; backfill: boolean }[];
+  dueNow: { video_id: string; version: number }[];
+  touchQueue: { ref: string; source_url: string }[];
+  channels: { channel_id: string; status: number | null; body_sha: string | null; etag: string | null;
+              interval_sec: number | null; backoff_until: string | null; clear_woken: boolean }[];
+}
+
+const empty = (): Buffers => ({
+  samples: [], observed: [], titleVersions: [], videoTitles: [], reentries: [],
+  titleChecks: [], descVersions: [], dueNow: [], touchQueue: [], channels: [],
+});
+
+// ---------------------------------------------------------------- flush
+
+async function flush(b: Buffers): Promise<Record<string, number>> {
+  const written: Record<string, number> = {};
+  // Sort every buffer on its key before writing: the deterministic order is half of the
+  // deadlock fix (lib/nightly/pg-retry is the other half).
+  const byId = (a: { video_id: string }, z: { video_id: string }) => (a.video_id < z.video_id ? -1 : a.video_id > z.video_id ? 1 : 0);
+  b.samples.sort(byId); b.titleVersions.sort(byId); b.videoTitles.sort(byId);
+  b.descVersions.sort(byId); b.dueNow.sort(byId);
+  b.observed.sort(); b.reentries.sort(); b.titleChecks.sort();
+  b.touchQueue.sort((a, z) => (a.ref < z.ref ? -1 : a.ref > z.ref ? 1 : 0));
+  b.channels.sort((a, z) => (a.channel_id < z.channel_id ? -1 : a.channel_id > z.channel_id ? 1 : 0));
+  // Duplicates across channels are impossible for videos, but a defensive dedupe on the stamp
+  // lists keeps the arrays (and the lock set) as small as possible.
+  b.observed = [...new Set(b.observed)];
+  b.titleChecks = [...new Set(b.titleChecks)];
+  // `actual` counts what the statement really wrote (via RETURNING) instead of what we offered.
+  // touch_queue needs it: most ids we re-offer are already queued from an earlier tick, and
+  // reporting the offered count as "new videos queued" overstates discovery by ~5x.
+  const insert = async (name: string, sql: string, rows: any[], cols: (r: any) => any[], actual = false) => {
+    if (!rows.length) return;
+    let n = 0;
+    for (const part of chunk(rows, CHUNK)) {
+      // Deterministic lock order + retry: launch-track, the drainer and this poller all write
+      // videos/track_schedule, and two statements taking overlapping ids in different orders
+      // deadlock (observed 40P01 on the first full-corpus flush).
+      const res = await withDeadlockRetry(() => pool.query(sql, cols(part)));
+      n += actual ? (res.rowCount ?? 0) : part.length;
+    }
+    written[name] = (written[name] ?? 0) + n;
+  };
+
+  await insert('rss_samples',
+    `insert into rss_samples (video_id, at, views, likes)
+     select * from unnest($1::text[], $2::timestamptz[], $3::bigint[], $4::bigint[])
+     on conflict do nothing`,
+    b.samples, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.at), p.map((r: any) => r.views), p.map((r: any) => r.likes)]);
+
+  await insert('title_versions',
+    `insert into title_versions (video_id, version, title, first_seen, backfill)
+     select * from unnest($1::text[], $2::int[], $3::text[], $4::timestamptz[], $5::boolean[])
+     on conflict do nothing`,
+    b.titleVersions, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.version), p.map((r: any) => r.title), p.map((r: any) => r.first_seen), p.map((r: any) => r.backfill)]);
+
+  await insert('description_versions',
+    `insert into description_versions (video_id, version, sha256, description, first_seen, backfill)
+     select * from unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::timestamptz[], $6::boolean[])
+     on conflict do nothing`,
+    b.descVersions, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.version), p.map((r: any) => r.sha256), p.map((r: any) => r.description), p.map((r: any) => r.first_seen), p.map((r: any) => r.backfill)]);
+
+  await insert('touch_queue',
+    `insert into touch_queue (kind, ref, source_url, mode)
+     select 'video', * , 'websub' from unnest($1::text[], $2::text[])
+     on conflict (kind, ref) do nothing
+     returning 1`,
+    b.touchQueue, (p) => [p.map((r: any) => r.ref), p.map((r: any) => r.source_url)], true);
+
+  // Titles that moved. Set-based UPDATE ... FROM the incoming values.
+  await insert('videos.title',
+    `update videos v set title = x.title, title_observed_at = $3, updated_at = now()
+       from unnest($1::text[], $2::text[]) as x(video_id, title)
+      where v.id = x.video_id`,
+    b.videoTitles, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.title), now]);
+
+  // Every title we LOOKED at, changed or not — the evidence the CHANGE/SYNC rule reads next tick.
+  await insert('videos.title_observed_at',
+    `update videos set title_observed_at = $2
+      where id = any($1) and (title_observed_at is null or title_observed_at < now() - ${STAMP_MAX_AGE})
+      returning 1`,
+    b.observed, (p) => [p, now], true);
+
+  await insert('track_schedule.reentry',
+    `update track_schedule set phase = 'launch', launch_until = $2, next_check = $3,
+            entered_reason = 'title_change', last_title_check = $3, updated_at = now()
+      where video_id = any($1)`,
+    b.reentries, (p) => { const r = reenter(now); return [p, r.launch_until, r.next_check]; });
+
+  await insert('track_schedule.checked',
+    `update track_schedule set last_title_check = $2
+      where video_id = any($1) and (last_title_check is null or last_title_check < now() - ${STAMP_MAX_AGE})
+      returning 1`,
+    b.titleChecks, (p) => [p, now], true);
+
+  await insert('thumbnail_versions.due_now',
+    `update thumbnail_versions t set last_checked = 'epoch'
+       from unnest($1::text[], $2::int[]) as m(video_id, version)
+      where t.video_id = m.video_id and t.version = m.version`,
+    b.dueNow, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.version)]);
+
+  await insert('channel_rss_state',
+    `update channel_rss_state c
+        set rss_last_polled = $7, rss_last_status = x.status, rss_body_sha = coalesce(x.body_sha, c.rss_body_sha),
+            rss_etag = x.etag, rss_interval_sec = x.interval_sec, rss_backoff_until = x.backoff_until,
+            rss_state = case when x.clear_woken and c.rss_state = 'woken' then 'active' else c.rss_state end,
+            updated_at = now()
+       from unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::int[], $6::timestamptz[], $8::boolean[])
+         as x(channel_id, status, body_sha, etag, interval_sec, backoff_until, clear_woken)
+      where c.channel_id = x.channel_id`,
+    b.channels, (p) => [p.map((r: any) => r.channel_id), p.map((r: any) => r.status), p.map((r: any) => r.body_sha),
+                        p.map((r: any) => r.etag), p.map((r: any) => r.interval_sec), p.map((r: any) => r.backoff_until),
+                        now, p.map((r: any) => r.clear_woken)]);
+  return written;
+}
+
+/** Replay a buffer a previous tick could not write, before this tick fetches anything. */
+async function replayPending(): Promise<void> {
+  if (!fs.existsSync(PENDING)) return;
+  const text = fs.readFileSync(PENDING, 'utf8').trim();
+  if (!text) { fs.unlinkSync(PENDING); return; }
+  try {
+    const merged = empty();
+    for (const line of text.split('\n')) {
+      const b = JSON.parse(line) as Buffers;
+      for (const k of Object.keys(merged) as (keyof Buffers)[]) {
+        (merged[k] as any[]).push(...((b[k] as any[]) ?? []));
+      }
+    }
+    const w = await flush(merged);
+    fs.unlinkSync(PENDING);
+    log(`replayed pending buffer: ${JSON.stringify(w)}`);
+  } catch (e) {
+    // Leave the file in place; the next tick tries again rather than dropping detected changes.
+    console.error(`pending replay failed, keeping ${PENDING}: ${(e as Error).message}`);
+  }
+}
+
+// ---------------------------------------------------------------- phase 0
+
 if (subset || forceSeed || now.getMinutes() < 5) {
   const seeded = await pool.query(subset ? SEED_SUBSET_SQL : SEED_ALL_SQL);
   log(`seeded/refreshed ${seeded.rowCount} channel states${subset ? ' (subset)' : ''}`);
@@ -76,7 +247,8 @@ if (dry) {
   process.exit(0);
 }
 
-// --- Select due channels, oldest poll first, capped so the run is a stagger and not a burst ---
+await replayPending();
+
 const { rows: totals } = await pool.query(
   `select count(*)::int as n from channel_rss_state c
     where (not $1::boolean or exists (select 1 from watch_subset w where w.channel_id = c.channel_id))`,
@@ -91,159 +263,13 @@ type DueChannel = {
   rss_body_sha: string | null; rss_interval_sec: number | null;
 };
 
+// ---------------------------------------------------------------- phase 1: fetch, no DB
+
+const t0 = Date.now();
+const buf = empty();
 let ok200 = 0, notModified = 0, sameBody = 0, errors = 0;
-let newVideos = 0, titleChanges = 0, titleSyncs = 0, descChanges = 0, dueNow = 0, samples = 0, skippedOld = 0;
-
-/**
- * Everything one channel's feed implies, written in a handful of set-based statements.
- *
- * The first cut of this did ~6 sequential round-trips PER ENTRY (15 entries per feed, ~90 per
- * channel). Against the pooler that was fine for the 52-channel subset and fell over completely
- * at full corpus: a 600-channel tick had not finished after 10 minutes. Everything below is
- * batched per channel, so a feed costs ~7 statements whatever its contents, and only the rare
- * real title/description change adds writes.
- */
-async function handleEntries(channelId: string, entries: RssEntry[]) {
-  if (!entries.length) return;
-  const ids = entries.map((e) => e.video_id);
-  const { rows: known } = await pool.query(
-    `select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [ids]
-  );
-  type Known = { id: string; title: string | null; description: string | null; published_at: Date | null; title_observed_at: Date | null };
-  const byId = new Map<string, Known>(known.map((r: any) => [r.id, r]));
-
-  // 1. Unknown video ids: hand them to the touch queue. Never insert straight into videos.
-  // mode 'websub' is what makes the drainer import them as real uploads (tier 0); the source_url
-  // is deliberately NOT the `websub:UC...` marker, which is the drainer's wake-up signal —
-  // re-waking a channel we polled a second ago would poll it every tick until its backlog cleared.
-  // Only genuinely new uploads. An old catalogue entry we never ingested is a backfill
-  // question, not discovery — see isNewUpload for the numbers that forced this.
-  const unknown = entries.filter((e) => !byId.has(e.video_id) && isNewUpload(e.published, now))
-    .map((e) => e.video_id);
-  skippedOld += ids.filter((id) => !byId.has(id)).length - unknown.length;
-  if (unknown.length) {
-    const ins = await pool.query(
-      `insert into touch_queue (kind, ref, source_url, mode)
-       select 'video', u, $2, 'websub' from unnest($1::text[]) u
-       on conflict (kind, ref) do nothing`,
-      [unknown, `feed:/rss/${channelId}`]
-    ).catch(() => ({ rowCount: 0 }));
-    newVideos += ins.rowCount ?? 0;
-  }
-
-  const present = entries.filter((e) => byId.has(e.video_id));
-  if (!present.length) return;
-
-  // 2. Free stats trace. Not scoring input; view_samples stays the source of truth.
-  const withStats = present.filter((e) => e.views != null || e.likes != null);
-  if (withStats.length) {
-    await pool.query(
-      `insert into rss_samples (video_id, at, views, likes)
-       select * from unnest($1::text[], $2::timestamptz[], $3::bigint[], $4::bigint[])
-       on conflict do nothing`,
-      [withStats.map((e) => e.video_id), withStats.map(() => now),
-       withStats.map((e) => e.views), withStats.map((e) => e.likes)]
-    );
-    samples += withStats.length;
-  }
-
-  // 3. Title changes go one at a time through the shared write path (they are rare, and each one
-  // needs its own version lookup + re-entry). Everything else just gets its check stamped.
-  const changed = present.filter((e) => {
-    const cur = byId.get(e.video_id)!;
-    return e.title && cur.title && e.title !== cur.title;
-  });
-  for (const e of changed) {
-    const cur = byId.get(e.video_id)!;
-    const r = await recordTitleChange(
-      pool, e.video_id, cur.title!, e.title, cur.published_at, now, cur.title_observed_at
-    );
-    if (r.kind === 'change') {
-      titleChanges++;
-      log(`TITLE CHANGE ${e.video_id}: "${cur.title}" -> "${e.title}"`);
-    } else {
-      titleSyncs++;   // no feed event, no re-entry: we had no recent evidence of the old title
-    }
-  }
-  const changedSet = new Set(changed.map((e) => e.video_id));
-  const unchangedIds = present.map((e) => e.video_id).filter((id) => !changedSet.has(id));
-  if (unchangedIds.length) {
-    // Every observation counts, changed or not: this is the evidence the CHANGE/SYNC rule reads.
-    await recordTitleObservations(pool, unchangedIds, now);
-    await pool.query(
-      `update track_schedule set last_title_check = now() where video_id = any($1)`, [unchangedIds]
-    ).catch(() => {});
-  }
-
-  // 4. Description history. Archived only, no feed event (explicitly out of scope in the plan).
-  const withDesc = present.filter((e) => e.description != null);
-  if (withDesc.length) {
-    const { rows: dv } = await pool.query(
-      `select distinct on (video_id) video_id, version, sha256 from description_versions
-        where video_id = any($1) order by video_id, version desc`,
-      [withDesc.map((e) => e.video_id)]
-    );
-    const latest = new Map<string, { version: number; sha256: string }>(
-      dv.map((r: any) => [r.video_id, { version: r.version, sha256: r.sha256 }])
-    );
-    const rows: { id: string; version: number; sha: string; text: string; seen: Date; isChange: boolean; backfill: boolean }[] = [];
-    for (const e of withDesc) {
-      const cur = byId.get(e.video_id)!;
-      const feedSha = sha(e.description!);
-      const prev = latest.get(e.video_id);
-      // Same CHANGE/SYNC rule as titles: without recent evidence of the old description, a
-      // difference is a first observation, not news. Descriptions emit no feed events yet, but
-      // the backfill flag keeps the archive honest for when they do.
-      const kind = classifyTitleDiff(
-        { publishedAt: cur.published_at, titleObservedAt: cur.title_observed_at }, now
-      );
-      const isSync = kind === 'sync';
-      if (!prev) {
-        // The v1 row is always a baseline of what we already held, never a change.
-        const base = cur.description ?? '';
-        rows.push({ id: e.video_id, version: 1, sha: sha(base), text: base, seen: cur.published_at ?? now, isChange: false, backfill: true });
-        if (sha(base) !== feedSha) {
-          rows.push({ id: e.video_id, version: 2, sha: feedSha, text: e.description!, seen: now, isChange: !isSync, backfill: isSync });
-        }
-      } else if (prev.sha256 !== feedSha) {
-        rows.push({ id: e.video_id, version: prev.version + 1, sha: feedSha, text: e.description!, seen: now, isChange: !isSync, backfill: isSync });
-        if (!isSync) log(`DESCRIPTION CHANGE ${e.video_id} -> v${prev.version + 1}`);
-      }
-    }
-    if (rows.length) {
-      await pool.query(
-        `insert into description_versions (video_id, version, sha256, description, first_seen, backfill)
-         select * from unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::timestamptz[], $6::boolean[])
-         on conflict do nothing`,
-        [rows.map((r) => r.id), rows.map((r) => r.version), rows.map((r) => r.sha),
-         rows.map((r) => r.text), rows.map((r) => r.seen), rows.map((r) => r.backfill)]
-      );
-      descChanges += rows.filter((r) => r.isChange).length;
-    }
-  }
-
-  // 5. The feed says these videos were touched more recently than our last CDN look, so make the
-  // thumbnail watcher pick them up on its very next tick. last_checked is NOT NULL, so the
-  // sentinel is 'epoch' — older than every recheck window, in every tier of both ladders.
-  const { rows: tv } = await pool.query(
-    `select distinct on (video_id) video_id, version, last_checked from thumbnail_versions
-      where video_id = any($1) order by video_id, version desc`,
-    [present.map((e) => e.video_id)]
-  );
-  const mark = tv.filter((r: any) => {
-    const e = present.find((x) => x.video_id === r.video_id);
-    return e && r.last_checked > new Date(0) && isUpdatedSince(e.updated, r.last_checked);
-  });
-  if (mark.length) {
-    await pool.query(
-      `update thumbnail_versions t set last_checked = 'epoch'
-        from unnest($1::text[], $2::int[]) as m(video_id, version)
-       where t.video_id = m.video_id and t.version = m.version`,
-      [mark.map((r: any) => r.video_id), mark.map((r: any) => r.version)]
-    );
-    dueNow += mark.length;
-  }
-}
+interface Fetched { channel_id: string; entries: RssEntry[] }
+const fetched: Fetched[] = [];
 
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
   await Promise.all(group.map(async (c) => {
@@ -252,55 +278,164 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
       const headers: Record<string, string> = {};
       if (c.rss_etag) headers['If-None-Match'] = c.rss_etag;
       const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${c.channel_id}`, {
-        headers,
-        signal: AbortSignal.timeout(RSS_POLICY.timeoutMs),
+        headers, signal: AbortSignal.timeout(RSS_POLICY.timeoutMs),
       });
       status = res.status;
       if (status === 304) {
         notModified++;
-        await pool.query(
-          `update channel_rss_state set rss_last_polled = $2, rss_last_status = 304,
-                  rss_interval_sec = null, rss_backoff_until = null, updated_at = now()
-            where channel_id = $1`, [c.channel_id, now]
-        );
+        buf.channels.push({ channel_id: c.channel_id, status: 304, body_sha: null, etag: c.rss_etag,
+                            interval_sec: null, backoff_until: null, clear_woken: true });
         return;
       }
       if (!res.ok) throw new Error(`HTTP ${status}`);
       ok200++;
       const body = await res.text();
       const bodySha = sha(body);
-      const etag = res.headers.get('etag');
-      // Byte-identical feed: bump last_polled and stop. No rss_samples, no per-entry work.
-      const unchanged = !shouldProcessEntries(c.rss_body_sha, bodySha);
-      if (unchanged) sameBody++;
-      // A poll clears 'woken': the push has now been confirmed by a real read.
-      await pool.query(
-        `update channel_rss_state set rss_last_polled = $2, rss_last_status = 200, rss_body_sha = $3,
-                rss_etag = $4, rss_interval_sec = null, rss_backoff_until = null,
-                rss_state = case when rss_state = 'woken' then 'active' else rss_state end,
-                updated_at = now()
-          where channel_id = $1`, [c.channel_id, now, bodySha, etag]
-      );
-      if (unchanged) return;
-      await handleEntries(c.channel_id, parseRssEntries(body));
+      buf.channels.push({ channel_id: c.channel_id, status: 200, body_sha: bodySha,
+                          etag: res.headers.get('etag'), interval_sec: null, backoff_until: null, clear_woken: true });
+      if (!shouldProcessEntries(c.rss_body_sha, bodySha)) { sameBody++; return; }
+      fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body) });
     } catch (err) {
       errors++;
       const b = backoffAfter(status || 599, c.rss_state, c.rss_interval_sec, now);
-      await pool.query(
-        `update channel_rss_state set rss_last_polled = $2, rss_last_status = $3,
-                rss_interval_sec = $4, rss_backoff_until = $5, updated_at = now()
-          where channel_id = $1`,
-        [c.channel_id, now, status || null, b.intervalSec, b.backoffUntil]
-      ).catch(() => {});
+      buf.channels.push({ channel_id: c.channel_id, status: status || null, body_sha: null, etag: c.rss_etag,
+                          interval_sec: b.intervalSec, backoff_until: b.backoffUntil ? b.backoffUntil.toISOString() : null,
+                          clear_woken: false });
       console.error(`${c.channel_id}: ${err instanceof Error ? err.message : 'fetch error'}`);
     }
   }));
 }
+const fetchSecs = secs(t0);
+log(`fetch: ${fetchSecs}s — ${ok200} x 200 (${sameBody} identical body), ${notModified} x 304, ${errors} errors; ${fetched.length} feeds to diff`);
+
+// ---------------------------------------------------------------- phase 2: one snapshot read
+
+const t1 = Date.now();
+const allIds = [...new Set(fetched.flatMap((f) => f.entries.map((e) => e.video_id)))];
+
+interface Snap {
+  title: string | null; description: string | null; published_at: Date | null;
+  title_observed_at: Date | null;
+  descVersion?: number; descSha?: string;
+  titleMaxVersion?: number;
+  thumbVersion?: number; thumbLastChecked?: Date;
+}
+const snap = new Map<string, Snap>();
+// Chunked so no single statement carries a 60K-element array.
+for (const part of chunk(allIds, CHUNK)) {
+  const [v, d, t, th] = await Promise.all([
+    pool.query(`select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [part]),
+    pool.query(`select distinct on (video_id) video_id, version, sha256 from description_versions
+                 where video_id = any($1) order by video_id, version desc`, [part]),
+    pool.query(`select video_id, max(version)::int as v from title_versions where video_id = any($1) group by video_id`, [part]),
+    pool.query(`select distinct on (video_id) video_id, version, last_checked from thumbnail_versions
+                 where video_id = any($1) order by video_id, version desc`, [part]),
+  ]);
+  for (const r of v.rows) snap.set(r.id, { title: r.title, description: r.description, published_at: r.published_at, title_observed_at: r.title_observed_at });
+  for (const r of d.rows) { const s = snap.get(r.video_id); if (s) { s.descVersion = r.version; s.descSha = r.sha256; } }
+  for (const r of t.rows) { const s = snap.get(r.video_id); if (s) s.titleMaxVersion = r.v; }
+  for (const r of th.rows) { const s = snap.get(r.video_id); if (s) { s.thumbVersion = r.version; s.thumbLastChecked = r.last_checked; } }
+}
+const snapSecs = secs(t1);
+log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} already in the corpus`);
+
+// ---------------------------------------------------------------- phase 3: diff, in memory
+
+const t2 = Date.now();
+const nowIso = now.toISOString();
+let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
+
+for (const f of fetched) {
+  for (const e of f.entries) {
+    const cur = snap.get(e.video_id);
+
+    // Unknown id: queue it only if it is a genuinely NEW upload. An old catalogue entry the
+    // feed still lists is a backfill question, not discovery (see isNewUpload).
+    if (!cur) {
+      if (isNewUpload(e.published, now)) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
+      else skippedOld++;
+      continue;
+    }
+
+    // Free stats trace, but only while the curve is still moving. A year-old video's view count
+    // does not need a 15-minute sample; that was ~9,000 wasted inserts per tick.
+    if (isSampleWorthy(cur.published_at, now) && (e.views != null || e.likes != null)) {
+      buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes });
+    }
+
+    const evidence = { publishedAt: cur.published_at, titleObservedAt: cur.title_observed_at };
+
+    // --- title ---
+    if (e.title && cur.title && e.title !== cur.title) {
+      const kind = classifyTitleDiff(evidence, now);
+      const backfill = kind === 'sync';
+      const plan = titleVersionPlan(cur.titleMaxVersion ?? 0);
+      if (plan.seedVersion1) {
+        buf.titleVersions.push({
+          video_id: e.video_id, version: 1, title: cur.title, backfill: true,
+          first_seen: (cur.published_at ?? now).toISOString(),
+        });
+      }
+      buf.titleVersions.push({ video_id: e.video_id, version: plan.newVersion, title: e.title, first_seen: nowIso, backfill });
+      buf.videoTitles.push({ video_id: e.video_id, title: e.title });
+      if (backfill) { titleSyncs++; buf.titleChecks.push(e.video_id); }
+      else { titleChanges++; buf.reentries.push(e.video_id); log(`TITLE CHANGE ${e.video_id}: "${cur.title}" -> "${e.title}"`); }
+    } else {
+      buf.observed.push(e.video_id);
+      buf.titleChecks.push(e.video_id);
+    }
+
+    // --- description --- (archived only; no feed event, explicitly out of scope in the plan)
+    if (e.description != null) {
+      const feedSha = sha(e.description);
+      const isSync = classifyTitleDiff(evidence, now) === 'sync';
+      if (cur.descVersion == null) {
+        const base = cur.description ?? '';
+        buf.descVersions.push({ video_id: e.video_id, version: 1, sha256: sha(base), description: base,
+                                first_seen: (cur.published_at ?? now).toISOString(), backfill: true });
+        if (sha(base) !== feedSha) {
+          buf.descVersions.push({ video_id: e.video_id, version: 2, sha256: feedSha, description: e.description,
+                                  first_seen: nowIso, backfill: isSync });
+          if (!isSync) descChanges++;
+        }
+      } else if (cur.descSha !== feedSha) {
+        buf.descVersions.push({ video_id: e.video_id, version: cur.descVersion + 1, sha256: feedSha,
+                                description: e.description, first_seen: nowIso, backfill: isSync });
+        if (!isSync) descChanges++;
+      }
+    }
+
+    // --- due now for the CDN watcher ---
+    // 'epoch' is older than every recheck window in every tier of both ladders.
+    if (cur.thumbVersion != null && cur.thumbLastChecked && cur.thumbLastChecked > new Date(0)
+        && isUpdatedSince(e.updated, cur.thumbLastChecked)) {
+      buf.dueNow.push({ video_id: e.video_id, version: cur.thumbVersion });
+    }
+  }
+}
+const diffSecs = secs(t2);
+
+// ---------------------------------------------------------------- phase 4: flush
+
+const t3 = Date.now();
+let written: Record<string, number> = {};
+try {
+  written = await flush(buf);
+} catch (e) {
+  fs.mkdirSync(path.dirname(PENDING), { recursive: true });
+  fs.appendFileSync(PENDING, JSON.stringify(buf) + '\n');
+  console.error(`FLUSH FAILED, buffered to ${PENDING} for the next tick: ${(e as Error).message}`);
+  process.exitCode = 1;
+}
+const flushSecs = secs(t3);
 
 log(
-  `done: ${ok200} x 200 (${sameBody} identical body), ${notModified} x 304, ${errors} errors; ` +
-  `${newVideos} new videos queued (${skippedOld} older unknown entries skipped), ${titleChanges} title changes (${titleSyncs} synced, no evidence of the old title), ` +
-  `${descChanges} description changes, ` +
-  `${dueNow} marked due-now for the CDN watcher, ${samples} rss_samples`
+  `done in ${secs(t0)}s (fetch ${fetchSecs}s, snapshot ${snapSecs}s, diff ${diffSecs}s, flush ${flushSecs}s): ` +
+  `${ok200} x 200 (${sameBody} identical body), ${notModified} x 304, ${errors} errors; ` +
+  `${written['touch_queue'] ?? 0} new videos queued of ${buf.touchQueue.length} offered ` +
+  `(${skippedOld} older unknown entries skipped), ` +
+  `${titleChanges} title changes (${titleSyncs} synced), ${descChanges} description changes, ` +
+  `${buf.dueNow.length} marked due-now, ${buf.samples.length} rss_samples`
 );
+log(`rows written: ${JSON.stringify(written)}`);
 await pool.end();

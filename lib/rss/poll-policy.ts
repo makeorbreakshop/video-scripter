@@ -32,22 +32,15 @@ export const RSS_POLICY = {
   runIntervalSec: 300,
   /** How recent a feed entry must be to count as a new upload worth queueing. */
   newUploadWindowDays: 7,
+  /** How young a video must be for a free RSS view/like sample to be worth storing. */
+  sampleWindowDays: 30,
   /**
-   * Hard ceiling on channels touched in one run.
-   *
-   * MEASURED 2026-09-03 at full corpus, not derived. Tick durations, taken as the gap between
-   * consecutive LaunchAgent starts while the thumbnail watcher and launch-track were also
-   * running: 1,935 channels -> 474 s and 518 s; 950 channels -> 390 s and 376 s (~0.40 s per
-   * channel). 700 targets ~280 s, inside the 300 s interval with a little margin.
-   *
-   * The honest consequence: 4,546 active channels / 700 per tick = 7 ticks, so the real active
-   * cadence is ~33 minutes, not the 15 the plan asked for. Leaving the ceiling high does NOT
-   * buy back the difference — it just makes ticks overrun and launchd serialise them, landing
-   * at a similar effective cadence with unbounded run times and more DB contention. Getting to
-   * 15 minutes needs the per-poll write cost down (the ~9,000 rss_samples inserts per 950
-   * channels dominate), not a bigger cap.
+   * Hard ceiling on channels touched in one tick. Sized to cover the whole corpus in one go
+   * (5,853 channels) now that a tick is fetch -> snapshot -> diff -> flush rather than a burst
+   * of per-channel statements. The 15-minute cadence in DUE_CHANNELS_SQL means only the
+   * channels actually due show up, so this ceiling is a safety rail, not the normal limit.
    */
-  maxPerRun: 700,
+  maxPerRun: 6000,
 } as const;
 
 const MS = 1000;
@@ -106,17 +99,13 @@ export function backoffAfter(
 }
 
 /**
- * Stagger: how many channels one run may take so the whole due population is spread evenly
- * across the per-channel interval instead of arriving as a burst every 15 minutes.
- * With 52 subset channels at 15 min and a 5-min tick this is ceil(52/3) = 18 per run.
+ * How many channels one tick may take. There is no stagger any more: with fetching decoupled
+ * from writing, a tick can poll every due channel, and the 15-minute per-channel cadence in
+ * DUE_CHANNELS_SQL is what spreads the load. A channel polled this tick is simply not due for
+ * the next two, so the burst is self-limiting.
  */
-export function perRunCap(
-  totalChannels: number,
-  intervalSec: number = RSS_POLICY.activeIntervalSec,
-  runIntervalSec: number = RSS_POLICY.runIntervalSec
-): number {
-  const slots = Math.max(1, Math.floor(intervalSec / runIntervalSec));
-  return Math.min(RSS_POLICY.maxPerRun, Math.max(1, Math.ceil(totalChannels / slots)));
+export function perRunCap(totalChannels: number): number {
+  return Math.min(RSS_POLICY.maxPerRun, Math.max(1, totalChannels));
 }
 
 /**
@@ -136,6 +125,24 @@ export function isNewUpload(
 ): boolean {
   if (!published) return false;
   return now.getTime() - new Date(published).getTime() < windowDays * 86_400_000;
+}
+
+/**
+ * Is this video's view curve still worth a free dense sample?
+ *
+ * The feed carries view/like counts for all 15 entries, and the first full-corpus shape wrote a
+ * row for every one of them — ~9,000 rss_samples inserts per 950 channels per tick, which
+ * dominated the tick's write cost. A year-old video's view count does not move meaningfully in
+ * 15 minutes, and view_snapshots already holds the daily truth for it. Sampling is only
+ * interesting while the launch curve is still bending.
+ */
+export function isSampleWorthy(
+  publishedAt: Date | string | null | undefined,
+  now: Date = new Date(),
+  windowDays: number = RSS_POLICY.sampleWindowDays
+): boolean {
+  if (!publishedAt) return false;
+  return now.getTime() - new Date(publishedAt).getTime() < windowDays * 86_400_000;
 }
 
 /**

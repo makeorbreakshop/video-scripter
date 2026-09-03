@@ -10,6 +10,7 @@ import {
   isUpdatedSince,
   shouldProcessEntries,
   isNewUpload,
+  isSampleWorthy,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -80,29 +81,38 @@ describe('backoffAfter', () => {
   });
 });
 
-describe('perRunCap staggers the population across the interval', () => {
-  it('spreads 52 subset channels over the three 5-min slots in 15 min', () => {
-    expect(perRunCap(52)).toBe(18);
-  });
-  it('never returns zero and never exceeds the hard ceiling', () => {
+describe('perRunCap', () => {
+  // No stagger any more: a tick fetches, snapshots, diffs and flushes in phases, so it can take
+  // every due channel. The 15-minute cadence in DUE_CHANNELS_SQL is what spreads the load.
+  it('takes every due channel up to the safety ceiling', () => {
+    expect(perRunCap(52)).toBe(52);
+    expect(perRunCap(5_853)).toBe(5_853);
     expect(perRunCap(1)).toBe(1);
     expect(perRunCap(0)).toBe(1);
-    expect(perRunCap(1_000_000)).toBe(P.maxPerRun);
   });
 
-  // At full corpus the ceiling, not the stagger, is what binds — and that is deliberate.
-  // Measured 2026-09-03: ~0.25 s/channel, so the stagger's own answer (ceil(5,803/3) = 1,935)
-  // produced 474-518 s ticks against a 300 s interval. The cap trades the plan's 15-minute
-  // cadence for ticks that actually fit; this test pins the trade so it stays visible.
-  it('binds on the measured ceiling at full corpus, not the stagger', () => {
-    const CORPUS = 5_803;       // channel_rss_state, 2026-09-03
-    const ACTIVE = 4_546;
-    expect(perRunCap(CORPUS)).toBe(P.maxPerRun);
-    expect(P.maxPerRun).toBeLessThan(Math.ceil(CORPUS / 3));
-    // 7 ticks to sweep the active channels => ~35 min, not 15. Documented, not accidental.
-    const ticksPerSweep = Math.ceil(ACTIVE / P.maxPerRun);
-    expect(ticksPerSweep).toBe(7);
-    expect((ticksPerSweep * P.runIntervalSec) / 60).toBeCloseTo(35, 0);
+  it('the ceiling covers the whole corpus, so it is a rail and not the normal limit', () => {
+    const CORPUS = 5_853; // channel_rss_state, 2026-09-03
+    expect(P.maxPerRun).toBeGreaterThan(CORPUS);
+    expect(perRunCap(1_000_000)).toBe(P.maxPerRun);
+  });
+});
+
+describe('isSampleWorthy (which videos get a free dense trace)', () => {
+  // The feed carries counts for all 15 entries; writing every one cost ~9,000 inserts per tick
+  // and dominated the flush. Only a curve that is still bending is worth 15-minute resolution.
+  it('samples videos inside the 30-day window', () => {
+    expect(isSampleWorthy(ago(days(1)), NOW)).toBe(true);
+    expect(isSampleWorthy(ago(days(29)), NOW)).toBe(true);
+  });
+
+  it('skips the back catalogue, where view_snapshots is already the daily truth', () => {
+    expect(isSampleWorthy(ago(days(31)), NOW)).toBe(false);
+    expect(isSampleWorthy(ago(days(400)), NOW)).toBe(false);
+  });
+
+  it('skips a video with no publish date rather than guessing', () => {
+    expect(isSampleWorthy(null, NOW)).toBe(false);
   });
 });
 
