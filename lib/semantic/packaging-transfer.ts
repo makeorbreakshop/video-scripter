@@ -153,7 +153,7 @@ function titleFormSimilarity(left: TitleForm, right: TitleForm): number {
   return 0.65 * signalSimilarity + 0.35 * skeletonSimilarity;
 }
 
-function titleFormCompatibility(candidate: TitleForm, targets: TitleForm[]): number {
+export function titleFormCompatibility(candidate: TitleForm, targets: TitleForm[]): number {
   const similarities = targets.map((target) => titleFormSimilarity(candidate, target)).sort((left, right) => right - left);
   const top = similarities.slice(0, Math.min(3, similarities.length));
   const topMean = top.reduce((sum, value) => sum + value, 0) / top.length;
