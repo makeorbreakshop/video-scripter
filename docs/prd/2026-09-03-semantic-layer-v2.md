@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 4 vertical slice and bounded J5 reranking bake-off complete; independent review passed; stopped at the dev gate. Date: 2026-09-03.
+Status: revision 5 programmatic cross-topic packaging experiment active after the independently reviewed revision-4 stop. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -244,3 +244,45 @@ The first challenger artifacts were withdrawn after independent review found tha
 Total semantic spend through the stop is conservatively bounded at $0.898715: $0.367486 from the frozen prior ledger plus $0.531229 for all challenger attempts. The challenger bound deliberately charges the interrupted corrected-input attempt the entire unused portion of its original $0.50 cap because its transfer-call usage was not persisted.
 
 The original v1 §10 experiment A (video document recipe) and D (query strategy) still have no valid winner. Revision 4 invalidated the old provisional comparison and did not authorize those bake-offs; this J5 result is not an A or D win.
+
+## 16. Revision-5 programmatic cross-topic packaging experiment
+
+Revision 4 proved that useful J5 candidates exist in the pooled top 100 but that ordinary semantic relevance and the first metadata-only LLM verifier rank direct copies above creative adaptations. The next bounded experiment therefore removes generative inference from the retrieval service. It tests whether deterministic packaging-form features, topic distance, trustworthy outlier strength, and source diversity can rank transferable source videos. A caller-owned skill may interpret the returned evidence later, but that interpretation is not part of retrieval or this evaluation.
+
+### 16.1 Outcome and protected behavior
+
+Build one offline, replayable reranker over only the two frozen J5 dev pools. It must make no OpenAI generation call, no embedding call, no database write, and no endpoint change. It may read the frozen task, pool, judgment, query-vector, and candidate-run artifacts plus the exact frozen Qdrant payload/vector for those candidate ids and seed channels. It must not use the resolved labels, source-system ranks, or source-system scores while constructing features or rankings; those are evaluator-only inputs after rankings are frozen.
+
+The programmatic representation is deliberately multi-part:
+
+- deterministic title-form features such as comparison, test, challenge, transformation, list, price, time constraint, warning, verdict, novelty, question, first-person, and superlative framing;
+- a normalized title skeleton that masks amounts, counts, durations, years, percentages, and content-bearing subject spans while preserving packaging operators;
+- target-channel format compatibility computed from the frozen seed channel's representative titles;
+- exact topic affinity computed as cosine similarity between the frozen seed query vector and each frozen candidate vector, used as a penalty rather than a relevance reward;
+- outlier strength and confidence from the frozen candidate payload, used only as proof/quality evidence;
+- deterministic result diversification with per-channel caps and maximal-marginal-relevance-style penalties.
+
+The first slice does not use thumbnail vectors because the 498-item pilot does not cover the frozen J5 pools sufficiently to produce a fair common-input comparison. It reports overlap and leaves a visual leg separate. It also does not mine historical transfers, train a learned ranker, assign BERTopic labels, or create a full-corpus packaging index. Those steps require a positive bounded signal first.
+
+### 16.2 Frozen variants and gate
+
+Define all recipes and weights in one versioned config before reading resolved judgments:
+
+1. `title_form`: target-channel title-form compatibility plus outlier strength;
+2. `cross_topic`: `title_form` plus a monotonic penalty for high topic affinity;
+3. `cross_topic_diverse`: `cross_topic` followed by deterministic source-channel and near-duplicate diversification.
+
+Run all three against the exact 149-candidate maker pool and 163-candidate technology pool. Stable entity id is the final tie-break. Evaluate only after all rankings and their input/config hashes are frozen. Report lower/upper creative precision@10, lower/upper nDCG@20, direct-application rate@10, unresolved top-10 count, creative hits per task, latency, and feature-ablation deltas.
+
+A variant may advance only if its mean lower creative precision@10 is at least 0.30, mean direct-application rate@10 is at most 0.20, it has at least one creative hit on both tasks, and it has zero unresolved top-10 results. A dev pass authorizes only one newly frozen confirmation set; it does not authorize endpoints or corpus-wide indexing. If no fixed variant passes, stop before historical weak-label mining or learned ranking and report that deterministic metadata features are insufficient.
+
+Budget: $0 paid model cost and no production writes. Qdrant reads are restricted to the 312 frozen candidate-task pairs and two seed channels. All generated artifacts are write-once or self-hashed and remain under `docs/prd/semantic-eval-v4/programmatic/`.
+
+### 16.3 Work units
+
+- [ ] Add failing pure tests for title normalization, title-form features, topic-penalized scoring, finite inputs, deterministic tie-breaking, channel caps, and diversity selection.
+- [ ] Implement the smallest reusable programmatic feature/ranking module and make the focused tests pass.
+- [ ] Freeze exact programmatic inputs and a pre-judgment variant config with complete upstream hashes and no label/rank/score leakage.
+- [ ] Run the fixed variants, then evaluate them against the existing resolved dev judgments and generate a reproducible report.
+- [ ] Run the full semantic Jest suite, touched-file TypeScript, artifact replay, and an independent fresh-context review.
+- [ ] Apply the gate literally: freeze one confirmation recipe only after a pass; otherwise record the stop without endpoints, full-corpus work, or historical weak-label mining.
