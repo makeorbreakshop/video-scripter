@@ -95,11 +95,11 @@ export default function FeedClient({ initialEvents, initialCursor, hasChannels, 
         </InsertCoin>
       ) : (
         <div className="cs-feed">
-          {groupCards(events).map((day) => (
+          {groupCards(events).map((day, di) => (
             <section key={day.key}>
               <h2 className="cs-day">{dayDividerLabel(day.cards[0].at)}</h2>
-              {day.cards.map((c) => (
-                <FeedCard key={c.key} card={c} avatarUrl={c.channel_id ? avatars[c.channel_id] : null} />
+              {day.cards.map((c, ci) => (
+                <FeedCard key={c.key} card={c} avatarUrl={c.channel_id ? avatars[c.channel_id] : null} priority={di === 0 && ci < 2} />
               ))}
             </section>
           ))}

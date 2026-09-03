@@ -1,8 +1,9 @@
 'use client';
-import { useCallback, useState } from 'react';
+import { Suspense, use, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AddChannel from './add-channel';
+import { ChannelCardsSkeleton } from '@/components/app/skeletons';
 import { ChannelAvatar } from '@/components/app/avatar';
 import {
   channelStats, planLabel, roleLabel, usageView, type ChannelRowLike,
@@ -10,7 +11,14 @@ import {
 import type { PlanLimits, PlanName } from '@/lib/app/plans';
 
 export interface ChannelsClientProps {
-  channels: ChannelRowLike[];
+  /**
+   * The card rows, as a promise. The page hands the unawaited read down so the head and the
+   * add-channel flow paint immediately and only the grid waits (React 19 `use()` inside the
+   * Suspense boundary below). Passing a resolved array still works — it just never suspends.
+   */
+  channels: ChannelRowLike[] | Promise<ChannelRowLike[]>;
+  /** Ids already tracked, read cheaply on the server so AddChannel need not wait for the grid. */
+  trackedIds: string[];
   plan: PlanName;
   limits: PlanLimits;
   usage: { tracked: number; watched_closely: number };
@@ -18,20 +26,52 @@ export interface ChannelsClientProps {
   readOnly?: boolean;
 }
 
-export default function ChannelsClient({ channels, plan, limits, usage, readOnly }: ChannelsClientProps) {
+export default function ChannelsClient({ channels, trackedIds, plan, limits, usage, readOnly }: ChannelsClientProps) {
   const router = useRouter();
-  const [rows, setRows] = useState(channels);
+  const view = usageView(plan, limits, { tracked: usage.tracked, watched_closely: usage.watched_closely });
+
+  // The grid re-reads itself from the server; nothing here needs the rows.
+  const refresh = useCallback(async () => { router.refresh(); }, [router]);
+
+  return (
+    <>
+      <div className="cs-page-head">
+        <div>
+          <h1 className="cs-h1">Channels</h1>
+          <p className="cs-sub">Everything you track.</p>
+        </div>
+        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+          <div className="cs-hiscore">{planLabel(plan)} plan</div>
+          <div className="cs-num" style={{ fontSize: 13 }}>{usage.tracked} channels</div>
+        </div>
+      </div>
+
+      {!readOnly && (
+        <div className="cs-section">
+          {view.atTrackedLimit ? (
+            <div className="cs-note" data-tone="accent">
+              You are using all {limits.tracked} channels on the {planLabel(plan)} plan. Remove one, or upgrade to track more.
+            </div>
+          ) : (
+            <AddChannel trackedIds={trackedIds} onAdded={refresh} />
+          )}
+        </div>
+      )}
+
+      <Suspense fallback={<ChannelCardsSkeleton />}>
+        <ChannelCards channels={channels} readOnly={readOnly} />
+      </Suspense>
+    </>
+  );
+}
+
+/** The card grid, and the optimistic remove that edits it. */
+function ChannelCards({ channels, readOnly }: { channels: ChannelRowLike[] | Promise<ChannelRowLike[]>; readOnly?: boolean }) {
+  const router = useRouter();
+  const initial = Array.isArray(channels) ? channels : use(channels);
+  const [rows, setRows] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
-  const view = usageView(plan, limits, { tracked: rows.length, watched_closely: usage.watched_closely });
-
-  const refresh = useCallback(async () => {
-    const res = await fetch('/api/app/channels');
-    if (!res.ok) return;
-    const body = await res.json();
-    setRows(body.channels || []);
-    router.refresh();
-  }, [router]);
 
   async function remove(id: string, name: string | null) {
     if (!confirm(`Stop tracking ${name || id}?`)) return;
@@ -51,33 +91,8 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
     }
   }
 
-  const trackedIds = rows.map((r) => r.channel_id);
-
   return (
     <>
-      <div className="cs-page-head">
-        <div>
-          <h1 className="cs-h1">Channels</h1>
-          <p className="cs-sub">Everything you track.</p>
-        </div>
-        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-          <div className="cs-hiscore">{planLabel(plan)} plan</div>
-          <div className="cs-num" style={{ fontSize: 13 }}>{rows.length} channels</div>
-        </div>
-      </div>
-
-      {!readOnly && (
-        <div className="cs-section">
-          {view.atTrackedLimit ? (
-            <div className="cs-note" data-tone="accent">
-              You are using all {limits.tracked} channels on the {planLabel(plan)} plan. Remove one, or upgrade to track more.
-            </div>
-          ) : (
-            <AddChannel trackedIds={trackedIds} onAdded={refresh} />
-          )}
-        </div>
-      )}
-
       {error && <div className="cs-note" data-tone="bad" style={{ marginBottom: 12 }}>{error}</div>}
 
       {rows.length === 0 ? (

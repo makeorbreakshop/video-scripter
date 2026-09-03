@@ -14,6 +14,8 @@ import {
 import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 import { classifyForInsert, skipForInsert } from '../ingest/classify';
+import { refreshChannelStats } from './channel-stats';
+import { revalidateChannel } from './revalidate';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
@@ -486,6 +488,11 @@ export async function trackChannel(
     jobs += r.length;
   }
 
+  // Seed the channel's row in channel_stats so /app/channels has numbers immediately (the
+  // backfill jobs refresh it again when they finish). Never fails the track.
+  await refreshChannelStats([channelId]).catch((e) => console.error('refreshChannelStats:', e.message));
+  revalidateChannel(channelId);
+
   return { channel_id: channelId, role, lane: 'user', enrolled, fast_synced: fastSynced, units, jobs_queued: jobs };
 }
 
@@ -500,6 +507,7 @@ export async function untrackChannel(userId: string, channelId: string): Promise
     [userId, channelId]
   );
   if (!del.length) return { removed: false, demoted: false };
+  revalidateChannel(channelId);
 
   const others = await one<{ n: string }>(
     `select count(*) as n from user_channels where channel_id = $1`,
@@ -534,7 +542,14 @@ export interface UserChannelRow {
   last_packaging_change: string | null;
 }
 
-/** The user's channel list with the headline numbers for /app/channels. */
+/**
+ * The user's channel list with the headline numbers for /app/channels.
+ *
+ * The numbers come from channel_stats (lib/app/channel-stats.ts), refreshed by the ingest and
+ * scoring runs. Computing them inline cost 4.3 s cold for 16 channels: three lateral
+ * subqueries per channel over videos, video_scores and both version tables. A channel with no
+ * stats row yet (added seconds ago, mid-backfill) falls back to zeros rather than vanishing.
+ */
 export async function listUserChannels(userId: string): Promise<UserChannelRow[]> {
   return q<UserChannelRow>(
     `select uc.channel_id,
@@ -543,43 +558,17 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             uc.added_at,
             ct.lane,
             ct.backfill_status,
-            coalesce(cm.title, v.name) as name,
-            v.thumbnail_url,
+            coalesce(cm.title, cs.name) as name,
+            cs.latest_thumbnail_url as thumbnail_url,
             cm.avatar_url,
-            coalesce(v.video_count, 0)::int as video_count,
-            s.baseline,
-            coalesce(s.outliers, 0)::int as outliers,
-            ch.last_packaging_change
+            coalesce(cs.video_count, 0)::int as video_count,
+            cs.baseline,
+            coalesce(cs.outliers, 0)::int as outliers,
+            cs.last_packaging_change
        from user_channels uc
        left join channel_tracking ct on ct.channel_id = uc.channel_id
        left join channel_meta cm on cm.channel_id = uc.channel_id
-       left join lateral (
-          select count(*)::int as video_count,
-                 max(vv.channel_name) as name,
-                 (array_agg(vv.thumbnail_url order by vv.published_at desc)
-                    filter (where vv.thumbnail_url is not null))[1] as thumbnail_url
-            from videos vv where vv.channel_id = uc.channel_id
-       ) v on true
-       left join lateral (
-          select percentile_cont(0.5) within group (order by vs.baseline) as baseline,
-                 count(*) filter (where vs.score >= 2 and vs.confidence <> 'insufficient') as outliers
-            from video_scores vs where vs.channel_id = uc.channel_id
-       ) s on true
-       left join lateral (
-          -- A packaging change is any version > 1 of a thumbnail or title on
-          -- one of the channel's videos.
-          select max(f) as last_packaging_change from (
-            select max(tv.first_seen) as f
-              from thumbnail_versions tv
-              join videos vv2 on vv2.id = tv.video_id
-             where vv2.channel_id = uc.channel_id and tv.version > 1
-            union all
-            select max(ti.first_seen) as f
-              from title_versions ti
-              join videos vv3 on vv3.id = ti.video_id
-             where vv3.channel_id = uc.channel_id and ti.version > 1
-          ) pk
-       ) ch on true
+       left join channel_stats cs on cs.channel_id = uc.channel_id
       where uc.user_id = $1
       order by uc.added_at asc`,
     [userId]

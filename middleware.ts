@@ -6,7 +6,9 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server
 // The public API authenticates itself with bearer API keys (lib/api/v1.ts), so Clerk must not
 // touch it: a session cookie is not how an agent or a curl call talks to /api/v1, and letting
 // Clerk redirect these to a sign-in page would turn a 401 into an HTML 302.
-const isPublicApi = createRouteMatcher(['/api/v1(.*)']);
+// /api/app/revalidate is in the same category: the pipeline scripts authenticate it with the
+// REVALIDATE_SECRET header, and they have no Clerk session to offer.
+const isPublicApi = createRouteMatcher(['/api/v1(.*)', '/api/app/revalidate']);
 
 const isProtected = createRouteMatcher([
   '/admin(.*)',

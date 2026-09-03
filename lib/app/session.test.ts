@@ -1,15 +1,19 @@
-jest.mock('@clerk/nextjs/server', () => ({ currentUser: jest.fn() }));
+jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(), currentUser: jest.fn() }));
 jest.mock('next/headers', () => ({ cookies: jest.fn() }));
 jest.mock('../admin/db', () => ({ q: jest.fn(), one: jest.fn() }));
 jest.mock('./users', () => ({ ensureUser: jest.fn(), userByClerkId: jest.fn() }));
 
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import { one } from '../admin/db';
 import { ensureUser, userByClerkId } from './users';
 import { requireAppUser } from './session';
 
+const mAuth = auth as unknown as jest.Mock;
 const mCurrentUser = currentUser as jest.Mock;
+
+// auth() carries the clerk_id off the locally-verified session JWT; signedIn(null) is a visitor.
+const signedIn = (userId: string | null) => mAuth.mockResolvedValue({ userId });
 const mCookies = cookies as jest.Mock;
 const mOne = one as jest.Mock;
 const mEnsure = ensureUser as jest.Mock;
@@ -30,18 +34,40 @@ beforeEach(() => {
   delete process.env.CS_PREVIEW_EMAIL;
   setNodeEnv('development');
   mCookies.mockResolvedValue({ get: () => undefined });
+  signedIn(null);
 });
 afterAll(() => { process.env = env; });
 
 describe('requireAppUser: normal Clerk path', () => {
-  it('ensures the row for the signed-in Clerk user', async () => {
+  it('reads the existing row by clerk_id without touching Clerk\'s backend', async () => {
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(DEV);
+    await expect(requireAppUser()).resolves.toBe(DEV);
+    expect(mByClerkId).toHaveBeenCalledWith('user_test');
+    // The whole point of auth(): no currentUser() round trip on the common path.
+    expect(mCurrentUser).not.toHaveBeenCalled();
+    expect(mEnsure).not.toHaveBeenCalled();
+  });
+
+  it('falls back to currentUser and inserts when there is no row yet', async () => {
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(null);
     mCurrentUser.mockResolvedValue({ id: 'user_test', primaryEmailAddress: { emailAddress: 'a@b.c' }, emailAddresses: [] });
     mEnsure.mockResolvedValue(DEV);
     await expect(requireAppUser()).resolves.toBe(DEV);
-    expect(mEnsure.mock.calls[0][0]).toMatchObject({ id: 'user_test' });
+    expect(mEnsure.mock.calls[0][0]).toMatchObject({ id: 'user_test', primaryEmailAddress: { emailAddress: 'a@b.c' } });
   });
 
   it('returns null when nobody is signed in', async () => {
+    signedIn(null);
+    await expect(requireAppUser()).resolves.toBeNull();
+    expect(mCurrentUser).not.toHaveBeenCalled();
+    expect(mEnsure).not.toHaveBeenCalled();
+  });
+
+  it('returns null when the session is valid but Clerk has no profile for it', async () => {
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(null);
     mCurrentUser.mockResolvedValue(null);
     await expect(requireAppUser()).resolves.toBeNull();
     expect(mEnsure).not.toHaveBeenCalled();
@@ -54,6 +80,7 @@ describe('requireAppUser: CS_DEV_AS_CLERK_ID', () => {
     mByClerkId.mockResolvedValue(PROD);
     await expect(requireAppUser()).resolves.toBe(PROD);
     expect(mByClerkId).toHaveBeenCalledWith('user_live');
+    expect(mAuth).not.toHaveBeenCalled();
     expect(mCurrentUser).not.toHaveBeenCalled();
     expect(mEnsure).not.toHaveBeenCalled();
   });
@@ -61,10 +88,12 @@ describe('requireAppUser: CS_DEV_AS_CLERK_ID', () => {
   it('is ignored in production', async () => {
     setNodeEnv('production');
     process.env.CS_DEV_AS_CLERK_ID = 'user_live';
-    mCurrentUser.mockResolvedValue({ id: 'user_test', emailAddresses: [] });
-    mEnsure.mockResolvedValue(DEV);
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(DEV);
     await expect(requireAppUser()).resolves.toBe(DEV);
-    expect(mByClerkId).not.toHaveBeenCalled();
+    // It resolved the signed-in id, never the CS_DEV_AS_CLERK_ID one.
+    expect(mByClerkId).toHaveBeenCalledTimes(1);
+    expect(mByClerkId).toHaveBeenCalledWith('user_test');
   });
 
   it('throws rather than silently falling back when the row is missing', async () => {
@@ -112,18 +141,20 @@ describe('requireAppUser: preview cookie', () => {
   it('is ignored when the cookie does not match the token', async () => {
     process.env.CS_PREVIEW_CLERK_ID = 'user_live';
     mCookies.mockResolvedValue({ get: () => ({ value: 'wrong' }) });
-    mCurrentUser.mockResolvedValue({ id: 'user_test', emailAddresses: [] });
-    mEnsure.mockResolvedValue(DEV);
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(DEV);
     await expect(requireAppUser()).resolves.toBe(DEV);
-    expect(mByClerkId).not.toHaveBeenCalled();
+    expect(mByClerkId).toHaveBeenCalledTimes(1);
+    expect(mByClerkId).toHaveBeenCalledWith('user_test');
   });
 
   it('is ignored in production', async () => {
     setNodeEnv('production');
     process.env.CS_PREVIEW_CLERK_ID = 'user_live';
-    mCurrentUser.mockResolvedValue({ id: 'user_test', emailAddresses: [] });
-    mEnsure.mockResolvedValue(DEV);
+    signedIn('user_test');
+    mByClerkId.mockResolvedValue(DEV);
     await expect(requireAppUser()).resolves.toBe(DEV);
-    expect(mByClerkId).not.toHaveBeenCalled();
+    expect(mByClerkId).toHaveBeenCalledTimes(1);
+    expect(mByClerkId).toHaveBeenCalledWith('user_test');
   });
 });

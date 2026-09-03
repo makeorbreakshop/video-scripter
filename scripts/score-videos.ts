@@ -13,6 +13,8 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { longformSql } from '../lib/scoring/longform';
+import { refreshChannelStatsSql } from '../lib/app/channel-stats';
+import { revalidateRemote } from '../lib/app/revalidate-remote';
 
 import { chunk } from '../lib/nightly/tracking-core';
 import {
@@ -364,4 +366,12 @@ async function final() {
 
 
 if (FIT) await fit(); else if (FINAL) await final(); else await score();
+// Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
+// refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
+if (!FIT) {
+  const statsRefreshed = await pool.query(refreshChannelStatsSql(CHANNELS.length > 0), CHANNELS.length ? [CHANNELS] : [])
+    .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
+  // New scores change what the channel page and every video page on it say.
+  await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
+}
 await pool.end();

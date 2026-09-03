@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import { etTimestamp, feedRowView, formatScore, relativeTime, type FeedEventLike } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
+import { installThumbFallback } from '@/components/app/thumb-runtime';
+
+installThumbFallback();
 
 /**
  * One event, read like a social/news item: who, when, what. The channel line comes first
@@ -9,7 +12,7 @@ import { ChannelAvatar } from '@/components/app/avatar';
  * then the title. An upload gets a large card thumbnail; a packaging change keeps the
  * before → after pair; an outlier carries the score chip.
  */
-export default function FeedRow({ event, now, avatarUrl }: { event: FeedEventLike; now?: Date; avatarUrl?: string | null }) {
+export default function FeedRow({ event, now, avatarUrl, priority = false }: { event: FeedEventLike; now?: Date; avatarUrl?: string | null; priority?: boolean }) {
   const v = feedRowView(event);
   const large = v.thumbSize === 'large';
   const body = (
@@ -21,7 +24,8 @@ export default function FeedRow({ event, now, avatarUrl }: { event: FeedEventLik
             {i > 0 && <span className="cs-arrow" aria-hidden>&rarr;</span>}
             <div className="cs-thumb">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.url} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              <img src={t.url} alt="" width={480} height={270} loading={priority ? 'eager' : 'lazy'}
+                   fetchPriority={priority ? 'high' : undefined} decoding="async" referrerPolicy="no-referrer" />
               {t.caption && <span className="cs-thumb-cap">{t.caption}</span>}
             </div>
           </span>

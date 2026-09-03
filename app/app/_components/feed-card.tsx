@@ -4,6 +4,11 @@ import type { FeedCard as Card } from '@/lib/app/feed-format';
 import { cardKind, cardMeta, cardVerb, etTimestamp, formatScore, relativeTime } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
+import { installThumbFallback } from '@/components/app/thumb-runtime';
+
+// The feed's own copy of the delegated fallback listener: these cards are client components,
+// so importing the runtime installs it once for the bundle instead of once per <img>.
+installThumbFallback();
 
 /**
  * One video, one day, as a social post: a byline that says in words what the channel did,
@@ -20,7 +25,9 @@ function Arrow() {
   );
 }
 
-export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarUrl?: string | null; now?: Date }) {
+export default function FeedCard({ card, avatarUrl, now, priority = false }: { card: Card; avatarUrl?: string | null; now?: Date; priority?: boolean }) {
+  // Only the first couple of cards are on screen at load; everything below waits.
+  const load = priority ? ('eager' as const) : ('lazy' as const);
   const kind = cardKind(card);
   const swaps = card.thumbSwaps;
   const cdn = card.video_id ? `https://i.ytimg.com/vi/${card.video_id}/hqdefault.jpg` : null;
@@ -46,12 +53,12 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
     <>
       <div className="cs-fcard-ba">
         <figure className="cs-fcard-ba-item">
-          <Thumb src={beforeUrl} fallbackSrc={cdn} alt="thumbnail before the change" style={{ width: '100%', height: '100%' }} />
+          <Thumb src={beforeUrl} fallbackSrc={cdn} alt="thumbnail before the change" loading={load} style={{ width: '100%', height: '100%' }} />
           <figcaption>{beforeVersion ? `v${beforeVersion}` : 'before'}</figcaption>
         </figure>
         <Arrow />
         <figure className="cs-fcard-ba-item">
-          <Thumb src={latest} fallbackSrc={cdn} alt="thumbnail after the change" style={{ width: '100%', height: '100%' }} />
+          <Thumb src={latest} fallbackSrc={cdn} alt="thumbnail after the change" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
           <figcaption>{afterVersion ? `v${afterVersion} · now` : 'now'}</figcaption>
         </figure>
       </div>
@@ -59,7 +66,8 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
         <span className="cs-versions cs-fcard-older">
           {olderSwaps.slice(-6).map((s, i) => (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img key={`${s.url}-${i}`} src={s.url} alt={`version ${s.version ?? ''}`} title={`v${s.version ?? '?'} · ${etTimestamp(s.at)}`} loading="lazy" referrerPolicy="no-referrer" />
+            <img key={`${s.url}-${i}`} src={s.url} alt={`version ${s.version ?? ''}`} title={`v${s.version ?? '?'} · ${etTimestamp(s.at)}`}
+                 width={136} height={76} loading="lazy" decoding="async" referrerPolicy="no-referrer" />
           ))}
         </span>
       )}
@@ -78,7 +86,7 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
     evidence = (
       <div className="cs-fcard-upload">
         <div className="cs-fcard-media">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
           {scoreChip}
         </div>
         <div className="cs-fcard-body">
@@ -91,7 +99,7 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
     evidence = (
       <div className="cs-fcard-upload">
         <div className="cs-fcard-media" data-size="ident">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
           {scoreChip}
         </div>
         <div className="cs-fcard-body">{titleChange}</div>
@@ -115,7 +123,7 @@ export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarU
     evidence = (
       <div className="cs-fcard-upload">
         <div className="cs-fcard-media" data-size="outlier">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
         </div>
         <div className="cs-fcard-body">
           <p className="cs-title" data-size="large">{title}</p>

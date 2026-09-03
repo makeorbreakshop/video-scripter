@@ -2,18 +2,40 @@
 //
 // Sorting and paging are URL parameters so Postgres does the ORDER BY and the LIMIT
 // (lib/app/channel-page.ts); nothing sorts a full catalogue in the browser.
+//
+// The page paints in two parts. The header is one small aggregate and the track state, so it
+// is awaited inline; the grid — a page of videos plus the range count — streams into a
+// <Suspense> boundary whose fallback is the same GridSkeleton the route's loading.tsx uses,
+// so the layout does not move when the real grid lands.
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { requireAppUser } from '@/lib/app/session';
-import { channelHeader, channelVideos, channelVideoCount, isTracked, parseSort, parseRange, GRID_PAGE } from '@/lib/app/channel-page';
+import { isTracked, parseSort, parseRange, GRID_PAGE, type SortKey, type RangeKey } from '@/lib/app/channel-page';
+import { cachedChannelHeader, cachedChannelVideos, cachedChannelVideoCount } from '@/lib/app/cached';
 import { compact, n } from '@/lib/admin/format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { VideoGrid, VideoGridStyles, FilterBar, LoadMore } from '@/components/app/video-grid';
+import { GridSkeleton } from '@/components/app/skeletons';
 import { TrackButton } from '@/components/app/track-button';
 
 export const dynamic = 'force-dynamic';
 
 const MAX_ROWS = 480;
+
+async function ChannelGrid({ channelId, sort, range, limit }: { channelId: string; sort: SortKey; range: RangeKey; limit: number }) {
+  const [page, total] = await Promise.all([
+    cachedChannelVideos(channelId, sort, limit, 0, range),
+    cachedChannelVideoCount(channelId, range),
+  ]);
+  return (
+    <>
+      <FilterBar channelId={channelId} sort={sort} range={range} showing={page.videos.length} total={total} />
+      <VideoGrid videos={page.videos} />
+      {page.hasMore && limit < MAX_ROWS && <LoadMore channelId={channelId} sort={sort} n={limit} range={range} />}
+    </>
+  );
+}
 
 export default async function AppChannelPage({
   params, searchParams,
@@ -30,11 +52,9 @@ export default async function AppChannelPage({
   const asked = parseInt(Array.isArray(sp.n) ? sp.n[0] ?? '' : sp.n ?? '', 10);
   const limit = Number.isFinite(asked) ? Math.min(Math.max(asked, GRID_PAGE), MAX_ROWS) : GRID_PAGE;
 
-  const [header, page, tracked, total] = await Promise.all([
-    channelHeader(id),
-    channelVideos(id, sort, limit, 0, range),
+  const [header, tracked] = await Promise.all([
+    cachedChannelHeader(id),
     isTracked(user.id, id),
-    channelVideoCount(id, range),
   ]);
   if (!header) notFound();
 
@@ -63,10 +83,9 @@ export default async function AppChannelPage({
         </div>
       </div>
 
-      <FilterBar channelId={header.channelId} sort={sort} range={range} showing={page.videos.length} total={total} />
-
-      <VideoGrid videos={page.videos} />
-      {page.hasMore && limit < MAX_ROWS && <LoadMore channelId={header.channelId} sort={sort} n={limit} range={range} />}
+      <Suspense key={`${sort}:${range}:${limit}`} fallback={<GridSkeleton />}>
+        <ChannelGrid channelId={header.channelId} sort={sort} range={range} limit={limit} />
+      </Suspense>
 
       <p style={{ fontSize: 12, marginTop: 24 }}>
         <Link href="/app/channels" style={{ color: 'var(--cs-muted)' }}>← all channels</Link>

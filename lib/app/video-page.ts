@@ -6,6 +6,7 @@
 // This module only composes them, adds the thumbnail URLs and the experiment read, and hands
 // the result to the page as plain serialisable data.
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
+import { q, one } from '../admin/db';
 import {
   mergeActuals, expectedCurve, projectedCurve, forecastCurve, packagingMarkers,
   type Actual, type CurvePoint, type ProjPoint, type Marker,
@@ -76,6 +77,72 @@ export function heroThumb(
 
 export function archiveFallbackUrl(videoId: string, version: number): string {
   return `/api/admin/thumb/${videoId}/${version}`;
+}
+
+
+/**
+ * Just enough for the top of the page: the video row, its score, and the numbers verdict()
+ * reads. Four small indexed reads instead of the full page's snapshot/sample series, so the
+ * hero and the verdict paint while loadVideoPage() streams the chart in behind a Suspense
+ * boundary.
+ */
+export type VideoHeadView = {
+  id: string;
+  title: string;
+  channelId: string;
+  channelName: string;
+  publishedAt: string;
+  views: number;
+  ageDays: number;
+  pace: number | null;
+  expectedNow: number | null;
+  headline: 'now' | 'day30';
+  thumbUrl: string | null;
+  thumbFallbackUrl: string | null;
+  score: VideoPageData['score'];
+};
+
+export async function loadVideoHead(id: string, now: number = Date.now()): Promise<VideoHeadView | null> {
+  const [v, score, params, thumbs] = await Promise.all([
+    one<any>(
+      `select id, title, channel_id, channel_name, published_at, view_count, thumbnail_url
+         from videos where id = $1`,
+      [id]
+    ),
+    one<any>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
+    one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null }>(
+      `select params->'mult' as mult, params->'longtail' as longtail
+         from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+    ),
+    q<{ version: number; r2_uploaded_at: string | null }>(
+      `select version, r2_uploaded_at from thumbnail_versions where video_id = $1 order by version`,
+      [id]
+    ),
+  ]);
+  if (!v) return null;
+
+  const mult = params?.mult ?? {};
+  const longtail = params?.longtail ?? null;
+  const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
+  const views = Number(v.view_count ?? 0);
+  const expectedNow = expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail);
+  const hero = heroThumb(id, thumbs, v.thumbnail_url ?? null);
+
+  return {
+    id,
+    title: v.title,
+    channelId: v.channel_id,
+    channelName: v.channel_name,
+    publishedAt: new Date(v.published_at).toISOString(),
+    views,
+    ageDays,
+    expectedNow,
+    pace: expectedNow && views > 0 ? views / expectedNow : null,
+    headline: ageDays >= 30 ? 'now' : 'day30',
+    thumbUrl: hero.src,
+    thumbFallbackUrl: hero.fallback,
+    score,
+  };
 }
 
 export async function loadVideoPage(id: string, now: number = Date.now()): Promise<VideoPageView | null> {
@@ -150,12 +217,16 @@ export function confidenceWord(confidence: string | null | undefined): string {
   return c === 'insufficient' ? 'not enough data' : c;
 }
 
+/** verdict() reads only the headline numbers, so the fast head view can produce it too. */
+export type VideoVerdictInput = Pick<VideoPageView,
+  'score' | 'headline' | 'pace' | 'expectedNow' | 'views' | 'ageDays' | 'channelName'>;
+
 /**
  * The one thing a creator came for, as words. Two readings of the same number:
  * a video past day 30 is judged on where it is now (the day-30 score is history, and is kept
  * as the comparable figure); a young one is judged on where day 30 is heading.
  */
-export function verdict(v: VideoPageView): { big: string | null; under: string; aside: string | null; over: boolean } {
+export function verdict(v: VideoVerdictInput): { big: string | null; under: string; aside: string | null; over: boolean } {
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
   const sc = v.score;
   const conf = sc?.confidence ? confidenceWord(sc.confidence) : null;

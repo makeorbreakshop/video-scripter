@@ -1,5 +1,6 @@
 // Clerk session -> app_users row, for the /api/app routes.
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { ensureUser, userByClerkId, AppUser } from './users';
 import { one } from '../admin/db';
@@ -46,12 +47,28 @@ async function previewUser(): Promise<AppUser | null> {
   );
 }
 
-/** The signed-in user's app_users row, creating it on first request. */
-export async function requireAppUser(): Promise<AppUser | null> {
+/**
+ * The signed-in user's app_users row, creating it on first request.
+ *
+ * Wrapped in React's cache() so the layout and the page it renders share one result per
+ * request instead of each paying for the session resolution again.
+ *
+ * auth() verifies the session JWT locally and yields the clerk_id with no network call;
+ * currentUser() is a round trip to Clerk's backend, so it is only reached on the one
+ * request per account that has to create the row (we need the email for that).
+ */
+export const requireAppUser = cache(async (): Promise<AppUser | null> => {
   const as = await impersonatedUser();
   if (as) return as;
   const pv = await previewUser();
   if (pv) return pv;
+
+  const { userId } = await auth();
+  if (!userId) return null;
+  const existing = await userByClerkId(userId);
+  if (existing) return existing;
+
+  // No row yet: first request after sign-up. Fetch the profile for its email and insert.
   const cu = await currentUser();
   if (!cu) return null;
   return ensureUser({
@@ -59,7 +76,7 @@ export async function requireAppUser(): Promise<AppUser | null> {
     primaryEmailAddress: cu.primaryEmailAddress ? { emailAddress: cu.primaryEmailAddress.emailAddress } : null,
     emailAddresses: (cu.emailAddresses || []).map((e: any) => ({ emailAddress: e.emailAddress })),
   });
-}
+});
 
 export const unauthorized = () =>
   Response.json({ error: 'unauthorized' }, { status: 401 });

@@ -10,7 +10,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
-import { SHORT_MAX_SECONDS } from '../lib/scoring/longform';
+import { SHORT_MAX_SECONDS, longformSql } from '../lib/scoring/longform';
 import { shortsVerdict, type ShortsVerdict } from '../lib/thumbs/shorts';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
@@ -55,6 +55,14 @@ async function worker() {
         ? `update videos set shorts_checked_at = now() where id = $1`
         : `update videos set is_short = $2, shorts_checked_at = now() where id = $1`,
       v === 'gone' ? [id] : [id, v === 'short']
+    );
+    // The verdict flips this video's longform status, and feed_events carries that as a stored
+    // column (lib/feed/query.ts filters on it), so re-stamp the video's events in the same pass.
+    await pool.query(
+      `update feed_events e
+          set is_longform = coalesce((select ${longformSql('v')} from videos v where v.id = e.video_id), false)
+        where e.video_id = $1`,
+      [id]
     );
     done++;
     if (done % 500 === 0) log(`progress ${done}/${rows.length}: ${shorts} shorts, ${long} long-form, ${gone} gone`);

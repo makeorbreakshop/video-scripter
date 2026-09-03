@@ -13,6 +13,8 @@ import {
   baselineRatio,
   temporalScore,
 } from '../lib/baselines/core';
+import { refreshChannelStatsSql } from '../lib/app/channel-stats';
+import { revalidateRemote } from '../lib/app/revalidate-remote';
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -101,4 +103,9 @@ for (const { channel_id } of channels) {
   if (done % 200 === 0) console.log(`[${done}/${channels.length}] channels, ${videosDone} videos rewritten`);
 }
 console.log(`RECOMPUTE COMPLETE: ${done} channels, ${videosDone} videos on the unified ratio convention.`);
+// Baselines changed, so the materialized channel-list numbers are stale (lib/app/channel-stats.ts).
+const statsRefreshed = await pool.query(refreshChannelStatsSql(false))
+  .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
+// Every baseline moved, so drop the cached channel/video reads in the running app.
+await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
 await pool.end();

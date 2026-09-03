@@ -8,6 +8,8 @@ import pg from 'pg';
 import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
+import { refreshChannelStatsSql } from '../lib/app/channel-stats';
+import { revalidateRemote } from '../lib/app/revalidate-remote';
 
 const maxChannels = parseInt(process.argv[2] || '0', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -234,6 +236,13 @@ await pool.query(`insert into quota_ledger (category, units) values ('ingest', $
   }
 }
 await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
+// Tonight's inserts moved video counts, thumbnails and names, so rebuild the materialized
+// per-channel numbers /app/channels reads (lib/app/channel-stats.ts). One set-based upsert.
+const statsRefreshed = await pool.query(refreshChannelStatsSql(false))
+  .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
+// Those channels' cached page reads are now stale (lib/app/cached.ts). This process is not the
+// Next runtime, so ask the running app to drop the tags. Best effort, never fatal.
+await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
 
 console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.`);
 await pool.end();

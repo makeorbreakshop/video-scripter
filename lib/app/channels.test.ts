@@ -2,7 +2,7 @@ jest.mock('../admin/db', () => ({ q: jest.fn(), one: jest.fn() }));
 import { q, one } from '../admin/db';
 import {
   searchTracked, resolveInput, resolveChannel, trackChannel, untrackChannel,
-  insertVideos, logQuota, quotaSpentToday, PlanLimitError, BACKFILL_DEPTH,
+  insertVideos, logQuota, quotaSpentToday, PlanLimitError, BACKFILL_DEPTH, listUserChannels,
 } from './channels';
 
 const mq = q as jest.Mock;
@@ -314,5 +314,60 @@ describe('trackChannel identity for known channels', () => {
     const spy = jest.spyOn(meta, 'channelMeta').mockResolvedValue(null);
     expect(spy).toBeDefined(); // behaviour is exercised in the integration path; the guard exists
     spy.mockRestore();
+  });
+});
+
+describe('listUserChannels', () => {
+  it('reads the headline numbers from channel_stats rather than recomputing them', async () => {
+    await listUserChannels('u1');
+    const sql = sqlOf(mq.mock.calls[0]);
+    expect(sql).toContain('left join channel_stats cs on cs.channel_id = uc.channel_id');
+    expect(sql).toContain('coalesce(cs.video_count, 0)::int as video_count');
+    expect(sql).toContain('cs.last_packaging_change');
+    // The three per-channel lateral aggregates are what made this 4.3 s cold.
+    expect(sql).not.toContain('left join lateral');
+    expect(sql).not.toContain('percentile_cont');
+    expect(sql).not.toContain('thumbnail_versions');
+    expect(mq.mock.calls[0][1]).toEqual(['u1']);
+  });
+
+  it('still orders oldest-tracked first and scopes to the user', async () => {
+    await listUserChannels('u1');
+    const sql = sqlOf(mq.mock.calls[0]);
+    expect(sql).toContain('where uc.user_id = $1');
+    expect(sql).toContain('order by uc.added_at asc');
+  });
+});
+
+describe('trackChannel refreshes channel_stats', () => {
+  it('seeds the new channel\'s stats row so the list has numbers straight away', async () => {
+    mone.mockImplementation(async (sql: string) => {
+      const t = String(sql).replace(/\s+/g, ' ');
+      if (t.includes('from user_channels where user_id')) return null;
+      if (t.includes('from app_users u')) return { plan: 'pro', tracked: '0', watched: '0' };
+      if (t.includes('as known')) return { known: true };
+      return { x: 1 };
+    });
+    await trackChannel('u1', CH);
+    const refresh = callsMatching(/insert into channel_stats/);
+    expect(refresh).toHaveLength(1);
+    expect(refresh[0][1]).toEqual([[CH]]);
+  });
+
+  it('does not fail the track when the refresh errors', async () => {
+    mone.mockImplementation(async (sql: string) => {
+      const t = String(sql).replace(/\s+/g, ' ');
+      if (t.includes('from user_channels where user_id')) return null;
+      if (t.includes('from app_users u')) return { plan: 'pro', tracked: '0', watched: '0' };
+      if (t.includes('as known')) return { known: true };
+      return { x: 1 };
+    });
+    mq.mockImplementation(async (sql: string) => {
+      if (/insert into channel_stats/.test(String(sql))) throw new Error('stats down');
+      return [];
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(trackChannel('u1', CH)).resolves.toMatchObject({ channel_id: CH });
+    (console.error as jest.Mock).mockRestore();
   });
 });

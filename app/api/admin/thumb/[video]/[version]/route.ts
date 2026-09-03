@@ -34,7 +34,15 @@ export async function GET(_: Request, ctx: { params: Promise<{ video: string; ve
     });
   }
   if (src.kind === 'redirect') {
-    return NextResponse.redirect(src.url, { status: 302, headers: { 'x-thumb-source': 'cdn' } });
+    // The DB lookup behind this miss costs about a second, and the answer barely changes:
+    // let the browser and the CDN keep the redirect instead of asking again per image.
+    return NextResponse.redirect(src.url, {
+      status: 302,
+      headers: { 'x-thumb-source': 'cdn', 'cache-control': 'public, max-age=3600, s-maxage=86400' },
+    });
   }
-  return new NextResponse('not archived on this host', { status: 404, headers: { 'x-thumb-source': 'missing' } });
+  return new NextResponse('not archived on this host', {
+    status: 404,
+    headers: { 'x-thumb-source': 'missing', 'cache-control': 'public, max-age=3600, s-maxage=86400' },
+  });
 }

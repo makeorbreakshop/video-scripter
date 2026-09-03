@@ -75,20 +75,26 @@ export type GridVideo = {
 
 export async function channelHeader(channelId: string): Promise<ChannelHeader | null> {
   const row = await one<any>(
+    // video_count / baseline / name come from channel_stats when it has been refreshed for
+    // this channel (lib/app/channel-stats.ts) — the same aggregates /app/channels shows, so
+    // the two pages agree. The inline aggregate stays as the fallback for a channel with no
+    // stats row yet.
     `select v.channel_id,
-            coalesce(max(cm.title), max(v.channel_name)) as name,
+            coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name,
             max(cm.avatar_url) as avatar_url,
             max(cm.subscriber_count) as subscriber_count,
             min(v.import_date) as tracked_since,
-            count(*)::int as video_count,
-            (select percentile_cont(0.5) within group (order by s.baseline)
-               from video_scores s where s.channel_id = $1 and s.baseline is not null) as baseline,
+            coalesce(max(cs.video_count), count(*)::int) as video_count,
+            coalesce(max(cs.baseline),
+                     (select percentile_cont(0.5) within group (order by s.baseline)
+                        from video_scores s where s.channel_id = $1 and s.baseline is not null)) as baseline,
             (select count(*)::int from video_scores s
               where s.channel_id = $1 and s.score is not null and s.confidence <> 'insufficient') as scored_count,
             (select count(*)::int from video_scores s
               where s.channel_id = $1 and s.score >= 2 and s.confidence <> 'insufficient') as over_count
        from videos v
        left join channel_meta cm on cm.channel_id = v.channel_id
+       left join channel_stats cs on cs.channel_id = v.channel_id
       where v.channel_id = $1
       group by v.channel_id`,
     [channelId]
@@ -130,13 +136,27 @@ export async function channelVideos(
   offset = 0,
   range: RangeKey = 'all'
 ): Promise<{ videos: GridVideo[]; hasMore: boolean }> {
+  // Page-then-decorate. The CTE picks the page's video rows off
+  // idx_videos_channel_published_longform (top-N sort, ~limit heap fetches); the packaging
+  // laterals and the score join then run for those rows only. Evaluating them before the
+  // LIMIT cost ~2,500 index probes on a 626-video channel to produce 61 rows.
+  // Sorting by score needs video_scores inside the CTE — that is the only sort that does.
+  const scoreSort = sort === 'score';
   const rows = await q<any>(
-    `select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url,
+    `with page as (
+       select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url
+         from videos v
+         ${scoreSort ? 'left join video_scores s on s.video_id = v.id' : ''}
+        where v.channel_id = $1 and ${longformSql('v')}${rangeClause(range)}
+        order by ${SORTS[sort]}
+        limit $2 offset $3
+     )
+     select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url,
             s.score, s.confidence,
             tv.n_versions as thumb_versions, tv.latest as thumb_latest, tv.last_change as thumb_change,
             tt.n_versions as title_versions, tt.last_change as title_change,
             tt.latest_title, tt.prev_title
-       from videos v
+       from page v
        left join video_scores s on s.video_id = v.id
        left join lateral (
          select max(version)::int as latest, count(*)::int as n_versions,
@@ -150,9 +170,7 @@ export async function channelVideos(
                 (array_agg(title order by version desc))[2] as prev_title
            from title_versions t where t.video_id = v.id
        ) tt on true
-      where v.channel_id = $1 and ${longformSql('v')}${rangeClause(range)}
-      order by ${SORTS[sort]}
-      limit $2 offset $3`,
+      order by ${SORTS[sort]}`,
     [channelId, limit + 1, offset]
   );
 

@@ -4,28 +4,17 @@
 import Link from 'next/link';
 import type { GridVideo, SortKey } from '@/lib/app/channel-page';
 import { GRID_PAGE, type RangeKey } from '@/lib/app/channel-page';
-import { compact, etDate, ago } from '@/lib/admin/format';
-import { Thumb } from './thumb';
+import { ThumbFallbackScript } from './thumb';
+import { VideoTile, ScoreChip } from './video-tile';
+import { LoadMoreClient } from './load-more';
+
+export { ScoreChip };
 
 const SORT_LABELS: [SortKey, string][] = [
   ['published', 'Newest'],
   ['score', 'Score'],
   ['views', 'Views'],
 ];
-
-/** Score as plain text: accent and bold at 2x and up, muted otherwise, a dash when unscored. */
-export function ScoreChip({ score, size = 'sm' }: { score: number | null; size?: 'sm' | 'lg' }) {
-  const fontSize = size === 'lg' ? 16 : 12;
-  if (score == null) return <span className="cs-num" title="not enough data to score this video yet" style={{ fontSize, color: 'var(--cs-muted)' }}>–</span>;
-  const outlier = score >= 2;
-  const color = outlier ? 'var(--cs-accent)' : score < 1 ? 'var(--cs-warn)' : 'var(--cs-ink)';
-  return (
-    <span className="cs-num" title={`${score.toFixed(2)}× the channel's baseline${score < 1 ? ' (below its usual)' : ''}`}
-      style={{ fontSize, fontWeight: outlier ? 700 : 600, color }}>
-      {score.toFixed(1)}×
-    </span>
-  );
-}
 
 const RANGE_LABELS: [RangeKey, string][] = [['all', 'All time'], ['1y', 'Past year'], ['90d', '90 days'], ['30d', '30 days']];
 
@@ -48,28 +37,11 @@ export function FilterBar({ channelId, sort, range, showing, total }: { channelI
   );
 }
 
-function Packaging({ v }: { v: GridVideo }) {
-  if (!v.swaps) return null;
-  const label = `${v.swaps} swap${v.swaps === 1 ? '' : 's'}${v.last_change ? ` · ${ago(v.last_change)}` : ''}`;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-      <span className="vg-meta" style={{ color: 'var(--cs-warn)', flex: 'none' }}>{label}</span>
-      {v.prevThumbUrl ? (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3, flex: 'none' }} title="previous → current thumbnail">
-          <Thumb src={v.prevThumbUrl} alt="previous thumbnail" style={{ width: 34, opacity: 0.65 }} />
-          <span aria-hidden className="cs-arrow" style={{ fontSize: 10 }}>→</span>
-          <Thumb src={v.thumbUrl} alt="current thumbnail" style={{ width: 34 }} />
-        </span>
-      ) : v.title_prev ? (
-        <span className="vg-meta vg-clip" title={`${v.title_prev} → ${v.title_latest}`}>title rewritten</span>
-      ) : null}
-    </div>
-  );
-}
-
 /** The grid's own CSS: four across at 1440, two at 768, one at 390. */
 export function VideoGridStyles() {
   return (
+    <>
+    <ThumbFallbackScript />
     <style>{`
       .vg-grid { display: grid; grid-template-columns: 1fr; gap: 24px 18px; list-style: none; margin: 0; padding: 0; }
       @media (min-width: 640px) { .vg-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -84,40 +56,25 @@ export function VideoGridStyles() {
       .vg-clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
       .vg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
     `}</style>
+    </>
   );
 }
+
+// The first six tiles are the ones on screen before any scrolling at three across, so they
+// load eagerly at high priority; the remaining fifty-four wait until the reader approaches
+// them. Before this, ninety-six unsized images competed over six connections at once.
+const EAGER_TILES = 6;
 
 export function VideoGrid({ videos }: { videos: GridVideo[] }) {
   if (!videos.length) return <p className="vg-meta">No videos for this channel yet.</p>;
   return (
     <ul className="vg-grid">
-      {videos.map((v) => (
-        <li key={v.id} className="vg-tile">
-          <Link href={`/app/videos/${v.id}`}>
-            <Thumb src={v.thumbUrl} fallbackSrc={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} alt="" style={{ width: '100%' }} />
-            <h3 className="vg-title">{v.title}</h3>
-          </Link>
-          <div className="vg-foot">
-            <span className="vg-meta vg-clip">
-              {etDate(v.published_at)} · <span className="cs-num">{compact(v.view_count)}</span> views
-            </span>
-            <ScoreChip score={v.score} />
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <Packaging v={v} />
-          </div>
-        </li>
-      ))}
+      {videos.map((v, i) => <VideoTile key={v.id} v={v} priority={i < EAGER_TILES} />)}
     </ul>
   );
 }
 
-export function LoadMore({ channelId, sort, n, range = 'all' }: { channelId: string; sort: SortKey; n: number; range?: RangeKey }) {
-  return (
-    <div className="cs-center">
-      <Link href={`/app/channels/${channelId}?sort=${sort}${range !== 'all' ? `&range=${range}` : ''}&n=${n + GRID_PAGE}`} className="cs-btn">
-        Load more
-      </Link>
-    </div>
-  );
+/** Kept as a server component with its old props; the fetching happens in the client half. */
+export function LoadMore({ channelId, sort, n, range = 'all', maxRows = 480 }: { channelId: string; sort: SortKey; n: number; range?: RangeKey; maxRows?: number }) {
+  return <LoadMoreClient channelId={channelId} sort={sort} range={range} initial={n} pageSize={GRID_PAGE} maxRows={maxRows} />;
 }

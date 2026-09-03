@@ -2,7 +2,6 @@
 // inserts underneath a scrolling reader, and get slower the further down you go.
 import { q } from '../admin/db';
 import { FEED_TYPES } from './event-types';
-import { longformSql } from '../scoring/longform';
 
 export { FEED_TYPES };
 export type { FeedEventType } from './event-types';
@@ -67,11 +66,7 @@ export function normalizeTypes(types: string[] | null | undefined): string[] | n
   return wanted.length ? [...new Set(wanted)] : null;
 }
 
-const SELECT = `
-  select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
-         v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at
-    from feed_events e
-    left join videos v on v.id = e.video_id`;
+
 
 /**
  * One page of events for an explicit channel list. `feedFor` layers the user's tracked channels
@@ -83,16 +78,43 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
   const cursor = decodeCursor(opts.cursor);
   const types = normalizeTypes(opts.types);
 
+  // Per-channel top-N, then merge. One index scan per tracked channel on
+  // idx_feed_events_channel_at_longform reads at most `limit + 1` rows in index order; the
+  // outer sort picks the global page out of those. The flat form scanned the global
+  // (at desc) index and threw away every event belonging to an untracked channel — 32K rows
+  // discarded to produce 60 on a 19-channel account.
+  //
+  // The longform test is a stored column (feed_events.is_longform, written at insert time and
+  // maintained by the shorts verifier) rather than a join to videos: joining 4,266 events to
+  // videos before the LIMIT was the other half of the cost. videos is still LEFT JOINed for
+  // the display columns, but now for the page's 60 rows only.
+  const p = { channels: 1, limit: 2, cursorAt: 3, cursorId: 4 };
+  let n = cursor ? 5 : 3;
+  const typesParam = types ? n++ : 0;
+  const sinceParam = opts.since ? n++ : 0;
+  const inner = `select e2.id, e2.type, e2.at, e2.channel_id, e2.video_id, e2.payload
+                   from feed_events e2
+                  where e2.channel_id = c.channel_id
+                    and e2.is_longform
+                    ${cursor ? `and (e2.at, e2.id) < ($${p.cursorAt}::timestamptz, $${p.cursorId}::bigint)` : ''}
+                    ${types ? `and e2.type = any($${typesParam}::text[])` : ''}
+                    ${opts.since ? `and e2.at >= $${sinceParam}::timestamptz` : ''}
+                  order by e2.at desc, e2.id desc
+                  limit $${p.limit}`;
+
   // One extra row tells us whether another page exists without a second count query.
   const rows = await q<FeedRow>(
-    `${SELECT}
-      where e.channel_id = any($1)
-        and ${longformSql('v')}
-        ${cursor ? `and (e.at, e.id) < ($3::timestamptz, $4::bigint)` : ''}
-        ${types ? `and e.type = any($${cursor ? 5 : 3}::text[])` : ''}
-        ${opts.since ? `and e.at >= $${(cursor ? 5 : 3) + (types ? 1 : 0)}::timestamptz` : ''}
-      order by e.at desc, e.id desc
-      limit $2`,
+    `select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
+            v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at
+       from (
+         select x.*
+           from unnest($${p.channels}::text[]) as c(channel_id)
+           cross join lateral (${inner}) x
+          order by x.at desc, x.id desc
+          limit $${p.limit}
+       ) e
+       left join videos v on v.id = e.video_id
+      order by e.at desc, e.id desc`,
     [
       channelIds,
       limit + 1,
