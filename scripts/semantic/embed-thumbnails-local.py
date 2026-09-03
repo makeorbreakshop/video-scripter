@@ -38,6 +38,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-cache", type=Path, required=True)
     parser.add_argument("--model", default="tencent/WeMM-Embedding-4B")
     parser.add_argument("--revision", required=True)
+    parser.add_argument("--preprocessing", required=True)
+    parser.add_argument("--max-edge", type=int, default=640)
     parser.add_argument("--dimensions", type=int, default=512)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--device", choices=("auto", "mps", "cuda", "cpu"), default="auto")
@@ -75,23 +77,28 @@ def perceptual_dhash(image: Image.Image) -> str:
     return f"{value:016x}"
 
 
-def download_candidate(candidate: dict[str, Any], cache_dir: Path) -> DownloadedThumbnail:
+def download_candidate(candidate: dict[str, Any], cache_dir: Path, max_edge: int) -> DownloadedThumbnail:
     video_id = candidate["videoId"]
     cache_key = hashlib.sha256(candidate["thumbnailUrl"].encode("utf-8")).hexdigest()
-    path = cache_dir / f"{cache_key}.img"
-    body = path.read_bytes() if path.exists() else fetch_bytes(candidate["thumbnailUrl"])
-    if not path.exists():
-        path.write_bytes(body)
+    raw_path = cache_dir / f"{cache_key}.img"
+    processed_path = cache_dir / f"{cache_key}.fit-{max_edge}.jpg"
+    body = raw_path.read_bytes() if raw_path.exists() else fetch_bytes(candidate["thumbnailUrl"])
+    if not raw_path.exists():
+        raw_path.write_bytes(body)
     content_sha256 = hashlib.sha256(body).hexdigest()
-    with Image.open(path) as image:
+    with Image.open(raw_path) as image:
         image.verify()
-    with Image.open(path) as image:
+    with Image.open(raw_path) as image:
         width, height = image.size
         if width < 32 or height < 18:
             raise ValueError(f"thumbnail is unexpectedly small ({width}x{height})")
         image_hash = perceptual_dhash(image)
+        if not processed_path.exists():
+            normalized = ImageOps.exif_transpose(image).convert("RGB")
+            normalized.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
+            normalized.save(processed_path, format="JPEG", quality=95, optimize=True)
     print(f"downloaded {video_id}", file=sys.stderr, flush=True)
-    return DownloadedThumbnail(candidate, path, image_hash, content_sha256)
+    return DownloadedThumbnail(candidate, processed_path, image_hash, content_sha256)
 
 
 def resolve_device(requested: str, allow_cpu: bool) -> tuple[str, Any]:
@@ -123,6 +130,7 @@ def write_output(
     *,
     model: str,
     model_revision: str,
+    preprocessing: str,
     dimensions: int,
     device: str,
     downloads: int,
@@ -132,6 +140,7 @@ def write_output(
     payload = {
         "model": model,
         "modelRevision": model_revision,
+        "preprocessing": preprocessing,
         "dimensions": dimensions,
         "device": device,
         "downloads": downloads,
@@ -148,6 +157,7 @@ def load_checkpoint(
     *,
     model: str,
     model_revision: str,
+    preprocessing: str,
     dimensions: int,
     representatives: list[DownloadedThumbnail],
 ) -> list[dict[str, Any]]:
@@ -158,6 +168,7 @@ def load_checkpoint(
     except (OSError, json.JSONDecodeError):
         return []
     if (checkpoint.get("model") != model or checkpoint.get("modelRevision") != model_revision
+            or checkpoint.get("preprocessing") != preprocessing
             or checkpoint.get("dimensions") != dimensions):
         return []
     current = {item.perceptual_hash: item for item in representatives}
@@ -178,8 +189,8 @@ def load_checkpoint(
 
 def main() -> None:
     args = parse_args()
-    if args.dimensions < 1 or args.batch_size < 1:
-        raise ValueError("dimensions and batch size must be positive")
+    if args.dimensions < 1 or args.batch_size < 1 or args.max_edge < 64:
+        raise ValueError("dimensions/batch size must be positive and max edge must be at least 64")
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     candidates = manifest.get("candidates")
     if not isinstance(candidates, list) or not candidates:
@@ -193,7 +204,7 @@ def main() -> None:
     failures: list[dict[str, str]] = []
     for candidate in candidates:
         try:
-            downloaded.append(download_candidate(candidate, args.image_cache))
+            downloaded.append(download_candidate(candidate, args.image_cache, args.max_edge))
         except Exception as error:  # failures are data, not a reason to fabricate a vector
             failures.append({"videoId": str(candidate.get("videoId", "unknown")), "reason": str(error)[:300]})
 
@@ -204,6 +215,7 @@ def main() -> None:
                        for _, group in sorted(groups.items())]
     if not representatives:
         write_output(args.output, model=args.model, model_revision=args.revision,
+                     preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device="unavailable",
                      downloads=0, failures=failures, rows=[])
         raise RuntimeError("no thumbnails downloaded successfully")
@@ -212,6 +224,7 @@ def main() -> None:
         args.output,
         model=args.model,
         model_revision=args.revision,
+        preprocessing=args.preprocessing,
         dimensions=args.dimensions,
         representatives=representatives,
     )
@@ -221,6 +234,7 @@ def main() -> None:
         print(f"resuming from {len(rows)} checkpointed thumbnails", file=sys.stderr, flush=True)
     if not remaining:
         write_output(args.output, model=args.model, model_revision=args.revision,
+                     preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device=args.device,
                      downloads=len(downloaded), failures=failures, rows=rows)
         return
@@ -274,6 +288,7 @@ def main() -> None:
                 "visualTitle": serializable_vector(visual_title[index]),
             })
         write_output(args.output, model=args.model, model_revision=args.revision,
+                     preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device=device,
                      downloads=len(downloaded), failures=failures, rows=rows)
         print(f"embedded {len(rows)}/{len(representatives)} unique thumbnails", file=sys.stderr, flush=True)

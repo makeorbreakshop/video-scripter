@@ -69,6 +69,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
       contentSha256: 'a'.repeat(64),
       model: 'tencent/WeMM-Embedding-4B',
       modelRevision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
+      preprocessing: 'exif-rgb-fit-640x640-jpeg95',
       dimensions: 512,
       embeddedAt: '2026-09-02T12:00:00.000Z',
       linkedVideoIds: ['v1', 'v2'],
@@ -83,6 +84,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
       content_sha256: 'a'.repeat(64),
       embedding_model: 'tencent/WeMM-Embedding-4B',
       embedding_model_revision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
+      embedding_preprocessing: 'exif-rgb-fit-640x640-jpeg95',
       embedding_dimensions: 512,
       embedded_at: '2026-09-02T12:00:00.000Z',
     });
@@ -112,6 +114,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
     const valid = {
       model: 'tencent/WeMM-Embedding-4B',
       modelRevision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
+      preprocessing: 'exif-rgb-fit-640x640-jpeg95',
       dimensions: 2,
       device: 'mps',
       downloads: 2,

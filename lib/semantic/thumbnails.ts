@@ -3,6 +3,8 @@ import { createHash } from 'crypto';
 export const THUMBNAIL_MODEL = 'tencent/WeMM-Embedding-4B';
 export const THUMBNAIL_MODEL_REVISION = 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819';
 export const THUMBNAIL_DIMS = 512;
+export const THUMBNAIL_IMAGE_MAX_EDGE = 640;
+export const THUMBNAIL_PREPROCESSING = 'exif-rgb-fit-640x640-jpeg95';
 export const THUMBNAIL_COLLECTION = 'thumbnails_wemm4b_test_v1';
 export const THUMBNAIL_VECTOR_NAMES = ['visual', 'visual_title'] as const;
 
@@ -170,6 +172,7 @@ export interface ThumbnailPayloadOptions {
   contentSha256: string;
   model?: string;
   modelRevision?: string;
+  preprocessing?: string;
   dimensions?: number;
   embeddedAt?: string;
   linkedVideoIds?: string[];
@@ -192,6 +195,7 @@ export interface ThumbnailEmbeddingRow {
 export interface ThumbnailEmbeddingOutput {
   model: string;
   modelRevision: string;
+  preprocessing: string;
   dimensions: number;
   device: string;
   downloads: number;
@@ -289,6 +293,9 @@ export function validateThumbnailEmbeddingOutput(
   if (typeof output.modelRevision !== 'string' || !/^[0-9a-f]{40}$/i.test(output.modelRevision)) {
     throw new Error('Thumbnail worker model revision is missing or invalid');
   }
+  if (typeof output.preprocessing !== 'string' || !output.preprocessing) {
+    throw new Error('Thumbnail worker preprocessing is missing');
+  }
   if (output.dimensions !== expectedDimensions) {
     throw new Error(`Thumbnail worker dimensions must equal ${expectedDimensions}`);
   }
@@ -343,6 +350,7 @@ export function mapThumbnailPayload(candidate: ThumbnailCandidate, options: Thum
     content_sha256: options.contentSha256,
     embedding_model: options.model ?? THUMBNAIL_MODEL,
     embedding_model_revision: options.modelRevision ?? THUMBNAIL_MODEL_REVISION,
+    embedding_preprocessing: options.preprocessing ?? THUMBNAIL_PREPROCESSING,
     embedding_dimensions: options.dimensions ?? THUMBNAIL_DIMS,
     embedded_at: options.embeddedAt ?? new Date().toISOString(),
   };

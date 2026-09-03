@@ -21,6 +21,7 @@ interface ThumbnailPayload {
   perceptual_hash: string;
   embedding_model: string;
   embedding_model_revision: string;
+  embedding_preprocessing: string;
   embedding_dimensions: number;
 }
 

@@ -4,8 +4,10 @@ import path from 'path';
 import {
   THUMBNAIL_COLLECTION,
   THUMBNAIL_DIMS,
+  THUMBNAIL_IMAGE_MAX_EDGE,
   THUMBNAIL_MODEL,
   THUMBNAIL_MODEL_REVISION,
+  THUMBNAIL_PREPROCESSING,
   mapThumbnailPayload,
   selectThumbnailCohort,
   thumbnailCollectionConfig,
@@ -121,6 +123,8 @@ async function runWorker(options: {
   python: string;
   model: string;
   revision: string;
+  preprocessing: string;
+  maxEdge: number;
   dimensions: number;
   batchSize: number;
   device: string;
@@ -134,6 +138,8 @@ async function runWorker(options: {
     '--image-cache', IMAGE_CACHE,
     '--model', options.model,
     '--revision', options.revision,
+    '--preprocessing', options.preprocessing,
+    '--max-edge', String(options.maxEdge),
     '--dimensions', String(options.dimensions),
     '--batch-size', String(options.batchSize),
     '--device', options.device,
@@ -256,7 +262,15 @@ async function main(): Promise<void> {
   if (dryRun) return;
 
   const output = await runWorker({
-    python, model, revision, dimensions: THUMBNAIL_DIMS, batchSize, device, allowCpu,
+    python,
+    model,
+    revision,
+    preprocessing: THUMBNAIL_PREPROCESSING,
+    maxEdge: THUMBNAIL_IMAGE_MAX_EDGE,
+    dimensions: THUMBNAIL_DIMS,
+    batchSize,
+    device,
+    allowCpu,
   });
   await ensureCollection();
   const embeddedAt = new Date().toISOString();
@@ -268,6 +282,7 @@ async function main(): Promise<void> {
       contentSha256: row.contentSha256,
       model: output.model,
       modelRevision: output.modelRevision,
+      preprocessing: output.preprocessing,
       dimensions: output.dimensions,
       embeddedAt,
       linkedVideoIds: row.linkedVideoIds,
@@ -280,6 +295,7 @@ async function main(): Promise<void> {
     collection: THUMBNAIL_COLLECTION,
     model: output.model,
     modelRevision: output.modelRevision,
+    preprocessing: output.preprocessing,
     dimensions: output.dimensions,
     device: output.device,
     selected: cohort.length,
