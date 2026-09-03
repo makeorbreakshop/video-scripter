@@ -3,6 +3,7 @@
 //
 // Direct Postgres only (lib/admin/db.ts) — never supabase-js (2026-08-31
 // org-wide egress incident). Every YouTube API unit is written to quota_ledger.
+import { channelMeta } from './channel-meta';
 import { q, one } from '../admin/db';
 import { chunk, clampCount, parseRssVideoIds } from '../nightly/tracking-core';
 import { canTrackMore, canWatchMoreClosely } from './plans';
@@ -10,7 +11,7 @@ import { planUsage } from './users';
 import {
   ChannelRef, CHANNEL_ID_RE, bareHandle, parseChannelInput, uploadsPlaylistId,
 } from './channels-core';
-import { metaFromListItem, saveChannelMeta, channelMeta, avatarRefreshDue, pickAvatar } from './channel-meta';
+import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
@@ -184,7 +185,7 @@ async function ytJson(url: string): Promise<any> {
 }
 
 /** channels.list — 1 unit. */
-export async function fetchChannel(param: 'id' | 'forHandle', value: string) {
+async function fetchChannel(param: 'id' | 'forHandle', value: string) {
   const d = await ytJson(
     `${YT}/channels?part=snippet,statistics,contentDetails&${param}=${encodeURIComponent(value)}&key=${apiKey()}`
   );
@@ -198,19 +199,6 @@ export async function fetchChannel(param: 'id' | 'forHandle', value: string) {
 async function channelIdForVideo(videoId: string): Promise<string | null> {
   const d = await ytJson(`${YT}/videos?part=snippet&id=${encodeURIComponent(videoId)}&key=${apiKey()}`);
   return d.items?.[0]?.snippet?.channelId || null;
-}
-
-/**
- * A browser reported a dead avatar URL. Re-fetch the channel (1 unit, at most once a day)
- * and return the current avatar, or null if we should not spend / it has none.
- */
-export async function refreshAvatar(channelId: string): Promise<string | null> {
-  if (!CHANNEL_ID_RE.test(channelId)) return null;
-  const meta = await channelMeta(channelId);
-  if (!avatarRefreshDue(meta?.fetched_at)) return meta?.avatar_url ?? null;
-  let item: any = null;
-  try { item = await fetchChannel('id', channelId); } finally { await logQuota('avatar-refresh', 1); }
-  return item ? pickAvatar(item.snippet?.thumbnails) : null;
 }
 
 export async function isKnownChannel(channelId: string): Promise<boolean> {

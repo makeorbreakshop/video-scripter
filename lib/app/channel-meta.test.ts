@@ -1,4 +1,4 @@
-import { pickAvatar, metaFromListItem, avatarRefreshDue } from './channel-meta';
+import { pickAvatar, metaFromListItem } from './channel-meta';
 
 describe('pickAvatar', () => {
   it('prefers high, then medium, then default', () => {
@@ -39,16 +39,5 @@ describe('metaFromListItem', () => {
   it('is null without an id', () => {
     expect(metaFromListItem({ snippet: { title: 'x' } })).toBeNull();
     expect(metaFromListItem(null)).toBeNull();
-  });
-});
-
-describe('avatarRefreshDue', () => {
-  const now = new Date('2026-09-02T12:00:00Z');
-  it('refreshes when we have never fetched, or fetched more than a day ago', () => {
-    expect(avatarRefreshDue(null, now)).toBe(true);
-    expect(avatarRefreshDue('2026-09-01T11:00:00Z', now)).toBe(true);
-  });
-  it('does not spend a unit again within a day of the last fetch (a dead URL stays dead)', () => {
-    expect(avatarRefreshDue('2026-09-02T02:00:00Z', now)).toBe(false);
   });
 });

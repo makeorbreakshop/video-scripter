@@ -92,7 +92,7 @@ export default function ChannelsClient({ channels, plan, limits, usage, readOnly
             <div className="cs-card" key={c.channel_id}>
               <div className="cs-card-head">
                 <Link href={`/app/channels/${c.channel_id}`} aria-label={c.name || c.channel_id}>
-                  <ChannelAvatar src={c.avatar_url} name={c.name} size={48} channelId={c.channel_id} />
+                  <ChannelAvatar src={c.avatar_url} name={c.name} size={48} />
                 </Link>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Link href={`/app/channels/${c.channel_id}`}>
