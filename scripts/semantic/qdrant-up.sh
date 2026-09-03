@@ -69,14 +69,35 @@ ensure_payload_index() {
 ensure_collection videos_v1
 ensure_collection channels_v1
 
+if ! curl --fail --silent --show-error "${headers[@]}" "$qdrant_url/collections/videos_v2" >/dev/null 2>&1; then
+  curl --fail --silent --show-error -X PUT "${headers[@]}" \
+    "$qdrant_url/collections/videos_v2?wait=true" \
+    --data '{
+      "vectors": {
+        "title": {"size":512,"distance":"Cosine"},
+        "purpose": {"size":512,"distance":"Cosine"},
+        "mechanism": {"size":512,"distance":"Cosine","hnsw_config":{"m":0}},
+        "niche": {"size":512,"distance":"Cosine","hnsw_config":{"m":0}},
+        "detopic": {"size":512,"distance":"Cosine","hnsw_config":{"m":0}}
+      },
+      "on_disk_payload": true
+    }' >/dev/null
+fi
+
 ensure_payload_index videos_v1 channel_id keyword
 ensure_payload_index videos_v1 published_at integer
 ensure_payload_index videos_v1 topic_niche keyword
 ensure_payload_index videos_v1 is_outlier bool
 ensure_payload_index videos_v1 score float
+ensure_payload_index videos_v2 video_id keyword
+ensure_payload_index videos_v2 channel_id keyword
+ensure_payload_index videos_v2 published_at integer
+ensure_payload_index videos_v2 is_outlier bool
+ensure_payload_index videos_v2 score float
+ensure_payload_index videos_v2 facet_model keyword
 ensure_payload_index channels_v1 subscriber_count integer
 ensure_payload_index channels_v1 top_niches keyword
 ensure_payload_index channels_v1 lane keyword
 
 image_digest="$(docker image inspect "$image" --format '{{index .RepoDigests 0}}' 2>/dev/null || true)"
-echo "Qdrant is ready with videos_v1 and channels_v1 at $qdrant_url (${image_digest:-$image})"
+echo "Qdrant is ready with videos_v1, videos_v2 and channels_v1 at $qdrant_url (${image_digest:-$image})"

@@ -97,7 +97,7 @@ export function semanticUnavailablePayload() {
 
 export interface QdrantPoint<Payload = Record<string, unknown>> {
   id: string;
-  vector: number[];
+  vector: number[] | Record<string, number[]>;
   payload: Payload;
 }
 
