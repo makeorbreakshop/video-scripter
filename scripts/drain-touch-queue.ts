@@ -7,6 +7,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { clampCount, chunk } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
+import { decideVideoRow, corpusTrackedChannels, type TouchResult } from '../lib/nightly/touch-decision';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 
@@ -66,6 +67,25 @@ async function fetchVideos(ids: string[]): Promise<any[]> {
     if (res.ok) out.push(...(((await res.json()) as any).items || []));
   }
   return out;
+}
+
+// The four registries a channel can be "ours" in (enrollment-core isTracked reads all four).
+async function loadKnownChannels(ids: string[]): Promise<KnownChannels> {
+  const known: KnownChannels = { competitor: new Set(), discovered: new Set(), legacy: new Set(), withVideos: new Set() };
+  if (!ids.length) return known;
+  const [comp, disc, leg, wv] = await Promise.all([
+    pool.query(`select youtube_channel_id id from competitor_youtube_channels where youtube_channel_id = any($1)`, [ids]),
+    pool.query(`select channel_id id from discovered_channels where channel_id = any($1)`, [ids]),
+    pool.query(`select channel_id id from channels where channel_id = any($1)`, [ids]),
+    // Corpus membership only counts once it is older than the grace window: a channel whose
+    // first upload we imported minutes ago still needs enrolling (corpusTrackedChannels).
+    pool.query(`select channel_id, min(import_date) first_import from videos where channel_id = any($1) group by channel_id`, [ids]),
+  ]);
+  comp.rows.forEach((r) => known.competitor.add(r.id));
+  disc.rows.forEach((r) => known.discovered.add(r.id));
+  leg.rows.forEach((r) => known.legacy.add(r.id));
+  known.withVideos = corpusTrackedChannels(wv.rows);
+  return known;
 }
 
 // Budget guards: discovery has a daily cap so browsing can never starve the
@@ -140,20 +160,28 @@ for (const h of rows.filter((x) => x.kind === 'handle')) {
   channelIds.set(h.id, res.ok ? ((await res.json()) as any).items?.[0]?.id || null : null);
 }
 
-// --- 2. Video rows: clicked videos import + enroll their channel.
-// Feed/passive videos are DISCOVERY SIGNALS ONLY: resolve to channel
-// candidates (dedupe against tracked channels); do not hoard the videos.
+// --- 2. Video rows: every video we see imports, whichever door it came in through
+// (lib/nightly/touch-decision.ts; click also enrolls the channel). A feed/passive sighting
+// from a channel in none of our registries ALSO surfaces that channel as a candidate so it
+// gets enrolled. TOUCH_IMPORT_TRACKED_ONLY=1 is the back-off knob for API budget: with it,
+// unknown-channel feed sightings go back to being signals only.
+const trackedOnly = process.env.TOUCH_IMPORT_TRACKED_ONLY === '1';
 let imported = 0;
 let candidatesSeen = 0;
 const candidateChannels = new Map<string, number>(); // channelId -> times seen this drain
+const decisions = new Map<number, TouchResult>(); // queue id -> what we did with it
 const vids = await fetchVideos(newVideoRows.map((r) => r.ref));
+const vidChannels = await loadKnownChannels([...new Set(vids.map((v) => v.snippet?.channelId).filter(Boolean))] as string[]);
 for (const v of vids) {
   const row = newVideoRows.find((r) => r.ref === v.id);
   if (!row) continue;
-  if (row.mode === 'click' || row.mode === 'websub') {
-    if (await insertVideo(v, row.mode === 'websub' ? 0 : 1)) imported++;
+  const d = decideVideoRow({ mode: row.mode, ref: row.ref, channelId: v.snippet?.channelId }, known, vidChannels, { trackedOnly });
+  decisions.set(row.id, d.result);
+  if (d.result === 'imported') {
+    if (await insertVideo(v, d.tier ?? 1)) imported++;
     if (row.mode === 'click' && v.snippet?.channelId) channelIds.set(row.id, v.snippet.channelId);
-  } else if (v.snippet?.channelId) {
+  }
+  if (d.unknownChannel && (row.mode === 'feed' || row.mode === 'passive') && v.snippet?.channelId) {
     candidateChannels.set(v.snippet.channelId, (candidateChannels.get(v.snippet.channelId) || 0) + 1);
   }
 }
@@ -194,21 +222,7 @@ if (candidateChannels.size) {
 // --- 3. Enroll new channels + import their latest uploads immediately ---
 // Four-registry dedup via enrollment-core (fixes the double-tracking bug).
 const uniqueChannels = [...new Set([...channelIds.values()].filter(Boolean))] as string[];
-const knownChannels: KnownChannels = {
-  competitor: new Set(), discovered: new Set(), legacy: new Set(), withVideos: new Set(),
-};
-if (uniqueChannels.length) {
-  const [comp, disc, leg, wv] = await Promise.all([
-    pool.query(`select youtube_channel_id id from competitor_youtube_channels where youtube_channel_id = any($1)`, [uniqueChannels]),
-    pool.query(`select channel_id id from discovered_channels where channel_id = any($1)`, [uniqueChannels]),
-    pool.query(`select channel_id id from channels where channel_id = any($1)`, [uniqueChannels]),
-    pool.query(`select distinct channel_id id from videos where channel_id = any($1)`, [uniqueChannels]),
-  ]);
-  comp.rows.forEach((r) => knownChannels.competitor.add(r.id));
-  disc.rows.forEach((r) => knownChannels.discovered.add(r.id));
-  leg.rows.forEach((r) => knownChannels.legacy.add(r.id));
-  wv.rows.forEach((r) => knownChannels.withVideos.add(r.id));
-}
+const knownChannels = await loadKnownChannels(uniqueChannels);
 const plan = planEnrollment(
   [...channelIds].map(([queueId, channelId]) => ({ queueId, channelId })),
   knownChannels
@@ -290,7 +304,9 @@ for (const r of rows) {
   const result =
     r.kind === 'video'
       ? known.has(r.ref) ? 'already-tracked'
-        : (r.mode === 'click' || r.mode === 'websub') ? 'imported' : 'candidate-signal'
+        : decisions.get(r.id)
+          // The videos API returned nothing for it (private/deleted): nothing was imported.
+          ?? ((r.mode === 'click' || r.mode === 'websub') ? 'unfetched' : 'candidate-signal')
       : ch ? (existing.has(ch) ? `already-enrolled:${ch}` : `enrolled:${ch}`) : 'unresolved';
   await pool.query(`update touch_queue set processed_at = now(), result = $2 where id = $1`, [r.id, result]);
 }

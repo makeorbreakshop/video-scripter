@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 4 vertical slice complete; one bounded J5-local reranking bake-off authorized. Date: 2026-09-03.
+Status: revision 4 vertical slice and bounded J5 reranking bake-off complete; stopped at the dev gate. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -227,3 +227,14 @@ The frozen diagnostic evaluation is recorded in `2026-09-03-semantic-eval-v4.md`
 The diagnostic result triggers both §8.2 and §8.3. On the J5 maker dev task, lexical retrieved 20 judged creative adaptations with the first at rank 44 and RRF retrieved 9 with the first at rank 66; dense retrieved none. On the J5 tech dev task, lexical retrieved 14 with the first at rank 27 and RRF retrieved 7 with the first at rank 50; dense retrieved none. Every system's top 10 on both tasks was direct application. Useful candidates therefore exist in the pool but rank too low, while the top results are topically plausible but do not transfer.
 
 The single next experiment is a J5-local reranking bake-off on the original dev pools. Variant A is a simple local cross-encoder control. Variant B dynamically extracts purpose/mechanism for the seed and pooled candidates and requires an explicit transfer mapping. Select one variant using dev only, freeze it, and evaluate only that selected variant on a newly frozen confirmation set. Do not precompute corpus-wide facets, add a corpus-wide reranker, or expose endpoints. The current diagnostic set cannot approve a production route, and Brandon's blinded calibration packet remains required before any product claim.
+
+## 15. J5 challenger result
+
+The bounded bake-off is recorded in `2026-09-03-semantic-j5-challenger.md` and `semantic-eval-v4/challenger/`. Both variants reranked only the two original frozen J5 dev pools; neither touched held-out tasks or performance metadata.
+
+| Variant | Lower creative P@10 | Direct application@10 | Hit both tasks | Unresolved top 10 | Gate |
+| --- | ---: | ---: | --- | ---: | --- |
+| Local MS-MARCO cross-encoder | 0.150 | 0.850 | no | 0 | fail |
+| Purpose/mechanism + explicit transfer verification | 0.200 | 0.750 | yes | 1 | fail |
+
+Neither variant met the required 0.300 lower-bound precision, 0.200 maximum direct-application rate, per-task creative-hit, and zero-unresolved gates. No variant is selected, so there is no confirmation run, corpus-wide facet extraction, endpoint work, or deployment. This is the PRD stop condition: metadata-only retrieval supplies some useful candidates, but these two reranking methods do not separate creative transfer from direct copying reliably enough.
