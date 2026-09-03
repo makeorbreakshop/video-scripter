@@ -110,12 +110,12 @@ Run these as part of the eval (same gold sets as §6), before the full-corpus ru
 
 | Experiment | Variants | Decide by |
 |---|---|---|
-| A. Video document | (1) title only · (2) title + channel name + niche (default) · (3) title + `llm_summary` where present · (4) two vectors per video (title, summary) fused by RRF | §6.2 neighbour outlier rate and the manual read; cost per 1K docs |
+| A. Video document | (1) title only · (2) title + channel name + niche (default) · (3) title + description first 300 chars (free, already stored) | §6.2 neighbour outlier rate and the manual read; cost per 1K docs |
 | B. Dimensions | 512 vs 1536 (same model) | §6.1 recall@10; if within 0.02, keep 512 (3× smaller, faster) |
-| C. Channel document | (1) name + top-20 titles (default) · (2) name + top-20 titles + top niches + `llm_summary` snippets of top 5 videos · (3) mean of the channel's video vectors (no extra embedding call) | §6.1 recall@10 / MRR |
+| C. Channel document | (1) name + top-20 titles (default) · (2) name + top-20 titles + top niches · (3) mean of the channel's video vectors (no extra embedding call) | §6.1 recall@10 / MRR |
 | D. Query strategy | (1) raw query · (2) hybrid RRF with lexical (default) · (3) multi-query expansion: an LLM rewrites the query into 3 forms (literal, audience problem, format/hook), union by RRF · (4) query + "for YouTube creators" prefix | §6.1 and §6.3 precision; latency budget 400 ms p95 for (3) with the expansion cached |
 | E. Similarity floor | none · 0.35 · 0.5 (cosine) | §6.2/§6.3: precision vs empty-result rate; report the curve |
 
 Rules: one variant changes at a time against the default; every run logs cost and p95 latency; results in the eval doc as a table with the winner per row and one sentence on why. The winner of A and D becomes the default for the full-corpus run; the rest stay as documented options. If no variant clears the §6 pass bars, stop and report rather than shipping semantic search that is not better than trigram.
 
-Budget for the experiments: the 30-day window re-embedded ~4 ways is ~$1–2; summary-based variants use existing summaries only (no new LLM summaries in v1).
+Budget for the experiments: the 30-day window re-embedded ~4 ways is ~$1–2. Decision 2026-09-02 (Brandon): no LLM summaries in v1, existing or new; their value is unproven and the cost is real. Revisit only if title-based variants fail the §6 bars.
