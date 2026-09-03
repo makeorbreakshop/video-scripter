@@ -8,6 +8,7 @@ import {
   parseRssEntries,
   decodeEntities,
   isUpdatedSince,
+  shouldProcessEntries,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -18,6 +19,7 @@ const NOW = new Date('2026-09-03T12:00:00Z');
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
 const mins = (m: number) => m * 60_000;
 const days = (d: number) => d * 86_400_000;
+const hours = (h: number) => h * 3_600_000;
 
 describe('channel state', () => {
   it('is active while the channel uploaded inside the dormancy window', () => {
@@ -86,6 +88,15 @@ describe('perRunCap staggers the population across the interval', () => {
     expect(perRunCap(0)).toBe(1);
     expect(perRunCap(1_000_000)).toBe(P.maxPerRun);
   });
+
+  // The whole point of the cap is that a full sweep of the active corpus finishes inside the
+  // 15-minute cadence. If the ceiling is below the corpus's own stagger number, the cadence is
+  // silently stretched instead (at maxPerRun 600 the 5,803-channel corpus polled every ~38 min).
+  it('does not throttle the real corpus below its 15-minute cadence', () => {
+    const CORPUS = 5_803; // channel_rss_state, 2026-09-03
+    expect(perRunCap(CORPUS)).toBe(Math.ceil(CORPUS / 3));
+    expect(perRunCap(CORPUS)).toBeLessThanOrEqual(P.maxPerRun);
+  });
 });
 
 describe('parseRssEntries', () => {
@@ -147,6 +158,52 @@ describe('isUpdatedSince', () => {
   });
 });
 
+describe('shouldProcessEntries (the unchanged-body rule)', () => {
+  // A byte-identical feed means identical view/like counts too, so an rss_samples row would
+  // duplicate the previous one. Nothing is written for the channel's videos on that poll.
+  it('skips all per-entry work — rss_samples included — when the body hash is unchanged', () => {
+    expect(shouldProcessEntries('abc123', 'abc123')).toBe(false);
+  });
+
+  it('does the full poll whenever the body differs at all, including view-count-only changes', () => {
+    expect(shouldProcessEntries('abc123', 'def456')).toBe(true);
+  });
+
+  it('does the full poll on the first ever sight of a channel', () => {
+    expect(shouldProcessEntries(null, 'abc123')).toBe(true);
+    expect(shouldProcessEntries(undefined, 'abc123')).toBe(true);
+  });
+});
+
+describe('the 60-day dormancy rule end to end', () => {
+  it('an active channel polls every 15 min and a dormant one gets a daily safety poll', () => {
+    const active = { rss_state: stateForLastUpload(ago(days(3)), NOW), rss_last_polled: ago(mins(16)) } as const;
+    expect(active.rss_state).toBe('active');
+    expect(isDue(active, NOW)).toBe(true);
+    expect(isDue({ ...active, rss_last_polled: ago(mins(14)) }, NOW)).toBe(false);
+
+    const dormant = { rss_state: stateForLastUpload(ago(days(120)), NOW), rss_last_polled: ago(hours(25)) } as const;
+    expect(dormant.rss_state).toBe('dormant');
+    expect(isDue(dormant, NOW)).toBe(true);                                   // daily safety poll
+    expect(isDue({ ...dormant, rss_last_polled: ago(hours(23)) }, NOW)).toBe(false);
+  });
+
+  it('a channel crossing the 60-day line flips active -> dormant, and a new upload flips it back', () => {
+    expect(stateForLastUpload(ago(days(59.9)), NOW)).toBe('active');
+    expect(stateForLastUpload(ago(days(60.1)), NOW)).toBe('dormant');
+    expect(stateForLastUpload(ago(mins(1)), NOW)).toBe('active');
+  });
+
+  // A WebSub push writes rss_state='woken' and rss_last_polled=null (scripts/drain-touch-queue.ts).
+  // Both halves matter: 'woken' must poll at the active cadence, and the null must make it due now.
+  it('a WebSub push makes a dormant channel due on the very next tick at the active cadence', () => {
+    expect(intervalSecFor('woken')).toBe(intervalSecFor('active'));
+    expect(isDue({ rss_state: 'woken', rss_last_polled: null }, NOW)).toBe(true);
+    expect(isDue({ rss_state: 'woken', rss_last_polled: ago(mins(16)) }, NOW)).toBe(true);
+    expect(isDue({ rss_state: 'woken', rss_last_polled: ago(mins(2)) }, NOW)).toBe(false);
+  });
+});
+
 describe('SQL shape', () => {
   it('the runtime queries can be restricted to watch_subset', () => {
     for (const sql of [DUE_CHANNELS_SQL, STATE_COUNTS_SQL]) {
@@ -170,6 +227,8 @@ describe('SQL shape', () => {
     expect(DUE_CHANNELS_SQL).toContain('86400');
     expect(DUE_CHANNELS_SQL).toContain('rss_backoff_until');
     expect(DUE_CHANNELS_SQL).toContain('order by c.rss_last_polled nulls first');
+    // 'woken' must fall through to the active cadence in SQL too, not just in isDue()
+    expect(DUE_CHANNELS_SQL).toContain("when c.rss_state = 'dormant' then 86400");
   });
   it('neither seed demotes a channel a WebSub push woke', () => {
     expect(SEED_SUBSET_SQL).toContain("rss_state = 'woken'");

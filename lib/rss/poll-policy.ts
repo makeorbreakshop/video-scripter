@@ -22,13 +22,18 @@ export const RSS_POLICY = {
   dormantIntervalSec: 24 * 3600,
   /** Back-off on 429/5xx: double, capped. Reset on 200/304. */
   backoffCapSec: 6 * 3600,
-  /** Network shape (matches thumbnail-watch). */
-  concurrency: 10,
+  /** Network shape. Raised from 10 to 20 for the 2026-09-03 full-corpus rollout: a full sweep
+   * has to fit 4,546 active channels into the 15-minute cadence, i.e. ~1,935 per 5-minute tick.
+   * Measured 2026-09-03 after the write path was batched: 400 channels / 57.5 s at concurrency
+   * 10 (0.144 s/channel), so 20 keeps a full tick around 2.5 min. */
+  concurrency: 20,
   timeoutMs: 10_000,
   /** LaunchAgent tick. The poller itself enforces the per-channel interval. */
   runIntervalSec: 300,
-  /** Hard ceiling on channels touched in one run, whatever the stagger says. */
-  maxPerRun: 600,
+  /** Hard ceiling on channels touched in one run, whatever the stagger says. Set above the
+   * corpus's own stagger number (ceil(5,803 / 3) = 1,935) so the 15-minute active cadence is
+   * actually achieved rather than silently stretched — at 600 it was a ~38-minute cadence. */
+  maxPerRun: 2500,
 } as const;
 
 const MS = 1000;
@@ -98,6 +103,23 @@ export function perRunCap(
 ): number {
   const slots = Math.max(1, Math.floor(intervalSec / runIntervalSec));
   return Math.min(RSS_POLICY.maxPerRun, Math.max(1, Math.ceil(totalChannels / slots)));
+}
+
+/**
+ * What a 200 response is worth. The feed carries no ETag, so the body hash is our only
+ * "nothing changed" signal — and when it says nothing changed, nothing at all is written for
+ * the channel's videos: no rss_samples, no title/description diffs, no due-now marks. Only
+ * rss_last_polled moves. A sample row for a byte-identical feed would just duplicate the
+ * previous row's counts, so it is noise in the dense trace, not data.
+ *
+ * Any change to the body — including the view/like counts embedded in media:statistics —
+ * makes the poll a full one, so real traces never lose a point.
+ */
+export function shouldProcessEntries(
+  storedBodySha: string | null | undefined,
+  bodySha: string
+): boolean {
+  return storedBodySha !== bodySha;
 }
 
 // ---------- feed parsing ----------

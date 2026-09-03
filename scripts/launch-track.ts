@@ -5,9 +5,8 @@
 //  - samples due videos via videos:batchGetStats (separate 10K-unit bucket) -> view_samples,
 //    and rolls the latest sample of the day into view_snapshots (daily truth for scoring/admin)
 //  - re-enters a video into the launch window when scripts/thumbnail-watch.ts records a new
-//    thumbnail version, or when ANY detector writes a new title_versions row (scripts/rss-poll.ts,
-//    the watcher's oEmbed pass, this script's own RSS check)
-//  - WATCH_SUBSET=1 hands titles for watch_subset channels to scripts/rss-poll.ts and skips them here
+//    thumbnail version, or when any detector writes a new title_versions row (scripts/rss-poll.ts
+//    owns the RSS title check since the 2026-09-03 rollout; thumbnail-watch owns the oEmbed one)
 //  - never updates the videos table except title on a confirmed title change
 // Direct Postgres only (2026-08-31 egress rule). Usage: npx tsx scripts/launch-track.ts [maxCalls]
 import dotenv from 'dotenv';
@@ -16,10 +15,9 @@ import pg from 'pg';
 import { chunk, clampCount } from '../lib/nightly/tracking-core';
 import { longformSql } from '../lib/scoring/longform';
 import {
-  nextCheck, reenter, launchUntilFor, titleCheckDue, parseRssTitles, daysSincePublished,
+  nextCheck, launchUntilFor, daysSincePublished,
   changeAtFromLaunchUntil, type Tier,
 } from '../lib/nightly/launch-core';
-import { recordTitleChange } from '../lib/rss/title-change';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
 // 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
@@ -83,59 +81,13 @@ const titleReentered = await pool.query(
 );
 if (titleReentered.rowCount) log(`re-entered ${titleReentered.rowCount} videos after title change`);
 
-// --- 3. Title checks via channel RSS (zero quota): hourly for launch-window and user-tracked videos, daily for the rest under 30 days ---
-// scripts/rss-poll.ts owns titles for watch_subset channels (plan section 1: retire this path
-// once the poller owns titles). While the subset gate is on, skip exactly those channels so the
-// two detectors can never write competing title_versions rows for the same change.
-const subsetGate = process.env.WATCH_SUBSET === '1';
-const titleDue = await pool.query(
-  `select s.video_id, s.channel_id, v.title
-     from track_schedule s join videos v on v.id = s.video_id
-    left join channel_tracking ct on ct.channel_id = s.channel_id
-    where s.channel_id is not null
-      and (not $1::boolean or not exists (select 1 from watch_subset ws where ws.channel_id = s.channel_id))
-      and v.published_at > now() - interval '30 days'
-      and ${longformSql('v')}
-      -- launch window and user-tracked channels hourly; the rest of the recent corpus daily.
-      -- RSS lists a channel's last 15 uploads, so one free fetch covers them all.
-      and (s.last_title_check is null
-           or s.last_title_check < now() - (case when s.phase = 'launch' or ct.lane = 'user' then interval '60 minutes' else interval '24 hours' end))
-    order by (s.phase = 'launch' or ct.lane = 'user') desc, s.last_title_check nulls first
-    limit 400`,
-  [subsetGate]
-);
-type TitleRow = { video_id: string; channel_id: string; title: string };
-const byChannel = new Map<string, { video_id: string; title: string }[]>();
-for (const r of titleDue.rows as TitleRow[]) {
-  if (!byChannel.has(r.channel_id)) byChannel.set(r.channel_id, []);
-  byChannel.get(r.channel_id)!.push({ video_id: r.video_id, title: r.title });
-}
-let titleChanges = 0;
-for (const group of chunk([...byChannel.entries()], 10)) {
-  await Promise.all(
-    group.map(async ([channelId, vids]) => {
-      try {
-        const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`, {
-          signal: AbortSignal.timeout(10000),
-        });
-        if (!res.ok) return;
-        const titles = parseRssTitles(await res.text());
-        for (const v of vids) {
-          const t = titles.get(v.video_id);
-          if (t == null) continue;
-          if (t !== v.title && v.title) {
-            await recordTitleChange(pool, v.video_id, v.title, t, null, now);
-            titleChanges++;
-            log(`TITLE CHANGE ${v.video_id}: "${v.title}" -> "${t}"`);
-          } else {
-            await pool.query(`update track_schedule set last_title_check = now() where video_id = $1`, [v.video_id]);
-          }
-        }
-      } catch { /* transient */ }
-    })
-  );
-}
-if (titleDue.rowCount) log(`title checks: ${titleDue.rowCount} videos over ${byChannel.size} feeds, ${titleChanges} changes`);
+// --- 3. Titles: RETIRED here (2026-09-03 rollout, plan section 1 + "Rollout") ---
+// scripts/rss-poll.ts owns titles for every channel now: it polls the same feed every 15
+// minutes instead of this script's 60-minute/daily pass, writes title_versions through the
+// shared path in lib/rss/title-change.ts, and re-enters the video itself. Step 2b above stays
+// as the catch-all re-entry for any title_versions row this script did not write. The 14-90 day
+// videos that have fallen out of their channel's 15-entry RSS window are covered by the oEmbed
+// check in scripts/thumbnail-watch.ts.
 
 // --- 4. Dense-tier lookup: ONE query per run, not one per video ---
 // Dense = any channel with a packaging change in the trailing 60 days, or any individual video
