@@ -9,14 +9,16 @@ import { useMemo, useState } from 'react';
 import {
   Area, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Legend,
 } from 'recharts';
-import { aleAt, type Actual, type CurvePoint, type Marker, type ProjPoint } from '@/lib/admin/video-curve';
+import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
+import type { SeriesPoint } from '@/lib/app/chart-series';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, tooltipDate, dayLabel, type Zoom } from './video-chart';
 
 type Row = {
   day: number;
   expected?: number; band?: [number, number];
-  projected?: number; implied?: number; impliedBand?: [number, number];
+  projected?: number; projectedBand?: [number, number];
+  implied?: number; impliedBand?: [number, number];
   views?: number; dot?: number;
 };
 
@@ -24,18 +26,17 @@ const HOUR_TICKS = [0, 6, 12, 24, 48, 72];
 const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 550, 730, 1095];
 
 export default function VideoChartPlot({
-  actuals, curve, projected, markers, thumbUrls, score, defaultZoom = 'full', sparse = false, publishedAt,
+  actuals, curve, series, markers, thumbUrls, score, defaultZoom = 'full', publishedAt,
 }: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
   curve: CurvePoint[];
-  projected: ProjPoint[];
+  /** One value per day with its kind; kind decides styling, never whether a value exists. */
+  series: SeriesPoint[];
   markers: Marker[];
   thumbUrls: Record<number, string>;
   score: number | null;
   defaultZoom?: Zoom;
-  /** Too few real points to read a shape: draw the implied path across the whole range. */
-  sparse?: boolean;
 }) {
   const { hovered, setHovered } = useMarkerHover();
   const [zoom, setZoom] = useState<Zoom>(defaultZoom);
@@ -45,40 +46,36 @@ export default function VideoChartPlot({
     const byDay = new Map<number, Row>();
     const at = (d: number) => { let r = byDay.get(d); if (!r) { r = { day: d }; byDay.set(d, r); } return r; };
     for (const c of curve) Object.assign(at(c.day), { expected: c.expected, band: [c.lo, c.hi] as [number, number] });
-    const clean = actuals.filter((a, i, arr) => {
-      const prev = arr[i - 1], next = arr[i + 1];
-      const spike = prev && next && a.views > prev.views * 1.03 && a.views > next.views * 1.03;
-      return !spike;
-    });
-    const lastDay = clean.length ? clean[clean.length - 1].day : 0;
-    if (sparse && projected.length) {
-      // One or two snapshots draw no shape. The implied path is this video's own score applied
-      // to the channel's typical curve — the path that ends where the video actually is — so it
-      // runs the whole range with the model's error band, and the real points sit on it as dots.
-      for (const p of projected) {
-        const a = aleAt(p.day);
-        Object.assign(at(p.day), {
-          implied: p.projected,
-          impliedBand: [p.projected * Math.exp(-a), p.projected * Math.exp(a)] as [number, number],
-        });
+    // One series, three styles. Each segment also writes its value into its NEIGHBOUR's key at
+    // the boundary day, so the dashed implied path and the solid measured line meet instead of
+    // leaving a one-pixel hole where the kind changes.
+    const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
+    for (let i = 0; i < series.length; i++) {
+      const p = series[i];
+      const row = at(p.day);
+      const prev = series[i - 1], next = series[i + 1];
+      const touches = (k: SeriesPoint['kind']) => prev?.kind === k || next?.kind === k;
+      if (p.kind === 'measured' || touches('measured')) row.views = p.views;
+      if (p.kind === 'implied' || touches('implied')) {
+        row.implied = p.views;
+        if (p.band) row.impliedBand = p.band;
       }
-    } else {
-      for (const p of projected) if (p.day >= lastDay) at(p.day).projected = p.projected;
-      if (clean.length) at(lastDay).projected = clean[clean.length - 1].views;
-      for (const a of clean) at(a.day).views = a.views;
+      if (p.kind === 'forecast' || touches('forecast')) {
+        row.projected = p.views;
+        if (p.band) row.projectedBand = p.band;
+      }
     }
-    for (const a of clean) at(a.day).dot = a.views;
-    // Every video has zero views at publish: anchor the typical curve there so the axis starts at 0h.
-    if (curve.length && !byDay.has(0)) Object.assign(at(0), { expected: 0, band: [0, 0] as [number, number] });
+    for (const a of actuals) if (kindAt.get(a.day) === 'measured') at(a.day).dot = a.views;
     return [...byDay.values()].sort((a, b) => a.day - b.day);
-  }, [actuals, curve, projected, sparse]);
+  }, [actuals, curve, series]);
 
   const launch = zoom === '72h';
   const rows = launch ? all.filter((r) => r.day <= 3) : all;
   const maxDay = launch ? 3 : Math.max(...all.map((r) => r.day), 1);
   const minDay = 0;
   const endBaseline = launch || !curve.length ? null : curve[curve.length - 1];
-  const endProjected = launch || !projected.length ? null : projected[projected.length - 1];
+  const lastSeries = series.length ? series[series.length - 1] : null;
+  const endProjected = launch || !lastSeries ? null : { day: lastSeries.day, projected: lastSeries.views };
   const shown = markers.filter((m) => !launch || m.day <= 3);
   const ticks = launch
     ? HOUR_TICKS.map((h) => h / 24).filter((t) => t >= minDay - 1e-9)
@@ -109,11 +106,11 @@ export default function VideoChartPlot({
     }
     return keep;
   }, [clusters, maxDay, minDay, launch]);
-  // The implied path only exists when there is a projection to scale; without one a sparse
-  // video still gets its own line through whatever points it has.
-  const implied = sparse && projected.length > 0;
+  const hasImplied = series.some((p) => p.kind === 'implied');
+  const hasMeasured = series.some((p) => p.kind === 'measured');
+  const hasForecast = series.some((p) => p.kind === 'forecast');
 
-  if (!actuals.length && !curve.length) {
+  if (!series.length && !actuals.length && !curve.length) {
     return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;
   }
   // A channel with no baseline yet has no expected curve and no band. Draw the actual
@@ -164,24 +161,29 @@ export default function VideoChartPlot({
           {curve.length > 0 && (
             <Area dataKey="band" name="typical range" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
           )}
-          {implied && (
+          {hasImplied && (
             <Area dataKey="impliedBand" name="likely range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.1} isAnimationActive={false} legendType="none" />
+          )}
+          {hasForecast && (
+            <Area dataKey="projectedBand" name="forecast range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.07} isAnimationActive={false} legendType="none" />
           )}
           {curve.length > 0 && (
             <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
           )}
-          {implied && (
-            <Line dataKey="implied" name="implied path" connectNulls dot={false} stroke={C.accent} strokeWidth={1.5} strokeDasharray="6 4" isAnimationActive={false} />
+          {/* Days we never sampled — the launch before the first measurement, and any gap
+              between two of them. Same line, dashed, because the value is inferred. */}
+          {hasImplied && (
+            <Line dataKey="implied" name="implied (not sampled)" connectNulls dot={false} stroke={C.accent} strokeWidth={1.5} strokeDasharray="6 4" isAnimationActive={false} />
           )}
-          {!implied && projected.length > 0 && (
+          {hasForecast && (
             <Line dataKey="projected" name="expected from here" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
           )}
-          {!implied && (
+          {hasMeasured && (
             <Line dataKey="views" name="this video" connectNulls dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
           )}
           {/* The real measurements as points — a video with one or two snapshots is otherwise a
               model path with nothing of its own on it. */}
-          {implied && (
+          {hasMeasured && actuals.length <= 6 && (
             <Line
               dataKey="dot" name="measured" connectNulls={false} stroke={C.accent} strokeWidth={0} isAnimationActive={false}
               legendType="circle"

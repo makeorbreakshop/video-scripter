@@ -9,7 +9,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { Actual, CurvePoint, Marker, ProjPoint } from '@/lib/admin/video-curve';
+import type { Actual, CurvePoint, Marker } from '@/lib/admin/video-curve';
+import type { SeriesPoint } from '@/lib/app/chart-series';
 
 export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
@@ -110,12 +111,11 @@ export function VideoChart(props: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
   curve: CurvePoint[];
-  projected: ProjPoint[];
+  series: SeriesPoint[];
   markers: Marker[];
   thumbUrls: Record<number, string>;
   score: number | null;
   defaultZoom?: Zoom;
-  sparse?: boolean;
 }) {
   return (
     <div style={{ minHeight: CHART_HEIGHT }}>

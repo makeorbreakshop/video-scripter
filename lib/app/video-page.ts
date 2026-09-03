@@ -8,9 +8,10 @@
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
 import { q, one } from '../admin/db';
 import {
-  mergeActuals, expectedCurve, projectedCurve, forecastCurve, packagingMarkers,
-  type Actual, type CurvePoint, type ProjPoint, type Marker,
-  expectedAtAge, fitScale } from '../admin/video-curve';
+  mergeActuals, expectedCurve, packagingMarkers,
+  type Actual, type CurvePoint, type Marker,
+  expectedAtAge } from '../admin/video-curve';
+import { buildSeries, type SeriesPoint } from './chart-series';
 import { thumbUrl } from '../thumbs/storage';
 import { experiments, type Experiment } from './experiment';
 
@@ -24,8 +25,6 @@ export type VideoPageView = {
   expectedNow: number | null;
   /** Last day drawn: today for a video past the last forecast milestone, else the next milestone. */
   horizonDay: number;
-  /** Too few real points to read a shape, so the implied path is drawn across the whole range. */
-  sparse: boolean;
   /** 'now' for a video past day 30 (pace leads), 'day30' for a young one (the projection leads). */
   headline: 'now' | 'day30';
   id: string;
@@ -39,7 +38,11 @@ export type VideoPageView = {
   score: VideoPageData['score'];
   actuals: Actual[];
   curve: CurvePoint[];
-  projected: ProjPoint[];
+  /**
+   * One value per day from publish to the horizon — measured / implied / forecast. This is the
+   * whole line the chart draws; `curve` is only the channel's typical path behind it.
+   */
+  series: SeriesPoint[];
   markers: Marker[];
   experiments: Experiment[];
   thumbs: ThumbVersionView[];
@@ -181,22 +184,24 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     expectedNow: expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail),
     pace: (() => { const exp = expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail); const views = Number(v.view_count ?? 0); return exp && views > 0 ? views / exp : null; })(),
     horizonDay: maxDay,
-    sparse: actuals.length <= 3,
     headline: ageDays >= 30 ? 'now' : 'day30',
     thumbUrl: hero.src,
     thumbFallbackUrl: hero.fallback,
     score,
     actuals,
     curve: expectedCurve(score?.baseline ?? null, mult, maxDay, 60, startDay, longtail),
-    // With a real shape to read, the forecast starts at the latest measurement and lands on the
-    // headline est30, so the drawn line continues the measured one and ends on the number the
-    // page quotes. A sparse video (<=3 points) instead gets the channel's typical curve fitted
-    // through whatever points it has, drawn across the whole range.
-    projected: score
-      ? actuals.length > 3
-        ? forecastCurve(actuals[actuals.length - 1].views, actuals[actuals.length - 1].day, score.est30, mult, maxDay, 60, longtail)
-        : projectedCurve((() => { const k = fitScale(actuals, score.baseline, mult, longtail); return k && score.baseline != null ? score.baseline * k : score.est30; })(), mult, maxDay, 60, startDay, longtail)
-      : [],
+    // The whole drawn line, in one pass: the implied launch we never sampled, the measurements,
+    // and the forecast onto est30. No count rule — a video with 20 samples and one with 3 get
+    // the same treatment (lib/app/chart-series.ts).
+    series: buildSeries({
+      actuals,
+      baseline: score?.baseline ?? null,
+      est30: score?.est30 ?? null,
+      mult,
+      longtail,
+      horizonDay: maxDay,
+      ageDays,
+    }),
     markers,
     experiments: experiments(v.published_at, samples, markers, now, snapshots.map((p: any) => ({ at: new Date(new Date(p.at).getTime()).toISOString(), views: p.views }))),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),

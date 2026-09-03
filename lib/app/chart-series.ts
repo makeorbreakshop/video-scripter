@@ -1,0 +1,156 @@
+// One value per day, from publish to the horizon, with a word for where it came from.
+//
+// Invariant: every day from publish (day 0) to the horizon has exactly one value, whose kind
+// is `measured` where we have a sample, `implied` where we do not and the day is behind the
+// last measurement, and `forecast` beyond it. Kind decides styling, never whether a value
+// exists — a video whose first sample landed on day 3.4 (RSS found it late) must not draw a
+// blank first three days, and the old rule that switched behaviour on `actuals.length <= 3`
+// meant a sparse video got an implied path while a well-sampled one got a hole.
+//
+// The shape everything is drawn along is the channel's own typical curve (lib/admin/video-curve
+// expectedAt / the fitted global `mult`), used only as a SHAPE: each segment is re-anchored on
+// the real measurements next to it, so the implied path passes exactly through the first
+// measurement instead of floating beside it.
+import { expectedAt, forecastAt, type Mult, type Longtail } from '../admin/video-curve';
+
+export type SeriesKind = 'measured' | 'implied' | 'forecast';
+export type SeriesPoint = { day: number; views: number; kind: SeriesKind; band?: [number, number] };
+
+export interface BuildSeriesInput {
+  /** The video's real measurements, in any order; days are days since publish. */
+  actuals: { day: number; views: number }[];
+  baseline: number | null | undefined;
+  est30: number | null | undefined;
+  mult: Mult;
+  longtail?: Longtail | null;
+  /** Last day drawn. */
+  horizonDay: number;
+  /** Age now; only used when there is nothing measured at all. */
+  ageDays?: number;
+}
+
+/** Integer days are drawn one by one up to here; past it the grid goes log-spaced. */
+export const DENSE_DAYS = 400;
+/** Sub-day grid so the launch window is readable at all (hours 1,2,4,8,12,18). */
+const LAUNCH_DAYS = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24, 18 / 24];
+
+/** Log-scale uncertainty of the implied past at the first measurement, and per log-day before it. */
+const IMPLIED_SIGMA0 = 0.06;
+const IMPLIED_SIGMA_PER_LOGDAY = 0.55;
+/** Interpolating a gap between two real points is a much smaller claim than the launch is. */
+const GAP_SIGMA = 0.12;
+/** Forecast uncertainty at day 30, per log-day past the last measurement. */
+const FORECAST_SIGMA_PER_LOGDAY = 0.30;
+
+const lg = (d: number) => Math.log(Math.max(d, 0) + 1);
+
+/**
+ * The unit-free growth shape a video on this channel follows. With a baseline it is the fitted
+ * channel curve; without one the global `mult` alone still gives the shape (the baseline only
+ * scales it); with neither it is a straight line in log(day+1), which is the plan's "linear in
+ * log between 0 views at day 0 and the first measurement".
+ */
+function shapeFn(baseline: number | null | undefined, mult: Mult, lt: Longtail | null | undefined) {
+  const hasBaseline = baseline != null && baseline > 0 && Number.isFinite(baseline);
+  if (hasBaseline) return (d: number) => expectedAt(baseline as number, mult, d, lt).expected;
+  return (d: number) => lg(d);
+}
+
+function dedupeActuals(actuals: { day: number; views: number }[]) {
+  const byDay = new Map<number, number>();
+  for (const a of actuals) {
+    if (!Number.isFinite(a.day) || a.day < 0 || !(a.views >= 0) || !Number.isFinite(a.views)) continue;
+    byDay.set(a.day, a.views);
+  }
+  return [...byDay.entries()].map(([day, views]) => ({ day, views })).sort((a, b) => a.day - b.day);
+}
+
+/** The days the series is sampled at: every integer day, the real measurements, and a launch grid. */
+export function seriesDays(horizonDay: number, actualDays: number[]): number[] {
+  const end = Math.max(horizonDay, 0);
+  const set = new Set<number>([0, end]);
+  for (let d = 0; d <= Math.min(end, DENSE_DAYS); d++) set.add(d);
+  if (end > DENSE_DAYS) {
+    // Past a year of daily points the chart is drawing pixels on top of pixels; keep the axis
+    // honest with a log-spaced tail instead.
+    const lo = lg(DENSE_DAYS), hi = lg(end);
+    for (let i = 1; i <= 60; i++) set.add(Math.exp(lo + ((hi - lo) * i) / 60) - 1);
+  }
+  for (const h of LAUNCH_DAYS) if (h <= end) set.add(h);
+  for (const d of actualDays) if (d >= 0 && d <= end) set.add(d);
+  return [...set].sort((a, b) => a - b);
+}
+
+export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
+  const { mult, horizonDay } = input;
+  const lt = input.longtail ?? null;
+  const acts = dedupeActuals(input.actuals || []);
+  const shape = shapeFn(input.baseline, mult, lt);
+  const days = seriesDays(horizonDay, acts.map((a) => a.day));
+  const byDay = new Map(acts.map((a) => [a.day, a.views] as const));
+
+  const first = acts[0] ?? null;
+  const last = acts[acts.length - 1] ?? null;
+  // Nothing measured: the whole past is implied off the channel shape, the future forecast.
+  const boundary = last ? last.day : Math.max(input.ageDays ?? 0, 0);
+
+  // Anchored value: the shape rescaled so it passes exactly through `anchor`.
+  const anchored = (d: number, anchor: { day: number; views: number }) => {
+    const s = shape(d), s0 = shape(anchor.day);
+    if (!(s0 > 0) || !Number.isFinite(s0)) return anchor.views;
+    return Math.max(0, (s / s0) * anchor.views);
+  };
+
+  const out: SeriesPoint[] = [];
+  for (const day of days) {
+    if (byDay.has(day)) {
+      out.push({ day, views: byDay.get(day)!, kind: 'measured' });
+      continue;
+    }
+
+    if (last && day > last.day) {
+      // ---- forecast: continue from the last measurement, landing on est30 at day 30 ----
+      const est = input.est30 != null && input.est30 > 0 && Number.isFinite(input.est30) ? input.est30 : null;
+      const views = est
+        ? forecastAt(last.views, last.day, est, mult, day, lt)
+        : anchored(day, last);
+      const sigma = FORECAST_SIGMA_PER_LOGDAY * Math.max(lg(day) - lg(last.day), 0);
+      out.push({ day, views, kind: 'forecast', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+      continue;
+    }
+
+    if (!last) {
+      // No measurement anywhere. Past is implied off the shape (nothing to anchor to, so the
+      // channel's own typical curve stands in); future is the same curve continued.
+      const s = shape(day);
+      const kind: SeriesKind = day > boundary ? 'forecast' : 'implied';
+      const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * Math.abs(lg(boundary) - lg(day));
+      out.push({ day, views: Math.max(0, s), kind, band: [s * Math.exp(-sigma), s * Math.exp(sigma)] });
+      continue;
+    }
+
+    if (day < first!.day) {
+      // ---- implied past: the launch we never saw ----
+      const views = anchored(day, first!);
+      // We know less about the launch the further it is from the first thing we measured.
+      const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first!.day) - lg(day));
+      out.push({ day, views, kind: 'implied', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+      continue;
+    }
+
+    // ---- implied gap: between two real measurements ----
+    let lo = acts[0], hi = acts[acts.length - 1];
+    for (let i = 1; i < acts.length; i++) {
+      if (acts[i].day >= day) { lo = acts[i - 1]; hi = acts[i]; break; }
+    }
+    const span = lg(hi.day) - lg(lo.day);
+    const w = span > 0 ? (lg(day) - lg(lo.day)) / span : 0;
+    const a = anchored(day, lo), b = anchored(day, hi);
+    // Blend the two anchorings in log space, so the path leaves `lo` exactly and arrives at
+    // `hi` exactly, following the channel shape in between.
+    const views = a > 0 && b > 0 ? Math.exp((1 - w) * Math.log(a) + w * Math.log(b)) : (1 - w) * a + w * b;
+    const sigma = GAP_SIGMA * 2 * Math.min(w, 1 - w); // zero at both ends, widest mid-gap
+    out.push({ day, views, kind: 'implied', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+  }
+  return out;
+}

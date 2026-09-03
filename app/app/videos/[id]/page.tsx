@@ -33,12 +33,11 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
           actuals={v.actuals}
           publishedAt={v.publishedAt}
           curve={v.curve}
-          projected={v.projected}
+          series={v.series}
           markers={v.markers}
           thumbUrls={v.thumbUrls}
           score={v.score?.score ?? null}
           defaultZoom={v.defaultZoom}
-          sparse={v.sparse}
         />
       </section>
 

@@ -133,20 +133,26 @@ export function projectedCurve(est30: number | null | undefined, mult: Mult, max
  *   views(d) = viewsNow * (est30 / viewsNow) ^ f(d)         for dayNow <= d <= 30
  *   views(d) = est30 * longtail(d)                           for d > 30
  */
-export function forecastCurve(viewsNow: number, dayNow: number, est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, lt?: Longtail | null): ProjPoint[] {
-  if (!(viewsNow > 0) || !est30 || est30 <= 0 || !Number.isFinite(est30) || !(dayNow >= 0)) return [];
+/**
+ * One point of the forecast: where the video is at `day`, having been at `viewsNow` on
+ * `dayNow` and heading for `est30`. Split out of forecastCurve so the video page's per-day
+ * series (lib/app/chart-series.ts) reads the same curve the chart used to draw.
+ */
+export function forecastAt(viewsNow: number, dayNow: number, est30: number, mult: Mult, day: number, lt?: Longtail | null): number {
   if (dayNow >= 30) {
     const base = viewsNow / longtailAt(lt, dayNow);
-    return curveDays(maxDay, steps, dayNow).map((d) => ({ day: d, projected: base * longtailAt(lt, Math.max(d, dayNow)) }));
+    return base * longtailAt(lt, Math.max(day, dayNow));
   }
+  if (day <= dayNow) return viewsNow;
+  if (day >= 30) return est30 * longtailAt(lt, day);
   const gNow = multAt(mult, Math.max(dayNow, 0.04)); // log growth still to come at dayNow
-  const ratio = est30 / viewsNow;
-  return curveDays(maxDay, steps, dayNow).map((d) => {
-    if (d <= dayNow) return { day: d, projected: viewsNow };
-    if (d >= 30) return { day: d, projected: est30 * longtailAt(lt, d) };
-    const f = gNow > 0 ? 1 - multAt(mult, d) / gNow : 1;
-    return { day: d, projected: viewsNow * Math.pow(ratio, Math.min(Math.max(f, 0), 1)) };
-  });
+  const f = gNow > 0 ? 1 - multAt(mult, day) / gNow : 1;
+  return viewsNow * Math.pow(est30 / viewsNow, Math.min(Math.max(f, 0), 1));
+}
+
+export function forecastCurve(viewsNow: number, dayNow: number, est30: number | null | undefined, mult: Mult, maxDay: number, steps = 60, lt?: Longtail | null): ProjPoint[] {
+  if (!(viewsNow > 0) || !est30 || est30 <= 0 || !Number.isFinite(est30) || !(dayNow >= 0)) return [];
+  return curveDays(maxDay, steps, dayNow).map((d) => ({ day: d, projected: forecastAt(viewsNow, dayNow, est30, mult, d, lt) }));
 }
 
 type Point = { at: string | Date; views: number };
