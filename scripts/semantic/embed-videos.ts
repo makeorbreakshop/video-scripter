@@ -48,6 +48,7 @@ export interface EmbedVideosOptions {
   updatedSince?: Date;
   collection?: string;
   maxUsd?: number;
+  recordBookkeeping?: boolean;
 }
 
 export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
@@ -118,7 +119,9 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
       await qdrant.upsert(collection, batch.map((item, index) => ({
         id: uuid5ForId(item.row.id), vector: vectors[index], payload: mapVideoPayload(item.row, embeddedAt),
       })));
-      await recordEmbeddings('video', batch.map((item) => ({ id: item.row.id, hash: item.hash })), options.dimensions);
+      if (options.recordBookkeeping !== false) {
+        await recordEmbeddings('video', batch.map((item) => ({ id: item.row.id, hash: item.hash })), options.dimensions);
+      }
       embedded += batch.length;
     }
   }
@@ -139,6 +142,7 @@ function cliOptions(argv: string[]): EmbedVideosOptions {
     updatedSince: argValue(argv, '--updated-since') ? sinceDate(argValue(argv, '--updated-since') as string) : undefined,
     collection: argValue(argv, '--collection') ?? undefined,
     maxUsd: floatArg(argv, '--max-usd') ?? 2,
+    recordBookkeeping: !argv.includes('--no-bookkeeping'),
   };
 }
 
