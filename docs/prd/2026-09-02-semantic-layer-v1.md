@@ -81,12 +81,18 @@ Also report: total cost (USD), wall time, Qdrant RAM/disk, p95 latency of each e
 - The Next.js app must run without Qdrant: if `QDRANT_URL` is unset or the container is down, semantic endpoints return 503 `{error:{code:'semantic_unavailable'}}` and `search` falls back to lexical.
 - Snapshot runbook: `POST /collections/{name}/snapshots`, copy the two files, restore on Hetzner with `?snapshot` upload; document in `docs/runbooks/qdrant-move.md`.
 
+## 7a. Permissions and cost control
+
+- Codex may start the Qdrant Docker container and load the `com.mfm.video-scripter-semantic` LaunchAgent on this machine without asking (Brandon, 2026-09-02).
+- **Cost gate before every embedding run.** Count the exact input tokens locally first (tiktoken `cl100k_base` over the built documents), print `docs, tokens, est_usd` using the current price for `text-embedding-3-small` (check https://openai.com/api/pricing before the first run and record the number used in the run log; do not rely on a remembered price), and refuse to call the API if the estimate exceeds the run's `--max-usd` (default 2.00 for the 30-day window, 25.00 for a full-corpus run). Log actual usage from the API response (`usage.total_tokens`) into `semantic_cost_ledger` and print the day's total at the end. If actual exceeds estimate by more than 20%, stop and report.
+- Never re-embed unchanged documents (`doc_hash` in `embeddings_v1`); the experiments in §10 must reuse vectors across variants where the document is identical.
+
 ## 8. Acceptance
 
 - `docker ps` shows the container; both collections exist with counts within 2% of the SQL counts for the window.
 - Hourly sync adds a video published 10 minutes ago within the next run.
 - All four endpoints documented in `docs/api-v1.md` with curl examples and return real data for: video `MpGDoiSH_PQ`, channel `UCjWkNxpp3UHdEavpM_19--Q`, query "laser engraver", topic "air fryer recipes".
-- Eval doc written with the three metrics, pass/fail, and the cost line.
+- Eval doc written with the three metrics, pass/fail, and the cost line (estimated vs actual USD per run).
 - Tests: document builders (pure), RRF fusion (pure), payload mapping, and the 503 fallback. `npx jest` green; `npx tsc --noEmit` clean on touched files.
 - Commits on `main`, small, prefixed `semantic:`; no push without Brandon.
 
