@@ -179,6 +179,16 @@ describe('insertVideos Shorts handling', () => {
     expect(insertedIds()).toEqual([]);
   });
 
+  it('writes a view_samples row at insert time so the video is measured immediately', async () => {
+    // Invariant 4: the videos.list response in hand is an observation at a known instant.
+    expect(await insertVideos([vid('longform0002', 'PT10M')], 'competitor')).toBe(1);
+    const call = callsMatching(/insert into view_samples/)[0];
+    expect(call).toBeDefined();
+    expect(call[1][0]).toBe('longform0002');
+    expect(call[1][1]).toBeInstanceOf(Date);
+    expect(call[1][2]).toBe(5);
+  });
+
   it('inserts longform with is_short=false and no verification stamp', async () => {
     expect(await insertVideos([vid('longform0001', 'PT10M')], 'competitor')).toBe(1);
     const call = callsMatching(/insert into videos/)[0];

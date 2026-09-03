@@ -11,6 +11,7 @@ import { decideVideoRow, corpusTrackedChannels, type TouchResult } from '../lib/
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
+import { ingestWrites } from '../lib/ingest/first-sample';
 
 const job = startManagedJob({ name: 'touch-drain' });
 if (!job.acquired) process.exit(0);
@@ -49,16 +50,11 @@ async function insertVideoOnce(v: any, tier: number, sn: any, st: any, cls: Inse
      sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
      cls.is_short, cls.shorts_checked_at === 'now']
   );
-  await pool.query(
-    `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
-     values ($1, current_date, $2, $3, $4, (current_date - $5::date)) on conflict do nothing`,
-    [v.id, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)), clampCount(parseInt(st.commentCount || '0', 10)), sn.publishedAt]
-  );
-  await pool.query(
-    `insert into view_tracking_priority (video_id, priority_tier, next_track_date)
-     values ($1, $2, current_date + 1) on conflict (video_id) do nothing`,
-    [v.id, tier]
-  );
+  // A sample, a daily snapshot and a tracking row, in that order (lib/ingest/first-sample.ts).
+  // The videos.list response in hand IS an observation at a known instant, so it is written as
+  // a view_samples row now rather than leaving the video unmeasured until the next tracker tick
+  // — which for an RSS-discovered video was up to a day after we already knew its view count.
+  for (const w of ingestWrites(v, tier, new Date())) await pool.query(w.sql, w.params);
 }
 
 async function fetchVideos(ids: string[]): Promise<any[]> {

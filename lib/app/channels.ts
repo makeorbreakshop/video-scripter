@@ -14,6 +14,7 @@ import {
 import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 import { classifyForInsert, skipForInsert } from '../ingest/classify';
+import { firstSampleWrite } from '../ingest/first-sample';
 import { refreshChannelStats } from './channel-stats';
 import { revalidateChannel } from './revalidate';
 
@@ -366,6 +367,11 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
          sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
          dataSource, SYSTEM_USER, cls.is_short, cls.shorts_checked_at === 'now']
       );
+      // The response we just read IS an observation at a known instant, so it is recorded as
+      // a sample too: a video imported days after publish is otherwise unmeasured until the
+      // next tracker tick (lib/ingest/first-sample.ts).
+      const sample = firstSampleWrite(v, new Date());
+      if (sample) await q(sample.sql, sample.params).catch(() => {});
       await q(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
          values ($1, current_date, $2, $3, $4, greatest(0, current_date - $5::date))

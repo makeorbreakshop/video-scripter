@@ -8,6 +8,7 @@ import pg from 'pg';
 import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
+import { firstSampleWrite } from '../lib/ingest/first-sample';
 import { refreshChannelStatsSql } from '../lib/app/channel-stats';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
 
@@ -194,6 +195,13 @@ for (const group of chunk(newIds, 50)) {
           cls.shorts_checked_at === 'now',
         ]
       );
+      // RSS finds a video 1-2 days after publish; the response that produced this row already
+      // has its view count at a known instant, so record it as a sample now instead of leaving
+      // the video unmeasured until the next tracker tick (lib/ingest/first-sample.ts).
+      {
+        const sample = firstSampleWrite(v, new Date());
+        if (sample) await pool.query(sample.sql, sample.params);
+      }
       await pool.query(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
          values ($1, current_date, $2, $3, $4, (current_date - $5::date))
