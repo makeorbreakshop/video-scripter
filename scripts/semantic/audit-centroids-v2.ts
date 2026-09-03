@@ -4,6 +4,14 @@ import { db, runMain } from './common';
 
 const OUT_DIR = path.resolve('docs/prd/semantic-eval-v2');
 
+function etNow(): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    dateStyle: 'medium',
+    timeStyle: 'long',
+  }).format(new Date());
+}
+
 export async function auditCentroids() {
   const [columns, byDate, examples] = await Promise.all([
     db().query<{ column_name: string; data_type: string }>(
@@ -35,7 +43,7 @@ export async function auditCentroids() {
     ),
   ]);
   return {
-    audited_at: new Date().toISOString(),
+    audited_at_et: etNow(),
     table: 'bertopic_clusters',
     columns: columns.rows,
     by_created_date: byDate.rows.map((row) => ({
@@ -63,7 +71,7 @@ function markdown(audit: Awaited<ReturnType<typeof auditCentroids>>): string {
   const table = audit.by_created_date
     .map((row) => `| ${row.created_date} | ${row.rows} | ${row.clusters_with_fewer_than_5_sources} | ${row.placeholder_hierarchy_rows} |`)
     .join('\n');
-  return `# Semantic v2 centroid audit\n\nGenerated: ${audit.audited_at}\n\n| Created date | Rows | <5 source clusters | Placeholder hierarchy rows |\n|---|---:|---:|---:|\n${table}\n\nDecision: ${audit.decision}\n`;
+  return `# Semantic v2 centroid audit\n\nGenerated: ${audit.audited_at_et}\n\n| Created date | Rows | <5 source clusters | Placeholder hierarchy rows |\n|---|---:|---:|---:|\n${table}\n\nDecision: ${audit.decision}\n`;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
