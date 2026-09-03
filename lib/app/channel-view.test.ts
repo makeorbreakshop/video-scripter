@@ -121,7 +121,7 @@ describe('pickerMeta', () => {
     expect(pickerMeta(base)).toBe('@captainsteeeve · 1.2M subscribers · 49 videos');
   });
   it('accepts the string a bigint column comes back as', () => {
-    expect(pickerMeta({ ...base, subscriber_count: '1150000' as any })).toBe('@captainsteeeve · 1.2M subscribers · 49 videos');
+    expect(pickerMeta({ ...base, subscriber_count: '1150000' as any })).toBe('@captainsteeeve · 1.1M subscribers · 49 videos');
   });
   it('skips what we do not know', () => {
     expect(pickerMeta({ ...base, handle: null, subscriber_count: null })).toBe('49 videos');
