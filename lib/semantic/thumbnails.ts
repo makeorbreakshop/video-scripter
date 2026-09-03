@@ -1,0 +1,200 @@
+import { createHash } from 'crypto';
+
+export const THUMBNAIL_MODEL = 'tencent/WeMM-Embedding-4B';
+export const THUMBNAIL_DIMS = 512;
+export const THUMBNAIL_COLLECTION = 'thumbnails_wemm4b_test_v1';
+export const THUMBNAIL_VECTOR_NAMES = ['visual', 'visual_title'] as const;
+
+export type ThumbnailVectorName = typeof THUMBNAIL_VECTOR_NAMES[number];
+export type ChannelSizeBand = 'under_10k' | '10k_100k' | '100k_1m' | 'over_1m' | 'unknown';
+
+export interface ThumbnailCandidate {
+  videoId: string;
+  channelId: string;
+  channelName: string;
+  title: string;
+  thumbnailUrl: string;
+  publishedAt: number;
+  topicDomain: string | null;
+  topicNiche: string | null;
+  topicMicro: string | null;
+  formatType: string | null;
+  score: number | null;
+  confidence: string | null;
+  isOutlier: boolean;
+  subscriberCount: number | null;
+}
+
+export interface ThumbnailCohortOptions {
+  limit?: number;
+  maxPerChannel?: number;
+  seed?: string;
+  forcedIds?: string[];
+}
+
+function stableHash(seed: string, value: string): string {
+  return createHash('sha256').update(seed).update('\0').update(value).digest('hex');
+}
+
+function canonicalCandidate(candidate: ThumbnailCandidate): string {
+  return JSON.stringify(Object.entries(candidate).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+export function channelSizeBand(subscriberCount: number | null): ChannelSizeBand {
+  if (subscriberCount == null || !Number.isFinite(subscriberCount) || subscriberCount < 0) return 'unknown';
+  if (subscriberCount < 10_000) return 'under_10k';
+  if (subscriberCount < 100_000) return '10k_100k';
+  if (subscriberCount < 1_000_000) return '100k_1m';
+  return 'over_1m';
+}
+
+export function thumbnailStratum(candidate: ThumbnailCandidate): string {
+  return [
+    candidate.topicDomain || 'unknown-domain',
+    candidate.topicNiche || 'unknown-niche',
+    candidate.formatType || 'unknown-format',
+    candidate.isOutlier ? 'outlier' : 'ordinary',
+    channelSizeBand(candidate.subscriberCount),
+  ].join('|');
+}
+
+function thumbnailFacets(candidate: ThumbnailCandidate): string[] {
+  return [
+    `domain:${candidate.topicDomain || 'unknown'}`,
+    `niche:${candidate.topicNiche || 'unknown'}`,
+    `format:${candidate.formatType || 'unknown'}`,
+    `outlier:${candidate.isOutlier}`,
+    `size:${channelSizeBand(candidate.subscriberCount)}`,
+  ];
+}
+
+function validThumbnailUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+export function selectThumbnailCohort(
+  input: ThumbnailCandidate[],
+  options: ThumbnailCohortOptions = {},
+): ThumbnailCandidate[] {
+  const limit = options.limit ?? 500;
+  const maxPerChannel = options.maxPerChannel ?? 3;
+  const seed = options.seed ?? 'channelsmith-thumbnail-v1';
+  if (!Number.isInteger(limit) || limit < 1) throw new Error('Thumbnail cohort limit must be a positive integer');
+  if (!Number.isInteger(maxPerChannel) || maxPerChannel < 1) {
+    throw new Error('Thumbnail cohort maxPerChannel must be a positive integer');
+  }
+
+  const byId = new Map<string, ThumbnailCandidate>();
+  for (const candidate of input) {
+    if (!candidate.videoId || !candidate.channelId || !validThumbnailUrl(candidate.thumbnailUrl)) continue;
+    const existing = byId.get(candidate.videoId);
+    if (!existing || canonicalCandidate(candidate) < canonicalCandidate(existing)) byId.set(candidate.videoId, candidate);
+  }
+
+  const selected: ThumbnailCandidate[] = [];
+  const selectedIds = new Set<string>();
+  const channelCounts = new Map<string, number>();
+  const facetCounts = new Map<string, number>();
+  const add = (candidate: ThumbnailCandidate): boolean => {
+    if (selectedIds.has(candidate.videoId)) return false;
+    const count = channelCounts.get(candidate.channelId) ?? 0;
+    if (count >= maxPerChannel) return false;
+    selected.push(candidate);
+    selectedIds.add(candidate.videoId);
+    channelCounts.set(candidate.channelId, count + 1);
+    for (const facet of thumbnailFacets(candidate)) facetCounts.set(facet, (facetCounts.get(facet) ?? 0) + 1);
+    return true;
+  };
+
+  for (const id of options.forcedIds ?? []) {
+    const candidate = byId.get(id);
+    if (candidate) add(candidate);
+    if (selected.length >= limit) return selected;
+  }
+
+  const remaining = [...byId.values()].sort((left, right) =>
+    stableHash(seed, left.videoId).localeCompare(stableHash(seed, right.videoId)));
+  while (selected.length < limit) {
+    let best: ThumbnailCandidate | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const candidate of remaining) {
+      if (selectedIds.has(candidate.videoId)) continue;
+      if ((channelCounts.get(candidate.channelId) ?? 0) >= maxPerChannel) continue;
+      const score = thumbnailFacets(candidate)
+        .reduce((total, facet) => total + (facetCounts.get(facet) ?? 0), 0);
+      if (score < bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
+    }
+    if (!best) break;
+    add(best);
+  }
+
+  return selected;
+}
+
+export function thumbnailCollectionConfig(dimensions = THUMBNAIL_DIMS) {
+  return {
+    vectors: {
+      visual: { size: dimensions, distance: 'Cosine' },
+      visual_title: { size: dimensions, distance: 'Cosine' },
+    },
+    on_disk_payload: true,
+  } as const;
+}
+
+export function thumbnailQueryBody(
+  vector: number[],
+  using: ThumbnailVectorName,
+  limit = 20,
+  withVector = false,
+) {
+  return {
+    query: vector,
+    using,
+    limit,
+    with_payload: true,
+    with_vector: withVector,
+  };
+}
+
+export interface ThumbnailPayloadOptions {
+  perceptualHash: string;
+  contentSha256: string;
+  model?: string;
+  dimensions?: number;
+  embeddedAt?: string;
+  linkedVideoIds?: string[];
+}
+
+export function mapThumbnailPayload(candidate: ThumbnailCandidate, options: ThumbnailPayloadOptions) {
+  return {
+    video_id: candidate.videoId,
+    linked_video_ids: options.linkedVideoIds ?? [candidate.videoId],
+    channel_id: candidate.channelId,
+    channel_name: candidate.channelName,
+    title: candidate.title,
+    thumbnail_url: candidate.thumbnailUrl,
+    published_at: candidate.publishedAt,
+    topic_domain: candidate.topicDomain,
+    topic_niche: candidate.topicNiche,
+    topic_micro: candidate.topicMicro,
+    format_type: candidate.formatType,
+    score: candidate.score,
+    confidence: candidate.confidence,
+    is_outlier: candidate.isOutlier,
+    subscriber_count: candidate.subscriberCount,
+    channel_size_band: channelSizeBand(candidate.subscriberCount),
+    perceptual_hash: options.perceptualHash,
+    content_sha256: options.contentSha256,
+    embedding_model: options.model ?? THUMBNAIL_MODEL,
+    embedding_dimensions: options.dimensions ?? THUMBNAIL_DIMS,
+    embedded_at: options.embeddedAt ?? new Date().toISOString(),
+  };
+}
