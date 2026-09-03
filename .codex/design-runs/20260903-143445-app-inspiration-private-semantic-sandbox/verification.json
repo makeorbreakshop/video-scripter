@@ -50,7 +50,7 @@
       "state": "balanced-ready",
       "source": "agent-browser authenticated localhost:3300",
       "captured_at": "2026-09-03T14:53:16-04:00",
-      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+      "commit": "fc87bb55d605bb34c73fbe2dd08086fd5c6cc87e"
     },
     {
       "path": "screenshots/balanced-narrow.png",
@@ -58,7 +58,7 @@
       "state": "balanced-ready",
       "source": "agent-browser authenticated localhost:3300",
       "captured_at": "2026-09-03T14:53:17-04:00",
-      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+      "commit": "fc87bb55d605bb34c73fbe2dd08086fd5c6cc87e"
     },
     {
       "path": "screenshots/far-narrow-actions.png",
@@ -66,7 +66,7 @@
       "state": "far-actions",
       "source": "agent-browser authenticated localhost:3300",
       "captured_at": "2026-09-03T14:58:44-04:00",
-      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+      "commit": "fc87bb55d605bb34c73fbe2dd08086fd5c6cc87e"
     },
     {
       "path": "screenshots/offline-wide.png",
@@ -74,7 +74,7 @@
       "state": "semantic-offline",
       "source": "agent-browser localhost:3301 with unreachable Qdrant",
       "captured_at": "2026-09-03T14:50:37-04:00",
-      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+      "commit": "fc87bb55d605bb34c73fbe2dd08086fd5c6cc87e"
     }
   ],
   "accessibility_evidence": [
