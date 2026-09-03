@@ -75,6 +75,7 @@ export interface ScoreInput {
   priorV30: number[];         // channel priors: day-30 views (<=10)
   priorSameAge: number[];     // channel priors: views at the same age (<=10)
   priorsFromLifetime?: number; // how many of priorV30 came from lifetime/long-tail normalization
+  priorsProjected?: number;    // how many of priorV30 were projected forward from before day 30
   params: GlobalParams;
 }
 
@@ -88,6 +89,7 @@ export interface ScoreOutput {
   sameAgeRatio: number | null;
   nSameAge: number;
   priorsFromLifetime: number;
+  priorsProjected: number;
   confidence: 'insufficient' | 'early' | 'likely' | 'confirmed';
 }
 
@@ -110,7 +112,8 @@ export function scoreVideo(inp: ScoreInput): ScoreOutput {
     inp.priorV30.length < 3 ? 'insufficient' : inp.day < 3 ? 'early' : inp.day < 7 ? 'likely' : 'confirmed';
   return {
     bucket, q, est30, baseline, nBaseline: inp.priorV30.length, score, sameAgeRatio,
-    nSameAge: inp.priorSameAge.length, priorsFromLifetime: inp.priorsFromLifetime ?? 0, confidence,
+    nSameAge: inp.priorSameAge.length, priorsFromLifetime: inp.priorsFromLifetime ?? 0,
+    priorsProjected: inp.priorsProjected ?? 0, confidence,
   };
 }
 
@@ -197,6 +200,112 @@ export function longtailAt(t: LongtailTable | undefined | null, age: number): nu
 
 // Minimum age at which a lifetime count may stand in for a day-30 snapshot.
 export const MIN_LIFETIME_AGE = 45;
+
+// ---- prior day-30 estimation for the channel baseline (2026-09-03) ----
+//
+// A channel baseline is the median day-30 views of its recent prior videos. Until now a prior
+// only counted with a real day-27..33 snapshot, or a lifetime count once it passed
+// MIN_LIFETIME_AGE. On a channel that uploads every day or two, the last 10 priors are all
+// younger than that, so NO prior qualified and the baseline came out null -- the page then said
+// "not enough history" for exactly the channels users watch most.
+//
+// Every observation is a point on a trajectory, and the fitted tables translate any of them to
+// day 30. So a prior contributes its day-30 estimate three ways, best first:
+//   real       a day-27..33 snapshot                      (no translation error)
+//   lifetime   past day 30, divided down the long tail     (small)
+//   projected  before day 30, multiplied UP the growth curve (largest, and age-dependent)
+//
+// Validated by scripts/backtest-baseline.ts on 2,753 videos from Jul-Aug 2025 with strict
+// walk-forward censoring. At day 3, all channels: coverage .50 -> .99, baseline medALE
+// .270 -> .102, score medALE .393 -> .213, outlier F1 .65 -> .75. Daily-cadence channels go
+// from 8% covered to ~100% and post the lowest baseline error of any group, so projecting
+// young priors is sound. The lone regression was sparse-cadence channels (F1 .70 -> .65 at
+// day 3), traced NOT to projection (under 10% of their priors) but to the wider prior window
+// dragging in stale history -- hence PRIOR_WINDOW_SPARSE and PRIOR_STALE_DAYS below.
+
+/** A prior younger than this is too noisy to project to day 30 (the day-1 multiplier is ~2.3x). */
+export const MIN_PROJECT_AGE = 2;
+/** Prior window: wider by default, narrower on channels that publish rarely. */
+export const PRIOR_WINDOW = 15;
+export const PRIOR_WINDOW_SPARSE = 10;
+/** Median publish gap above which a channel counts as sparse. */
+export const SPARSE_GAP_DAYS = 9;
+/** A prior older than this says little about how the channel performs now. */
+export const PRIOR_STALE_DAYS = 550;
+
+export type PriorKind = 'real' | 'lifetime' | 'projected';
+export interface PriorEstimate { v30: number; kind: PriorKind }
+
+/**
+ * Log multiplier from views at `day` up to day 30, interpolated log-linearly between the
+ * fitted day buckets. Zero at day 30 and beyond (no growth left to project).
+ */
+export function logMultTo30(params: GlobalParams, day: number): number {
+  const b = DAY_BUCKETS as readonly number[];
+  const m = (k: number) => params.mult[k] ?? 0;
+  if (!(day > 0)) return m(b[0]);
+  if (day <= b[0]) return m(b[0]);
+  if (day >= 30) return 0;
+  for (let i = 1; i < b.length; i++) {
+    if (day <= b[i]) {
+      const x0 = Math.log(b[i - 1]), x1 = Math.log(b[i]), x = Math.log(day);
+      return m(b[i - 1]) + ((m(b[i]) - m(b[i - 1])) * (x - x0)) / (x1 - x0);
+    }
+  }
+  return 0;
+}
+
+/**
+ * Long-tail multiplier for an age between 30 and the table's first bucket (60d), where
+ * `longtailAt` would otherwise clamp to the 60-day value and overstate the tail. Ramps
+ * linearly from 1.0 at day 30 to the fitted 60-day multiplier.
+ */
+export function longtailFrom30(lt: LongtailTable | undefined | null, age: number): number {
+  const first = lt?.ages?.[0] ?? 60;
+  if (age >= first) return longtailAt(lt, age);
+  if (age <= 30) return 1;
+  const m = longtailAt(lt, first);
+  return 1 + (m - 1) * ((age - 30) / (first - 30));
+}
+
+/**
+ * Day-30 estimate for one prior video from its own record. `snapDay` is the age at the latest
+ * snapshot, which is what both translations are keyed to -- NOT the prior's age today, which
+ * would over-divide a stale snapshot down the long tail.
+ */
+export function priorV30(
+  realV30: number | null | undefined,
+  latest: Snapshot | null | undefined,
+  params: GlobalParams,
+  minProjectAge = MIN_PROJECT_AGE
+): PriorEstimate | null {
+  if (realV30 != null && realV30 > 0 && Number.isFinite(realV30)) return { v30: realV30, kind: 'real' };
+  if (!latest || !(latest.views > 0) || !Number.isFinite(latest.day)) return null;
+  if (latest.day >= 30) {
+    const m = longtailFrom30(params.longtail, latest.day);
+    return m > 0 ? { v30: latest.views / m, kind: 'lifetime' } : null;
+  }
+  if (latest.day < minProjectAge) return null;
+  return { v30: latest.views * Math.exp(logMultTo30(params, latest.day)), kind: 'projected' };
+}
+
+/** Median gap in days between consecutive publish times; null with fewer than 3. */
+export function publishGapDays(publishedAtMs: number[]): number | null {
+  if (publishedAtMs.length < 3) return null;
+  const p = [...publishedAtMs].sort((a, b) => a - b);
+  const gaps: number[] = [];
+  for (let i = 1; i < p.length; i++) gaps.push((p[i] - p[i - 1]) / 86_400_000);
+  return median(gaps);
+}
+
+/**
+ * How many recent priors to use. Sparse channels keep the narrower window: they already had
+ * full baseline coverage from the long-tail path, and reaching further back only added stale
+ * history (the one F1 regression in the backtest).
+ */
+export function priorWindow(gapDays: number | null): number {
+  return gapDays != null && gapDays > SPARSE_GAP_DAYS ? PRIOR_WINDOW_SPARSE : PRIOR_WINDOW;
+}
 
 export interface V30Estimate { v30: number; fromLifetime: boolean }
 

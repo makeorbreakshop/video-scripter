@@ -1,4 +1,4 @@
-import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams } from './core';
+import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams, logMultTo30, longtailFrom30, priorV30, publishGapDays, priorWindow } from './core';
 
 const params: GlobalParams = {
   mult: { 1: Math.log(2.2), 2: Math.log(1.9), 3: Math.log(1.4), 5: Math.log(1.25), 7: Math.log(1.12), 14: Math.log(1.05), 21: Math.log(1.02), 30: 0 },
@@ -173,5 +173,69 @@ describe('confidence with lifetime-derived baselines', () => {
     const out = scoreVideo({ vt: 1000, day: 20, snaps: [], priorMultLogs: [], priorV30: [900, 1000, 1100], priorSameAge: [], priorsFromLifetime: 2, params });
     expect(out.priorsFromLifetime).toBe(2);
     expect(out.nBaseline).toBe(3);
+  });
+});
+
+describe('prior day-30 estimation (baseline from young priors)', () => {
+  const params: GlobalParams = {
+    mult: { 1: Math.log(2.27), 2: Math.log(1.75), 3: Math.log(1.52), 5: Math.log(1.31), 7: Math.log(1.22), 14: Math.log(1.09), 21: Math.log(1.03), 30: 0 },
+    qBins: {}, fittedAt: 'x', nVideos: 0,
+    longtail: { ages: [60, 90, 180, 365, 730, 1500], mult: [1.08, 1.11, 1.11, 1.26, 1.26, 1.26], n: [1, 1, 1, 1, 1, 1] },
+  };
+
+  it('logMultTo30 hits the buckets exactly and is zero from day 30', () => {
+    expect(logMultTo30(params, 1)).toBeCloseTo(Math.log(2.27));
+    expect(logMultTo30(params, 7)).toBeCloseTo(Math.log(1.22));
+    expect(logMultTo30(params, 30)).toBe(0);
+    expect(logMultTo30(params, 45)).toBe(0);
+  });
+  it('logMultTo30 interpolates between buckets and clamps below day 1', () => {
+    const d4 = logMultTo30(params, 4);
+    expect(d4).toBeLessThan(Math.log(1.52));
+    expect(d4).toBeGreaterThan(Math.log(1.31));
+    expect(logMultTo30(params, 0.3)).toBeCloseTo(Math.log(2.27));
+  });
+  it('longtailFrom30 ramps from 1 at day 30 to the 60-day value', () => {
+    expect(longtailFrom30(params.longtail, 30)).toBe(1);
+    expect(longtailFrom30(params.longtail, 45)).toBeCloseTo(1.04);
+    expect(longtailFrom30(params.longtail, 60)).toBeCloseTo(1.08);
+    expect(longtailFrom30(params.longtail, 365)).toBeCloseTo(1.26);
+  });
+  it('priorV30 prefers a real day-30 read', () => {
+    expect(priorV30(1000, { day: 5, views: 400 }, params)).toEqual({ v30: 1000, kind: 'real' });
+  });
+  it('priorV30 projects a young prior up the growth curve', () => {
+    const e = priorV30(null, { day: 7, views: 1000 }, params)!;
+    expect(e.kind).toBe('projected');
+    expect(e.v30).toBeCloseTo(1220);
+  });
+  it('priorV30 refuses a prior younger than MIN_PROJECT_AGE', () => {
+    expect(priorV30(null, { day: 1.5, views: 1000 }, params)).toBeNull();
+    expect(priorV30(null, { day: 2, views: 1000 }, params)?.kind).toBe('projected');
+  });
+  it('priorV30 divides an old prior down the long tail, keyed to the snapshot age', () => {
+    const e = priorV30(null, { day: 365, views: 1260 }, params)!;
+    expect(e.kind).toBe('lifetime');
+    expect(e.v30).toBeCloseTo(1000);
+  });
+  it('priorV30 returns null with no usable record', () => {
+    expect(priorV30(null, null, params)).toBeNull();
+    expect(priorV30(null, { day: 10, views: 0 }, params)).toBeNull();
+  });
+  it('a daily channel with 10 young priors now gets a baseline', () => {
+    const v30s = Array.from({ length: 10 }, (_, i) => priorV30(null, { day: 2 + i, views: 10000 }, params)!.v30);
+    const out = scoreVideo({ vt: 5000, day: 0.5, snaps: [{ day: 0.5, views: 5000 }], priorMultLogs: [], priorV30: v30s, priorSameAge: [], priorsProjected: 10, params });
+    expect(out.baseline).not.toBeNull();
+    expect(out.nBaseline).toBe(10);
+    expect(out.priorsProjected).toBe(10);
+    expect(out.confidence).toBe('early');
+  });
+  it('publishGapDays / priorWindow: daily -> 15 priors, sparse -> 10', () => {
+    const day = 86_400_000;
+    expect(publishGapDays([0, day, 2 * day, 3 * day])).toBe(1);
+    expect(priorWindow(1)).toBe(15);
+    expect(priorWindow(14)).toBe(10);
+    expect(priorWindow(null)).toBe(15);
+    expect(publishGapDays([0, day])).toBeNull();
   });
 });
