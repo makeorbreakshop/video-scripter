@@ -59,12 +59,17 @@ export function sinceDate(raw = '30d'): Date {
   return date;
 }
 
-export async function currentHashes(entity: 'video' | 'channel', ids: string[]): Promise<Map<string, string>> {
+export async function currentHashes(
+  entity: 'video' | 'channel',
+  ids: string[],
+  dimensions = EMBEDDING_DIMS,
+): Promise<Map<string, string>> {
   if (!ids.length) return new Map();
   if (ids.length > READ_BATCH_SIZE) throw new Error(`Hash lookup exceeds ${READ_BATCH_SIZE} ids`);
   const result = await db().query<{ id: string; doc_hash: string }>(
-    `select id, doc_hash from embeddings_v1 where entity = $1 and id = any($2::text[])`,
-    [entity, ids],
+    `select id, doc_hash from embeddings_v1
+      where entity = $1 and id = any($2::text[]) and model = $3 and dims = $4`,
+    [entity, ids, EMBEDDING_MODEL, dimensions],
   );
   return new Map(result.rows.map((row) => [row.id, row.doc_hash]));
 }

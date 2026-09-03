@@ -80,7 +80,7 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
     )).rows as VideoRow[];
     if (!rows.length) break;
     selected += rows.length;
-    const hashes = await currentHashes('video', rows.map((row) => row.id));
+    const hashes = await currentHashes('video', rows.map((row) => row.id), options.dimensions);
     const prepared: PreparedVideo[] = rows.map((row) => {
       const document = buildVideoDocument({
         title: row.title,

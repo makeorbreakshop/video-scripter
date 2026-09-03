@@ -67,6 +67,7 @@ export interface EmbedChannelsOptions {
   collection?: string;
   refreshPayloads?: boolean;
   maxUsd?: number;
+  recordBookkeeping?: boolean;
 }
 
 export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
@@ -121,7 +122,7 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
       videosByChannel.set(video.channel_id, list);
     }
     const metaByChannel = new Map<string, ChannelMetaRow>(metaRows.map((row) => [row.channel_id, row]));
-    const hashes = await currentHashes('channel', idBatch);
+    const hashes = await currentHashes('channel', idBatch, options.dimensions);
     const allPrepared: PreparedChannel[] = idBatch.map((id) => {
       const videos = videosByChannel.get(id) ?? [];
       const meta = metaByChannel.get(id);
@@ -176,7 +177,9 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
       await qdrant.upsert(collection, batch.map((item, index) => ({
         id: uuid5ForId(item.id), vector: vectors[index], payload: item.payload,
       })));
-      await recordEmbeddings('channel', batch.map((item) => ({ id: item.id, hash: item.hash })), options.dimensions);
+      if (options.recordBookkeeping !== false) {
+        await recordEmbeddings('channel', batch.map((item) => ({ id: item.id, hash: item.hash })), options.dimensions);
+      }
       embedded += batch.length;
     }
     for (const batch of chunks(payloadRefreshes, QDRANT_BATCH_SIZE)) {
@@ -204,6 +207,7 @@ function cliOptions(argv: string[]): EmbedChannelsOptions {
     collection: argValue(argv, '--collection') ?? undefined,
     refreshPayloads: argv.includes('--refresh-payloads'),
     maxUsd: floatArg(argv, '--max-usd') ?? 2,
+    recordBookkeeping: !argv.includes('--no-bookkeeping'),
   };
 }
 
