@@ -13,6 +13,7 @@
 // never crowd it out of the per-run cap. The long-tail query is separately capped
 // (LONG_TAIL_MAX_PER_RUN) and only runs once an hour (isLongTailRun) because its
 // anti-join covers ~850K rows and this DB has had IO incidents.
+import { isLongform, longformSql } from '../scoring/longform';
 
 export type Tier = 'launch' | 'hot' | 'warm' | 'cool' | 'cold';
 
@@ -82,17 +83,12 @@ export function isLongTailRun(now: Date = new Date()): boolean {
 export const SHORT_DURATION_RE = /^PT(([0-5]?[0-9])S|1M([0-2]S)?)$/;
 
 /** Same rule as the SQL below — a video the watcher is allowed to fetch at all, in ANY tier. */
-export function isEligible(v: { duration?: string | null; is_short?: boolean | null }): boolean {
-  const d = v.duration ?? '';
-  if (d === 'P0D') return false;           // live / upcoming: hqdefault is a feed frame
-  if (v.is_short === true) return false;
-  return !SHORT_DURATION_RE.test(d);
+export function isEligible(v: { duration?: string | null; is_short?: boolean | null; shorts_checked_at?: string | Date | null }): boolean {
+  return isLongform(v);                    // live / upcoming excluded too: hqdefault is a feed frame
 }
 
 // Shared eligibility: no Shorts, no live/upcoming (hqdefault is a feed frame there, not packaging).
-const ELIGIBLE = `coalesce(v.duration, '') <> 'P0D'
-     and coalesce(v.is_short, false) = false
-     and not (coalesce(v.duration, '') ~ '^PT(([0-5]?[0-9])S|1M([0-2]S)?)$')`;
+const ELIGIBLE = longformSql('v');
 
 const LATEST = `with latest as (
      select distinct on (video_id) video_id, last_checked

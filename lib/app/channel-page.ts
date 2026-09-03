@@ -6,6 +6,7 @@
 // lateral subqueries so the planner keeps them to the page's own rows.
 import { q, one } from '../admin/db';
 import { versionThumbUrl } from './video-page';
+import { longformSql } from '../scoring/longform';
 
 export type ChannelHeader = {
   channelId: string;
@@ -41,7 +42,7 @@ function rangeClause(range: RangeKey): string {
 }
 /** How many of the channel's videos fall in the range (for "showing N of M"). */
 export async function channelVideoCount(channelId: string, range: RangeKey): Promise<number> {
-  const rows = await q<{ n: number }>(`select count(*)::int as n from videos v where v.channel_id = $1${rangeClause(range)}`, [channelId]);
+  const rows = await q<{ n: number }>(`select count(*)::int as n from videos v where v.channel_id = $1 and ${longformSql('v')}${rangeClause(range)}`, [channelId]);
   return rows[0]?.n ?? 0;
 }
 
@@ -149,7 +150,7 @@ export async function channelVideos(
                 (array_agg(title order by version desc))[2] as prev_title
            from title_versions t where t.video_id = v.id
        ) tt on true
-      where v.channel_id = $1${rangeClause(range)}
+      where v.channel_id = $1 and ${longformSql('v')}${rangeClause(range)}
       order by ${SORTS[sort]}
       limit $2 offset $3`,
     [channelId, limit + 1, offset]

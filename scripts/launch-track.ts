@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { chunk, clampCount } from '../lib/nightly/tracking-core';
+import { longformSql } from '../lib/scoring/longform';
 import {
   nextCheck, reenter, launchUntilFor, titleCheckDue, parseRssTitles, daysSincePublished,
   changeAtFromLaunchUntil, type Tier,
@@ -38,8 +39,7 @@ const enrolled = await pool.query(
           case when v.published_at > now() - interval '24 hours' then 'publish' else 'backfill' end
    from videos v
    where v.published_at > now() - interval '30 days'
-     and coalesce(v.is_short, false) = false
-     and coalesce(v.duration, '') <> 'P0D'
+     and ${longformSql('v')}
      and not exists (select 1 from track_schedule t where t.video_id = v.id)
    on conflict (video_id) do nothing`
 );
@@ -68,7 +68,7 @@ const titleDue = await pool.query(
     left join channel_tracking ct on ct.channel_id = s.channel_id
     where s.channel_id is not null
       and v.published_at > now() - interval '30 days'
-      and coalesce(v.is_short, false) = false
+      and ${longformSql('v')}
       -- launch window and user-tracked channels hourly; the rest of the recent corpus daily.
       -- RSS lists a channel's last 15 uploads, so one free fetch covers them all.
       and (s.last_title_check is null

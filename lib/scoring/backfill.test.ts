@@ -62,8 +62,8 @@ describe('semantic scoring backfill helpers', () => {
     const sql = eligibleWhere('v');
     expect(sql).toContain("v.published_at >= now() - ($1::int * interval '1 day')");
     expect(sql).toContain("v.published_at <= now() - ($2::int * interval '1 day')");
-    expect(sql).toContain('coalesce(v.is_short,false)=false');
-    expect(sql).toContain("coalesce(v.duration,'')<>'P0D'");
+    expect(sql).toContain('shorts_checked_at is null');
+    expect(sql).toContain("coalesce(v.duration, '') <> 'P0D'");
     expect(sql).toContain("coalesce(v.privacy_status,'public') = 'public'");
     expect(sql).toContain('coalesce(v.view_count,0) > 0');
   });

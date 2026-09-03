@@ -32,6 +32,7 @@ import {
   priorV30 as corePriorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, MIN_PROJECT_AGE,
   type GlobalParams,
 } from '../lib/scoring/core';
+import { longformSql } from '../lib/scoring/longform';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const FROM = arg('--from') ?? '2025-07-01';
@@ -53,7 +54,7 @@ type Snap = { day: number; views: number; at: number }; // at = epoch ms of the 
 log(`holdout: videos published ${FROM}..${TO} with an early (<=3d) snapshot and day-30 truth (limit ${LIMIT})`);
 const vids: { id: string; channel_id: string; pub: number }[] = (await q(
   `select v.id, v.channel_id, extract(epoch from v.published_at)*1000 as pub from videos v
-    where v.published_at between $1 and $2 and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D'
+    where v.published_at between $1 and $2 and ${longformSql('v')}
       and coalesce(v.privacy_status,'public')='public'
       and exists (select 1 from view_snapshots s where s.video_id=v.id and s.days_since_published between 27 and 33 and s.view_count>0)
       and exists (select 1 from view_snapshots s where s.video_id=v.id and s.days_since_published <= 3 and s.view_count>0)
@@ -88,7 +89,7 @@ const priorRows: { video_id: string; prior_id: string; ppub: number }[] = await 
      from unnest($1::text[]) as r(id) join videos v on v.id=r.id
      join lateral (select p.id, p.published_at from videos p
                     where p.channel_id=v.channel_id and p.published_at < v.published_at
-                      and coalesce(p.is_short,false)=false and coalesce(p.duration,'')<>'P0D'
+                      and ${longformSql('p')}
                       and coalesce(p.privacy_status,'public')='public' and coalesce(p.view_count,0)>0
                     order by p.published_at desc limit ${N_PROPOSED}) p on true`, [ids]);
 const priorsOf = new Map<string, { id: string; pub: number }[]>();

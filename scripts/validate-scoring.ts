@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { scoreVideo, bucketFor, GlobalParams, MODEL_VERSION, Snapshot, median } from '../lib/scoring/core';
+import { longformSql } from '../lib/scoring/longform';
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 300000').catch(() => {}); });
@@ -17,7 +18,7 @@ const params: GlobalParams = (await q(`select params from score_params where mod
 // holdout videos: published 2025-07-20..2025-08-15 (inside the fit window: a port check, not an out-of-sample test — the harness did that), non-short, with day-30 truth
 const vids: { id: string; channel_id: string; published_at: string }[] = await q(
   `select v.id, v.channel_id, v.published_at from videos v
-    where v.published_at between '2025-07-20' and '2025-08-15' and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D'
+    where v.published_at between '2025-07-20' and '2025-08-15' and ${longformSql('v')}
       and exists (select 1 from view_snapshots s where s.video_id=v.id and s.days_since_published between 27 and 33 and s.view_count>0)
     limit 6000`
 );
@@ -33,7 +34,7 @@ const truth = new Map<string, number>(truthRows.map((r: any) => [r.video_id, Num
 // priors (walk-forward by publish date only; day-30 truth of priors may postdate the test video's day t — mild optimism, same as harness S*)
 const priorRows: { video_id: string; prior_id: string }[] = await q(
   `select r.id as video_id, p.id as prior_id from unnest($1::text[]) as r(id) join videos v on v.id=r.id
-   join lateral (select p.id from videos p where p.channel_id=v.channel_id and p.published_at < v.published_at and coalesce(p.is_short,false)=false order by p.published_at desc limit 10) p on true`, [ids]);
+   join lateral (select p.id from videos p where p.channel_id=v.channel_id and p.published_at < v.published_at and ${longformSql('p')} order by p.published_at desc limit 10) p on true`, [ids]);
 const priorsOf = new Map<string, string[]>();
 for (const r of priorRows) { if (!priorsOf.has(r.video_id)) priorsOf.set(r.video_id, []); priorsOf.get(r.video_id)!.push(r.prior_id); }
 const priorIds = [...new Set(priorRows.map((r) => r.prior_id))];

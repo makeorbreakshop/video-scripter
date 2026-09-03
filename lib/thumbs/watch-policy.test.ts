@@ -122,7 +122,12 @@ describe('eligibility applies in every tier', () => {
     expect(isEligible({ duration: 'PT10M5S', is_short: true })).toBe(false);
     expect(isEligible({ duration: 'PT59S', is_short: false })).toBe(false);
     expect(isEligible({ duration: 'PT1M2S', is_short: false })).toBe(false);
-    expect(isEligible({ duration: 'PT1M3S', is_short: false })).toBe(true);
+    // Shorts run to 3 minutes now: an unverified clip up to 180s is treated as a Short until
+    // scripts/verify-shorts.ts has asked YouTube; a verified one is a real upload.
+    expect(isEligible({ duration: 'PT1M3S', is_short: false })).toBe(false);
+    expect(isEligible({ duration: 'PT2M59S', is_short: false, shorts_checked_at: null })).toBe(false);
+    expect(isEligible({ duration: 'PT2M59S', is_short: false, shorts_checked_at: '2026-09-03T00:00:00Z' })).toBe(true);
+    expect(isEligible({ duration: 'PT3M1S', is_short: false })).toBe(true);
   });
 
   it.each([
@@ -132,6 +137,6 @@ describe('eligibility applies in every tier', () => {
   ])('%s query filters Shorts and live in every branch', (_name, sql) => {
     expect(sql).toContain("coalesce(v.duration, '') <> 'P0D'");
     expect(sql).toContain('coalesce(v.is_short, false) = false');
-    expect(sql).toContain("^PT(([0-5]?[0-9])S|1M([0-2]S)?)$");
+    expect(sql).toContain('v.shorts_checked_at is null'); // the shared long-form rule (lib/scoring/longform)
   });
 });

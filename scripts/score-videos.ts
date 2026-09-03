@@ -12,6 +12,8 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
+import { longformSql } from '../lib/scoring/longform';
+
 import { chunk } from '../lib/nightly/tracking-core';
 import {
   scoreVideo, fitParams, fitLongTail, estimateV30, longtailAt, bucketFor, growthExponent,
@@ -96,7 +98,7 @@ async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
        from unnest($1::text[]) as r(id) join videos v on v.id = r.id
        join lateral (select p.id, p.published_at from videos p
                       where p.channel_id = v.channel_id and p.published_at < v.published_at
-                        and coalesce(p.is_short,false)=false and coalesce(p.duration,'')<>'P0D'
+                        and ${longformSql('p')}
                         and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
                       order by p.published_at desc limit ${PRIOR_WINDOW}) p on true
       order by r.id, p.published_at desc`,
@@ -129,7 +131,7 @@ async function fit() {
   const vids = await q(
     `select distinct s.video_id from view_snapshots s join videos v on v.id = s.video_id
       where s.days_since_published between 27 and 33 and s.view_count > 0
-        and v.published_at > now() - interval '18 months' and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D'
+        and v.published_at > now() - interval '18 months' and ${longformSql('v')}
       limit 60000`
   );
   const ids: string[] = vids.map((r: any) => r.video_id as string);
@@ -174,13 +176,13 @@ async function fitLongtailTable() {
      select b.v30, v.view_count as later, extract(epoch from (now() - v.published_at))/86400.0 as age
        from base b join videos v on v.id = b.video_id
       where v.view_count > 0 and v.published_at < now() - interval '60 days'
-        and coalesce(v.is_short,false) = false and coalesce(v.duration,'') <> 'P0D'
+        and ${longformSql('v')}
      union all
      select b.v30, l.view_count as later, l.days_since_published::float as age
        from base b
        join view_snapshots l on l.video_id = b.video_id and l.days_since_published >= 60 and l.view_count > 0
        join videos v on v.id = b.video_id
-      where coalesce(v.is_short,false) = false and coalesce(v.duration,'') <> 'P0D'`
+      where ${longformSql('v')}`
   );
   const ltRows: LongtailRow[] = rows.map((r: any) => ({ age: Number(r.age), v30: Number(r.v30), lifetime: Number(r.later) }));
   log(`fit: longtail fed by ${ltRows.length} (video, later-count) observations`);
@@ -198,11 +200,11 @@ async function score() {
   const targets: { id: string; channel_id: string; published_at: string }[] = await q(
     ALL
       ? `select v.id, v.channel_id, v.published_at from videos v
-          where v.published_at > now() - interval '60 days' and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D'
+          where v.published_at > now() - interval '60 days' and ${longformSql('v')}
             ${chFilter} ${cap}`
       : `select v.id, v.channel_id, v.published_at from videos v
           left join video_scores sc on sc.video_id = v.id
-          where v.published_at > now() - interval '60 days' and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D'
+          where v.published_at > now() - interval '60 days' and ${longformSql('v')}
             ${chFilter}
             and (sc.video_id is null
                  or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
@@ -276,7 +278,7 @@ async function final() {
     `select v.id, v.channel_id from videos v
        left join video_scores sc on sc.video_id = v.id
       where v.published_at < now() - interval '60 days'
-        and coalesce(v.is_short,false)=false and coalesce(v.duration,'')<>'P0D' and coalesce(v.view_count,0) > 0
+        and ${longformSql('v')} and coalesce(v.view_count,0) > 0
         ${chFilter}
         and (sc.video_id is null or (sc.snapshot_day < 27 and sc.model_version <> '${FINAL_VERSION}'))
       order by v.published_at desc

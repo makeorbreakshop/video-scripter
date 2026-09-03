@@ -6,6 +6,7 @@ import { withApiKey, jsonError, intParam, listParam, scoreShape } from '@/lib/ap
 import { embedQuery } from '@/lib/semantic/embed';
 import { channelMatchEvidence, diversifyByChannel, isSemanticUnavailable, semanticUnavailableResponse } from '@/lib/semantic/api';
 import { SemanticQdrant, VIDEOS_COLLECTION } from '@/lib/semantic/qdrant';
+import { longformSql } from '@/lib/scoring/longform';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -85,7 +86,7 @@ export const GET = withApiKey(async (req) => {
        from video_scores s join videos v on v.id = s.video_id
       where v.published_at >= $1::timestamptz and s.score >= $2 and s.confidence in ('likely','confirmed')
         and s.n_baseline >= 5 and s.baseline >= $${channels ? 5 : 4}
-        and coalesce(v.is_short, false) = false
+        and ${longformSql('v')}
         ${channels ? 'and v.channel_id = any($4::text[])' : ''}
       order by s.score desc
       limit $3`,

@@ -4,11 +4,13 @@
 // Two documented blank-thumbnail sources (2026-09-01):
 //  - live streams (duration 'P0D'/'PT0S'): hqdefault is a gray or feed frame
 //  - deleted/private videos: i.ytimg serves a ~1KB gray placeholder with 200
+import { isLongform } from '../scoring/longform';
 
 export interface BattleVideo {
   thumbnail_url: string | null;
   duration?: string | null;
   is_short?: boolean | null;
+  shorts_checked_at?: string | Date | null;
   is_institutional?: boolean | null;
   temporal_performance_score?: number | null;
 }
@@ -17,9 +19,9 @@ const LIVE_DURATIONS = new Set(['P0D', 'PT0S']);
 
 export function isBattleEligible(v: BattleVideo): boolean {
   if (!v.thumbnail_url) return false;
-  if (v.is_short) return false;
   if (v.is_institutional) return false;
   if (v.duration != null && LIVE_DURATIONS.has(v.duration)) return false;
+  if (!isLongform({ is_short: v.is_short, duration: v.duration ?? 'PT1H', shorts_checked_at: v.shorts_checked_at })) return false;
   const s = v.temporal_performance_score;
   if (s == null || s <= 0.1 || s > 100) return false;
   return true;

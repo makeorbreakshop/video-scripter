@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { q } from '@/lib/admin/db';
 import { withApiKey, jsonError, intParam, scoreShape } from '@/lib/api/v1';
+import { longformSql } from '@/lib/scoring/longform';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,7 @@ export const GET = withApiKey(async (req, _caller, ctx: { params: Promise<{ id: 
                      (select max(first_seen) from title_versions t where t.video_id = v.id and t.version > 1)) as last_packaging_change
        from videos v
        left join video_scores s on s.video_id = v.id
-      where v.channel_id = $1 and v.published_at is not null and coalesce(v.is_short, false) = false
+      where v.channel_id = $1 and v.published_at is not null and ${longformSql('v')}
         ${since ? 'and v.published_at >= $3::timestamptz' : ''} ${until ? `and v.published_at <= $${since ? 4 : 3}::timestamptz` : ''}
       order by ${order}
       limit $2`,

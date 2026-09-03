@@ -2,6 +2,7 @@
 import { unstable_cache } from 'next/cache';
 import { q, one } from './db';
 import { labelByPhash, hamming } from '../thumbs/phash';
+import { longformSql } from '../scoring/longform';
 
 export type DayCount = { day: string; n: number };
 
@@ -95,7 +96,7 @@ export async function thumbnailHistories(limit = 100, channelId?: string, includ
                              order by t.version)
              from thumbnail_versions t where t.video_id = c.video_id) as versions
      from changed c join videos v on v.id = c.video_id
-     where coalesce(v.is_short, false) = false and not (coalesce(v.duration,'') ~ '^PT(([0-5]?[0-9])S|1M([0-2]S)?)$')
+     where ${longformSql('v')}
        ${includeLive ? '' : "and coalesce(v.duration, '') <> 'P0D'"}
      order by c.last_change desc`,
     channelId ? [limit, channelId] : [limit]

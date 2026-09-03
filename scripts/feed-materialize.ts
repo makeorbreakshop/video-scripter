@@ -13,6 +13,7 @@ import {
   uploadEvents, thumbnailEvents, titleEvents, outlierEvents,
   FeedEvent, OUTLIER_MIN_SCORE, OUTLIER_CONFIDENCES,
 } from '../lib/feed/materialize';
+import { longformSql } from '../lib/scoring/longform';
 
 const DRY = process.argv.includes('--dry-run');
 const CATCH_UP = process.argv.includes('--catch-up');
@@ -122,7 +123,7 @@ function uploadSource(column: 'published_at' | 'import_date'): Source {
       `select id as video_id, channel_id, title, published_at, import_date
          from videos
         where ${column} >= $1 and (${column} > $1 or id > $2) and ${column} <= now() and published_at is not null
-              and coalesce(is_short, false) = false and coalesce(duration, '') <> 'P0D'
+              and ${longformSql('videos')}
               ${freshOnly}
         order by ${column}, id
         limit ${BATCH}`,
@@ -213,7 +214,7 @@ async function backfillUserChannelUploads(): Promise<number> {
     `select v.id as video_id, v.channel_id, v.title, v.published_at, v.import_date
        from videos v
        join channel_tracking ct on ct.channel_id = v.channel_id and ct.lane = 'user'
-      where v.published_at is not null and coalesce(v.is_short, false) = false and coalesce(v.duration, '') <> 'P0D'
+      where v.published_at is not null and ${longformSql('v')}
         and not exists (select 1 from feed_events f where f.type = 'upload' and f.video_id = v.id)
       order by v.published_at desc
       limit 5000`,

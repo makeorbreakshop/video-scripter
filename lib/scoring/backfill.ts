@@ -1,3 +1,4 @@
+import { longformSql } from './longform';
 export const SEMANTIC_BACKFILL_MODEL_VERSION = 'v3.1-semantic-backfill-2026-09';
 export const DEFAULT_BACKFILL_DAYS = 365;
 export const DEFAULT_MIN_AGE_DAYS = 0;
@@ -55,8 +56,7 @@ export function parseBackfillArgs(argv: string[]): BackfillOptions {
 export function eligibleWhere(alias = 'v'): string {
   return `${alias}.published_at >= now() - ($1::int * interval '1 day')
         and ${alias}.published_at <= now() - ($2::int * interval '1 day')
-        and coalesce(${alias}.is_short,false)=false
-        and coalesce(${alias}.duration,'')<>'P0D'
+        and ${longformSql(alias)}
         and coalesce(${alias}.privacy_status,'public') = 'public'
         and coalesce(${alias}.view_count,0) > 0`;
 }
