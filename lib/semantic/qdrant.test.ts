@@ -1,6 +1,7 @@
 import {
   QdrantUnavailableError,
   reciprocalRankFuse,
+  reciprocalRankFuseMany,
   runWithLexicalFallback,
   semanticUnavailablePayload,
   uuid5ForId,
@@ -25,6 +26,19 @@ describe('Qdrant helpers', () => {
     expect(result.find((item) => item.id === 'c')?.source).toBe('lexical');
     expect(result.find((item) => item.id === 'd')?.source).toBe('semantic');
     expect(result[0].rrfScore).toBeCloseTo(1 / 62 + 1 / 61);
+  });
+
+  test('fuses any number of ranked lists for multi-query retrieval', () => {
+    const result = reciprocalRankFuseMany(
+      [
+        [{ id: 'a' }, { id: 'b' }],
+        [{ id: 'b' }, { id: 'c' }],
+        [{ id: 'c' }, { id: 'b' }],
+      ],
+      (item) => item.id,
+    );
+    expect(result.map((item) => item.id)).toEqual(['b', 'c', 'a']);
+    expect(result[0].rrfScore).toBeCloseTo(1 / 62 + 1 / 61 + 1 / 62);
   });
 
   test('falls back to lexical only for semantic availability failures', async () => {

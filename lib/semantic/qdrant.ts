@@ -30,6 +30,25 @@ export function uuid5ForId(id: string): string {
 
 export type FusionSource = 'lexical' | 'semantic' | 'both';
 
+export function reciprocalRankFuseMany<T>(
+  lists: T[][],
+  idFor: (item: T) => string,
+  k = 60,
+): Array<T & { rrfScore: number }> {
+  const fused = new Map<string, { item: T; score: number }>();
+  for (const items of lists) {
+    items.forEach((item, index) => {
+      const id = idFor(item);
+      const current = fused.get(id) ?? { item, score: 0 };
+      current.score += 1 / (k + index + 1);
+      fused.set(id, current);
+    });
+  }
+  return [...fused.values()]
+    .sort((a, b) => b.score - a.score)
+    .map(({ item, score }) => ({ ...item, rrfScore: score }));
+}
+
 export function reciprocalRankFuse<T>(
   lexical: T[],
   semantic: T[],
