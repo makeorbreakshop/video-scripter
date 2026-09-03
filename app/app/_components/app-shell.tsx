@@ -6,6 +6,7 @@ import { ThemeProvider, ThemeToggle, THEME_BOOT_SCRIPT } from './theme';
 
 const NAV = [
   { href: '/app/feed', label: 'Feed' },
+  { href: '/app/inspiration', label: 'Inspiration' },
   { href: '/app/channels', label: 'Channels' },
   { href: '/app/settings', label: 'Settings' },
 ];

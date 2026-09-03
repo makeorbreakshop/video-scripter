@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "artifact_type": "design-contract",
+  "selected_direction": "Evidence-led result stream",
+  "visual_direction": {
+    "intended_experience": "A practical workbench for finding and judging ideas, experimental without feeling provisional or opaque.",
+    "surface_class": "product",
+    "brand_posture": "Existing ChannelSmith theme; content and evidence provide the character, with no new decorative chrome.",
+    "preserved_language": ["ChannelSmith", "score", "typical for this channel", "tracked channels"],
+    "subject_derived_choices": ["real YouTube thumbnails", "actual video titles", "observable title-pattern words", "measured outlier multiples"],
+    "rejected_defaults": ["three equal lanes", "score gauges", "AI explanation prose", "nested evidence cards"],
+    "evaluation_criteria": ["target and distance are obvious", "the reason for every result is legible", "feedback is reversible", "outage state is honest"]
+  },
+  "hierarchy": ["target + distance decision", "candidate thumbnail + title", "why it surfaced", "save/dismiss", "corpus provenance"],
+  "responsive_rules": ["controls wrap at content pressure", "candidate media and body stack below 720px", "evidence becomes one column", "actions stay reachable without horizontal scroll"],
+  "component_states": ["ready", "loading", "no channels", "target not indexed", "semantic unavailable", "empty", "saved", "dismissed"],
+  "accessibility_requirements": ["native labelled select and fieldset", "visible focus", "feedback state conveyed in text and aria-pressed", "headings remain ordered", "images have concise contextual alt text"],
+  "motion_intent": ["none beyond existing control feedback"],
+  "implementation_constraints": ["direct Postgres through lib/admin/db.ts", "local Qdrant eval collections only", "no runtime LLM", "no public API", "no full videos scan", "candidate and point batches below 5,000", "no new dependency"],
+  "preserved_behavior": ["authenticated app shell", "theme tokens", "thumbnail fallback", "existing video detail routes", "app remains usable when Qdrant is down"],
+  "preservation_requirements": {
+      "routes_and_anchors": ["add /app/inspiration; existing routes unchanged"],
+      "seo_metadata": ["not-applicable: authenticated app route"],
+      "analytics_identifiers": ["not-applicable: none added"],
+      "form_contracts": ["GET exploration form: channel then distance", "POST feedback action: target, video, distance, decision, rank"],
+      "legal_and_consent": ["not-applicable"],
+      "brand_and_content": ["ChannelSmith theme and plain evidence language"],
+      "accessibility_behavior": ["native controls, semantic forms, focus-visible treatment, non-color feedback state"]
+  },
+  "validation_targets": ["focused Jest ranker and payload tests", "all lib/semantic tests", "TypeScript noEmit", "Qdrant live and offline behavior", "1440x900 and 390x844 screenshots", "keyboard and focus pass", "design lint clean"],
+  "complete": true
+}

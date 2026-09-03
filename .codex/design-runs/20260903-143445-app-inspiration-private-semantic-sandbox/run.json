@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "artifact_type": "design-run",
+  "run_id": "20260903-143445-app-inspiration-private-semantic-sandbox",
+  "target": "/app/inspiration private semantic sandbox",
+  "mode": "build",
+  "phase": "learn",
+  "status": "complete",
+  "reference_authority": {
+    "kind": "none",
+    "source": "",
+    "notes": ""
+  },
+  "exploration": "skipped",
+  "design_lint_profile": "brandon-ai-defaults-v1",
+  "specialists": [],
+  "history": [
+    {
+      "at": "2026-09-03T14:34:45-04:00",
+      "phase": "orient",
+      "event": "run-created",
+      "rationale": "Initialized by the ui-design run tool."
+    },
+    {
+      "at": "2026-09-03T14:39:03-04:00",
+      "phase": "build",
+      "event": "direction-selected",
+      "rationale": "The owner explicitly selected the private evidence-led sandbox; visual exploration was skipped because the established app grammar and requested interaction already constrain one coherent structure."
+    },
+    {
+      "at": "2026-09-03T15:00:00-04:00",
+      "phase": "learn",
+      "event": "verification-passed",
+      "rationale": "Pure tests, scoped types, live Qdrant retrieval, authenticated feedback persistence, database privacy controls, outage behavior, design lint, and wide/narrow rendered checks passed."
+    }
+  ],
+  "current_commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb",
+  "created_at": "2026-09-03T14:34:45-04:00",
+  "updated_at": "2026-09-03T15:00:00-04:00"
+}

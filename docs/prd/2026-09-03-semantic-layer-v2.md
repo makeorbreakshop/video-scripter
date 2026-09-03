@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 5 programmatic cross-topic packaging experiment completed and stopped after failing the fixed gate. Date: 2026-09-03.
+Status: revision 6 private inspiration sandbox shipped as an authenticated experiment after the revision-5 production gate stopped. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -296,3 +296,33 @@ Coverage was complete for all 304 candidate video vectors. Frozen source-channel
 The input, config, and rankings were frozen before the reporting script loaded resolved judgments. However, an independent design subagent proposed the source-channel feature after inspecting dev-label behavior, so this result is explicitly exploratory rather than a clean blind estimate. Since the primary failed anyway, the stop is unchanged: no endpoint, corpus-wide packaging index, historical weak-label miner, or learned ranker ships from revision 5. Full tables and artifact links are in `docs/prd/2026-09-03-semantic-programmatic.md`.
 
 A separate fresh-context reviewer reproduced the source hashes, exact blind bindings, live loopback-Qdrant affinities, all six rankings, all metrics, the literal gate failures, and the cost total. Its two non-blocking provenance/gate-hardening findings were fixed before completion. The final semantic suite passes 18 suites / 97 tests, and the strict touched-file TypeScript check is clean. Repository-wide `tsc --noEmit` remains red on extensive pre-existing app, worker, and stale `.next/types` errors outside this work.
+
+## 17. Revision-6 private inspiration sandbox
+
+The revision-5 gate still blocks a public semantic endpoint and any claim that the ranking is a validated J5 winner. It does not block a private, explicitly experimental surface for collecting natural product feedback. `/app/inspiration` is therefore an authenticated workbench, not a public `/api/v1` contract and not a production relevance claim.
+
+The user chooses one of their tracked channels and one content-distance mode:
+
+- `Near` favors the closest document territory within the candidate pool;
+- `Balanced` favors the middle of the pool;
+- `Far` favors the furthest document territory available in the pool.
+
+Every mode uses the same deterministic `inspiration-sandbox-v1` recipe. It queries the frozen 512-dimensional channel vector against up to 1,500 videos from `videos_eval_v4`, excludes the target channel, computes source-channel affinity when that channel exists in `channels_eval_v4`, and reranks with document-distance fit, observable title-form compatibility, measured outlier proof, and a maximum of two results per source channel before backfill. The page returns 24 results. It does not use transcripts, thumbnail vectors, a runtime LLM call, a full scan of `videos`, or a new embedding call.
+
+Each result shows the real thumbnail, title, source channel, publish date, score multiple, title-pattern signals, relative content-document distance, and baseline evidence count. It deliberately does not describe that document affinity as a pure topic measure, expose cosine similarity as a consumer percentage, or reuse the evaluator-only `creative_adaptation`, `direct_application`, and `unresolved` categories.
+
+Save and dismiss are explicit reversible feedback in `inspiration_feedback`, keyed by signed-in user, target channel, and candidate video. The server derives the recipe, permits only tracked target channels, and replays the deterministic search so a mutation must match the exact returned video and rank. A composite foreign key deletes feedback when a target is untracked. Row-level security is enabled with no client policies, and all privileges are revoked from Supabase's `anon` and `authenticated` roles; the application alone uses direct Postgres. These decisions are directional product evidence; they are not promoted automatically into relevance labels or ranking weights.
+
+The Qdrant dependency is fail-closed for this surface and fail-open for the app: an unavailable local vector service renders a retryable `Inspiration search is offline` state while the rest of ChannelSmith remains available. A tracked channel missing from the frozen channel corpus receives a separate target-not-indexed state.
+
+### 17.1 Verification
+
+- Focused pure tests cover Near/Balanced/Far ordering, source-channel proximity, deterministic diversity, malformed inputs, Qdrant-unavailable fallback, and feedback payload mapping.
+- The live Make or Break Shop path searched 1,500 candidates in roughly 0.23–0.35 seconds per mode on the local machine.
+- Browser verification covered 1,440×900 and 390×844, URL-preserved mode changes, 24-result rendering, visible keyboard focus, zero horizontal overflow, save persistence, undo deletion, and a real unreachable-Qdrant render.
+- The migration was applied through direct Postgres with a 45-second statement timeout and 5-second lock timeout. It created one empty table and one scoped index, enabled fail-closed RLS, revoked Supabase client-role access, and added the tracked-target cascade; no bulk read or REST traffic occurred.
+- This slice adds $0 model cost. Total semantic spend remains conservatively bounded at $0.898715.
+
+### 17.2 Limits
+
+The sandbox searches only the frozen 9,385-video, 3,544-channel one-year evaluation corpus. “Far” means furthest within the 1,500 nearest retrieved candidates, not universally far across the million-row library. The page is meant to reveal whether the programmatic evidence is useful through real saves and dismissals before any ranking-learning step is designed.

@@ -1,0 +1,110 @@
+{
+  "schema_version": 2,
+  "artifact_type": "design-verification",
+  "checks": [
+    {
+      "name": "Design lint",
+      "result": "pass",
+      "method": "Executable source lint plus rendered review against the selected project grammar.",
+      "evidence": "TASTE-007 through TASTE-013 passed across five UI files with zero findings; manual review also covered TASTE-014."
+    },
+    {
+      "name": "Pure ranking and feedback behavior",
+      "result": "pass",
+      "method": "Jest unit tests and an exact touched-file TypeScript project.",
+      "evidence": "lib/semantic: 19 suites and 103 tests passed. Feedback mapping/receipt: 3 tests passed. Scoped tsc completed with no diagnostics."
+    },
+    {
+      "name": "Live semantic path",
+      "result": "pass",
+      "method": "Authenticated local browser and loopback Qdrant using the frozen evaluation corpus.",
+      "evidence": "Near, Balanced, and Far each ranked 1,500 candidates and rendered 24 results; observed server search latency was approximately 0.23 to 0.35 seconds per mode."
+    },
+    {
+      "name": "Feedback persistence and privacy",
+      "result": "pass",
+      "method": "Browser save/undo followed by direct-Postgres catalog and row checks.",
+      "evidence": "Save persisted saved|balanced|1; undo returned the table to zero rows. RLS is enabled, anon/authenticated SELECT and INSERT are revoked, and the validated tracked-channel FK cascades on delete."
+    },
+    {
+      "name": "Responsive and degraded states",
+      "result": "pass",
+      "method": "Rendered captures at wide and narrow viewports plus a real unreachable-Qdrant run.",
+      "evidence": "No horizontal overflow at 1440x900 or 390x844. The local-vector outage rendered the retryable offline state without taking down the app."
+    }
+  ],
+  "viewports": [
+    { "name": "wide", "width": 1440, "height": 900 },
+    { "name": "narrow", "width": 390, "height": 844 }
+  ],
+  "states": [
+    { "name": "balanced-ready", "applicable": true, "notes": "Default 24-result evidence stream." },
+    { "name": "far-actions", "applicable": true, "notes": "Far mode with result evidence and reversible actions in view." },
+    { "name": "semantic-offline", "applicable": true, "notes": "Qdrant deliberately pointed at an unreachable loopback port." },
+    { "name": "saved-and-undone", "applicable": true, "notes": "A live save was persisted, shown as pressed, then removed through the same control." }
+  ],
+  "captures": [
+    {
+      "path": "screenshots/balanced-wide.png",
+      "viewport": "wide",
+      "state": "balanced-ready",
+      "source": "agent-browser authenticated localhost:3300",
+      "captured_at": "2026-09-03T14:53:16-04:00",
+      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+    },
+    {
+      "path": "screenshots/balanced-narrow.png",
+      "viewport": "narrow",
+      "state": "balanced-ready",
+      "source": "agent-browser authenticated localhost:3300",
+      "captured_at": "2026-09-03T14:53:17-04:00",
+      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+    },
+    {
+      "path": "screenshots/far-narrow-actions.png",
+      "viewport": "narrow",
+      "state": "far-actions",
+      "source": "agent-browser authenticated localhost:3300",
+      "captured_at": "2026-09-03T14:58:44-04:00",
+      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+    },
+    {
+      "path": "screenshots/offline-wide.png",
+      "viewport": "wide",
+      "state": "semantic-offline",
+      "source": "agent-browser localhost:3301 with unreachable Qdrant",
+      "captured_at": "2026-09-03T14:50:37-04:00",
+      "commit": "ec2dd0f7aadbc726a4cc17d0749967321e3184fb"
+    }
+  ],
+  "accessibility_evidence": [
+    {
+      "check": "Keyboard and focus",
+      "result": "pass",
+      "method": "Interactive snapshot and keyboard traversal in the narrow and wide renders.",
+      "evidence": "Target selector, distance radios, submit control, result links, and save/dismiss controls are native focusable elements with the existing visible focus treatment."
+    },
+    {
+      "check": "State is not color-only",
+      "result": "pass",
+      "method": "Rendered and accessibility-tree inspection.",
+      "evidence": "Distance modes are labeled radios; selected feedback changes text and aria-pressed; unavailable and missing-index states use explicit text."
+    },
+    {
+      "check": "Content structure",
+      "result": "pass",
+      "method": "DOM and visual inspection.",
+      "evidence": "One page heading, labeled controls, semantic result articles, definition lists for evidence, time elements, descriptive thumbnail alt text, and explicit external-link labels are present."
+    }
+  ],
+  "blockers": [],
+  "remaining_risks": [
+    "The experiment covers only the frozen 9,385-video and 3,544-channel corpus.",
+    "Far means furthest among the 1,500 nearest retrieved candidates, not the entire library.",
+    "Save and dismiss are product feedback, not validated creative-transfer labels or learned ranking weights.",
+    "Repository-wide tsc remains red on pre-existing legacy and stale .next/type errors outside the touched-file project.",
+    "The black Next.js development-toolbar button visible in captures is not product UI."
+  ],
+  "passed": true,
+  "completed_at": "2026-09-03T15:00:00-04:00"
+}

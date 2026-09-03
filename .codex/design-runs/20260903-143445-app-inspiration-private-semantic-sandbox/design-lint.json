@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "artifact_type": "design-lint-report",
+  "profile": "brandon-ai-defaults-v1",
+  "engine_version": "1.0.0",
+  "project_root": "/Users/brandoncullum/video-scripter-v2/video-scripter",
+  "files_scanned": [
+    "app/app/_components/app-shell.tsx",
+    "app/app/inspiration/actions.ts",
+    "app/app/inspiration/inspiration.module.css",
+    "app/app/inspiration/loading.tsx",
+    "app/app/inspiration/page.tsx"
+  ],
+  "rules_checked": [
+    "TASTE-007",
+    "TASTE-008",
+    "TASTE-009",
+    "TASTE-010",
+    "TASTE-011",
+    "TASTE-012",
+    "TASTE-013"
+  ],
+  "manual_rules": [
+    "TASTE-007",
+    "TASTE-008",
+    "TASTE-009",
+    "TASTE-010",
+    "TASTE-011",
+    "TASTE-012",
+    "TASTE-013",
+    "TASTE-014"
+  ],
+  "findings": [],
+  "waivers": [],
+  "summary": {
+    "files_scanned": 5,
+    "blockers": 0,
+    "waived_findings": 0,
+    "rules_failed": 0
+  },
+  "passed": true
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "artifact_type": "design-model",
+  "objects": [
+    { "name": "target channel", "notes": "one of the signed-in user's tracked channels; own channel sorts first" },
+    { "name": "distance mode", "notes": "Near, Balanced, or Far; controls the desired content-document proximity percentile" },
+    { "name": "candidate video", "notes": "one scored long-form outlier from the frozen one-year Qdrant corpus" },
+    { "name": "ranking evidence", "notes": "deterministic title-form compatibility, document proximity, and score proof" },
+    { "name": "feedback", "notes": "saved or dismissed for user + target + video; exact row is reversible" }
+  ],
+  "actions": [
+    { "name": "explore", "notes": "GET form changes target and distance in the URL" },
+    { "name": "open video", "notes": "opens the existing private video detail route" },
+    { "name": "save / dismiss / undo", "notes": "server action writes or deletes one exact feedback row" }
+  ],
+  "states": [
+    { "name": "ready", "notes": "24 diversified ranked results and corpus receipt" },
+    { "name": "no tracked channels", "notes": "link to add a target channel" },
+    { "name": "target not indexed", "notes": "explain that this channel is outside the bounded test corpus" },
+    { "name": "semantic unavailable", "notes": "Qdrant outage yields a retryable page notice, never an app crash" },
+    { "name": "empty", "notes": "no candidate survived the bounded query" },
+    { "name": "feedback saved or dismissed", "notes": "text and pressed state communicate the persisted choice" }
+  ],
+  "recovery_paths": [
+    { "name": "Qdrant offline", "notes": "keep target controls visible and offer a normal page retry" },
+    { "name": "target missing", "notes": "choose another tracked channel" },
+    { "name": "feedback changed", "notes": "press active choice to undo or choose the other state" },
+    { "name": "thumbnail missing", "notes": "reuse the existing delegated YouTube thumbnail fallback" }
+  ],
+  "permissions": [
+    { "name": "signed-in app user", "notes": "page and actions resolve through requireAppUser" },
+    { "name": "tracked target only", "notes": "feedback insert is gated by an indexed user_channels existence check" }
+  ],
+  "side_effects": [
+    { "name": "feedback upsert", "notes": "one row in inspiration_feedback; reversible" },
+    { "name": "feedback clear", "notes": "deletes the user's exact target/video row" }
+  ],
+  "scenarios": [
+    { "name": "own-channel far exploration", "notes": "Make or Break Shop target; packaging transfers from outside laser/maker territory" },
+    { "name": "competitor near exploration", "notes": "use adjacent videos as direct market research" },
+    { "name": "service failure", "notes": "controls and explanation remain, results become unavailable" }
+  ],
+  "complete": true
+}
