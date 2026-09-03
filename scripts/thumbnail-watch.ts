@@ -14,7 +14,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
 import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
-import { isShortByCdn } from '../lib/thumbs/shorts';
+import { isShortByRedirect } from '../lib/thumbs/shorts';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
 import {
@@ -90,11 +90,12 @@ for (const group of chunk(targets, 20)) {
           await pool.query(`update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`, [id, cur[0].version]);
           return;
         }
-        // First capture: ask the CDN whether this is a Short (vertical variant exists). Flag it and stop watching.
-        if (!cur.length && (await isShortByCdn(id)) === true) {
-          await pool.query(`update videos set is_short = true where id = $1`, [id]);
-          shorts++;
-          return;
+        // First capture: ask YouTube whether this is a Short (youtube.com/shorts/<id> routing).
+        // Record the answer either way so lib/scoring/longform stops treating a short clip as unverified.
+        if (!cur.length) {
+          const short = await isShortByRedirect(id);
+          if (short !== null) await pool.query(`update videos set is_short = $2, shorts_checked_at = now() where id = $1`, [id, short]);
+          if (short === true) { shorts++; return; }
         }
         // Different bytes: only a CHANGE if the picture itself differs (CDN re-encodes flip sha256 with the same image).
         const phash = await phashFromJpeg(buf);
