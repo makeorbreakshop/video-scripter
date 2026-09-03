@@ -61,7 +61,7 @@ export interface ChannelSearchFilters {
   excludeIds?: string[];
 }
 
-const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, video_count::int as video_count, tracked_lane`;
+const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, subscriber_count::bigint as subscriber_count, video_count::int as video_count, tracked_lane`;
 
 /**
  * Search the channels we already know about, from the channel_directory view
@@ -152,14 +152,15 @@ export async function refreshChannelDirectory(): Promise<number> {
 export async function upsertDirectoryRow(ch: ResolvedChannel): Promise<void> {
   const name = ch.name || ch.channel_id;
   await q(
-    `insert into channel_directory (channel_id, name, norm, handle, avatar_url, video_count, tracked_lane)
-     values ($1, $2, $3, $4, $5, 0, 'user')
+    `insert into channel_directory (channel_id, name, norm, handle, avatar_url, subscriber_count, video_count, tracked_lane)
+     values ($1, $2, $3, $4, $5, $6, 0, 'user')
      on conflict (channel_id) do update
        set name = excluded.name, norm = excluded.norm,
            handle = coalesce(excluded.handle, channel_directory.handle),
            avatar_url = coalesce(excluded.avatar_url, channel_directory.avatar_url),
+           subscriber_count = coalesce(excluded.subscriber_count, channel_directory.subscriber_count),
            tracked_lane = 'user', refreshed_at = now()`,
-    [ch.channel_id, name, normalizeName(name), ch.handle ? bareHandle(ch.handle).toLowerCase() : null, ch.thumbnail_url]
+    [ch.channel_id, name, normalizeName(name), ch.handle ? bareHandle(ch.handle).toLowerCase() : null, ch.thumbnail_url, ch.subscriber_count]
   ).catch((e) => console.error('upsertDirectoryRow:', e.message));
 }
 
@@ -279,7 +280,7 @@ function fromDirectory(r: ChannelSearchResult): ResolvedChannel {
     name: r.name,
     handle: r.handle ? `@${r.handle}` : null,
     thumbnail_url: r.avatar_url,
-    subscriber_count: null,
+    subscriber_count: r.subscriber_count ?? null,
     video_count: r.video_count,
     uploads_playlist_id: uploadsPlaylistId(r.channel_id),
     units: 0,
