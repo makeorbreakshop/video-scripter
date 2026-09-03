@@ -15,10 +15,14 @@ const limit = parseInt(arg('limit') || '5000', 10);
 const dry = process.argv.includes('--dry');
 const SIZE = 128;   // what the UI ever shows (56px cards, retina)
 
+// Source from channel_directory: it is what the UI actually renders, so it also covers
+// channels whose only avatar lives in the legacy `channels` table rather than channel_meta.
 const rows = await q<{ channel_id: string; avatar_url: string }>(
-  `select channel_id, avatar_url from channel_meta
-    where avatar_url is not null and (avatar_cached_at is null or avatar_cached_url is distinct from avatar_url)
-    order by fetched_at desc limit $1`, [limit]
+  `select d.channel_id, d.avatar_url from channel_directory d
+     left join channel_meta cm on cm.channel_id = d.channel_id
+    where d.avatar_url is not null
+      and (cm.avatar_cached_at is null or cm.avatar_cached_url is distinct from d.avatar_url)
+    order by d.video_count desc limit $1`, [limit]
 );
 console.log(`${rows.length} avatar${rows.length === 1 ? '' : 's'} to copy${dry ? ' (dry)' : ''}`);
 
@@ -38,7 +42,13 @@ async function one(r: { channel_id: string; avatar_url: string }) {
     if (buf.length < 200) throw new Error('empty');
     if (!dry) {
       if (!(await uploadAvatar(r.channel_id, buf))) throw new Error('upload refused');
-      await q(`update channel_meta set avatar_cached_at = now(), avatar_cached_url = $2 where channel_id = $1`, [r.channel_id, r.avatar_url]);
+      // A directory row may have no channel_meta row yet (legacy-only avatar), so upsert.
+      await q(
+        `insert into channel_meta (channel_id, avatar_url, avatar_cached_at, avatar_cached_url, fetched_at)
+         values ($1, $2, now(), $2, now())
+         on conflict (channel_id) do update set avatar_cached_at = now(), avatar_cached_url = excluded.avatar_cached_url`,
+        [r.channel_id, r.avatar_url]
+      );
     }
     ok++;
   } catch (e: any) {
@@ -54,8 +64,9 @@ await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
 
 console.log(`copied ${ok}, ${dead} dead urls (need a meta refresh), ${failed} other failures`);
 if (dead) {
-  // Clear the stale url so `channel-meta-backfill --blank-avatars` picks these up next.
+  // Clear the stale url in both places so `channel-meta-backfill --blank-avatars` picks these up next.
   await q(`update channel_meta set avatar_url = null where channel_id = any($1)`, [deadIds]);
+  await q(`update channel_directory set avatar_url = null where channel_id = any($1)`, [deadIds]);
   console.log(`cleared ${dead} stale avatar_url${dead === 1 ? '' : 's'}; run: npx tsx scripts/channel-meta-backfill.ts --blank-avatars`);
 }
 await getPool().end();
