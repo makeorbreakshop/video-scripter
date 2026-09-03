@@ -25,6 +25,7 @@ import { uploadThumb } from '../lib/thumbs/storage';
 import { longformSql } from '../lib/scoring/longform';
 import { recordTitleChange, recordTitleObservations } from '../lib/rss/title-change';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import {
   HOT_TARGETS_SQL,
   LONG_TAIL_TARGETS_SQL,
@@ -40,12 +41,14 @@ const forceLongTail = args.includes('--long-tail');
 // Subset gate: while the two-lane watcher is on trial, only watch_subset channels get the new
 // (much denser) cadence. Everything else keeps exactly the cadence it had before.
 const subset = args.includes('--subset') || process.env.WATCH_SUBSET === '1';
+const job = startManagedJob({ name: 'thumbnail-watch', args });
+if (!job.acquired) process.exit(0);
 // Per-run cap. The full ladder's steady-state demand is ~6,000 targets per 5-minute tick
 // (launch 1,295 every run + hot/3 + warm/6 + steady/24 off the 2026-09-03 tier counts).
 // Measured the same day: 28.8 checks/s with the ETag path (5,288 targets in 183.7 s), so 6,000
 // lands at ~3.5 min and leaves headroom inside the tick. The long tail draws from the same
 // budget (see below), so a long-tail hour cannot push the run over.
-const maxVideos = parseInt(args.find((a) => /^\d+$/.test(a)) || '6000', 10);
+const maxVideos = parseInt(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--max-seconds') || '6000', 10);
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 4,
@@ -66,6 +69,7 @@ if (dry) {
   }
   console.log(`(long tail cap ${LONG_TAIL_MAX_PER_RUN}/run, runs hourly; long-tail slot now: ${isLongTailRun(new Date())})`);
   await pool.end();
+  job.finish();
   process.exit(0);
 }
 
@@ -92,6 +96,7 @@ let notModified = 0;
 // Concurrency 50 (was 20): with the ETag path most checks are a bodyless 304, so the run is
 // latency-bound, not bandwidth-bound. Measured 2026-09-03: 4,000 targets took 152.8 s at 20.
 for (const group of chunk(targets, 50)) {
+  if (job.signal.aborted) break;
   await Promise.all(
     group.map(async ({ id }) => {
       try {
@@ -215,6 +220,7 @@ let oembedTitleChanges = 0;
 let oembedTitleSyncs = 0;
 const oembedSeen: string[] = [];
 for (const group of chunk(oembedTargets, 20)) {
+  if (job.signal.aborted) break;
   await Promise.all(group.map(async (v: { id: string; title: string; published_at: string; title_observed_at: string | null }) => {
     try {
       const res = await fetch(
@@ -249,3 +255,4 @@ if (oembedTargets.length) {
   );
 }
 await pool.end();
+job.finish();

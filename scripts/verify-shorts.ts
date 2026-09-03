@@ -12,6 +12,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { SHORT_MAX_SECONDS, longformSql } from '../lib/scoring/longform';
 import { shortsVerdict, type ShortsVerdict } from '../lib/thumbs/shorts';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const LIMIT = Number(arg('--limit') ?? 2000);
@@ -20,6 +21,8 @@ const CONCURRENCY = Number(arg('--concurrency') ?? 4);
 const CHANNELS = (arg('--channels') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 // --only-flagged: re-check videos the old CDN detector marked is_short=true (it had ~10% false positives).
 const ONLY_FLAGGED = process.argv.includes('--only-flagged');
+const job = startManagedJob({ name: ONLY_FLAGGED ? 'verify-shorts:flagged' : 'verify-shorts:default' });
+if (!job.acquired) process.exit(0);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
@@ -44,7 +47,7 @@ const check = (id: string): Promise<Verdict> => shortsVerdict(id);
 let shorts = 0, long = 0, gone = 0, retry = 0, done = 0;
 const queue = [...rows];
 async function worker() {
-  while (queue.length) {
+  while (queue.length && !job.signal.aborted) {
     const { id } = queue.shift()!;
     const v = await check(id);
     if (v === 'unknown') { retry++; continue; }
@@ -72,3 +75,4 @@ async function worker() {
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 log(`done: ${done} checked — ${shorts} shorts, ${long} long-form, ${gone} gone, ${retry} to retry next run`);
 await pool.end();
+job.finish();

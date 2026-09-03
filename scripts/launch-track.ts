@@ -14,6 +14,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { chunk, clampCount } from '../lib/nightly/tracking-core';
 import { longformSql } from '../lib/scoring/longform';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import {
   nextCheck, launchUntilFor, daysSincePublished,
   changeAtFromLaunchUntil, type Tier,
@@ -22,7 +23,10 @@ import {
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
 // 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
 // bucket) while leaving ~5x headroom over the ~5 calls/run the schedule actually needs.
-const maxCalls = parseInt(process.argv[2] || '25', 10); // per run; 288 runs/day
+const args = process.argv.slice(2);
+const maxCalls = parseInt(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--max-seconds') || '25', 10); // per run; 288 runs/day
+const job = startManagedJob({ name: 'launch-track', args });
+if (!job.acquired) process.exit(0);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
@@ -134,6 +138,7 @@ type DueRow = {
 let calls = 0, mainCalls = 0, samples = 0;
 const tierSamples: Record<Tier, number> = { standard: 0, dense: 0 };
 for (const batch of chunk(due.rows as DueRow[], 50)) {
+  if (job.signal.aborted) break;
   const ids = batch.map((r) => r.video_id);
   let res: Response | null = null;
   for (let attempt = 0; attempt < 3 && !res; attempt++) {
@@ -248,3 +253,4 @@ if (mainCalls) {
 }
 log(`done: ${samples} samples, ${calls} calls (${calls - mainCalls} batch-bucket, ${mainCalls} main)`);
 await pool.end();
+job.finish();

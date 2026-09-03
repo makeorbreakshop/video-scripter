@@ -14,9 +14,12 @@ import {
   FeedEvent, OUTLIER_MIN_SCORE, OUTLIER_CONFIDENCES,
 } from '../lib/feed/materialize';
 import { longformSql } from '../lib/scoring/longform';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
 const DRY = process.argv.includes('--dry-run');
 const CATCH_UP = process.argv.includes('--catch-up');
+const job = startManagedJob({ name: 'feed-materialize' });
+if (!job.acquired) process.exit(0);
 const sinceArg = (() => {
   const i = process.argv.indexOf('--since');
   if (i < 0) return null;
@@ -253,9 +256,11 @@ async function main() {
 
   const totals = new Map<string, number>();
   for (const s of sources) {
+    if (job.signal.aborted) break;
     // A single pass keeps each launchd run bounded; --catch-up drains a cold-start backlog.
     let passes = 0;
     for (;;) {
+      if (job.signal.aborted) break;
       const r = await runOnce(s);
       totals.set(s.name, (totals.get(s.name) || 0) + r.written);
       if (!r.more || !CATCH_UP || ++passes > 500) break;
@@ -273,4 +278,7 @@ async function main() {
 
 main()
   .catch((e) => { console.error(e); process.exitCode = 1; })
-  .finally(() => pool.end());
+  .finally(async () => {
+    await pool.end();
+    job.finish();
+  });
