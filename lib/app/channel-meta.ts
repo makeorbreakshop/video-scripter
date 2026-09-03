@@ -105,3 +105,14 @@ export async function channelMeta(channelId: string): Promise<ChannelMeta | null
   ).catch(() => [] as ChannelMeta[]);
   return rows[0] ?? null;
 }
+
+/**
+ * YouTube rotates avatar URLs now and then; when one 404s in the browser, the client asks
+ * us to re-fetch. One channels.list unit per channel per day at most — a channel whose
+ * avatar is genuinely gone would otherwise cost a unit on every render.
+ */
+export const AVATAR_REFRESH_MIN_AGE_MS = 24 * 60 * 60 * 1000;
+export function avatarRefreshDue(fetchedAt: string | null | undefined, now: Date = new Date()): boolean {
+  if (!fetchedAt) return true;
+  return now.getTime() - new Date(fetchedAt).getTime() >= AVATAR_REFRESH_MIN_AGE_MS;
+}

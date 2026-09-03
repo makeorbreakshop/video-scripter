@@ -152,7 +152,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
               disabled={r.already || adding !== null}
               onClick={() => add(r.channel_id)}
             >
-              <ChannelAvatar src={avatarAt(r.avatar_url, 64)} name={r.name} size={32} eager />
+              <ChannelAvatar src={avatarAt(r.avatar_url, 64)} name={r.name} size={32} eager channelId={r.channel_id} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="cs-pick-name">{r.name}</div>
                 <div className="cs-pick-meta">{pickerMeta(r)}</div>
@@ -168,7 +168,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
       {resolved && (
         <div className="cs-card" style={{ marginTop: 10 }}>
           <div className="cs-card-head">
-            <ChannelAvatar src={avatarAt(resolved.thumbnail_url, 96)} name={resolved.name} size={48} eager />
+            <ChannelAvatar src={avatarAt(resolved.thumbnail_url, 96)} name={resolved.name} size={48} eager channelId={resolved.channel_id} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="cs-card-name">{resolved.name}</p>
               <div className="cs-pick-meta">

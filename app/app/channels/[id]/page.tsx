@@ -46,7 +46,7 @@ export default async function AppChannelPage({
       `}</style>
 
       <div className="ch-head">
-        <ChannelAvatar src={header.avatarUrl} name={header.name} size={56} />
+        <ChannelAvatar src={header.avatarUrl} name={header.name} size={56} channelId={header.channelId} />
         <div style={{ minWidth: 0 }}>
           <h1 className="cs-h1">{header.name}</h1>
           <p className="cs-sub">
