@@ -97,3 +97,25 @@ Also report: total cost (USD), wall time, Qdrant RAM/disk, p95 latency of each e
 - Existing lexical search: `lib/app/channels.ts searchTracked` over `channel_directory` with `pg_trgm`.
 - Existing API plumbing: `lib/api/v1.ts` (`withApiKey`, `jsonError`, `intParam`, `listParam`, `scoreShape`).
 - OpenAI key: `OPENAI_API_KEY` in `.env.local`.
+
+## 10. Method experiments (decide the document and the search before scaling)
+
+The 2025 system taught three things that this PRD must not relearn the hard way (see `IDEA_HEIST_SYSTEM_SUMMARY.md`, `docs/logs/archive_logs/daily_log-2025-07-19.md`, `-07-27.md`):
+
+1. Title embeddings capture literal wording; **LLM-summary embeddings capture the concept**. The old system searched both (thresholds 0.5 titles / 0.4 summaries) and merged. 423915 videos still have an `llm_summary` in Postgres (0 in the 30-day window), reusable for free.
+2. **Thread expansion was too narrow**: expanding a laser query only found laser variations. The fix that worked was expanding the *query* into several abstracted formulations (audience problem, format, emotional hook) and filtering results for transferability, not a bigger k.
+3. Summaries cost ~$1,700 per 170K videos in 2025; titles cost dollars. So summaries are a targeted spend, not a default.
+
+Run these as part of the eval (same gold sets as §6), before the full-corpus run:
+
+| Experiment | Variants | Decide by |
+|---|---|---|
+| A. Video document | (1) title only · (2) title + channel name + niche (default) · (3) title + `llm_summary` where present · (4) two vectors per video (title, summary) fused by RRF | §6.2 neighbour outlier rate and the manual read; cost per 1K docs |
+| B. Dimensions | 512 vs 1536 (same model) | §6.1 recall@10; if within 0.02, keep 512 (3× smaller, faster) |
+| C. Channel document | (1) name + top-20 titles (default) · (2) name + top-20 titles + top niches + `llm_summary` snippets of top 5 videos · (3) mean of the channel's video vectors (no extra embedding call) | §6.1 recall@10 / MRR |
+| D. Query strategy | (1) raw query · (2) hybrid RRF with lexical (default) · (3) multi-query expansion: an LLM rewrites the query into 3 forms (literal, audience problem, format/hook), union by RRF · (4) query + "for YouTube creators" prefix | §6.1 and §6.3 precision; latency budget 400 ms p95 for (3) with the expansion cached |
+| E. Similarity floor | none · 0.35 · 0.5 (cosine) | §6.2/§6.3: precision vs empty-result rate; report the curve |
+
+Rules: one variant changes at a time against the default; every run logs cost and p95 latency; results in the eval doc as a table with the winner per row and one sentence on why. The winner of A and D becomes the default for the full-corpus run; the rest stay as documented options. If no variant clears the §6 pass bars, stop and report rather than shipping semantic search that is not better than trigram.
+
+Budget for the experiments: the 30-day window re-embedded ~4 ways is ~$1–2; summary-based variants use existing summaries only (no new LLM summaries in v1).
