@@ -2,9 +2,15 @@ import { createHash } from 'crypto';
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import { j5Metrics, rankJ5Scores, type J5ResolvedLabel } from '../../lib/semantic/j5-rerank';
-import { SemanticQdrant } from '../../lib/semantic/qdrant';
-import { chunks, runMain } from './common';
+import type { BlindCandidate, V4Task } from '../../lib/semantic/eval-v4';
+import {
+  buildJ5TargetDocument,
+  j5Metrics,
+  rankJ5Scores,
+  validateJ5BlindCandidate,
+  type J5ResolvedLabel,
+} from '../../lib/semantic/j5-rerank';
+import { runMain } from './common';
 
 const EVAL_DIR = path.resolve('docs/prd/semantic-eval-v4');
 const CHALLENGER_DIR = path.join(EVAL_DIR, 'challenger');
@@ -54,61 +60,65 @@ async function runPython(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const [taskManifest, candidateRuns, blindPools, judgments, queryVectors] = await Promise.all([
-    readJson<{ content_hash: string; tasks: Array<{ id: string; lane: string; split: string; seed?: { channel_id: string } }> }>('tasks.json'),
+  const [taskManifest, candidateRuns, blindPools, judgments, judgmentBundle] = await Promise.all([
+    readJson<{ content_hash: string; tasks: V4Task[] }>('tasks.json'),
     readJson<{ rankings_hash: string; tasks: Array<{ task_id: string; systems: Array<{ system: string; candidates: Array<{ entity_id: string; rank: number; document_hash: string }> }> }> }>('candidate-runs.json'),
-    readJson<{ tasks: Array<{ task: { id: string }; candidates: Array<{ entity_id: string; title: string; channel_name: string; description: string }> }> }>('blind-pools-pass-1.json'),
+    readJson<{ judge_contract: string; tasks: Array<{ task: V4Task; rubric: Record<string, unknown>; candidates: BlindCandidate[] }> }>('blind-pools-pass-1.json'),
     readJson<{ candidate_rankings_hash: string; judgments: Array<{ task_id: string; entity_id: string; resolved: J5ResolvedLabel }> }>('resolved-judgments.json'),
-    readJson<{ content_hash: string; entries: Array<{ task_id: string; query_text_hash: string }> }>('query-vectors.json'),
+    readJson<{ candidate_rankings_hash: string; assignments: Record<string, { rubric_version: string;
+      judgments: Array<{ blind_id: string; input_hash: string }> }> }>('judgments-pass-1-2.json'),
   ]);
-  if (candidateRuns.rankings_hash !== judgments.candidate_rankings_hash) throw new Error('judgments do not match candidate rankings');
-  const qdrant = new SemanticQdrant({ timeoutMs: 15_000 });
+  if (candidateRuns.rankings_hash !== judgments.candidate_rankings_hash
+    || candidateRuns.rankings_hash !== judgmentBundle.candidate_rankings_hash) {
+    throw new Error('judgments do not match candidate rankings');
+  }
   const devTasks = taskManifest.tasks.filter((task) => task.lane === 'J5' && task.split === 'dev');
   const tasks = [];
   for (const task of devTasks) {
-    if (!task.seed?.channel_id) throw new Error(`${task.id}: missing seed channel`);
-    const seedPoint = await qdrant.point<{ channel_id: string; document: string; document_hash: string }>('channels_eval_v4', task.seed.channel_id);
-    const expectedQueryHash = queryVectors.entries.find((row) => row.task_id === task.id)?.query_text_hash;
-    if (!expectedQueryHash || textHash(seedPoint.payload.document) !== expectedQueryHash) throw new Error(`${task.id}: seed query hash mismatch`);
     const blindTask = blindPools.tasks.find((row) => row.task.id === task.id);
     const runTask = candidateRuns.tasks.find((row) => row.task_id === task.id);
     if (!blindTask || !runTask) throw new Error(`${task.id}: frozen pool missing`);
+    const judgeVisibleTask = { id: task.id, lane: task.lane, intent: task.intent,
+      seed: task.seed && { channel_id: task.seed.channel_id, channel_name: task.seed.channel_name } };
+    if (canonical(blindTask.task) !== canonical(judgeVisibleTask)) {
+      throw new Error(`${task.id}: blind task differs from the judge-visible task manifest projection`);
+    }
     const sourceById = new Map<string, Array<{ system: string; rank: number }>>();
-    const documentHashById = new Map<string, string>();
     for (const system of runTask.systems) for (const candidate of system.candidates) {
       const rows = sourceById.get(candidate.entity_id) ?? [];
       rows.push({ system: system.system, rank: candidate.rank });
       sourceById.set(candidate.entity_id, rows);
-      const prior = documentHashById.get(candidate.entity_id);
-      if (prior && prior !== candidate.document_hash) throw new Error(`${candidate.entity_id}: conflicting document hashes`);
-      documentHashById.set(candidate.entity_id, candidate.document_hash);
     }
     const poolIds = new Set(sourceById.keys());
     if (new Set(blindTask.candidates.map((candidate) => candidate.entity_id)).size !== poolIds.size) {
       throw new Error(`${task.id}: blind pool does not match candidate union`);
     }
-    const videoPayloads = new Map<string, { video_id: string; document: string; document_hash: string }>();
-    for (const batch of chunks([...poolIds], 50)) {
-      const points = await Promise.all(batch.map((id) => qdrant.point<{ video_id: string; document: string; document_hash: string }>('videos_eval_v4', id)));
-      for (const point of points) videoPayloads.set(point.payload.video_id, point.payload);
+    const assignments = [1, 2].map((pass) => {
+      const assignment = judgmentBundle.assignments[`${pass}:${task.id}`];
+      if (!assignment) throw new Error(`${task.id}: missing judgment pass ${pass}`);
+      return assignment;
+    });
+    if (!assignments[0].rubric_version || assignments[0].rubric_version !== assignments[1].rubric_version) {
+      throw new Error(`${task.id}: judgment rubric versions differ`);
     }
-    const candidates = [...poolIds].map((entityId) => {
-      const payload = videoPayloads.get(entityId);
-      if (!payload || payload.document_hash !== documentHashById.get(entityId) || textHash(payload.document) !== payload.document_hash) {
-        throw new Error(`${entityId}: frozen Qdrant candidate document hash mismatch`);
-      }
-      return { entity_id: entityId, document: payload.document, document_hash: payload.document_hash };
+    const passHashes = assignments.map((assignment) => new Map(assignment.judgments.map((row) => [row.blind_id, row.input_hash])));
+    const candidates = blindTask.candidates.map((candidate) => {
+      if (!poolIds.has(candidate.entity_id)) throw new Error(`${task.id}: blind candidate is outside the candidate union`);
+      return validateJ5BlindCandidate(candidate, passHashes.map((rows) => rows.get(candidate.blind_id) ?? 'missing'));
     }).sort((left, right) => left.entity_id.localeCompare(right.entity_id));
     if (candidates.length !== poolIds.size) throw new Error(`${task.id}: incomplete candidate documents`);
-    tasks.push({ task_id: task.id, seed_channel_id: task.seed.channel_id, seed_document: seedPoint.payload.document,
-      seed_document_hash: seedPoint.payload.document_hash, candidates });
+    tasks.push({ task_id: task.id, task_context: blindTask.task, task_context_hash: hash(blindTask.task),
+      rubric: blindTask.rubric, judge_context_hash: hash({ task: blindTask.task, rubric: blindTask.rubric,
+        judge_contract: blindPools.judge_contract, rubric_version: assignments[0].rubric_version }),
+      target_text: buildJ5TargetDocument(blindTask.task), candidates });
   }
   const body = {
     task_manifest_hash: taskManifest.content_hash,
     candidate_rankings_hash: candidateRuns.rankings_hash,
-    query_vectors_hash: queryVectors.content_hash,
-    query_recipe: 'j5-seed-channel-document-v1',
-    document_recipe: 'title-channel-clean-description-v1',
+    blind_pool_pass_1_hash: hash(blindPools),
+    judgment_bundle_hash: hash(judgmentBundle),
+    query_recipe: 'exact-blind-task-intent-and-channel-v1',
+    document_recipe: 'exact-blind-title-channel-description-v1',
     tasks,
   };
   const input = { version: 1, split: 'dev', body, content_hash: hash(body) };
@@ -125,9 +135,11 @@ async function main(): Promise<void> {
     const ranked = rankJ5Scores(rawTask.scores);
     const labels = Object.fromEntries(judgments.judgments.filter((row) => row.task_id === rawTask.task_id)
       .map((row) => [row.entity_id, row.resolved]));
-    return { ...rawTask, scores: undefined, rankings: ranked, metrics: j5Metrics(ranked.map((row) => row.entity_id), labels) };
+    const { scores: _scores, ...taskMetadata } = rawTask;
+    return { ...taskMetadata, rankings: ranked, metrics: j5Metrics(ranked.map((row) => row.entity_id), labels) };
   });
   const outputBody = { input_content_hash: input.content_hash, raw_content_hash: raw.content_hash,
+    resolved_judgments_hash: hash(judgments),
     model: raw.body.model, model_revision: raw.body.model_revision, model_files_sha256: raw.body.model_files_sha256, max_length: raw.body.max_length,
     batch_size: raw.body.batch_size, runtime: raw.body.runtime, tasks: outputTasks };
   await writeFrozen(OUTPUT_PATH, { version: 1, split: 'dev', variant: 'cross_encoder', body: outputBody, content_hash: hash(outputBody) });

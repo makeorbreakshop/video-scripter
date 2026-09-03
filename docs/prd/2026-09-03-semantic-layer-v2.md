@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 4 vertical slice and bounded J5 reranking bake-off complete; stopped at the dev gate. Date: 2026-09-03.
+Status: revision 4 vertical slice and bounded J5 reranking bake-off complete; independent review passed; stopped at the dev gate. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -182,7 +182,7 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Run lexical, dense, and RRF candidate generation; write immutable run artifacts (all 48 task/system rankings reproduced exactly after freezing query vectors).
 - [x] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet (2,196 pooled non-J1 candidates; 841 third-pass adjudications; 20-item packet).
 - [x] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
-- [ ] Independently review the artifacts against this PRD. Do not expose endpoints.
+- [x] Independently review the artifacts against this PRD. Do not expose endpoints.
 
 ## 11. Verification handoff
 
@@ -230,11 +230,17 @@ The single next experiment is a J5-local reranking bake-off on the original dev 
 
 ## 15. J5 challenger result
 
-The bounded bake-off is recorded in `2026-09-03-semantic-j5-challenger.md` and `semantic-eval-v4/challenger/`. Both variants reranked only the two original frozen J5 dev pools; neither touched held-out tasks or performance metadata.
+The bounded bake-off is recorded in `2026-09-03-semantic-j5-challenger.md` and `semantic-eval-v4/challenger/`. Both variants reranked only the two original frozen J5 dev pools; neither reranker received held-out tasks or performance metadata.
 
-| Variant | Lower creative P@10 | Direct application@10 | Hit both tasks | Unresolved top 10 | Gate |
-| --- | ---: | ---: | --- | ---: | --- |
-| Local MS-MARCO cross-encoder | 0.150 | 0.850 | no | 0 | fail |
-| Purpose/mechanism + explicit transfer verification | 0.200 | 0.750 | yes | 1 | fail |
+| Variant | Lower creative P@10 | Upper creative P@10 | Lower nDCG@20 | Direct application@10 | Hit both tasks | Unresolved top 10 | Gate |
+| --- | ---: | ---: | ---: | ---: | --- | ---: | --- |
+| Local MS-MARCO cross-encoder | 0.200 | 0.250 | 0.184 | 0.700 | yes | 1 | fail |
+| Purpose/mechanism + explicit transfer verification | 0.150 | 0.150 | 0.161 | 0.850 | yes | 0 | fail |
 
 Neither variant met the required 0.300 lower-bound precision, 0.200 maximum direct-application rate, per-task creative-hit, and zero-unresolved gates. No variant is selected, so there is no confirmation run, corpus-wide facet extraction, endpoint work, or deployment. This is the PRD stop condition: metadata-only retrieval supplies some useful candidates, but these two reranking methods do not separate creative transfer from direct copying reliably enough.
+
+The first challenger artifacts were withdrawn after independent review found that 101 of 312 model documents differed from the blind judgment text and that the cross-encoder envelope hash was invalid. The final run rebuilds candidates from the exact blind title/channel/description fields, validates both judgment-pass hashes for every candidate, binds the resolved-label and source-artifact hashes, recomputes rankings and metrics in the report generator, and records the provider-returned model name. The primary purpose/mechanism pass emitted 38 internally inconsistent creative labels. Its single repair pass produced 37 valid decisions; one remained invalid, was deterministically demoted to the bottom, and did not enter either task's top 20.
+
+Total semantic spend through the stop is conservatively bounded at $0.898715: $0.367486 from the frozen prior ledger plus $0.531229 for all challenger attempts. The challenger bound deliberately charges the interrupted corrected-input attempt the entire unused portion of its original $0.50 cap because its transfer-call usage was not persisted.
+
+The original v1 §10 experiment A (video document recipe) and D (query strategy) still have no valid winner. Revision 4 invalidated the old provisional comparison and did not authorize those bake-offs; this J5 result is not an A or D win.

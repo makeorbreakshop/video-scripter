@@ -62,8 +62,12 @@ def main() -> None:
     model_files = {str(file.relative_to(snapshot)): file_hash(file.resolve()) for file in sorted(snapshot.rglob("*")) if file.is_file()}
     task_results = []
     for task in payload["body"]["tasks"]:
+        if task["task_id"] != task["task_context"]["id"] or not task["target_text"]:
+            raise ValueError(f"{task['task_id']}: task identity mismatch")
+        if len({candidate["entity_id"] for candidate in task["candidates"]}) != len(task["candidates"]):
+            raise ValueError(f"{task['task_id']}: duplicate candidate identity")
         ids = [candidate["entity_id"] for candidate in task["candidates"]]
-        pairs = [(task["seed_document"], candidate["document"]) for candidate in task["candidates"]]
+        pairs = [(task["target_text"], candidate["candidate_text"]) for candidate in task["candidates"]]
         token_lengths = [len(model.tokenizer(query, document, truncation=False)["input_ids"]) for query, document in pairs]
         warm_scores = np.asarray(model.predict(
             pairs, batch_size=BATCH_SIZE, show_progress_bar=False,

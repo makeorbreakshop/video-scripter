@@ -1,4 +1,7 @@
+import { createHash } from 'crypto';
 import { ndcgAtK, precisionAtK } from './eval-v4';
+import type { BlindCandidate } from './eval-v4';
+import { blindCandidateInputHash } from './judgments-v4';
 
 export type J5ResolvedLabel = 'creative_adaptation' | 'direct_application' | 'background' | 'none' | 'unresolved';
 export type TransferRating = 0 | 1 | 2 | 3;
@@ -42,6 +45,35 @@ export interface J5MetricSet {
   creative_hits_at_k: number;
 }
 
+export interface J5HashedEnvelope<T> {
+  content_hash: string;
+  body: T;
+}
+
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.entries(value as Record<string, unknown>)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
+function contentHash(value: unknown): string {
+  return createHash('sha256').update(canonical(value)).digest('hex');
+}
+
+export function createJ5HashedEnvelope<T>(body: T): J5HashedEnvelope<T> {
+  return { content_hash: contentHash(body), body };
+}
+
+export function validateJ5HashedEnvelope<T>(envelope: J5HashedEnvelope<T>): T {
+  if (!envelope || typeof envelope !== 'object' || !nonEmpty(envelope.content_hash)
+    || contentHash(envelope.body) !== envelope.content_hash) {
+    throw new Error('J5 envelope content hash mismatch');
+  }
+  return envelope.body;
+}
+
 function nonEmpty(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -52,6 +84,35 @@ export function buildJ5CandidateDocument(candidate: {
   description: string;
 }): string {
   return `title: ${candidate.title}\nchannel: ${candidate.channel_name}\ndescription: ${candidate.description}`;
+}
+
+export function buildJ5TargetDocument(task: {
+  id: string;
+  lane: string;
+  intent?: string;
+  seed?: { channel_id?: string; channel_name?: string };
+}): string {
+  if (task.lane !== 'J5' || !nonEmpty(task.id) || !nonEmpty(task.intent)
+    || !nonEmpty(task.seed?.channel_id) || !nonEmpty(task.seed?.channel_name)) {
+    throw new Error('J5 target requires the frozen task id, intent, and channel identity');
+  }
+  return `intent: ${task.intent}\ntarget channel: ${task.seed.channel_name}`;
+}
+
+export function validateJ5BlindCandidate(
+  candidate: BlindCandidate,
+  judgmentInputHashes: string[],
+): { blind_id: string; entity_id: string; candidate_text: string; judge_input_hash: string } {
+  const judgeInputHash = blindCandidateInputHash(candidate);
+  if (judgmentInputHashes.length < 2 || judgmentInputHashes.some((value) => value !== judgeInputHash)) {
+    throw new Error(`${candidate.blind_id}: judge input hash does not match the exact blind candidate payload`);
+  }
+  return {
+    blind_id: candidate.blind_id,
+    entity_id: candidate.entity_id,
+    candidate_text: buildJ5CandidateDocument(candidate),
+    judge_input_hash: judgeInputHash,
+  };
 }
 
 export function rankJ5Scores<T extends { entity_id: string; score: number }>(rows: T[]): Array<T & { rank: number }> {
@@ -72,6 +133,14 @@ export function j5Metrics(
   labels: Record<string, J5ResolvedLabel>,
   k = 10,
 ): J5MetricSet {
+  const rankedSet = new Set(rankedIds);
+  const labelIds = Object.keys(labels);
+  const validLabels = new Set<J5ResolvedLabel>(['creative_adaptation', 'direct_application', 'background', 'none', 'unresolved']);
+  if (rankedSet.size !== rankedIds.length || labelIds.length !== rankedIds.length
+    || rankedIds.some((id) => !Object.prototype.hasOwnProperty.call(labels, id))
+    || labelIds.some((id) => !rankedSet.has(id) || !validLabels.has(labels[id]))) {
+    throw new Error('J5 label coverage must exactly match the unique ranked candidate IDs');
+  }
   const lower = Object.fromEntries(Object.entries(labels).map(([id, label]) => [id, label === 'creative_adaptation' ? 1 : 0]));
   const upper = Object.fromEntries(Object.entries(labels).map(([id, label]) => [id, label === 'creative_adaptation' || label === 'unresolved' ? 1 : 0]));
   const top = rankedIds.slice(0, k);
@@ -134,6 +203,31 @@ export function validateTransferDecision(raw: TransferDecision): TransferDecisio
   return decision;
 }
 
+export function validateOrDowngradeTransferDecision(raw: TransferDecision): TransferDecision {
+  try {
+    return validateTransferDecision(raw);
+  } catch (error) {
+    if (raw?.verdict !== 'creative_adaptation') throw error;
+    const sameDomain = raw.domain_relation === 'same' || raw.domain_relation === 'adjacent';
+    return validateTransferDecision({
+      ...raw,
+      domain_relation: sameDomain ? raw.domain_relation : 'unknown',
+      preserved_purpose: sameDomain ? raw.preserved_purpose : null,
+      preserved_mechanism: sameDomain ? raw.preserved_mechanism : null,
+      changed_surface: sameDomain ? raw.changed_surface : null,
+      adapted_concept: sameDomain ? raw.adapted_concept : null,
+      purpose_fit: sameDomain ? raw.purpose_fit : 0,
+      mechanism_fit: sameDomain ? raw.mechanism_fit : 0,
+      audience_fit: sameDomain ? raw.audience_fit : 0,
+      mapping_specificity: sameDomain ? raw.mapping_specificity : 0,
+      verdict: sameDomain ? 'direct_application' : 'none',
+      confidence: 'low',
+      blocking_reasons: [...(Array.isArray(raw.blocking_reasons) ? raw.blocking_reasons : []),
+        'invalid creative mapping downgraded'],
+    });
+  }
+}
+
 export function validateJ5Facet(raw: J5Facet): J5Facet {
   if (!raw || typeof raw !== 'object') throw new Error('J5 facet must be an object');
   if (!nonEmpty(raw.entity_id)) throw new Error('J5 facet entity_id is required');
@@ -155,6 +249,7 @@ export function validateJ5Facet(raw: J5Facet): J5Facet {
 }
 
 export function transferRankScore(decision: TransferDecision): number {
+  if (decision.blocking_reasons.includes('invalid creative mapping downgraded')) return -1;
   const bucket = { creative_adaptation: 3, background: 2, none: 1, direct_application: 0 }[decision.verdict];
   const confidence = { high: 0.2, medium: 0.1, low: 0 }[decision.confidence];
   return bucket * 100
@@ -168,6 +263,7 @@ export function transferRankScore(decision: TransferDecision): number {
 export function selectJ5Variant(variants: Array<{ name: string; task_metrics: J5MetricSet[] }>): string | null {
   const eligible = variants.flatMap((variant) => {
     if (!variant.task_metrics.length
+      || variant.task_metrics.some((metrics) => Object.values(metrics).some((value) => !Number.isFinite(value)))
       || variant.task_metrics.some((metrics) => metrics.unresolved_at_k > 0 || metrics.creative_hits_at_k === 0)) return [];
     const mean = (key: keyof J5MetricSet) => variant.task_metrics.reduce((sum, metrics) => sum + metrics[key], 0)
       / variant.task_metrics.length;
