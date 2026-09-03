@@ -43,9 +43,18 @@ export function intArg(argv: string[], name: string): number | null {
   return value;
 }
 
+export function floatArg(argv: string[], name: string): number | null {
+  const raw = argValue(argv, name);
+  if (raw == null) return null;
+  const value = Number.parseFloat(raw);
+  if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be a positive number`);
+  return value;
+}
+
 export function sinceDate(raw = '30d'): Date {
-  const days = /^(\d+)d$/.exec(raw);
-  const date = days ? new Date(Date.now() - Number(days[1]) * 86_400_000) : new Date(raw);
+  const relative = /^(\d+)([dhm])$/.exec(raw);
+  const unitMs = relative?.[2] === 'd' ? 86_400_000 : relative?.[2] === 'h' ? 3_600_000 : 60_000;
+  const date = relative ? new Date(Date.now() - Number(relative[1]) * unitMs) : new Date(raw);
   if (Number.isNaN(date.getTime())) throw new Error(`Invalid --since value: ${raw}`);
   return date;
 }

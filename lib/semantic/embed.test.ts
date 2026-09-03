@@ -1,4 +1,11 @@
-import { chunkEmbeddingInputs, embedTexts, embeddingCostUsd } from './embed';
+import {
+  assertEmbeddingBudget,
+  chunkEmbeddingInputs,
+  embedTexts,
+  embeddingCostUsd,
+  estimateEmbeddingRun,
+  normalizeQuery,
+} from './embed';
 
 describe('embedding client', () => {
   test('batches at no more than 256 inputs', () => {
@@ -9,6 +16,17 @@ describe('embedding client', () => {
   test('calculates text-embedding-3-small cost from input tokens', () => {
     expect(embeddingCostUsd(1_000_000)).toBeCloseTo(0.02);
     expect(embeddingCostUsd(250)).toBeCloseTo(0.000005);
+  });
+
+  test('normalizes query cache keys across casing and repeated whitespace', () => {
+    expect(normalizeQuery('  Laser   ENGRAVER\nReviews ')).toBe('laser engraver reviews');
+  });
+
+  test('counts cl100k tokens locally and refuses runs above their cost ceiling', () => {
+    const estimate = estimateEmbeddingRun(['hello', 'laser engraver']);
+    expect(estimate).toEqual({ docs: 2, tokens: 5, est_usd: 0.0000001, usd_per_million_tokens: 0.02 });
+    expect(() => assertEmbeddingBudget(estimate, 0.00000009)).toThrow(/exceeds --max-usd/);
+    expect(() => assertEmbeddingBudget(estimate, 0.01)).not.toThrow();
   });
 
   test('retries 429 responses with backoff and logs each successful call cost', async () => {

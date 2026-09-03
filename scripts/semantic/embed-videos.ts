@@ -6,7 +6,7 @@ import {
   VideoDocumentVariant,
   VideoPayloadRow,
 } from '../../lib/semantic/documents';
-import { embedTexts } from '../../lib/semantic/embed';
+import { assertEmbeddingBudget, embedTexts, estimateEmbeddingRun } from '../../lib/semantic/embed';
 import { SemanticQdrant, uuid5ForId, VIDEOS_COLLECTION } from '../../lib/semantic/qdrant';
 import {
   argValue,
@@ -15,6 +15,7 @@ import {
   currentHashes,
   db,
   intArg,
+  floatArg,
   QDRANT_BATCH_SIZE,
   READ_BATCH_SIZE,
   recordEmbeddings,
@@ -45,6 +46,7 @@ export interface EmbedVideosOptions {
   dimensions: number;
   updatedSince?: Date;
   collection?: string;
+  maxUsd?: number;
 }
 
 export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
@@ -60,6 +62,7 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
   let cursorId = '';
   let selected = 0;
   let embedded = 0;
+  const toEmbed: PreparedVideo[] = [];
 
   while (options.limit == null || selected < options.limit) {
     const pageLimit = Math.min(READ_BATCH_SIZE, options.limit == null ? READ_BATCH_SIZE : options.limit - selected);
@@ -86,27 +89,37 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
       return { row, document, hash: docHash(document) };
     }).filter((item) => hashes.get(item.row.id) !== item.hash);
 
-    if (options.dry) {
-      embedded += prepared.length;
-    } else {
-      for (const batch of chunks(prepared, QDRANT_BATCH_SIZE)) {
-        const vectors = await embedTexts(batch.map((item) => item.document), { dimensions: options.dimensions });
-        const embeddedAt = new Date().toISOString();
-        await qdrant.upsert(collection, batch.map((item, index) => ({
-          id: uuid5ForId(item.row.id),
-          vector: vectors[index],
-          payload: mapVideoPayload(item.row, embeddedAt),
-        })));
-        await recordEmbeddings('video', batch.map((item) => ({ id: item.row.id, hash: item.hash })), options.dimensions);
-        embedded += batch.length;
-      }
-    }
+    toEmbed.push(...prepared);
 
     const last = result.rows[result.rows.length - 1];
     cursorPublished = last.published_at;
     cursorId = last.id;
-    console.log(`videos: scanned=${selected} changed=${embedded}`);
+    console.log(`videos: scanned=${selected} changed=${toEmbed.length}`);
     if (result.rows.length < pageLimit) break;
+  }
+
+  const estimate = estimateEmbeddingRun(toEmbed.map((item) => item.document));
+  console.log(JSON.stringify({ cost_gate: estimate, max_usd: options.maxUsd ?? 2, price_checked_at: '2026-09-02', price_source: 'https://developers.openai.com/api/docs/models/text-embedding-3-small' }));
+  assertEmbeddingBudget(estimate, options.maxUsd ?? 2);
+  if (options.dry) {
+    embedded = toEmbed.length;
+  } else {
+    let actualUsd = 0;
+    for (const batch of chunks(toEmbed, QDRANT_BATCH_SIZE)) {
+      const vectors = await embedTexts(batch.map((item) => item.document), {
+        dimensions: options.dimensions,
+        onUsage: (_tokens, usd) => { actualUsd += usd; },
+      });
+      if (estimate.est_usd > 0 && actualUsd > estimate.est_usd * 1.2) {
+        throw new Error(`Actual embedding cost exceeded estimate by more than 20% ($${actualUsd.toFixed(6)} actual vs $${estimate.est_usd.toFixed(6)} estimated)`);
+      }
+      const embeddedAt = new Date().toISOString();
+      await qdrant.upsert(collection, batch.map((item, index) => ({
+        id: uuid5ForId(item.row.id), vector: vectors[index], payload: mapVideoPayload(item.row, embeddedAt),
+      })));
+      await recordEmbeddings('video', batch.map((item) => ({ id: item.row.id, hash: item.hash })), options.dimensions);
+      embedded += batch.length;
+    }
   }
 
   const qdrantCount = options.dry ? null : await qdrant.count(collection);
@@ -124,6 +137,7 @@ function cliOptions(argv: string[]): EmbedVideosOptions {
     dimensions: intArg(argv, '--dimensions') ?? EMBEDDING_DIMS,
     updatedSince: argValue(argv, '--updated-since') ? sinceDate(argValue(argv, '--updated-since') as string) : undefined,
     collection: argValue(argv, '--collection') ?? undefined,
+    maxUsd: floatArg(argv, '--max-usd') ?? 2,
   };
 }
 

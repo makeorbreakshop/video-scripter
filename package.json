@@ -147,6 +147,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "latest",
     "tailwindcss-animate": "^1.0.7",
+    "tiktoken": "1.0.22",
     "use-debounce": "^10.0.5",
     "vaul": "^0.9.6",
     "youtube-transcript": "^1.2.1",

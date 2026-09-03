@@ -2,14 +2,24 @@
 set -euo pipefail
 
 container_name="channelsmith-qdrant"
-image="qdrant/qdrant:v1.12.6"
+image="qdrant/qdrant:v1.19.0"
 storage_dir="${HOME}/qdrant/channelsmith"
 qdrant_url="${QDRANT_URL:-http://localhost:6333}"
 
 mkdir -p "$storage_dir"
 
 if docker container inspect "$container_name" >/dev/null 2>&1; then
-  if [ "$(docker inspect -f '{{.State.Running}}' "$container_name")" != "true" ]; then
+  current_image="$(docker inspect -f '{{.Config.Image}}' "$container_name")"
+  if [ "$current_image" != "$image" ]; then
+    docker stop "$container_name" >/dev/null 2>&1 || true
+    docker rm "$container_name" >/dev/null
+    docker run -d \
+      --name "$container_name" \
+      --restart unless-stopped \
+      -p 6333:6333 \
+      -v "$storage_dir:/qdrant/storage" \
+      "$image" >/dev/null
+  elif [ "$(docker inspect -f '{{.State.Running}}' "$container_name")" != "true" ]; then
     docker start "$container_name" >/dev/null
   fi
 else
@@ -64,5 +74,9 @@ ensure_payload_index videos_v1 published_at integer
 ensure_payload_index videos_v1 topic_niche keyword
 ensure_payload_index videos_v1 is_outlier bool
 ensure_payload_index videos_v1 score float
+ensure_payload_index channels_v1 subscriber_count integer
+ensure_payload_index channels_v1 top_niches keyword
+ensure_payload_index channels_v1 lane keyword
 
-echo "Qdrant is ready with videos_v1 and channels_v1 at $qdrant_url"
+image_digest="$(docker image inspect "$image" --format '{{index .RepoDigests 0}}' 2>/dev/null || true)"
+echo "Qdrant is ready with videos_v1 and channels_v1 at $qdrant_url (${image_digest:-$image})"

@@ -4,6 +4,7 @@ import {
   runWithLexicalFallback,
   semanticUnavailablePayload,
   uuid5ForId,
+  SemanticQdrant,
 } from './qdrant';
 
 describe('Qdrant helpers', () => {
@@ -43,5 +44,23 @@ describe('Qdrant helpers', () => {
       status: 503,
       body: { error: { code: 'semantic_unavailable', message: 'Semantic search is temporarily unavailable.' } },
     });
+  });
+
+  test('uses Qdrant universal Query API rather than the legacy search endpoint', async () => {
+    const fetchMock = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ result: { points: [] } }),
+    }));
+    const previousFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      await new SemanticQdrant({ url: 'http://qdrant.test' }).search('channels_v1', [0.1, 0.2], { limit: 5 });
+      const [requestUrl, requestInit] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>)[0];
+      expect(requestUrl).toBe('http://qdrant.test/collections/channels_v1/points/query');
+      expect(JSON.parse(String(requestInit.body))).toMatchObject({ query: [0.1, 0.2], limit: 5 });
+    } finally {
+      global.fetch = previousFetch;
+    }
   });
 });

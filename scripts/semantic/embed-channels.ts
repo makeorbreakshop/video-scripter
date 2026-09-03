@@ -6,7 +6,7 @@ import {
   mapChannelPayload,
   topNiches,
 } from '../../lib/semantic/documents';
-import { embedTexts } from '../../lib/semantic/embed';
+import { assertEmbeddingBudget, embedTexts, estimateEmbeddingRun } from '../../lib/semantic/embed';
 import { CHANNELS_COLLECTION, SemanticQdrant, uuid5ForId } from '../../lib/semantic/qdrant';
 import {
   argValue,
@@ -14,6 +14,7 @@ import {
   costToday,
   currentHashes,
   db,
+  floatArg,
   intArg,
   QDRANT_BATCH_SIZE,
   READ_BATCH_SIZE,
@@ -65,6 +66,7 @@ export interface EmbedChannelsOptions {
   updatedSince?: Date;
   collection?: string;
   refreshPayloads?: boolean;
+  maxUsd?: number;
 }
 
 export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
@@ -90,6 +92,8 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
   const qdrant = new SemanticQdrant();
   const collection = options.collection ?? CHANNELS_COLLECTION;
   let embedded = 0;
+  const toEmbed: PreparedChannel[] = [];
+  const payloadRefreshes: PreparedChannel[] = [];
 
   for (const idBatch of chunks<string>(ids, Math.min(1_000, READ_BATCH_SIZE))) {
     const videoRows = (await db().query<ChannelVideoRow>(
@@ -149,28 +153,38 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
     });
     const prepared = allPrepared.filter((item) => hashes.get(item.id) !== item.hash);
 
-    if (options.dry) {
-      embedded += prepared.length;
-    } else {
-      for (const batch of chunks(prepared, QDRANT_BATCH_SIZE)) {
-        const vectors = await embedTexts(batch.map((item) => item.document), { dimensions: options.dimensions });
-        await qdrant.upsert(collection, batch.map((item, index) => ({
-          id: uuid5ForId(item.id), vector: vectors[index], payload: item.payload,
-        })));
-        await recordEmbeddings('channel', batch.map((item) => ({ id: item.id, hash: item.hash })), options.dimensions);
-        embedded += batch.length;
+    toEmbed.push(...prepared);
+    if (options.refreshPayloads) payloadRefreshes.push(...allPrepared.filter((item) => hashes.get(item.id) === item.hash));
+    console.log(`channels: scanned=${Math.min(ids.length, idBatch.length + ids.indexOf(idBatch[0]))} changed=${toEmbed.length}`);
+  }
+
+  const estimate = estimateEmbeddingRun(toEmbed.map((item) => item.document));
+  console.log(JSON.stringify({ cost_gate: estimate, max_usd: options.maxUsd ?? 2, price_checked_at: '2026-09-02', price_source: 'https://developers.openai.com/api/docs/models/text-embedding-3-small' }));
+  assertEmbeddingBudget(estimate, options.maxUsd ?? 2);
+  if (options.dry) {
+    embedded = toEmbed.length;
+  } else {
+    let actualUsd = 0;
+    for (const batch of chunks(toEmbed, QDRANT_BATCH_SIZE)) {
+      const vectors = await embedTexts(batch.map((item) => item.document), {
+        dimensions: options.dimensions,
+        onUsage: (_tokens, usd) => { actualUsd += usd; },
+      });
+      if (estimate.est_usd > 0 && actualUsd > estimate.est_usd * 1.2) {
+        throw new Error(`Actual embedding cost exceeded estimate by more than 20% ($${actualUsd.toFixed(6)} actual vs $${estimate.est_usd.toFixed(6)} estimated)`);
       }
-      if (options.refreshPayloads) {
-        const unchanged = allPrepared.filter((item) => hashes.get(item.id) === item.hash);
-        for (const batch of chunks(unchanged, QDRANT_BATCH_SIZE)) {
-          await qdrant.updatePayloads(collection, batch.map((item) => {
-            const { embedded_at: _embeddedAt, ...payload } = item.payload;
-            return { id: item.id, payload };
-          }));
-        }
-      }
+      await qdrant.upsert(collection, batch.map((item, index) => ({
+        id: uuid5ForId(item.id), vector: vectors[index], payload: item.payload,
+      })));
+      await recordEmbeddings('channel', batch.map((item) => ({ id: item.id, hash: item.hash })), options.dimensions);
+      embedded += batch.length;
     }
-    console.log(`channels: scanned=${Math.min(ids.length, idBatch.length + ids.indexOf(idBatch[0]))} changed=${embedded}`);
+    for (const batch of chunks(payloadRefreshes, QDRANT_BATCH_SIZE)) {
+      await qdrant.updatePayloads(collection, batch.map((item) => {
+        const { embedded_at: _embeddedAt, ...payload } = item.payload;
+        return { id: item.id, payload };
+      }));
+    }
   }
 
   const qdrantCount = options.dry ? null : await qdrant.count(collection);
@@ -189,6 +203,7 @@ function cliOptions(argv: string[]): EmbedChannelsOptions {
     updatedSince: argValue(argv, '--updated-since') ? sinceDate(argValue(argv, '--updated-since') as string) : undefined,
     collection: argValue(argv, '--collection') ?? undefined,
     refreshPayloads: argv.includes('--refresh-payloads'),
+    maxUsd: floatArg(argv, '--max-usd') ?? 2,
   };
 }
 

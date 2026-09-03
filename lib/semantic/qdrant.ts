@@ -146,12 +146,12 @@ export class SemanticQdrant {
     vector: number[],
     options: { limit?: number; filter?: QdrantFilter; scoreThreshold?: number; withVector?: boolean } = {},
   ): Promise<Array<QdrantSearchHit<Payload>>> {
-    const response = await this.request<{ result: Array<QdrantSearchHit<Payload>> }>(
-      `/collections/${collection}/points/search`,
+    const response = await this.request<{ result: { points: Array<QdrantSearchHit<Payload>> } }>(
+      `/collections/${collection}/points/query`,
       {
         method: 'POST',
         body: JSON.stringify({
-          vector,
+          query: vector,
           limit: options.limit ?? 20,
           with_payload: true,
           with_vector: options.withVector ?? false,
@@ -160,7 +160,7 @@ export class SemanticQdrant {
         }),
       },
     );
-    return response.result;
+    return response.result.points;
   }
 
   async updatePayloads<Payload>(
