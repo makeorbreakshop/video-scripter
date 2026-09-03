@@ -319,19 +319,63 @@
 @media (prefers-reduced-motion: reduce) { .cs-skel { animation: none; } }
 
 /* ------------------------------------------------------------ feed cards --- */
-.cs-fcard { display: flex; gap: 18px; padding: 14px; border: 1px solid var(--cs-line); border-radius: 12px;
+/* Social-post shape: a byline that names the action in words, then the evidence for it.
+   Only an upload gets the big hero thumbnail, so an edit cannot read as a new video. */
+.cs-fcard { display: block; padding: 14px; border: 1px solid var(--cs-line); border-radius: 12px;
   background: var(--cs-surface); text-decoration: none; color: inherit; margin-bottom: 10px; }
 .cs-fcard:hover { border-color: var(--cs-line-strong); }
+.cs-fcard-head { flex-wrap: nowrap; margin-bottom: 12px; }
+.cs-fcard-verb { color: var(--cs-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-fcard-time { margin-left: auto; flex: none; color: var(--cs-muted); font-size: 12px; }
+
+.cs-fcard-upload { display: flex; gap: 18px; align-items: flex-start; }
 .cs-fcard-media { position: relative; flex: none; width: 320px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--cs-surface-2); }
+.cs-fcard-media[data-size="ident"] { width: 120px; }
+.cs-fcard-media[data-size="outlier"] { width: 200px; }
 .cs-fcard-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cs-fcard-score { position: absolute; right: 8px; bottom: 8px; }
 .cs-fcard-body { min-width: 0; flex: 1; padding-top: 2px; }
+.cs-fcard-sub { color: var(--cs-muted); font-size: 13px; margin: 6px 0 0; }
+.cs-fcard-bigscore { flex: none; align-self: center; font-size: 28px; padding: 6px 12px; }
+
+.cs-fcard-evidence { display: flex; flex-direction: column; gap: 10px; }
+.cs-fcard-ba { display: flex; align-items: center; gap: 12px; }
+.cs-fcard-ba-item { position: relative; margin: 0; flex: 1 1 0; min-width: 0; max-width: 300px;
+  aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--cs-surface-2); }
+.cs-fcard-ba-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-fcard-ba-item figcaption {
+  position: absolute; left: 6px; bottom: 6px; padding: 2px 6px; border-radius: 4px;
+  background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+  font-family: var(--font-mono), monospace;
+}
+.cs-fcard-arrow { color: var(--cs-muted); flex: none; }
+.cs-fcard-older { margin-top: 2px; }
+
+.cs-fcard-titles { min-width: 0; }
+.cs-fcard-oldtitle { color: var(--cs-muted); font-size: 14px; margin: 0 0 4px; text-decoration: line-through;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-title[data-size="small"] { font-size: 15px; }
+.cs-fcard-meta { color: var(--cs-muted); font-size: 13px; margin: 10px 0 0; }
+
+/* Older thumbnail versions, when a day held more than the two shown large. */
+.cs-versions { display: inline-flex; gap: 4px; }
+.cs-versions img { width: 56px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; border: 1px solid var(--cs-line); }
+
+/* Kept for the compact row list, which still stacks short activity lines. */
 .cs-activity { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; color: var(--cs-muted); font-size: 13px; }
 .cs-activity li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cs-activity em { font-style: normal; color: var(--cs-ink); }
-.cs-versions { display: inline-flex; gap: 4px; }
-.cs-versions img { width: 56px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; border: 1px solid var(--cs-line); }
-@media (max-width: 720px) { .cs-fcard { flex-direction: column; } .cs-fcard-media { width: 100%; } }
+
+@media (max-width: 720px) {
+  .cs-fcard-upload { flex-direction: column; }
+  .cs-fcard-media, .cs-fcard-media[data-size="ident"], .cs-fcard-media[data-size="outlier"] { width: 100%; }
+  .cs-fcard-ba { flex-direction: column; align-items: stretch; }
+  .cs-fcard-ba-item { max-width: none; width: 100%; }
+  .cs-fcard-arrow { transform: rotate(90deg); align-self: center; }
+  .cs-fcard-bigscore { align-self: flex-start; }
+  .cs-fcard-head { flex-wrap: wrap; }
+  .cs-fcard-time { margin-left: 0; width: 100%; }
+}
 
 /* ---------------------------------------------------------- connections ---- */
 /* A connected account: avatar, name, state. Same anatomy as .cs-pick so the app has

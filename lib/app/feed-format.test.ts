@@ -33,6 +33,9 @@ describe('sincePublish', () => {
     expect(sincePublish(0.5)).toBe('30m after publish');
     expect(sincePublish(6)).toBe('6h after publish');
     expect(sincePublish(72)).toBe('3d after publish');
+    expect(sincePublish(24 * 120)).toBe('4mo after publish');
+    expect(sincePublish(24 * 601)).toBe('1.6y after publish');
+    expect(sincePublish(24 * 365)).toBe('1y after publish');
     expect(sincePublish(null)).toBeNull();
   });
 });
@@ -217,5 +220,65 @@ describe('groupCards', () => {
       ev({ type: 'upload', at: '2026-09-01T16:00:00.000Z' }),
     ]);
     expect(days.map((d) => d.cards.length)).toEqual([1, 1]);
+  });
+});
+
+describe('card kind, verb and meta', () => {
+  const { cardKind, cardVerb, ordinal, cardMeta } = require('./feed-format');
+  const ev = (o: Partial<FeedEventLike>): FeedEventLike => ({ id: Math.random().toString(36).slice(2), type: 'upload', at: '2026-09-01T16:00:00.000Z', channel_id: 'c', channel_name: 'C', video_id: 'v', video_title: 'T', thumbnail_url: 'u', published_at: null, payload: {}, ...o });
+  const card = (events: FeedEventLike[]) => groupCards(events)[0].cards[0];
+
+  it('an upload wins the verb even when the day also holds edits', () => {
+    const c = card([
+      ev({ type: 'title_change', at: '2026-09-01T18:00:00.000Z', payload: { old_title: 'A', new_title: 'B', version: 2 } }),
+      ev({ type: 'upload' }),
+    ]);
+    expect(cardKind(c)).toBe('upload');
+    expect(cardVerb(c)).toBe('posted a new video');
+  });
+
+  it('names a title-only day', () => {
+    const c = card([ev({ type: 'title_change', payload: { old_title: 'A', new_title: 'B', version: 2, hours_since_publish: 72 } })]);
+    expect(cardKind(c)).toBe('title');
+    expect(cardVerb(c)).toBe('changed the title');
+    expect(cardMeta(c)).toBe('2nd title · 3d after publish');
+  });
+
+  it('counts thumbnails, and calls a rotation an A/B test', () => {
+    const one = card([ev({ type: 'thumbnail_change', payload: { after_url: 'x', version: 3, hours_since_publish: 24 } })]);
+    expect(cardKind(one)).toBe('thumb');
+    expect(cardVerb(one)).toBe('swapped the thumbnail');
+    expect(cardMeta(one)).toBe('3rd thumbnail · 24h after publish');
+
+    const many = card([
+      ev({ type: 'thumbnail_change', at: '2026-09-01T17:00:00.000Z', payload: { after_url: 'x', version: 2, hours_since_publish: 24 } }),
+      ev({ type: 'ab_rotation', at: '2026-09-01T18:00:00.000Z', payload: { after_url: 'y', version: 3, hours_since_publish: 48 } }),
+      ev({ type: 'ab_rotation', at: '2026-09-01T19:00:00.000Z', payload: { after_url: 'z', version: 4, hours_since_publish: 48 } }),
+    ]);
+    expect(cardVerb(many)).toBe('tested 3 thumbnails');
+    expect(cardMeta(many)).toBe('A/B test · 2 rotations · 2d after publish');
+  });
+
+  it('a same-day title and thumbnail change is one package', () => {
+    const c = card([
+      ev({ type: 'thumbnail_change', at: '2026-09-01T17:00:00.000Z', payload: { after_url: 'x', version: 3, hours_since_publish: 144 } }),
+      ev({ type: 'title_change', at: '2026-09-01T17:05:00.000Z', payload: { old_title: 'A', new_title: 'B', version: 2, hours_since_publish: 144 } }),
+    ]);
+    expect(cardKind(c)).toBe('combo');
+    expect(cardVerb(c)).toBe('changed the title and thumbnail');
+    expect(cardMeta(c)).toBe('3rd package · 6d after publish');
+  });
+
+  it('a score on its own is an outlier card with no meta line', () => {
+    const c = card([ev({ type: 'outlier', payload: { score: 4.2 } })]);
+    expect(cardKind(c)).toBe('outlier');
+    expect(cardVerb(c)).toBe('is beating its baseline');
+    expect(cardMeta(c)).toBeNull();
+  });
+
+  it('ordinal handles the teens and rejects junk', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(ordinal)).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd']);
+    expect(ordinal(0)).toBeNull();
+    expect(ordinal(null)).toBeNull();
   });
 });

@@ -88,7 +88,10 @@ export function sincePublish(hours: number | null | undefined): string | null {
   if (hours === null || hours === undefined || !Number.isFinite(hours)) return null;
   if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m after publish`;
   if (hours < 48) return `${Math.round(hours)}h after publish`;
-  return `${Math.round(hours / 24)}d after publish`;
+  const days = hours / 24;
+  if (days < 60) return `${Math.round(days)}d after publish`;
+  if (days < 365) return `${Math.round(days / 30.4)}mo after publish`;
+  return `${(days / 365).toFixed(1).replace(/\.0$/, '')}y after publish`;
 }
 
 // ------------------------------------------------------------------ score ----
@@ -301,4 +304,87 @@ export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards:
     for (const c of cards) c.thumbSwaps.sort((a, b) => (a.at < b.at ? -1 : 1));
     return { key: day.key, cards };
   });
+}
+
+// ------------------------------------------------------- card presentation ---
+
+export type CardKind = 'upload' | 'title' | 'thumb' | 'combo' | 'outlier';
+
+/**
+ * What the card is *about*. An upload wins over any same-day edits — the video being new
+ * is the bigger fact — and a score with nothing else that day is an outlier card.
+ */
+export function cardKind(card: FeedCard): CardKind {
+  if (card.uploadedAt) return 'upload';
+  const t = !!card.titleChange, th = card.thumbSwaps.length > 0;
+  if (t && th) return 'combo';
+  if (t) return 'title';
+  if (th) return 'thumb';
+  if (card.score !== null) return 'outlier';
+  return 'upload';
+}
+
+/** The muted verb phrase in the byline: "<Channel> posted a new video". */
+export function cardVerb(card: FeedCard): string {
+  switch (cardKind(card)) {
+    case 'upload': return 'posted a new video';
+    case 'combo': return 'changed the title and thumbnail';
+    case 'title': return 'changed the title';
+    case 'thumb': return card.thumbSwaps.length > 1
+      ? `tested ${card.thumbSwaps.length} thumbnails`
+      : 'swapped the thumbnail';
+    case 'outlier': return 'is beating its baseline';
+  }
+}
+
+/** 1 -> "1st", 2 -> "2nd", 11 -> "11th". Null for anything that is not a positive integer. */
+export function ordinal(n: number | null | undefined): string | null {
+  if (n === null || n === undefined || !Number.isFinite(n) || n < 1) return null;
+  const i = Math.round(n);
+  const rem100 = i % 100, rem10 = i % 10;
+  const suffix = rem100 >= 11 && rem100 <= 13 ? 'th'
+    : rem10 === 1 ? 'st' : rem10 === 2 ? 'nd' : rem10 === 3 ? 'rd' : 'th';
+  return `${i}${suffix}`;
+}
+
+const payloadNums = (card: FeedCard, types: string[], key: string): number[] =>
+  card.events.filter((e) => types.includes(e.type))
+    .map((e) => num((e.payload || {})[key]))
+    .filter((v): v is number => v !== null);
+
+const THUMB_TYPES = ['thumbnail_change', 'ab_rotation'];
+
+/**
+ * The muted line under the evidence: what number of change this is, whether it looks like
+ * an A/B test, and how long after publish it happened. No effect or delta numbers — we
+ * tested those and per-change deltas were noise.
+ */
+export function cardMeta(card: FeedCard): string | null {
+  const kind = cardKind(card);
+  const bits: string[] = [];
+  const titleV = Math.max(0, ...payloadNums(card, ['title_change'], 'version'));
+  const thumbV = Math.max(0, ...payloadNums(card, THUMB_TYPES, 'version'));
+  const rotations = card.thumbSwaps.filter((s) => s.rotation).length;
+
+  if (kind === 'combo') {
+    const pkg = ordinal(Math.max(titleV, thumbV) || null);
+    if (pkg) bits.push(`${pkg} package`);
+  } else if (kind === 'title') {
+    const o = ordinal(titleV || null);
+    if (o) bits.push(`${o} title`);
+  } else if (kind === 'thumb') {
+    if (rotations > 0) bits.push('A/B test', `${rotations} rotation${rotations === 1 ? '' : 's'}`);
+    else {
+      const o = ordinal(thumbV || null);
+      if (o) bits.push(`${o} thumbnail`);
+    }
+  }
+  if (kind !== 'thumb' && rotations > 0) bits.push(`${rotations} rotation${rotations === 1 ? '' : 's'}`);
+
+  const hours = card.events
+    .map((e) => num((e.payload || {}).hours_since_publish))
+    .filter((v): v is number => v !== null);
+  const when = hours.length ? sincePublish(Math.max(...hours)) : null;
+  if (when) bits.push(when);
+  return bits.length ? bits.join(' · ') : null;
 }

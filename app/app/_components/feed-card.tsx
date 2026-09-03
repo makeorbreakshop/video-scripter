@@ -1,52 +1,143 @@
 'use client';
 import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
-import { etTimestamp, formatScore, relativeTime } from '@/lib/app/feed-format';
+import { cardKind, cardMeta, cardVerb, etTimestamp, formatScore, relativeTime } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
 
 /**
- * One video, one day. The card is the video (thumbnail, title, channel, when); everything
- * that happened to it that day stacks underneath as short lines, so a burst of thumbnail
- * tests reads as one story instead of six rows.
+ * One video, one day, as a social post: a byline that says in words what the channel did,
+ * then the evidence for it. A title change shows the old title struck through next to the
+ * new one; a thumbnail test shows before and after side by side. Only the upload gets the
+ * big hero treatment, so an edit can no longer read as a new video.
  */
+
+function Arrow() {
+  return (
+    <svg className="cs-fcard-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden focusable="false">
+      <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function FeedCard({ card, avatarUrl, now }: { card: Card; avatarUrl?: string | null; now?: Date }) {
+  const kind = cardKind(card);
   const swaps = card.thumbSwaps;
-  const rotations = swaps.filter((s) => s.rotation).length;
   const cdn = card.video_id ? `https://i.ytimg.com/vi/${card.video_id}/hqdefault.jpg` : null;
-  const hero = (swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url) || cdn;
-  const body = (
+  const latest = (swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url) || cdn;
+  const title = card.titleChange?.to || card.title;
+  const meta = cardMeta(card);
+
+  // Before/after pair for a swap day: the previous version when we have two, otherwise the
+  // `before_url` the change event carried.
+  const swapEvent = card.events.find((e) => e.type === 'thumbnail_change' || e.type === 'ab_rotation');
+  const beforeUrl = swaps.length > 1
+    ? swaps[swaps.length - 2].url
+    : ((swapEvent?.payload?.before_url as string | undefined) || card.thumbnail_url || cdn);
+  const beforeVersion = swaps.length > 1 ? swaps[swaps.length - 2].version : null;
+  const afterVersion = swaps.length ? swaps[swaps.length - 1].version : null;
+  const olderSwaps = swaps.length > 2 ? swaps.slice(0, -2) : [];
+
+  const scoreChip = card.score !== null
+    ? <span className="cs-score cs-fcard-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>
+    : null;
+
+  const beforeAfter = (
     <>
-      <div className="cs-fcard-media">
-        <Thumb src={hero} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
-        {card.score !== null && <span className="cs-score cs-fcard-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>}
+      <div className="cs-fcard-ba">
+        <figure className="cs-fcard-ba-item">
+          <Thumb src={beforeUrl} fallbackSrc={cdn} alt="thumbnail before the change" style={{ width: '100%', height: '100%' }} />
+          <figcaption>{beforeVersion ? `v${beforeVersion}` : 'before'}</figcaption>
+        </figure>
+        <Arrow />
+        <figure className="cs-fcard-ba-item">
+          <Thumb src={latest} fallbackSrc={cdn} alt="thumbnail after the change" style={{ width: '100%', height: '100%' }} />
+          <figcaption>{afterVersion ? `v${afterVersion} · now` : 'now'}</figcaption>
+        </figure>
       </div>
-      <div className="cs-fcard-body">
-        <div className="cs-byline">
-          <ChannelAvatar src={avatarUrl} name={card.channel_name} size={20} />
-          {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
-          <span aria-hidden>·</span>
-          <time className="cs-num" dateTime={card.at} title={`${relativeTime(card.at, now)} ago`}>{etTimestamp(card.at)}</time>
-        </div>
-        <p className="cs-title" data-size="large">{card.titleChange?.to || card.title}</p>
-        <ul className="cs-activity">
-          {card.uploadedAt && <li>Published</li>}
-          {swaps.length > 0 && (
-            <li>
-              <span>{swaps.length === 1 ? 'Thumbnail changed' : `${swaps.length} thumbnail versions`}{rotations ? ` · A/B test, ${rotations} rotation${rotations === 1 ? '' : 's'}` : ''}</span>
-              <span className="cs-versions">
-                {swaps.slice(-6).map((s, i) => (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img key={`${s.url}-${i}`} src={s.url} alt={`version ${s.version ?? ''}`} title={`v${s.version ?? '?'} · ${etTimestamp(s.at)}`} loading="lazy" referrerPolicy="no-referrer" />
-                ))}
-              </span>
-            </li>
-          )}
-          {card.titleChange && <li>Title changed{card.titleChange.from ? <> · was <em>“{card.titleChange.from}”</em></> : null}</li>}
-          {card.score !== null && <li>Beat its channel baseline · <span className="cs-num">{formatScore(card.score)}</span></li>}
-        </ul>
-      </div>
+      {olderSwaps.length > 0 && (
+        <span className="cs-versions cs-fcard-older">
+          {olderSwaps.slice(-6).map((s, i) => (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img key={`${s.url}-${i}`} src={s.url} alt={`version ${s.version ?? ''}`} title={`v${s.version ?? '?'} · ${etTimestamp(s.at)}`} loading="lazy" referrerPolicy="no-referrer" />
+          ))}
+        </span>
+      )}
     </>
   );
-  return card.href ? <Link className="cs-fcard" href={card.href}>{body}</Link> : <div className="cs-fcard">{body}</div>;
+
+  const titleChange = (
+    <div className="cs-fcard-titles">
+      {card.titleChange?.from && <p className="cs-fcard-oldtitle">{card.titleChange.from}</p>}
+      <p className="cs-title" data-size="large">{title}</p>
+    </div>
+  );
+
+  let evidence: React.ReactNode = null;
+  if (kind === 'upload') {
+    evidence = (
+      <div className="cs-fcard-upload">
+        <div className="cs-fcard-media">
+          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+          {scoreChip}
+        </div>
+        <div className="cs-fcard-body">
+          <p className="cs-title" data-size="large">{title}</p>
+          <p className="cs-fcard-sub">Published {etTimestamp(card.uploadedAt || card.at)}</p>
+        </div>
+      </div>
+    );
+  } else if (kind === 'title') {
+    evidence = (
+      <div className="cs-fcard-upload">
+        <div className="cs-fcard-media" data-size="ident">
+          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+          {scoreChip}
+        </div>
+        <div className="cs-fcard-body">{titleChange}</div>
+      </div>
+    );
+  } else if (kind === 'thumb') {
+    evidence = (
+      <div className="cs-fcard-evidence">
+        {beforeAfter}
+        <p className="cs-title" data-size="small">{title}</p>
+      </div>
+    );
+  } else if (kind === 'combo') {
+    evidence = (
+      <div className="cs-fcard-evidence">
+        {beforeAfter}
+        {titleChange}
+      </div>
+    );
+  } else {
+    evidence = (
+      <div className="cs-fcard-upload">
+        <div className="cs-fcard-media" data-size="outlier">
+          <Thumb src={latest} fallbackSrc={cdn} alt="" style={{ width: '100%', height: '100%' }} />
+        </div>
+        <div className="cs-fcard-body">
+          <p className="cs-title" data-size="large">{title}</p>
+        </div>
+        <span className="cs-score cs-fcard-bigscore" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>
+      </div>
+    );
+  }
+
+  const body = (
+    <>
+      <div className="cs-byline cs-fcard-head">
+        <ChannelAvatar src={avatarUrl} name={card.channel_name} size={20} />
+        {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
+        <span className="cs-fcard-verb">{cardVerb(card)}</span>
+        <time className="cs-num cs-fcard-time" dateTime={card.at} title={`${relativeTime(card.at, now)} ago`}>{etTimestamp(card.at)}</time>
+      </div>
+      {evidence}
+      {meta && <p className="cs-fcard-meta">{meta}</p>}
+    </>
+  );
+  return card.href
+    ? <Link className="cs-fcard" data-kind={kind} href={card.href}>{body}</Link>
+    : <div className="cs-fcard" data-kind={kind}>{body}</div>;
 }
