@@ -174,7 +174,7 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Complete the versioned score backfill and verify direct-Postgres operation.
 - [x] Establish the v1 OpenAI/Qdrant control, local thumbnail pilot, cost ledger, sync, and Qdrant-down fallback.
 - [x] Re-audit v1/v2 evidence and quarantine invalid truth/prototype artifacts.
-- [ ] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
+- [x] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
 - [ ] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
 - [ ] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2.
 - [ ] Run lexical, dense, and RRF candidate generation; write immutable run artifacts.
