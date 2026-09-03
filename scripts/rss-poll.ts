@@ -95,11 +95,15 @@ async function handleEntry(channelId: string, e: ReturnType<typeof parseRssEntri
   );
 
   // 1. Unknown video: hand it to the touch queue. Never insert straight into videos.
+  // mode 'websub' is what makes the drainer import it as a real upload (tier 0). The source_url
+  // is deliberately NOT the `websub:UC...` marker: that marker is the drainer's WebSub wake-up
+  // signal, and re-waking a channel we polled a second ago would put it in a poll-every-tick
+  // loop for as long as its ingest backlog lasts.
   if (!v.length) {
     const ins = await pool.query(
       `insert into touch_queue (kind, ref, source_url, mode)
        values ('video', $1, $2, 'websub') on conflict (kind, ref) do nothing`,
-      [e.video_id, `websub:${channelId}`]
+      [e.video_id, `feed:/rss/${channelId}`]
     ).catch(() => ({ rowCount: 0 }));
     if (ins.rowCount) { newVideos++; log(`NEW VIDEO queued ${e.video_id} (${channelId})`); }
     return;
