@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 
 export const THUMBNAIL_MODEL = 'tencent/WeMM-Embedding-4B';
+export const THUMBNAIL_MODEL_REVISION = 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819';
 export const THUMBNAIL_DIMS = 512;
 export const THUMBNAIL_COLLECTION = 'thumbnails_wemm4b_test_v1';
 export const THUMBNAIL_VECTOR_NAMES = ['visual', 'visual_title'] as const;
@@ -168,9 +169,84 @@ export interface ThumbnailPayloadOptions {
   perceptualHash: string;
   contentSha256: string;
   model?: string;
+  modelRevision?: string;
   dimensions?: number;
   embeddedAt?: string;
   linkedVideoIds?: string[];
+}
+
+export interface ThumbnailEmbeddingFailure {
+  videoId: string;
+  reason: string;
+}
+
+export interface ThumbnailEmbeddingRow {
+  candidate: ThumbnailCandidate;
+  linkedVideoIds: string[];
+  perceptualHash: string;
+  contentSha256: string;
+  visual: number[];
+  visualTitle: number[];
+}
+
+export interface ThumbnailEmbeddingOutput {
+  model: string;
+  modelRevision: string;
+  dimensions: number;
+  device: string;
+  downloads: number;
+  failures: ThumbnailEmbeddingFailure[];
+  rows: ThumbnailEmbeddingRow[];
+}
+
+function assertVector(value: unknown, name: string, dimensions: number): asserts value is number[] {
+  if (!Array.isArray(value) || value.length !== dimensions || value.some((item) => !Number.isFinite(item))) {
+    throw new Error(`${name} must contain ${dimensions} finite numbers`);
+  }
+  const norm = Math.sqrt(value.reduce((sum, item) => sum + item * item, 0));
+  if (Math.abs(norm - 1) > 0.02) throw new Error(`${name} must be L2 normalized`);
+}
+
+export function validateThumbnailEmbeddingOutput(
+  value: unknown,
+  expectedDimensions = THUMBNAIL_DIMS,
+): ThumbnailEmbeddingOutput {
+  if (!value || typeof value !== 'object') throw new Error('Thumbnail worker output must be an object');
+  const output = value as Partial<ThumbnailEmbeddingOutput>;
+  if (typeof output.model !== 'string' || !output.model) throw new Error('Thumbnail worker model is missing');
+  if (typeof output.modelRevision !== 'string' || !/^[0-9a-f]{40}$/i.test(output.modelRevision)) {
+    throw new Error('Thumbnail worker model revision is missing or invalid');
+  }
+  if (output.dimensions !== expectedDimensions) {
+    throw new Error(`Thumbnail worker dimensions must equal ${expectedDimensions}`);
+  }
+  if (typeof output.device !== 'string' || !output.device) throw new Error('Thumbnail worker device is missing');
+  if (!Number.isInteger(output.downloads) || (output.downloads ?? -1) < 0) {
+    throw new Error('Thumbnail worker downloads must be a non-negative integer');
+  }
+  if (!Array.isArray(output.failures) || !Array.isArray(output.rows)) {
+    throw new Error('Thumbnail worker rows and failures must be arrays');
+  }
+
+  const hashes = new Set<string>();
+  for (const [index, row] of output.rows.entries()) {
+    if (!row || typeof row !== 'object') throw new Error(`rows[${index}] must be an object`);
+    if (!row.candidate?.videoId) throw new Error(`rows[${index}].candidate is missing`);
+    if (!Array.isArray(row.linkedVideoIds) || !row.linkedVideoIds.length) {
+      throw new Error(`rows[${index}].linkedVideoIds is missing`);
+    }
+    if (!/^[0-9a-f]{16}$/i.test(row.perceptualHash)) {
+      throw new Error(`rows[${index}].perceptualHash is invalid`);
+    }
+    if (hashes.has(row.perceptualHash)) throw new Error(`Duplicate perceptual hash ${row.perceptualHash}`);
+    hashes.add(row.perceptualHash);
+    if (!/^[0-9a-f]{64}$/i.test(row.contentSha256)) {
+      throw new Error(`rows[${index}].contentSha256 is invalid`);
+    }
+    assertVector(row.visual, `rows[${index}].visual`, expectedDimensions);
+    assertVector(row.visualTitle, `rows[${index}].visualTitle`, expectedDimensions);
+  }
+  return output as ThumbnailEmbeddingOutput;
 }
 
 export function mapThumbnailPayload(candidate: ThumbnailCandidate, options: ThumbnailPayloadOptions) {
@@ -194,6 +270,7 @@ export function mapThumbnailPayload(candidate: ThumbnailCandidate, options: Thum
     perceptual_hash: options.perceptualHash,
     content_sha256: options.contentSha256,
     embedding_model: options.model ?? THUMBNAIL_MODEL,
+    embedding_model_revision: options.modelRevision ?? THUMBNAIL_MODEL_REVISION,
     embedding_dimensions: options.dimensions ?? THUMBNAIL_DIMS,
     embedded_at: options.embeddedAt ?? new Date().toISOString(),
   };

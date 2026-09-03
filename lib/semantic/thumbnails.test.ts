@@ -3,6 +3,7 @@ import {
   selectThumbnailCohort,
   thumbnailCollectionConfig,
   thumbnailQueryBody,
+  validateThumbnailEmbeddingOutput,
   type ThumbnailCandidate,
 } from './thumbnails';
 
@@ -66,6 +67,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
       perceptualHash: 'abcdef0123456789',
       contentSha256: 'a'.repeat(64),
       model: 'tencent/WeMM-Embedding-4B',
+      modelRevision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
       dimensions: 512,
       embeddedAt: '2026-09-02T12:00:00.000Z',
       linkedVideoIds: ['v1', 'v2'],
@@ -79,6 +81,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
       perceptual_hash: 'abcdef0123456789',
       content_sha256: 'a'.repeat(64),
       embedding_model: 'tencent/WeMM-Embedding-4B',
+      embedding_model_revision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
       embedding_dimensions: 512,
       embedded_at: '2026-09-02T12:00:00.000Z',
     });
@@ -103,5 +106,33 @@ describe('thumbnail payload and Qdrant contracts', () => {
       with_vector: false,
     });
   });
-});
 
+  test('accepts finite, normalized worker output and rejects malformed vectors', () => {
+    const valid = {
+      model: 'tencent/WeMM-Embedding-4B',
+      modelRevision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
+      dimensions: 2,
+      device: 'mps',
+      downloads: 2,
+      failures: [{ videoId: 'v2', reason: 'HTTP 404' }],
+      rows: [{
+        candidate: candidate({ videoId: 'v1' }),
+        linkedVideoIds: ['v1'],
+        perceptualHash: '0123456789abcdef',
+        contentSha256: 'a'.repeat(64),
+        visual: [0.6, 0.8],
+        visualTitle: [0, 1],
+      }],
+    };
+
+    expect(validateThumbnailEmbeddingOutput(valid, 2)).toMatchObject({ device: 'mps', downloads: 2 });
+    expect(() => validateThumbnailEmbeddingOutput({
+      ...valid,
+      rows: [{ ...valid.rows[0], visual: [0.6, Number.NaN] }],
+    }, 2)).toThrow('visual');
+    expect(() => validateThumbnailEmbeddingOutput({
+      ...valid,
+      rows: [{ ...valid.rows[0], visualTitle: [1] }],
+    }, 2)).toThrow('visualTitle');
+  });
+});
