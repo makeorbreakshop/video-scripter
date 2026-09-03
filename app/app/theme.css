@@ -406,3 +406,197 @@
   color: var(--cs-muted); text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
 }
 .cs-linkbtn:hover { color: var(--cs-ink); }
+
+/* ------------------------------------------------------------ test rows --- */
+/* One packaging TEST as a row: who, what changed, and when we detected it. Shared by the
+   feed and a channel's Changes tab (components/app/test-row.tsx). The words are built in
+   lib/app/test-row.ts — no share-of-time, no rotation counts, no "live now". */
+
+.tr-list { display: flex; flex-direction: column; }
+.tr-row { border-bottom: 1px solid var(--cs-line); }
+.tr-row:last-child { border-bottom: 0; }
+.tr-row[data-open="true"] { border-bottom-color: transparent; }
+
+/* Height is the information, so height is what moves — measured number to measured number,
+   because `auto` does not interpolate. The component sets both ends. */
+.tr-anim { overflow: hidden; transition: height 260ms cubic-bezier(0.2, 0, 0, 1); }
+
+.tr-collapsed { display: flex; align-items: center; gap: 28px; padding: 22px 0; }
+.tr-left { flex: none; width: 236px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tr-by { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.tr-chan { color: var(--cs-muted); font-size: 12px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-title { font-size: 15px; font-weight: 600; line-height: 20px; color: var(--cs-ink);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tr-title:hover { color: var(--cs-accent); }
+.tr-title:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 3px; border-radius: 3px; }
+.tr-meta { color: var(--cs-muted); font-size: 12px; line-height: 16px; }
+
+.tr-open { display: block; flex: none; padding: 0; border: 0; background: none; border-radius: 8px; }
+button.tr-open { cursor: pointer; }
+button.tr-open:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 4px; }
+
+.tr-shot { position: relative; display: block; border-radius: 6px; overflow: hidden;
+  background: var(--cs-surface-2); }
+.tr-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tr-shot-sm { width: 112px; aspect-ratio: 16 / 9; flex: none; }
+.tr-shot-lg { width: 200px; aspect-ratio: 16 / 9; flex: none; }
+.tr-shot-full { width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; }
+/* The image a test beat, or the one a swap replaced: present, plainly secondary. */
+.tr-dim { opacity: 0.45; }
+.tr-shot-win, .tr-shot-new { box-shadow: 0 0 0 2px var(--cs-accent); }
+.tr-winner { position: absolute; left: 6px; top: 6px; padding: 3px 7px; border-radius: 4px;
+  background: var(--cs-accent); color: var(--cs-accent-on); font-size: 10px; letter-spacing: 0.08em; line-height: 12px; }
+
+.tr-settled, .tr-swap { display: flex; align-items: center; gap: 12px; }
+.tr-arrow { color: var(--cs-muted); flex: none; }
+
+/* The deck: the variants stacked, offset and slightly turned, so a test reads as one object
+   with more inside it. Hover slides the cards apart — transform only, nothing reflows. */
+.tr-deck { position: relative; display: block; width: 236px; height: 124px; }
+.tr-deck-card { position: absolute; width: 200px; aspect-ratio: 16 / 9;
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); }
+.tr-deck-0 { left: 0; top: 10px; z-index: 3; box-shadow: 0 0 0 2px var(--cs-surface), 0 2px 6px rgba(16, 19, 26, 0.18); }
+.tr-deck-1 { left: 24px; top: 0; z-index: 2; transform: rotate(3deg); transform-origin: 0 0;
+  box-shadow: 0 1px 2px rgba(16, 19, 26, 0.12); }
+.tr-deck-2 { left: 40px; top: -6px; z-index: 1; transform: rotate(5deg); transform-origin: 0 0; opacity: 0.9; }
+button.tr-open:hover .tr-deck-0, button.tr-open:focus-visible .tr-deck-0 { transform: translateX(-4px); }
+button.tr-open:hover .tr-deck-1, button.tr-open:focus-visible .tr-deck-1 { transform: rotate(3deg) translateX(8px); }
+button.tr-open:hover .tr-deck-2, button.tr-open:focus-visible .tr-deck-2 { transform: rotate(5deg) translateX(16px); }
+
+.tr-status { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tr-status-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tr-status-inline { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tr-pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px;
+  border-radius: 12px; background: var(--cs-surface-2); color: var(--cs-ink);
+  font-family: var(--font-mono), monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
+.tr-pill[data-status="testing"] { background: var(--cs-accent-soft); color: var(--cs-accent); }
+.tr-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.tr-headline { font-size: 14px; font-weight: 600; color: var(--cs-ink); }
+.tr-stamp { color: var(--cs-muted); font-size: 12px; line-height: 16px; }
+
+.tr-expanded { margin: 8px 0; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px;
+  background: var(--cs-surface); border: 1px solid var(--cs-line); border-radius: 10px; box-shadow: var(--cs-shadow); }
+.tr-head { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: 100%; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.tr-head:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 4px; border-radius: 6px; }
+.tr-head-left { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+.tr-variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.tr-variant { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tr-variant-title { font-size: 15px; font-weight: 600; line-height: 20px; color: var(--cs-ink); }
+.tr-badge { position: absolute; left: 8px; top: 8px; width: 24px; height: 24px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cs-ink); color: var(--cs-ground); font-size: 12px; font-weight: 700; }
+/* The image the video is wearing now. Not "live now": during a test every variant is live. */
+.tr-badge[data-current="true"] { background: var(--cs-accent); color: var(--cs-accent-on); }
+.tr-row[data-open="true"] .tr-variant {
+  animation: tr-rise 220ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation-delay: calc(var(--tr-i, 0) * 40ms);
+}
+@keyframes tr-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 900px) {
+  .tr-collapsed { flex-wrap: wrap; gap: 16px; }
+  .tr-left { width: 100%; }
+  .tr-deck { width: 216px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-anim { transition: none; }
+  .tr-deck-card { transition: none; }
+  .tr-row[data-open="true"] .tr-variant { animation: none; }
+}
+
+/* -------------------------------------------------------- control row ----- */
+/* One right-aligned line of controls, on the same line as the page heading: a segmented
+   control, then any dropdowns. Replaces the two stacked rows of chips. */
+
+.cs-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.cs-seg { display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  border: 1px solid var(--cs-line); border-radius: 9px; background: var(--cs-surface); }
+.cs-seg > * { padding: 4px 10px; border-radius: 6px; border: 0; background: none;
+  color: var(--cs-muted); font-size: 13px; font-weight: 550; line-height: 18px; cursor: pointer; white-space: nowrap; }
+.cs-seg > *:hover { color: var(--cs-ink); }
+.cs-seg > [data-on="true"] { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-seg > *:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
+.cs-select { appearance: none; padding: 6px 26px 6px 10px; border-radius: 8px; font-size: 13px;
+  border: 1px solid var(--cs-line); background: var(--cs-surface); color: var(--cs-ink); cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--cs-muted) 50%), linear-gradient(135deg, var(--cs-muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 13px, calc(100% - 9px) 13px; background-size: 5px 5px; background-repeat: no-repeat; }
+.cs-select:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
+.cs-showing { font-size: 12px; color: var(--cs-muted); white-space: nowrap; }
+
+/* Tabs: Videos / Changes on a channel, sharing the line with the control row. */
+.cs-tabs { display: flex; align-items: center; gap: 20px; }
+.cs-tab { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 0 10px;
+  color: var(--cs-muted); font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; }
+.cs-tab:hover { color: var(--cs-ink); }
+.cs-tab[data-on="true"] { color: var(--cs-ink); border-bottom-color: var(--cs-ink); }
+.cs-tab .cs-num { font-size: 12px; color: var(--cs-muted); font-weight: 500; }
+.cs-tabbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--cs-line); margin-bottom: 6px; }
+
+/* "N EDITS" on a grid tile: this video's packaging has moved since it was published. */
+.vg-edits { position: absolute; left: 8px; top: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 7px; border-radius: 5px; background: var(--cs-ink); color: var(--cs-ground);
+  font-family: var(--font-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+.vg-edits::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--cs-accent); }
+
+/* ------------------------------------------------- packaging timeline ----- */
+/* The video page's history, left to right: what it was published as, the test, the changes,
+   and what it is wearing now. Equal-width clips — the ruler says roughly when, and nothing
+   here claims how long anything ran. */
+
+.pt-wrap { position: relative; }
+.pt-ruler { display: flex; justify-content: space-between; padding: 0 4px 6px;
+  border-bottom: 1px solid var(--cs-line); color: var(--cs-muted); font-size: 10px; line-height: 12px; }
+.pt-track { display: flex; align-items: stretch; overflow-x: auto; scroll-snap-type: x proximity;
+  scrollbar-width: thin; }
+.pt-clip { flex: none; width: 200px; padding: 12px; display: flex; flex-direction: column; gap: 6px;
+  border-right: 1px solid var(--cs-line); scroll-snap-align: start;
+  transition: width 260ms cubic-bezier(0.2, 0, 0, 1); }
+.pt-clip:last-child { border-right: 0; }
+.pt-shot { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 5px; overflow: hidden;
+  background: var(--cs-surface-2); position: relative; }
+.pt-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pt-title { font-size: 12px; font-weight: 600; line-height: 16px; color: var(--cs-ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pt-label { font-family: var(--font-mono), monospace; font-size: 10px; line-height: 12px; color: var(--cs-muted); }
+.pt-label[data-now="true"] { color: var(--cs-accent); font-weight: 600; }
+.pt-clip[data-kind="now"] .pt-shot { box-shadow: 0 0 0 2px var(--cs-accent); }
+.pt-clip[data-kind="title"] .pt-shot { opacity: 0.7; }
+.pt-clip[data-hot="true"] { background: var(--cs-surface-2); }
+
+.pt-clip[data-kind="test"] { width: 260px; background: var(--cs-surface); text-align: left; }
+button.pt-clip { border-top: 0; border-bottom: 0; border-left: 0; font: inherit; color: inherit; cursor: pointer; }
+button.pt-clip:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -2px; }
+.pt-deck { position: relative; width: 176px; height: 106px; }
+.pt-deck .pt-shot { position: absolute; width: 176px; height: 99px; aspect-ratio: auto;
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); }
+.pt-deck .pt-shot:first-child { left: 24px; top: 0; opacity: 0.9; transform: rotate(3deg); transform-origin: 0 0; }
+.pt-deck .pt-shot:last-child { left: 0; top: 7px; box-shadow: 0 0 0 2px var(--cs-surface), 0 2px 6px rgba(16, 19, 26, 0.18); }
+button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) translateX(8px); }
+.pt-testline { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.pt-chev { color: var(--cs-muted); flex: none; transition: transform 180ms ease-out; }
+.pt-clip[data-open="true"] .pt-chev { transform: rotate(180deg); }
+.pt-clip[data-open="true"] { width: 440px; }
+.pt-vars { display: flex; gap: 12px; }
+.pt-var { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; margin: 0;
+  animation: tr-rise 220ms cubic-bezier(0.2, 0, 0, 1) both; animation-delay: calc(var(--tr-i, 0) * 40ms); }
+.pt-badge { position: absolute; left: 6px; top: 6px; width: 20px; height: 20px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cs-ink); color: var(--cs-ground); font-size: 11px; font-weight: 700; }
+.pt-badge[data-current="true"] { background: var(--cs-accent); color: var(--cs-accent-on); }
+
+.pt-fade { position: absolute; right: 0; top: 0; bottom: 0; width: 120px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--cs-ground)); }
+.pt-next { position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cs-line); background: var(--cs-surface); box-shadow: var(--cs-shadow); cursor: pointer; }
+.pt-next:hover { border-color: var(--cs-line-strong); }
+.pt-next:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-clip, .pt-deck .pt-shot, .pt-chev { transition: none; }
+  .pt-var { animation: none; }
+  .pt-track { scroll-behavior: auto; }
+}

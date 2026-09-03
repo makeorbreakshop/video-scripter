@@ -24,28 +24,15 @@ export function ScoreChip({ score, size = 'sm' }: { score: number | null; size?:
   );
 }
 
-// The before/after swatches are decoration for a row the reader may never scroll to, and the
-// R2 worker cannot resize, so they keep the full-size URL but are always lazy and declare the
-// 136x76 box they are actually painted into rather than hqdefault's 480x270.
-const SWATCH = { width: 136, height: 76 };
-
-function Packaging({ v }: { v: GridVideo }) {
+/**
+ * "3 EDITS" on the tile: this video's packaging has moved since it was published. A count, not
+ * a story — the story is the Changes tab and the video page's timeline. It replaced a row of
+ * before/after swatches under every tile, which drew the same thumbnails twice at 34px.
+ */
+function EditsBadge({ v }: { v: GridVideo }) {
   if (!v.swaps) return null;
-  const label = `${v.swaps} swap${v.swaps === 1 ? '' : 's'}${v.last_change ? ` · ${ago(v.last_change)}` : ''}`;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-      <span className="vg-meta" style={{ color: 'var(--cs-warn)', flex: 'none' }}>{label}</span>
-      {v.prevThumbUrl ? (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3, flex: 'none' }} title="previous → current thumbnail">
-          <Thumb src={v.prevThumbUrl} alt="previous thumbnail" loading="lazy" {...SWATCH} style={{ width: 34, opacity: 0.65 }} />
-          <span aria-hidden className="cs-arrow" style={{ fontSize: 10 }}>→</span>
-          <Thumb src={v.thumbUrl} alt="current thumbnail" loading="lazy" {...SWATCH} style={{ width: 34 }} />
-        </span>
-      ) : v.title_prev ? (
-        <span className="vg-meta vg-clip" title={`${v.title_prev} → ${v.title_latest}`}>title rewritten</span>
-      ) : null}
-    </div>
-  );
+  const label = `${v.swaps} EDIT${v.swaps === 1 ? '' : 'S'}`;
+  return <span className="vg-edits" title={v.last_change ? `last change ${ago(v.last_change)}` : undefined}>{label}</span>;
 }
 
 /** `priority` is for the tiles above the fold — the first row or two, never the whole page. */
@@ -53,14 +40,17 @@ export function VideoTile({ v, priority = false }: { v: GridVideo; priority?: bo
   return (
     <li className="vg-tile">
       <Link href={`/app/videos/${v.id}`}>
-        <Thumb
-          src={v.thumbUrl}
-          fallbackSrc={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`}
-          alt=""
-          loading={priority ? 'eager' : 'lazy'}
-          fetchPriority={priority ? 'high' : undefined}
-          style={{ width: '100%' }}
-        />
+        <span style={{ position: 'relative', display: 'block' }}>
+          <Thumb
+            src={v.thumbUrl}
+            fallbackSrc={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`}
+            alt=""
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
+            style={{ width: '100%' }}
+          />
+          <EditsBadge v={v} />
+        </span>
         <h3 className="vg-title">{v.title}</h3>
       </Link>
       <div className="vg-foot">
@@ -68,9 +58,6 @@ export function VideoTile({ v, priority = false }: { v: GridVideo; priority?: bo
           {etDate(v.published_at)} · <span className="cs-num">{compact(v.view_count)}</span> views
         </span>
         <ScoreChip score={v.score} />
-      </div>
-      <div style={{ marginTop: 6 }}>
-        <Packaging v={v} />
       </div>
     </li>
   );

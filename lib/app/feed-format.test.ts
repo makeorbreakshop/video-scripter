@@ -1,6 +1,8 @@
 import {
   relativeTime, sincePublish, formatScore, isHighScore, compactNumber,
-  feedRowView, toggleType, feedQuery, parseFeedParams, HIGH_SCORE_AT, FILTER_CHIPS, groupCards, type FeedEventLike } from './feed-format';
+  feedRowView, toggleType, feedQuery, parseFeedParams, HIGH_SCORE_AT, FILTER_CHIPS, groupCards,
+  FEED_SEGMENTS, parseSegment, segmentTypes, type FeedEventLike } from './feed-format';
+import { FEED_TYPES } from '../feed/event-types';
 
 const NOW = new Date('2026-09-02T12:00:00.000Z');
 const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString();
@@ -280,5 +282,25 @@ describe('card kind, verb and meta', () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(ordinal)).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd']);
     expect(ordinal(0)).toBeNull();
     expect(ordinal(null)).toBeNull();
+  });
+});
+
+describe('feed segments', () => {
+  it('falls back to all for anything it does not know', () => {
+    expect(parseSegment('nope')).toBe('all');
+    expect(parseSegment(undefined)).toBe('all');
+    expect(parseSegment(['tests'])).toBe('tests');
+  });
+  it('maps each segment to the event types behind it', () => {
+    expect(segmentTypes('all')).toBeNull();
+    expect(segmentTypes('tests')).toEqual(['ab_rotation']);
+    expect(segmentTypes('changes')).toEqual(['thumbnail_change', 'title_change']);
+    expect(segmentTypes('uploads')).toEqual(['upload']);
+    expect(segmentTypes('outliers')).toEqual(['outlier']);
+  });
+  it('only offers types the feed actually stores', () => {
+    for (const s of FEED_SEGMENTS) {
+      for (const t of segmentTypes(s.key) || []) expect(FEED_TYPES).toContain(t);
+    }
   });
 });

@@ -14,6 +14,8 @@ export interface FeedEventLike {
   video_title: string | null;
   thumbnail_url: string | null;
   published_at: string | null;
+  /** Current view count, joined at read time — the TestRow's left column shows it. */
+  view_count?: number | null;
   payload: Record<string, any>;
   /**
    * The video's CURRENT video_scores.score, joined at read time (lib/feed/query.ts).
@@ -461,4 +463,39 @@ export function cardScoreNote(card: FeedCard): string | null {
   if (priors !== null && priors >= MIN_PRIORS) return gapReasonWords('priors-unusable', card.channel_name);
   if ((f.nBaseline ?? 0) < MIN_PRIORS) return gapReasonWords('no-channel-baseline', card.channel_name);
   return gapReasonWords('other', card.channel_name);
+}
+
+// --------------------------------------------------------------- segments ---
+/**
+ * The feed's one control: a segmented switch, not two rows of chips. Each segment is a
+ * question a creator actually asks ("what did they test?"), so it maps to a set of event
+ * types rather than exposing the type names.
+ */
+export type FeedSegment = 'all' | 'uploads' | 'tests' | 'changes' | 'outliers';
+
+export const FEED_SEGMENTS: Array<{ key: FeedSegment; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'uploads', label: 'Uploads' },
+  { key: 'tests', label: 'Tests' },
+  { key: 'changes', label: 'Changes' },
+  { key: 'outliers', label: 'Outliers' },
+];
+
+const SEGMENT_TYPES: Record<FeedSegment, string[] | null> = {
+  all: null,
+  uploads: ['upload'],
+  // A rotation is what the watcher writes when an image comes back: that is the test.
+  tests: ['ab_rotation'],
+  changes: ['thumbnail_change', 'title_change'],
+  outliers: ['outlier'],
+};
+
+export function parseSegment(value: string | string[] | null | undefined): FeedSegment {
+  const v = Array.isArray(value) ? value[0] : value;
+  return FEED_SEGMENTS.some((s) => s.key === v) ? (v as FeedSegment) : 'all';
+}
+
+/** Event types for a segment; null means every type. */
+export function segmentTypes(segment: FeedSegment): string[] | null {
+  return SEGMENT_TYPES[segment] ?? null;
 }

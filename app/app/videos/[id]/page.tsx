@@ -13,7 +13,7 @@ import { cachedVideoPage } from '@/lib/app/cached';
 import { VideoBodySkeleton } from '@/components/app/skeletons';
 import { n, etDateTime, ageLabel } from '@/lib/admin/format';
 import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
-import { PackagingStrip } from '@/components/app/packaging-strip';
+import { PackagingTimeline } from '@/components/app/packaging-timeline';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
 
 export const dynamic = 'force-dynamic';
@@ -41,15 +41,11 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
         />
       </section>
 
-      {v.thumbs.length > 1 && (
+      {v.timeline.length > 1 && (
         <section className="cs-section">
-          <h2>Thumbnails it has worn</h2>
-          <PackagingStrip
-            videoId={v.id}
-            publishedAt={v.publishedAt}
-            thumbs={v.thumbs}
-            experiments={v.experiments}
-          />
+          {/* The heading stands alone: no subtitle, no explainer. */}
+          <h2>Packaging history</h2>
+          <PackagingTimeline clips={v.timeline} ticks={v.timelineTicks} />
         </section>
       )}
 

@@ -19,6 +19,8 @@ export interface FeedRow {
   video_title: string | null;
   thumbnail_url: string | null;
   published_at: string | null;
+  /** The video's current view count — the TestRow's "2.3M views" line. */
+  view_count: number | null;
   payload: Record<string, unknown>;
   /**
    * The video's current video_scores.score. An outlier event's payload freezes the score at
@@ -114,7 +116,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
   // One extra row tells us whether another page exists without a second count query.
   const rows = await q<FeedRow>(
     `select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
-            v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at,
+            v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_count,
             sc.score::float8 as score, sc.n_baseline as score_n_baseline, sc.confidence as score_confidence
        from (
          select x.*
