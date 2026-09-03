@@ -1,10 +1,14 @@
 // Serves archived thumbnail versions from R2 at the edge and accepts uploads from the watcher.
 //   GET  /{videoId}_v{n}.jpg           -> image (cached at the edge for a year; objects are immutable)
+//   Avatar keys are NOT immutable (a channel changes its avatar and we overwrite the same key),
+//   so they get a one-day edge cache instead of a year.
 //   PUT  /{videoId}_v{n}.jpg           -> store (requires header x-upload-secret: UPLOAD_SECRET)
 //   HEAD /{videoId}_v{n}.jpg           -> 200/404 without body
+//   avatars/{channelId}.jpg           -> same three verbs; a copy of a channel's YouTube avatar,
+//                                        served only when the hotlinked original fails
 export interface Env { THUMBS: R2Bucket; UPLOAD_SECRET: string }
 
-const KEY = /^[A-Za-z0-9_-]{6,20}_v\d{1,4}\.jpg$/;
+const KEY = /^(?:[A-Za-z0-9_-]{6,20}_v\d{1,4}|avatars\/UC[A-Za-z0-9_-]{22})\.jpg$/;
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -31,7 +35,7 @@ export default {
     if (!obj) return new Response('not found', { status: 404, headers: { 'cache-control': 'public, max-age=60' } });
     const headers = new Headers({
       'content-type': 'image/jpeg',
-      'cache-control': 'public, max-age=31536000, immutable',
+      'cache-control': key.startsWith('avatars/') ? 'public, max-age=86400' : 'public, max-age=31536000, immutable',
       'access-control-allow-origin': '*',
       etag: obj.httpEtag,
     });

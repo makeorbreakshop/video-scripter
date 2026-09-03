@@ -10,6 +10,7 @@
 //   npx tsx scripts/channel-meta-backfill.ts --dry
 //   npx tsx scripts/channel-meta-backfill.ts                 # every missing channel
 //   npx tsx scripts/channel-meta-backfill.ts --tracked-only  # only user_channels
+//   npx tsx scripts/channel-meta-backfill.ts --blank-avatars # channels the search directory shows without an avatar
 //   npx tsx scripts/channel-meta-backfill.ts --max-age 30    # also refresh stale rows
 //   npx tsx scripts/channel-meta-backfill.ts --limit 500 --sleep 400
 import dotenv from 'dotenv';
@@ -50,7 +51,14 @@ function int(v: any): number | null {
 }
 
 /** Which channels still need meta. */
-async function targets(trackedOnly: boolean, maxAgeDays: number | null, limit: number): Promise<string[]> {
+async function targets(trackedOnly: boolean, maxAgeDays: number | null, limit: number, blankAvatars = false): Promise<string[]> {
+  if (blankAvatars) {
+    // Whatever the directory cannot show an avatar for, regardless of which registry it came from.
+    const rows = await q<{ channel_id: string }>(
+      `select channel_id from channel_directory where avatar_url is null and channel_id like 'UC%' order by video_count desc limit $1`, [limit]
+    );
+    return rows.map((r) => r.channel_id);
+  }
   const sources = trackedOnly
     ? `select channel_id from user_channels`
     : `select channel_id from user_channels
@@ -129,7 +137,7 @@ async function main() {
   const limit = num('limit', 5000);
   const sleepMs = num('sleep', DEFAULT_SLEEP_MS);
 
-  const ids = await targets(trackedOnly, maxAge, limit);
+  const ids = await targets(trackedOnly, maxAge, limit, flag('blank-avatars'));
   const calls = Math.ceil(ids.length / BATCH);
   console.log(`${ids.length} channel${ids.length === 1 ? '' : 's'} need meta -> ${calls} call${calls === 1 ? '' : 's'} (${calls} unit${calls === 1 ? '' : 's'})`);
   if (dry || !ids.length) {

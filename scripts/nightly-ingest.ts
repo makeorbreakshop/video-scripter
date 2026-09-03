@@ -220,6 +220,8 @@ await pool.query(`insert into quota_ledger (category, units) values ('ingest', $
 try {
   const { execFileSync } = await import('node:child_process');
   execFileSync('npx', ['tsx', 'scripts/owned-analytics-sync.ts', '--days', '45'], { stdio: 'inherit', timeout: 10 * 60_000 });
+  // Avatar copies for the hotlink fallback (downloads, no API).
+  execFileSync('npx', ['tsx', 'scripts/avatar-cache-sync.ts'], { stdio: 'inherit', timeout: 10 * 60_000 });
 } catch (e: any) { console.error('owned-analytics-sync:', e.message); }
 await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
 
