@@ -332,3 +332,33 @@
 .cs-versions { display: inline-flex; gap: 4px; }
 .cs-versions img { width: 56px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; border: 1px solid var(--cs-line); }
 @media (max-width: 720px) { .cs-fcard { flex-direction: column; } .cs-fcard-media { width: 100%; } }
+
+/* ---------------------------------------------------------- connections ---- */
+/* A connected account: avatar, name, state. Same anatomy as .cs-pick so the app has
+   one channel-row shape, but it is a row of record rather than a button. */
+.cs-conn { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--cs-line); }
+.cs-conn:last-of-type { border-bottom: 0; }
+.cs-conn-body { flex: 1; min-width: 0; }
+.cs-conn-name { display: flex; align-items: center; gap: 8px; font-weight: 550; font-size: 13px; }
+.cs-conn-meta { color: var(--cs-muted); font-size: 12px; margin-top: 2px; }
+.cs-meter { display: block; height: 3px; max-width: 240px; margin-top: 6px; border-radius: 2px; background: var(--cs-line); }
+.cs-meter > span { display: block; height: 100%; border-radius: 2px; background: var(--cs-accent); }
+
+/* Native <dialog>: focus trap, Esc and backdrop come for free. */
+.cs-dialog {
+  border: 1px solid var(--cs-line); border-radius: var(--cs-radius); background: var(--cs-surface);
+  color: var(--cs-ink); padding: 0; max-width: 460px; width: calc(100vw - 32px); box-shadow: var(--cs-shadow);
+}
+.cs-dialog::backdrop { background: rgba(16, 19, 26, 0.45); }
+.cs-dialog-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 0; }
+.cs-dialog-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
+.cs-dialog-body { padding: 12px 16px 16px; }
+.cs-deflist { margin: 0; font-size: 13px; }
+.cs-deflist dt { color: var(--cs-muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 12px; }
+.cs-deflist dt:first-child { margin-top: 0; }
+.cs-deflist dd { margin: 3px 0 0; }
+.cs-linkbtn {
+  border: 0; background: none; padding: 0; font: inherit; font-size: 12px;
+  color: var(--cs-muted); text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.cs-linkbtn:hover { color: var(--cs-ink); }

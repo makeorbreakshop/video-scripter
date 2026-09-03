@@ -123,12 +123,15 @@ export async function removeConnection(userId: string, channelId: string): Promi
 }
 
 /** What the settings page shows: never the token. */
-export type ConnectionView = Omit<Connection, 'refresh_token'>;
+export type ConnectionView = Omit<Connection, 'refresh_token'> & { avatar_url: string | null };
 
 export async function listConnections(userId: string): Promise<ConnectionView[]> {
   return q<ConnectionView>(
-    `select user_id, channel_id, channel_title, scopes, connected_at, last_synced_at, last_error
-       from youtube_connections where user_id = $1 order by connected_at`,
+    `select yc.user_id, yc.channel_id, coalesce(yc.channel_title, cm.title) as channel_title,
+            cm.avatar_url, yc.scopes, yc.connected_at, yc.last_synced_at, yc.last_error
+       from youtube_connections yc
+       left join channel_meta cm on cm.channel_id = yc.channel_id
+      where yc.user_id = $1 order by yc.connected_at`,
     [userId]
   );
 }

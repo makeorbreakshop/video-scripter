@@ -25,23 +25,20 @@ export function progressPercent(j: StatusLike): number | null {
 export function backfillStatus(j: StatusLike | null, lastSyncedAt?: string | null, now: Date = new Date()): StatusView {
   if (!j) {
     return lastSyncedAt
-      ? { label: 'Synced', detail: `Last updated ${shortDate(lastSyncedAt, now)}.`, tone: 'good', percent: null }
-      : { label: 'Connected', detail: 'History import has not started yet.', tone: 'muted', percent: null };
+      ? { label: 'Synced', detail: `Last run ${shortDate(lastSyncedAt, now)}`, tone: 'good', percent: null }
+      : { label: 'Connected', detail: 'Import not started', tone: 'muted', percent: null };
   }
   const pct = progressPercent(j);
-  if (j.status === 'queued') {
-    return { label: 'Waiting to import', detail: 'Your history is in the queue. This usually starts within a few minutes.', tone: 'accent', percent: pct };
-  }
+  if (j.status === 'queued') return { label: 'Queued', detail: 'Waiting to import history', tone: 'accent', percent: pct };
   if (j.status === 'running') {
-    const through = j.cursor_date ? ` Imported through ${shortDate(j.cursor_date, now)}.` : '';
-    return { label: 'Importing history', detail: `${pct ?? 0}% done.${through} You can leave this page.`, tone: 'accent', percent: pct };
+    return { label: 'Importing', detail: j.cursor_date ? `${pct ?? 0}% · through ${shortDate(j.cursor_date, now)}` : `${pct ?? 0}%`, tone: 'accent', percent: pct };
   }
   if (j.status === 'failed') {
-    return { label: 'Import stopped', detail: `${j.error || 'Something went wrong.'} We will try again tonight.`, tone: 'bad', percent: pct };
+    return { label: 'Stopped', detail: `${j.error || 'Import failed'} · retries tonight`, tone: 'bad', percent: pct };
   }
   return {
-    label: 'History imported',
-    detail: lastSyncedAt ? `Updated daily. Last run ${shortDate(lastSyncedAt, now)}.` : 'Updated daily from now on.',
+    label: 'Synced',
+    detail: lastSyncedAt ? `Updated daily · last run ${shortDate(lastSyncedAt, now)}` : 'Updated daily',
     tone: 'good', percent: 100,
   };
 }

@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { planLabel, usageView } from '@/lib/app/channel-view';
+import { ChannelAvatar } from '@/components/app/avatar';
 import { relativeTime } from '@/lib/app/feed-format';
 import type { PlanLimits, PlanName } from '@/lib/app/plans';
 
@@ -20,7 +21,7 @@ export interface SettingsClientProps {
   usage: { tracked: number; watched_closely: number };
   keys: KeyRow[];
   /** Channels the user has connected with Google OAuth (owner analytics). */
-  youtube?: { channel_id: string; channel_title: string | null; connected_at: string; last_synced_at: string | null; last_error: string | null;
+  youtube?: { channel_id: string; channel_title: string | null; avatar_url?: string | null; connected_at: string; last_synced_at: string | null; last_error: string | null;
               sync?: { label: string; detail: string; tone: 'good'|'bad'|'accent'|'muted'; percent: number | null } }[];
   youtubeStatus?: string | null;
   readOnly?: boolean;
@@ -28,6 +29,7 @@ export interface SettingsClientProps {
 
 export default function SettingsClient({ profile, plan, limits, usage, keys, readOnly, youtube = [], youtubeStatus }: SettingsClientProps) {
   const [rows, setRows] = useState(keys);
+  const ytInfo = useRef<HTMLDialogElement>(null);
   const [label, setLabel] = useState('');
   const [plaintext, setPlaintext] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -107,56 +109,76 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
       </section>
 
       <section className="cs-section">
-        <h2>YouTube</h2>
-        <p className="cs-sub" style={{ marginBottom: 10 }}>
-          Connect a channel you own to read its private analytics: per-day views, average view duration and
-          subscribers gained. We do not request revenue or earnings data.
-        </p>
-        <p className="cs-sub" style={{ marginBottom: 10 }}>
-          Your numbers stay private to your account. We also use them in aggregate, combined with other
-          connected channels and never identifying yours, to calibrate the performance benchmarks everyone
-          sees. Disconnecting deletes the analytics we stored for that channel.
-        </p>
-        <p className="cs-sub" style={{ marginBottom: 10 }}>
-          After you connect we import your full history, which takes a few minutes to a few hours depending
-          on the size of your channel. After that it updates once a day. YouTube publishes analytics about
-          two days behind, so the most recent day you will see is a couple of days old.
-        </p>
-        {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginBottom: 10 }}>Connected. We have started importing your history.</div>}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+          <h2>YouTube</h2>
+          <button type="button" className="cs-linkbtn" onClick={() => ytInfo.current?.showModal()}>
+            What we collect
+          </button>
+        </div>
+        <p className="cs-sub" style={{ marginBottom: 4 }}>Private analytics from channels you own.</p>
+
+        {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginTop: 10 }}>Connected. Importing your history now.</div>}
         {youtubeStatus && youtubeStatus !== 'connected' && (
-          <div className="cs-note" data-tone="bad" style={{ marginBottom: 10 }}>
-            {youtubeStatus === 'denied' ? 'You cancelled the Google prompt.' : youtubeStatus === 'nochannel' ? 'That Google account does not own a YouTube channel.' : 'Could not finish connecting. Try again.'}
+          <div className="cs-note" data-tone="bad" style={{ marginTop: 10 }}>
+            {youtubeStatus === 'denied' ? 'You cancelled the Google prompt.'
+              : youtubeStatus === 'nochannel' ? 'That Google account does not own a channel.'
+              : 'Could not finish connecting. Try again.'}
           </div>
         )}
+
         {youtube.map((c) => (
-          <div key={c.channel_id} className="cs-kv" style={{ alignItems: 'flex-start' }}>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div key={c.channel_id} className="cs-conn">
+            <ChannelAvatar src={c.avatar_url} name={c.channel_title} size={36} channelId={c.channel_id} eager />
+            <div className="cs-conn-body">
+              <div className="cs-conn-name">
                 {c.channel_title || c.channel_id}
                 {c.sync && <span className="cs-badge" data-tone={c.sync.tone}>{c.sync.label}</span>}
-              </span>
-              <span className="cs-pick-meta" style={{ display: 'block', marginTop: 3 }}>
-                {c.sync ? c.sync.detail : c.last_synced_at ? `Last updated ${new Date(c.last_synced_at).toLocaleDateString()}.` : 'Not synced yet.'}
-              </span>
+              </div>
+              <div className="cs-conn-meta">{c.sync ? c.sync.detail : 'Not synced yet'}</div>
               {c.sync?.percent != null && c.sync.percent < 100 && (
-                <span aria-hidden style={{ display: 'block', height: 3, borderRadius: 2, background: 'var(--cs-line)', marginTop: 6, maxWidth: 260 }}>
-                  <span style={{ display: 'block', height: '100%', width: `${c.sync.percent}%`, borderRadius: 2, background: 'var(--cs-accent)' }} />
-                </span>
+                <span className="cs-meter" aria-hidden><span style={{ width: `${c.sync.percent}%` }} /></span>
               )}
-            </span>
+            </div>
             {!readOnly && (
               <button type="button" className="cs-btn" data-variant="danger"
                       onClick={async () => {
-                  if (!confirm(`Disconnect ${c.channel_title || c.channel_id}? This also deletes the analytics we stored for it.`)) return;
-                  await fetch('/api/app/youtube/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ channel_id: c.channel_id }) });
-                  location.reload();
-                }}>
-                Disconnect and delete data
+                        if (!confirm(`Disconnect ${c.channel_title || c.channel_id}? This deletes the analytics we stored for it.`)) return;
+                        await fetch('/api/app/youtube/disconnect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ channel_id: c.channel_id }) });
+                        location.reload();
+                      }}>
+                Disconnect
               </button>
             )}
           </div>
         ))}
-        {!readOnly && <a className="cs-btn" data-variant="primary" href="/api/app/youtube/connect" style={{ marginTop: 10, display: 'inline-block' }}>{youtube.length ? 'Connect another channel' : 'Connect YouTube'}</a>}
+
+        {!readOnly && (
+          <a className="cs-btn" data-variant={youtube.length ? undefined : 'primary'} href="/api/app/youtube/connect"
+             style={{ marginTop: 12, display: 'inline-block' }}>
+            {youtube.length ? 'Connect another channel' : 'Connect a channel'}
+          </a>
+        )}
+
+        <dialog ref={ytInfo} className="cs-dialog" onClick={(e) => { if (e.target === ytInfo.current) ytInfo.current?.close(); }}>
+          <div className="cs-dialog-head">
+            <h3>Connecting a channel</h3>
+            <button type="button" className="cs-linkbtn" onClick={() => ytInfo.current?.close()}>Close</button>
+          </div>
+          <div className="cs-dialog-body">
+            <dl className="cs-deflist">
+              <dt>We read</dt>
+              <dd>Per-day views, average view duration, and subscribers gained, for each of your videos.</dd>
+              <dt>We do not read</dt>
+              <dd>Revenue, earnings, or anything about your viewers as individuals.</dd>
+              <dt>Who sees it</dt>
+              <dd>Only you. Aggregates across connected channels are used to calibrate benchmarks, and never identify a channel.</dd>
+              <dt>History</dt>
+              <dd>Imported once when you connect, then updated daily. YouTube publishes about two days behind.</dd>
+              <dt>Leaving</dt>
+              <dd>Disconnecting deletes the analytics we stored for that channel.</dd>
+            </dl>
+          </div>
+        </dialog>
       </section>
 
       <section className="cs-section">
