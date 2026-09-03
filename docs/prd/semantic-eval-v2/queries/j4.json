@@ -1,0 +1,364 @@
+{
+  "queries": [
+    {
+      "id": "j4-topic-001",
+      "query": "laser engraver",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-002",
+      "query": "air fryer recipes",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-003",
+      "query": "woodworking jigs",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-004",
+      "query": "beginner 3d printing",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-005",
+      "query": "cheap tool comparison",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-006",
+      "query": "home coffee setup",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-007",
+      "query": "gardening mistakes",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-008",
+      "query": "small shop storage",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-009",
+      "query": "budget camera gear",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-010",
+      "query": "AI workflow tools",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-011",
+      "query": "meal prep",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-012",
+      "query": "electric vehicle repair",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-013",
+      "query": "home theater setup",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-014",
+      "query": "beginner welding",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-015",
+      "query": "CNC router project",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-016",
+      "query": "sewing for beginners",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-017",
+      "query": "epoxy table",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-018",
+      "query": "camping gear test",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-019",
+      "query": "fitness transformation",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-020",
+      "query": "creator business",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-021",
+      "query": "thumbnail design",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-022",
+      "query": "smart home automation",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-023",
+      "query": "permaculture",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-024",
+      "query": "barbecue brisket",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-025",
+      "query": "motorcycle maintenance",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-026",
+      "query": "travel packing",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-027",
+      "query": "chess improvement",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-028",
+      "query": "gaming setup",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-029",
+      "query": "phone camera comparison",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-030",
+      "query": "DIY bathroom remodel",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-031",
+      "query": "budget kitchen upgrade",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-032",
+      "query": "solar power",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-033",
+      "query": "drone review",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-034",
+      "query": "personal finance",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-035",
+      "query": "real estate investing",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-036",
+      "query": "parenting routines",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-037",
+      "query": "baking sourdough",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-038",
+      "query": "music production",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-039",
+      "query": "Disney trip planning",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    },
+    {
+      "id": "j4-topic-040",
+      "query": "movie review",
+      "lexical_coverage": {
+        "trusted_outliers": 0,
+        "channels": 0
+      },
+      "source": "hand_authored_topic_string_coverage_count_only"
+    }
+  ]
+}

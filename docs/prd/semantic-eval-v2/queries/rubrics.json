@@ -1,0 +1,43 @@
+{
+  "J1": {
+    "target": "single canonical channel id",
+    "metric": "MRR",
+    "judgment": "deterministic exact match"
+  },
+  "J2": {
+    "scale": {
+      "0": "not useful",
+      "1": "weak/background overlap",
+      "2": "useful adjacent overlap",
+      "3": "direct competitor/strong overlap"
+    }
+  },
+  "J3": {
+    "dimensions": [
+      "topic",
+      "packaging",
+      "format"
+    ],
+    "scale": {
+      "0": "none",
+      "1": "weak",
+      "2": "partial",
+      "3": "strong"
+    }
+  },
+  "J4": {
+    "scale": {
+      "0": "off-topic or not an outlier",
+      "1": "on-topic trusted outlier"
+    }
+  },
+  "J5": {
+    "labels": [
+      "creative_adaptation",
+      "direct_application",
+      "background",
+      "none"
+    ],
+    "hit": "creative_adaptation only"
+  }
+}

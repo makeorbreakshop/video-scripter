@@ -1,0 +1,604 @@
+{
+  "queries": [
+    {
+      "id": "j1-name-001",
+      "query": "Marques Brownlee",
+      "target_id": "UCBJycsmduvYEL83R_U4JriQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-001",
+      "query": "@mkbhd",
+      "target_id": "UCBJycsmduvYEL83R_U4JriQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-002",
+      "query": "Parkrose Permaculture",
+      "target_id": "UCUpbDOT-OVNBlaQpb9pbd2w",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-002",
+      "query": "@parkrosepermaculture",
+      "target_id": "UCUpbDOT-OVNBlaQpb9pbd2w",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-003",
+      "query": "Thais Gibson - Personal Development School",
+      "target_id": "UCHQ4lSaKRap5HyrpitrTOhQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-003",
+      "query": "@thepersonaldevelopmentschool",
+      "target_id": "UCHQ4lSaKRap5HyrpitrTOhQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-004",
+      "query": "TraderNick",
+      "target_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-004",
+      "query": "@tradernick",
+      "target_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-005",
+      "query": "Thomas DeLauer",
+      "target_id": "UC70SrI3VkT1MXALRtf0pcHg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-005",
+      "query": "@thomasdelauerofficial",
+      "target_id": "UC70SrI3VkT1MXALRtf0pcHg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-006",
+      "query": "The Verge",
+      "target_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-006",
+      "query": "@theverge",
+      "target_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-007",
+      "query": "Stumpy Nubs (James Hamilton)",
+      "target_id": "UCstwpLSByklww1YojZN-KiQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-007",
+      "query": "@stumpynubs",
+      "target_id": "UCstwpLSByklww1YojZN-KiQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-008",
+      "query": "24 News",
+      "target_id": "UCup3etEdjyF1L3sRbU-rKLw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-008",
+      "query": "@24onlive",
+      "target_id": "UCup3etEdjyF1L3sRbU-rKLw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-009",
+      "query": "AllEars.net",
+      "target_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-009",
+      "query": "@allearsnet",
+      "target_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-010",
+      "query": "Alex Hormozi",
+      "target_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-010",
+      "query": "@alexhormozi",
+      "target_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-011",
+      "query": "Julian Goldie SEO",
+      "target_id": "UCGpsgNbzdF7BECCVbB1COHw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-011",
+      "query": "@juliangoldieseo",
+      "target_id": "UCGpsgNbzdF7BECCVbB1COHw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-012",
+      "query": "GothamChess",
+      "target_id": "UCQHX6ViZmPsWiYSFAyS0a3Q",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-012",
+      "query": "@gothamchess",
+      "target_id": "UCQHX6ViZmPsWiYSFAyS0a3Q",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-013",
+      "query": "I Will Teach You To Be Rich",
+      "target_id": "UC7ZddA__ewP3AtDefjl_tWg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-013",
+      "query": "@ramitsethi",
+      "target_id": "UC7ZddA__ewP3AtDefjl_tWg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-014",
+      "query": "How To Support",
+      "target_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-014",
+      "query": "@howtosupportofficial",
+      "target_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-015",
+      "query": "CBC News Saskatchewan",
+      "target_id": "UCvdbpUpDg1cA4f_Jfg_-_TQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-015",
+      "query": "@cbcsask",
+      "target_id": "UCvdbpUpDg1cA4f_Jfg_-_TQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-016",
+      "query": "Lewis Howes",
+      "target_id": "UCKsP3v2JeT2hWI_HzkxWiMA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-016",
+      "query": "@lewishowes",
+      "target_id": "UCKsP3v2JeT2hWI_HzkxWiMA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-017",
+      "query": "BioTech Whisperer",
+      "target_id": "UC_kzFBb2-8zENiawppXcUig",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-017",
+      "query": "@biotechwhisperer",
+      "target_id": "UC_kzFBb2-8zENiawppXcUig",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-018",
+      "query": "Tolivelugu",
+      "target_id": "UCWi4BD5GG_egaDEUFPhQJPg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-018",
+      "query": "@tolivelugutv",
+      "target_id": "UCWi4BD5GG_egaDEUFPhQJPg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-019",
+      "query": "DFBGuide",
+      "target_id": "UCnpWedLQdHpZqhgTLdB9Yyg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-019",
+      "query": "@dfbguide",
+      "target_id": "UCnpWedLQdHpZqhgTLdB9Yyg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-020",
+      "query": "Australian Parliament House Streaming Portal",
+      "target_id": "UCzx6ti0rql6Q2Dc2zSAPmuA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-020",
+      "query": "@ausparliamentlive",
+      "target_id": "UCzx6ti0rql6Q2Dc2zSAPmuA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-021",
+      "query": "ItzVexo",
+      "target_id": "UCQzi4Q8AvCx2yV19ay0zRgQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-021",
+      "query": "@itzvexo",
+      "target_id": "UCQzi4Q8AvCx2yV19ay0zRgQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-022",
+      "query": "Bloomberg Tech",
+      "target_id": "UCrM7B7SL_g1edFOnmj-SDKg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-022",
+      "query": "@bloombergtechnology",
+      "target_id": "UCrM7B7SL_g1edFOnmj-SDKg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-023",
+      "query": "Ptcgradio",
+      "target_id": "UCnwlWgbcxwpsnB7LtOL1kPg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-023",
+      "query": "@ptcgradio",
+      "target_id": "UCnwlWgbcxwpsnB7LtOL1kPg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-024",
+      "query": "Wrexham AFC",
+      "target_id": "UCS7BAYpqOSaYy-pZp6oO4PA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-024",
+      "query": "@wxmafcofficial",
+      "target_id": "UCS7BAYpqOSaYy-pZp6oO4PA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-025",
+      "query": "Microsoft Reactor",
+      "target_id": "UCkm6luGCS3hD25jcEhvRMIA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-025",
+      "query": "@microsoftreactor",
+      "target_id": "UCkm6luGCS3hD25jcEhvRMIA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-026",
+      "query": "CITIUS MAG",
+      "target_id": "UCjyDlyHPHLhcIT8ov53d5qg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-026",
+      "query": "@citiusmag",
+      "target_id": "UCjyDlyHPHLhcIT8ov53d5qg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-027",
+      "query": "Snyder Reports",
+      "target_id": "UCGSS2mBuqH5MGDLP0Q5C7Kw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-027",
+      "query": "@snyderreports",
+      "target_id": "UCGSS2mBuqH5MGDLP0Q5C7Kw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-028",
+      "query": "BTC Sessions",
+      "target_id": "UChzLnWVsl3puKQwc5PoO6Zg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-028",
+      "query": "@btcsessions",
+      "target_id": "UChzLnWVsl3puKQwc5PoO6Zg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-029",
+      "query": "oShven",
+      "target_id": "UCsnGeV10a723yPypUtOJPiQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-029",
+      "query": "@oshven",
+      "target_id": "UCsnGeV10a723yPypUtOJPiQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-030",
+      "query": "Nebraska Huskers",
+      "target_id": "UCMqWeJDl7yjblwPKVNo4XfA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-030",
+      "query": "@huskers",
+      "target_id": "UCMqWeJDl7yjblwPKVNo4XfA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-031",
+      "query": "Democracy Now!",
+      "target_id": "UCzuqE7-t13O4NIDYJfakrhw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-031",
+      "query": "@democracynow",
+      "target_id": "UCzuqE7-t13O4NIDYJfakrhw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-032",
+      "query": "Tech With Tim",
+      "target_id": "UC4JX40jDee_tINbkjycV4Sg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-032",
+      "query": "@techwithtim",
+      "target_id": "UC4JX40jDee_tINbkjycV4Sg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-033",
+      "query": "Idaho News 6",
+      "target_id": "UCV5KgNhOM87RJB7Fbv8C2CQ",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-033",
+      "query": "@kivitvnews",
+      "target_id": "UCV5KgNhOM87RJB7Fbv8C2CQ",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-034",
+      "query": "KPRC 2 Click2Houston",
+      "target_id": "UCKQECjul8nw1KW_JzfBTP1A",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-034",
+      "query": "@kprc2click2houston",
+      "target_id": "UCKQECjul8nw1KW_JzfBTP1A",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-035",
+      "query": "ABC News",
+      "target_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-035",
+      "query": "@abcnews",
+      "target_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-036",
+      "query": "DPCcars",
+      "target_id": "UCGWNHkr2WZcRbxqoet-nyeg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-036",
+      "query": "@dpccars",
+      "target_id": "UCGWNHkr2WZcRbxqoet-nyeg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-037",
+      "query": "Fireship",
+      "target_id": "UCsBjURrPoezykLs9EqgamOA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-037",
+      "query": "@fireship",
+      "target_id": "UCsBjURrPoezykLs9EqgamOA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-038",
+      "query": "SDPB",
+      "target_id": "UCUpJ4ls00kQY2vKx7PsCtdw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-038",
+      "query": "@sdpbdotorg",
+      "target_id": "UCUpJ4ls00kQY2vKx7PsCtdw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-039",
+      "query": "CNBC International Live",
+      "target_id": "UCF8HUTbUwPKh2Q-KpGOCVGw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-039",
+      "query": "@cnbcinternationallive",
+      "target_id": "UCF8HUTbUwPKh2Q-KpGOCVGw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-040",
+      "query": "Think Tutorial",
+      "target_id": "UC_Gz-8R2G8jBs20ro9AL9hA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-040",
+      "query": "@think_tutorial",
+      "target_id": "UC_Gz-8R2G8jBs20ro9AL9hA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-041",
+      "query": "SumanTV Health",
+      "target_id": "UC-5Yj4HIiruwkzFuLflxL_w",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-041",
+      "query": "@https://www.youtube.com/channel/uc-5yj4hiiruwkzfulflxl_w",
+      "target_id": "UC-5Yj4HIiruwkzFuLflxL_w",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-042",
+      "query": "Denver7",
+      "target_id": "UC-2MJlKSq9_pYk5-bdvMhnw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-042",
+      "query": "@denver7",
+      "target_id": "UC-2MJlKSq9_pYk5-bdvMhnw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-043",
+      "query": "KSL News Utah",
+      "target_id": "UCUKyRkZuMdNv87E8xbObN4g",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-043",
+      "query": "@kslnews",
+      "target_id": "UCUKyRkZuMdNv87E8xbObN4g",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-044",
+      "query": "DJ Pain 1",
+      "target_id": "UCJ1RVDuSiJncq6VQYiqpzLA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-044",
+      "query": "@djpain1",
+      "target_id": "UCJ1RVDuSiJncq6VQYiqpzLA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-045",
+      "query": "FOX 13 Seattle",
+      "target_id": "UC5bKZHg4PzURMOWcvanl6nA",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-045",
+      "query": "@fox13seattle",
+      "target_id": "UC5bKZHg4PzURMOWcvanl6nA",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-046",
+      "query": "Rabbi Pinchas Taylor",
+      "target_id": "UChISHLovxnSLP0w81NEQj5w",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-046",
+      "query": "@pinchastaylor",
+      "target_id": "UChISHLovxnSLP0w81NEQj5w",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-047",
+      "query": "Dave Asprey",
+      "target_id": "UC1KoulyXR8gBGyxv7r6pWQg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-047",
+      "query": "@daveaspreybpr",
+      "target_id": "UC1KoulyXR8gBGyxv7r6pWQg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-048",
+      "query": "WCCO - CBS Minnesota",
+      "target_id": "UCry2gCVdntv6r661sKUiKXw",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-048",
+      "query": "@wcco",
+      "target_id": "UCry2gCVdntv6r661sKUiKXw",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-049",
+      "query": "First Coast News",
+      "target_id": "UCJCdiZtw9zStiR3xgnp7qlg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-049",
+      "query": "@firstcoastnews",
+      "target_id": "UCJCdiZtw9zStiR3xgnp7qlg",
+      "source": "channel_directory_handle"
+    },
+    {
+      "id": "j1-name-050",
+      "query": "PAHO TV",
+      "target_id": "UCpNnv_kL4Jk8YG_VflnZpmg",
+      "source": "channel_directory_video_count"
+    },
+    {
+      "id": "j1-handle-050",
+      "query": "@pahotv",
+      "target_id": "UCpNnv_kL4Jk8YG_VflnZpmg",
+      "source": "channel_directory_handle"
+    }
+  ]
+}

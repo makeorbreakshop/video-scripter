@@ -1,0 +1,2200 @@
+{
+  "version": 1,
+  "jobs": {
+    "J1": {
+      "queries": [
+        {
+          "id": "j1-name-001",
+          "query": "Marques Brownlee",
+          "target_id": "UCBJycsmduvYEL83R_U4JriQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-001",
+          "query": "@mkbhd",
+          "target_id": "UCBJycsmduvYEL83R_U4JriQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-002",
+          "query": "Parkrose Permaculture",
+          "target_id": "UCUpbDOT-OVNBlaQpb9pbd2w",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-002",
+          "query": "@parkrosepermaculture",
+          "target_id": "UCUpbDOT-OVNBlaQpb9pbd2w",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-003",
+          "query": "Thais Gibson - Personal Development School",
+          "target_id": "UCHQ4lSaKRap5HyrpitrTOhQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-003",
+          "query": "@thepersonaldevelopmentschool",
+          "target_id": "UCHQ4lSaKRap5HyrpitrTOhQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-004",
+          "query": "TraderNick",
+          "target_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-004",
+          "query": "@tradernick",
+          "target_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-005",
+          "query": "Thomas DeLauer",
+          "target_id": "UC70SrI3VkT1MXALRtf0pcHg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-005",
+          "query": "@thomasdelauerofficial",
+          "target_id": "UC70SrI3VkT1MXALRtf0pcHg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-006",
+          "query": "The Verge",
+          "target_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-006",
+          "query": "@theverge",
+          "target_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-007",
+          "query": "Stumpy Nubs (James Hamilton)",
+          "target_id": "UCstwpLSByklww1YojZN-KiQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-007",
+          "query": "@stumpynubs",
+          "target_id": "UCstwpLSByklww1YojZN-KiQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-008",
+          "query": "24 News",
+          "target_id": "UCup3etEdjyF1L3sRbU-rKLw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-008",
+          "query": "@24onlive",
+          "target_id": "UCup3etEdjyF1L3sRbU-rKLw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-009",
+          "query": "AllEars.net",
+          "target_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-009",
+          "query": "@allearsnet",
+          "target_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-010",
+          "query": "Alex Hormozi",
+          "target_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-010",
+          "query": "@alexhormozi",
+          "target_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-011",
+          "query": "Julian Goldie SEO",
+          "target_id": "UCGpsgNbzdF7BECCVbB1COHw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-011",
+          "query": "@juliangoldieseo",
+          "target_id": "UCGpsgNbzdF7BECCVbB1COHw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-012",
+          "query": "GothamChess",
+          "target_id": "UCQHX6ViZmPsWiYSFAyS0a3Q",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-012",
+          "query": "@gothamchess",
+          "target_id": "UCQHX6ViZmPsWiYSFAyS0a3Q",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-013",
+          "query": "I Will Teach You To Be Rich",
+          "target_id": "UC7ZddA__ewP3AtDefjl_tWg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-013",
+          "query": "@ramitsethi",
+          "target_id": "UC7ZddA__ewP3AtDefjl_tWg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-014",
+          "query": "How To Support",
+          "target_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-014",
+          "query": "@howtosupportofficial",
+          "target_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-015",
+          "query": "CBC News Saskatchewan",
+          "target_id": "UCvdbpUpDg1cA4f_Jfg_-_TQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-015",
+          "query": "@cbcsask",
+          "target_id": "UCvdbpUpDg1cA4f_Jfg_-_TQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-016",
+          "query": "Lewis Howes",
+          "target_id": "UCKsP3v2JeT2hWI_HzkxWiMA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-016",
+          "query": "@lewishowes",
+          "target_id": "UCKsP3v2JeT2hWI_HzkxWiMA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-017",
+          "query": "BioTech Whisperer",
+          "target_id": "UC_kzFBb2-8zENiawppXcUig",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-017",
+          "query": "@biotechwhisperer",
+          "target_id": "UC_kzFBb2-8zENiawppXcUig",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-018",
+          "query": "Tolivelugu",
+          "target_id": "UCWi4BD5GG_egaDEUFPhQJPg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-018",
+          "query": "@tolivelugutv",
+          "target_id": "UCWi4BD5GG_egaDEUFPhQJPg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-019",
+          "query": "DFBGuide",
+          "target_id": "UCnpWedLQdHpZqhgTLdB9Yyg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-019",
+          "query": "@dfbguide",
+          "target_id": "UCnpWedLQdHpZqhgTLdB9Yyg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-020",
+          "query": "Australian Parliament House Streaming Portal",
+          "target_id": "UCzx6ti0rql6Q2Dc2zSAPmuA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-020",
+          "query": "@ausparliamentlive",
+          "target_id": "UCzx6ti0rql6Q2Dc2zSAPmuA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-021",
+          "query": "ItzVexo",
+          "target_id": "UCQzi4Q8AvCx2yV19ay0zRgQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-021",
+          "query": "@itzvexo",
+          "target_id": "UCQzi4Q8AvCx2yV19ay0zRgQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-022",
+          "query": "Bloomberg Tech",
+          "target_id": "UCrM7B7SL_g1edFOnmj-SDKg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-022",
+          "query": "@bloombergtechnology",
+          "target_id": "UCrM7B7SL_g1edFOnmj-SDKg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-023",
+          "query": "Ptcgradio",
+          "target_id": "UCnwlWgbcxwpsnB7LtOL1kPg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-023",
+          "query": "@ptcgradio",
+          "target_id": "UCnwlWgbcxwpsnB7LtOL1kPg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-024",
+          "query": "Wrexham AFC",
+          "target_id": "UCS7BAYpqOSaYy-pZp6oO4PA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-024",
+          "query": "@wxmafcofficial",
+          "target_id": "UCS7BAYpqOSaYy-pZp6oO4PA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-025",
+          "query": "Microsoft Reactor",
+          "target_id": "UCkm6luGCS3hD25jcEhvRMIA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-025",
+          "query": "@microsoftreactor",
+          "target_id": "UCkm6luGCS3hD25jcEhvRMIA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-026",
+          "query": "CITIUS MAG",
+          "target_id": "UCjyDlyHPHLhcIT8ov53d5qg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-026",
+          "query": "@citiusmag",
+          "target_id": "UCjyDlyHPHLhcIT8ov53d5qg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-027",
+          "query": "Snyder Reports",
+          "target_id": "UCGSS2mBuqH5MGDLP0Q5C7Kw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-027",
+          "query": "@snyderreports",
+          "target_id": "UCGSS2mBuqH5MGDLP0Q5C7Kw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-028",
+          "query": "BTC Sessions",
+          "target_id": "UChzLnWVsl3puKQwc5PoO6Zg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-028",
+          "query": "@btcsessions",
+          "target_id": "UChzLnWVsl3puKQwc5PoO6Zg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-029",
+          "query": "oShven",
+          "target_id": "UCsnGeV10a723yPypUtOJPiQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-029",
+          "query": "@oshven",
+          "target_id": "UCsnGeV10a723yPypUtOJPiQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-030",
+          "query": "Nebraska Huskers",
+          "target_id": "UCMqWeJDl7yjblwPKVNo4XfA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-030",
+          "query": "@huskers",
+          "target_id": "UCMqWeJDl7yjblwPKVNo4XfA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-031",
+          "query": "Democracy Now!",
+          "target_id": "UCzuqE7-t13O4NIDYJfakrhw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-031",
+          "query": "@democracynow",
+          "target_id": "UCzuqE7-t13O4NIDYJfakrhw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-032",
+          "query": "Tech With Tim",
+          "target_id": "UC4JX40jDee_tINbkjycV4Sg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-032",
+          "query": "@techwithtim",
+          "target_id": "UC4JX40jDee_tINbkjycV4Sg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-033",
+          "query": "Idaho News 6",
+          "target_id": "UCV5KgNhOM87RJB7Fbv8C2CQ",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-033",
+          "query": "@kivitvnews",
+          "target_id": "UCV5KgNhOM87RJB7Fbv8C2CQ",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-034",
+          "query": "KPRC 2 Click2Houston",
+          "target_id": "UCKQECjul8nw1KW_JzfBTP1A",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-034",
+          "query": "@kprc2click2houston",
+          "target_id": "UCKQECjul8nw1KW_JzfBTP1A",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-035",
+          "query": "ABC News",
+          "target_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-035",
+          "query": "@abcnews",
+          "target_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-036",
+          "query": "DPCcars",
+          "target_id": "UCGWNHkr2WZcRbxqoet-nyeg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-036",
+          "query": "@dpccars",
+          "target_id": "UCGWNHkr2WZcRbxqoet-nyeg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-037",
+          "query": "Fireship",
+          "target_id": "UCsBjURrPoezykLs9EqgamOA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-037",
+          "query": "@fireship",
+          "target_id": "UCsBjURrPoezykLs9EqgamOA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-038",
+          "query": "SDPB",
+          "target_id": "UCUpJ4ls00kQY2vKx7PsCtdw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-038",
+          "query": "@sdpbdotorg",
+          "target_id": "UCUpJ4ls00kQY2vKx7PsCtdw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-039",
+          "query": "CNBC International Live",
+          "target_id": "UCF8HUTbUwPKh2Q-KpGOCVGw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-039",
+          "query": "@cnbcinternationallive",
+          "target_id": "UCF8HUTbUwPKh2Q-KpGOCVGw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-040",
+          "query": "Think Tutorial",
+          "target_id": "UC_Gz-8R2G8jBs20ro9AL9hA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-040",
+          "query": "@think_tutorial",
+          "target_id": "UC_Gz-8R2G8jBs20ro9AL9hA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-041",
+          "query": "SumanTV Health",
+          "target_id": "UC-5Yj4HIiruwkzFuLflxL_w",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-041",
+          "query": "@https://www.youtube.com/channel/uc-5yj4hiiruwkzfulflxl_w",
+          "target_id": "UC-5Yj4HIiruwkzFuLflxL_w",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-042",
+          "query": "Denver7",
+          "target_id": "UC-2MJlKSq9_pYk5-bdvMhnw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-042",
+          "query": "@denver7",
+          "target_id": "UC-2MJlKSq9_pYk5-bdvMhnw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-043",
+          "query": "KSL News Utah",
+          "target_id": "UCUKyRkZuMdNv87E8xbObN4g",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-043",
+          "query": "@kslnews",
+          "target_id": "UCUKyRkZuMdNv87E8xbObN4g",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-044",
+          "query": "DJ Pain 1",
+          "target_id": "UCJ1RVDuSiJncq6VQYiqpzLA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-044",
+          "query": "@djpain1",
+          "target_id": "UCJ1RVDuSiJncq6VQYiqpzLA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-045",
+          "query": "FOX 13 Seattle",
+          "target_id": "UC5bKZHg4PzURMOWcvanl6nA",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-045",
+          "query": "@fox13seattle",
+          "target_id": "UC5bKZHg4PzURMOWcvanl6nA",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-046",
+          "query": "Rabbi Pinchas Taylor",
+          "target_id": "UChISHLovxnSLP0w81NEQj5w",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-046",
+          "query": "@pinchastaylor",
+          "target_id": "UChISHLovxnSLP0w81NEQj5w",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-047",
+          "query": "Dave Asprey",
+          "target_id": "UC1KoulyXR8gBGyxv7r6pWQg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-047",
+          "query": "@daveaspreybpr",
+          "target_id": "UC1KoulyXR8gBGyxv7r6pWQg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-048",
+          "query": "WCCO - CBS Minnesota",
+          "target_id": "UCry2gCVdntv6r661sKUiKXw",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-048",
+          "query": "@wcco",
+          "target_id": "UCry2gCVdntv6r661sKUiKXw",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-049",
+          "query": "First Coast News",
+          "target_id": "UCJCdiZtw9zStiR3xgnp7qlg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-049",
+          "query": "@firstcoastnews",
+          "target_id": "UCJCdiZtw9zStiR3xgnp7qlg",
+          "source": "channel_directory_handle"
+        },
+        {
+          "id": "j1-name-050",
+          "query": "PAHO TV",
+          "target_id": "UCpNnv_kL4Jk8YG_VflnZpmg",
+          "source": "channel_directory_video_count"
+        },
+        {
+          "id": "j1-handle-050",
+          "query": "@pahotv",
+          "target_id": "UCpNnv_kL4Jk8YG_VflnZpmg",
+          "source": "channel_directory_handle"
+        }
+      ]
+    },
+    "J2": {
+      "queries": [
+        {
+          "id": "j2-seed-001",
+          "channel_id": "UCS-aqFUCWXl4nyAyW82RCKw",
+          "channel_name": "Osteoarthritis Action Alliance",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 8,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-002",
+          "channel_id": "UC-MyedGvj_EphEQhYQpLVeQ",
+          "channel_name": "Green Building Network",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-003",
+          "channel_id": "UCfhSB16X9MXhzSFe_H7XbHg",
+          "channel_name": "Bryan Jenks",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 9,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-004",
+          "channel_id": "UCXtyEu6azu8vCYN4CQ4BoeA",
+          "channel_name": "eMaint",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 10,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-005",
+          "channel_id": "UC_bOcLgDdfE1whPDIwx3M_g",
+          "channel_name": "Joe & Nic's Road Trip",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 55,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-006",
+          "channel_id": "UCLWWXPSNENcmCDUr7uhmtKg",
+          "channel_name": "MherMardoyan Career Coach",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 17,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-007",
+          "channel_id": "UCkxXSZpIg2P41q_EAHGTBLg",
+          "channel_name": "CNS",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 78,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-008",
+          "channel_id": "UCk_pvW0ARNwn1lZgRmQFIzw",
+          "channel_name": "Simon Says Home Assistant",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-009",
+          "channel_id": "UCoeOHLLAEdscfdPPiPOgEwA",
+          "channel_name": "Earthworks Landscaping",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 11,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-010",
+          "channel_id": "UCpOlOeQjj7EsVnDh3zuCgsA",
+          "channel_name": "Adafruit Industries",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 320,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-011",
+          "channel_id": "UCiqtvk_lmbWwGlQskk69hRA",
+          "channel_name": "The Paula Faris Show",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-012",
+          "channel_id": "UCSJDkIfw8SJ8P5bJxQiwqUg",
+          "channel_name": "AMZ One Step",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-013",
+          "channel_id": "UCr1yOAfXblt40YOfEsgvxDw",
+          "channel_name": "Critical Edge",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 7,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-014",
+          "channel_id": "UC7HtxPOje1ZqjGsxn_zbLbw",
+          "channel_name": "Inner Peace Look Inside",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 296,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-015",
+          "channel_id": "UC9lyUdwosxq_OxC1uggjUPA",
+          "channel_name": "Photo Genius",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 8,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-016",
+          "channel_id": "UCWN3xxRkmTPmbKwht9FuE5A",
+          "channel_name": "Siraj Raval",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-017",
+          "channel_id": "UC-Qq6XphOe3QEH4IhhdW4aA",
+          "channel_name": "Elevate Digital",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-018",
+          "channel_id": "UCmLtsFOepwwkui0OEztvjfg",
+          "channel_name": "LeeMerie3D",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-019",
+          "channel_id": "UCDG7_piIA5baWqIvtOQ-trA",
+          "channel_name": "PBS SoCal",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-020",
+          "channel_id": "UCBdTBTbjKHSq6VXA6EBw_-g",
+          "channel_name": "The GCSE Science Teacher",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 9,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-021",
+          "channel_id": "UCEfSHYQkDJO7AcDWqNTbb2A",
+          "channel_name": "Teresa Kwant",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 18,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-022",
+          "channel_id": "UCPi3KcdpIigxZTsMEM07Pxw",
+          "channel_name": "Jake Adv",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-023",
+          "channel_id": "UCFk7dqVnBayNPbrMtIwtaSw",
+          "channel_name": "MasterClass",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-024",
+          "channel_id": "UC3o204QqPUa6V3q2m_9DZuQ",
+          "channel_name": "University Hospitals",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 78,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-025",
+          "channel_id": "UC1WS3BjzLB4-3A7tobb_3LA",
+          "channel_name": "A Wiser Retirement®",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 113,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-026",
+          "channel_id": "UCZAoatH4HngcEuCtOWuSX2A",
+          "channel_name": "Greg Gottfried",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-027",
+          "channel_id": "UCBiuljj5uaUVHbnTAzfvutg",
+          "channel_name": "HGTV",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 352,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-028",
+          "channel_id": "UC7H6D4NK7OfQVvF7-3_9HiA",
+          "channel_name": "Deutsche Sporthochschule Köln (Spoho)",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 21,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-029",
+          "channel_id": "UCP4BbluxW-H6i0VreCszbFA",
+          "channel_name": "T&I Committee Republicans",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-030",
+          "channel_id": "UCI7bfebbOWLqw3m4zW7XjIg",
+          "channel_name": "Scarface Trades",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-031",
+          "channel_id": "UC1IEyos7R_m_Dp4INilWEDg",
+          "channel_name": "Thunder Laser USA",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 31,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-032",
+          "channel_id": "UCdqYVrvoqpB86vzlctr2OMQ",
+          "channel_name": "JOHNNY LAZER STUDIO",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 10,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-033",
+          "channel_id": "UCLK1Z1LaUqVkip8etghj5Cg",
+          "channel_name": "Master Builders Victoria",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 12,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-034",
+          "channel_id": "UCBJTkVhTjRKH_OunmxiVSrQ",
+          "channel_name": "The Louisiana Hobby Guy",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 78,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-035",
+          "channel_id": "UCdamCrxKpl-NF3BFhS9-04A",
+          "channel_name": "Volleyball England",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-036",
+          "channel_id": "UCALMPipK6cDV8HUEn2tjzGg",
+          "channel_name": "Adventure Travel Trade Association",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 7,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-037",
+          "channel_id": "UCfVRskMpJahA9BcnAs_u1cw",
+          "channel_name": "Thomson Industries, Inc.",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 7,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-038",
+          "channel_id": "UCJ6J1r5u8CFsbyVZ03A6IaQ",
+          "channel_name": "FightCamp",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-039",
+          "channel_id": "UCDPjx5kE8O-LAKbIw7RyHzQ",
+          "channel_name": "Scott's Synth Stuff",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-040",
+          "channel_id": "UC1yFUI9HQHvnLvT6ahuLcgw",
+          "channel_name": "HartmanBaldwin",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 6,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-041",
+          "channel_id": "UCaaSGD6wIhpYZhavYyPwR4g",
+          "channel_name": "PRINTING PERSPECTIVE",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 7,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-042",
+          "channel_id": "UC_EdazBt99xQQIuxj_ECE0Q",
+          "channel_name": "EUIPO",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 8,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-043",
+          "channel_id": "UCN82dHiZsPXk80URpDVsbsg",
+          "channel_name": "Virtual Coffee Lab - Home Coffee Roaster",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 10,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-044",
+          "channel_id": "UCFHiSF8Bx9fxkO3jBUA0vWQ",
+          "channel_name": "Southwest EFC",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-045",
+          "channel_id": "UCoIFQMdO72fkaEue2WM-QGw",
+          "channel_name": "Japan House London",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 11,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-046",
+          "channel_id": "UCUBfi4hMeTvmnqHH2vkNbCA",
+          "channel_name": "Brittany + Ryan",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-047",
+          "channel_id": "UCBVCi5JbYmfG3q5MEuoWdOw",
+          "channel_name": "Udacity",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-048",
+          "channel_id": "UCmPc7lvTIm-J9GmvQku5wAw",
+          "channel_name": "HomePro Hero",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 12,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-049",
+          "channel_id": "UCBayuhgYpKNbhJxfExYkPfA",
+          "channel_name": "Ross Cameron - Warrior Trading",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 366,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j2-seed-050",
+          "channel_id": "UCvccwjObHiDH_3IWnM3f5KA",
+          "channel_name": "4 The Creatives",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        }
+      ]
+    },
+    "J3": {
+      "queries": [
+        {
+          "id": "j3-video-001",
+          "video_id": "3Lbf2zo2zjY",
+          "title": "AI on the Edge LESSON 52: Gesture Recognition on the Raspberry Pi 5",
+          "channel_id": "UCfYfK0tzHZTpNFrc_NDKfTA",
+          "channel_name": "Paul McWhorter",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-002",
+          "video_id": "y9MFNO_ZohI",
+          "title": "Jônatas Ambrozio, Gicele Ambrozio - Segurança e Alegria (Vídeo Oficial)",
+          "channel_id": "UC-beWRwC5XbZtwZQQTTMiRw",
+          "channel_name": "Louvor Eterno",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-003",
+          "video_id": "fa_14FwMnek",
+          "title": "How To Activate A Power Of Attorney? - CountyOffice.org",
+          "channel_id": "UCisPttu_da-DvuCAdxSH6Gg",
+          "channel_name": "County Office Law",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-004",
+          "video_id": "r0yLX9xpscs",
+          "title": "What Instruments Are Used In Psychrometry? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-005",
+          "video_id": "K0C8fHeZMUg",
+          "title": "How to Start a Squarespace Trial Site",
+          "channel_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+          "channel_name": "How To Support",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-006",
+          "video_id": "LkUGWCPfvqw",
+          "title": "What Innovative Technologies Were Used To Build The Three Gorges Dam? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-007",
+          "video_id": "WA7FrjK5n8w",
+          "title": "What Insulation Is Used In Masonry Fireplace Construction? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-008",
+          "video_id": "740hxrxmzTo",
+          "title": "Finding My Why",
+          "channel_id": "UCqLmokG6Req2pHn2p7D8WZQ",
+          "channel_name": "Africa Digital Media Institute - ADMI",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-009",
+          "video_id": "fci78vNY4oo",
+          "title": "LEGS & MORE Workout | Lower Body Strength + Arms with Dumbbells & Bands",
+          "channel_id": "UCyfg0A7ZE3RJEcbUBS688Fg",
+          "channel_name": "CHRISTINA DORNER",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-010",
+          "video_id": "zsteQg7U_B8",
+          "title": "What Are The Different Types Of Biomass Fuels? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-011",
+          "video_id": "TJvST5bAiHs",
+          "title": "Real Himalayan Nepali Mountain Village Life During Heavy Rain | Real Rural Life in Nepal 🌧️",
+          "channel_id": "UC3XgO6zPt5t-4rX15zpNzgQ",
+          "channel_name": "Nepali Life88",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-012",
+          "video_id": "PBCR7qNikAM",
+          "title": "What Integrations Work With Project Management Software? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-013",
+          "video_id": "8AtIg27DIwA",
+          "title": "Code with AI: GitHub Copilot for AI-Native Coding Workflows",
+          "channel_id": "UCkm6luGCS3hD25jcEhvRMIA",
+          "channel_name": "Microsoft Reactor",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-014",
+          "video_id": "Gm7iYnATzbQ",
+          "title": "Logan Mac - \"Memories\" (Live at The Print Shop)",
+          "channel_id": "UCbYvrqplfxfm3C-09UE0Zqg",
+          "channel_name": "Live At The Print Shop",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-015",
+          "video_id": "HpcrA9QLeqE",
+          "title": "The Stoplight - IMBM",
+          "channel_id": "UCVQyWbVBZSWvivXuQjKvQew",
+          "channel_name": "I Mostly Blame Myself",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-016",
+          "video_id": "fHX8HLMtyls",
+          "title": "The Ironman Journey: Pushing Past Self-Imposed Limits",
+          "channel_id": "UCRXK7NG1JsMF49bg-RPIFvw",
+          "channel_name": "Christian Espinosa",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-017",
+          "video_id": "2eSXl1SwU2g",
+          "title": "Is the ponytail method the best way to cut curly hair?",
+          "channel_id": "UCYL1Kn00HYDP0gOZKHBC84w",
+          "channel_name": "Paul Watts HAIR",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-018",
+          "video_id": "exUBy4tcYyY",
+          "title": "First Time Hearing YOASOBI - Racing Into the Night (Yoru ni Kakeru) on First Take",
+          "channel_id": "UCa9MNqsRESRc16U8VR7rGyg",
+          "channel_name": "Jennifer Glatzhofer",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-019",
+          "video_id": "deUMq1ZGfug",
+          "title": "What Insurance Should A Contractor Have? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-020",
+          "video_id": "VqhYVdpuwpc",
+          "title": "ADHD Motivation Song: Get Moving with One Small Thing",
+          "channel_id": "UCDtSDFIuNEGBgLH1PJRyegg",
+          "channel_name": "ADHD Support Talk",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-021",
+          "video_id": "-sFTpd3RQS8",
+          "title": "Do I Have To Go To Court For Uncontested Divorce? - CountyOffice.org",
+          "channel_id": "UCisPttu_da-DvuCAdxSH6Gg",
+          "channel_name": "County Office Law",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-022",
+          "video_id": "iGg3_PvWXxo",
+          "title": "How to Add a Column in Sharepoint",
+          "channel_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+          "channel_name": "How To Support",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-023",
+          "video_id": "5M5iaPuF0No",
+          "title": "What Are Common Contract Types For Drill And Blast Tunneling Projects? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-024",
+          "video_id": "taSDJ-G0NIY",
+          "title": "Single Together by Lisa LaGeorge - Unboxing",
+          "channel_id": "UCHiptLg52PAxPgvHNLj8bFg",
+          "channel_name": "New Growth Press",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-025",
+          "video_id": "a28W0QSRz-s",
+          "title": "SOC 103 Help folder",
+          "channel_id": "UCCxqelk1xkwZKqemp-DJPXQ",
+          "channel_name": "Dan Kasper",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-026",
+          "video_id": "n0r6X6gnUb0",
+          "title": "Shakeout With Yared: The Diamond League Final",
+          "channel_id": "UC1Fp52XJH8UKaa_gHMZrckw",
+          "channel_name": "FloTrack",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-027",
+          "video_id": "EMQydbilqmo",
+          "title": "Everything You Need To Learn For Jazz Guitar (In Order)",
+          "channel_id": "UCqepSCHTyWj4BzHxEEUNvlg",
+          "channel_name": "Jens Larsen",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-028",
+          "video_id": "_Y17BOieibI",
+          "title": "Men Wearing Purses, Studio Etiquette & Lace Fronts: The Fashion Debate | Big Facts",
+          "channel_id": "UCqISR0F9-nCth-V2r4Qy75Q",
+          "channel_name": "REVOLT",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-029",
+          "video_id": "l58hFJSzLus",
+          "title": "What Instruments Are Used To Measure Steel Surface Finish? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-030",
+          "video_id": "J1d8QygZ4KY",
+          "title": "What Insurance Covers Construction Equipment? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-031",
+          "video_id": "XzceVV44d2E",
+          "title": "TEAS 7 Math Practice with Nurse Cheung ( Basic Word Problem )",
+          "channel_id": "UC1OT_rrZ-isdVcPqSODDSYw",
+          "channel_name": "Nurse Cheung",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-032",
+          "video_id": "5AioH9ZcNnY",
+          "title": "How Is This Legal? This DAC Should Not Be This Cheap",
+          "channel_id": "UC93TsVvp47ZNKKywT0l2BlA",
+          "channel_name": "Passion for Sound",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-033",
+          "video_id": "eb6upbRJIQY",
+          "title": "Your First Watercolor Flowers: Beginner Techniques",
+          "channel_id": "UCzapwS5Y5Tknpb-u1xKJLkQ",
+          "channel_name": "Karen Rice Art",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-034",
+          "video_id": "Ea3eVMcHMko",
+          "title": "My Exact System For Up Selling Websites (For My $57,811/mo GoHighLevel Agency)",
+          "channel_id": "UCEzU7p3e3gZbBCPP20KLkLQ",
+          "channel_name": "Clay Lawrence",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-035",
+          "video_id": "viucs7oyLrs",
+          "title": "Problem Solving Under Pressure: 5 Ways to Stay Calm and Think Clearly Instantly",
+          "channel_id": "UCHaNr3K4k8BGYhtj88olToA",
+          "channel_name": "Trish Lee",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-036",
+          "video_id": "m0qm9rSOv_0",
+          "title": "What Insurance Is Required For Demolition? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-037",
+          "video_id": "kxEsD9osBuU",
+          "title": "Azure SRE Agent and App Modernisation with GitHub Copilot",
+          "channel_id": "UCkm6luGCS3hD25jcEhvRMIA",
+          "channel_name": "Microsoft Reactor",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-038",
+          "video_id": "xdolfCEmh5I",
+          "title": "Billy Carson: You Have Until 2030 — Then Everything Changes - 4BiddenKnowledge",
+          "channel_id": "UCOgXHr5S3oF0qetPfqxJfSw",
+          "channel_name": "Brian Scott",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-039",
+          "video_id": "1lFlZP0ajqU",
+          "title": "What Innovative Technologies Are Used In Train Stations? - Civil Engineering Explained",
+          "channel_id": "UCLfsD-eKFl5QWdhERAd8D2A",
+          "channel_name": "Civil Engineering Explained",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-040",
+          "video_id": "fPKbHL0GECg",
+          "title": "17 Unexpected Reasons It May Be Time to Downsize. Forget everything you know and listen!",
+          "channel_id": "UCqUCj6qGiqnvSeBZCdfHUmQ",
+          "channel_name": "Rita Wilkins",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-041",
+          "video_id": "YLE-3SEUWRo",
+          "title": "What Is Equity Court? - CountyOffice.org",
+          "channel_id": "UCisPttu_da-DvuCAdxSH6Gg",
+          "channel_name": "County Office Law",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-042",
+          "video_id": "41EUHCVQODw",
+          "title": "How to Replace An Image in a Canva Template (Without Ruining the Design)",
+          "channel_id": "UC_i_ZggZaqVOrbNVd7F-76g",
+          "channel_name": "Essetino Media - Create Profitable Content",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-043",
+          "video_id": "VpJ3nS7IBtI",
+          "title": "I Tested 2 Turntables So Good That I'm Quitting Vinyl!",
+          "channel_id": "UC93TsVvp47ZNKKywT0l2BlA",
+          "channel_name": "Passion for Sound",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-044",
+          "video_id": "qElvEnpWSyY",
+          "title": "What Is Active Warrant? - CountyOffice.org",
+          "channel_id": "UCisPttu_da-DvuCAdxSH6Gg",
+          "channel_name": "County Office Law",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-045",
+          "video_id": "jvFa89mb2jI",
+          "title": "Trump Predicts Big Drop In Costs, Praises Auto Industry In Uncut Video",
+          "channel_id": "UCuIoW6QbUK3ZE7Qk5ofKF1A",
+          "channel_name": "WXOW News 19",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-046",
+          "video_id": "5tJXFRVdaxg",
+          "title": "How to Print and Cut with xTool O1 Omni (and What to Do When Calibration Fails)",
+          "channel_id": "UCaZAY89K6t0cOFNUN-9LXKw",
+          "channel_name": "Silhouette School with Melissa Viscount",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-047",
+          "video_id": "HBHs8FFXOo0",
+          "title": "Building My Cabin Studio - Episode 06",
+          "channel_id": "UCxAEtFuvUW3S4YGpUKdASkA",
+          "channel_name": "Other Record Labels",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-048",
+          "video_id": "3w-UtReSPbI",
+          "title": "I Fixed a Ruined Acrylic Painting With Oils in One Hour",
+          "channel_id": "UCRH4YWhFhLYuHBcx-9Lg14w",
+          "channel_name": "Milan Art Institute",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-049",
+          "video_id": "-3UuPq3qOXw",
+          "title": "Spreading The Living Word of Jesus Christ Episode 0926",
+          "channel_id": "UCbd9qQFrFy03bGYjzSiDD-g",
+          "channel_name": "DoubleACS",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        },
+        {
+          "id": "j3-video-050",
+          "video_id": "r3wKCNRKaBk",
+          "title": "What Was The Original Purpose Of A Jail? - CountyOffice.org",
+          "channel_id": "UCisPttu_da-DvuCAdxSH6Gg",
+          "channel_name": "County Office Law",
+          "topic_domain": null,
+          "source": "stratified_recent_video_seed_not_truth"
+        }
+      ]
+    },
+    "J4": {
+      "queries": [
+        {
+          "id": "j4-topic-001",
+          "query": "laser engraver",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-002",
+          "query": "air fryer recipes",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-003",
+          "query": "woodworking jigs",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-004",
+          "query": "beginner 3d printing",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-005",
+          "query": "cheap tool comparison",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-006",
+          "query": "home coffee setup",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-007",
+          "query": "gardening mistakes",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-008",
+          "query": "small shop storage",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-009",
+          "query": "budget camera gear",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-010",
+          "query": "AI workflow tools",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-011",
+          "query": "meal prep",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-012",
+          "query": "electric vehicle repair",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-013",
+          "query": "home theater setup",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-014",
+          "query": "beginner welding",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-015",
+          "query": "CNC router project",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-016",
+          "query": "sewing for beginners",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-017",
+          "query": "epoxy table",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-018",
+          "query": "camping gear test",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-019",
+          "query": "fitness transformation",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-020",
+          "query": "creator business",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-021",
+          "query": "thumbnail design",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-022",
+          "query": "smart home automation",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-023",
+          "query": "permaculture",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-024",
+          "query": "barbecue brisket",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-025",
+          "query": "motorcycle maintenance",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-026",
+          "query": "travel packing",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-027",
+          "query": "chess improvement",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-028",
+          "query": "gaming setup",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-029",
+          "query": "phone camera comparison",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-030",
+          "query": "DIY bathroom remodel",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-031",
+          "query": "budget kitchen upgrade",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-032",
+          "query": "solar power",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-033",
+          "query": "drone review",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-034",
+          "query": "personal finance",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-035",
+          "query": "real estate investing",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-036",
+          "query": "parenting routines",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-037",
+          "query": "baking sourdough",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-038",
+          "query": "music production",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-039",
+          "query": "Disney trip planning",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        },
+        {
+          "id": "j4-topic-040",
+          "query": "movie review",
+          "lexical_coverage": {
+            "trusted_outliers": 0,
+            "channels": 0
+          },
+          "source": "hand_authored_topic_string_coverage_count_only"
+        }
+      ]
+    },
+    "J5": {
+      "queries": [
+        {
+          "id": "j5-seed-001",
+          "channel_id": "UCS-aqFUCWXl4nyAyW82RCKw",
+          "channel_name": "Osteoarthritis Action Alliance",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 8,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-002",
+          "channel_id": "UC-MyedGvj_EphEQhYQpLVeQ",
+          "channel_name": "Green Building Network",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-003",
+          "channel_id": "UCfhSB16X9MXhzSFe_H7XbHg",
+          "channel_name": "Bryan Jenks",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 9,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-004",
+          "channel_id": "UCXtyEu6azu8vCYN4CQ4BoeA",
+          "channel_name": "eMaint",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 10,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-005",
+          "channel_id": "UC_bOcLgDdfE1whPDIwx3M_g",
+          "channel_name": "Joe & Nic's Road Trip",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 55,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-006",
+          "channel_id": "UCLWWXPSNENcmCDUr7uhmtKg",
+          "channel_name": "MherMardoyan Career Coach",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 17,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-007",
+          "channel_id": "UCkxXSZpIg2P41q_EAHGTBLg",
+          "channel_name": "CNS",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 78,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-008",
+          "channel_id": "UCk_pvW0ARNwn1lZgRmQFIzw",
+          "channel_name": "Simon Says Home Assistant",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 14,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-009",
+          "channel_id": "UCoeOHLLAEdscfdPPiPOgEwA",
+          "channel_name": "Earthworks Landscaping",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 11,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-010",
+          "channel_id": "UCpOlOeQjj7EsVnDh3zuCgsA",
+          "channel_name": "Adafruit Industries",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 320,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-011",
+          "channel_id": "UCiqtvk_lmbWwGlQskk69hRA",
+          "channel_name": "The Paula Faris Show",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-012",
+          "channel_id": "UCSJDkIfw8SJ8P5bJxQiwqUg",
+          "channel_name": "AMZ One Step",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-013",
+          "channel_id": "UCr1yOAfXblt40YOfEsgvxDw",
+          "channel_name": "Critical Edge",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 7,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-014",
+          "channel_id": "UC7HtxPOje1ZqjGsxn_zbLbw",
+          "channel_name": "Inner Peace Look Inside",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 296,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-015",
+          "channel_id": "UC9lyUdwosxq_OxC1uggjUPA",
+          "channel_name": "Photo Genius",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 8,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-016",
+          "channel_id": "UCWN3xxRkmTPmbKwht9FuE5A",
+          "channel_name": "Siraj Raval",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-017",
+          "channel_id": "UC-Qq6XphOe3QEH4IhhdW4aA",
+          "channel_name": "Elevate Digital",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-018",
+          "channel_id": "UCmLtsFOepwwkui0OEztvjfg",
+          "channel_name": "LeeMerie3D",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 13,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-019",
+          "channel_id": "UCDG7_piIA5baWqIvtOQ-trA",
+          "channel_name": "PBS SoCal",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-020",
+          "channel_id": "UCBdTBTbjKHSq6VXA6EBw_-g",
+          "channel_name": "The GCSE Science Teacher",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 9,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-021",
+          "channel_id": "UCEfSHYQkDJO7AcDWqNTbb2A",
+          "channel_name": "Teresa Kwant",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 18,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-022",
+          "channel_id": "UCPi3KcdpIigxZTsMEM07Pxw",
+          "channel_name": "Jake Adv",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-023",
+          "channel_id": "UCFk7dqVnBayNPbrMtIwtaSw",
+          "channel_name": "MasterClass",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 5,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-024",
+          "channel_id": "UC3o204QqPUa6V3q2m_9DZuQ",
+          "channel_name": "University Hospitals",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 78,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-025",
+          "channel_id": "UC1WS3BjzLB4-3A7tobb_3LA",
+          "channel_name": "A Wiser Retirement®",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 113,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-026",
+          "channel_id": "UCZAoatH4HngcEuCtOWuSX2A",
+          "channel_name": "Greg Gottfried",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-027",
+          "channel_id": "UCBiuljj5uaUVHbnTAzfvutg",
+          "channel_name": "HGTV",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 352,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-028",
+          "channel_id": "UC7H6D4NK7OfQVvF7-3_9HiA",
+          "channel_name": "Deutsche Sporthochschule Köln (Spoho)",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 21,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-029",
+          "channel_id": "UCP4BbluxW-H6i0VreCszbFA",
+          "channel_name": "T&I Committee Republicans",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 15,
+          "source": "stratified_recent_channel_seed_not_truth"
+        },
+        {
+          "id": "j5-seed-030",
+          "channel_id": "UCI7bfebbOWLqw3m4zW7XjIg",
+          "channel_name": "Scarface Trades",
+          "subscriber_count": null,
+          "topic_domain": null,
+          "video_count": 16,
+          "source": "stratified_recent_channel_seed_not_truth"
+        }
+      ]
+    }
+  },
+  "rubrics": {
+    "J1": {
+      "target": "single canonical channel id",
+      "metric": "MRR",
+      "judgment": "deterministic exact match"
+    },
+    "J2": {
+      "scale": {
+        "0": "not useful",
+        "1": "weak/background overlap",
+        "2": "useful adjacent overlap",
+        "3": "direct competitor/strong overlap"
+      }
+    },
+    "J3": {
+      "dimensions": [
+        "topic",
+        "packaging",
+        "format"
+      ],
+      "scale": {
+        "0": "none",
+        "1": "weak",
+        "2": "partial",
+        "3": "strong"
+      }
+    },
+    "J4": {
+      "scale": {
+        "0": "off-topic or not an outlier",
+        "1": "on-topic trusted outlier"
+      }
+    },
+    "J5": {
+      "labels": [
+        "creative_adaptation",
+        "direct_application",
+        "background",
+        "none"
+      ],
+      "hit": "creative_adaptation only"
+    }
+  },
+  "frozen_at": "FROZEN",
+  "content_hash": "082accf4a9daa7c13e724902d2c4a0db254de7327e26e73fd2410b1f90ecd913"
+}
