@@ -15,6 +15,7 @@ export interface CorpusEligibilityRow {
   confidence: string | null;
   n_baseline: number | string | null;
   baseline: number | string | null;
+  scored_at: string | Date;
 }
 
 interface ChannelSeed {
@@ -37,6 +38,7 @@ export interface V4Task {
   query?: string;
   target_id?: string;
   seed?: ChannelSeed | VideoSeed;
+  intent?: string;
   visual?: boolean;
 }
 
@@ -49,6 +51,23 @@ export interface V4TaskManifestInput {
 
 export interface FrozenV4TaskManifest extends V4TaskManifestInput {
   frozen_at: 'FROZEN';
+  content_hash: string;
+}
+
+export interface V4CorpusManifestInput {
+  version: 4;
+  entity_type: 'video' | 'channel';
+  as_of: string;
+  predicate: string;
+  document_recipe: string;
+  ids: string[];
+  source: Record<string, unknown>;
+}
+
+export interface FrozenV4CorpusManifest extends V4CorpusManifestInput {
+  frozen_at: 'FROZEN';
+  entity_count: number;
+  ids_hash: string;
   content_hash: string;
 }
 
@@ -135,15 +154,17 @@ function shuffled<T>(values: T[], seed: number): T[] {
 export function isEligibleCorpusRow(row: CorpusEligibilityRow, asOf: string | Date): boolean {
   const boundary = new Date(asOf).getTime();
   const publishedAt = new Date(row.published_at).getTime();
+  const scoredAt = new Date(row.scored_at).getTime();
   const score = finiteNumber(row.score);
   const nBaseline = finiteNumber(row.n_baseline);
   const baseline = finiteNumber(row.baseline);
-  if (!Number.isFinite(boundary) || !Number.isFinite(publishedAt)) return false;
+  if (!Number.isFinite(boundary) || !Number.isFinite(publishedAt) || !Number.isFinite(scoredAt)) return false;
   return nonEmpty(row.id)
     && nonEmpty(row.channel_id)
     && nonEmpty(row.title)
     && publishedAt <= boundary
     && publishedAt >= boundary - 365 * DAY_MS
+    && scoredAt <= boundary
     && row.is_short !== true
     && row.duration !== 'P0D'
     && row.is_institutional !== true
@@ -220,6 +241,27 @@ export function validateV4TaskManifest(manifest: V4TaskManifestInput | FrozenV4T
 export function freezeV4TaskManifest(input: V4TaskManifestInput): FrozenV4TaskManifest {
   validateV4TaskManifest(input);
   return { ...input, frozen_at: 'FROZEN', content_hash: manifestHash(input) };
+}
+
+export function freezeV4CorpusManifest(input: V4CorpusManifestInput): FrozenV4CorpusManifest {
+  if (!Number.isFinite(new Date(input.as_of).getTime())) throw new Error('as_of must be an ISO timestamp');
+  if (!nonEmpty(input.predicate)) throw new Error('corpus predicate is required');
+  if (!nonEmpty(input.document_recipe)) throw new Error('document recipe is required');
+  if (input.ids.some((id) => !nonEmpty(id))) throw new Error('corpus ids must be non-empty');
+  if (new Set(input.ids).size !== input.ids.length) throw new Error('duplicate corpus id');
+  const ids = [...input.ids].sort((a, b) => a.localeCompare(b));
+  const idsHash = createHash('sha256').update(ids.join('\0')).digest('hex');
+  const body = {
+    ...input,
+    ids,
+    entity_count: ids.length,
+    ids_hash: idsHash,
+  };
+  return {
+    ...body,
+    frozen_at: 'FROZEN',
+    content_hash: createHash('sha256').update(canonicalJson(body)).digest('hex'),
+  };
 }
 
 export function buildBlindPool(input: {

@@ -62,6 +62,7 @@ The video candidate universe serves J3, J4, and J5. A video must satisfy all of 
 - `coalesce(videos.is_institutional, false) = false`; `videos.is_institutional` is authoritative for this experiment and null means not marked institutional, matching the current application guard;
 - a `video_scores` row with `score >= 2` and confidence `likely` or `confirmed`;
 - `n_baseline >= 5` and `baseline >= 5000`;
+- the score row was computed no later than the frozen `as_of` timestamp;
 - stable `video_id` and `channel_id`.
 
 Expected size as of September 3 is approximately 10.6K videos. The build must record the exact SQL predicate, score-model versions, row count, distinct-channel count, time boundary, source hashes, and creation time in the corpus manifest. It must not silently substitute the raw ~25.8K `score >= 2` population.
@@ -175,7 +176,7 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Establish the v1 OpenAI/Qdrant control, local thumbnail pilot, cost ledger, sync, and Qdrant-down fallback.
 - [x] Re-audit v1/v2 evidence and quarantine invalid truth/prototype artifacts.
 - [x] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
-- [ ] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
+- [x] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
 - [ ] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2.
 - [ ] Run lexical, dense, and RRF candidate generation; write immutable run artifacts.
 - [ ] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet.

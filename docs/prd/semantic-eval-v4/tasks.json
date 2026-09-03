@@ -1,0 +1,204 @@
+{
+  "version": 4,
+  "as_of": "2026-09-03T09:30:00-04:00",
+  "tasks": [
+    {
+      "id": "j1-make-or-break",
+      "lane": "J1",
+      "split": "dev",
+      "query": "Make or Break Shop",
+      "target_id": "UCjWkNxpp3UHdEavpM_19--Q"
+    },
+    {
+      "id": "j1-mkbhd",
+      "lane": "J1",
+      "split": "heldout",
+      "query": "MKBHD",
+      "target_id": "UCBJycsmduvYEL83R_U4JriQ"
+    },
+    {
+      "id": "j2-maker-channel",
+      "lane": "J2",
+      "split": "dev",
+      "intent": "Find channels with meaningfully useful audience or subject overlap for Make or Break Shop.",
+      "seed": {
+        "channel_id": "UCjWkNxpp3UHdEavpM_19--Q",
+        "channel_name": "Make or Break Shop",
+        "subscriber_count": 119000
+      }
+    },
+    {
+      "id": "j2-tech-review-channel",
+      "lane": "J2",
+      "split": "dev",
+      "intent": "Find channels with meaningfully useful audience or subject overlap for Marques Brownlee.",
+      "seed": {
+        "channel_id": "UCBJycsmduvYEL83R_U4JriQ",
+        "channel_name": "Marques Brownlee",
+        "subscriber_count": 20100000
+      }
+    },
+    {
+      "id": "j2-build-explainer-channel",
+      "lane": "J2",
+      "split": "heldout",
+      "intent": "Find channels with meaningfully useful audience or subject overlap for Adam Savage’s Tested.",
+      "seed": {
+        "channel_id": "UCiDJtJKMICpb9B1qf7qjEOA",
+        "channel_name": "Adam Savage’s Tested",
+        "subscriber_count": 7010000
+      }
+    },
+    {
+      "id": "j3-laser-product-explainer",
+      "lane": "J3",
+      "split": "dev",
+      "intent": "Find outlier videos similar in topic or packaging to this laser product explainer.",
+      "seed": {
+        "video_id": "9mVaKmmhYFc",
+        "title": "Everything I Know about the xTool X1 Laser",
+        "channel_id": "UCjWkNxpp3UHdEavpM_19--Q",
+        "channel_name": "Make or Break Shop"
+      }
+    },
+    {
+      "id": "j3-kitchen-hacks-list",
+      "lane": "J3",
+      "split": "heldout",
+      "intent": "Find outlier videos similar in topic or packaging to this practical hacks list.",
+      "seed": {
+        "video_id": "MpGDoiSH_PQ",
+        "title": "18 Microwave Hacks You Need to Know (Nicole's Best Tips & Tricks!) | Allrecipes",
+        "channel_id": "UC4tAgeVdaNB5vD_mBoxg50w",
+        "channel_name": "Allrecipes"
+      }
+    },
+    {
+      "id": "j3-unusual-camera-demo",
+      "lane": "J3",
+      "split": "heldout",
+      "intent": "Find outlier videos similar in topic or packaging to this unusual technology demonstration.",
+      "seed": {
+        "video_id": "v-_d2e7x4KA",
+        "title": "The Wildest Camera Robot",
+        "channel_id": "UCBJycsmduvYEL83R_U4JriQ",
+        "channel_name": "Marques Brownlee"
+      }
+    },
+    {
+      "id": "j4-laser-engraver",
+      "lane": "J4",
+      "split": "dev",
+      "query": "laser engraver",
+      "intent": "Find current valid outliers about laser engravers."
+    },
+    {
+      "id": "j4-woodworking-jigs",
+      "lane": "J4",
+      "split": "dev",
+      "query": "woodworking jigs",
+      "intent": "Find current valid outliers about woodworking jigs."
+    },
+    {
+      "id": "j4-air-fryer-recipes",
+      "lane": "J4",
+      "split": "heldout",
+      "query": "air fryer recipes",
+      "intent": "Find current valid outliers about air fryer recipes."
+    },
+    {
+      "id": "j4-budget-camera-gear",
+      "lane": "J4",
+      "split": "heldout",
+      "query": "budget camera gear",
+      "intent": "Find current valid outliers about budget camera gear."
+    },
+    {
+      "id": "j5-maker-transfer",
+      "lane": "J5",
+      "split": "dev",
+      "intent": "Find proven ideas from unrelated niches whose framing could transfer to Make or Break Shop.",
+      "seed": {
+        "channel_id": "UCjWkNxpp3UHdEavpM_19--Q",
+        "channel_name": "Make or Break Shop",
+        "subscriber_count": 119000
+      }
+    },
+    {
+      "id": "j5-tech-transfer",
+      "lane": "J5",
+      "split": "dev",
+      "intent": "Find proven ideas from unrelated niches whose framing could transfer to Marques Brownlee.",
+      "seed": {
+        "channel_id": "UCBJycsmduvYEL83R_U4JriQ",
+        "channel_name": "Marques Brownlee",
+        "subscriber_count": 20100000
+      }
+    },
+    {
+      "id": "j5-gardening-transfer",
+      "lane": "J5",
+      "split": "heldout",
+      "intent": "Find proven ideas from unrelated niches whose framing could transfer to Epic Gardening.",
+      "seed": {
+        "channel_id": "UCSbyncU597LMwb3HhnAI_4w",
+        "channel_name": "Epic Gardening",
+        "subscriber_count": 3880000
+      }
+    },
+    {
+      "id": "j5-build-transfer",
+      "lane": "J5",
+      "split": "heldout",
+      "intent": "Find proven ideas from unrelated niches whose framing could transfer to Adam Savage’s Tested.",
+      "seed": {
+        "channel_id": "UCiDJtJKMICpb9B1qf7qjEOA",
+        "channel_name": "Adam Savage’s Tested",
+        "subscriber_count": 7010000
+      }
+    }
+  ],
+  "rubrics": {
+    "J1": {
+      "judgment": "exact canonical channel id",
+      "metric": "MRR"
+    },
+    "J2": {
+      "scale": {
+        "0": "not useful",
+        "1": "weak background overlap",
+        "2": "useful adjacency",
+        "3": "strong useful overlap"
+      }
+    },
+    "J3": {
+      "dimensions": [
+        "topic",
+        "packaging"
+      ],
+      "scale": {
+        "0": "none",
+        "1": "weak",
+        "2": "partial",
+        "3": "strong"
+      }
+    },
+    "J4": {
+      "scale": {
+        "0": "off-topic or invalid outlier",
+        "1": "on-topic and valid guarded outlier"
+      }
+    },
+    "J5": {
+      "labels": [
+        "creative_adaptation",
+        "direct_application",
+        "background",
+        "none"
+      ],
+      "hit": "creative_adaptation only"
+    }
+  },
+  "frozen_at": "FROZEN",
+  "content_hash": "ae286197b7ae1b29c0720ddaa0dde51e51471de8fe43da7f5fc532486df26076"
+}

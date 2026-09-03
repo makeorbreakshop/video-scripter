@@ -3,6 +3,7 @@ import {
   CorpusEligibilityRow,
   V4Task,
   buildBlindPool,
+  freezeV4CorpusManifest,
   freezeV4TaskManifest,
   isEligibleCorpusRow,
   ndcgAtK,
@@ -26,6 +27,7 @@ function eligibleRow(overrides: Partial<CorpusEligibilityRow> = {}): CorpusEligi
     confidence: 'confirmed',
     n_baseline: 8,
     baseline: 25_000,
+    scored_at: '2026-09-03T09:00:00-04:00',
     ...overrides,
   };
 }
@@ -75,9 +77,30 @@ describe('semantic v4 corpus contract', () => {
       eligibleRow({ confidence: 'early' }),
       eligibleRow({ n_baseline: 4 }),
       eligibleRow({ baseline: 4_999 }),
+      eligibleRow({ scored_at: '2026-09-03T12:01:00-04:00' }),
     ];
 
     expect(rejected.every((row) => !isEligibleCorpusRow(row, asOf))).toBe(true);
+  });
+
+  test('freezes a sorted, unique entity universe with a reproducible hash', () => {
+    const input = {
+      version: 4 as const,
+      entity_type: 'video' as const,
+      as_of: asOf,
+      predicate: 'guarded-outlier-v1',
+      document_recipe: 'title-channel-clean-description-v1',
+      ids: ['video-b', 'video-a'],
+      source: { score_model_versions: ['v3.1-semantic-backfill-2026-09'] },
+    };
+    const manifest = freezeV4CorpusManifest(input);
+    expect(manifest.ids).toEqual(['video-a', 'video-b']);
+    expect(manifest.entity_count).toBe(2);
+    expect(manifest.ids_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(freezeV4CorpusManifest({ ...input, ids: [...input.ids].reverse() }).content_hash)
+      .toBe(manifest.content_hash);
+    expect(() => freezeV4CorpusManifest({ ...input, ids: ['video-a', 'video-a'] }))
+      .toThrow(/duplicate/i);
   });
 });
 
