@@ -247,7 +247,7 @@ The original v1 §10 experiment A (video document recipe) and D (query strategy)
 
 ## 16. Revision-5 programmatic cross-topic packaging experiment
 
-Revision 4 proved that useful J5 candidates exist in the pooled top 100 but that ordinary semantic relevance and the first metadata-only LLM verifier rank direct copies above creative adaptations. The next bounded experiment therefore removes generative inference from the retrieval service. It tests whether deterministic packaging-form features, topic distance, trustworthy outlier strength, and source diversity can rank transferable source videos. A caller-owned skill may interpret the returned evidence later, but that interpretation is not part of retrieval or this evaluation.
+Revision 4 proved that useful J5 candidates exist in the pooled top 100 but that ordinary semantic relevance and the first metadata-only LLM verifier rank direct copies above creative adaptations. The next bounded experiment therefore removes generative inference from the retrieval service. It tests whether deterministic packaging-form features, frozen document-affinity novelty, trustworthy outlier evidence, and source diversity can rank transferable source videos. A caller-owned skill may interpret the returned evidence later, but that interpretation is not part of retrieval or this evaluation.
 
 ### 16.1 Outcome and protected behavior
 
@@ -258,23 +258,23 @@ The programmatic representation is deliberately multi-part:
 - deterministic title-form features such as comparison, test, challenge, transformation, list, price, time constraint, warning, verdict, novelty, question, first-person, and superlative framing;
 - a normalized title skeleton that masks amounts, counts, durations, years, percentages, and content-bearing subject spans while preserving packaging operators;
 - target-channel format compatibility computed from the frozen seed channel's representative titles;
-- exact topic affinity computed as cosine similarity between the frozen seed query vector and each frozen candidate vector, used as a penalty rather than a relevance reward;
-- outlier strength and confidence from the frozen candidate payload, used only as proof/quality evidence;
+- exact document affinity computed as cosine similarity between the frozen whole-channel seed document vector and each frozen title/channel/description candidate vector; when a frozen source-channel vector exists, use the maximum of candidate-video affinity and source-channel affinity so a narrowly worded video from an otherwise target-like source is not mistaken for a cross-topic transfer; use the result inversely as a novelty proxy rather than describing it as pure topic distance, and fall back explicitly to candidate affinity when source-channel coverage is absent;
+- outlier proof computed as 75% frozen-corpus percentile of outlier score plus 25% frozen-corpus percentile of baseline evidence count; frozen confidence is reported as provenance but is not a ranking feature because all 9,385 eligible corpus rows are `confirmed`;
 - deterministic result diversification with per-channel caps and maximal-marginal-relevance-style penalties.
 
-The first slice does not use thumbnail vectors because the 498-item pilot does not cover the frozen J5 pools sufficiently to produce a fair common-input comparison. It reports overlap and leaves a visual leg separate. It also does not mine historical transfers, train a learned ranker, assign BERTopic labels, or create a full-corpus packaging index. Those steps require a positive bounded signal first.
+The first slice does not use thumbnail vectors because the 498-item pilot has zero overlap with the frozen J5 dev pools (0/149 maker and 0/163 technology), so it cannot produce a fair common-input comparison. It reports that zero coverage and leaves a visual leg separate. It also does not mine historical transfers, train a learned ranker, assign BERTopic labels, or create a full-corpus packaging index. Those steps require a positive bounded signal first.
 
 ### 16.2 Frozen variants and gate
 
-Define all recipes and weights in one versioned config before reading resolved judgments:
+Define all recipes and weights in one versioned config before reading resolved judgments. Because only two dev tasks exist, there is one eligible primary recipe and two diagnostic ablations; the evaluation must not select whichever fixed recipe happens to look best after labels are joined:
 
-1. `title_form`: target-channel title-form compatibility plus outlier strength;
-2. `cross_topic`: `title_form` plus a monotonic penalty for high topic affinity;
-3. `cross_topic_diverse`: `cross_topic` followed by deterministic source-channel and near-duplicate diversification.
+1. `title_form`: diagnostic target-channel title-form compatibility plus outlier proof;
+2. `cross_topic`: diagnostic ablation adding inverse frozen-document affinity;
+3. `cross_topic_diverse`: the sole eligible primary, frozen as 0.60 document novelty + 0.25 title-form compatibility + 0.15 outlier proof, followed by deterministic diversification using 0.85 relevance minus 0.15 maximum raw-title-or-title-form similarity, with at most two results per source channel before deterministic backfill.
 
 Run all three against the exact 149-candidate maker pool and 163-candidate technology pool. Stable entity id is the final tie-break. Evaluate only after all rankings and their input/config hashes are frozen. Report lower/upper creative precision@10, lower/upper nDCG@20, direct-application rate@10, unresolved top-10 count, creative hits per task, latency, and feature-ablation deltas.
 
-A variant may advance only if its mean lower creative precision@10 is at least 0.30, mean direct-application rate@10 is at most 0.20, it has at least one creative hit on both tasks, and it has zero unresolved top-10 results. A dev pass authorizes only one newly frozen confirmation set; it does not authorize endpoints or corpus-wide indexing. If no fixed variant passes, stop before historical weak-label mining or learned ranking and report that deterministic metadata features are insufficient.
+The primary may advance only if each task has lower creative precision@10 of at least 0.30, direct-application rate@10 of at most 0.20, at least one creative hit, zero unresolved top-10 results, and at least eight distinct source channels in its top 10. A dev pass authorizes only one newly frozen confirmation set; it does not authorize endpoints or corpus-wide indexing. If the primary fails, stop before historical weak-label mining or learned ranking and report that deterministic metadata features are insufficient. Ablations cannot rescue or replace a failed primary.
 
 Budget: $0 paid model cost and no production writes. Qdrant reads are restricted to the 312 frozen candidate-task pairs and two seed channels. All generated artifacts are write-once or self-hashed and remain under `docs/prd/semantic-eval-v4/programmatic/`.
 

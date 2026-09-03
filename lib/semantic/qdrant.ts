@@ -108,6 +108,12 @@ export interface QdrantSearchHit<Payload = Record<string, unknown>> {
   vector?: number[] | Record<string, number[]>;
 }
 
+export interface QdrantRetrievedPoint<Payload = Record<string, unknown>> {
+  id: string | number;
+  payload: Payload;
+  vector?: number[] | Record<string, number[]>;
+}
+
 export interface QdrantFilter {
   must?: Array<Record<string, unknown>>;
   must_not?: Array<Record<string, unknown>>;
@@ -159,6 +165,27 @@ export class SemanticQdrant {
   async point<Payload>(collection: string, rawId: string): Promise<QdrantSearchHit<Payload> & { vector: number[] }> {
     const response = await this.request<{ result: QdrantSearchHit<Payload> & { vector: number[] } }>(
       `/collections/${collection}/points/${uuid5ForId(rawId)}?with_payload=true&with_vector=true`,
+    );
+    return response.result;
+  }
+
+  async points<Payload>(
+    collection: string,
+    rawIds: string[],
+    options: { withVector?: boolean } = {},
+  ): Promise<Array<QdrantRetrievedPoint<Payload>>> {
+    if (!rawIds.length) return [];
+    if (rawIds.length > 5_000) throw new Error('Qdrant point lookup is limited to 5,000 ids');
+    const response = await this.request<{ result: Array<QdrantRetrievedPoint<Payload>> }>(
+      `/collections/${collection}/points`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          ids: rawIds.map(uuid5ForId),
+          with_payload: true,
+          with_vector: options.withVector ?? false,
+        }),
+      },
     );
     return response.result;
   }

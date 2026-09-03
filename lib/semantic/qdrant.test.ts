@@ -110,6 +110,28 @@ describe('Qdrant helpers', () => {
     }
   });
 
+  test('retrieves a bounded id batch with vectors for offline reranking', async () => {
+    const fetchMock = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ result: [{ id: 'one', payload: { video_id: 'a' }, vector: [0.1] }] }),
+    }));
+    const previousFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      await expect(new SemanticQdrant({ url: 'http://qdrant.test' }).points('videos_v1', ['a', 'b'], {
+        withVector: true,
+      })).resolves.toEqual([{ id: 'one', payload: { video_id: 'a' }, vector: [0.1] }]);
+      const [requestUrl, requestInit] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>)[0];
+      expect(requestUrl).toBe('http://qdrant.test/collections/videos_v1/points');
+      expect(JSON.parse(String(requestInit.body))).toEqual({
+        ids: [uuid5ForId('a'), uuid5ForId('b')], with_payload: true, with_vector: true,
+      });
+    } finally {
+      global.fetch = previousFetch;
+    }
+  });
+
   test('surfaces bounded Qdrant validation details for failed writes', async () => {
     const fetchMock = jest.fn(async () => ({
       ok: false,
