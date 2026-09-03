@@ -1,6 +1,8 @@
 // Throttled upload of the local thumbnail archive to R2 (via the thumbs Worker). Safe to re-run; skips
 // versions already marked uploaded. Rate-limited so it never competes with the DB or the Mac.
-// Usage: npx tsx scripts/thumbnail-r2-backfill.ts [perMinute=300] [max=0]
+// Usage: npx tsx scripts/thumbnail-r2-backfill.ts [perMinute=300] [max=0] [--video <id>]
+// --video heals one video's misses now, instead of waiting for the nightly batch to walk back
+// to it (the batch takes the newest first, so an older miss can sit for days).
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
@@ -8,13 +10,19 @@ import fs from 'fs';
 import path from 'path';
 import { uploadThumb } from '../lib/thumbs/storage';
 
-const perMinute = parseInt(process.argv[2] || '300', 10);
-const max = parseInt(process.argv[3] || '0', 10);
+const vi = process.argv.indexOf('--video');
+const ONLY = vi >= 0 ? process.argv[vi + 1] : null;
+const positional = process.argv.slice(2).filter((a, i, all) => a !== '--video' && all[i - 1] !== '--video');
+const perMinute = parseInt(positional[0] || '300', 10);
+const max = parseInt(positional[1] || '0', 10);
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const rows = (await pool.query(
-  `select id, video_id, version, storage_path from thumbnail_versions where r2_uploaded_at is null order by first_seen desc ${max ? `limit ${max}` : ''}`
+  `select id, video_id, version, storage_path from thumbnail_versions
+    where r2_uploaded_at is null ${ONLY ? 'and video_id = $1' : ''}
+    order by first_seen desc ${max ? `limit ${max}` : ''}`,
+  ONLY ? [ONLY] : []
 )).rows as any[];
 log(`backfill: ${rows.length} versions to upload at ${perMinute}/min`);
 let ok = 0, missing = 0, failed = 0;

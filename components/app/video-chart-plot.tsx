@@ -179,7 +179,9 @@ export default function VideoChartPlot({
             <Line dataKey="projected" name="expected from here" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
           )}
           {hasMeasured && (
-            <Line dataKey="views" name="this video" connectNulls dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
+            /* connectNulls would bridge a gap between two measurements with a solid line —
+               claiming we measured days we did not. The implied path already covers it. */
+            <Line dataKey="views" name="this video" connectNulls={false} dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
           )}
           {/* The real measurements as points — a video with one or two snapshots is otherwise a
               model path with nothing of its own on it. */}
