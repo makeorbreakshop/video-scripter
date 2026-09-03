@@ -1,5 +1,6 @@
 import { CHANNELS_COLLECTION, SemanticQdrant, uuid5ForId, VIDEOS_COLLECTION } from '../../lib/semantic/qdrant';
-import { chunks, QDRANT_BATCH_SIZE, runMain, sinceDate } from './common';
+import { chunks, db, QDRANT_BATCH_SIZE, runMain, sinceDate } from './common';
+import { chooseMedoids } from '../../lib/semantic/medoids';
 
 export const CHANNEL_MEAN_COLLECTION = 'channels_mean_v1';
 export const CHANNEL_BREAKOUT_COLLECTION = 'channels_breakout_v1';
@@ -22,6 +23,10 @@ interface VideoPayload {
   score: number | null;
   view_count: number;
   published_at: number;
+}
+
+interface VideosV2Payload extends VideoPayload {
+  facet_model?: string;
 }
 
 interface ChannelAccumulator {
@@ -63,7 +68,7 @@ export async function buildChannelPrototypes(): Promise<void> {
   offset = undefined;
   const windowStart = Math.floor(sinceDate('30d').getTime() / 1_000);
   do {
-    const page = await qdrant.scroll<VideoPayload>(VIDEOS_COLLECTION, {
+    const page: { points: Array<{ vector?: number[] | Record<string, number[]>; payload: VideoPayload }>; nextPageOffset?: string | number } = await qdrant.scroll<VideoPayload>(VIDEOS_COLLECTION, {
       limit: 1_000,
       offset,
       withVector: true,
@@ -71,9 +76,9 @@ export async function buildChannelPrototypes(): Promise<void> {
     });
     for (const point of page.points) {
       if (!Array.isArray(point.vector) || !channels.has(point.payload.channel_id)) continue;
-      const vector = point.vector;
-      const current = accumulators.get(point.payload.channel_id) ?? { sum: Array(vector.length).fill(0), count: 0, breakout: null };
-      vector.forEach((value, index) => { current.sum[index] += value; });
+      const vector: number[] = point.vector;
+      const current: ChannelAccumulator = accumulators.get(point.payload.channel_id) ?? { sum: Array(vector.length).fill(0) as number[], count: 0, breakout: null };
+      vector.forEach((value: number, index: number) => { current.sum[index] += value; });
       current.count += 1;
       const currentScore = current.breakout?.payload.score ?? Number.NEGATIVE_INFINITY;
       const candidateScore = point.payload.score ?? Number.NEGATIVE_INFINITY;
@@ -113,4 +118,60 @@ export async function buildChannelPrototypes(): Promise<void> {
   console.log(JSON.stringify({ channels: channels.size, means: meanPoints.length, breakouts: breakoutPoints.length }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) runMain(buildChannelPrototypes);
+function vectorNamed(pointVector: number[] | Record<string, number[]> | undefined, name: string): number[] | null {
+  if (!pointVector || Array.isArray(pointVector)) return null;
+  return pointVector[name] ?? null;
+}
+
+export async function buildChannelMedoidsV2(): Promise<void> {
+  const qdrant = new SemanticQdrant({ timeoutMs: 30_000 });
+  const byChannel = new Map<string, { topic: Array<{ id: string; vector: number[]; publishedAt: Date }>; purpose: Array<{ id: string; vector: number[]; publishedAt: Date }> }>();
+  let offset: string | number | undefined;
+  do {
+    const page = await qdrant.scroll<VideosV2Payload>('videos_v2', { limit: 1_000, offset, withVector: true });
+    for (const point of page.points) {
+      const publishedAt = new Date(point.payload.published_at * 1_000);
+      const current = byChannel.get(point.payload.channel_id) ?? { topic: [], purpose: [] };
+      const title = vectorNamed(point.vector, 'title');
+      const purpose = vectorNamed(point.vector, 'purpose');
+      if (title) current.topic.push({ id: point.payload.video_id, vector: title, publishedAt });
+      if (purpose) current.purpose.push({ id: point.payload.video_id, vector: purpose, publishedAt });
+      byChannel.set(point.payload.channel_id, current);
+    }
+    offset = page.nextPageOffset;
+  } while (offset != null);
+
+  const rows: Array<{ channelId: string; kind: 'topic' | 'purpose'; videoId: string; importance: number; clusterSize: number }> = [];
+  for (const [channelId, groups] of byChannel) {
+    for (const medoid of chooseMedoids(groups.topic, { maxMedoids: 8 })) {
+      rows.push({ channelId, kind: 'topic', videoId: medoid.id, importance: medoid.importance, clusterSize: medoid.clusterSize });
+    }
+    for (const medoid of chooseMedoids(groups.purpose, { maxMedoids: 8 })) {
+      rows.push({ channelId, kind: 'purpose', videoId: medoid.id, importance: medoid.importance, clusterSize: medoid.clusterSize });
+    }
+  }
+  if (rows.length) {
+    await db().query(
+      `insert into channel_prototypes (channel_id, kind, video_id, importance, cluster_size, built_at)
+       select input.channel_id, input.kind, input.video_id, input.importance, input.cluster_size, now()
+         from unnest($1::text[], $2::text[], $3::text[], $4::double precision[], $5::int[])
+              as input(channel_id, kind, video_id, importance, cluster_size)
+       on conflict (channel_id, kind, video_id) do update
+         set importance = excluded.importance,
+             cluster_size = excluded.cluster_size,
+             built_at = excluded.built_at`,
+      [
+        rows.map((row) => row.channelId),
+        rows.map((row) => row.kind),
+        rows.map((row) => row.videoId),
+        rows.map((row) => row.importance),
+        rows.map((row) => row.clusterSize),
+      ],
+    );
+  }
+  console.log(JSON.stringify({ collection: 'videos_v2', channels: byChannel.size, prototypes: rows.length }, null, 2));
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runMain(process.argv.includes('--v2') ? buildChannelMedoidsV2 : buildChannelPrototypes);
+}

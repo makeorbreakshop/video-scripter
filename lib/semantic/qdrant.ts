@@ -105,7 +105,7 @@ export interface QdrantSearchHit<Payload = Record<string, unknown>> {
   id: string | number;
   score: number;
   payload: Payload;
-  vector?: number[];
+  vector?: number[] | Record<string, number[]>;
 }
 
 export interface QdrantFilter {
