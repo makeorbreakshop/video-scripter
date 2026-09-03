@@ -1,0 +1,25 @@
+{
+  "captured_at_et": "2026-09-03T11:44:30-04:00",
+  "qdrant_image": "qdrant/qdrant:v1.19.0",
+  "qdrant_memory_observed_mib": {
+    "before_snapshot": 718.6,
+    "after_snapshot": 674.2
+  },
+  "persistent_volume_all_semantic_experiments": "1.3G",
+  "durable_eval_snapshot_directory": "/Users/brandoncullum/qdrant/channelsmith/snapshots/semantic-eval-v4",
+  "snapshots": [
+    {
+      "collection": "videos_eval_v4",
+      "name": "videos_eval_v4-7833497353036245-2026-09-03-15-44-26.snapshot",
+      "bytes": 77659136,
+      "sha256": "1f8afecefd4befc9a288cd42a4288f7d05348e88c4eaa05fef66de8c09027a7b"
+    },
+    {
+      "collection": "channels_eval_v4",
+      "name": "channels_eval_v4-7833497353036245-2026-09-03-15-44-27.snapshot",
+      "bytes": 25402880,
+      "sha256": "9ba3d30c1bcfb2632e0652f4ebed9a0f55731cba3c8ffed160713593ec89b6c5"
+    }
+  ],
+  "note": "The two eval-v4 snapshots were copied from /qdrant/snapshots into the persistent Qdrant bind mount and their hashes were verified. The 1.3G persistent-volume measurement includes v1/v2 experiments, not only eval-v4."
+}

@@ -8,6 +8,7 @@ import {
   freezeV4CorpusManifest,
   freezeV4TaskManifest,
   isEligibleCorpusRow,
+  isValidOutlierEvidence,
   ndcgAtK,
   pendingDocuments,
   pooledRecallAtK,
@@ -84,6 +85,23 @@ describe('semantic v4 corpus contract', () => {
     ];
 
     expect(rejected.every((row) => !isEligibleCorpusRow(row, asOf))).toBe(true);
+  });
+
+  test('validates frozen outlier score evidence instead of assuming every result is valid', () => {
+    const valid = {
+      id: 'video-1',
+      score: 2.5,
+      confidence: 'likely',
+      n_baseline: 5,
+      baseline: 5_000,
+      scored_at: '2026-09-03T15:59:59.000Z',
+    };
+    expect(isValidOutlierEvidence(valid, asOf)).toBe(true);
+    expect(isValidOutlierEvidence({ ...valid, score: 1.99 }, asOf)).toBe(false);
+    expect(isValidOutlierEvidence({ ...valid, confidence: 'early' }, asOf)).toBe(false);
+    expect(isValidOutlierEvidence({ ...valid, n_baseline: 4 }, asOf)).toBe(false);
+    expect(isValidOutlierEvidence({ ...valid, baseline: 4_999 }, asOf)).toBe(false);
+    expect(isValidOutlierEvidence({ ...valid, scored_at: '2026-09-03T16:00:01.000Z' }, asOf)).toBe(false);
   });
 
   test('freezes a sorted, unique entity universe with a reproducible hash', () => {

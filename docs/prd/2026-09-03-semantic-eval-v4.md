@@ -9,6 +9,37 @@ Status: generated from frozen revision-4 artifacts. This is a diagnostic evaluat
 - Pooled non-J1 judgments: 2196; initial agreement 0.617; adjudicated 841; unresolved 35.
 - Semantic cost ledger today: $0.367486 for 11,854,097 tokens, including earlier revision-4 retries/experiments today.
 
+## Pool depth and overlap
+
+| Task | Pool size | In all three systems |
+| --- | --- | --- |
+| j1-make-or-break | 179 | 21 |
+| j1-mkbhd | 101 | 4 |
+| j2-maker-channel | 133 | 67 |
+| j2-tech-review-channel | 143 | 57 |
+| j2-build-explainer-channel | 183 | 17 |
+| j3-laser-product-explainer | 155 | 45 |
+| j3-kitchen-hacks-list | 179 | 21 |
+| j3-unusual-camera-demo | 180 | 20 |
+| j4-laser-engraver | 147 | 53 |
+| j4-woodworking-jigs | 126 | 74 |
+| j4-air-fryer-recipes | 169 | 31 |
+| j4-budget-camera-gear | 152 | 48 |
+| j5-maker-transfer | 149 | 51 |
+| j5-tech-transfer | 163 | 37 |
+| j5-gardening-transfer | 123 | 77 |
+| j5-build-transfer | 194 | 6 |
+
+Pools contain 101–194 unique candidates per task; pooled recall below is relative to this judged union, not exhaustive corpus truth.
+
+### Per-system novel candidates
+
+| System | Tasks | Novel total | Mean novel/task | Share of returned slots |
+| --- | --- | --- | --- | --- |
+| lexical_bm25 | 16 | 440 | 27.5 | 0.292 |
+| openai_dense | 16 | 436 | 27.3 | 0.273 |
+| rrf_control | 16 | 0 | 0.0 | 0.000 |
+
 ## J1 exact-channel MRR
 
 | Split | Task | System | MRR |
@@ -133,13 +164,66 @@ Status: generated from frozen revision-4 artifacts. This is a diagnostic evaluat
 | heldout | J5 | upper_pooled_recall@100 | openai_dense | 0.131 | 0.071–0.190 |
 | heldout | J5 | upper_pooled_recall@100 | rrf_control | 0.405 | 0.310–0.500 |
 
-## Retrieval latency
+## Retrieval guardrails
 
-| System | Tasks | p50 ms | p95 ms |
+| Split | Lane | Measure | System | Mean |
+| --- | --- | --- | --- | --- |
+| dev | J1 | zero_result | lexical_bm25 | 0.000 |
+| dev | J1 | zero_result | openai_dense | 0.000 |
+| dev | J1 | zero_result | rrf_control | 0.000 |
+| dev | J2 | zero_result | lexical_bm25 | 0.000 |
+| dev | J2 | zero_result | openai_dense | 0.000 |
+| dev | J2 | zero_result | rrf_control | 0.000 |
+| dev | J3 | zero_result | lexical_bm25 | 0.000 |
+| dev | J3 | zero_result | openai_dense | 0.000 |
+| dev | J3 | zero_result | rrf_control | 0.000 |
+| dev | J4 | invalid_outlier_rate@10 | lexical_bm25 | 0.000 |
+| dev | J4 | invalid_outlier_rate@10 | openai_dense | 0.000 |
+| dev | J4 | invalid_outlier_rate@10 | rrf_control | 0.000 |
+| dev | J4 | zero_result | lexical_bm25 | 0.000 |
+| dev | J4 | zero_result | openai_dense | 0.000 |
+| dev | J4 | zero_result | rrf_control | 0.000 |
+| dev | J5 | zero_result | lexical_bm25 | 0.000 |
+| dev | J5 | zero_result | openai_dense | 0.000 |
+| dev | J5 | zero_result | rrf_control | 0.000 |
+| heldout | J1 | zero_result | lexical_bm25 | 0.000 |
+| heldout | J1 | zero_result | openai_dense | 0.000 |
+| heldout | J1 | zero_result | rrf_control | 0.000 |
+| heldout | J2 | zero_result | lexical_bm25 | 0.000 |
+| heldout | J2 | zero_result | openai_dense | 0.000 |
+| heldout | J2 | zero_result | rrf_control | 0.000 |
+| heldout | J3 | zero_result | lexical_bm25 | 0.000 |
+| heldout | J3 | zero_result | openai_dense | 0.000 |
+| heldout | J3 | zero_result | rrf_control | 0.000 |
+| heldout | J4 | invalid_outlier_rate@10 | lexical_bm25 | 0.000 |
+| heldout | J4 | invalid_outlier_rate@10 | openai_dense | 0.000 |
+| heldout | J4 | invalid_outlier_rate@10 | rrf_control | 0.000 |
+| heldout | J4 | zero_result | lexical_bm25 | 0.000 |
+| heldout | J4 | zero_result | openai_dense | 0.000 |
+| heldout | J4 | zero_result | rrf_control | 0.000 |
+| heldout | J5 | zero_result | lexical_bm25 | 0.000 |
+| heldout | J5 | zero_result | openai_dense | 0.000 |
+| heldout | J5 | zero_result | rrf_control | 0.000 |
+
+J4 invalid-outlier rate is recomputed from frozen corpus membership and frozen score evidence; it is not inferred from judge labels.
+
+## Measured retrieval components
+
+| Component | Tasks | p50 ms | p95 ms |
 | --- | --- | --- | --- |
 | lexical_bm25 | 16 | 10.6 | 49.2 |
 | openai_dense | 16 | 28.4 | 78.2 |
 | rrf_control | 16 | 0.1 | 0.4 |
+
+These are component timings, not comparable end-to-end request latency: OpenAI dense is Qdrant vector-search-only; its frozen query embeddings were prepared in one 16-query batch taking 1142.1 ms. RRF is fusion-only and excludes both prerequisite retrieval legs.
+
+## Local resources and snapshots
+
+- Qdrant image: `qdrant/qdrant:v1.19.0`; observed container memory 674.2–718.6 MiB.
+- Eval snapshots: videos_eval_v4 74.1 MiB, SHA-256 `1f8afecefd4befc9a288cd42a4288f7d05348e88c4eaa05fef66de8c09027a7b`; channels_eval_v4 24.2 MiB, SHA-256 `9ba3d30c1bcfb2632e0652f4ebed9a0f55731cba3c8ffed160713593ec89b6c5`.
+- Durable snapshot directory: `/Users/brandoncullum/qdrant/channelsmith/snapshots/semantic-eval-v4`.
+- Persistent volume across all semantic experiments: 1.3G. The two eval-v4 snapshots were copied from /qdrant/snapshots into the persistent Qdrant bind mount and their hashes were verified. The 1.3G persistent-volume measurement includes v1/v2 experiments, not only eval-v4.
+
 
 ## Decision
 
@@ -148,7 +232,9 @@ Status: generated from frozen revision-4 artifacts. This is a diagnostic evaluat
 - J4 has candidates but does not pass the quality bar: its best held-out precision@10 is RRF at 0.350, below 0.600.
 - J5 fails the creative-transfer job. Held-out lower-bound creative precision@10 is 0.100 lexical, 0.000 dense, and 0.050 RRF; direct-application rates are 0.750, 1.000, and 0.900.
 
-The selected §8 challenger is dynamic purpose/mechanism extraction and explicit transfer verification for J5, developed only on the original dev tasks. Do not add a global reranker, corpus-wide facets, or endpoints. Freeze a new confirmation set before evaluating the challenger.
+On the two J5 dev tasks, judged creative candidates already exist below rank 20: j5-maker-transfer: lexical_bm25 20 (first 44), openai_dense 0 (first none), rrf_control 9 (first 66); j5-tech-transfer: lexical_bm25 14 (first 27), openai_dense 0 (first none), rrf_control 7 (first 50). This triggers both §8.2 (ordering failure) and §8.3 (topical results are not transferable); the old report was too confident in selecting §8.3 alone.
+
+The next bounded experiment is therefore one J5-local reranking bake-off on the original dev pools: (A) a simple local cross-encoder control and (B) dynamic purpose/mechanism extraction with explicit transfer verification. Select one variant on dev, freeze it, then evaluate that single selected variant on a new confirmation set. Do not add a corpus-wide reranker, precompute corpus-wide facets, or expose endpoints.
 
 ## Gate status
 

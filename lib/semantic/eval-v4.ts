@@ -18,6 +18,9 @@ export interface CorpusEligibilityRow {
   scored_at: string | Date;
 }
 
+export type OutlierEvidenceRow = Pick<CorpusEligibilityRow,
+  'id' | 'score' | 'confidence' | 'n_baseline' | 'baseline' | 'scored_at'>;
+
 interface ChannelSeed {
   channel_id: string;
   channel_name: string;
@@ -174,6 +177,21 @@ export function isEligibleCorpusRow(row: CorpusEligibilityRow, asOf: string | Da
     && row.is_short !== true
     && row.duration !== 'P0D'
     && row.is_institutional !== true
+    && score != null && score >= 2
+    && (row.confidence === 'likely' || row.confidence === 'confirmed')
+    && nBaseline != null && nBaseline >= 5
+    && baseline != null && baseline >= 5_000;
+}
+
+export function isValidOutlierEvidence(row: OutlierEvidenceRow, asOf: string | Date): boolean {
+  const boundary = new Date(asOf).getTime();
+  const scoredAt = new Date(row.scored_at).getTime();
+  const score = finiteNumber(row.score);
+  const nBaseline = finiteNumber(row.n_baseline);
+  const baseline = finiteNumber(row.baseline);
+  if (!Number.isFinite(boundary) || !Number.isFinite(scoredAt)) return false;
+  return nonEmpty(row.id)
+    && scoredAt <= boundary
     && score != null && score >= 2
     && (row.confidence === 'likely' || row.confidence === 'confirmed')
     && nBaseline != null && nBaseline >= 5
