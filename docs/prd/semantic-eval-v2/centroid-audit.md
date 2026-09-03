@@ -1,6 +1,6 @@
 # Semantic v2 centroid audit
 
-Generated: 2026-09-03T12:32:15.308Z
+Generated: Sep 3, 2026, 8:47:18 AM EDT
 
 | Created date | Rows | <5 source clusters | Placeholder hierarchy rows |
 |---|---:|---:|---:|
