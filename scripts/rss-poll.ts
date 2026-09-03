@@ -34,6 +34,7 @@ import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { reenter } from '../lib/nightly/launch-core';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { classifyTitleDiff, titleVersionPlan } from '../lib/rss/title-change';
 import {
   RSS_POLICY,
@@ -56,7 +57,9 @@ const args = process.argv.slice(2);
 const dry = args.includes('--dry');
 const subset = args.includes('--subset') || process.env.WATCH_SUBSET === '1';
 const forceSeed = args.includes('--seed');
-const maxChannels = parseInt(args.find((a) => /^\d+$/.test(a)) || '0', 10) || null;
+const maxChannels = parseInt(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--max-seconds') || '0', 10) || null;
+const job = startManagedJob({ name: 'rss-poll', args });
+if (!job.acquired) process.exit(0);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 // pgbouncer strips startup options, so SET per connection like the other batch scripts.
@@ -244,6 +247,7 @@ if (dry) {
   const total = rows.reduce((a: number, r: any) => a + r.total, 0);
   console.log(`(per-run cap ${maxChannels ?? perRunCap(total)}, concurrency ${RSS_POLICY.concurrency}, tick ${RSS_POLICY.runIntervalSec}s)`);
   await pool.end();
+  job.finish();
   process.exit(0);
 }
 
@@ -272,6 +276,7 @@ interface Fetched { channel_id: string; entries: RssEntry[] }
 const fetched: Fetched[] = [];
 
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
+  if (job.signal.aborted) break;
   await Promise.all(group.map(async (c) => {
     let status = 0;
     try {
@@ -322,7 +327,11 @@ interface Snap {
 }
 const snap = new Map<string, Snap>();
 // Chunked so no single statement carries a 60K-element array.
+let snapshotComplete = true;
 for (const part of chunk(allIds, CHUNK)) {
+  // A partial snapshot is worse than none: a video missing from `snap` looks like an unknown id
+  // and would be queued as a new upload, and its real title/description diff would be missed.
+  if (job.signal.aborted) { snapshotComplete = false; break; }
   const [v, d, t, th] = await Promise.all([
     pool.query(`select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [part]),
     pool.query(`select distinct on (video_id) video_id, version, sha256 from description_versions
@@ -337,6 +346,7 @@ for (const part of chunk(allIds, CHUNK)) {
   for (const r of th.rows) { const s = snap.get(r.video_id); if (s) { s.thumbVersion = r.version; s.thumbLastChecked = r.last_checked; } }
 }
 const snapSecs = secs(t1);
+if (!snapshotComplete) { fetched.length = 0; log('snapshot aborted mid-way; skipping the diff so no feed is half-read'); }
 log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} already in the corpus`);
 
 // ---------------------------------------------------------------- phase 3: diff, in memory
@@ -344,8 +354,13 @@ log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} al
 const t2 = Date.now();
 const nowIso = now.toISOString();
 let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
+const diffedChannels = new Set<string>();
 
 for (const f of fetched) {
+  // startManagedJob's run budget can abort mid-phase. A channel whose feed we fetched but did
+  // NOT finish diffing must not be recorded as polled, or its changes would be dropped until
+  // the next 15-minute cycle — diffedChannels is what the flush filters on.
+  if (job.signal.aborted) break;
   for (const e of f.entries) {
     const cur = snap.get(e.video_id);
 
@@ -412,6 +427,17 @@ for (const f of fetched) {
       buf.dueNow.push({ video_id: e.video_id, version: cur.thumbVersion });
     }
   }
+  diffedChannels.add(f.channel_id);
+}
+
+// Drop the channel-state rows for feeds we fetched but never got to diff (budget abort). They
+// stay due and are re-polled next tick: one wasted fetch, never a missed change. Channels that
+// 304'd, matched on body hash, or errored were never in `fetched` and are kept.
+const fetchedIds = new Set(fetched.map((f) => f.channel_id));
+const droppedChannels = buf.channels.filter((c) => fetchedIds.has(c.channel_id) && !diffedChannels.has(c.channel_id)).length;
+if (droppedChannels) {
+  buf.channels = buf.channels.filter((c) => !fetchedIds.has(c.channel_id) || diffedChannels.has(c.channel_id));
+  log(`ABORTED mid-tick: ${droppedChannels} fetched feeds left un-diffed and still due`);
 }
 const diffSecs = secs(t2);
 
@@ -439,3 +465,4 @@ log(
 );
 log(`rows written: ${JSON.stringify(written)}`);
 await pool.end();
+job.finish();
