@@ -21,7 +21,16 @@ export function oauthClient(): { clientId: string; clientSecret: string } {
   return { clientId, clientSecret };
 }
 
+/**
+ * Where Google sends the user back. Prefer the configured value: it must match a URI
+ * registered on the OAuth client exactly, and deriving it from the request host is fragile
+ * (channelsmith.com redirects to www, so the origin is not the registered domain) as well
+ * as attacker-influencable via the Host header. Falls back to the request origin for local
+ * development, where http://localhost:3000/oauth-callback is registered.
+ */
 export function redirectUriFor(origin: string): string {
+  const configured = (process.env.YOUTUBE_REDIRECT_URI || '').trim();
+  if (configured) return configured.replace(/\/$/, '');
   return `${origin.replace(/\/$/, '')}${CALLBACK_PATH}`;
 }
 

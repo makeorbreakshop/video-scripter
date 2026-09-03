@@ -15,8 +15,15 @@ describe('buildAuthUrl', () => {
     expect(u.searchParams.get('scope')!.split(' ')).toEqual(YT_SCOPES);
     expect(u.searchParams.get('redirect_uri')).toBe('http://localhost:3000/oauth-callback');
   });
-  it('derives the registered callback from the request origin', () => {
+  it('derives the callback from the request origin when nothing is configured', () => {
+    delete process.env.YOUTUBE_REDIRECT_URI;
     expect(redirectUriFor('https://channelsmith.com/')).toBe('https://channelsmith.com/oauth-callback');
+  });
+  it('prefers the configured uri, because it must match the OAuth client exactly', () => {
+    process.env.YOUTUBE_REDIRECT_URI = 'https://channelsmith.com/oauth-callback';
+    // the live site serves from www, but the registered uri is the bare domain
+    expect(redirectUriFor('https://www.channelsmith.com')).toBe('https://channelsmith.com/oauth-callback');
+    delete process.env.YOUTUBE_REDIRECT_URI;
   });
 });
 
