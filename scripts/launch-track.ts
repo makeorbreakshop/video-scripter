@@ -5,7 +5,9 @@
 //  - samples due videos via videos:batchGetStats (separate 10K-unit bucket) -> view_samples,
 //    and rolls the latest sample of the day into view_snapshots (daily truth for scoring/admin)
 //  - re-enters a video into the launch window when scripts/thumbnail-watch.ts records a new
-//    thumbnail version, or when the channel RSS feed (zero quota, hourly) shows a new title
+//    thumbnail version, or when ANY detector writes a new title_versions row (scripts/rss-poll.ts,
+//    the watcher's oEmbed pass, this script's own RSS check)
+//  - WATCH_SUBSET=1 hands titles for watch_subset channels to scripts/rss-poll.ts and skips them here
 //  - never updates the videos table except title on a confirmed title change
 // Direct Postgres only (2026-08-31 egress rule). Usage: npx tsx scripts/launch-track.ts [maxCalls]
 import dotenv from 'dotenv';
@@ -17,6 +19,7 @@ import {
   nextCheck, reenter, launchUntilFor, titleCheckDue, parseRssTitles, daysSincePublished,
   changeAtFromLaunchUntil, type Tier,
 } from '../lib/nightly/launch-core';
+import { recordTitleChange } from '../lib/rss/title-change';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
 // 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
@@ -61,12 +64,36 @@ const reentered = await pool.query(
 );
 if (reentered.rowCount) log(`re-entered ${reentered.rowCount} videos after thumbnail change`);
 
+// --- 2b. Re-entry on title change (detector = anything that writes title_versions: the RSS
+// poller, the watcher's oEmbed pass, a backfill). The poller re-enters the videos it detects
+// itself; this is the catch-all so no title_versions row is ever missed. last_title_version_seen
+// makes it fire exactly once per version.
+const titleReentered = await pool.query(
+  `with latest as (
+     select t.video_id, max(t.version) as v from title_versions t
+     join track_schedule s on s.video_id = t.video_id
+     where t.version > 1 and t.first_seen > now() - interval '2 days'
+     group by t.video_id)
+   update track_schedule s
+      set phase = 'launch', launch_until = now() + interval '24 hours', next_check = now(),
+          entered_reason = 'title_change', last_title_version_seen = l.v, updated_at = now()
+     from latest l
+    where l.video_id = s.video_id and l.v > s.last_title_version_seen
+   returning s.video_id`
+);
+if (titleReentered.rowCount) log(`re-entered ${titleReentered.rowCount} videos after title change`);
+
 // --- 3. Title checks via channel RSS (zero quota): hourly for launch-window and user-tracked videos, daily for the rest under 30 days ---
+// scripts/rss-poll.ts owns titles for watch_subset channels (plan section 1: retire this path
+// once the poller owns titles). While the subset gate is on, skip exactly those channels so the
+// two detectors can never write competing title_versions rows for the same change.
+const subsetGate = process.env.WATCH_SUBSET === '1';
 const titleDue = await pool.query(
   `select s.video_id, s.channel_id, v.title
      from track_schedule s join videos v on v.id = s.video_id
     left join channel_tracking ct on ct.channel_id = s.channel_id
     where s.channel_id is not null
+      and (not $1::boolean or not exists (select 1 from watch_subset ws where ws.channel_id = s.channel_id))
       and v.published_at > now() - interval '30 days'
       and ${longformSql('v')}
       -- launch window and user-tracked channels hourly; the rest of the recent corpus daily.
@@ -74,7 +101,8 @@ const titleDue = await pool.query(
       and (s.last_title_check is null
            or s.last_title_check < now() - (case when s.phase = 'launch' or ct.lane = 'user' then interval '60 minutes' else interval '24 hours' end))
     order by (s.phase = 'launch' or ct.lane = 'user') desc, s.last_title_check nulls first
-    limit 400`
+    limit 400`,
+  [subsetGate]
 );
 type TitleRow = { video_id: string; channel_id: string; title: string };
 const byChannel = new Map<string, { video_id: string; title: string }[]>();
@@ -96,27 +124,7 @@ for (const group of chunk([...byChannel.entries()], 10)) {
           const t = titles.get(v.video_id);
           if (t == null) continue;
           if (t !== v.title && v.title) {
-            const { rows } = (await pool.query(
-              `select coalesce(max(version), 0)::int as v from title_versions where video_id = $1`, [v.video_id]
-            )) as { rows: { v: number }[] };
-            const next = rows[0].v === 0 ? 2 : rows[0].v + 1;
-            if (rows[0].v === 0) {
-              await pool.query(
-                `insert into title_versions (video_id, version, title, first_seen) values ($1, 1, $2, $3) on conflict do nothing`,
-                [v.video_id, v.title, now]
-              );
-            }
-            await pool.query(
-              `insert into title_versions (video_id, version, title) values ($1, $2, $3) on conflict do nothing`,
-              [v.video_id, next, t]
-            );
-            await pool.query(`update videos set title = $1, updated_at = now() where id = $2`, [t, v.video_id]);
-            const r = reenter(now);
-            await pool.query(
-              `update track_schedule set phase = $1, launch_until = $2, next_check = $3, entered_reason = 'title_change',
-                      last_title_check = now(), updated_at = now() where video_id = $4`,
-              [r.phase, r.launch_until, r.next_check, v.video_id]
-            );
+            await recordTitleChange(pool, v.video_id, v.title, t, null, now);
             titleChanges++;
             log(`TITLE CHANGE ${v.video_id}: "${v.title}" -> "${t}"`);
           } else {

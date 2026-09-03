@@ -50,3 +50,8 @@ create table if not exists watch_subset (
   reason     text,
   added_at   timestamptz not null default now()
 );
+
+-- Stats-lane re-entry on title changes (plan section 5). The schedule already tracks the
+-- highest thumbnail version it reacted to; titles get the same marker so a title_versions row
+-- written by any path (RSS poller, oEmbed, a backfill) re-opens the change ladder exactly once.
+alter table track_schedule add column if not exists last_title_version_seen integer not null default 0;

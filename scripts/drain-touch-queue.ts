@@ -8,39 +8,41 @@ import pg from 'pg';
 import { clampCount, chunk } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
+import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 let quota = 0;
 
-function isShortDuration(dur: string | null | undefined): boolean {
-  if (!dur) return false;
-  const m = dur.match(/^PT(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (!m) return false;
-  return (parseInt(m[1] || '0', 10)) * 60 + parseInt(m[2] || '0', 10) <= 62;
-}
-
 async function insertVideo(v: any, tier = 1): Promise<boolean> {
-  if (isShortDuration(v.contentDetails?.duration)) return false;
+  // One shared Shorts/live rule (lib/ingest/classify.ts). A 63-180s clip is settled against
+  // YouTube; if it cannot be reached the row is stored unverified and longformSql hides it.
+  const cls = await classifyForInsert(v);
+  if (skipForInsert(cls.kind)) return false;
   const sn = v.snippet || {}; const st = v.statistics || {};
   // Deadlock-retried: the videos insert fires sync_institutional triggers that
   // can deadlock against concurrent launch-track/nightly-tracking writers
   // (observed 40P01 overnight 2026-09-02).
-  await withDeadlockRetry(() => insertVideoOnce(v, tier, sn, st));
+  await withDeadlockRetry(() => insertVideoOnce(v, tier, sn, st, cls));
   return true;
 }
 
-async function insertVideoOnce(v: any, tier: number, sn: any, st: any): Promise<void> {
+async function insertVideoOnce(v: any, tier: number, sn: any, st: any, cls: InsertClassification): Promise<void> {
   await pool.query(
     `insert into videos (id, title, description, channel_id, channel_name, published_at,
                          view_count, like_count, comment_count, duration, thumbnail_url,
-                         data_source, is_competitor, import_date, updated_at, user_id)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000')
-     on conflict (id) do nothing`,
+                         data_source, is_competitor, import_date, updated_at, user_id,
+                         is_short, shorts_checked_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000',
+             $12, case when $13::boolean then now() else null end)
+     on conflict (id) do update set
+           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
     [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId, sn.channelTitle || '',
      sn.publishedAt, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)),
      clampCount(parseInt(st.commentCount || '0', 10)), v.contentDetails?.duration || null,
-     sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null]
+     sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
+     cls.is_short, cls.shorts_checked_at === 'now']
   );
   await pool.query(
     `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
@@ -84,7 +86,7 @@ if (spent >= DISCOVERY_DAILY_CAP) { console.log(`discovery cap reached (${spent}
 if (total >= GLOBAL_FLOOR) { console.log(`global quota floor reached (${total}); discovery paused`); await pool.end(); process.exit(0); }
 
 const { rows } = await pool.query(
-  `select id, kind, ref, mode from touch_queue where processed_at is null order by id limit 1000`
+  `select id, kind, ref, mode, source_url from touch_queue where processed_at is null order by id limit 1000`
 );
 if (!rows.length) { console.log('queue empty'); await pool.end(); process.exit(0); }
 
@@ -96,6 +98,37 @@ for (const group of chunk(videoRows, 500)) {
   res.rows.forEach((r) => known.add(r.id));
 }
 const newVideoRows = videoRows.filter((r) => !known.has(r.ref));
+
+// --- 1b. WebSub wake-up (two-lane watcher, plan section 3) ---------------------------------
+// A push is a doorbell, not a confirmed change: it says "look at this channel now", and the RSS
+// poll is what confirms what actually changed. So we only (a) wake the channel so the next
+// rss-poll tick reads its feed, and (b) if the push is about a video we ALREADY have — i.e. an
+// edit, not an upload — mark it due now for the thumbnail watcher by stamping the latest
+// thumbnail_versions.last_checked to 'epoch', which beats every recheck window in every tier.
+const websubRows = rows.filter((r) => r.kind === 'video' && r.mode === 'websub');
+const wokenChannels = [...new Set(
+  websubRows.map((r) => /^websub:(UC[A-Za-z0-9_-]{22})$/.exec(r.source_url || '')?.[1]).filter(Boolean)
+)] as string[];
+if (wokenChannels.length) {
+  await pool.query(
+    `insert into channel_rss_state (channel_id, rss_state, rss_last_polled)
+     select unnest($1::text[]), 'woken', null
+     on conflict (channel_id) do update set rss_state = 'woken', rss_last_polled = null, updated_at = now()`,
+    [wokenChannels]
+  ).catch((e) => console.error(`websub wake-up failed: ${e.message}`));
+}
+const editedVideos = websubRows.filter((r) => known.has(r.ref)).map((r) => r.ref);
+if (editedVideos.length) {
+  const marked = await pool.query(
+    `update thumbnail_versions t set last_checked = 'epoch'
+      where t.video_id = any($1)
+        and t.version = (select max(t2.version) from thumbnail_versions t2 where t2.video_id = t.video_id)`,
+    [editedVideos]
+  ).catch(() => ({ rowCount: 0 }));
+  console.log(`WebSub: woke ${wokenChannels.length} channels, marked ${marked.rowCount} edited videos due now`);
+} else if (wokenChannels.length) {
+  console.log(`WebSub: woke ${wokenChannels.length} channels`);
+}
 
 const channelIds = new Map<number, string | null>();
 for (const r of rows.filter((x) => x.kind === 'channel')) channelIds.set(r.id, r.ref);

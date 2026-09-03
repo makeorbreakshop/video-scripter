@@ -22,7 +22,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import crypto from 'crypto';
 import { chunk } from '../lib/nightly/tracking-core';
-import { reenter } from '../lib/nightly/launch-core';
+import { recordTitleChange } from '../lib/rss/title-change';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -115,32 +115,10 @@ async function handleEntry(channelId: string, e: ReturnType<typeof parseRssEntri
     samples++;
   }
 
-  // 3. Title change: same write path launch-track used, plus the stats-lane re-entry.
+  // 3. Title change: shared write path (lib/rss/title-change.ts), including the stats-lane
+  // re-entry. feed-materialize.ts turns the title_versions row into the title_change event.
   if (e.title && cur.title && e.title !== cur.title) {
-    const { rows: tv } = await pool.query(
-      `select coalesce(max(version), 0)::int as v from title_versions where video_id = $1`, [e.video_id]
-    );
-    // No history yet: archive the title we had as v1 so the feed event has an old title.
-    if (tv[0].v === 0) {
-      await pool.query(
-        `insert into title_versions (video_id, version, title, first_seen) values ($1, 1, $2, $3)
-         on conflict do nothing`,
-        [e.video_id, cur.title, cur.published_at ?? now]
-      );
-    }
-    const next = tv[0].v === 0 ? 2 : tv[0].v + 1;
-    await pool.query(
-      `insert into title_versions (video_id, version, title) values ($1,$2,$3) on conflict do nothing`,
-      [e.video_id, next, e.title]
-    );
-    await pool.query(`update videos set title = $1, updated_at = now() where id = $2`, [e.title, e.video_id]);
-    const r = reenter(now);
-    await pool.query(
-      `update track_schedule set phase = $1, launch_until = $2, next_check = $3,
-              entered_reason = 'title_change', last_title_check = now(), updated_at = now()
-        where video_id = $4`,
-      [r.phase, r.launch_until, r.next_check, e.video_id]
-    );
+    await recordTitleChange(pool, e.video_id, cur.title, e.title, cur.published_at, now);
     titleChanges++;
     log(`TITLE CHANGE ${e.video_id}: "${cur.title}" -> "${e.title}"`);
   } else {
