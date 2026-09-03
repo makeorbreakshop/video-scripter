@@ -36,8 +36,8 @@ async function insertVideoOnce(v: any, tier: number, sn: any, st: any, cls: Inse
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000',
              $12, case when $13::boolean then now() else null end)
      on conflict (id) do update set
-           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
-           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
+       is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+       shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
     [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId, sn.channelTitle || '',
      sn.publishedAt, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)),
      clampCount(parseInt(st.commentCount || '0', 10)), v.contentDetails?.duration || null,

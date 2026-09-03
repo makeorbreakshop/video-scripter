@@ -2,7 +2,7 @@ jest.mock('../admin/db', () => ({ q: jest.fn(), one: jest.fn() }));
 import { q, one } from '../admin/db';
 import {
   searchTracked, resolveInput, resolveChannel, trackChannel, untrackChannel,
-  isShortOrLive, logQuota, quotaSpentToday, PlanLimitError, BACKFILL_DEPTH,
+  insertVideos, logQuota, quotaSpentToday, PlanLimitError, BACKFILL_DEPTH,
 } from './channels';
 
 const mq = q as jest.Mock;
@@ -159,16 +159,48 @@ describe('resolveChannel', () => {
   });
 });
 
-describe('isShortOrLive', () => {
-  it('rejects sub-63-second videos, live and upcoming', () => {
-    expect(isShortOrLive({ contentDetails: { duration: 'PT58S' } })).toBe(true);
-    expect(isShortOrLive({ contentDetails: { duration: 'PT1M2S' } })).toBe(true);
-    expect(isShortOrLive({ contentDetails: { duration: 'PT10M' }, snippet: { liveBroadcastContent: 'live' } })).toBe(true);
-    expect(isShortOrLive({ snippet: { liveBroadcastContent: 'upcoming' } })).toBe(true);
+// insertVideos classifies through lib/ingest/classify.ts; the boundaries themselves are
+// pinned in lib/ingest/classify.test.ts. Here we only check what reaches the videos table.
+describe('insertVideos Shorts handling', () => {
+  const vid = (id: string, duration: string, liveBroadcastContent = 'none') => ({
+    id, contentDetails: { duration },
+    snippet: { title: id, channelId: CH, publishedAt: '2026-01-01T00:00:00Z', liveBroadcastContent },
+    statistics: { viewCount: '5' },
   });
-  it('keeps longform', () => {
-    expect(isShortOrLive({ contentDetails: { duration: 'PT1M3S' }, snippet: { liveBroadcastContent: 'none' } })).toBe(false);
-    expect(isShortOrLive({ contentDetails: { duration: 'PT1H2M' } })).toBe(false);
+  const insertedIds = () => callsMatching(/insert into videos/).map((c) => c[1][0]);
+
+  it('skips Shorts and live/upcoming placeholders', async () => {
+    expect(await insertVideos([
+      vid('short000001', 'PT58S'),
+      vid('short000002', 'PT1M2S'),
+      vid('live00000001', 'PT10M', 'live'),
+      vid('live00000002', 'P0D'),
+    ], 'competitor')).toBe(0);
+    expect(insertedIds()).toEqual([]);
+  });
+
+  it('inserts longform with is_short=false and no verification stamp', async () => {
+    expect(await insertVideos([vid('longform0001', 'PT10M')], 'competitor')).toBe(1);
+    const call = callsMatching(/insert into videos/)[0];
+    expect(insertedIds()).toEqual(['longform0001']);
+    expect(call[1].slice(-2)).toEqual([false, false]); // is_short, verified-now flag
+    expect(sqlOf(call)).toContain('is_short, shorts_checked_at');
+    expect(sqlOf(call)).toContain('coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)');
+  });
+
+  it('asks YouTube about a 63-180s clip and drops it when it is a Short', async () => {
+    // lib/thumbs/shorts.ts HEADs /shorts/<id>: 200 means it IS a Short.
+    (global.fetch as jest.Mock).mockResolvedValue({ status: 200, headers: { get: () => null } });
+    expect(await insertVideos([vid('clip00000001', 'PT2M')], 'competitor')).toBe(0);
+    expect(insertedIds()).toEqual([]);
+  });
+
+  it('keeps a verified 63-180s clip and stamps shorts_checked_at', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      status: 303, headers: { get: () => 'https://www.youtube.com/watch?v=clip00000001' },
+    });
+    expect(await insertVideos([vid('clip00000001', 'PT2M')], 'competitor')).toBe(1);
+    expect(callsMatching(/insert into videos/)[0][1].slice(-2)).toEqual([false, true]);
   });
 });
 
@@ -240,7 +272,9 @@ describe('trackChannel', () => {
     expect(r.enrolled).toBe(true);
     expect(r.fast_synced).toBe(1);
     expect(callsMatching(/insert into discovered_channels/)).toHaveLength(1);
-    expect(sqlOf(callsMatching(/insert into videos/)[0])).toContain('on conflict (id) do nothing');
+    // Idempotent: a re-seen video only ever gains a Shorts verdict, never loses one.
+    expect(sqlOf(callsMatching(/insert into videos/)[0]))
+      .toContain('coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)');
     expect(callsMatching(/insert into view_snapshots/)).toHaveLength(1);
     // and it is searchable right away: one directory row, no full rebuild
     const dir = callsMatching(/insert into channel_directory/);

@@ -5,6 +5,9 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import pg from 'pg';
+import {
+  SHORTS_UNVERIFIED_SQL, SHORTS_UNVERIFIED_WARN, SHORTS_UNVERIFIED_FAIL, shortsUnverifiedStatus,
+} from '@/lib/pipeline/health-checks';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,7 +53,7 @@ function median(xs: number[]) {
 export async function GET() {
   const db = getPool();
   try {
-    const [snapshots, ingested, thumbDays, thumbTotals, quota, quotaLedger, logs] =
+    const [snapshots, ingested, thumbDays, thumbTotals, quota, quotaLedger, shortsUnverified, logs] =
       await Promise.all([
         db.query(
           `select snapshot_date::text as day, count(*)::int as n
@@ -81,6 +84,7 @@ export async function GET() {
           `select category, sum(units)::int as units from quota_ledger
            where date = current_date group by category order by units desc`
         ),
+        db.query(SHORTS_UNVERIFIED_SQL),
         Promise.all(LOGS.map(async (l) => ({ job: l.job, ...(await readLog(l.file)) }))),
       ]);
 
@@ -171,9 +175,24 @@ export async function GET() {
       return { ...j, hasErrors: errTail.length > 0, median: med, anomaly };
     });
 
+    // Runtime invariant: recent <=180s uploads nobody has asked YouTube about. Ingest settles
+    // these at insert time (lib/ingest/classify.ts), so a backlog means the redirect check is
+    // failing and unverified clips are queued to pollute channel baselines.
+    const unverified = shortsUnverified.rows[0]?.n ?? 0;
+    const checks = [
+      {
+        check: 'shorts_unverified_recent',
+        status: shortsUnverifiedStatus(unverified),
+        value: unverified,
+        warnAbove: SHORTS_UNVERIFIED_WARN,
+        failAbove: SHORTS_UNVERIFIED_FAIL,
+      },
+    ];
+
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
       jobs,
+      checks,
       thumbnails: {
         watched: tt.watched,
         checked24h: tt.checked_24h,

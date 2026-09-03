@@ -13,6 +13,7 @@ const SCANNED_ROOTS = ['lib', 'scripts', 'app/app', 'app/api/v1', 'server', 'wor
 // Known exceptions, each with a reason. Remove an entry when its file is migrated.
 const ALLOWLIST: Record<string, string> = {
   'lib/scoring/longform.ts': 'the definition itself',
+  'lib/ingest/classify.ts': 'the ingest-side definition itself',
   'lib/unified-video-import.ts': 'legacy importer; writes the column, does not filter on it',
   'lib/hybrid-performance-cached.ts': 'legacy performance tool (supabase-js), pre-ChannelSmith',
   'lib/temporal-baseline-processor.ts': 'legacy temporal baseline (superseded by lib/scoring)',
@@ -24,6 +25,15 @@ const ALLOWLIST: Record<string, string> = {
   'lib/semantic/': 'semantic layer corpus selection; migrate with the semantic PRD (tracked)',
   'app/api/v1/videos/[id]/route.ts': 'echoes the flag in the response; no filtering',
 };
+
+// A line carrying a PRIVATE duration rule. Every ingest path must classify through
+// lib/ingest/classify.ts; a hand-rolled "<= 62s" copy is exactly the bug that let 63-180s
+// Shorts into the corpus as long-form.
+const DURATION_RULE_PATTERNS = [
+  /<=\s*62\b/,
+  /secs\s*<=\s*\d+/,
+  /PT\(\?:\(\\d\+\)M\)\?\(\?:\(\\d\+\)S\)\?/,   // the ISO-8601 duration regex literal
+];
 
 // A line that FILTERS on the flag, as opposed to selecting or writing it.
 const FILTER_PATTERNS = [
@@ -60,6 +70,21 @@ describe('long-form rule guard', () => {
         const lines = fs.readFileSync(file, 'utf8').split('\n');
         lines.forEach((line, i) => {
           if (FILTER_PATTERNS.some((re) => re.test(line))) offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 100)}`);
+        });
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test('no ingest path carries its own duration rule instead of lib/ingest/classify.ts', () => {
+    const offenders: string[] = [];
+    for (const root of SCANNED_ROOTS) {
+      for (const file of walk(path.join(ROOT, root))) {
+        const rel = path.relative(ROOT, file).split(path.sep).join('/');
+        if (allowed(rel)) continue;
+        const lines = fs.readFileSync(file, 'utf8').split('\n');
+        lines.forEach((line, i) => {
+          if (DURATION_RULE_PATTERNS.some((re) => re.test(line))) offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 100)}`);
         });
       }
     }

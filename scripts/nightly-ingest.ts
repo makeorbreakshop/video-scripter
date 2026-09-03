@@ -7,17 +7,10 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
+import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
 
 const maxChannels = parseInt(process.argv[2] || '0', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
-
-function isShortDuration(dur: string | null | undefined): boolean {
-  if (!dur) return false;
-  const m = dur.match(/^PT(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (!m) return false; // has hours -> not a short
-  const secs = (parseInt(m[1] || '0', 10)) * 60 + parseInt(m[2] || '0', 10);
-  return secs <= 62;
-}
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 
@@ -166,16 +159,23 @@ for (const group of chunk(newIds, 50)) {
   }
   const data: any = await res.json();
   for (const v of data.items || []) {
-    if (isShortDuration(v.contentDetails?.duration)) continue; // longform corpus only
+    // longform corpus only, via the one shared rule (lib/ingest/classify.ts): a 63-180s clip
+    // is settled against YouTube, or stored unverified so longformSql keeps it out for now.
+    const cls = await classifyForInsert(v);
+    if (skipForInsert(cls.kind)) continue;
     const sn = v.snippet || {};
     const st = v.statistics || {};
     try {
       await pool.query(
         `insert into videos (id, title, description, channel_id, channel_name, published_at,
                              view_count, like_count, comment_count, duration, thumbnail_url,
-                             data_source, is_competitor, import_date, updated_at, user_id)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000')
-         on conflict (id) do nothing`,
+                             data_source, is_competitor, import_date, updated_at, user_id,
+                             is_short, shorts_checked_at)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000',
+                 $12, case when $13::boolean then now() else null end)
+         on conflict (id) do update set
+           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
         [
           v.id,
           sn.title || '',
@@ -188,6 +188,8 @@ for (const group of chunk(newIds, 50)) {
           clampCount(parseInt(st.commentCount || '0', 10)),
           v.contentDetails?.duration || null,
           sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
+          cls.is_short,
+          cls.shorts_checked_at === 'now',
         ]
       );
       await pool.query(

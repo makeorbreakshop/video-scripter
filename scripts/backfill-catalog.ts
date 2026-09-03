@@ -16,6 +16,7 @@ dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { chunk, clampCount } from '../lib/nightly/tracking-core';
 import { CHANNEL_ID_RE, uploadsPlaylistId } from '../lib/app/channels-core';
+import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 const CATEGORY = 'backfill';
@@ -64,14 +65,7 @@ function takeUnit(): boolean {
   return true;
 }
 
-function isShortOrLive(v: any): boolean {
-  const m = String(v?.contentDetails?.duration || '').match(/^PT(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (m && parseInt(m[1] || '0', 10) * 60 + parseInt(m[2] || '0', 10) <= 62) return true;
-  const bc = v?.snippet?.liveBroadcastContent;
-  return bc === 'live' || bc === 'upcoming';
-}
-
-async function insertVideo(v: any): Promise<boolean> {
+async function insertVideo(v: any, cls: InsertClassification): Promise<boolean> {
   const sn = v.snippet || {};
   const st = v.statistics || {};
   const views = clampCount(parseInt(st.viewCount || '0', 10));
@@ -81,13 +75,19 @@ async function insertVideo(v: any): Promise<boolean> {
     const r = await pool.query(
       `insert into videos (id, title, description, channel_id, channel_name, published_at,
                            view_count, like_count, comment_count, duration, thumbnail_url,
-                           data_source, is_competitor, import_date, updated_at, user_id)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'user',true,now(),now(),$12)
-       on conflict (id) do nothing`,
+                           data_source, is_competitor, import_date, updated_at, user_id,
+                           is_short, shorts_checked_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'user',true,now(),now(),$12,
+               $13, case when $14::boolean then now() else null end)
+       on conflict (id) do update set
+         is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+         shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)
+       returning (xmax = 0) as fresh`,
       [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId,
        sn.channelTitle || '', sn.publishedAt, views, likes, comments,
        v.contentDetails?.duration || null,
-       sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null, SYSTEM_USER]
+       sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null, SYSTEM_USER,
+       cls.is_short, cls.shorts_checked_at === 'now']
     );
     await pool.query(
       `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
@@ -95,7 +95,8 @@ async function insertVideo(v: any): Promise<boolean> {
        on conflict (video_id, snapshot_date) do nothing`,
       [v.id, views, likes, comments, sn.publishedAt]
     );
-    return (r.rowCount ?? 0) > 0;
+    // `do update` always reports one row, so ask Postgres whether this row was actually new.
+    return r.rows[0]?.fresh === true;
   } catch (e: any) {
     console.error(`  insert ${v.id} failed: ${e.message}`);
     return false;
@@ -152,8 +153,11 @@ async function backfillChannel(channelId: string, depth: number): Promise<Outcom
     if (!takeUnit()) { exhausted = true; break; }
     const d = await ytJson(`${YT}/videos?part=snippet,statistics,contentDetails&id=${group.join(',')}&key=${API_KEY}`);
     for (const v of d.items || []) {
-      if (isShortOrLive(v)) continue;
-      if (await insertVideo(v)) inserted++;
+      // One shared Shorts/live rule (lib/ingest/classify.ts): 63-180s clips are settled against
+      // YouTube, or inserted unverified so longformSql keeps them out until verify-shorts runs.
+      const cls = await classifyForInsert(v);
+      if (skipForInsert(cls.kind)) continue;
+      if (await insertVideo(v, cls)) inserted++;
     }
     await sleep(PAGE_SLEEP_MS);
   }

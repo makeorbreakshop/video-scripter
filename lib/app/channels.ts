@@ -13,6 +13,7 @@ import {
 } from './channels-core';
 import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
+import { classifyForInsert, skipForInsert } from '../ingest/classify';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
@@ -333,23 +334,14 @@ export async function fastSync(channelId: string): Promise<{ inserted: number; u
   return { inserted, units };
 }
 
-/** True for Shorts and live content — excluded from the longform corpus. */
-export function isShortOrLive(item: any): boolean {
-  const dur: string = item?.contentDetails?.duration || '';
-  const m = dur.match(/^PT(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (m) {
-    const secs = parseInt(m[1] || '0', 10) * 60 + parseInt(m[2] || '0', 10);
-    if (secs <= 62) return true;
-  }
-  const bc = item?.snippet?.liveBroadcastContent;
-  return bc === 'live' || bc === 'upcoming';
-}
-
 /** Insert video rows + a same-day view_snapshots row. Idempotent. */
 export async function insertVideos(items: any[], dataSource: 'user' | 'competitor'): Promise<number> {
   let n = 0;
   for (const v of items) {
-    if (isShortOrLive(v)) continue;
+    // One shared Shorts/live rule (lib/ingest/classify.ts): 63-180s clips are settled against
+    // YouTube before they count as long-form; an unsettled one is stored unverified.
+    const cls = await classifyForInsert(v);
+    if (skipForInsert(cls.kind)) continue;
     const sn = v.snippet || {};
     const st = v.statistics || {};
     const views = clampCount(parseInt(st.viewCount || '0', 10));
@@ -359,14 +351,18 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
       await q(
         `insert into videos (id, title, description, channel_id, channel_name, published_at,
                              view_count, like_count, comment_count, duration, thumbnail_url,
-                             data_source, is_competitor, import_date, updated_at, user_id)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,now(),now(),$13)
-         on conflict (id) do nothing`,
+                             data_source, is_competitor, import_date, updated_at, user_id,
+                             is_short, shorts_checked_at)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,now(),now(),$13,
+                 $14, case when $15::boolean then now() else null end)
+         on conflict (id) do update set
+           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
         [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId,
          sn.channelTitle || '', sn.publishedAt, views, likes, comments,
          v.contentDetails?.duration || null,
          sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
-         dataSource, SYSTEM_USER]
+         dataSource, SYSTEM_USER, cls.is_short, cls.shorts_checked_at === 'now']
       );
       await q(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
