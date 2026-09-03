@@ -55,7 +55,7 @@ describe('Qdrant helpers', () => {
     const previousFetch = global.fetch;
     global.fetch = fetchMock as unknown as typeof fetch;
     try {
-      await new SemanticQdrant({ url: 'http://qdrant.test' }).search('channels_v1', [0.1, 0.2], { limit: 5 });
+      await new SemanticQdrant({ url: 'http://qdrant.test' }).query('channels_v1', [0.1, 0.2], { limit: 5 });
       const [requestUrl, requestInit] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>)[0];
       expect(requestUrl).toBe('http://qdrant.test/collections/channels_v1/points/query');
       expect(JSON.parse(String(requestInit.body))).toMatchObject({ query: [0.1, 0.2], limit: 5 });

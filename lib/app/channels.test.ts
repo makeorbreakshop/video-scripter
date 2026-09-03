@@ -66,6 +66,19 @@ describe('searchTracked', () => {
     mq.mockResolvedValue([row]);
     expect(await searchTracked('allrec')).toEqual([row]);
   });
+  it('applies subscriber, lane, niche, and exclusion filters inside the indexed query', async () => {
+    await searchTracked('laser', 20, {
+      minSubscribers: 10_000,
+      maxSubscribers: 500_000,
+      lane: 'corpus',
+      niche: 'Laser Engraving',
+      excludeIds: ['UCexcluded'],
+    });
+    const [sql, params] = mq.mock.calls[0];
+    expect(sqlOf([sql])).toContain('left join channel_meta');
+    expect(sqlOf([sql])).toContain('v.topic_niche = $8');
+    expect(params).toEqual(['laser', 'laser', null, 20, 10_000, 500_000, 'corpus', 'Laser Engraving', ['UCexcluded']]);
+  });
 });
 
 describe('resolveInput', () => {

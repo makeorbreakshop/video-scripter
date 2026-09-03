@@ -141,7 +141,7 @@ export class SemanticQdrant {
     return response.result;
   }
 
-  async search<Payload>(
+  async query<Payload>(
     collection: string,
     vector: number[],
     options: { limit?: number; filter?: QdrantFilter; scoreThreshold?: number; withVector?: boolean } = {},

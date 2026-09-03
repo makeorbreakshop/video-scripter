@@ -50,6 +50,15 @@ export interface ChannelSearchResult {
   tracked_lane: 'corpus' | 'user' | null;
   avatar_url: string | null;
   handle: string | null;
+  subscriber_count?: number | null;
+}
+
+export interface ChannelSearchFilters {
+  minSubscribers?: number | null;
+  maxSubscribers?: number | null;
+  lane?: 'user' | 'corpus' | null;
+  niche?: string | null;
+  excludeIds?: string[];
 }
 
 const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, video_count::int as video_count, tracked_lane`;
@@ -63,10 +72,43 @@ const DIRECTORY_COLS = `channel_id, name, handle, avatar_url, video_count::int a
  * indexes serve it — EXPLAIN showed a seq scan at 80ms with word_similarity() as a
  * function call. No YouTube quota.
  */
-export async function searchTracked(query: string, limit = 20): Promise<ChannelSearchResult[]> {
+export async function searchTracked(query: string, limit = 20, filters: ChannelSearchFilters = {}): Promise<ChannelSearchResult[]> {
   const t = searchTerms(query);
   if (!t) return [];
   const cap = Math.min(Math.max(limit, 1), 50);
+  const hasFilters = filters.minSubscribers != null || filters.maxSubscribers != null || filters.lane != null
+    || !!filters.niche || !!filters.excludeIds?.length;
+  if (hasFilters) {
+    return q<ChannelSearchResult>(
+      `select d.channel_id, d.name, d.handle, d.avatar_url, d.video_count::int as video_count,
+              d.tracked_lane, cm.subscriber_count
+         from channel_directory d
+         left join channel_meta cm on cm.channel_id = d.channel_id
+        where (d.handle = $3
+           or d.name ilike '%' || $1 || '%'
+           or d.norm like $2 || '%'
+           or d.norm % $2
+           or d.name % $1
+           or $1 <% d.name)
+          and ($5::bigint is null or cm.subscriber_count >= $5)
+          and ($6::bigint is null or cm.subscriber_count <= $6)
+          and ($7::text is null or coalesce(d.tracked_lane, 'corpus') = $7)
+          and ($8::text is null or exists (
+            select 1 from videos v where v.channel_id = d.channel_id and v.topic_niche = $8 limit 1
+          ))
+          and not (d.channel_id = any($9::text[]))
+        order by
+          (d.handle = $3) desc,
+          (lower(d.name) like $1 || '%' or d.handle like $1 || '%') desc,
+          (d.norm like $2 || '%') desc,
+          greatest(similarity(d.norm, $2), similarity(d.name, $1), word_similarity($1, d.name)) desc,
+          d.video_count desc,
+          d.name asc
+        limit $4`,
+      [t.text, t.norm, t.handle, cap, filters.minSubscribers ?? null, filters.maxSubscribers ?? null,
+        filters.lane ?? null, filters.niche ?? null, filters.excludeIds ?? []],
+    );
+  }
   return q<ChannelSearchResult>(
     `select ${DIRECTORY_COLS}
        from channel_directory
