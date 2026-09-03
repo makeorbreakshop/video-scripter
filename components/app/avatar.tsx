@@ -1,12 +1,14 @@
 // A channel's YouTube avatar, from channel_meta. Falls back to the channel's initial
 // on a neutral disc so a missing avatar never leaves a hole in a row or a card.
 export function ChannelAvatar({
-  src, name, size = 28, className,
+  src, name, size = 28, className, eager,
 }: {
   src?: string | null;
   name?: string | null;
   size?: number;
   className?: string;
+  /** Fetch immediately (search results the user is looking at) instead of lazily (long lists). */
+  eager?: boolean;
 }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
   const style: React.CSSProperties = {
@@ -30,7 +32,7 @@ export function ChannelAvatar({
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className={className} src={src} alt="" width={size} height={size} loading="lazy"
+    <img className={className} src={src} alt="" width={size} height={size} loading={eager ? 'eager' : 'lazy'} decoding="async"
          referrerPolicy="no-referrer" style={style} />
   );
 }

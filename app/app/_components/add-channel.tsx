@@ -5,12 +5,12 @@
 // new ones (1-2 units), and returns close local matches when a handle is mistyped.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  addChannelMode, addChannelError, markAlreadyTracked, type PickerItem,
+  addChannelMode, addChannelError, markAlreadyTracked, avatarAt, pickerMeta, type PickerItem,
 } from '@/lib/app/channel-view';
 import { compactNumber } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 
-const DEBOUNCE_MS = 250;
+const DEBOUNCE_MS = 150;
 
 interface Resolved {
   channel_id: string;
@@ -152,14 +152,10 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
               disabled={r.already || adding !== null}
               onClick={() => add(r.channel_id)}
             >
-              <ChannelAvatar src={r.avatar_url} name={r.name} size={32} />
+              <ChannelAvatar src={avatarAt(r.avatar_url, 64)} name={r.name} size={32} eager />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="cs-pick-name">{r.name}</div>
-                <div className="cs-pick-meta">
-                  {r.handle ? `@${r.handle} · ` : ''}
-                  {compactNumber(r.video_count)} videos
-                  {r.tracked_lane ? ' · we already have its videos' : ''}
-                </div>
+                <div className="cs-pick-meta">{pickerMeta(r)}</div>
               </div>
               {r.already
                 ? <span className="cs-badge" data-tone="good">already tracked</span>
@@ -172,7 +168,7 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
       {resolved && (
         <div className="cs-card" style={{ marginTop: 10 }}>
           <div className="cs-card-head">
-            <ChannelAvatar src={resolved.thumbnail_url} name={resolved.name} size={48} />
+            <ChannelAvatar src={avatarAt(resolved.thumbnail_url, 96)} name={resolved.name} size={48} eager />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="cs-card-name">{resolved.name}</p>
               <div className="cs-pick-meta">

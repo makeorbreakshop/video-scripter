@@ -1,6 +1,6 @@
 import {
   addChannelMode, channelStats, roleLabel, planLabel, usageView,
-  markAlreadyTracked, addChannelError, MIN_SEARCH_LEN,
+  markAlreadyTracked, addChannelError, MIN_SEARCH_LEN, avatarAt, pickerMeta,
 } from './channel-view';
 import { PLANS } from './plans';
 
@@ -101,5 +101,32 @@ describe('addChannelError', () => {
     expect(addChannelError(503, null)).toMatch(/rate limiting/);
     expect(addChannelError(401, null)).toMatch(/session expired/i);
     expect(addChannelError(500, null)).toMatch(/went wrong/);
+  });
+});
+
+describe('avatarAt', () => {
+  it('asks YouTube for a small avatar instead of the 800px original', () => {
+    expect(avatarAt('https://yt3.ggpht.com/ytc/AIdro_k=s800-c-k-c0x00ffffff-no-rj', 64))
+      .toBe('https://yt3.ggpht.com/ytc/AIdro_k=s64-c-k-c0x00ffffff-no-rj');
+  });
+  it('leaves other hosts and nulls alone', () => {
+    expect(avatarAt('https://example.com/a.jpg', 64)).toBe('https://example.com/a.jpg');
+    expect(avatarAt(null, 64)).toBeNull();
+  });
+});
+
+describe('pickerMeta', () => {
+  const base = { channel_id: 'UC1', name: 'Captain Steeeve', video_count: 49, tracked_lane: 'corpus', handle: 'captainsteeeve', subscriber_count: 1_240_000 };
+  it('shows handle, subscribers and videos; nothing about our internals', () => {
+    expect(pickerMeta(base)).toBe('@captainsteeeve · 1.2M subscribers · 49 videos');
+  });
+  it('accepts the string a bigint column comes back as', () => {
+    expect(pickerMeta({ ...base, subscriber_count: '1150000' as any })).toBe('@captainsteeeve · 1.2M subscribers · 49 videos');
+  });
+  it('skips what we do not know', () => {
+    expect(pickerMeta({ ...base, handle: null, subscriber_count: null })).toBe('49 videos');
+  });
+  it('tells the user a brand-new channel will be synced after adding', () => {
+    expect(pickerMeta({ ...base, tracked_lane: null, video_count: 0 })).toBe('@captainsteeeve · 1.2M subscribers · new to us, synced after you add it');
   });
 });

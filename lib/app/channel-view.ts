@@ -97,7 +97,7 @@ export function usageView(
  */
 export interface SearchResultLike {
   channel_id: string; name: string; video_count: number;
-  tracked_lane: string | null; avatar_url?: string | null; handle?: string | null;
+  tracked_lane: string | null; avatar_url?: string | null; handle?: string | null; subscriber_count?: number | string | null;
 }
 export interface PickerItem extends SearchResultLike { already: boolean }
 
@@ -113,4 +113,24 @@ export function addChannelError(status: number, body: { error?: string; code?: s
   if (status === 503) return body?.error || 'YouTube is rate limiting us right now. Try again in a bit.';
   if (status === 401) return 'Your session expired. Reload the page.';
   return body?.error || 'Something went wrong. Try again.';
+}
+
+/**
+ * YouTube avatar URLs carry their size in the path (`=s800-c-k...`). The picker shows
+ * them at 32px, so asking for 800px is why the results felt slow to fill in.
+ */
+export function avatarAt(url: string | null | undefined, px: number): string | null {
+  if (!url) return null;
+  return /\.ggpht\.com\//.test(url) ? url.replace(/=s\d+(?=-|$)/, `=s${px}`) : url;
+}
+
+/** The one line under a search result: handle · subscribers · videos. */
+export function pickerMeta(r: SearchResultLike): string {
+  const parts: string[] = [];
+  if (r.handle) parts.push(`@${r.handle}`);
+  // Postgres hands bigint back as a string; coerce before formatting.
+  const subs = r.subscriber_count == null ? null : Number(r.subscriber_count);
+  if (subs != null && Number.isFinite(subs)) parts.push(`${compactNumber(subs)} subscribers`);
+  parts.push(r.tracked_lane || r.video_count > 0 ? `${compactNumber(r.video_count)} videos` : 'new to us, synced after you add it');
+  return parts.join(' · ');
 }
