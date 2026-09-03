@@ -20,6 +20,12 @@ export interface FeedRow {
   thumbnail_url: string | null;
   published_at: string | null;
   payload: Record<string, unknown>;
+  /**
+   * The video's current video_scores.score. An outlier event's payload freezes the score at
+   * the moment the video crossed 2x, and the channel baseline is refit under it afterwards,
+   * so the card would otherwise keep quoting a number the video page contradicts.
+   */
+  score: number | null;
 }
 
 export interface FeedPage {
@@ -105,7 +111,8 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
   // One extra row tells us whether another page exists without a second count query.
   const rows = await q<FeedRow>(
     `select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
-            v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at
+            v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at,
+            sc.score::float8 as score
        from (
          select x.*
            from unnest($${p.channels}::text[]) as c(channel_id)
@@ -114,6 +121,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
           limit $${p.limit}
        ) e
        left join videos v on v.id = e.video_id
+       left join video_scores sc on sc.video_id = e.video_id
       order by e.at desc, e.id desc`,
     [
       channelIds,

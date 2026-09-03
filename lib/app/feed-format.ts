@@ -14,6 +14,14 @@ export interface FeedEventLike {
   thumbnail_url: string | null;
   published_at: string | null;
   payload: Record<string, any>;
+  /**
+   * The video's CURRENT video_scores.score, joined at read time (lib/feed/query.ts).
+   * An outlier event's payload is written once, when the video first crossed 2x, and the
+   * channel baseline is refit under it afterwards — Jay Clouse GmIn1W9V8Rs read 4.47x in its
+   * Aug 30 event and 2.79x in video_scores four days later, off the same est30. The event
+   * timestamp stays "when it crossed"; the number a card shows is always the live one.
+   */
+  score?: number | null;
 }
 
 // ------------------------------------------------------------------- time ----
@@ -99,6 +107,21 @@ export function sincePublish(hours: number | null | undefined): string | null {
 /** The score a feed event has to reach before it earns the arcade high-score tag. */
 export const HIGH_SCORE_AT = 3;
 
+/** The score at which a video first earns an outlier card in the feed. */
+export const OUTLIER_AT = 2;
+
+/**
+ * The badge's title attribute. It says three things a reader otherwise has to guess: the number
+ * is a multiple of what this channel normally does by day 30, it is the current score rather
+ * than the one from the day the card is filed under, and 2x is the line that puts a video in
+ * the feed at all.
+ */
+export function scoreTooltip(score: number | null | undefined): string {
+  if (score === null || score === undefined || !Number.isFinite(score)) return 'No score yet';
+  return `${formatScore(score)} of this channel's normal day-30 views, as of now. `
+    + `Videos enter the feed as outliers at ${OUTLIER_AT}x.`;
+}
+
 /** Scores are multiples of baseline: one decimal under 10, whole numbers above. */
 export function formatScore(score: number | null | undefined): string {
   if (score === null || score === undefined || !Number.isFinite(score)) return '—';
@@ -152,6 +175,15 @@ export const TYPE_LABELS: Record<string, string> = {
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null);
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
+/**
+ * The live score, when the reader joined one. `undefined` means "no live score column here"
+ * (a caller that never joined video_scores) and falls back to the payload; an explicit `null`
+ * means "this video has no score row" and wins, because showing a stale one would be a lie.
+ */
+function liveScore(e: { score?: number | null }): number | null | undefined {
+  return e.score === undefined ? undefined : num(e.score);
+}
+
 /** Everything a feed row needs, derived from the event and its payload. */
 export function feedRowView(e: FeedEventLike): FeedRowView {
   const p = e.payload || {};
@@ -203,7 +235,7 @@ export function feedRowView(e: FeedEventLike): FeedRowView {
     }
 
     case 'outlier': {
-      const score = num(p.score);
+      const score = liveScore(e) ?? num(p.score);
       base.score = score;
       base.highScore = isHighScore(score);
       const est30 = num(p.est30), baseline = num(p.baseline);
@@ -274,7 +306,10 @@ export interface FeedCard {
   uploadedAt: string | null;       // set when the day includes the upload itself
   thumbSwaps: Array<{ url: string; version: number | null; at: string; rotation: boolean }>;
   titleChange: { from: string | null; to: string } | null;
+  /** The live video_scores.score when the reader joined one, else the crossing event's. */
   score: number | null;
+  /** The day held an outlier crossing event — what makes a scoreless day an outlier card. */
+  outlier: boolean;
   events: FeedEventLike[];
 }
 
@@ -288,7 +323,8 @@ export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards:
       if (!c) {
         c = { key: `${day.key}:${k}`, video_id: e.video_id, channel_id: e.channel_id, channel_name: e.channel_name,
               title: e.video_title || str(p.title) || str(p.new_title) || 'Untitled video', thumbnail_url: e.thumbnail_url,
-              href: e.video_id ? `/app/videos/${e.video_id}` : null, at: e.at, uploadedAt: null, thumbSwaps: [], titleChange: null, score: null, events: [] };
+              href: e.video_id ? `/app/videos/${e.video_id}` : null, at: e.at, uploadedAt: null, thumbSwaps: [], titleChange: null,
+              score: null, outlier: false, events: [] };
         byVideo.set(k, c);
       }
       c.events.push(e);
@@ -298,7 +334,10 @@ export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards:
         const url = str(p.after_url) || e.thumbnail_url; if (url) c.thumbSwaps.push({ url, version: num(p.version), at: e.at, rotation: e.type === 'ab_rotation' });
       }
       if (e.type === 'title_change') c.titleChange = { from: str(p.old_title), to: str(p.new_title) || c.title };
-      if (e.type === 'outlier') c.score = num(p.score);
+      if (e.type === 'outlier') { c.outlier = true; if (c.score === null) c.score = num(p.score); }
+      // The live score, wherever it rides in, is the number the card shows.
+      const live = liveScore(e);
+      if (live !== undefined) c.score = live;
     }
     const cards = [...byVideo.values()].sort((a, b) => (a.at < b.at ? 1 : -1));
     for (const c of cards) c.thumbSwaps.sort((a, b) => (a.at < b.at ? -1 : 1));
@@ -320,7 +359,9 @@ export function cardKind(card: FeedCard): CardKind {
   if (t && th) return 'combo';
   if (t) return 'title';
   if (th) return 'thumb';
-  if (card.score !== null) return 'outlier';
+  // A live score rides on every card now, so it cannot be what makes one an outlier card;
+  // the crossing event is.
+  if (card.outlier) return 'outlier';
   return 'upload';
 }
 

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
-import { cardKind, cardMeta, cardVerb, etTimestamp, formatScore, relativeTime } from '@/lib/app/feed-format';
+import { cardKind, cardMeta, cardVerb, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
 import { installThumbFallback } from '@/components/app/thumb-runtime';
@@ -46,7 +46,7 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
   const olderSwaps = swaps.length > 2 ? swaps.slice(0, -2) : [];
 
   const scoreChip = card.score !== null
-    ? <span className="cs-score cs-fcard-score" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>
+    ? <span className="cs-score cs-fcard-score" title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
     : null;
 
   const beforeAfter = (
@@ -128,7 +128,7 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
         <div className="cs-fcard-body">
           <p className="cs-title" data-size="large">{title}</p>
         </div>
-        <span className="cs-score cs-fcard-bigscore" title={`${card.score}x the channel baseline`}>{formatScore(card.score)}</span>
+        <span className="cs-score cs-fcard-bigscore" title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
       </div>
     );
   }
