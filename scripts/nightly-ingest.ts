@@ -224,7 +224,10 @@ await pool.query(`insert into quota_ledger (category, units) values ('ingest', $
 {
   const { execFileSync } = await import('node:child_process');
   const tsx = new URL('../node_modules/tsx/dist/cli.mjs', import.meta.url).pathname;
-  for (const args of [['scripts/analytics-backfill-worker.ts'], ['scripts/owned-analytics-sync.ts', '--days', '45'], ['scripts/avatar-cache-sync.ts']]) {
+  // thumbnail-watch uploads to R2 best-effort and swallows failures, so anything that missed
+  // would sit local-only forever; retry a bounded batch nightly. A no-op once caught up.
+  for (const args of [['scripts/analytics-backfill-worker.ts'], ['scripts/owned-analytics-sync.ts', '--days', '45'],
+                      ['scripts/avatar-cache-sync.ts'], ['scripts/thumbnail-r2-backfill.ts', '300', '5000']]) {
     try {
       execFileSync(process.execPath, [tsx, ...args], { stdio: 'inherit', timeout: 15 * 60_000, cwd: new URL('..', import.meta.url).pathname });
     } catch (e: any) { console.error(`${args[0]}: ${e.message}`); }
