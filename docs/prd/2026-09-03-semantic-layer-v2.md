@@ -1,7 +1,7 @@
 # PRD: Semantic layer v2 — trustworthy retrieval before enrichment
 
 Owner: Brandon Cullum. Implementer: Codex. Reviewer: independent fresh-context agent.
-Status: revision 4, implementation-ready. Date: 2026-09-03.
+Status: revision 4 vertical slice complete; one bounded §8.3 challenger authorized. Date: 2026-09-03.
 Supersedes revisions 1–3 and the open quality claims in `2026-09-02-semantic-layer-v1.md`. The v1 infrastructure remains the control; no semantic endpoint is promoted or expanded until the held-out gate in this PRD passes.
 
 Revision 4 resets the project after the 5.6 Sol audit. The previous v1 gold set, v2 query manifest, 204-row facet pilot, `videos_v2` pilot vectors, and derived channel prototypes are quarantined from evaluation. They may remain as historical artifacts but cannot supply truth, tune parameters, or justify a product claim.
@@ -180,8 +180,8 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
 - [x] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2 (9,385 videos and 3,544 channels reconciled in Qdrant; estimated clean-run cost $0.06083).
 - [x] Run lexical, dense, and RRF candidate generation; write immutable run artifacts (all 48 task/system rankings reproduced exactly after freezing query vectors).
-- [ ] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet.
-- [ ] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
+- [x] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet (2,196 pooled non-J1 candidates; 841 third-pass adjudications; 20-item packet).
+- [x] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
 - [ ] Independently review the artifacts against this PRD. Do not expose endpoints.
 
 ## 11. Verification handoff
@@ -214,3 +214,14 @@ Required real-path evidence:
 ## 13. Immediate execution boundary
 
 Begin with the first unchecked work unit and proceed serially through the frozen manifests and candidate run. Stop before bulk LLM judging only if the blind pool cannot be proven clean or the cost gate would be exceeded. Stop all endpoint work until §9 passes.
+
+## 14. Revision-4 vertical-slice result
+
+The frozen diagnostic evaluation is recorded in `2026-09-03-semantic-eval-v4.md` and the machine-readable artifacts under `semantic-eval-v4/`.
+
+- Known-channel search remains lexical: held-out J1 MRR was 1.000 lexical, 0.125 dense, and 0.333 RRF.
+- OpenAI dense retrieval is useful for similarity: held-out J3 topic precision@10 was 1.000 and topic nDCG@20 was 0.681.
+- Topical outlier search does not pass the production bar: held-out J4 precision@10 peaked at 0.350 for RRF versus the 0.600 bar.
+- Cross-niche inspiration fails under all three controls: held-out lower-bound creative-adaptation precision@10 was 0.100 lexical, 0.000 dense, and 0.050 RRF; direct-application rates were 0.750, 1.000, and 0.900.
+
+This identifies §8.3 as the single next challenger: dynamically extract purpose/mechanism for the J5 dev seeds and pooled candidates, require an explicit transfer mapping, and freeze a new confirmation set before evaluating it. Do not precompute corpus-wide facets, add a global reranker, or expose endpoints. The current diagnostic set cannot approve a production route, and Brandon's blinded calibration packet remains required before any product claim.

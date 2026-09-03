@@ -1,0 +1,1391 @@
+{
+  "version": 4,
+  "judge_identity": "codex-gpt-5.6-sol/eval_red_team",
+  "rubric_version": "semantic-v4-rubric-1",
+  "assignments": [
+    {
+      "pass": 3,
+      "task_id": "j5-maker-transfer",
+      "judgments": [
+        {
+          "blind_id": "blind_0cc7f10a3a3d9947172e",
+          "input_hash": "96ab84cd1e382ec5571f4dd37ec16429b3dab42b569ba898ee7b1054e0d9e532",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Robotic Lawnmower Buyer's Guide 2026 - Don't Make This Mistake!” supplies a portable warning/contrarian hook for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f53db0314fb0067964cd",
+          "input_hash": "818180b9b6a9846ce6ccc3fc6a6599db76707bf9176ca86390009d2b0bb5844a",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_11edbcc167f96a120845",
+          "input_hash": "eb3f9c55751881bd4e89f304521656322a801f88630d01b16232740492774a62",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Notion's new Dashboards: Everything you need to know” supplies a portable specific list or completeness promise for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_be72a6127c9f3cbb4953",
+          "input_hash": "00674b0f3d034f69d21fa085911fc15e7d2e9a5ecc35ae7dc10fa671f3faab41",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_debaba10245c7d557c94",
+          "input_hash": "653d73c44dbd902121465aa74d97721fa7cd43a8f13f12d7b463ca2428760555",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Master Google Omni in 10 Minutes (Full 2026 Guide)” supplies a portable specific list or completeness promise for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_bb63565c99faa3048d7b",
+          "input_hash": "932d32a6a453544e7f734b0b7edc8c662016a7a0f6472c79e1fa8760be5b3540",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “10 Genius Home Features We Randomly Stopped Building” supplies a portable specific list or completeness promise for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_e58d27a8462fb3d5280d",
+          "input_hash": "c751d99df34e41e990722ccfdca1478afb06cb5854aeb4919c82f2b3c62f17aa",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_17bc569f1ca45298a5f7",
+          "input_hash": "64d648c3d2d143b12e34d12f3b6a46d1b850b18f6987c403b10921a9e01c4493",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0da6e155e925f969dbf6",
+          "input_hash": "62fc5a97b58e7102de8f12361daa112553286dcbb42d91326f600391ea0479d0",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Octopus EV Charger REVIEW Better Than Ohme?” supplies a portable comparison or proof-led test for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_e93efdf41d2c07e52425",
+          "input_hash": "06f9032bd8aaed985b19c040a636134b71871e52ca0429d07eb5f4ae778ad802",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “You Don't Need To Start A Business, Just Buy One Of These” supplies a portable warning/contrarian hook for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ff72fce15f15e870395c",
+          "input_hash": "d318f52c995fba7847734a666314ac85e3b73a7c99ef410217b99a20634966aa",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “3 Tech Deals I’d Buy Before Prime Day Ends” supplies a portable specific list or completeness promise for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_e6c0b3a20a9b09ed269c",
+          "input_hash": "e658966949ec7e162a25a37faa3a2a148995e09d8d589e7de45fec594dfb64ad",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0c4ffa723e2229758872",
+          "input_hash": "f21021f2cdf82846ebca10ea6566c26085e59247b967744bce99796678f0fab3",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “This Simple Business Makes The Owner $500k+/Month?!” supplies a portable title-led story framing for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c59d56a24a789d43d95b",
+          "input_hash": "4d64dd14525c3573e524de4835e70097a03c29b8e51b6e4d1e8eb7d01e5382c9",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Make or Break Shop, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_7d956d822f0a15ecc75f",
+          "input_hash": "a09870df209e5c2b86ae530a0f85bd1d0ad72da6642feaf42c038467f5aaddc0",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “This Robot Vacuum Actually Scrubs Greasy Messes | ECOVACS X12 OmniCyc…” supplies a portable explanation or reveal framing for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_45da10e26e9f8d46643b",
+          "input_hash": "745ac68e39c1e1c6883e1ea1e2f3fc330082415ba26952f00e35c3c837d2c433",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_cf7e85b920cd180e4f7a",
+          "input_hash": "398e5369119a1785a4947f9454b2b2ac27f1e7c28461704b519a3c9b498aa99b",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The $20,000 Kitchen Cabinet Mistake 90% Of Homeowners Make” supplies a portable warning/contrarian hook for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_218797c2ef3d32214d65",
+          "input_hash": "d2e327718d0837db6bf523fd16fbb239028522f26b6c745f87b7a0ae28dd6399",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Legit Remote AI Work? I Found This! (Handshake AI Review)” supplies a portable comparison or proof-led test for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_dee03fe476da081a5340",
+          "input_hash": "2caf452299ad1aa55815a0157898c1f4bf67fc929945f41233b31e5ab7b6ef9d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_eb1cadb7c3685c0a90f0",
+          "input_hash": "d8790e4a75d4e5fe1b07e802cb22c4a7ee33c6032b599e8faf26e415e9e556e8",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Only 14 Ways to Make Money with AI in 2026” supplies a portable specific list or completeness promise for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_7914cddc52ea2cbd0e3d",
+          "input_hash": "60c3f95095696d0c39305aebb70cf3380f53e049a4b7af4104547e5eb8b0f915",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Craziest Experiment Humans Have Ever Built” supplies a portable transformation/build narrative for Make or Break Shop.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a2185e0ac65c84a5abc0",
+          "input_hash": "08c592840ef45ec74cf4bef42268f3af9cbe70ef220cb5a5a98388f042880ff1",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Make or Break Shop, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a9e78ada34b4d91151a9",
+          "input_hash": "863b1638c51f5ee3bd7494cdb952a0077be59bcb4eeeae948fae7c2672fbce51",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Make or Break Shop's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j5-tech-transfer",
+      "judgments": [
+        {
+          "blind_id": "blind_1e5c076571443d5c2d30",
+          "input_hash": "d1293151fc8fda3631cfe8eea383eff410616c0664b87812ddf15b60e25bdd87",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_48a0316b01bf6a582b1f",
+          "input_hash": "5bf2aeacc77130b42414b0b31cc5b2d016348df654b6305c4840fb1e7bdf8fea",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ad8ffe6c9336a0b5dacf",
+          "input_hash": "ac58183d18667624abd120acbea5a6d76739b71b5e03eb117f256b047214ffe0",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3a78e85c67d3b53c40bd",
+          "input_hash": "17eda3efc2c900f524ce9018c82be35245065cf7e623a7d69fda7d3c86da7bf5",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_359df1dfc3dfa4f9bb25",
+          "input_hash": "7eefe2363fa0154fb919111b9483fcc60a4089757aafd058ecbcf6be82e851c4",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a107ec9fd49ada3455aa",
+          "input_hash": "dc2b0eb1d2340d36ee9bdd2baa97d0d2b404c47d0660754d8095b7787e0bfe73",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I Went to 10 of NYC's Most Famous Spots in One Day” supplies a portable specific list or completeness promise for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_1b6bf45b66584c4b2fb4",
+          "input_hash": "3e848c9b877980c78f779800e9225515c5ee5cbec1144d2437a4ae0293e1c47c",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Adidas Adizero Adios Pro Evo 3 First Run Review: We try Adidas' sub-1…” supplies a portable comparison or proof-led test for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c8ba4ac63409c2cac346",
+          "input_hash": "83f7e1d297659e2d10ea5493033befd61397e929eb58a98918d053dcc088f7f0",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3c04ef1f412dd4db9785",
+          "input_hash": "fa866c50f15b1335c8a7dd94d59ff8281759010ce7c3b929750a714635e7fc11",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “10 Wardrobe Essentials EVERY Woman in Her Late 20s Needs” supplies a portable specific list or completeness promise for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_9a6da03e70f911bf8add",
+          "input_hash": "fa7ec4d788f6b386bfa9e869f3f5a3eb14c0ac3f92e4de83e1b2eb3f8d5d4af7",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_b9385527796b7a758120",
+          "input_hash": "de4e4c66f6f4416046eb62ad1f5566d08a71b9e081d6bf82aecf11efcc33312d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_07c41e6559dda3585fe0",
+          "input_hash": "e10357a181b8c7555d1440a1a5e067789d2ec9ccdb3f9d7bf490eed23a4eedd5",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Marques Brownlee, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_319268471a1581818f25",
+          "input_hash": "aafe97a5715e03b98a2e40b9ba2d83e4022ae8313520a6a0a161564e16e0d9df",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_7f862c2a0655246ef7d8",
+          "input_hash": "e058da42846c8e2f19605c2e91be37b640c144699c615123cb59b710567e8433",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_da14dad60d1d350f2017",
+          "input_hash": "bef0a3cb240cb7a326bf31139789607367ed58208dc0a8fbed09949d07de0451",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Marques Brownlee and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8cc284b8a83bfee5aee5",
+          "input_hash": "fb82bf0f3860217650a05e90f117211677b3942941bee69c38ead411489c6866",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8fa46602dcf9bc5354b0",
+          "input_hash": "2eca96f539aeb3c9e6d0283bcda63ba1c82c503e7a395327f4e2384f64393311",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Marques Brownlee, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c587b2d2712cbd028e9e",
+          "input_hash": "2351121f721fd6f06861fd10349a1880c862b945fd83d8ee489e647d5a3c2392",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_06007d894300a8874589",
+          "input_hash": "53e6c851aca85ebe952e2751dd33b7f804d5a4bc2b07aa0b1533946add86da74",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_af250e3c16f6ada1e457",
+          "input_hash": "16ee3d1373d81c2cc1b8093bd557edc5041c0bcb5ff376af32b129ae36663ed7",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “LiberNovo ACTUALLY LISTENED and made MAJOR changes to their chair | O…” supplies a portable transformation/build narrative for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_45474a0f47d1b29371af",
+          "input_hash": "ecb18e783603bd08d1942ba0592754e875ea8a3b5cc9264bfce6a609d23947fb",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ebd57969ab72e73773db",
+          "input_hash": "db74eef0ae104b2140d2b7e90e312656fb274158b9b7632fa19b43097ac456db",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Stretch & Massage All 18 Hip Muscles in 3 minutes” supplies a portable specific list or completeness promise for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8a23d969debef61c0d14",
+          "input_hash": "51c72ce1cc72853958472d3f0bbbbfc548abb1285bd0f4bf6cd9eadb2e5f475d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_babd56aedab4dbd11e02",
+          "input_hash": "d5c1c8fdfb7e3f82399da5c6bc6532e735a39afc5c4606c43ee3ebb4e2bb95fe",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_b0fb062395838828ad15",
+          "input_hash": "08b23d693d70d46f45c93ab5cfd0edb2422eda78b0939bb8063c28c0800cda0b",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Saucony Endorphin Azura First Run: First thoughts on the Adidas EVO S…” supplies a portable title-led story framing for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_d6df425cef65dcc7096b",
+          "input_hash": "64e3472338202c3ab327e5999453229193ef003a03dd7487a0cb28313df8c788",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “A Super Shoe Shouldn't Feel This Plush: Saucony Endorphin Pro 5 and A…” supplies a portable warning/contrarian hook for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_35a95d096d57f5f96163",
+          "input_hash": "e419d43e96ce04755721db330d8d6124ffa6871c1ba89dd82c2f3fa8725dbb46",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Why Your Outfits Lack Style! (10 MISTAKES YOU DON'T KNOW YOU'RE MAKING)” supplies a portable warning/contrarian hook for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0eef68e90ebd2fabb2e8",
+          "input_hash": "7e19e6fc76ae1a1bede7df6882e446ca5dc3c52e17bfb6d93acdccad9ef29e6e",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_4cdc6cd347e7ef736c02",
+          "input_hash": "e896e5656893c9a7b099aef428505db44d0c605a319aef79a419ca7b7937b626",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Which is the Best Ice Maker in 2026? Nugget Ice Makers Honest Review!” supplies a portable comparison or proof-led test for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_482c9b77f885f395031f",
+          "input_hash": "7519a69dde997c1021ca88265920f28e1c61b3784d22f00050a07a3a2afb6dba",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ad7ce9bf51ef93827ce0",
+          "input_hash": "f4042e8b74619aea4dce1d149cb2b175609a6266f2e7fb71c48ff4cf62ef758e",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “7 Things Cyclists Should NEVER Do | GCN Show Ep. 668” supplies a portable warning/contrarian hook for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f0eed1adc968640c3d5b",
+          "input_hash": "439ae843edd1e48e628ada71c28b7f698b143d4c10b2c1ebc82f8e157c46b138",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I Earned on VidGain - But Is It Legit? (Important Details)” supplies a portable title-led story framing for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_1f91bf37c94df12d796a",
+          "input_hash": "96abeb6bf4af2bf67814bd9421df444a2e3c3bae24eaa99c2a6493604833af7f",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a184eb9e17d06eafb697",
+          "input_hash": "89c948b4e08a6226a10a0596a13f01a51cf0282326dae492b15541ff10ccb23f",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ba17e55d26af63f4b268",
+          "input_hash": "04bb7ea81f82f09eb1b9e5f81e714d865f4bb194a034fc990b30cf51eb9d5bc1",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Why This NYC Neighborhood Is so Expensive” supplies a portable explanation or reveal framing for Marques Brownlee.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2a82b67aec3a43a80a86",
+          "input_hash": "ac459e6c0abf1223bea53495760568a5f146172f8e0bd9962f1d90699f7f8e6a",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c52367b9f1b6a0f2f06c",
+          "input_hash": "d9b9c96bb343b6118e36e08a6eb9a138344391da05b7d207bcf349da62b06dee",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Marques Brownlee's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j5-gardening-transfer",
+      "judgments": [
+        {
+          "blind_id": "blind_6b7ab053cdc046a8f53f",
+          "input_hash": "846e4e7b4eb0fcedae3a964ab23cf2ee65dca438403f5b34950c13d48d7d048a",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “MY UNDERGROUND CINEMA HAS BEEN DESTROYED” supplies a portable title-led story framing for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_5cce4d3e9751c3848974",
+          "input_hash": "78f903e43e1e459225c43c59cd3426363f287b47ca7059dd8d47daa42eb8c4e4",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “This Advice Stops Streamers From Growing” supplies a portable warning/contrarian hook for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_25f32ffd4bcd77445646",
+          "input_hash": "3fb4920d9dc9d50142c4c06acdde8c4e73926330136c48ce869bf45fa66965ba",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2062deaaad90154f33e9",
+          "input_hash": "1edd0d4fc2ab295ace1cadef82f389efc3d65b8cdef8111a0533c3834e91726a",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c1d66166f17bf9eba1f1",
+          "input_hash": "1338e1db17e7ec8dc05352f3d61d36c67bae60f8c1a194692cd5eb867ea75826",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “4 Months - One Man - An Ultra-Realistic RC Airplane Built From Scratc…” supplies a portable specific list or completeness promise for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_9f2aae34530e13ec9b6d",
+          "input_hash": "8c6049eb29ca7c41fdaa23c762d5e2f6645b66b97039fdab7192c559e385fb53",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2fe002a08128862881d0",
+          "input_hash": "56ba6881e1fb261e2921141223de8dcb6cb9fe3f9113e2bdb3ef0966114e6205",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Best Foods for Hair Growth | Grow Hair Faster Naturally | Dr Hansaji” supplies a portable comparison or proof-led test for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_97cfc6f745944bdef08b",
+          "input_hash": "4071dfff10e65911d0da7890fc20b9028c421ff593fc05f702af39f9d5a50c95",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Epic Gardening, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_daa30e59d3fbe40bb206",
+          "input_hash": "6d37b228e960e66cd63a073b37e6eff899b69f746e8d9c48ca3e57f26f6b857f",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_4a9317c57c2c4e632826",
+          "input_hash": "3103aafdcd4475d0f2ed83efeffce479c700b619c7d2a9d13da25a1ef994ba0a",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Epic Gardening, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3f25c6dd82e23cc22396",
+          "input_hash": "287707c7f584af3e721012cc4cd5383fa98979dca8f0b917dec936bb6ba85790",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Epic Gardening, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ea44356e3fe69b1c472e",
+          "input_hash": "e9358f919c0b6304a3659b93c77f915139cd88084c71c4b8d2c54ddcd5f2edb8",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I Built A Business With AI In 24 Hours” supplies a portable specific list or completeness promise for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8ae04dd1df1ffb067562",
+          "input_hash": "dea485fc6639cd758c5e2ad67edd9de46df9617106a705b2e45aaf758201c60d",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “How millions of tatami mats are made from grass in Japan  - Amazing J…” supplies a portable transformation/build narrative for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0ca02e69710346e92717",
+          "input_hash": "99280523e420f26da7a8fc4d1bb4ca2936c84446e3e8f4787b45042a858d4281",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Real-Life Olaf Robot & Inside Imagineering's Research & Development |…” supplies a portable access/behind-the-scenes reveal for Epic Gardening.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c1331d0f2b17b39edcd7",
+          "input_hash": "afceb7bcfa1bcea83f374cdb6927f043226e1efca6c37e27e901b90a32adbd06",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f6b49c1ac75622f54a7c",
+          "input_hash": "ce88ab27869923b5f751c2ed88f25e80f37c73eb278662443969c019f16c7b0a",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_43f926e9929e8dc562db",
+          "input_hash": "2d1808dcff3a517042b57493e4fc7b7302dcaa837f5c2b3402721b9e0ccb4aa2",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Epic Gardening's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j5-build-transfer",
+      "judgments": [
+        {
+          "blind_id": "blind_61cab93e86649737345a",
+          "input_hash": "c64f330f483e8fab3b91f66247cc86e87842dafcaea2f32d49566daf2cae961d",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “You Don't Need a Lifetime of Therapy, Watch This Instead” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3ca8ce2385fe4afbfb27",
+          "input_hash": "deda1a3550a185604ce66eecb05f7648b748d249fd4ad6b5f6489e2cdc4bcf49",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_61f5b620262ced39fec5",
+          "input_hash": "fe0e4bb037bace394d76077c189e3c5496325bd6886e07d6c7c6640f72374997",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “We Got Kicked Out of Noah’s Ark… We Made a Big Mistake” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_91f983c50f606aaa5bbf",
+          "input_hash": "96f71de984f7208b5b928cf576b27bf359365f04386c8895d3dbb0129169ef16",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0254f3bbef696075f099",
+          "input_hash": "df33a84eb01632a171fc1572b3da643347a0f149a23b9aa52e6458fb6c509bdf",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_35690408d63e9b4af1fa",
+          "input_hash": "717a3e22a1420a545edf9887b66d23cd73489f521abeee6d1ae778e7dcefddeb",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_225c2e897f235ebdd6ec",
+          "input_hash": "bb2bb299f41dea970061d73fa6709180be0e21591a3d56fd98fd998303443a9c",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Mary Kay Andrews’ Beach Cottage is a Collector’s Paradise | House Tour” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_5ace199ca003efa4a9a7",
+          "input_hash": "c9afbe6c9a24745de581bb830ceb30bd3280b94146dc9f443d5cfd00af92b546",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I Love This House… But Should I Move? | Full Home Tour” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2456ff84521f4b2e6f3f",
+          "input_hash": "0f1990f4feae58797d6e9ff87e0321e1d0ae251ab2a08795a2ba847029ac3fb5",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_4d83dff128275748948f",
+          "input_hash": "6bbd4a46506b4bf5f5f121591d66ef8f652626ca8534f4bcdf7d336fa1f9a92b",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_741714ed1ddc1d1866b5",
+          "input_hash": "4edb03d2a678ab83a7a89a66df0faa890a966926c74d476f51bf13e3aaa20df8",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8f8738cd8bdd828638d9",
+          "input_hash": "073cff775e629f3a413cb2a7e2077491c47897cad43940ef8c7aed20d9cc6d6f",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “If you don’t understand these money laws, you’ll never be rich” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_bc6c7f110c822040706a",
+          "input_hash": "0de4a7f1cae5047afecba8deec818290a2b05df601ff251598d5dc7f6f9eb967",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_bc2e690bd08ab9d132dc",
+          "input_hash": "9173dc3ae8bc1c93d514da320c65b616090970f0b945c2dd15898118eb5002c1",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_aaf09c8f4468d4c24f74",
+          "input_hash": "d549becebada3ad85679e47a3fc5d08aa694bb123fa697d7af8cb6e9830cc499",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_90d5d3b8a277c343c7c0",
+          "input_hash": "14e7036b256224c10b0de7d4f1cbb5b2e6acc9995d384621086d37a6932e48a5",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Internet Was Weeks Away From Disaster And No One Knew” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_d949bc03f232c4154580",
+          "input_hash": "d802073b3634c627511053f3624946ae5360ecad746f29c740b65f35ad9797fc",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_934395dde494f2525079",
+          "input_hash": "4547939d9fcb688fd0efe22907711dc7234ca7e096b30a89b03f68bc77bc7fdc",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_99bccbc4b4ac87709c0a",
+          "input_hash": "d377eb27c73e2a94ad49183fd8cbe4227787ba36595a574954decfb65caf260b",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “What Experts Don't Want You to Know About Long Distance Running” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_cd7263fdc43dbafdc887",
+          "input_hash": "1f04355446fd814715b18fdeb9ca69f3af14196a1bcf0c4484b8a80e94a2f835",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_cc75836b4515ec3e97dd",
+          "input_hash": "5c19151d6e955c6d56a8b49818d9933ae3ca1da138fc8309141684eeac1ba4bf",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_da6e9231ae398edd2274",
+          "input_hash": "b0e97192beee1c50d11d3c258ac0e44160dd9527617d8b0cfe3de39ba2cf4ec1",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a2ceccc124ed7dad5bad",
+          "input_hash": "fa7df275cc427ae77f79b42d8cf8771b0384ae741004b8e3a0b150693f215bb9",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I’m Done with AYANEO – Here’s Why.” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_372d2abf87e863e3b8d6",
+          "input_hash": "7dbb02cb18e6e4f05532b595daefb1694f6e40c71bb6ba385fdd5c3507209842",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_d28df45990dd9373088b",
+          "input_hash": "0d20c3396a86796da8728fa56bc14e10791f8371917058cea04e47853144c1a2",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_617e55c9d3292b9764f8",
+          "input_hash": "7ff3a11b2eb7d0888b81c0cfd73be9bd4180b8bc8473686b195be3a4817d8a28",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_dcf283bc43399dc30150",
+          "input_hash": "3b06fda62617b976d80cebff6cd7fcd03a48ad582f7d516f61fdc8c78cf1bc70",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_16e2b50296cdb3c49ec1",
+          "input_hash": "369b8715eca001142f487e7468401541889aa6cc1112f25b32b329b17788b9e1",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_87e81b751579f9020c79",
+          "input_hash": "c5a338936dc57b35692a0108d1a8d1816183987246e043fa096679a149284647",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ceb0419bb1ea47c0155f",
+          "input_hash": "1d20181e5073780cee349e267b8be1bc542c011a00d14f54356769f4962738f5",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0c4fd39714697394ad41",
+          "input_hash": "d24382eaeb7e8449df0a62d609f73ef07c45f45160e0993fae6aeec96b3cd01a",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_d0c49e620ae3d542539d",
+          "input_hash": "cb409d951da88dac19c2a2d7482363c9df9f9475848d24bd5ad83c8f6dd237e8",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_af91a67cb58ac09674eb",
+          "input_hash": "19888a24376b29a3461034b328b4867ead197bbd631230c698e70a86d8d0faa4",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “I Realistically Rebuilt Torino Into Italy's Best Club - Full Movie” supplies a portable comparison or proof-led test for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8c98f018e65439a71425",
+          "input_hash": "f89c0e7ebe7afc25888e5d94f55d61872c7b2ced160ba63c99e22144c3eee9fa",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ffe1386aff8e421732fd",
+          "input_hash": "9de9f76006cb83feff453f1a64583c82590276f05996afabfb2a7facbc98fc7d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_17ed03d762c3c3b5f4de",
+          "input_hash": "2606b31694b783088f0464436dcf1c8a2759ebe5d2147513383531b88e827c93",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c1948ca6ee03c8f08cad",
+          "input_hash": "289de172d06ea54214b914bde28402588ed58b5d8746a8d8a4288e41d1fa44bc",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Invisible Infrastructure in the Sky | Adam Bry | TED” supplies a portable explanation or reveal framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ab8445576a1fc925d4bb",
+          "input_hash": "aaa3178eb6b919df55c02df86ddedc661225a93a1ee2348bcf5a4c50d515c559",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “My 21 Best Decorating Tips After Years of Designing Homes” supplies a portable comparison or proof-led test for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_55a521deb9004558203c",
+          "input_hash": "bc3461a415eea9a372d165d63e7f0e3f0ff074cb9fbf867a08c58f4d38447998",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3cc3d1b52d00116c0bc3",
+          "input_hash": "91bb4fefdc4b30fedc04deaa44269d03fb35771923803f6c2e83d94decfcea98",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_3a88d2dace5efd2d4736",
+          "input_hash": "a65360c09c9ef8f16f94f10c23f5f66aefc28d5ea9312583581c1c03683c1533",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0196390d5e061f01ff28",
+          "input_hash": "56e2e464eb02adaf10cf89ee82d833188dbe7c0b3e20c0a8f4f46430130efd36",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Song that Proves Eminem is the Modern Day Shakespeare” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c188d67d12e23da027f9",
+          "input_hash": "cb4957eb3c43c4e8834f4c47de7a28c49cb38754710aa8cea91ed5c971fec6b1",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Pilots React to Catch Me If You Can (With Captain Steve)” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_e30b100e70bd36f9495e",
+          "input_hash": "cdd6be72967962681c67b0c646b8476dba0077bd7dca412741968468d7b47f06",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Psychological Trick That Makes Homes Feel Expensive” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_6307a9760a108a318391",
+          "input_hash": "755c9a9dd9730505609c0dd45846296c3fd2fbc01a036cfee1a2f62507fea5b2",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2cd00d96e20eaae5de8c",
+          "input_hash": "cb4939a4689027d7844060c5a7c4bcdb52fe2c97074eca66abdd58c75f46e6f6",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_7e93a04f461ae4ebffa5",
+          "input_hash": "87e083d1800848f16c8eba4ac272e321e5c0b87d1ad4cd42c3c605a6d05deb45",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c8b3dc038155902daf87",
+          "input_hash": "e7515bf98883d826be89fe60f6606182661e2eeb16d0508548f33e3e0bb33b66",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_328cad5e23835bb5b34c",
+          "input_hash": "f9dee09996859d4cd2b89bea45ff01526bff8c26fa4403f79de685989a9bd71d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8fb9e6eae645844e8972",
+          "input_hash": "cd32774ebc9ab9392a5964b2adae7c0d0f55714f3094ec78be2652c59768f42a",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “How I Trained Jaafar Jackson to Become Michael” supplies a portable explanation or reveal framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_5731b08dde80d6e71f55",
+          "input_hash": "426bc3a64e71c73ba624cfd397672f8d58a388737ccd0d82a08c5c1cf19fb3ff",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_38466b426b68110bcff1",
+          "input_hash": "09a7c2b2258c3bfe91b55fa98b1068269961640da6b46d56bd38d1b61996fdcf",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_599df5e31e93dc2fbaee",
+          "input_hash": "630d49453bee5a4cba902dc31ac20b74c145c39551d789a9f799dd6c2dcd6a57",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_6c19ff844df382c5c12c",
+          "input_hash": "c07fd16c0c0d83598ca49b295b4983190f578fdaea6eed015e91ffd1379cb1fa",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Colosseum was built on a tyrant's lake” supplies a portable transformation/build narrative for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_99a10555a1c5736d4261",
+          "input_hash": "4980ad2565fb71f4f7527238922a5df3fb32d16d5be7af3ba342974f5b15e1b5",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_efdd455721e97b421838",
+          "input_hash": "5dd1428ddfd02b55d39e4cc6affbbb26f2a56a7286b941c971d9835940ff23f3",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0f18e8df5d3c78024b5e",
+          "input_hash": "e01096afbd13515c1e644ca3f9dc417985d86295f6739b01eda9f18e5f7b0834",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “8 Forgotten Home Features Grandma Was Right About!” supplies a portable specific list or completeness promise for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_36c45af4968770c6ce09",
+          "input_hash": "6d26410dc4ed6f7e7d2afdf7a545c6725ec281887084f16f8883866cd85b9bb7",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_22df9c5da9d4ac036f40",
+          "input_hash": "8828e1c99816851c36896bb05fdb3abeb56565c4bec569097f4753071f48de12",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f7f1c26c963b111fe6b1",
+          "input_hash": "af620564e719c3578ea05e4213e97b0aceeb5d18ab2ff6ab8034663e2fbbe641",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_54e4e2a9d4706b40fc9d",
+          "input_hash": "2caaed0a257b27df9c3183bd3a968681747452d2fadb92eeea49aa083b940862",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “10 Unearthed Artifacts That Shouldn’t Exist” supplies a portable specific list or completeness promise for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_88cccce6a950334b0993",
+          "input_hash": "80713f552d27d65ce1150607bc22a9950ab45e0397d95bbadeed6dd65c747906",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_8987d1d65ae4d678ab90",
+          "input_hash": "f5707d78a872872f5bfffcc0d99fe82da40b266ea03868cc4e2a95c291cd640d",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_33c9f276bb8918f1d0fe",
+          "input_hash": "976793593ddbc405d1f4489d853a60b2de947a921cf0057a6d9a90f2debed9f2",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “The Rise and Fall of Thomas Cromwell│Henry VIII's Right Hand Man” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f94e532a62302f5d2374",
+          "input_hash": "5ef0412153461d317431ee4f1c771a9566c0c45172a3789fda64a54cf3119701",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_a837992191e75093ea7e",
+          "input_hash": "536e35e99d9cbe48eae14d30f8b02388cff064e55c6bd5015514fed304ab5f4b",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_bf01e727defbc3492f91",
+          "input_hash": "d80fe496336e733b1ce8ee16728ec60f76bb79d53958a894a9a7d952c57a5c53",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_04c20843264f48859eee",
+          "input_hash": "87d6c05027b82020be7997fb4cf3c2a67d6f3b95b4f253a1c1ec6c194d20e775",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_da23ccaea429f41c047f",
+          "input_hash": "5efbe0dee0fb442b299442ca6af86f8771a9bf00e8d3058208d61ddea7222ba1",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_12c08085ce6202a4046b",
+          "input_hash": "cc3762cf29d13d83e50f634dd67a1742270be5d3f4165dbe35451750ec9fda53",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Go Behind the Scenes of America's Most Iconic 4th of July Celebration…” supplies a portable access/behind-the-scenes reveal for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_eea8e55e397e3452a85c",
+          "input_hash": "64204fdb4470467b27f212053d8ee14bb0c160e6b7e08cabb452b9bceeb0fba3",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Survivorman Les Stroud Busts Survival Myths, Exposes Bear Grylls & Dr…” supplies a portable title-led story framing for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_e0b426c7b3585ed1b0a9",
+          "input_hash": "d88071dcfbbf5208fa93f2d384656ef03118a125dcf9e371cad769d996269fbc",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ccce287683591e7c7338",
+          "input_hash": "2289f6bea14ad1d54326378e53aeb2bfc0c145eefb88f67c742d09cafa41f74f",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_4ed7aa1540bc7a3e54a7",
+          "input_hash": "b7e1c19b9c9c7f192b48d1a958a6a35ba2aa6e368c594f5dbccb5562a4fe1a28",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_88be2ada60300510116b",
+          "input_hash": "91366cf5e6cd4ae35ac688a3bb544f448a24bb509c8f1621b1d6c2987e0e1c8e",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_f0a3fcb728b968916eb8",
+          "input_hash": "77cf22a946f79b8255f0622014ef70f46cf26df60a7f7281f7c8c66712c4e3ea",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c8e962e9e604c17329f8",
+          "input_hash": "fcd59dff4b3328a3e617d96081da8c9fa4096c44c44847717d008bc65480c667",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c6887d71e075ce3d4a85",
+          "input_hash": "129b361422e0168dc40572e13a9a2a1383ec3766d3c7f9bcb85e6277507c7cf8",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2e891368f8431ec6f6b4",
+          "input_hash": "e3e7e344dad89118fa01c3bdadd45d8bcb709b91bd4e23a3f5f2208031bf4d65",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_9b7db9d920b66b69e60c",
+          "input_hash": "e7228d6458add00c8a8dfd8836cf659c02178f62a867c45b91567c0c88d40f89",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “How The Hunger Games Movies Ruined Katniss Everdeen” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_0c31b01ccf52c88f55d5",
+          "input_hash": "78ac7e542e616db215c6ecd75a9f46b6517e8158a8219b5c0ffc2fec11172bb6",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c423178cd7009031a77e",
+          "input_hash": "aa2a02aa2a7062703af83d9c325cbb52ffd23d0dcf6e4297ed42a4b88944d1e7",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_eaa865b441811ae7752d",
+          "input_hash": "cc07512646bff7ce8bdbbfcde116b76875903c6f2afa670698e08ec7d0cc3ee9",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_bfcde3b23e04897862e2",
+          "input_hash": "50cd6193395c8e883027a1d3b61bc8363b3cf1aed23a12b7a8930e25911c836a",
+          "output": "none",
+          "confidence": "high",
+          "rationale": "The subject is unrelated to Adam Savage’s Tested and offers no credible, specific framing or mechanism to transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_80abe90a651f50f5f8cb",
+          "input_hash": "54019ef79121e32ca66510757174a5bc56119875213f9172daa6b2bf45bbce59",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “Something Happened to Us at the End of Zzyzx Road... Never Going Back” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_82f4e2b81e58b09c893f",
+          "input_hash": "f40b549fadddf529d1a259fe27ed571ba0e1cbe45e96550c624746fabcd6bc00",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_78a40772c4b4f611fe1e",
+          "input_hash": "ff74fceee15873286a1133a74597f62c9b66d4c288a3c22b6ca8e77d25c259c1",
+          "output": "background",
+          "confidence": "low",
+          "rationale": "There is loose contextual adjacency to Adam Savage’s Tested, but no distinctive cross-niche mechanism strong enough to adapt.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_6ea3febb5ede73d2f451",
+          "input_hash": "da9feba1f408b6a3fd1da138d807fd0b8ef26bc780de461f03bafb588baf07bb",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_2140d0d00b07eac2992f",
+          "input_hash": "bda9434925a1046db200e04d15696d06f6e6ba5e4b52a196a91b10b79b963b6f",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_462906f8cb334768af4c",
+          "input_hash": "1d81241648ea88848639ad7698840877cb58670b6249328fc95c36ba94e9cb48",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_ff4027ba3cf3113cf3fe",
+          "input_hash": "bb2e9b17463bab66ac56744c904edb83f7c9c512cfd39db5a5a867bfef976998",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_00b12b179b585d2b1308",
+          "input_hash": "50be734bbd0f98f1a3dbc1d6f383c674932b8833a92b846281e46f9491f86f48",
+          "output": "direct_application",
+          "confidence": "high",
+          "rationale": "The subject already sits in Adam Savage’s Tested's maker/content territory, so this is same-niche application, not cross-niche transfer.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        },
+        {
+          "blind_id": "blind_c16acae73d2792f67f4f",
+          "input_hash": "9789b26a4fd32323142a795a5d9de80823a7659e92ef649cac58fe4232440d23",
+          "output": "creative_adaptation",
+          "confidence": "medium",
+          "rationale": "Unrelated-niche subject; “5 Design Mistakes That Make Modern Homes MISERABLE” supplies a portable warning/contrarian hook for Adam Savage’s Tested.",
+          "judged_at": "2026-09-03T15:31:26.275Z"
+        }
+      ]
+    }
+  ]
+}

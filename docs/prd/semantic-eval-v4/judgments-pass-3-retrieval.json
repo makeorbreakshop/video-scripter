@@ -1,0 +1,1829 @@
+{
+  "version": 4,
+  "judge_identity": "codex-gpt-5.6-sol/retrieval_sota_audit",
+  "rubric_version": "semantic-v4-rubric-1",
+  "assignments": [
+    {
+      "pass": 3,
+      "task_id": "j3-unusual-camera-demo",
+      "judgments": [
+        {
+          "blind_id": "blind_97f5368d210a5f00908a",
+          "input_hash": "60f642feb6dbaf23755b4669d8c028953c05b0bef80d7b9ac9ffd9bd1d46b81e",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_dc85559e1db6a0566abb",
+          "input_hash": "f3997941dd4c882043773951a3643af84c189b55343bf67205bc8c8ee709d3cc",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_406130837d567fbe121b",
+          "input_hash": "45391427187451f4b43098b01b67fb19ae3fc490b555f56f9eab8acca6696b6a",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a9465dcb15d26a86393b",
+          "input_hash": "bee5b2c07d10f61586d2e196657768294f5b744623813959c9615ad7a14a38e0",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_274b15871d5a7683edb3",
+          "input_hash": "3fdfc52b0fad1fb2b714212e1e25df8774c838cd1dadc05a472b8e51028553d0",
+          "output": {
+            "topic": 3,
+            "packaging": 2
+          },
+          "confidence": "high",
+          "rationale": "Strong match to an unusual camera/robot technology demonstration; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_67bcdeb2e77d2eaced92",
+          "input_hash": "7cfe709c7d9c97ce6bc30955c53bfe303e5462394239627e88111f0f4799c202",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_bc8cabc96ee71c88af04",
+          "input_hash": "02c8cdc95bf18c4e127158c4c498475e4f3aebcf44e6a8e8d13b87dd5e67fa18",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_dbcd1ea61113d9579d1d",
+          "input_hash": "21b2ae92e3da89f456f4d674ae1ebf709a5a312b1da9540af12499f20e75d165",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_fabe54d9f780e6106576",
+          "input_hash": "37679b9599d438b718f2546c141185e7d79445fe7d76dacf1a596755fe42fc0e",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_c37d60c2ec2da16e84e9",
+          "input_hash": "f42360a163b1b8fc3b7d422e6e4b20aab29116c7dedced4ca0e8017a73522cb6",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_d18ea365b4eedd8b787b",
+          "input_hash": "cb09a4f041bb655bb63ec5d32d85a24f896d71cf08e3e88ba8fdce0db5e29e2a",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_7cdd0fa672569c9a06a6",
+          "input_hash": "8163c3628860971e59f76a09eccde6cc6aedb08b962a7c13e3d9e834859dc853",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0fc31cd9f20d65a1c233",
+          "input_hash": "85d17001a84505770bcf821d05a1b386c8ca357b875ac599194f4665fd6fa0f5",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ad32aa433e053fa46c2f",
+          "input_hash": "3600d8c2a85f9fef4889aa0a8589c5532c4a290a5875996e78542258925e91aa",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_e78856f2239d2fdbf03f",
+          "input_hash": "8b5b7cdfe8bb9f78064f5d9e0b9ebf4bb00fd5479fcbc2d97dd6afbb37de71c7",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0bacb348e4caf9386eba",
+          "input_hash": "f7bb8afcc763e9369f64e4ba3ac27c94b86e678a2710ccae44c8a9e0d3b50773",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f87dacdeb39432c7494a",
+          "input_hash": "40acf36ea387770cb5418b00dd656f60d17ad1ccdf81b9593ff4d9d4dc065fbd",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_35169bde8687ae879f17",
+          "input_hash": "e654c86b9e62f5ef17963121e2c1c01c9712e14476ba6e292a7497e9dd3dd13d",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_59126406c4c9cdd6ab5c",
+          "input_hash": "1d57296dd77d96fde3d00377ec2faca8e64af310c192ab7f2704e56e3081891c",
+          "output": {
+            "topic": 3,
+            "packaging": 3
+          },
+          "confidence": "high",
+          "rationale": "Strong match to an unusual camera/robot technology demonstration; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5b38495df6a4d5cd5880",
+          "input_hash": "95a31db711e75da81765f9f55fae07591841e0eadba2e4004bcf48f3519b50f8",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2815bd9b7660e49b09e4",
+          "input_hash": "d166a47d7ef53f7ef4fde5823839750c39bc334534e364a8332cd0953c99892d",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_446e951e3308e065e682",
+          "input_hash": "ff02288668628f826a23f5ea6824424bfdc04464bf8f3ef34333da2ea3b09c0e",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_b13bdfff0aa86d362a28",
+          "input_hash": "3e5b18913dbd3de28f7f38531ce7453a21d51c5ab9d0bff32b1adb9941711f8c",
+          "output": {
+            "topic": 3,
+            "packaging": 3
+          },
+          "confidence": "high",
+          "rationale": "Strong match to an unusual camera/robot technology demonstration; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_86acd9ccce5ac33bdcef",
+          "input_hash": "cac3f9d28cac48c9db41fa04e3cf5e513283229b8fe0ba9947bc8270dd69f3bd",
+          "output": {
+            "topic": 0,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "No meaningful camera/robot topic match; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a1c05b1a99e00f96d0b6",
+          "input_hash": "e2ba9bce871fe013df2ba2b3e5daa676aec2cc680f8df6444f0c04b04895bc20",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_fea677e06adea484aad5",
+          "input_hash": "e5eeab14bfe51ce67c84a1e0e4c97c68948ccb702205c084ef8d57668f69ccb7",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_9761092dbf99237eb58b",
+          "input_hash": "ab7cdceabb97063b1129b25b3c2975f8b3d39eae40e8355c45d61067e02e3c85",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_62a8917077dbbf4e3fff",
+          "input_hash": "98f62afd58567891cb0261938ec80aa59db5512f0419faded7b9b5db72a4791b",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_599dae170cedcadef611",
+          "input_hash": "6d4a449bcd27c14cea9b0b30d8cb5a9463c71176f8f7bedc5382c4f72e015a78",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_067dc3668647c350e955",
+          "input_hash": "0d42275cf0970d3b345a0567b07bd151267ed8004845494e30d374c59c21858d",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ed0e24ecb945f9b3cef5",
+          "input_hash": "f4675444adf0596399d935f3dec7f22e5aac00251058026630c48997fedb2efd",
+          "output": {
+            "topic": 3,
+            "packaging": 2
+          },
+          "confidence": "high",
+          "rationale": "Strong match to an unusual camera/robot technology demonstration; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0af442089387d210bd57",
+          "input_hash": "6f842be15386d323193ebccf5a9e1a1d709a15a86238fa65b629aa482614ca9c",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_3be597833e2e9cb1ac47",
+          "input_hash": "1f483ffeee1c8d56eb68f8dc976fa72016a1b9b5a5a522dc082762271106d38c",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5496d69bf4c9fcc3a87e",
+          "input_hash": "e1e819c6dcee30797558bab9c88bf4c88585e9a2b9567ee99b3847c8e758a915",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_404058a15540a8759a99",
+          "input_hash": "65ef32c5252832f0a5a4424716ecdd066cc565dec40169bb02259269025870b6",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ac11d5ff1c0d4f29da6a",
+          "input_hash": "192ce8c6914ebf1fa0a95abc31d67c08f63f42602755b38895e92206158e0641",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_14b11860eff12e5721ff",
+          "input_hash": "2ac15381a25cfc27596466c1612de700b7982b7eabc9c937bfb70b99d702bd40",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_bf79f105085971561007",
+          "input_hash": "ccc16546a42a6c171edccabffd5b87bff476c24f00c076bf01b0899f38ea6d65",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_01e7854a44bd97aca9e9",
+          "input_hash": "b5143e358976595028f694469c9434dee2a3dd533a48071cd0d5e5797b612fef",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_7aafd7d697bd3bd54a3d",
+          "input_hash": "60c13267d7797a03c4bf1d62dd36444e4d61bdc6320a0060d9f8c0bf182c3152",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_63e7336308194680eea0",
+          "input_hash": "4a46cdf2d294b500706b2a2fad384a348eb5b7a4e1c180aa0fa0905bc0175849",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2c0242a39ea7b8280686",
+          "input_hash": "a6eb0bf727b1deaa312c63da6492eb17be27e02bef3ff16b983c2a48e7d4af8b",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_05b836aa36df75bc8fea",
+          "input_hash": "218a4dde35d97c229e5e556704386047ae24aa093636294f3bd446f8c7a6714c",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a31b83534a646895f7ec",
+          "input_hash": "f1364a620e797a0c8c0efbaebb11186202bbcd3988cac42ecbdf9d364cc7ddbc",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2b7018ceb8a3f4027321",
+          "input_hash": "6497dae4b8e3b0ca67359c8f4e0a55b67d335d9ba255d8034d4282f5503e403c",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_29beb7f92bb918cd17ec",
+          "input_hash": "fef23dd2c86e48ea08266a08724910b6895362284ac429ff7de43a41aff692a0",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f12a905c76acc1fc424f",
+          "input_hash": "a001c5b0bb04ce2da4bd234d21c49cc91ad1c0002ee5c9cc9fc8599813a826c8",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1c67a8bd2c2cff572c1a",
+          "input_hash": "22c350dd6ec6141340f2ad26b0e48713042fc712f75806aabf88932a3a9d88d3",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_32467118b75cb2ab7865",
+          "input_hash": "28f1d9276f037c461d3af9252dcccd2ff91af73fce882682a0ee500598b2383b",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_9a14727b2c591bb3ef19",
+          "input_hash": "b3d7ed0a48a869fbaeacbb5c90288ad30efd6f42d228681f638db2fcf88ba7f0",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_4f697ff7634480f908b4",
+          "input_hash": "7b8455a125b9b6d96a2d80b47073a1941466285d1de9190bbfca7a718088e1bd",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ef2861fc41bb1056ec8f",
+          "input_hash": "558825293110175416a08af576054fb9bdf0d71485f6dff8714fb1a728a9c01e",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8d1ef2fb8abec9fdd508",
+          "input_hash": "4195b680a9a3a54ad7886d8d941fc8c3e66ac436ceaf84a060aca8fac3fdc210",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0684c8add4cdc8f0b9e2",
+          "input_hash": "45a96aa02904fd4949183a2c2ec852a2513ea8e9866e4cac8cd1bbd65298de97",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_21ac6bc27d859a123f98",
+          "input_hash": "7a80f59de86c0c02578d442bd85c296c4aa3cbd5848316becac068d6507ae406",
+          "output": {
+            "topic": 0,
+            "packaging": 3
+          },
+          "confidence": "medium",
+          "rationale": "No meaningful camera/robot topic match; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_e77cdc9ad06e530a0f9a",
+          "input_hash": "a5306e905a0b3209665c563962c49318ee7032196c2a12dcee225057f049f5f6",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_3571facc599ba19771e3",
+          "input_hash": "bd38e210b18614a13598975bbff0c858e4e77ebf275bcfe57c7d072a10c5eff8",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_c164fbf4b0e7381fc058",
+          "input_hash": "4e2835b0e8640f442bf93d2a3ba00b2019ad713ad9df48e086433952f556a40d",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_dec0354c250437c21534",
+          "input_hash": "e376f31cc538dac016958c1a43b7d32ac3865722b91206b2b15392f97797ca4d",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_e518661ba2342de1af58",
+          "input_hash": "ce6115b9631fea50c006df1bab08eb0fd1f09c81e48a81164e413fc795b08a48",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_d66bc961f1b223f2ec31",
+          "input_hash": "d80fae40f0d059d881b9f6d1785adf673346aed97e3219bea5d489465d76ade1",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8f96946279f7eb0b7f2e",
+          "input_hash": "2672cd2cc5ed5ff8c7bfd77747063877e370af9811ae0978d04528c9fed815bd",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ed1cb9288f8f2e0c3d78",
+          "input_hash": "6fa29ba0fd55b28a83e6ed5234024a497a38e5cd24a3ddb4714a86cad01f5bc5",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8af16fdde51006c269b5",
+          "input_hash": "aaad910b0b5b6d151c2d92d7eba8f9c98a64b30cc16f1416a44b91f644f796d0",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_498fa80d761a56a38f44",
+          "input_hash": "ae3c8c2099d0683df9ceb0f0857125b90c791868318cb2ea0a011cd019ec5b7d",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_de9d67982db32ef0a90e",
+          "input_hash": "499a742a1f00164bb7fd3369086304123bb61384624a1d8ac64cf8262638d63b",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_df0954cf6e0e11f60b8d",
+          "input_hash": "9a5ef423ec11b0694ee2c2ef048f02df7082b717099a73c61e050fc2177e5d1f",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f25bfa5d7faa817df33d",
+          "input_hash": "884d859ffd821789c3221a6a41bf878c83c0798fab5ef60b4e8f09e532694b3c",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_6d5831d2a645dad9f309",
+          "input_hash": "17c7cdd4136b64c956a9d67cdcd6411b53f0029cebd065edb836d35424a89089",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f48c55d14fae6f9b89ac",
+          "input_hash": "c9df1db35df5d876aea3923ea05beb5ee5c2986c9838e62db81bbc34c2d39ba2",
+          "output": {
+            "topic": 2,
+            "packaging": 3
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8b7d4cf317d55d854b62",
+          "input_hash": "399d07fc2f9da8a4b797341ddbf5d0d5fd8fb24197362e64638c9a8972a7c7d1",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8318bd63fdb149ca5f3a",
+          "input_hash": "938b72a3c307d41a2e6d44ef625ab42a87ba39d3972cec4e08138b20662077ab",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_7183987e60be7b8caff6",
+          "input_hash": "9aed65329429a1d08572bceecda07c37c2de58ebbf4e333fd313f5f646ee86f7",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2591a55c6eb439fdcd85",
+          "input_hash": "1ce6478b4494e99b9fea2049ebb48b5e9859fd6fe838ccf4c257971dfa9c8742",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_264cd4303a43707229b0",
+          "input_hash": "27290886f10bbd0a9e00a9040269cf44fa44f549bc643acb42eb96475f7db228",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f41d0301fe72570256a3",
+          "input_hash": "890e3b64eea7e3116f36720460288396d672d4ea0c3a6d753b801a5ac4ebecd3",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f20537a5e1d982e4d6a3",
+          "input_hash": "647a60ed3d45be36fbc92d55775a7361617252260029a2bdcd21e5a183f12ac0",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_7111088b7dd2a24960db",
+          "input_hash": "4234c9dd7f0a034c37128e965bb1e864698019097a8e00d8bd938e834a7b6c61",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_73af3cb1318bfd35f9d0",
+          "input_hash": "5f46c30abf522db29b9a36e0af74e0dd7048958aa3f4f55edbf0b2960018d2e9",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1b44096234f7c05b345d",
+          "input_hash": "16b0101305ea1c80fc0b057349f30ee0a07290d4ff6e30fa40cb21710d698372",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5327379c02db63cf0526",
+          "input_hash": "8ad4c0d73f69281b8c6d87e22ebab3b7683826328808b83f07e30dce5a01b11b",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_eb8bc12ab834003563ee",
+          "input_hash": "0511ccb4dc592285456eff6eaa9281961111a51afcf98a73082118e0d15e913d",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ea91376f606ce02af22c",
+          "input_hash": "90fcd3544c37362b36e2679482c0199e9f9f103fa3bd5290d4ee829bb10efcb9",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ae51470828286b9efe65",
+          "input_hash": "f7313f396c7b828474b746360508884817381bdd5959a22e4830e714af357fb1",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5d89c8c0b1608eea185d",
+          "input_hash": "f6c3a5783703c17f8af44c3d3e85f558faf2a798caa4e6a535f51ec5841aa339",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_13799735f2d897960616",
+          "input_hash": "79453dc3c2c84198341a49c2c9d1eec89625a64f38329e1242e9be266cb54b02",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_31209a649039faed8834",
+          "input_hash": "987ced03cbf444ddae586856022131f3bed3dc46a02d4c61f87be0f7e27a753e",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_84107109352f65cb19b7",
+          "input_hash": "cf556a2d421a8bef5f38511fe72001b5374294f98402c29ae6ffa4c67662cce6",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_03a01b9471d6915f376c",
+          "input_hash": "9d5a85c6121a43c79caa58169ee2c278d203af6634a3beb315bdc93cab751fd8",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_268ecdc406a1c525ad99",
+          "input_hash": "9889db3a6bd568cfe8be58419b6fd1318664cc9d2d2680155bdc329f6001350e",
+          "output": {
+            "topic": 0,
+            "packaging": 3
+          },
+          "confidence": "medium",
+          "rationale": "No meaningful camera/robot topic match; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_d75579616da7e76608a9",
+          "input_hash": "abe58cf49f6a556125c0b0a05da6595a3238d4b3fd1baebceb9e6012ee8af262",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_4e7d0ddcad70f7db200b",
+          "input_hash": "2d5ae5f8d707949175cee40ef16f17bf616715c3c8ba571818241eecc46abf51",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_7d8852f39112ddcb7c5e",
+          "input_hash": "6c86b3764b32a9d74a9b7349bf216d2905a1e9c4cee270413036849eae4b0619",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_4f38e7eb1c08371add09",
+          "input_hash": "94f59d9b73bdfd87f74413c60a1f0aa55ec3a08d16e75438c7f867889dcf6e92",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_fb87409bc90560cc9953",
+          "input_hash": "93ce8d3f180f3dcf77699ffdcab97877b8268769eeb0692e9100cf54913231ed",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_03a5d4ab096e29e7e0db",
+          "input_hash": "5ce3d30864af9d45689bdec0275ac9ee91bfabf73ef60a70e1769636fecca19b",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_151d267967ed56af4bba",
+          "input_hash": "a4618c2877cad29a8373bd9913fdfde8483deb66a73fc96b70803c29a5a0b2e8",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_6eec69e6f817d24678c4",
+          "input_hash": "ae5218f65ae4aa84be23591ec68128bb563620c4839a00ed8e0eef8823c36c87",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_9e60c906b5d375606a76",
+          "input_hash": "d907e614c9b873aeb6e20ee44f84d15cfc6829184eecda639a80c681e2a89352",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_bb1e049f709ca2a7abaf",
+          "input_hash": "e432c40a88270ad380e73c249767b3cb4c8c03a9c6f0b16d5b653b5185ec938d",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8630b2d31d3db4c6b101",
+          "input_hash": "5d31fd24752c6498a11b490709b846402c38cd97ca30f04b24dac49b9da6ef17",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_cdf432f59bbc3b94123b",
+          "input_hash": "4aa5d7dcb4e218f4fa152e9598f46d057a1961c33f3746c5df518de9613d8a39",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8054348df87e85dff931",
+          "input_hash": "a2c94b45c4ea2966e3a96f6aad4cc693c48a512ba898a9eb038c91e10fbf454d",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_4fe1b03162de361bc1b0",
+          "input_hash": "d180b46be27b26f2ccded80e2c326021cb1fec66286c4d69bf17f6117bfdce36",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_e05f78694c9b666adeac",
+          "input_hash": "54b79e0b60177c2857ac29364ac89ca22d97ed6b92ee20f03e95209a4530e5c8",
+          "output": {
+            "topic": 0,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "No meaningful camera/robot topic match; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_65a84339c2eb8ef52f1b",
+          "input_hash": "d9e9c103aaadd67dbff91a911497afafb0c0aca70431c88d0a1234fe3e6d49d7",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_6f65d1af62c553e1ac2e",
+          "input_hash": "6d94590edb08401725785faa6edc6c7dffdcf39b62e09e8442236c4819c23f6a",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f1fc75e8239264748fad",
+          "input_hash": "ce30684985c98613dccc2aaf75f281ebaeeffec99b4c06a57756368412853b2f",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_c67919c008eec7e55418",
+          "input_hash": "7de75701d8b7244687d2136ef167043302da3d9d89d39f87d9cf8fb3bf49d29f",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_db3dd29b1f2ab7d63047",
+          "input_hash": "5692d259c8d0eddd23b669e6d7d569034248b0ddc101e21d0233bc7ec2f03341",
+          "output": {
+            "topic": 0,
+            "packaging": 3
+          },
+          "confidence": "medium",
+          "rationale": "No meaningful camera/robot topic match; a very strong spectacle/superlative reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f8235d9ede8df8c9007f",
+          "input_hash": "48186c5d7f8ab5c2e37921b1195ab37e40f497898f08f8737790389d9eab22f1",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_9979ee66ecac275fc4b6",
+          "input_hash": "afe7c5aeb1fb3f154427e648600e90c8ae169117d97a650b72a0ebdf25df8631",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_d1159aee2948479e6f1c",
+          "input_hash": "07910f3dc46fcb7b5174bec760df1dbdba369e0c48e1826c16212f8710ba199b",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_eb8aa68812452de85d23",
+          "input_hash": "973ae2c72356d860db506518856b1c059614a37463ded9bc0e442283e5e691ce",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1408d0a6d43cb51ac950",
+          "input_hash": "5ad8d054113032fb41c9191e196a056bb7e1c9970f5f4ac73d0b93375bb47bea",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5a07951479f31129e79f",
+          "input_hash": "6786dd7ffad14fb1cb4ca817ce97f654691762257cab542d68305f46e0741c38",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2bbc7bd32c4e200e143c",
+          "input_hash": "209b1aac735d55945293afa9870ab444dca12cdec310f6c8e6dc2298dec07a45",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a9cd71d2771afe46b130",
+          "input_hash": "9cbb371866dee21651e425a9c646609101862abf41800e966d1b7d68ab5d8abf",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f284b895c5b9d9a80278",
+          "input_hash": "f4b6247359b53ba29acc8bbaa3b6f8150454e21550b9f46f2441347a159f2db5",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_8199eb62a97473c0c43b",
+          "input_hash": "b8d7776eb6a384156abaab2e6f31bb1dac80a41d924afe73e077c87ada357336",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_9de68842b5b2a4d5906e",
+          "input_hash": "607b65e3bfdf9914eed699efcb7196d2d18f4b2a715d902f91309a49a129601b",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ee4a179a78d29f5c146d",
+          "input_hash": "47eee390169b9f289c9fc0223b929855e17c464f9908f20777261fabb60c9cf4",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_94abdf086cef5ddcf8cc",
+          "input_hash": "29ab76b23d9d0cea5453c44f29f75947af55ed423ab4776e4016b9d7631a3557",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_f9044cd89d892c7aa789",
+          "input_hash": "aa05494e720514d0e758fdd9ef8facaa76f3d9ba7ba49363645509c18548fd48",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a2df3f154095502d7fbc",
+          "input_hash": "284afa6c72b16b6c42284c298ad1a54e11b962ff55d9dcb0d25c1a064ec5f4d9",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_206d5b95df437b1598eb",
+          "input_hash": "0c4c7ed80e8e987fe899499851d06b88e14f55e948bc853a178e33027c3cef17",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_38029a54f37a5410e9fc",
+          "input_hash": "91520908822265057b3c647688c470da9052b1cf85db5a81c7a0fa459484aa93",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1572f44a56a4a1cd35a1",
+          "input_hash": "47bc7f43cf27ef4fb1ee533d1b98b3cabd6568ef6327bb3c84de8de8072a902a",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_6aa1b4ce02b43a523e94",
+          "input_hash": "d475ce126d15058b2cf1c4de9bda2d1e46ce733a6173eb638a73ca8efcaf6f09",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_fc51366394227bc6825f",
+          "input_hash": "c13bb4c074882f723e61e4315077985bf7c81f8181a2d648c815349813643a8c",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_998e5543678a1a457ea6",
+          "input_hash": "c541a12b744f299c1fa94b9dc20cadcd5ce45cff89acc587b728dba184b10cbd",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_d781df3a125ab4b18110",
+          "input_hash": "22893bb3b9c453e416361a99f66268c3b6efbd8e03860226fab4b9f5235318d1",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2ac6276908aa24d9b93c",
+          "input_hash": "6cf593f6270cf68dd5b8c064399b8eea44a6259dd958c3ee241e6dd8d53f8d46",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0c2e9ec0e923e0ea01a8",
+          "input_hash": "115c947014c9069bd6fa13f6d087b397536407c118c8d33f68023fba2c3df71f",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_08840e0bba5469a51d27",
+          "input_hash": "b6837820dd8716adfd8e303c7d26b07c3c41edbe8ca2074b7f00eaaf93094e5f",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_c84ac5e0acb0c5e7414b",
+          "input_hash": "b15c91fafc4d2d3f0333abe5d6b85b64d90a65f1cd40cbb28b7dfbca700e84e0",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_93bac5d8facdc60ba794",
+          "input_hash": "0dc126cd62f3b0890a83024e2fd2c0004453af1088bf1075d62111a3d3cd67fd",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a4645b2dc967bf272d4d",
+          "input_hash": "6ecc5475555076fb035f0a778b59eb90a6181db8ce495999d96c0d800526e0c4",
+          "output": {
+            "topic": 2,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_972436084d81452344c9",
+          "input_hash": "b7674c7d5db0eb436b342d6f1b15406dd2b34e8af78b0a908bdccf40df20c511",
+          "output": {
+            "topic": 1,
+            "packaging": 1
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; only a standard review, test, or guide structure.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ae8c160f1f5f6d7e2893",
+          "input_hash": "e2cb687766384b54c41ef9ba307501674d00d99b4ec4b79706ccb0ded4926817",
+          "output": {
+            "topic": 1,
+            "packaging": 0
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1b226ce9cd7daeb5125e",
+          "input_hash": "32fe2707f787ca3bbc95cd335aa5de0286a461105ac2a64eba171978f3d1b3d4",
+          "output": {
+            "topic": 2,
+            "packaging": 2
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_52704b4643135b7057a4",
+          "input_hash": "cfe0540efdb91e8b21ac46833fb3bdb14cfc6b6d35fd4e72d4f688717dfcf1bb",
+          "output": {
+            "topic": 2,
+            "packaging": 0
+          },
+          "confidence": "medium",
+          "rationale": "Partial topic match through camera, drone, or robotics technology; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_19f8cd3dd5bfd7bce456",
+          "input_hash": "08cc31f65edf16acb7b5428a1fdb1d176dabf591843cf6f531d5b079ccd6b842",
+          "output": {
+            "topic": 0,
+            "packaging": 0
+          },
+          "confidence": "high",
+          "rationale": "No meaningful camera/robot topic match; no meaningful packaging similarity.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_628790ded3a3e5f5d882",
+          "input_hash": "a0b357859812834d30a65403f2d24a5144796f50a1f99caef893a2e7d0ad0bdb",
+          "output": {
+            "topic": 1,
+            "packaging": 2
+          },
+          "confidence": "low",
+          "rationale": "Weak topic adjacency through another technology product; a useful curiosity-led product reveal.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j4-laser-engraver",
+      "judgments": [
+        {
+          "blind_id": "blind_d6ac0c01dfa576aa6f99",
+          "input_hash": "ce7231aee742ee5ed424b7f6ab671f763110bb12f456cd16b426fdc2baeb3e37",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_655b21b51c87e0b36100",
+          "input_hash": "a711121e76dc8539b2af6710d86f144d7ecc78b82a309ff7717a8b2b29aa1396",
+          "output": 0,
+          "confidence": "high",
+          "rationale": "Visible metadata is off-topic for “laser engraver,” despite corpus-level outlier eligibility.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_48759b7ad3c342f24eb3",
+          "input_hash": "480dca7f950e7d3049e9c7996ca41333b27e031c4e5367f1bd31f1b4f05e87ff",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_43722e36cbf3ef51204e",
+          "input_hash": "24b6789673405f6ae9128491c71c1c9380c86fcd643223ed7e809f67d6232ed6",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_6e86bf7cd38ad5fe18c0",
+          "input_hash": "84ecd70bab62b622c6e9e89fd93f680e3935f1aa87b21e285b471b89af642f76",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_2294c73429718a210e88",
+          "input_hash": "6b409c484c7333ee19c024bbd2fab43493c5e1d5a2e30336bd4f26f9f6e9ffc2",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_3251ca3d4ab208c783cc",
+          "input_hash": "db03dbe2d2f41a4ed66945ab49356fe2c8411ab03cc79bf3ada99ba773f756de",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0e7809376223a0578907",
+          "input_hash": "929705a9c7971c6eee21d797c43d8f06a6a2b4761730bf680b4479e06e39846c",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_5e28d89c1c5e5b3de93f",
+          "input_hash": "e86c29ae4e21bc988a20a2309ba95ea3887b136c94fa604bcbf4bd9bd35ff711",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_b6cac5096dd9904b91e7",
+          "input_hash": "5edd92b6a3bf4b2d39c7db5d03cd7ce7dd779e5a410f90d711378854949cf709",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “laser engraver”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j4-woodworking-jigs",
+      "judgments": [
+        {
+          "blind_id": "blind_50fc59e33eab81bbdfe3",
+          "input_hash": "f8369ab75cec178796952467d4ec27828e6e08990237822f4f81629b69360657",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “woodworking jigs”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_ff4bccaace2366a58efd",
+          "input_hash": "af37f47d81ab7881661a7482d69de3327fba8ce95b8c2579c3eef1f669e8a3a1",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “woodworking jigs”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_12f63ab8395b2ccb2c04",
+          "input_hash": "92b61702b384e69523ed4f97c96c3350959c85e1e27047c643ffa8abac7bed49",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “woodworking jigs”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_c2d4a779a1fcba1d1d79",
+          "input_hash": "77604b5f7c45c1b9dd1486ed9ad353b930d8a816abe5b43e92d3bc328cec8f8b",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “woodworking jigs”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j4-air-fryer-recipes",
+      "judgments": [
+        {
+          "blind_id": "blind_7921d638d2fee9a660e7",
+          "input_hash": "42cb4b38cf9114777e701ab432d0c83581efa775746a26ad0305b69a4dcc5087",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “air fryer recipes”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0eb5cf6caec2fbf6350b",
+          "input_hash": "cf3339715dd1c21118918d597e60bdde9decac38c0ff118e73e28dec17f9b519",
+          "output": 1,
+          "confidence": "medium",
+          "rationale": "Visible title/description evidence is on-topic for “air fryer recipes”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "task_id": "j4-budget-camera-gear",
+      "judgments": [
+        {
+          "blind_id": "blind_7ec99d99eb16b8d03134",
+          "input_hash": "54c726936659e89488376bbf03ba95f8225f452b1bf47bb85d01f9110c49804c",
+          "output": 1,
+          "confidence": "medium",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_e892757ee3e45e46f237",
+          "input_hash": "36bca8961c401798c55132852104285fcb039e46424309d3812b1400ef9b93fe",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_947f2de67939d7410e5a",
+          "input_hash": "f41dc0c059adab4b52db21a9f21ae12be2f3c6cc146673e33845d9fb4fb58e41",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_3c16d998de83a23164ee",
+          "input_hash": "876694e2f3a73b67cf853be2a895f7b4aae5244baf81dd9fed121e617e595fcf",
+          "output": 1,
+          "confidence": "medium",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_da514e0694b7d5625300",
+          "input_hash": "c0a94058cdb45382db0346925d14086e4944364e73b0f834eb917d074b5e2f04",
+          "output": 1,
+          "confidence": "medium",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_0d5ee1dd8f43e3af1dab",
+          "input_hash": "e92585ab792afa497fd3906b70180c6e016f0b8eba736ef81c89c59b8896ee5f",
+          "output": 1,
+          "confidence": "medium",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_b03bb78a7b9bb9b9ea9f",
+          "input_hash": "5f0a805be971077155c951e32de01df5a92561adb709d74a2d03dc0c7218ab96",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_a558e898131d784e748e",
+          "input_hash": "dd6a3e1611ec51f2e167cb67c8170c137fbe2b511a5f5617671bab3fe570a12d",
+          "output": 0,
+          "confidence": "high",
+          "rationale": "Visible metadata is off-topic for “budget camera gear,” despite corpus-level outlier eligibility.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_314e521ba82800002f3a",
+          "input_hash": "f9a07dcb9bee8bfb0e121ad8d251a1af8666b113bb406c106dc427de9f6afb0e",
+          "output": 0,
+          "confidence": "high",
+          "rationale": "Visible metadata is off-topic for “budget camera gear,” despite corpus-level outlier eligibility.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        },
+        {
+          "blind_id": "blind_1d72162f0827bf6bc81e",
+          "input_hash": "6a772d238b15f722ed46414a22a7534fcf85b2bb33f372139a78393f3d7a0243",
+          "output": 1,
+          "confidence": "high",
+          "rationale": "Visible title/description evidence is on-topic for “budget camera gear”; guarded-outlier validity is supplied by the corpus.",
+          "judged_at": "2026-09-03T15:30:27.320Z"
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import {
   CorpusEligibilityRow,
   V4Task,
   buildBlindPool,
+  bootstrapMeanInterval,
   candidateRankingsHash,
   freezeV4CorpusManifest,
   freezeV4TaskManifest,
@@ -213,5 +214,15 @@ describe('semantic v4 ranking metrics', () => {
     expect(pooledRecallAtK(['a', 'b'], judgments, 2)).toBeCloseTo(1 / 3);
     expect(ndcgAtK(['a', 'c', 'd'], judgments, 3)).toBeCloseTo(1);
     expect(ndcgAtK(['unknown', 'a', 'c'], judgments, 3)).toBeLessThan(1);
+  });
+
+  test('produces deterministic descriptive bootstrap intervals over tasks', () => {
+    expect(bootstrapMeanInterval([0.2, 0.6, 1], { iterations: 500, seed: 42 }))
+      .toEqual(bootstrapMeanInterval([0.2, 0.6, 1], { iterations: 500, seed: 42 }));
+    const interval = bootstrapMeanInterval([0.2, 0.6, 1], { iterations: 500, seed: 42 });
+    expect(interval.mean).toBeCloseTo(0.6);
+    expect(interval.low).toBeLessThanOrEqual(interval.mean);
+    expect(interval.high).toBeGreaterThanOrEqual(interval.mean);
+    expect(bootstrapMeanInterval([0.5])).toEqual({ mean: 0.5, low: 0.5, high: 0.5 });
   });
 });

@@ -372,3 +372,26 @@ export function candidateRankingsHash(runs: CandidateRankingRun[]): string {
     }));
   return createHash('sha256').update(canonicalJson(rankings)).digest('hex');
 }
+
+export function bootstrapMeanInterval(
+  values: number[],
+  options: { iterations?: number; seed?: number } = {},
+): { mean: number; low: number; high: number } {
+  if (!values.length || values.some((value) => !Number.isFinite(value))) {
+    throw new Error('bootstrap values must be a non-empty finite array');
+  }
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  if (values.length === 1) return { mean, low: mean, high: mean };
+  const iterations = options.iterations ?? 5_000;
+  if (!Number.isInteger(iterations) || iterations < 100) throw new Error('bootstrap iterations must be at least 100');
+  const random = seededRandom(options.seed ?? 0x51a71c);
+  const samples = Array.from({ length: iterations }, () => {
+    let sum = 0;
+    for (let index = 0; index < values.length; index += 1) {
+      sum += values[Math.floor(random() * values.length)];
+    }
+    return sum / values.length;
+  }).sort((left, right) => left - right);
+  const quantile = (probability: number) => samples[Math.floor(probability * (samples.length - 1))];
+  return { mean, low: quantile(0.025), high: quantile(0.975) };
+}
