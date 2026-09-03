@@ -64,15 +64,20 @@ export interface EmbedChannelsOptions {
   dimensions: number;
   updatedSince?: Date;
   collection?: string;
+  refreshPayloads?: boolean;
 }
 
 export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
   const idResult = await db().query<{ channel_id: string }>(
-    `select distinct channel_id from videos
-      where published_at > $1 and coalesce(is_short, false) = false and duration <> 'P0D'
-        and channel_id is not null
-        and ($2::timestamptz is null or updated_at >= $2 or published_at >= $2)
-      order by channel_id`,
+    `select distinct v.channel_id
+       from videos v
+      where v.published_at > $1 and coalesce(v.is_short, false) = false and v.duration <> 'P0D'
+        and v.channel_id is not null
+        and ($2::timestamptz is null
+          or v.updated_at >= $2 or v.published_at >= $2
+          or v.channel_id in (select s.channel_id from video_scores s where s.scored_at >= $2)
+          or v.channel_id in (select cm.channel_id from channel_meta cm where cm.fetched_at >= $2))
+      order by v.channel_id`,
     [options.since, options.updatedSince ?? null],
   );
   const allWindowCount = await db().query<{ count: string }>(
@@ -113,7 +118,7 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
     }
     const metaByChannel = new Map<string, ChannelMetaRow>(metaRows.map((row) => [row.channel_id, row]));
     const hashes = await currentHashes('channel', idBatch);
-    const prepared: PreparedChannel[] = idBatch.map((id) => {
+    const allPrepared: PreparedChannel[] = idBatch.map((id) => {
       const videos = videosByChannel.get(id) ?? [];
       const meta = metaByChannel.get(id);
       const name = meta?.title || videos[0]?.channel_name || id;
@@ -141,7 +146,8 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
           lane: meta?.lane ?? 'corpus',
         }),
       };
-    }).filter((item) => hashes.get(item.id) !== item.hash);
+    });
+    const prepared = allPrepared.filter((item) => hashes.get(item.id) !== item.hash);
 
     if (options.dry) {
       embedded += prepared.length;
@@ -153,6 +159,15 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
         })));
         await recordEmbeddings('channel', batch.map((item) => ({ id: item.id, hash: item.hash })), options.dimensions);
         embedded += batch.length;
+      }
+      if (options.refreshPayloads) {
+        const unchanged = allPrepared.filter((item) => hashes.get(item.id) === item.hash);
+        for (const batch of chunks(unchanged, QDRANT_BATCH_SIZE)) {
+          await qdrant.updatePayloads(collection, batch.map((item) => {
+            const { embedded_at: _embeddedAt, ...payload } = item.payload;
+            return { id: item.id, payload };
+          }));
+        }
       }
     }
     console.log(`channels: scanned=${Math.min(ids.length, idBatch.length + ids.indexOf(idBatch[0]))} changed=${embedded}`);
@@ -173,6 +188,7 @@ function cliOptions(argv: string[]): EmbedChannelsOptions {
     dimensions: intArg(argv, '--dimensions') ?? EMBEDDING_DIMS,
     updatedSince: argValue(argv, '--updated-since') ? sinceDate(argValue(argv, '--updated-since') as string) : undefined,
     collection: argValue(argv, '--collection') ?? undefined,
+    refreshPayloads: argv.includes('--refresh-payloads'),
   };
 }
 
