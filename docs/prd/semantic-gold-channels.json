@@ -1,0 +1,1288 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-03T01:10:22.075Z",
+  "source": "Direct PostgreSQL over the indexed 30-day long-form window and channel_directory; no channel ids were invented.",
+  "labeling_status": "sql_seeded_requires_blind_pool_adjudication",
+  "queries": [
+    {
+      "id": "known-01",
+      "stratum": "known_item",
+      "query": "Marques Brownlee",
+      "expected_channels": [
+        {
+          "channel_id": "UCBJycsmduvYEL83R_U4JriQ",
+          "name": "Marques Brownlee",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC0r_-7jgl1yl0oWzGEJ6o3w",
+          "name": "Browney",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC3CrzXzBFVqEopj5T1jiRtA",
+          "name": "Peter Brown",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCfDNi1aEljAQ17mUrfUjkvg",
+          "name": "Alton Brown",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCMcoud_ZW7cfxeIugBflSBw",
+          "name": "Riley Brown",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-02",
+      "stratum": "known_item",
+      "query": "@parkrosepermaculture",
+      "expected_channels": [
+        {
+          "channel_id": "UCUpbDOT-OVNBlaQpb9pbd2w",
+          "name": "Parkrose Permaculture",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC7r7A8qlvL8hoKJhfpbVb2w",
+          "name": "Permaculture Magazine",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCCnRgdvs5REvtEbOtivzawQ",
+          "name": "Penrose",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCG-cY3xD3S-oEkdM_5xHMxw",
+          "name": "Vulture",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCt-IoSXVF_U2_R0zDaefG3Q",
+          "name": "The Parent Venture",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-03",
+      "stratum": "known_item",
+      "query": "This Gibson - Personal Development School",
+      "expected_channels": [
+        {
+          "channel_id": "UCHQ4lSaKRap5HyrpitrTOhQ",
+          "name": "Thais Gibson - Personal Development School",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCJoM14_FRzdVAK4awLISSDA",
+          "name": "School of Personal Finance ",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC75leipkdP1wX8b72mPyOIg",
+          "name": "The Greatest Developer",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC6LnqqAXZ3NmrOqIehHXYQA",
+          "name": "Inter-American Development Bank",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCgmaIAMFvJunsgcHOBUM25g",
+          "name": "MM Personal Styling ",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-04",
+      "stratum": "known_item",
+      "query": "TraderNick",
+      "expected_channels": [
+        {
+          "channel_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+          "name": "TraderNick",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCfO2yCpx6_XU-xovhpJuaYw",
+          "name": "Bear Bull Traders",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCWt3Cx6RrHX86_yF4I7f1LA",
+          "name": "The Traveling Trader",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCI7bfebbOWLqw3m4zW7XjIg",
+          "name": "Scarface Trades",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCGwyQM5eQOTxoeHOZaMwzSg",
+          "name": "Track Star*",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-05",
+      "stratum": "known_item",
+      "query": "@thomasdelauerofficial",
+      "expected_channels": [
+        {
+          "channel_id": "UC70SrI3VkT1MXALRtf0pcHg",
+          "name": "Thomas DeLauer",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCG-KntY7aVnIGXYEBQvmBAQ",
+          "name": "Thomas Frank",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC22zjQTlx5lzIo-50WJFeHA",
+          "name": "Thomas J Elpel",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCDdsIqmZfvwKsE03R-Hap9w",
+          "name": "Thomas Rowntree",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCd_WBvzBg1UbHE8j8MIL5Ng",
+          "name": "Thomas Frank Explains",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-06",
+      "stratum": "known_item",
+      "query": "Th Verge",
+      "expected_channels": [
+        {
+          "channel_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+          "name": "The Verge",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCWEKEegHitfH5GQbVdMW15A",
+          "name": "the",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCZdGJgHbmqQcVZaJCkqDRwg",
+          "name": "The Q",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCDlz9C2bhSW6dcVn_PO5mYw",
+          "name": "The Met",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCt-IoSXVF_U2_R0zDaefG3Q",
+          "name": "The Parent Venture",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-07",
+      "stratum": "known_item",
+      "query": "Stumpy Nubs (James Hamilton)",
+      "expected_channels": [
+        {
+          "channel_id": "UCstwpLSByklww1YojZN-KiQ",
+          "name": "Stumpy Nubs (James Hamilton)",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCHl4MB8UalGLUydbWdBzG1Q",
+          "name": "Lewis Hamilton",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCsga4ThrENksdN7RghkPJow",
+          "name": "Hamilton Dilbeck",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCUbDcUPed50Y_7KmfCXKohA",
+          "name": "James Bruton",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCO9Rhj_x_GgJl-Ria7257EA",
+          "name": "Remington James",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-08",
+      "stratum": "known_item",
+      "query": "@24onlive",
+      "expected_channels": [
+        {
+          "channel_id": "UCup3etEdjyF1L3sRbU-rKLw",
+          "name": "24 News",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCknLrEdhRCp1aegoMqRaCZg",
+          "name": "DW News",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCeY0bbntWzzVIaj2z3QigXg",
+          "name": "NBC News",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+          "name": "ABC News",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC8p1vwvWtl6T73JiExfWs1g",
+          "name": "CBS News",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-09",
+      "stratum": "known_item",
+      "query": "llEars.net",
+      "expected_channels": [
+        {
+          "channel_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+          "name": "AllEars.net",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCTTYccSBNghxcxULTGaO1bA",
+          "name": "NerdWallet",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCVS89U86PwqzNkK2qYNbk5A",
+          "name": "Allen Pan",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCJXz-QU2_KU7pSuWr12XTHA",
+          "name": "Levi Allen",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCCEkrdkurnRF-gNh0h_61HA",
+          "name": "Allen Hart",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "known-10",
+      "stratum": "known_item",
+      "query": "Alex Hormozi",
+      "expected_channels": [
+        {
+          "channel_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+          "name": "Alex Hormozi",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCh1MtJ4rx4n4PQGYNYK_UXA",
+          "name": "Alex Rome",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCQgL66VBbwihX6tBjd197UA",
+          "name": "Just Alex",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCorTd-PiSzgUeYHvgna9QCA",
+          "name": "Alex Armer",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC5lW9NV0c3VAZy8GWd7N8KQ",
+          "name": "Alex Pine",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-01",
+      "stratum": "discovery",
+      "query": "laser engraver",
+      "expected_channels": [
+        {
+          "channel_id": "UC8OYKUSN4uLaDVCVwcm7G4w",
+          "name": "Tech Deal",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCbp6aXwwr4UXwGqPLZ2nTUg",
+          "name": "3DJake",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCRmi99NI3SFTKVn7a_-MHFQ",
+          "name": "Crafted by Ray",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCQ5V0aJ7pgSoHqYTONUyjrQ",
+          "name": "VALLEY FORGED",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC0j0J7AkzSmYqdLMumV1NlA",
+          "name": "The Laser Channel",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-02",
+      "stratum": "discovery",
+      "query": "laser cutting",
+      "expected_channels": [
+        {
+          "channel_id": "UCM0kHJXSHR1k1wtLuliKmHg",
+          "name": "Weld.com",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCWpztXlPMkNGEkuxSz91DQQ",
+          "name": "Cad Build Fly RC",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCMLAJJhV2Rrzor87fogEjBw",
+          "name": "xTool",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC6w9-gm7VJRFN-YJsP2EYaw",
+          "name": "My Simple Builds",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCxgunnLdsV72eAezHW6u0KA",
+          "name": "Desktop Makes",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-03",
+      "stratum": "discovery",
+      "query": "woodworking",
+      "expected_channels": [
+        {
+          "channel_id": "UCyQxAUfkTCfJdDO1nyr_a9w",
+          "name": "Highline Guitars",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCqKCuJ4_6T4H_3ZOPSPANHg",
+          "name": "HoneyBadger WoodWorks",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCf4FdWfGUnV_kwIzOZY1rzQ",
+          "name": "I Like Woodworking",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCKp44bWWZIiOPShPN_ytShw",
+          "name": "The Wood Whisperer",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCuVaqIpPgUyGP6AytqSfs0g",
+          "name": "DIY Woodworking Projects",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-04",
+      "stratum": "discovery",
+      "query": "epoxy",
+      "expected_channels": [
+        {
+          "channel_id": "UCgpu3SzIQIzGfdxB9MDaRVg",
+          "name": "Resin Art Mary ",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCTYSouVgnpkqDbdG2hY2W5w",
+          "name": "Stone Coat Countertops",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC5jOh6yQNOfygSSYzmxRURw",
+          "name": "Ben Grimsley Woodworking",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCjG94SagJZoyPggcBhUdFCA",
+          "name": "Stud Pack",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCaQRmy4Beww-riYiV44qjhg",
+          "name": "ResinWoodArt - jedrek29t",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-05",
+      "stratum": "discovery",
+      "query": "3d printing",
+      "expected_channels": [
+        {
+          "channel_id": "UC_7aK9PpYTqt08ERh1MewlQ",
+          "name": "3D Printing Nerd",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCoq_hfxvAg5Z6_l5pqKLN3A",
+          "name": "The 3D Print Spot",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC6QNjBn6KMq5-pe3OE11zZg",
+          "name": "Slant 3D",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCB5Nin2VBUeNLqamqEVh-2A",
+          "name": "The Next Layer",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC0NBDEd4nECrlJnUEaJisEQ",
+          "name": "John McGrath (Man In Shed)",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-06",
+      "stratum": "discovery",
+      "query": "recipes",
+      "expected_channels": [
+        {
+          "channel_id": "UC4tAgeVdaNB5vD_mBoxg50w",
+          "name": "Allrecipes",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCpSgg_ECBj25s9moCDfSTsA",
+          "name": "Jamie Oliver",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCpTaewGuthzN4CuYKmgXneQ",
+          "name": "Webspoon World",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC02ylS81wzdeKFkQdgf_NOg",
+          "name": "Flourishing Miranda - Food and Fitness",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCjkETDTi-OBxrN4z5lvaL5A",
+          "name": "CHCH News",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-07",
+      "stratum": "discovery",
+      "query": "AI tools",
+      "expected_channels": [
+        {
+          "channel_id": "UCEvsxF4Z12vwpwDUaU02yiA",
+          "name": "Zapier",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCWstLaT61QUc-TvfxOjNpFw",
+          "name": "Bernard Marr",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC4JX40jDee_tINbkjycV4Sg",
+          "name": "Tech With Tim",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCA-mWX9CvCTVFWRMb9bKc9w",
+          "name": "Dan Martell",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCwSozl89jl2zUDzQ4jGJD3g",
+          "name": "Skill Leap AI",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-08",
+      "stratum": "discovery",
+      "query": "artificial intelligence",
+      "expected_channels": [
+        {
+          "channel_id": "UC6ZFN9Tx6xh-skXCuRHCDpQ",
+          "name": "PBS NewsHour",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCsLt8oYvDYGpSHcGhRBBkyw",
+          "name": "Dr. Nellie Deutsch",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCb_JYhqnSdEejiznUm3XNqQ",
+          "name": "UCLA Health",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCvHDpsWKADrDia0c99X37vg",
+          "name": "i24NEWS English",
+          "grade": 1
+        },
+        {
+          "channel_id": "UClwddNv0Cr6SIEGkzVK886w",
+          "name": "FOX 9 Minneapolis-St. Paul",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-09",
+      "stratum": "discovery",
+      "query": "gardening",
+      "expected_channels": [
+        {
+          "channel_id": "UCzzsltdnAgTMSlPOvjko_Dw",
+          "name": "Gardening Australia",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCVGVbOl6F5rGF4wSYS6Y5yQ",
+          "name": "MIgardener",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCGwHWxpp7vxEZ3jgsOuD0Xg",
+          "name": "The Ripe Tomato Farms",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCFF20WbbyKSiYQe0J6a7HTQ",
+          "name": "Market Gardener Institute",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCcJceGUaevGlP7s2xzL9akA",
+          "name": "Next Level Gardening",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-10",
+      "stratum": "discovery",
+      "query": "fitness",
+      "expected_channels": [
+        {
+          "channel_id": "UCZ7yH-kLdFj7HNo2Dcs6FnQ",
+          "name": "Mark Coles",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC9zEqIwv7yPQ8IlzNYpB_Aw",
+          "name": "Keltie O'Connor",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCoSxzVDrViaWSTBa5DJDfVg",
+          "name": "Obi Vincent",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC-SJ6nODDmufqBzPBwCvYvQ",
+          "name": "CBS Mornings",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCHkPBtUkm7SaBKv3UDU5FTA",
+          "name": "KevTheTrainer",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-11",
+      "stratum": "discovery",
+      "query": "weight loss",
+      "expected_channels": [
+        {
+          "channel_id": "UC-5Yj4HIiruwkzFuLflxL_w",
+          "name": "SumanTV Health",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC_WNOY86Z1szXh91b2YxhGg",
+          "name": "Dr. Jones, DC",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCRhNwnpu9OjqPx9acwzsfiQ",
+          "name": "Lucy Lismore",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCjWgUFeyDbeQ3Q_eVCup_7Q",
+          "name": "National Academy of Sports Medicine (NASM)",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC9zEqIwv7yPQ8IlzNYpB_Aw",
+          "name": "Keltie O'Connor",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-12",
+      "stratum": "discovery",
+      "query": "trading",
+      "expected_channels": [
+        {
+          "channel_id": "UCfO2yCpx6_XU-xovhpJuaYw",
+          "name": "Bear Bull Traders",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCPCPE5MoI7DS1WiVB_-mzNw",
+          "name": "TraderNick",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCg3B_joekBGJ1s_4fRjsMKA",
+          "name": "SMB Capital",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCZZzo055Pg5z4i5wB9-wVUA",
+          "name": "Riley Coleman",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCrp_UI8XtuYfpiqluWLD7Lw",
+          "name": "CNBC Television",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-13",
+      "stratum": "discovery",
+      "query": "crypto",
+      "expected_channels": [
+        {
+          "channel_id": "UCIEvlRpHBVFthrF6pZzBEXw",
+          "name": "MoneyZG",
+          "grade": 2
+        },
+        {
+          "channel_id": "UClwddNv0Cr6SIEGkzVK886w",
+          "name": "FOX 9 Minneapolis-St. Paul",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCX_MdaGkjJwY8vGvytybE7w",
+          "name": "The Hobbyist Miner",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCwp9GbPASoPs6BIxVWm_-2A",
+          "name": "Fidelity Investments",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCrp_UI8XtuYfpiqluWLD7Lw",
+          "name": "CNBC Television",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-14",
+      "stratum": "discovery",
+      "query": "smartphone",
+      "expected_channels": [
+        {
+          "channel_id": "UCbvIIQc5Jo9-jIXnkPe03oA",
+          "name": "Matti Haapoja",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCK7tptUDHh-RYDsdxO1-5QQ",
+          "name": "The Wall Street Journal",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCvJJ_dzjViJCoLf5uKUTwoA",
+          "name": "CNBC",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCrp_UI8XtuYfpiqluWLD7Lw",
+          "name": "CNBC Television",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCNbzN3eHbLKPzltSB560DkA",
+          "name": "The Blind Life",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-15",
+      "stratum": "discovery",
+      "query": "travel",
+      "expected_channels": [
+        {
+          "channel_id": "UCbwp5B-uDBy-fS4bDA0TEaw",
+          "name": "The Travel Edit",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC3TIRH4PPSDde66Hg5wGh-w",
+          "name": "Condé Nast Traveler",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC_rI3y1DzDULTr-UIvshiwg",
+          "name": "Pack Hacker",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCP6HGa63sBC7-KHtkme-p-g",
+          "name": "USA TODAY",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCEZKpVw6ldXNVU4Ua6IFwTw",
+          "name": "Travel Tips by Laurie",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-16",
+      "stratum": "discovery",
+      "query": "theme park",
+      "expected_channels": [
+        {
+          "channel_id": "UCEfnuTz6kG_xh_0kRegtnlw",
+          "name": "FUN FUN FUN with Disney Dan Becker",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+          "name": "AllEars.net",
+          "grade": 2
+        },
+        {
+          "channel_id": "UChEpP2eDIS2Ixm5bl81kFlQ",
+          "name": "Tonio Guajardo",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCwqDAwhG1JCxTNr6HnB7gnQ",
+          "name": "Theme Park Worldwide",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC8p1vwvWtl6T73JiExfWs1g",
+          "name": "CBS News",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-17",
+      "stratum": "discovery",
+      "query": "Disney",
+      "expected_channels": [
+        {
+          "channel_id": "UCA3ermB2Eg_pyMYcOb3Pdjg",
+          "name": "Laughing Place",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCUE2McDzxy_VDCaZDbcjKsw",
+          "name": "Disney Parks with Love - Janel",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCfzP_CiebRdveD9rRZv5Ndw",
+          "name": "AllEars.net",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCnpWedLQdHpZqhgTLdB9Yyg",
+          "name": "DFBGuide",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCLFgO1aEI66fh06p6u6-juw",
+          "name": "LMG Vids",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-18",
+      "stratum": "discovery",
+      "query": "chess",
+      "expected_channels": [
+        {
+          "channel_id": "UCQHX6ViZmPsWiYSFAyS0a3Q",
+          "name": "GothamChess",
+          "grade": 2
+        },
+        {
+          "channel_id": "UChDxbOUQRXEZ1zdI14Zyx9w",
+          "name": "Chess Vibes",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCupvZG-5ko_eiXAupbDfxWw",
+          "name": "CNN",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC7MgijK9WL_EqCo1juUERwg",
+          "name": "Don't Tell Comedy",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCLGNeElk4sNgzUrZr0c9krA",
+          "name": "Chef Jean-Pierre",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-19",
+      "stratum": "discovery",
+      "query": "gaming",
+      "expected_channels": [
+        {
+          "channel_id": "UChIZGfcnjHI0DG4nweWEduw",
+          "name": "TechSource",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC8OYKUSN4uLaDVCVwcm7G4w",
+          "name": "Tech Deal",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCAaMgASV4htjw3KNqh_vQvA",
+          "name": "ROG Global",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCx9bOYEjkevIDYONBAstK-A",
+          "name": "Joshua Valour",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCCT0-fxrMR-2Jv-DNs-MSHA",
+          "name": "Luke Stephens CLIPS",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "discovery-20",
+      "stratum": "discovery",
+      "query": "camera",
+      "expected_channels": [
+        {
+          "channel_id": "UCHfF8wFnipMeDpJf8OmMxDg",
+          "name": "FOX 11 Los Angeles",
+          "grade": 2
+        },
+        {
+          "channel_id": "UClwddNv0Cr6SIEGkzVK886w",
+          "name": "FOX 9 Minneapolis-St. Paul",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCKQECjul8nw1KW_JzfBTP1A",
+          "name": "KPRC 2 Click2Houston",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCXJryYh6xcW5iEeJGzK191A",
+          "name": "CBS Miami",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCry2gCVdntv6r661sKUiKXw",
+          "name": "WCCO - CBS Minnesota",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-01",
+      "stratum": "analogue",
+      "query": "how to",
+      "expected_channels": [
+        {
+          "channel_id": "UCOl6nKiJCqZSxYl44YQgtkQ",
+          "name": "How To Support",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCQzi4Q8AvCx2yV19ay0zRgQ",
+          "name": "ItzVexo",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC_Gz-8R2G8jBs20ro9AL9hA",
+          "name": "Think Tutorial",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCVMJPRXrBIOFDBZEaF-_pEA",
+          "name": "Adobe Live",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC0wajJ67o5YTuxaRjZGX8eA",
+          "name": "The University of Maine",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-02",
+      "stratum": "analogue",
+      "query": "i tried",
+      "expected_channels": [
+        {
+          "channel_id": "UCayab18rVcu2PA685_WZXig",
+          "name": "Alston Godbolt",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCOhzOImpPwT1klYmttywq3w",
+          "name": "Dylan Huynh",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCqNkn5PNeSqbQTAR5RP-L-Q",
+          "name": "Andy Cooks",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCRyJEm7B_HTBm-5D8C4QRfQ",
+          "name": "Simplistic",
+          "grade": 1
+        },
+        {
+          "channel_id": "UClMgNsPzvVprkO297NfjDuw",
+          "name": "Clearmud",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-03",
+      "stratum": "analogue",
+      "query": "mistakes",
+      "expected_channels": [
+        {
+          "channel_id": "UCH6acC9jnug-mI4vdGvuDbA",
+          "name": "Simon d'Entremont",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCaw0tS0jWEadkKu9nERaFGA",
+          "name": "Gaming with Griff Griffin",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCuMyjTVlkM4xZ5z_eSyoB1w",
+          "name": "Taddy Digest",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCTOmRzcByIVmNzf8prekmWg",
+          "name": "Ula Burgiel",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCEDZT_VZ0oz-gt7Mf_hJp2A",
+          "name": "Silver Pascal Coder",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-04",
+      "stratum": "analogue",
+      "query": "before and after",
+      "expected_channels": [
+        {
+          "channel_id": "UC52X5wxOL_s5yw0dQk7NtgA",
+          "name": "Associated Press",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCSjF378bQhLKO-ISsrHE7ng",
+          "name": "The Lawn Care Nut",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCUyDOdBWhC1MCxEjC46d-zw",
+          "name": "Alex Hormozi",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCyy8ULLDGSm16_EkXdIt4Gw",
+          "name": "Titleist",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCS0b8YPdtC-oVAiosZkM6hw",
+          "name": "Planetizen ",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-05",
+      "stratum": "analogue",
+      "query": "versus",
+      "expected_channels": [
+        {
+          "channel_id": "UCW1C2xOfXsIzPgjXyuhkw9g",
+          "name": "Simons Institute for the Theory of Computing",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCM4zjRF2EWXZbHkKGLB9zvw",
+          "name": "The Clutter Fairy",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCPD_bxCRGpmmeQcbe2kpPaA",
+          "name": "First We Feast",
+          "grade": 1
+        },
+        {
+          "channel_id": "UChDKyKQ59fYz3JO2fl0Z6sg",
+          "name": "TODAY",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCl3dEwja549_pzHAV4zOgWA",
+          "name": "Driving Line",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-06",
+      "stratum": "analogue",
+      "query": "review",
+      "expected_channels": [
+        {
+          "channel_id": "UC8OYKUSN4uLaDVCVwcm7G4w",
+          "name": "Tech Deal",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCiwBbXQlljGjKtKhcdMliRA",
+          "name": "The Dice Tower",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCOBM9FasII4dKbyE_HKkbjw",
+          "name": "The Run Testers",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC5PrkGgI_cIaSStOyRmLAKA",
+          "name": "One Bite Pizza Reviews",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCDVYQ4Zhbm3S2dlz7P1GBDg",
+          "name": "NFL",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-07",
+      "stratum": "analogue",
+      "query": "challenge",
+      "expected_channels": [
+        {
+          "channel_id": "UCmGyCEbHfY91NFwHgioNLMQ",
+          "name": "JomezPro",
+          "grade": 2
+        },
+        {
+          "channel_id": "UC_znAZirr11Q5bPrdhKVLZQ",
+          "name": "MasterChef World",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCxgunnLdsV72eAezHW6u0KA",
+          "name": "Desktop Makes",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCyJdJV1ghewgw6_3ifyfzxA",
+          "name": "CAB Training",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCXJryYh6xcW5iEeJGzK191A",
+          "name": "CBS Miami",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-08",
+      "stratum": "analogue",
+      "query": "beginner",
+      "expected_channels": [
+        {
+          "channel_id": "UCD6ERCjNsDnPZsLYRN4O-og",
+          "name": "Makera",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCyHGVG2E0yo1NidXwG_JrpA",
+          "name": "JeyRam Draws",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCWpztXlPMkNGEkuxSz91DQQ",
+          "name": "Cad Build Fly RC",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCrSvDunJEc1CME4-KvhW_3Q",
+          "name": "Howfinity",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC_BTlSrGukMM1Ft_FA1xrSw",
+          "name": "PRAVEEN YOGA ACADEMY",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-09",
+      "stratum": "analogue",
+      "query": "reaction",
+      "expected_channels": [
+        {
+          "channel_id": "UCtak3C1t8k3u8CVzVGYvemA",
+          "name": "Intuitive Tennis",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCP6HGa63sBC7-KHtkme-p-g",
+          "name": "USA TODAY",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCa9MNqsRESRc16U8VR7rGyg",
+          "name": "Jennifer Glatzhofer",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCVI8ItkS1VwLGIvR_w75MYw",
+          "name": "IGE - Individual Group Effort - Ken Lawson",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCaw0tS0jWEadkKu9nERaFGA",
+          "name": "Gaming with Griff Griffin",
+          "grade": 1
+        }
+      ]
+    },
+    {
+      "id": "analogue-10",
+      "stratum": "analogue",
+      "query": "why",
+      "expected_channels": [
+        {
+          "channel_id": "UCknLrEdhRCp1aegoMqRaCZg",
+          "name": "DW News",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCsT0YIqwnpJCM-mx7-gSA4Q",
+          "name": "TEDx Talks",
+          "grade": 2
+        },
+        {
+          "channel_id": "UCupvZG-5ko_eiXAupbDfxWw",
+          "name": "CNN",
+          "grade": 1
+        },
+        {
+          "channel_id": "UC6ZFN9Tx6xh-skXCuRHCDpQ",
+          "name": "PBS NewsHour",
+          "grade": 1
+        },
+        {
+          "channel_id": "UCuFFtHWoLl5fauMMD5Ww2jA",
+          "name": "CBC News",
+          "grade": 1
+        }
+      ]
+    }
+  ]
+}
