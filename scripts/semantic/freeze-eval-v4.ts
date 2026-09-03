@@ -310,7 +310,7 @@ async function freeze(): Promise<void> {
     entity_type: 'channel',
     as_of: AS_OF,
     predicate: CHANNEL_PREDICATE,
-    document_recipe: 'semantic-v1-channel-document-with-name-recent-titles-and-available-niches',
+    document_recipe: 'semantic-v4-channel-name-top20-viewed-365d-and-available-niches-v1',
     ids: channels,
     source: {
       created_at_et: AS_OF,

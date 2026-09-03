@@ -346,3 +346,10 @@ export function ndcgAtK(rankedIds: string[], judgments: Record<string, number>, 
   const idealDcg = dcg(ideal);
   return idealDcg === 0 ? 0 : dcg(actual) / idealDcg;
 }
+
+export function pendingDocuments<T extends { id: string; hash: string }>(
+  documents: T[],
+  existingHashes: ReadonlyMap<string, string>,
+): T[] {
+  return documents.filter((document) => existingHashes.get(document.id) !== document.hash);
+}

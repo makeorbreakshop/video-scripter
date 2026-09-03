@@ -28,4 +28,11 @@ describe('semantic retrieval text helpers', () => {
     expect(sourceHash('a')).toBe(sourceHash('a'));
     expect(sourceHash('a')).not.toBe(sourceHash('b'));
   });
+
+  test('does not split a Unicode surrogate pair at the description limit', () => {
+    const cleaned = cleanDescriptionForRetrieval(`${'a'.repeat(9)}🎧`, 10);
+
+    expect(cleaned).toBe('a'.repeat(9));
+    expect(cleaned).not.toMatch(/[\uD800-\uDFFF]$/u);
+  });
 });

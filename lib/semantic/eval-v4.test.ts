@@ -7,6 +7,7 @@ import {
   freezeV4TaskManifest,
   isEligibleCorpusRow,
   ndcgAtK,
+  pendingDocuments,
   pooledRecallAtK,
   precisionAtK,
   validateV4TaskManifest,
@@ -169,6 +170,18 @@ describe('semantic v4 blind pooling', () => {
     });
     expect(repeated.blind.map((candidate: BlindCandidate) => candidate.blind_id))
       .toEqual(pool.blind.map((candidate) => candidate.blind_id));
+  });
+});
+
+describe('semantic v4 materialization resume', () => {
+  test('re-embeds only missing or hash-changed documents', () => {
+    const documents = [
+      { id: 'a', hash: 'same' },
+      { id: 'b', hash: 'new' },
+      { id: 'c', hash: 'missing' },
+    ];
+    expect(pendingDocuments(documents, new Map([['a', 'same'], ['b', 'old']])))
+      .toEqual([documents[1], documents[2]]);
   });
 });
 

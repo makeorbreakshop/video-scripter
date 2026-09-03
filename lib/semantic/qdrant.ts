@@ -138,7 +138,10 @@ export class SemanticQdrant {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (response.status === 404) throw new QdrantNotFoundError(`Qdrant resource not found: ${path}`);
-      if (!response.ok) throw new QdrantUnavailableError(`Qdrant returned HTTP ${response.status}`);
+      if (!response.ok) {
+        const detail = (await response.text()).replace(/\s+/g, ' ').trim().slice(0, 500);
+        throw new QdrantUnavailableError(`Qdrant returned HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
+      }
       return await response.json() as T;
     } catch (error) {
       if (error instanceof QdrantNotFoundError || error instanceof QdrantUnavailableError) throw error;

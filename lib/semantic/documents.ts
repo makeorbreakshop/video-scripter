@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { cleanDescriptionForRetrieval, wellFormedText } from './text';
 
 export const EMBEDDING_MODEL = 'text-embedding-3-small';
 export const EMBEDDING_DIMS = 512;
@@ -10,6 +11,14 @@ export interface VideoDocumentInput {
   channelName: string;
   topicNiche?: string | null;
   description?: string | null;
+}
+
+export function buildV4VideoDocument(input: VideoDocumentInput): string {
+  return [
+    `title: ${wellFormedText(input.title).trim()}`,
+    `channel: ${wellFormedText(input.channelName).trim()}`,
+    `description: ${cleanDescriptionForRetrieval(input.description)}`,
+  ].join('\n');
 }
 
 export function buildVideoDocument(input: VideoDocumentInput, variant: VideoDocumentVariant = 'default'): string {
@@ -63,8 +72,8 @@ export function buildChannelDocument(
   input: ChannelDocumentInput,
   options: { includeNiches?: boolean } = {},
 ): string {
-  const lines = [input.name, ...selectChannelVideos(input.videos).map((video) => video.title)];
-  if (options.includeNiches !== false) lines.push(...topNiches(input.videos));
+  const lines = [wellFormedText(input.name), ...selectChannelVideos(input.videos).map((video) => wellFormedText(video.title))];
+  if (options.includeNiches !== false) lines.push(...topNiches(input.videos).map(wellFormedText));
   return lines.join('\n');
 }
 

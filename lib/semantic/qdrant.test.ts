@@ -109,4 +109,21 @@ describe('Qdrant helpers', () => {
       global.fetch = previousFetch;
     }
   });
+
+  test('surfaces bounded Qdrant validation details for failed writes', async () => {
+    const fetchMock = jest.fn(async () => ({
+      ok: false,
+      status: 400,
+      text: async () => '{"status":{"error":"Wrong input: payload too large"}}',
+    }));
+    const previousFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      await expect(new SemanticQdrant({ url: 'http://qdrant.test' }).upsert('videos', [{
+        id: uuid5ForId('bad'), vector: [0.1], payload: { id: 'bad' },
+      }])).rejects.toThrow(/HTTP 400.*Wrong input: payload too large/i);
+    } finally {
+      global.fetch = previousFetch;
+    }
+  });
 });

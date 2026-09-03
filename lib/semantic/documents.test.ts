@@ -1,5 +1,6 @@
 import {
   buildChannelDocument,
+  buildV4VideoDocument,
   buildVideoDocument,
   docHash,
   mapChannelPayload,
@@ -7,6 +8,28 @@ import {
 } from './documents';
 
 describe('semantic documents', () => {
+  test('builds the v4 retrieval document from title, channel, and cleaned description only', () => {
+    expect(buildV4VideoDocument({
+      title: 'Cheap Laser Beats the Expensive One?',
+      channelName: 'Shop Tests',
+      description: 'Real side-by-side test. https://example.com Affiliate links support the channel. Views: 1,000,000.',
+    })).toBe([
+      'title: Cheap Laser Beats the Expensive One?',
+      'channel: Shop Tests',
+      'description: Real side-by-side test.',
+    ].join('\n'));
+  });
+
+  test('normalizes malformed Unicode before JSON/Qdrant serialization', () => {
+    const document = buildV4VideoDocument({
+      title: 'Broken \uD800 title',
+      channelName: 'Channel \uDC00',
+      description: 'Useful \uD800 description',
+    });
+    expect(document).not.toMatch(/[\uD800-\uDFFF]/u);
+    expect(document).toContain('Broken � title');
+  });
+
   test('builds the exact default video document from title, channel, and niche', () => {
     expect(buildVideoDocument({
       title: 'A Lazy Weeknight Dinner',

@@ -65,7 +65,7 @@ The video candidate universe serves J3, J4, and J5. A video must satisfy all of 
 - the score row was computed no later than the frozen `as_of` timestamp;
 - stable `video_id` and `channel_id`.
 
-Expected size as of September 3 is approximately 10.6K videos. The build must record the exact SQL predicate, score-model versions, row count, distinct-channel count, time boundary, source hashes, and creation time in the corpus manifest. It must not silently substitute the raw ~25.8K `score >= 2` population.
+The frozen September 3 manifest contains 9,385 videos across 1,498 channels. The build must record the exact SQL predicate, score-model versions, row count, distinct-channel count, time boundary, source hashes, and creation time in the corpus manifest. It must not silently substitute the raw ~25.8K `score >= 2` population.
 
 Its retrieval document is exactly:
 
@@ -77,7 +77,7 @@ description: <cleaned description, with links, affiliate disclosures, and repeat
 
 Performance fields stay in payloads for filtering/evidence and are not embedded.
 
-The channel candidate universe serves J1 and J2. It is the frozen intersection of channel ids present in `channel_directory`, `channel_meta`, and `channels_v1` at `as_of`. Every selected channel must have a non-empty name, non-null subscriber count, and at least five eligible long-form videos in the 365-day window. J1 targets must be present in this universe. The channel document uses the existing v1 recipe—channel name plus representative recent titles and available topic/niche strings—and its exact hash is recorded. J1 lexical search uses name/handle fields but is filtered to the same frozen ids; J2 lexical ranking and dense ranking use the same channel documents. No video-to-channel aggregation is performed at query time.
+The channel candidate universe serves J1 and J2. It is the frozen intersection of channel ids present in `channel_directory`, `channel_meta`, and `channels_v1` at `as_of`. Every selected channel must have a non-empty name, non-null subscriber count, and at least five eligible long-form videos in the 365-day window. J1 targets must be present in this universe. The channel document is the channel name plus its 20 most-viewed eligible titles in the frozen 365-day window and any available topic/niche strings; its exact hash is recorded. J1 lexical search uses name/handle fields but is filtered to the same frozen ids; J2 lexical ranking and dense ranking use the same channel documents. No video-to-channel aggregation is performed at query time.
 
 The two entity universes are intentionally different because known-channel retrieval and outlier-video retrieval are different product jobs. Comparisons are valid within a lane; metrics are never averaged across channel and video entities into one headline score.
 
@@ -177,7 +177,7 @@ Failure is a valid result. Do not weaken a gate to continue.
 - [x] Re-audit v1/v2 evidence and quarantine invalid truth/prototype artifacts.
 - [x] Add pure corpus-eligibility, task-manifest, blind-payload, pooling, and metric tests; confirm they fail against the old behavior.
 - [x] Build and freeze the 16-task manifest plus the guarded video and channel-universe manifests without running retrieval.
-- [ ] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2.
+- [x] Materialize the bounded retrieval documents and OpenAI vectors with a maximum initial-slice budget of $2 (9,385 videos and 3,544 channels reconciled in Qdrant; estimated clean-run cost $0.06083).
 - [ ] Run lexical, dense, and RRF candidate generation; write immutable run artifacts.
 - [ ] Produce two-pass blind Codex judgments and the 15–20-item Brandon spot-check packet.
 - [ ] Generate the dev and held-out report with uncertainty, latency, coverage, quality, total cost, and the §8 next-step decision.
