@@ -22,7 +22,9 @@ import { phashFromJpeg, pixelMeanDiff } from '../lib/thumbs/decode';
 import { isShortByRedirect } from '../lib/thumbs/shorts';
 import { isSamePicture } from '../lib/thumbs/phash';
 import { uploadThumb } from '../lib/thumbs/storage';
+import { longformSql } from '../lib/scoring/longform';
 import { recordTitleChange, recordTitleObservations } from '../lib/rss/title-change';
+import { revalidateRemote } from '../lib/app/revalidate-remote';
 import {
   HOT_TARGETS_SQL,
   LONG_TAIL_TARGETS_SQL,
@@ -124,7 +126,16 @@ for (const group of chunk(targets, 50)) {
         // Record the answer either way so lib/scoring/longform stops treating a short clip as unverified.
         if (!cur.length) {
           const short = await isShortByRedirect(id);
-          if (short !== null) await pool.query(`update videos set is_short = $2, shorts_checked_at = now() where id = $1`, [id, short]);
+          if (short !== null) {
+            await pool.query(`update videos set is_short = $2, shorts_checked_at = now() where id = $1`, [id, short]);
+            // feed_events carries the longform flag as a stored column (lib/feed/query.ts).
+            await pool.query(
+              `update feed_events e set is_longform =
+                 coalesce((select ${longformSql('v')} from videos v where v.id = e.video_id), false)
+               where e.video_id = $1`,
+              [id]
+            ).catch(() => {});
+          }
           if (short === true) { shorts++; return; }
         }
         // Different bytes: only a CHANGE if the picture itself differs (CDN re-encodes flip sha256 with the same image).
@@ -155,6 +166,19 @@ for (const group of chunk(targets, 50)) {
         else {
           changes++;
           console.log(`THUMBNAIL CHANGE: ${id} -> v${version}`);
+          // Feed the materialized channel-list number directly (lib/app/channel-stats.ts):
+          // a single-row UPSERT, not a recompute of the channel's aggregates.
+          const touched = await pool.query(
+            `update channel_stats cs
+                set last_packaging_change = greatest(cs.last_packaging_change, now()), updated_at = now()
+               from videos v
+              where v.id = $1 and cs.channel_id = v.channel_id
+            returning cs.channel_id`,
+            [id]
+          ).catch(() => ({ rows: [] as any[] }));
+          // Outside the Next runtime, so the cached reads are dropped over HTTP
+          // (lib/app/revalidate-remote.ts). Best effort.
+          await revalidateRemote({ videos: [{ id, channelId: touched.rows[0]?.channel_id ?? null }] });
         }
       } catch { /* transient */ }
     })

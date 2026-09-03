@@ -90,13 +90,19 @@ describe('perRunCap staggers the population across the interval', () => {
     expect(perRunCap(1_000_000)).toBe(P.maxPerRun);
   });
 
-  // The whole point of the cap is that a full sweep of the active corpus finishes inside the
-  // 15-minute cadence. If the ceiling is below the corpus's own stagger number, the cadence is
-  // silently stretched instead (at maxPerRun 600 the 5,803-channel corpus polled every ~38 min).
-  it('does not throttle the real corpus below its 15-minute cadence', () => {
-    const CORPUS = 5_803; // channel_rss_state, 2026-09-03
-    expect(perRunCap(CORPUS)).toBe(Math.ceil(CORPUS / 3));
-    expect(perRunCap(CORPUS)).toBeLessThanOrEqual(P.maxPerRun);
+  // At full corpus the ceiling, not the stagger, is what binds — and that is deliberate.
+  // Measured 2026-09-03: ~0.25 s/channel, so the stagger's own answer (ceil(5,803/3) = 1,935)
+  // produced 474-518 s ticks against a 300 s interval. The cap trades the plan's 15-minute
+  // cadence for ticks that actually fit; this test pins the trade so it stays visible.
+  it('binds on the measured ceiling at full corpus, not the stagger', () => {
+    const CORPUS = 5_803;       // channel_rss_state, 2026-09-03
+    const ACTIVE = 4_546;
+    expect(perRunCap(CORPUS)).toBe(P.maxPerRun);
+    expect(P.maxPerRun).toBeLessThan(Math.ceil(CORPUS / 3));
+    // 7 ticks to sweep the active channels => ~35 min, not 15. Documented, not accidental.
+    const ticksPerSweep = Math.ceil(ACTIVE / P.maxPerRun);
+    expect(ticksPerSweep).toBe(7);
+    expect((ticksPerSweep * P.runIntervalSec) / 60).toBeCloseTo(35, 0);
   });
 });
 

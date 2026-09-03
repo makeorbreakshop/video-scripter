@@ -15,6 +15,7 @@
 // that EVERY detector bumps on EVERY observation, changed or not.
 import type pg from 'pg';
 import { reenter } from '../nightly/launch-core';
+import { revalidateRemote } from '../app/revalidate-remote';
 
 /** How recent our evidence of the old title must be for a difference to count as news. */
 export const TITLE_EVIDENCE_WINDOW_DAYS = 7;
@@ -113,6 +114,26 @@ export async function recordTitleChange(
     `update videos set title = $1, title_observed_at = $3, updated_at = now() where id = $2`,
     [newTitle, videoId, now]
   );
+
+  // A version > 1 is a packaging change, which the channel list surfaces from the
+  // materialized channel_stats row (lib/app/channel-stats.ts). Single-row touch, no
+  // aggregate recompute. Best effort: a stale timestamp must not fail the write above.
+  if (plan.newVersion > 1) {
+    const touched = await pool.query(
+      // UPDATE only — a stub row here would read as video_count 0 on the channel list until
+      // the next full refresh (which recomputes this timestamp anyway).
+      `update channel_stats cs
+          set last_packaging_change = greatest(cs.last_packaging_change, $2::timestamptz),
+              updated_at = now()
+         from videos v
+        where v.id = $1 and cs.channel_id = v.channel_id
+      returning cs.channel_id`,
+      [videoId, now]
+    ).catch(() => ({ rows: [] as any[] }));
+    // The watcher runs outside Next, so the cached video/channel reads are dropped over HTTP
+    // (lib/app/revalidate-remote.ts). Best effort; a miss only means a stale page for the TTL.
+    await revalidateRemote({ videos: [{ id: videoId, channelId: touched.rows[0]?.channel_id ?? null }] });
+  }
 
   // Only real news re-opens the stats lane's 5-minute change ladder.
   if (!backfill) {

@@ -32,10 +32,22 @@ export const RSS_POLICY = {
   runIntervalSec: 300,
   /** How recent a feed entry must be to count as a new upload worth queueing. */
   newUploadWindowDays: 7,
-  /** Hard ceiling on channels touched in one run, whatever the stagger says. Set above the
-   * corpus's own stagger number (ceil(5,803 / 3) = 1,935) so the 15-minute active cadence is
-   * actually achieved rather than silently stretched — at 600 it was a ~38-minute cadence. */
-  maxPerRun: 2500,
+  /**
+   * Hard ceiling on channels touched in one run.
+   *
+   * MEASURED 2026-09-03 at full corpus, not derived. Tick durations, taken as the gap between
+   * consecutive LaunchAgent starts while the thumbnail watcher and launch-track were also
+   * running: 1,935 channels -> 474 s and 518 s; 950 channels -> 390 s and 376 s (~0.40 s per
+   * channel). 700 targets ~280 s, inside the 300 s interval with a little margin.
+   *
+   * The honest consequence: 4,546 active channels / 700 per tick = 7 ticks, so the real active
+   * cadence is ~33 minutes, not the 15 the plan asked for. Leaving the ceiling high does NOT
+   * buy back the difference — it just makes ticks overrun and launchd serialise them, landing
+   * at a similar effective cadence with unbounded run times and more DB contention. Getting to
+   * 15 minutes needs the per-poll write cost down (the ~9,000 rss_samples inserts per 950
+   * channels dominate), not a bigger cap.
+   */
+  maxPerRun: 700,
 } as const;
 
 const MS = 1000;
