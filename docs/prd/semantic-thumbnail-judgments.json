@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-09-03T04:52:01.000Z",
+  "pool": "semantic-thumbnail-retrieval-pool.json",
+  "rankingHash": "e1d7487aff422ce83706a52c8a975427407a3ffb162fb891765a75ca3ea34405",
+  "rankingHashAlgorithm": "sha256(JSON.stringify([{seedVideoId,visualIds,visualTitleIds}]))",
+  "judge": "independent Codex subagent",
+  "blindness": "titles and cosine scores hidden; representation row identity visible",
+  "rubric": {
+    "0": "no meaningful match",
+    "1": "superficial resemblance",
+    "2": "useful visual or packaging analogue",
+    "3": "strong match"
+  },
+  "rows": [
+    { "videoId": "MpGDoiSH_PQ", "visual": [3, 2, 2, 1, 2], "visualTitle": [3, 2, 1, 0, 1] },
+    { "videoId": "k9FLu1v1aqM", "visual": [2, 2, 0, 1, 1], "visualTitle": [1, 2, 1, 1, 1] },
+    { "videoId": "oJ9h28awQrA", "visual": [3, 1, 2, 2, 2], "visualTitle": [3, 1, 1, 1, 1] },
+    { "videoId": "VqaMvq2JqWc", "visual": [3, 2, 1, 1, 2], "visualTitle": [3, 2, 2, 1, 2] },
+    { "videoId": "WD8067Jyti8", "visual": [3, 2, 1, 1, 2], "visualTitle": [3, 2, 2, 2, 1] },
+    { "videoId": "ApI1rroJNeg", "visual": [2, 3, 2, 2, 2], "visualTitle": [2, 1, 2, 2, 1] },
+    { "videoId": "7bUt4xQqBuw", "visual": [1, 1, 2, 2, 1], "visualTitle": [1, 2, 1, 1, 1] },
+    { "videoId": "HFR1MLwXbag", "visual": [3, 3, 1, 0, 0], "visualTitle": [3, 1, 3, 0, 0] },
+    { "videoId": "NQ7BjJDQBlo", "visual": [2, 2, 3, 2, 0], "visualTitle": [2, 2, 2, 2, 2] },
+    { "videoId": "JqQ8teTIdzg", "visual": [2, 3, 2, 1, 2], "visualTitle": [2, 2, 2, 0, 1] },
+    { "videoId": "ISCfnEBG6-4", "visual": [3, 2, 2, 2, 2], "visualTitle": [2, 2, 3, 1, 1] },
+    { "videoId": "U6OsSMtbe5E", "visual": [2, 2, 1, 1, 0], "visualTitle": [2, 2, 1, 1, 2] },
+    { "videoId": "xiekFvJjjvA", "visual": [1, 2, 2, 2, 2], "visualTitle": [3, 1, 3, 0, 1] },
+    { "videoId": "KnfErushHY8", "visual": [3, 2, 2, 2, 2], "visualTitle": [2, 2, 1, 2, 2] },
+    { "videoId": "XL7XNz78pcY", "visual": [1, 1, 1, 1, 0], "visualTitle": [1, 1, 1, 1, 1] },
+    { "videoId": "fOJSONJFiR8", "visual": [1, 1, 1, 1, 1], "visualTitle": [1, 3, 1, 1, 1] },
+    { "videoId": "eEulsyCSp68", "visual": [2, 2, 2, 2, 2], "visualTitle": [2, 3, 3, 3, 2] },
+    { "videoId": "KnleuEj0qHg", "visual": [3, 1, 1, 1, 2], "visualTitle": [3, 2, 1, 2, 3] },
+    { "videoId": "Z7Zs7kQ9pWU", "visual": [1, 2, 2, 2, 0], "visualTitle": [2, 2, 2, 1, 2] },
+    { "videoId": "5mos4cYtXTI", "visual": [2, 2, 2, 2, 2], "visualTitle": [2, 2, 2, 1, 1] }
+  ],
+  "summary": {
+    "visual": { "scoreCounts": { "0": 7, "1": 29, "2": 52, "3": 12 }, "mean": 1.69, "precisionAt2": 0.64, "seedWins": 9 },
+    "visualTitle": { "scoreCounts": { "0": 5, "1": 40, "2": 40, "3": 15 }, "mean": 1.65, "precisionAt2": 0.55, "seedWins": 9 },
+    "ties": 2
+  }
+}

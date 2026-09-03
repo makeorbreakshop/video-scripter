@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-09-03T05:09:48.164Z",
+  "collection": "thumbnails_wemm4b_test_v1",
+  "model": "tencent/WeMM-Embedding-4B",
+  "modelRevision": "a28b25c5d18cf71ec46b115e06ea79ab00ee4819",
+  "preprocessing": "exif-rgb-fit-640x640-jpeg95",
+  "dimensions": 512,
+  "device": "mps",
+  "selected": 500,
+  "downloaded": 500,
+  "uniqueProcessedImages": 498,
+  "uniquePerceptualHashes": 498,
+  "exactDuplicatesCollapsed": 2,
+  "perceptualHashCollisions": 0,
+  "failures": [],
+  "upserted": 498,
+  "durationSeconds": 517.082
+}
