@@ -1,0 +1,7 @@
+accelerate==1.14.0
+Pillow==10.0.1
+qwen-vl-utils==0.0.14
+sentence-transformers==6.0.1
+torch==2.14.0
+torchvision==0.29.0
+transformers==5.2.0

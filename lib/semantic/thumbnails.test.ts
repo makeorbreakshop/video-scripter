@@ -2,6 +2,7 @@ import {
   mapThumbnailPayload,
   selectThumbnailCohort,
   summarizeThumbnailRetrieval,
+  thumbnailRankingHash,
   thumbnailCollectionConfig,
   thumbnailQueryBody,
   validateThumbnailEmbeddingOutput,
@@ -67,6 +68,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
     }), {
       perceptualHash: 'abcdef0123456789',
       contentSha256: 'a'.repeat(64),
+      processedContentSha256: 'b'.repeat(64),
       model: 'tencent/WeMM-Embedding-4B',
       modelRevision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
       preprocessing: 'exif-rgb-fit-640x640-jpeg95',
@@ -82,6 +84,7 @@ describe('thumbnail payload and Qdrant contracts', () => {
       channel_size_band: 'unknown',
       perceptual_hash: 'abcdef0123456789',
       content_sha256: 'a'.repeat(64),
+      processed_content_sha256: 'b'.repeat(64),
       embedding_model: 'tencent/WeMM-Embedding-4B',
       embedding_model_revision: 'a28b25c5d18cf71ec46b115e06ea79ab00ee4819',
       embedding_preprocessing: 'exif-rgb-fit-640x640-jpeg95',
@@ -118,12 +121,14 @@ describe('thumbnail payload and Qdrant contracts', () => {
       dimensions: 2,
       device: 'mps',
       downloads: 2,
+      uniquePerceptualHashes: 1,
       failures: [{ videoId: 'v2', reason: 'HTTP 404' }],
       rows: [{
         candidate: candidate({ videoId: 'v1' }),
         linkedVideoIds: ['v1'],
         perceptualHash: '0123456789abcdef',
         contentSha256: 'a'.repeat(64),
+        processedContentSha256: 'b'.repeat(64),
         visual: [0.6, 0.8],
         visualTitle: [0, 1],
       }],
@@ -138,6 +143,18 @@ describe('thumbnail payload and Qdrant contracts', () => {
       ...valid,
       rows: [{ ...valid.rows[0], visualTitle: [1] }],
     }, 2)).toThrow('visualTitle');
+    expect(validateThumbnailEmbeddingOutput({
+      ...valid,
+      rows: [
+        valid.rows[0],
+        {
+          ...valid.rows[0],
+          candidate: candidate({ videoId: 'v2' }),
+          linkedVideoIds: ['v2'],
+          processedContentSha256: 'c'.repeat(64),
+        },
+      ],
+    }, 2).rows).toHaveLength(2);
   });
 
   test('summarizes representation overlap without treating cosine as a relevance label', () => {
@@ -158,5 +175,14 @@ describe('thumbnail payload and Qdrant contracts', () => {
       visual: { crossChannelRate: 0.5, meanTitleTokenOverlap: 0 },
       visualTitle: { crossChannelRate: 0.5, meanTitleTokenOverlap: 0.1667 },
     });
+  });
+
+  test('fingerprints the exact judged seed and neighbor ranking', () => {
+    const ranking = [{ seedVideoId: 'seed', visualIds: ['a', 'b'], visualTitleIds: ['b', 'c'] }];
+    expect(thumbnailRankingHash(ranking)).toHaveLength(64);
+    expect(thumbnailRankingHash(ranking)).toBe(thumbnailRankingHash([...ranking]));
+    expect(thumbnailRankingHash(ranking)).not.toBe(thumbnailRankingHash([
+      { ...ranking[0], visualIds: ['b', 'a'] },
+    ]));
   });
 });

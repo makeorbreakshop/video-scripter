@@ -1,15 +1,16 @@
 import { createHash } from 'crypto';
-import { writeFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import {
   THUMBNAIL_COLLECTION,
   THUMBNAIL_VECTOR_NAMES,
   summarizeThumbnailRetrieval,
+  thumbnailRankingHash,
   type ThumbnailRetrievalNeighbor,
   type ThumbnailRetrievalPair,
   type ThumbnailVectorName,
 } from '../../lib/semantic/thumbnails';
-import { intArg, runMain } from './common';
+import { argValue, intArg, runMain } from './common';
 
 interface ThumbnailPayload {
   video_id: string;
@@ -22,6 +23,7 @@ interface ThumbnailPayload {
   embedding_model: string;
   embedding_model_revision: string;
   embedding_preprocessing: string;
+  processed_content_sha256: string;
   embedding_dimensions: number;
 }
 
@@ -72,15 +74,30 @@ async function allPoints(): Promise<ThumbnailPoint[]> {
 }
 
 function stableOrder(point: ThumbnailPoint): string {
-  return createHash('sha256').update('channelsmith-thumbnail-eval-v1\0').update(String(point.id)).digest('hex');
+  return createHash('sha256')
+    .update('channelsmith-thumbnail-eval-v1\0')
+    .update(point.payload.video_id)
+    .digest('hex');
 }
 
-function chooseSeeds(points: ThumbnailPoint[], count: number): ThumbnailPoint[] {
+function chooseSeeds(points: ThumbnailPoint[], count: number, requestedIds: string[] = []): ThumbnailPoint[] {
+  const byVideoId = new Map<string, ThumbnailPoint>();
+  for (const point of points) {
+    byVideoId.set(point.payload.video_id, point);
+    for (const videoId of point.payload.linked_video_ids) byVideoId.set(videoId, point);
+  }
+  const requested = requestedIds.map((videoId) => {
+    const point = byVideoId.get(videoId);
+    if (!point) throw new Error(`Requested evaluation seed is missing: ${videoId}`);
+    return point;
+  });
+  const requestedPointIds = new Set(requested.map((point) => point.id));
   const forced = points.find((point) => point.payload.linked_video_ids.includes('MpGDoiSH_PQ'));
   const ordered = [...points].sort((left, right) => stableOrder(left).localeCompare(stableOrder(right)));
   return [
-    ...(forced ? [forced] : []),
-    ...ordered.filter((point) => point.id !== forced?.id),
+    ...requested,
+    ...(!requested.length && forced ? [forced] : []),
+    ...ordered.filter((point) => !requestedPointIds.has(point.id) && (requested.length || point.id !== forced?.id)),
   ].slice(0, count);
 }
 
@@ -128,11 +145,31 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const seedCount = intArg(argv, '--seeds') ?? 20;
   const neighborCount = intArg(argv, '--neighbors') ?? 5;
+  const seedFile = argValue(argv, '--seed-file');
   if (seedCount > 100 || neighborCount > 20) throw new Error('Evaluation is capped at 100 seeds and 20 neighbors');
 
   const points = await allPoints();
   if (points.length < 2) throw new Error(`Need at least two points in ${THUMBNAIL_COLLECTION}`);
-  const seeds = chooseSeeds(points, Math.min(seedCount, points.length));
+  const buildSignatures = new Set(points.map((point) => [
+    point.payload.embedding_model,
+    point.payload.embedding_model_revision,
+    point.payload.embedding_preprocessing,
+    point.payload.embedding_dimensions,
+  ].join('|')));
+  if (buildSignatures.size !== 1) throw new Error('Thumbnail collection contains mixed embedding builds');
+  if (new Set(points.map((point) => point.payload.processed_content_sha256)).size !== points.length) {
+    throw new Error('Thumbnail collection contains duplicate processed-image identities');
+  }
+  const seedArtifact = seedFile
+    ? JSON.parse(await readFile(path.resolve(seedFile), 'utf8')) as {
+      rankingHash?: string;
+      rows?: Array<{ videoId?: string }>;
+    }
+    : null;
+  const requestedSeeds = seedArtifact?.rows
+    ?.map((row) => row.videoId)
+    .filter((videoId): videoId is string => Boolean(videoId)) ?? [];
+  const seeds = chooseSeeds(points, Math.min(seedCount, points.length), requestedSeeds);
   const pairs: ThumbnailRetrievalPair[] = [];
   const latencies: number[] = [];
   const queries = [];
@@ -152,13 +189,24 @@ async function main(): Promise<void> {
       seed: { id: seed.id, ...seed.payload },
       visual: {
         latencyMs: results.visual.latencyMs,
-        neighbors: results.visual.raw.map((point) => ({ id: point.id, score: point.score, ...point.payload })),
+        neighbors: results.visual.raw.map((point) => ({ id: point.id, ...point.payload, similarity: point.score })),
       },
       visualTitle: {
         latencyMs: results.visual_title.latencyMs,
-        neighbors: results.visual_title.raw.map((point) => ({ id: point.id, score: point.score, ...point.payload })),
+        neighbors: results.visual_title.raw.map((point) => ({ id: point.id, ...point.payload, similarity: point.score })),
       },
     });
+  }
+
+  const rankingHash = thumbnailRankingHash(queries.map((query) => ({
+    seedVideoId: query.seed.video_id,
+    visualIds: query.visual.neighbors.map((neighbor) => neighbor.video_id),
+    visualTitleIds: query.visualTitle.neighbors.map((neighbor) => neighbor.video_id),
+  })));
+  if (seedArtifact?.rankingHash && rankingHash !== seedArtifact.rankingHash) {
+    throw new Error(
+      `Frozen thumbnail ranking changed: expected ${seedArtifact.rankingHash}, received ${rankingHash}`,
+    );
   }
 
   const artifact = {
@@ -167,8 +215,13 @@ async function main(): Promise<void> {
     pointCount: points.length,
     methodology: {
       seeds: seeds.length,
+      seedSource: seedFile ?? 'deterministic video-id hash with forced test video',
+      seedVideoIds: seeds.map((seed) => seed.payload.video_id),
       neighborsPerRepresentation: neighborCount,
       exactSearch: true,
+      rankingHash,
+      expectedRankingHash: seedArtifact?.rankingHash ?? null,
+      rankingIntegrity: seedArtifact?.rankingHash ? 'verified' : 'not-frozen',
       labels: 'unjudged pool; diagnostics below are not relevance metrics',
     },
     diagnostics: summarizeThumbnailRetrieval(pairs),

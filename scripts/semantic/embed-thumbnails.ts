@@ -180,30 +180,27 @@ async function qdrantRequest<T>(pathname: string, init: RequestInit = {}): Promi
   return { status: response.status, body };
 }
 
-async function ensureCollection(): Promise<void> {
+async function recreateCollection(): Promise<void> {
   const existing = await qdrantRequest<{ result?: { config?: { params?: { vectors?: Record<string, { size: number }> } } } }>(
     `/collections/${THUMBNAIL_COLLECTION}`,
   );
-  if (existing.status === 404) {
-    const created = await qdrantRequest(`/collections/${THUMBNAIL_COLLECTION}`, {
-      method: 'PUT', body: JSON.stringify(thumbnailCollectionConfig()),
-    });
-    if (created.status >= 300) throw new Error(`Unable to create thumbnail collection (HTTP ${created.status})`);
-  } else if (existing.status >= 300) {
+  if (existing.status !== 404 && existing.status >= 300) {
     throw new Error(`Unable to inspect thumbnail collection (HTTP ${existing.status})`);
-  } else {
-    const vectors = existing.body?.result?.config?.params?.vectors;
-    for (const name of ['visual', 'visual_title']) {
-      if (vectors?.[name]?.size !== THUMBNAIL_DIMS) {
-        throw new Error(`Existing ${THUMBNAIL_COLLECTION} has an incompatible ${name} vector`);
-      }
-    }
   }
+  if (existing.status !== 404) {
+    const removed = await qdrantRequest(`/collections/${THUMBNAIL_COLLECTION}`, { method: 'DELETE' });
+    if (removed.status >= 300) throw new Error(`Unable to reset thumbnail test collection (HTTP ${removed.status})`);
+  }
+  const created = await qdrantRequest(`/collections/${THUMBNAIL_COLLECTION}`, {
+    method: 'PUT', body: JSON.stringify(thumbnailCollectionConfig()),
+  });
+  if (created.status >= 300) throw new Error(`Unable to create thumbnail collection (HTTP ${created.status})`);
 
   const indexes: Array<[string, string]> = [
     ['video_id', 'keyword'], ['linked_video_ids', 'keyword'], ['channel_id', 'keyword'],
     ['published_at', 'integer'], ['topic_niche', 'keyword'], ['format_type', 'keyword'],
     ['is_outlier', 'bool'], ['subscriber_count', 'integer'], ['perceptual_hash', 'keyword'],
+    ['processed_content_sha256', 'keyword'],
   ];
   for (const [fieldName, fieldSchema] of indexes) {
     const response = await qdrantRequest(`/collections/${THUMBNAIL_COLLECTION}/index?wait=true`, {
@@ -272,14 +269,15 @@ async function main(): Promise<void> {
     device,
     allowCpu,
   });
-  await ensureCollection();
+  await recreateCollection();
   const embeddedAt = new Date().toISOString();
   const points: ThumbnailPoint[] = output.rows.map((row) => ({
-    id: uuid5ForId(`thumbnail:${row.perceptualHash}`),
+    id: uuid5ForId(`thumbnail:${row.processedContentSha256}`),
     vector: { visual: row.visual, visual_title: row.visualTitle },
     payload: mapThumbnailPayload(row.candidate, {
       perceptualHash: row.perceptualHash,
       contentSha256: row.contentSha256,
+      processedContentSha256: row.processedContentSha256,
       model: output.model,
       modelRevision: output.modelRevision,
       preprocessing: output.preprocessing,
@@ -300,7 +298,10 @@ async function main(): Promise<void> {
     device: output.device,
     selected: cohort.length,
     downloaded: output.downloads,
-    uniquePerceptualHashes: output.rows.length,
+    uniqueProcessedImages: output.rows.length,
+    uniquePerceptualHashes: output.uniquePerceptualHashes,
+    exactDuplicatesCollapsed: output.downloads - output.rows.length,
+    perceptualHashCollisions: output.rows.length - output.uniquePerceptualHashes,
     failures: output.failures,
     upserted: points.length,
     durationSeconds: (completedAt.getTime() - startedAt.getTime()) / 1_000,

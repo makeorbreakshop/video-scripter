@@ -29,6 +29,7 @@ class DownloadedThumbnail:
     path: Path
     perceptual_hash: str
     content_sha256: str
+    processed_content_sha256: str
 
 
 def parse_args() -> argparse.Namespace:
@@ -77,11 +78,17 @@ def perceptual_dhash(image: Image.Image) -> str:
     return f"{value:016x}"
 
 
-def download_candidate(candidate: dict[str, Any], cache_dir: Path, max_edge: int) -> DownloadedThumbnail:
+def download_candidate(
+    candidate: dict[str, Any],
+    cache_dir: Path,
+    max_edge: int,
+    preprocessing: str,
+) -> DownloadedThumbnail:
     video_id = candidate["videoId"]
     cache_key = hashlib.sha256(candidate["thumbnailUrl"].encode("utf-8")).hexdigest()
     raw_path = cache_dir / f"{cache_key}.img"
-    processed_path = cache_dir / f"{cache_key}.fit-{max_edge}.jpg"
+    recipe_key = hashlib.sha256(preprocessing.encode("utf-8")).hexdigest()[:12]
+    processed_path = cache_dir / f"{cache_key}.{recipe_key}.jpg"
     body = raw_path.read_bytes() if raw_path.exists() else fetch_bytes(candidate["thumbnailUrl"])
     if not raw_path.exists():
         raw_path.write_bytes(body)
@@ -97,8 +104,11 @@ def download_candidate(candidate: dict[str, Any], cache_dir: Path, max_edge: int
             normalized = ImageOps.exif_transpose(image).convert("RGB")
             normalized.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
             normalized.save(processed_path, format="JPEG", quality=95, optimize=True)
+    processed_content_sha256 = hashlib.sha256(processed_path.read_bytes()).hexdigest()
     print(f"downloaded {video_id}", file=sys.stderr, flush=True)
-    return DownloadedThumbnail(candidate, processed_path, image_hash, content_sha256)
+    return DownloadedThumbnail(
+        candidate, processed_path, image_hash, content_sha256, processed_content_sha256,
+    )
 
 
 def resolve_device(requested: str, allow_cpu: bool) -> tuple[str, Any]:
@@ -134,6 +144,7 @@ def write_output(
     dimensions: int,
     device: str,
     downloads: int,
+    unique_perceptual_hashes: int,
     failures: list[dict[str, str]],
     rows: list[dict[str, Any]],
 ) -> None:
@@ -144,6 +155,7 @@ def write_output(
         "dimensions": dimensions,
         "device": device,
         "downloads": downloads,
+        "uniquePerceptualHashes": unique_perceptual_hashes,
         "failures": failures,
         "rows": rows,
     }
@@ -160,6 +172,7 @@ def load_checkpoint(
     preprocessing: str,
     dimensions: int,
     representatives: list[DownloadedThumbnail],
+    linked_ids_by_hash: dict[str, list[str]],
 ) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -171,14 +184,16 @@ def load_checkpoint(
             or checkpoint.get("preprocessing") != preprocessing
             or checkpoint.get("dimensions") != dimensions):
         return []
-    current = {item.perceptual_hash: item for item in representatives}
+    current = {item.processed_content_sha256: item for item in representatives}
     reusable: list[dict[str, Any]] = []
     for row in checkpoint.get("rows", []):
-        image_hash = row.get("perceptualHash")
+        image_hash = row.get("processedContentSha256")
         representative = current.get(image_hash)
         vectors = (row.get("visual"), row.get("visualTitle"))
-        if (not representative or row.get("candidate", {}).get("videoId") != representative.candidate["videoId"]
-                or row.get("candidate", {}).get("title") != representative.candidate["title"]
+        if (not representative or row.get("candidate") != representative.candidate
+                or row.get("contentSha256") != representative.content_sha256
+                or row.get("processedContentSha256") != representative.processed_content_sha256
+                or row.get("linkedVideoIds") != linked_ids_by_hash[image_hash]
                 or any(not isinstance(vector, list) or len(vector) != dimensions
                        or any(not isinstance(value, (int, float)) or not math.isfinite(value) for value in vector)
                        for vector in vectors)):
@@ -204,20 +219,22 @@ def main() -> None:
     failures: list[dict[str, str]] = []
     for candidate in candidates:
         try:
-            downloaded.append(download_candidate(candidate, args.image_cache, args.max_edge))
+            downloaded.append(download_candidate(
+                candidate, args.image_cache, args.max_edge, args.preprocessing,
+            ))
         except Exception as error:  # failures are data, not a reason to fabricate a vector
             failures.append({"videoId": str(candidate.get("videoId", "unknown")), "reason": str(error)[:300]})
 
     groups: dict[str, list[DownloadedThumbnail]] = {}
     for item in downloaded:
-        groups.setdefault(item.perceptual_hash, []).append(item)
+        groups.setdefault(item.processed_content_sha256, []).append(item)
     representatives = [sorted(group, key=lambda item: item.candidate["videoId"])[0]
                        for _, group in sorted(groups.items())]
     if not representatives:
         write_output(args.output, model=args.model, model_revision=args.revision,
                      preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device="unavailable",
-                     downloads=0, failures=failures, rows=[])
+                     downloads=0, unique_perceptual_hashes=0, failures=failures, rows=[])
         raise RuntimeError("no thumbnails downloaded successfully")
 
     rows = load_checkpoint(
@@ -227,16 +244,22 @@ def main() -> None:
         preprocessing=args.preprocessing,
         dimensions=args.dimensions,
         representatives=representatives,
+        linked_ids_by_hash={
+            image_hash: sorted(member.candidate["videoId"] for member in group)
+            for image_hash, group in groups.items()
+        },
     )
-    completed_hashes = {row["perceptualHash"] for row in rows}
-    remaining = [item for item in representatives if item.perceptual_hash not in completed_hashes]
+    completed_hashes = {row["processedContentSha256"] for row in rows}
+    remaining = [item for item in representatives if item.processed_content_sha256 not in completed_hashes]
+    unique_perceptual_hashes = len({item.perceptual_hash for item in downloaded})
     if rows:
         print(f"resuming from {len(rows)} checkpointed thumbnails", file=sys.stderr, flush=True)
     if not remaining:
         write_output(args.output, model=args.model, model_revision=args.revision,
                      preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device=args.device,
-                     downloads=len(downloaded), failures=failures, rows=rows)
+                     downloads=len(downloaded), unique_perceptual_hashes=unique_perceptual_hashes,
+                     failures=failures, rows=rows)
         return
 
     device, dtype = resolve_device(args.device, args.allow_cpu)
@@ -278,19 +301,21 @@ def main() -> None:
             show_progress_bar=False,
         )
         for index, item in enumerate(batch):
-            linked_ids = sorted(member.candidate["videoId"] for member in groups[item.perceptual_hash])
+            linked_ids = sorted(member.candidate["videoId"] for member in groups[item.processed_content_sha256])
             rows.append({
                 "candidate": item.candidate,
                 "linkedVideoIds": linked_ids,
                 "perceptualHash": item.perceptual_hash,
                 "contentSha256": item.content_sha256,
+                "processedContentSha256": item.processed_content_sha256,
                 "visual": serializable_vector(visual[index]),
                 "visualTitle": serializable_vector(visual_title[index]),
             })
         write_output(args.output, model=args.model, model_revision=args.revision,
                      preprocessing=args.preprocessing,
                      dimensions=args.dimensions, device=device,
-                     downloads=len(downloaded), failures=failures, rows=rows)
+                     downloads=len(downloaded), unique_perceptual_hashes=unique_perceptual_hashes,
+                     failures=failures, rows=rows)
         print(f"embedded {len(rows)}/{len(representatives)} unique thumbnails", file=sys.stderr, flush=True)
 
 

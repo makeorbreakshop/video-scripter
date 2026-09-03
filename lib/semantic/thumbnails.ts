@@ -170,6 +170,7 @@ export function thumbnailQueryBody(
 export interface ThumbnailPayloadOptions {
   perceptualHash: string;
   contentSha256: string;
+  processedContentSha256: string;
   model?: string;
   modelRevision?: string;
   preprocessing?: string;
@@ -188,6 +189,7 @@ export interface ThumbnailEmbeddingRow {
   linkedVideoIds: string[];
   perceptualHash: string;
   contentSha256: string;
+  processedContentSha256: string;
   visual: number[];
   visualTitle: number[];
 }
@@ -199,6 +201,7 @@ export interface ThumbnailEmbeddingOutput {
   dimensions: number;
   device: string;
   downloads: number;
+  uniquePerceptualHashes: number;
   failures: ThumbnailEmbeddingFailure[];
   rows: ThumbnailEmbeddingRow[];
 }
@@ -215,6 +218,16 @@ export interface ThumbnailRetrievalPair {
   seedTitle: string;
   visual: ThumbnailRetrievalNeighbor[];
   visualTitle: ThumbnailRetrievalNeighbor[];
+}
+
+export interface ThumbnailRankingIds {
+  seedVideoId: string;
+  visualIds: string[];
+  visualTitleIds: string[];
+}
+
+export function thumbnailRankingHash(rows: ThumbnailRankingIds[]): string {
+  return createHash('sha256').update(JSON.stringify(rows)).digest('hex');
 }
 
 function roundMetric(value: number): number {
@@ -303,11 +316,14 @@ export function validateThumbnailEmbeddingOutput(
   if (!Number.isInteger(output.downloads) || (output.downloads ?? -1) < 0) {
     throw new Error('Thumbnail worker downloads must be a non-negative integer');
   }
+  if (!Number.isInteger(output.uniquePerceptualHashes) || (output.uniquePerceptualHashes ?? -1) < 0) {
+    throw new Error('Thumbnail worker uniquePerceptualHashes must be a non-negative integer');
+  }
   if (!Array.isArray(output.failures) || !Array.isArray(output.rows)) {
     throw new Error('Thumbnail worker rows and failures must be arrays');
   }
 
-  const hashes = new Set<string>();
+  const processedContentHashes = new Set<string>();
   for (const [index, row] of output.rows.entries()) {
     if (!row || typeof row !== 'object') throw new Error(`rows[${index}] must be an object`);
     if (!row.candidate?.videoId) throw new Error(`rows[${index}].candidate is missing`);
@@ -317,11 +333,16 @@ export function validateThumbnailEmbeddingOutput(
     if (!/^[0-9a-f]{16}$/i.test(row.perceptualHash)) {
       throw new Error(`rows[${index}].perceptualHash is invalid`);
     }
-    if (hashes.has(row.perceptualHash)) throw new Error(`Duplicate perceptual hash ${row.perceptualHash}`);
-    hashes.add(row.perceptualHash);
     if (!/^[0-9a-f]{64}$/i.test(row.contentSha256)) {
       throw new Error(`rows[${index}].contentSha256 is invalid`);
     }
+    if (!/^[0-9a-f]{64}$/i.test(row.processedContentSha256)) {
+      throw new Error(`rows[${index}].processedContentSha256 is invalid`);
+    }
+    if (processedContentHashes.has(row.processedContentSha256)) {
+      throw new Error(`Duplicate processed content SHA ${row.processedContentSha256}`);
+    }
+    processedContentHashes.add(row.processedContentSha256);
     assertVector(row.visual, `rows[${index}].visual`, expectedDimensions);
     assertVector(row.visualTitle, `rows[${index}].visualTitle`, expectedDimensions);
   }
@@ -348,6 +369,7 @@ export function mapThumbnailPayload(candidate: ThumbnailCandidate, options: Thum
     channel_size_band: channelSizeBand(candidate.subscriberCount),
     perceptual_hash: options.perceptualHash,
     content_sha256: options.contentSha256,
+    processed_content_sha256: options.processedContentSha256,
     embedding_model: options.model ?? THUMBNAIL_MODEL,
     embedding_model_revision: options.modelRevision ?? THUMBNAIL_MODEL_REVISION,
     embedding_preprocessing: options.preprocessing ?? THUMBNAIL_PREPROCESSING,
