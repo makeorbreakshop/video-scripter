@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-09-03T02:33:06.765Z",
+  "video_documents": {
+    "seeds": 200,
+    "library_outlier_rate": 0.04934879721482351,
+    "judge_model": "gpt-5-mini",
+    "judge_cost_usd": 0.021242,
+    "variants": {
+      "title": {
+        "mean_blind_grade": 3.16,
+        "lists_with_5_unique_channels": 0.87,
+        "neighbor_outlier_rate": 0.0555,
+        "neighbor_outlier_lift": 1.1246474713132173,
+        "median_similarity": 0.500337,
+        "judged_pairs": 100
+      },
+      "default": {
+        "mean_blind_grade": 3.02,
+        "lists_with_5_unique_channels": 0.82,
+        "neighbor_outlier_rate": 0.054,
+        "neighbor_outlier_lift": 1.0942515937101573,
+        "median_similarity": 0.5192789,
+        "judged_pairs": 100
+      },
+      "description": {
+        "mean_blind_grade": 3.03,
+        "lists_with_5_unique_channels": 0.81,
+        "neighbor_outlier_rate": 0.061,
+        "neighbor_outlier_lift": 1.2360990225244368,
+        "median_similarity": 0.52882624,
+        "judged_pairs": 100
+      }
+    },
+    "winner": "title"
+  },
+  "query_strategies": {
+    "expansion_model": "gpt-5-mini",
+    "expansion_cost_usd": 0.00430325,
+    "multi_query": {
+      "metrics": {
+        "known_item": {
+          "recall": 0.15999999999999998,
+          "mrr": 0.23583333333333334,
+          "ndcg": 0.1500961569330511
+        },
+        "discovery": {
+          "recall": 0.26000000000000006,
+          "mrr": 0.47125000000000006,
+          "ndcg": 0.23673131794799604
+        },
+        "analogue": {
+          "recall": 0.04,
+          "mrr": 0.2,
+          "ndcg": 0.06440893359705104
+        }
+      },
+      "p95_ms": 59.86170900000434
+    },
+    "creator_prefix": {
+      "metrics": {
+        "known_item": {
+          "recall": 0.04,
+          "mrr": 0.13333333333333333,
+          "ndcg": 0.0624105567784388
+        },
+        "discovery": {
+          "recall": 0.16,
+          "mrr": 0.2322222222222222,
+          "ndcg": 0.13521829818501735
+        },
+        "analogue": {
+          "recall": 0,
+          "mrr": 0,
+          "ndcg": 0
+        }
+      },
+      "p95_ms": 55.48958299998776
+    }
+  }
+}
