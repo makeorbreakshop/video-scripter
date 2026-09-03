@@ -20,7 +20,8 @@ export interface SettingsClientProps {
   usage: { tracked: number; watched_closely: number };
   keys: KeyRow[];
   /** Channels the user has connected with Google OAuth (owner analytics). */
-  youtube?: { channel_id: string; channel_title: string | null; connected_at: string; last_synced_at: string | null; last_error: string | null }[];
+  youtube?: { channel_id: string; channel_title: string | null; connected_at: string; last_synced_at: string | null; last_error: string | null;
+              sync?: { label: string; detail: string; tone: 'good'|'bad'|'accent'|'muted'; percent: number | null } }[];
   youtubeStatus?: string | null;
   readOnly?: boolean;
 }
@@ -116,19 +117,32 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
           connected channels and never identifying yours, to calibrate the performance benchmarks everyone
           sees. Disconnecting deletes the analytics we stored for that channel.
         </p>
-        {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginBottom: 10 }}>Connected. The first sync runs tonight.</div>}
+        <p className="cs-sub" style={{ marginBottom: 10 }}>
+          After you connect we import your full history, which takes a few minutes to a few hours depending
+          on the size of your channel. After that it updates once a day. YouTube publishes analytics about
+          two days behind, so the most recent day you will see is a couple of days old.
+        </p>
+        {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginBottom: 10 }}>Connected. We have started importing your history.</div>}
         {youtubeStatus && youtubeStatus !== 'connected' && (
           <div className="cs-note" data-tone="bad" style={{ marginBottom: 10 }}>
             {youtubeStatus === 'denied' ? 'You cancelled the Google prompt.' : youtubeStatus === 'nochannel' ? 'That Google account does not own a YouTube channel.' : 'Could not finish connecting. Try again.'}
           </div>
         )}
         {youtube.map((c) => (
-          <div key={c.channel_id} className="cs-kv">
-            <span>
-              {c.channel_title || c.channel_id}
-              <span className="cs-pick-meta" style={{ marginLeft: 8 }}>
-                {c.last_error ? `sync failed: ${c.last_error}` : c.last_synced_at ? `synced ${new Date(c.last_synced_at).toLocaleDateString()}` : 'not synced yet'}
+          <div key={c.channel_id} className="cs-kv" style={{ alignItems: 'flex-start' }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {c.channel_title || c.channel_id}
+                {c.sync && <span className="cs-badge" data-tone={c.sync.tone}>{c.sync.label}</span>}
               </span>
+              <span className="cs-pick-meta" style={{ display: 'block', marginTop: 3 }}>
+                {c.sync ? c.sync.detail : c.last_synced_at ? `Last updated ${new Date(c.last_synced_at).toLocaleDateString()}.` : 'Not synced yet.'}
+              </span>
+              {c.sync?.percent != null && c.sync.percent < 100 && (
+                <span aria-hidden style={{ display: 'block', height: 3, borderRadius: 2, background: 'var(--cs-line)', marginTop: 6, maxWidth: 260 }}>
+                  <span style={{ display: 'block', height: '100%', width: `${c.sync.percent}%`, borderRadius: 2, background: 'var(--cs-accent)' }} />
+                </span>
+              )}
             </span>
             {!readOnly && (
               <button type="button" className="cs-btn" data-variant="danger"

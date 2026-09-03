@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Drains the owner-analytics onboarding queue every 10 minutes, so a newly connected channel
+  starts importing within minutes instead of waiting for the 3am ingest. The worker exits
+  immediately when the queue is empty and paces itself against the API ceilings.
+
+  Install:
+    cp scripts/launchd/com.mfm.channelsmith-backfill.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.channelsmith-backfill.plist
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.channelsmith-backfill</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/npx</string>
+    <string>tsx</string>
+    <string>scripts/analytics-backfill-worker.ts</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartInterval</key><integer>600</integer>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/backfill-worker.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/backfill-worker.err.log</string>
+</dict></plist>

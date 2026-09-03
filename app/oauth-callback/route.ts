@@ -7,6 +7,7 @@ import {
   accessTokenFromRefresh, exchangeCode, ownedChannel, parseCallback, redirectUriFor, saveConnection, OAUTH_STATE_COOKIE,
 } from '@/lib/app/youtube-connect';
 import { requireAppUser } from '@/lib/app/session';
+import { enqueueBackfill } from '@/lib/app/backfill-jobs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,9 @@ export async function GET(req: Request) {
     const ch = await ownedChannel(tokens.accessToken || await accessTokenFromRefresh(tokens.refreshToken));
     if (!ch) return back('nochannel');
     await saveConnection({ userId: user.id, channelId: ch.id, channelTitle: ch.title, refreshToken: tokens.refreshToken, scopes: tokens.scopes });
+    // History is imported by scripts/analytics-backfill-worker.ts, not inline: a full backfill
+    // is tens to hundreds of API queries and a signup burst would trip the per-minute ceiling.
+    await enqueueBackfill(user.id, ch.id).catch((e) => console.error('enqueueBackfill:', e.message));
     const ok = back('connected');
     ok.cookies.delete(OAUTH_STATE_COOKIE);
     return ok;

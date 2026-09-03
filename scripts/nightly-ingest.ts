@@ -217,14 +217,14 @@ await pool.query(
 ).catch((e) => console.warn('quota log skipped:', e.message));
 await pool.query(`insert into quota_ledger (category, units) values ('ingest', $1)`, [apiCalls]).catch(() => {});
 // Fold tonight's new channels/videos into the add-channel search view (sql/channel-directory.sql).
-// Owner analytics (per-day views, AVD, subs) for channels connected via Google OAuth, then the
+// Drain any queued history imports, refresh owner analytics for connected channels, then the
 // avatar fallback copies. Best effort: a failure in either must not fail the ingest.
 // launchd runs this with a bare PATH, so spawn the repo's own tsx via the current node binary
 // rather than relying on `npx` being findable.
 {
   const { execFileSync } = await import('node:child_process');
   const tsx = new URL('../node_modules/tsx/dist/cli.mjs', import.meta.url).pathname;
-  for (const args of [['scripts/owned-analytics-sync.ts', '--days', '45'], ['scripts/avatar-cache-sync.ts']]) {
+  for (const args of [['scripts/analytics-backfill-worker.ts'], ['scripts/owned-analytics-sync.ts', '--days', '45'], ['scripts/avatar-cache-sync.ts']]) {
     try {
       execFileSync(process.execPath, [tsx, ...args], { stdio: 'inherit', timeout: 15 * 60_000, cwd: new URL('..', import.meta.url).pathname });
     } catch (e: any) { console.error(`${args[0]}: ${e.message}`); }
