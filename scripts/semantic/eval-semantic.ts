@@ -10,6 +10,15 @@ interface GoldQuery { id: string; stratum: 'known_item' | 'discovery' | 'analogu
 interface GoldFile { queries: GoldQuery[] }
 interface SearchResponse { channels?: Array<{ id: string }>; requested_mode?: string; effective_mode?: string; degraded?: boolean }
 interface Snapshot { name: string; size: number }
+type SearchMode = 'lexical' | 'semantic' | 'hybrid';
+type StratumMetrics = {
+  recall: number | null;
+  mrr: number | null;
+  ndcg: number | null;
+  latencyMs: number | null;
+  p95LatencyMs: number | null;
+};
+type ChannelMetrics = Record<GoldQuery['stratum'], StratumMetrics>;
 
 const outputPath = path.resolve('docs/prd/2026-09-02-semantic-eval.md');
 const baseUrl = process.env.SEMANTIC_EVAL_API_URL ?? 'http://localhost:3300/api/v1';
@@ -21,10 +30,11 @@ async function apiKey(): Promise<string> {
 
 async function apiGet<T>(route: string, key: string): Promise<{ data: T; bytes: number; latencyMs: number }> {
   const started = performance.now();
-  let response = await fetch(`${baseUrl}${route}`, { headers: { authorization: `Bearer ${key}` } });
-  if (response.status === 429) {
-    await new Promise((resolve) => setTimeout(resolve, Number(response.headers.get('retry-after') ?? 1) * 1_000));
+  let response: Response;
+  for (;;) {
     response = await fetch(`${baseUrl}${route}`, { headers: { authorization: `Bearer ${key}` } });
+    if (response.status !== 429) break;
+    await new Promise((resolve) => setTimeout(resolve, Math.max(1, Number(response.headers.get('retry-after') ?? 1)) * 1_000));
   }
   const text = await response.text();
   if (!response.ok) throw new Error(`API ${route} returned ${response.status}: ${text.slice(0, 200)}`);
@@ -35,10 +45,13 @@ function fixed(value: number | null, digits = 3): string {
   return value == null ? 'blocked' : value.toFixed(digits);
 }
 
-async function lexicalMetrics(gold: GoldQuery[], key: string) {
+async function searchMetrics(gold: GoldQuery[], key: string, mode: SearchMode): Promise<ChannelMetrics> {
   const results = [] as Array<{ query: GoldQuery; ids: string[]; latencyMs: number }>;
   for (const query of gold) {
-    const response = await apiGet<SearchResponse>(`/search?q=${encodeURIComponent(query.query)}&mode=lexical&limit=10`, key);
+    const response = await apiGet<SearchResponse>(`/search?q=${encodeURIComponent(query.query)}&mode=${mode}&limit=10`, key);
+    if (response.data.effective_mode !== mode || response.data.degraded) {
+      throw new Error(`${mode} evaluation degraded to ${response.data.effective_mode ?? 'unknown'}`);
+    }
     results.push({ query, ids: response.data.channels?.map((channel) => channel.id) ?? [], latencyMs: response.latencyMs });
   }
   const strata = ['known_item', 'discovery', 'analogue'] as const;
@@ -58,7 +71,7 @@ async function lexicalMetrics(gold: GoldQuery[], key: string) {
       latencyMs: mean(latencies),
       p95LatencyMs: percentile(latencies, 0.95),
     }];
-  }));
+  })) as ChannelMetrics;
 }
 
 function shell(command: string, args: string[]): string {
@@ -105,9 +118,23 @@ function mebibytes(bytes: number | null): string {
   return bytes == null ? 'not measured' : `${(bytes / 1_048_576).toFixed(2)} MiB`;
 }
 
-function reportMarkdown(env: Awaited<ReturnType<typeof environment>>, lexical: Awaited<ReturnType<typeof lexicalMetrics>>) {
+function reportMarkdown(env: Awaited<ReturnType<typeof environment>>, modes: Record<SearchMode, ChannelMetrics>) {
   const populated = env.videoCount > 0 && env.channelCount > 0;
-  const status = populated ? 'partial — automated lexical baseline complete; blind labels required' : 'blocked — OpenAI account has no credits; collections are empty';
+  const { lexical, semantic, hybrid } = modes;
+  const knownPass = (hybrid.known_item.mrr ?? 0) >= (lexical.known_item.mrr ?? 0) - 0.02;
+  const discoveryPass = (hybrid.discovery.ndcg ?? 0) >= (lexical.discovery.ndcg ?? 0) + 0.10
+    && (hybrid.discovery.recall ?? 0) > (lexical.discovery.recall ?? 0);
+  const analoguePass = (hybrid.analogue.ndcg ?? 0) >= (lexical.analogue.ndcg ?? 0) + 0.10
+    && (hybrid.analogue.recall ?? 0) > (lexical.analogue.recall ?? 0);
+  const beatsTrigram = ['discovery', 'analogue'].some((stratum) => {
+    const key = stratum as 'discovery' | 'analogue';
+    return (semantic[key].ndcg ?? 0) > (lexical[key].ndcg ?? 0)
+      || (hybrid[key].ndcg ?? 0) > (lexical[key].ndcg ?? 0);
+  });
+  const status = populated
+    ? `${knownPass && discoveryPass && analoguePass ? 'channel-search gate passed' : 'channel-search gate failed'} — SQL-seeded judgments remain provisional pending blind pooled adjudication`
+    : 'blocked — semantic collections are empty';
+  const result = (pass: boolean) => pass ? 'pass' : 'fail';
   return `# Semantic layer v1 evaluation
 
 Date: 2026-09-02 (ET)  
@@ -119,10 +146,9 @@ Status: **${status}**
 \`npx tsx scripts/semantic/embed-channels.ts --since 30d --max-usd 2\`  
 \`npx tsx scripts/semantic/eval-semantic.ts\`
 
-The first live embedding call returned OpenAI \`429: no credits remaining\`. No embeddings were
-created and no cost was incurred. The SQL-grounded gold seed is present, but semantic, hybrid,
-similar-video, topical-precision, exact-recall, latency, and agent-task conclusions would be
-fabricated until vectors exist and blind judgments are completed.
+The 30-day corpus was embedded after credits were added. Channel metrics below use the 40-query,
+SQL-grounded seed set. They are suitable for the PRD's initial stop gate, but remain provisional
+until the pooled lexical/semantic/hybrid candidates are blindly adjudicated.
 
 ## Environment and coverage
 
@@ -136,8 +162,8 @@ fabricated until vectors exist and blind judgments are completed.
 | Qdrant channels_v1 | ${env.channelCount.toLocaleString()} |
 | Qdrant RAM | ${env.ram} |
 | Qdrant storage | ${env.disk} |
-| Latest videos_v1 snapshot | ${mebibytes(env.latestVideoSnapshot)} (empty collection; not representative) |
-| Latest channels_v1 snapshot | ${mebibytes(env.latestChannelSnapshot)} (empty collection; not representative) |
+| Latest videos_v1 snapshot | ${mebibytes(env.latestVideoSnapshot)} |
+| Latest channels_v1 snapshot | ${mebibytes(env.latestChannelSnapshot)} |
 | Actual OpenAI tokens | ${env.costs.tokens.toLocaleString()} |
 | Actual OpenAI cost | $${env.costs.usd.toFixed(8)} |
 
@@ -154,20 +180,22 @@ Full dry-run cost gates (local tokenization, no OpenAI request):
 | Stratum | Mode | Recall@10 | MRR | NDCG@10 | Result |
 |---|---|---:|---:|---:|---|
 | Known item | lexical | ${fixed(lexical.known_item.recall)} | ${fixed(lexical.known_item.mrr)} | — | baseline |
-| Known item | semantic | blocked | blocked | — | no vectors |
-| Known item | hybrid | blocked | blocked | — | no vectors |
+| Known item | semantic | ${fixed(semantic.known_item.recall)} | ${fixed(semantic.known_item.mrr)} | — | candidate |
+| Known item | hybrid | ${fixed(hybrid.known_item.recall)} | ${fixed(hybrid.known_item.mrr)} | — | ${result(knownPass)} |
 | Discovery | lexical | ${fixed(lexical.discovery.recall)} | — | ${fixed(lexical.discovery.ndcg)} | provisional SQL-seed baseline |
-| Discovery | semantic | blocked | — | blocked | no vectors |
-| Discovery | hybrid | blocked | — | blocked | no vectors |
+| Discovery | semantic | ${fixed(semantic.discovery.recall)} | — | ${fixed(semantic.discovery.ndcg)} | candidate |
+| Discovery | hybrid | ${fixed(hybrid.discovery.recall)} | — | ${fixed(hybrid.discovery.ndcg)} | ${result(discoveryPass)} |
 | Analogue | lexical | ${fixed(lexical.analogue.recall)} | — | ${fixed(lexical.analogue.ndcg)} | provisional SQL-seed baseline |
-| Analogue | semantic | blocked | — | blocked | no vectors |
-| Analogue | hybrid | blocked | — | blocked | no vectors |
+| Analogue | semantic | ${fixed(semantic.analogue.recall)} | — | ${fixed(semantic.analogue.ndcg)} | candidate |
+| Analogue | hybrid | ${fixed(hybrid.analogue.recall)} | — | ${fixed(hybrid.analogue.ndcg)} | ${result(analoguePass)} |
 
-Lexical request latency on this 40-query run (not the required 200-request endpoint benchmark):
-known item p95 ${fixed(lexical.known_item.p95LatencyMs, 1)} ms; discovery p95 ${fixed(lexical.discovery.p95LatencyMs, 1)} ms;
-analogue p95 ${fixed(lexical.analogue.p95LatencyMs, 1)} ms.
+Request p95 on this 40-query run (not the required 200-request endpoint benchmark): lexical
+${fixed(Math.max(...Object.values(lexical).map((row) => row.p95LatencyMs ?? 0)), 1)} ms; semantic
+${fixed(Math.max(...Object.values(semantic).map((row) => row.p95LatencyMs ?? 0)), 1)} ms; hybrid
+${fixed(Math.max(...Object.values(hybrid).map((row) => row.p95LatencyMs ?? 0)), 1)} ms.
 
-Pass/fail: **blocked**. The revised bar requires hybrid known-item MRR within 0.02 of lexical,
+Pass/fail: known item **${result(knownPass)}**; discovery **${result(discoveryPass)}**; analogue
+**${result(analoguePass)}**. The revised bar requires hybrid known-item MRR within 0.02 of lexical,
 discovery/analogue NDCG at least +0.10, and recall improvement.
 
 ## 6.2 Similar videos
@@ -218,16 +246,20 @@ Winning variant D: **not determined**.
 ## Cost and stop decision
 
 Actual cost is **$${env.costs.usd.toFixed(8)}**. Estimates are emitted by the mandatory local
-\`cl100k_base\` cost gate before each embedding run. The PRD stop rule cannot yet be evaluated:
-semantic/hybrid retrieval has not run, so this report makes no claim that it beats trigram.
+\`cl100k_base\` cost gate before each embedding run. Initial stop decision: **${beatsTrigram
+  ? 'continue — at least one semantic or hybrid discovery/analogue result beats trigram on the SQL seed'
+  : 'stop — neither semantic nor hybrid beats trigram on discovery/analogue'}**.
 `;
 }
 
 export async function evaluate(): Promise<void> {
   const gold = JSON.parse(await fs.readFile(path.resolve('docs/prd/semantic-gold-channels.json'), 'utf8')) as GoldFile;
   const env = await environment();
-  const lexical = await lexicalMetrics(gold.queries, await apiKey());
-  await fs.writeFile(outputPath, reportMarkdown(env, lexical));
+  const key = await apiKey();
+  const lexical = await searchMetrics(gold.queries, key, 'lexical');
+  const semantic = await searchMetrics(gold.queries, key, 'semantic');
+  const hybrid = await searchMetrics(gold.queries, key, 'hybrid');
+  await fs.writeFile(outputPath, reportMarkdown(env, { lexical, semantic, hybrid }));
   console.log(`wrote evaluation report to ${outputPath}`);
 }
 

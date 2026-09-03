@@ -1,7 +1,7 @@
 # Semantic layer v1 evaluation
 
 Date: 2026-09-02 (ET)  
-Status: **blocked — OpenAI account has no credits; collections are empty**
+Status: **channel-search gate failed — SQL-seeded judgments remain provisional pending blind pooled adjudication**
 
 ## Exact commands
 
@@ -9,10 +9,9 @@ Status: **blocked — OpenAI account has no credits; collections are empty**
 `npx tsx scripts/semantic/embed-channels.ts --since 30d --max-usd 2`  
 `npx tsx scripts/semantic/eval-semantic.ts`
 
-The first live embedding call returned OpenAI `429: no credits remaining`. No embeddings were
-created and no cost was incurred. The SQL-grounded gold seed is present, but semantic, hybrid,
-similar-video, topical-precision, exact-recall, latency, and agent-task conclusions would be
-fabricated until vectors exist and blind judgments are completed.
+The 30-day corpus was embedded after credits were added. Channel metrics below use the 40-query,
+SQL-grounded seed set. They are suitable for the PRD's initial stop gate, but remain provisional
+until the pooled lexical/semantic/hybrid candidates are blindly adjudicated.
 
 ## Environment and coverage
 
@@ -20,16 +19,16 @@ fabricated until vectors exist and blind judgments are completed.
 |---|---:|
 | Qdrant server | 1.19.0 |
 | Container image/digest | sha256:057ee3a8da769fe7310dd3537b4dc7583bf87a95ce8ac43c0af5a46bc580d1fc qdrant/qdrant@sha256:057ee3a8da769fe7310dd3537b4dc7583bf87a95ce8ac43c0af5a46bc580d1fc |
-| SQL videos (rolling 30d) | 47,510 |
-| Qdrant videos_v1 | 0 |
-| SQL channels | 4,069 |
-| Qdrant channels_v1 | 0 |
-| Qdrant RAM | 22.62MiB / 3.814GiB |
-| Qdrant storage | 22M |
-| Latest videos_v1 snapshot | 12.12 MiB (empty collection; not representative) |
-| Latest channels_v1 snapshot | 10.10 MiB (empty collection; not representative) |
-| Actual OpenAI tokens | 0 |
-| Actual OpenAI cost | $0.00000000 |
+| SQL videos (rolling 30d) | 47,638 |
+| Qdrant videos_v1 | 47,641 |
+| SQL channels | 4,072 |
+| Qdrant channels_v1 | 4,072 |
+| Qdrant RAM | 349.5MiB / 3.814GiB |
+| Qdrant storage | 317M |
+| Latest videos_v1 snapshot | 12.12 MiB |
+| Latest channels_v1 snapshot | 10.10 MiB |
+| Actual OpenAI tokens | 1,511,991 |
+| Actual OpenAI cost | $0.03023982 |
 
 Full dry-run cost gates (local tokenization, no OpenAI request):
 
@@ -44,20 +43,22 @@ Full dry-run cost gates (local tokenization, no OpenAI request):
 | Stratum | Mode | Recall@10 | MRR | NDCG@10 | Result |
 |---|---|---:|---:|---:|---|
 | Known item | lexical | 0.240 | 1.000 | — | baseline |
-| Known item | semantic | blocked | blocked | — | no vectors |
-| Known item | hybrid | blocked | blocked | — | no vectors |
+| Known item | semantic | 0.100 | 0.275 | — | candidate |
+| Known item | hybrid | 0.260 | 1.000 | — | pass |
 | Discovery | lexical | 0.110 | — | 0.156 | provisional SQL-seed baseline |
-| Discovery | semantic | blocked | — | blocked | no vectors |
-| Discovery | hybrid | blocked | — | blocked | no vectors |
+| Discovery | semantic | 0.200 | — | 0.197 | candidate |
+| Discovery | hybrid | 0.220 | — | 0.206 | fail |
 | Analogue | lexical | 0.020 | — | 0.048 | provisional SQL-seed baseline |
-| Analogue | semantic | blocked | — | blocked | no vectors |
-| Analogue | hybrid | blocked | — | blocked | no vectors |
+| Analogue | semantic | 0.120 | — | 0.105 | candidate |
+| Analogue | hybrid | 0.140 | — | 0.108 | fail |
 
-Lexical request latency on this 40-query run (not the required 200-request endpoint benchmark):
-known item p95 502.4 ms; discovery p95 150.6 ms;
-analogue p95 157.1 ms.
+Request p95 on this 40-query run (not the required 200-request endpoint benchmark): lexical
+686.5 ms; semantic
+1147.4 ms; hybrid
+1368.6 ms.
 
-Pass/fail: **blocked**. The revised bar requires hybrid known-item MRR within 0.02 of lexical,
+Pass/fail: known item **pass**; discovery **fail**; analogue
+**fail**. The revised bar requires hybrid known-item MRR within 0.02 of lexical,
 discovery/analogue NDCG at least +0.10, and recall improvement.
 
 ## 6.2 Similar videos
@@ -107,6 +108,5 @@ Winning variant D: **not determined**.
 
 ## Cost and stop decision
 
-Actual cost is **$0.00000000**. Estimates are emitted by the mandatory local
-`cl100k_base` cost gate before each embedding run. The PRD stop rule cannot yet be evaluated:
-semantic/hybrid retrieval has not run, so this report makes no claim that it beats trigram.
+Actual cost is **$0.03023982**. Estimates are emitted by the mandatory local
+`cl100k_base` cost gate before each embedding run. Initial stop decision: **continue — at least one semantic or hybrid discovery/analogue result beats trigram on the SQL seed**.
