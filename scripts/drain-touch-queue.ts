@@ -10,6 +10,10 @@ import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { decideVideoRow, corpusTrackedChannels, type TouchResult } from '../lib/nightly/touch-decision';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
+
+const job = startManagedJob({ name: 'touch-drain' });
+if (!job.acquired) process.exit(0);
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
@@ -102,18 +106,19 @@ const [{ spent }] = (await pool.query(
 const [{ total }] = (await pool.query(
   `select coalesce((select quota_used from youtube_quota_usage where date=current_date), 0)::int as total`
 )).rows;
-if (spent >= DISCOVERY_DAILY_CAP) { console.log(`discovery cap reached (${spent}/${DISCOVERY_DAILY_CAP}); queue holds until tomorrow`); await pool.end(); process.exit(0); }
-if (total >= GLOBAL_FLOOR) { console.log(`global quota floor reached (${total}); discovery paused`); await pool.end(); process.exit(0); }
+if (spent >= DISCOVERY_DAILY_CAP) { console.log(`discovery cap reached (${spent}/${DISCOVERY_DAILY_CAP}); queue holds until tomorrow`); await pool.end(); job.finish(); process.exit(0); }
+if (total >= GLOBAL_FLOOR) { console.log(`global quota floor reached (${total}); discovery paused`); await pool.end(); job.finish(); process.exit(0); }
 
 const { rows } = await pool.query(
   `select id, kind, ref, mode, source_url from touch_queue where processed_at is null order by id limit 1000`
 );
-if (!rows.length) { console.log('queue empty'); await pool.end(); process.exit(0); }
+if (!rows.length) { console.log('queue empty'); await pool.end(); job.finish(); process.exit(0); }
 
 // --- 1. Resolve refs to channel ids / video ids, skipping already-known ---
 const videoRows = rows.filter((r) => r.kind === 'video');
 const known = new Set<string>();
 for (const group of chunk(videoRows, 500)) {
+  if (job.signal.aborted) break;
   const res = await pool.query(`select id from videos where id = any($1)`, [group.map((r) => r.ref)]);
   res.rows.forEach((r) => known.add(r.id));
 }
@@ -153,6 +158,7 @@ if (editedVideos.length) {
 const channelIds = new Map<number, string | null>();
 for (const r of rows.filter((x) => x.kind === 'channel')) channelIds.set(r.id, r.ref);
 for (const h of rows.filter((x) => x.kind === 'handle')) {
+  if (job.signal.aborted) break;
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(h.ref)}&key=${API_KEY}`
   );
@@ -173,6 +179,7 @@ const decisions = new Map<number, TouchResult>(); // queue id -> what we did wit
 const vids = await fetchVideos(newVideoRows.map((r) => r.ref));
 const vidChannels = await loadKnownChannels([...new Set(vids.map((v) => v.snippet?.channelId).filter(Boolean))] as string[]);
 for (const v of vids) {
+  if (job.signal.aborted) break;
   const row = newVideoRows.find((r) => r.ref === v.id);
   if (!row) continue;
   const d = decideVideoRow({ mode: row.mode, ref: row.ref, channelId: v.snippet?.channelId }, known, vidChannels, { trackedOnly });
@@ -197,6 +204,7 @@ if (candidateChannels.size) {
   const trackedSet = new Set(tracked.rows.map((r) => r.id));
   const fresh = candIds.filter((c) => !trackedSet.has(c));
   for (const group of chunk(fresh, 50)) {
+    if (job.signal.aborted) break;
     const res = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${group.join(',')}&key=${API_KEY}`
     );
@@ -235,6 +243,7 @@ const newChannels = plan.toEnroll;
 let channelsEnrolled = 0;
 let channelVideos = 0;
 for (const group of chunk(newChannels, 50)) {
+  if (job.signal.aborted) break;
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${group.join(',')}&key=${API_KEY}`
   );
@@ -281,6 +290,7 @@ const { rows: liveRows } = await pool.query(
 if (liveRows.length) {
   let refreshed = 0;
   for (const group of chunk(liveRows.map((r) => r.id), 50)) {
+    if (job.signal.aborted) break;
     const res = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${group.join(',')}&key=${API_KEY}`
     );
@@ -300,6 +310,7 @@ if (liveRows.length) {
 
 // --- 4. Mark everything processed ---
 for (const r of rows) {
+  if (job.signal.aborted) break;
   const ch = channelIds.get(r.id);
   const result =
     r.kind === 'video'
@@ -326,3 +337,4 @@ console.log(
   `Drained ${rows.length} rows: ${imported} clicked videos imported, ${candidatesSeen} channel candidates surfaced, ${channelsEnrolled} channels enrolled (+${channelVideos} videos), ${quota} quota units`
 );
 await pool.end();
+job.finish();
