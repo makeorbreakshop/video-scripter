@@ -1,0 +1,145 @@
+{
+  "audited_at": "2026-09-03T12:32:15.308Z",
+  "table": "bertopic_clusters",
+  "columns": [
+    {
+      "column_name": "cluster_id",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "topic_name",
+      "data_type": "text"
+    },
+    {
+      "column_name": "parent_topic",
+      "data_type": "text"
+    },
+    {
+      "column_name": "grandparent_topic",
+      "data_type": "text"
+    },
+    {
+      "column_name": "centroid_embedding",
+      "data_type": "USER-DEFINED"
+    },
+    {
+      "column_name": "video_count",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    }
+  ],
+  "by_created_date": [
+    {
+      "created_date": "2025-07-11",
+      "rows": 892,
+      "clusters_with_fewer_than_5_sources": 694,
+      "placeholder_hierarchy_rows": 647
+    },
+    {
+      "created_date": "2025-08-03",
+      "rows": 216,
+      "clusters_with_fewer_than_5_sources": 0,
+      "placeholder_hierarchy_rows": 0
+    }
+  ],
+  "august_2025_examples": [
+    {
+      "cluster_id": 0,
+      "topic_name": "Topic 0",
+      "parent_topic": "niche_19",
+      "grandparent_topic": "domain_11",
+      "video_count": 5441,
+      "dims": 512
+    },
+    {
+      "cluster_id": 1,
+      "topic_name": "Topic 1",
+      "parent_topic": "niche_33",
+      "grandparent_topic": "domain_2",
+      "video_count": 4217,
+      "dims": 512
+    },
+    {
+      "cluster_id": 2,
+      "topic_name": "Topic 2",
+      "parent_topic": "niche_33",
+      "grandparent_topic": "domain_2",
+      "video_count": 3299,
+      "dims": 512
+    },
+    {
+      "cluster_id": 3,
+      "topic_name": "Topic 3",
+      "parent_topic": "niche_19",
+      "grandparent_topic": "domain_11",
+      "video_count": 1615,
+      "dims": 512
+    },
+    {
+      "cluster_id": 4,
+      "topic_name": "Topic 4",
+      "parent_topic": "niche_33",
+      "grandparent_topic": "domain_2",
+      "video_count": 1936,
+      "dims": 512
+    },
+    {
+      "cluster_id": 5,
+      "topic_name": "Topic 5",
+      "parent_topic": "niche_19",
+      "grandparent_topic": "domain_11",
+      "video_count": 1230,
+      "dims": 512
+    },
+    {
+      "cluster_id": 6,
+      "topic_name": "Topic 6",
+      "parent_topic": "niche_23",
+      "grandparent_topic": "domain_14",
+      "video_count": 1460,
+      "dims": 512
+    },
+    {
+      "cluster_id": 7,
+      "topic_name": "Topic 7",
+      "parent_topic": "niche_20",
+      "grandparent_topic": "domain_14",
+      "video_count": 2839,
+      "dims": 512
+    },
+    {
+      "cluster_id": 8,
+      "topic_name": "Topic 8",
+      "parent_topic": "niche_10",
+      "grandparent_topic": "domain_14",
+      "video_count": 1209,
+      "dims": 512
+    },
+    {
+      "cluster_id": 9,
+      "topic_name": "Topic 9",
+      "parent_topic": "niche_0",
+      "grandparent_topic": "domain_6",
+      "video_count": 1679,
+      "dims": 512
+    }
+  ],
+  "provenance_evidence": [
+    {
+      "path": "scripts/load-bertopic-centroids-to-db.js",
+      "finding": "August 2025 loader read bertopic_centroids_complete_20250803.json and inserted blended_centroid || title_centroid into bertopic_clusters via Supabase JS at the time."
+    },
+    {
+      "path": "scripts/clustering/incremental/incremental-assignment.js",
+      "finding": "Historical assignment compared title_embedding to bertopic_clusters.centroid_embedding with cosine threshold 0.65."
+    }
+  ],
+  "decision": "Use August 2025 216 centroids only for shadow assignment/eval. Exclude July 2025 rows with low source counts or placeholder hierarchy from v2 canonical topic assignment."
+}
