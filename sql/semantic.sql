@@ -119,3 +119,7 @@ create table if not exists semantic_eval_v2_pool (
 
 create index if not exists idx_semantic_eval_v2_pool_query
   on semantic_eval_v2_pool (query_id, entity_type, entity_id);
+
+create index if not exists idx_video_scores_semantic_v2_outliers
+  on video_scores (model_version, score desc, confidence, video_id)
+  where score is not null;
