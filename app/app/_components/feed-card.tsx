@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
-import { cardKind, cardMeta, cardVerb, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
+import { cardKind, cardMeta, cardScoreNote, cardVerb, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
 import { installThumbFallback } from '@/components/app/thumb-runtime';
@@ -34,6 +34,8 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
   const latest = (swaps.length ? swaps[swaps.length - 1].url : card.thumbnail_url) || cdn;
   const title = card.titleChange?.to || card.title;
   const meta = cardMeta(card);
+  // A blank where the badge goes reads as a broken product. Say why there is no number.
+  const scoreNote = cardScoreNote(card);
 
   // Before/after pair for a swap day: the previous version when we have two, otherwise the
   // `before_url` the change event carried.
@@ -142,7 +144,9 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
         <time className="cs-num cs-fcard-time" dateTime={card.at} title={`${relativeTime(card.at, now)} ago`}>{etTimestamp(card.at)}</time>
       </div>
       {evidence}
-      {meta && <p className="cs-fcard-meta">{meta}</p>}
+      {(meta || scoreNote) && (
+        <p className="cs-fcard-meta">{[meta, scoreNote].filter(Boolean).join(' · ')}</p>
+      )}
     </>
   );
   return card.href

@@ -12,6 +12,7 @@ import {
   type Actual, type CurvePoint, type Marker,
   expectedAtAge } from '../admin/video-curve';
 import { buildSeries, type SeriesPoint } from './chart-series';
+import { gapReasonWords, MIN_PRIORS } from '../scoring/score-gaps';
 import { thumbUrl } from '../thumbs/storage';
 import { experiments, type Experiment } from './experiment';
 
@@ -103,10 +104,12 @@ export type VideoHeadView = {
   thumbUrl: string | null;
   thumbFallbackUrl: string | null;
   score: VideoPageData['score'];
+  /** Snapshots + samples we hold; 0 means we have never measured this video (verdict says so). */
+  observations: number;
 };
 
 export async function loadVideoHead(id: string, now: number = Date.now()): Promise<VideoHeadView | null> {
-  const [v, score, params, thumbs] = await Promise.all([
+  const [v, score, params, thumbs, obs] = await Promise.all([
     one<any>(
       `select id, title, channel_id, channel_name, published_at, view_count, thumbnail_url
          from videos where id = $1`,
@@ -119,6 +122,13 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     ),
     q<{ version: number; r2_uploaded_at: string | null }>(
       `select version, r2_uploaded_at from thumbnail_versions where video_id = $1 order by version`,
+      [id]
+    ),
+    // Two index-only counts: what separates "we have no baseline" from "we have never
+    // measured this video", which the verdict has to be able to say out loud.
+    one<{ n: string }>(
+      `select ((select count(*) from view_samples s where s.video_id = $1)
+             + (select count(*) from view_snapshots s where s.video_id = $1))::text as n`,
       [id]
     ),
   ]);
@@ -145,6 +155,7 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     thumbUrl: hero.src,
     thumbFallbackUrl: hero.fallback,
     score,
+    observations: Number(obs?.n ?? 0),
   };
 }
 
@@ -224,7 +235,12 @@ export function confidenceWord(confidence: string | null | undefined): string {
 
 /** verdict() reads only the headline numbers, so the fast head view can produce it too. */
 export type VideoVerdictInput = Pick<VideoPageView,
-  'score' | 'headline' | 'pace' | 'expectedNow' | 'views' | 'ageDays' | 'channelName'>;
+  'score' | 'headline' | 'pace' | 'expectedNow' | 'views' | 'ageDays' | 'channelName'> & {
+  /** Snapshots + samples we hold for this video; 0 means we have not measured it at all. */
+  observations?: number;
+  /** Prior long-form videos on the channel, when the caller knows it. */
+  priorLongform?: number | null;
+};
 
 /**
  * The one thing a creator came for, as words. Two readings of the same number:
@@ -259,10 +275,19 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
       aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
     };
   }
+  // No score. Name the cause instead of leaving a blank: a reader who sees nothing assumes the
+  // product is broken, one who is told the channel has two prior videos knows to wait.
+  // (lib/scoring/score-gaps.ts is the one cause list; scripts/score-gaps.ts counts the same ones.)
+  const bucket =
+    v.observations === 0 ? 'no-observations'
+    : (v.priorLongform ?? 0) >= MIN_PRIORS ? 'priors-unusable'
+    : sc && sc.baseline == null ? 'no-channel-baseline'
+    : sc ? 'no-channel-baseline'
+    : 'never-scored-in-window';
   return {
     big: null,
     over: false,
-    under: `${fmt(v.views)} views at ${age(v.ageDays)} · not enough ${v.channelName} history for a baseline yet`,
+    under: `${fmt(v.views)} views at ${age(v.ageDays)} · ${gapReasonWords(bucket, v.channelName)}`,
     aside: null,
   };
 }

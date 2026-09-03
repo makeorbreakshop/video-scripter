@@ -4,7 +4,7 @@
 // Jay Clouse GmIn1W9V8Rs is the live case: the outlier event written on Aug 30 carries
 // score 4.4711 (baseline 4,387.9), while video_scores today says 2.7908 (baseline 6,808.5)
 // off the same est30 — the channel baseline was refit under it.
-import { groupCards, feedRowView, cardKind, scoreTooltip, type FeedEventLike } from './feed-format';
+import { groupCards, feedRowView, cardKind, cardScoreNote, scoreTooltip, type FeedEventLike } from './feed-format';
 
 const OUTLIER_EVENT: FeedEventLike = {
   id: '1', type: 'outlier', at: '2026-08-30T13:04:14.000Z',
@@ -90,5 +90,30 @@ describe('the badge tooltip documents what the number is', () => {
   });
   it('says so plainly when there is no score', () => {
     expect(scoreTooltip(null)).toBe('No score yet');
+  });
+});
+
+describe('a card with no score says why, instead of showing nothing', () => {
+  const noScore = (extra: Partial<FeedEventLike>): FeedEventLike =>
+    ({ ...UPLOAD_EVENT, score: null, ...extra } as FeedEventLike);
+
+  it('names the channel when it has too little history for a baseline', () => {
+    const [card] = cardsOf([noScore({ score_n_baseline: 1, score_confidence: 'insufficient' })]);
+    expect(cardScoreNote(card)).toBe('Not enough Jay Clouse history yet for a baseline');
+  });
+
+  it('says the priors are too young when the channel has plenty of videos but no day-30 reads', () => {
+    const [card] = cardsOf([noScore({ score_n_baseline: 0, score_confidence: 'insufficient', prior_longform: 12 })]);
+    expect(cardScoreNote(card)).toBe("Jay Clouse's recent videos are still too young to set a baseline");
+  });
+
+  it('says a video with no score row at all is simply not scored yet', () => {
+    const [card] = cardsOf([noScore({})]);
+    expect(cardScoreNote(card)).toBe('Not scored yet — the next scoring run picks it up');
+  });
+
+  it('says nothing at all once there is a score to show', () => {
+    const [card] = cardsOf([{ ...UPLOAD_EVENT, score: 2.79 }]);
+    expect(cardScoreNote(card)).toBeNull();
   });
 });

@@ -26,6 +26,9 @@ export interface FeedRow {
    * so the card would otherwise keep quoting a number the video page contradicts.
    */
   score: number | null;
+  /** Why there is no score, when there is none (lib/scoring/score-gaps.ts names the causes). */
+  score_n_baseline: number | null;
+  score_confidence: string | null;
 }
 
 export interface FeedPage {
@@ -112,7 +115,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
   const rows = await q<FeedRow>(
     `select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
             v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at,
-            sc.score::float8 as score
+            sc.score::float8 as score, sc.n_baseline as score_n_baseline, sc.confidence as score_confidence
        from (
          select x.*
            from unnest($${p.channels}::text[]) as c(channel_id)

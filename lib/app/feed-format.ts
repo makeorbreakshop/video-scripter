@@ -2,6 +2,7 @@
 // components render what these return, so the wording and thresholds are testable
 // without mounting React or touching the database.
 import { FEED_TYPES } from '../feed/event-types';
+import { gapReasonWords, MIN_PRIORS } from '../scoring/score-gaps';
 
 export interface FeedEventLike {
   id: string;
@@ -22,6 +23,11 @@ export interface FeedEventLike {
    * timestamp stays "when it crossed"; the number a card shows is always the live one.
    */
   score?: number | null;
+  /** video_scores.n_baseline / .confidence, for saying WHY there is no score. */
+  score_n_baseline?: number | null;
+  score_confidence?: string | null;
+  /** Prior long-form videos on the channel — what separates "new channel" from "young priors". */
+  prior_longform?: number | null;
 }
 
 // ------------------------------------------------------------------- time ----
@@ -310,6 +316,8 @@ export interface FeedCard {
   score: number | null;
   /** The day held an outlier crossing event — what makes a scoreless day an outlier card. */
   outlier: boolean;
+  /** Why there is no score, when there is none: see cardScoreNote. */
+  scoreFacts: { nBaseline: number | null; confidence: string | null; priorLongform: number | null } | null;
   events: FeedEventLike[];
 }
 
@@ -324,7 +332,7 @@ export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards:
         c = { key: `${day.key}:${k}`, video_id: e.video_id, channel_id: e.channel_id, channel_name: e.channel_name,
               title: e.video_title || str(p.title) || str(p.new_title) || 'Untitled video', thumbnail_url: e.thumbnail_url,
               href: e.video_id ? `/app/videos/${e.video_id}` : null, at: e.at, uploadedAt: null, thumbSwaps: [], titleChange: null,
-              score: null, outlier: false, events: [] };
+              score: null, outlier: false, scoreFacts: null, events: [] };
         byVideo.set(k, c);
       }
       c.events.push(e);
@@ -338,6 +346,13 @@ export function groupCards(events: FeedEventLike[]): Array<{ key: string; cards:
       // The live score, wherever it rides in, is the number the card shows.
       const live = liveScore(e);
       if (live !== undefined) c.score = live;
+      if (e.score_n_baseline !== undefined || e.score_confidence !== undefined || e.prior_longform !== undefined) {
+        c.scoreFacts = {
+          nBaseline: e.score_n_baseline ?? null,
+          confidence: e.score_confidence ?? null,
+          priorLongform: e.prior_longform ?? null,
+        };
+      }
     }
     const cards = [...byVideo.values()].sort((a, b) => (a.at < b.at ? 1 : -1));
     for (const c of cards) c.thumbSwaps.sort((a, b) => (a.at < b.at ? -1 : 1));
@@ -428,4 +443,22 @@ export function cardMeta(card: FeedCard): string | null {
   const when = hours.length ? sincePublish(Math.max(...hours)) : null;
   if (when) bits.push(when);
   return bits.length ? bits.join(' · ') : null;
+}
+
+/**
+ * The line a card shows where the score would be. A blank badge reads as a broken product;
+ * a sentence saying the channel has two videos reads as "wait a week". The cause list is
+ * lib/scoring/score-gaps.ts, so the card and scripts/score-gaps.ts agree on the words.
+ */
+export function cardScoreNote(card: FeedCard): string | null {
+  if (card.score !== null) return null;
+  const f = card.scoreFacts;
+  // No score row at all: the scorer has not reached it yet.
+  if (!f || (f.nBaseline === null && f.confidence === null)) {
+    return gapReasonWords('never-scored-in-window', card.channel_name);
+  }
+  const priors = f.priorLongform;
+  if (priors !== null && priors >= MIN_PRIORS) return gapReasonWords('priors-unusable', card.channel_name);
+  if ((f.nBaseline ?? 0) < MIN_PRIORS) return gapReasonWords('no-channel-baseline', card.channel_name);
+  return gapReasonWords('other', card.channel_name);
 }

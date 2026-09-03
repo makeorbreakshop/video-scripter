@@ -1,4 +1,4 @@
-import { heroThumb } from './video-page';
+import { heroThumb, verdict } from './video-page';
 
 const R2 = 'https://thumbs.example';
 beforeEach(() => { process.env.NEXT_PUBLIC_THUMBS_BASE_URL = R2; });
@@ -23,5 +23,43 @@ describe('heroThumb', () => {
   });
   it('derives the YouTube URL from the id when the row has none', () => {
     expect(heroThumb('abc', [], null)).toEqual({ src: 'https://i.ytimg.com/vi/abc/hqdefault.jpg', fallback: null });
+  });
+});
+
+// Invariant 3, reader's half: a video we cannot score says why, in words, rather than
+// leaving a blank where the ratio belongs. The causes are lib/scoring/score-gaps.ts.
+describe('verdict names the reason there is no score', () => {
+  const base = {
+    score: null as any, headline: 'day30' as const, pace: null, expectedNow: null,
+    views: 1200, ageDays: 2, channelName: 'Jay Clouse',
+  };
+
+  // A row with a null baseline: we tried to score it and the channel had nothing to divide by.
+  const noBaselineRow = { score: null, baseline: null, est30: 4000, confidence: 'insufficient' } as any;
+
+  it('says the channel has too little history when the row has no baseline', () => {
+    const v = verdict({ ...base, score: noBaselineRow, observations: 4 });
+    expect(v.big).toBeNull();
+    expect(v.under).toContain('Not enough Jay Clouse history yet for a baseline');
+    expect(v.under).toContain('1K views');
+  });
+
+  it('says the priors are too young when the channel has plenty of prior videos', () => {
+    const v = verdict({ ...base, score: noBaselineRow, observations: 4, priorLongform: 12 });
+    expect(v.under).toContain('too young to set a baseline');
+  });
+
+  it('says a video with no score row at all has simply not been scored yet', () => {
+    expect(verdict({ ...base, observations: 4 }).under).toContain('Not scored yet');
+  });
+
+  it('says the video has not been measured yet when nothing has been sampled', () => {
+    const v = verdict({ ...base, observations: 0 });
+    expect(v.under).toContain('No view measurements yet');
+  });
+
+  it('still leads with the ratio when there is one', () => {
+    const v = verdict({ ...base, score: { score: 2.79, baseline: 6808, est30: 19001, confidence: 'likely' } as any, observations: 9 });
+    expect(v.big).toBe('2.8×');
   });
 });
