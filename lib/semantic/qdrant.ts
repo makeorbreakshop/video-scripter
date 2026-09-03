@@ -183,6 +183,25 @@ export class SemanticQdrant {
     return response.result.points;
   }
 
+  async scroll<Payload>(
+    collection: string,
+    options: { limit?: number; offset?: string | number; withVector?: boolean; filter?: QdrantFilter } = {},
+  ): Promise<{ points: Array<QdrantSearchHit<Payload>>; nextPageOffset?: string | number }> {
+    const response = await this.request<{
+      result: { points: Array<QdrantSearchHit<Payload>>; next_page_offset?: string | number };
+    }>(`/collections/${collection}/points/scroll`, {
+      method: 'POST',
+      body: JSON.stringify({
+        limit: options.limit ?? 1_000,
+        ...(options.offset == null ? {} : { offset: options.offset }),
+        with_payload: true,
+        with_vector: options.withVector ?? false,
+        ...(options.filter ? { filter: options.filter } : {}),
+      }),
+    });
+    return { points: response.result.points, nextPageOffset: response.result.next_page_offset };
+  }
+
   async updatePayloads<Payload>(
     collection: string,
     updates: Array<{ id: string; payload: Payload }>,

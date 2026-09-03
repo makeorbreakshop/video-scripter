@@ -68,6 +68,7 @@ export interface EmbedChannelsOptions {
   refreshPayloads?: boolean;
   maxUsd?: number;
   recordBookkeeping?: boolean;
+  force?: boolean;
 }
 
 export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sqlCount: number; embedded: number; qdrantCount: number | null }> {
@@ -152,7 +153,7 @@ export async function embedChannels(options: EmbedChannelsOptions): Promise<{ sq
         }),
       };
     });
-    const prepared = allPrepared.filter((item) => hashes.get(item.id) !== item.hash);
+    const prepared = allPrepared.filter((item) => options.force || hashes.get(item.id) !== item.hash);
 
     toEmbed.push(...prepared);
     if (options.refreshPayloads) payloadRefreshes.push(...allPrepared.filter((item) => hashes.get(item.id) === item.hash));
@@ -208,6 +209,7 @@ function cliOptions(argv: string[]): EmbedChannelsOptions {
     refreshPayloads: argv.includes('--refresh-payloads'),
     maxUsd: floatArg(argv, '--max-usd') ?? 2,
     recordBookkeeping: !argv.includes('--no-bookkeeping'),
+    force: argv.includes('--force'),
   };
 }
 

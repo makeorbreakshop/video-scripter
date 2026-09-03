@@ -85,4 +85,28 @@ describe('Qdrant helpers', () => {
       global.fetch = previousFetch;
     }
   });
+
+  test('scrolls collection points with vectors for offline representation builds', async () => {
+    const fetchMock = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ result: { points: [{ id: 'one', payload: { channel_id: 'c' }, vector: [0.1] }], next_page_offset: 'next' } }),
+    }));
+    const previousFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      await expect(new SemanticQdrant({ url: 'http://qdrant.test' }).scroll('videos_v1', {
+        limit: 1000, offset: 'cursor', withVector: true,
+      })).resolves.toEqual({
+        points: [{ id: 'one', payload: { channel_id: 'c' }, vector: [0.1] }],
+        nextPageOffset: 'next',
+      });
+      const [, requestInit] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>)[0];
+      expect(JSON.parse(String(requestInit.body))).toEqual({
+        limit: 1000, offset: 'cursor', with_payload: true, with_vector: true,
+      });
+    } finally {
+      global.fetch = previousFetch;
+    }
+  });
 });
