@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import sys
 import time
@@ -142,6 +143,39 @@ def write_output(
     temporary.replace(path)
 
 
+def load_checkpoint(
+    path: Path,
+    *,
+    model: str,
+    model_revision: str,
+    dimensions: int,
+    representatives: list[DownloadedThumbnail],
+) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        checkpoint = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if (checkpoint.get("model") != model or checkpoint.get("modelRevision") != model_revision
+            or checkpoint.get("dimensions") != dimensions):
+        return []
+    current = {item.perceptual_hash: item for item in representatives}
+    reusable: list[dict[str, Any]] = []
+    for row in checkpoint.get("rows", []):
+        image_hash = row.get("perceptualHash")
+        representative = current.get(image_hash)
+        vectors = (row.get("visual"), row.get("visualTitle"))
+        if (not representative or row.get("candidate", {}).get("videoId") != representative.candidate["videoId"]
+                or row.get("candidate", {}).get("title") != representative.candidate["title"]
+                or any(not isinstance(vector, list) or len(vector) != dimensions
+                       or any(not isinstance(value, (int, float)) or not math.isfinite(value) for value in vector)
+                       for vector in vectors)):
+            continue
+        reusable.append(row)
+    return reusable
+
+
 def main() -> None:
     args = parse_args()
     if args.dimensions < 1 or args.batch_size < 1:
@@ -174,6 +208,23 @@ def main() -> None:
                      downloads=0, failures=failures, rows=[])
         raise RuntimeError("no thumbnails downloaded successfully")
 
+    rows = load_checkpoint(
+        args.output,
+        model=args.model,
+        model_revision=args.revision,
+        dimensions=args.dimensions,
+        representatives=representatives,
+    )
+    completed_hashes = {row["perceptualHash"] for row in rows}
+    remaining = [item for item in representatives if item.perceptual_hash not in completed_hashes]
+    if rows:
+        print(f"resuming from {len(rows)} checkpointed thumbnails", file=sys.stderr, flush=True)
+    if not remaining:
+        write_output(args.output, model=args.model, model_revision=args.revision,
+                     dimensions=args.dimensions, device=args.device,
+                     downloads=len(downloaded), failures=failures, rows=rows)
+        return
+
     device, dtype = resolve_device(args.device, args.allow_cpu)
     print(f"loading {args.model} on {device}", file=sys.stderr, flush=True)
     from sentence_transformers import SentenceTransformer
@@ -189,9 +240,8 @@ def main() -> None:
     if supported_dimensions and args.dimensions not in supported_dimensions:
         raise ValueError(f"dimension {args.dimensions} is not supported: {supported_dimensions}")
 
-    rows: list[dict[str, Any]] = []
-    for start in range(0, len(representatives), args.batch_size):
-        batch = representatives[start:start + args.batch_size]
+    for start in range(0, len(remaining), args.batch_size):
+        batch = remaining[start:start + args.batch_size]
         visual_inputs = [{"image": str(item.path)} for item in batch]
         visual_title_inputs = [
             {"image": str(item.path), "text": f"YouTube title: {item.candidate['title']}"}
