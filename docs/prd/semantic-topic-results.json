@@ -1,0 +1,2791 @@
+{
+  "generated_at": "2026-09-03T02:58:29.149Z",
+  "labeler": "Codex subagent blind review",
+  "labeler_cost_usd": 0,
+  "topics": [
+    {
+      "topic": "laser engraver",
+      "precision_at_20": 0
+    },
+    {
+      "topic": "laser cutting",
+      "precision_at_20": 0
+    },
+    {
+      "topic": "woodworking",
+      "precision_at_20": 0.55
+    },
+    {
+      "topic": "epoxy",
+      "precision_at_20": 0.05
+    },
+    {
+      "topic": "3d printing",
+      "precision_at_20": 0.3
+    },
+    {
+      "topic": "recipes",
+      "precision_at_20": 0.4
+    },
+    {
+      "topic": "AI tools",
+      "precision_at_20": 0.25
+    },
+    {
+      "topic": "artificial intelligence",
+      "precision_at_20": 0.7
+    },
+    {
+      "topic": "gardening",
+      "precision_at_20": 0.3
+    },
+    {
+      "topic": "fitness",
+      "precision_at_20": 0.65
+    },
+    {
+      "topic": "weight loss",
+      "precision_at_20": 0.15
+    },
+    {
+      "topic": "trading",
+      "precision_at_20": 0.15
+    },
+    {
+      "topic": "crypto",
+      "precision_at_20": 0.05
+    },
+    {
+      "topic": "smartphone",
+      "precision_at_20": 0.2
+    },
+    {
+      "topic": "air fryer recipes",
+      "precision_at_20": 0
+    }
+  ],
+  "overall_precision_at_20": 0.25,
+  "floors": [
+    {
+      "floor": null,
+      "retained": 300,
+      "precision": 0.25,
+      "empty_result_rate": 0
+    },
+    {
+      "floor": 0.35,
+      "retained": 91,
+      "precision": 0.5714285714285714,
+      "empty_result_rate": 0.2
+    },
+    {
+      "floor": 0.5,
+      "retained": 8,
+      "precision": 0.875,
+      "empty_result_rate": 0.7333333333333333
+    }
+  ],
+  "brandon_spot_check": "pending for 3 queries",
+  "judgments": [
+    {
+      "id": "1-1",
+      "topic": "laser engraver",
+      "title": "3D Printing Miniatures Has Entered a New Era",
+      "channel_name": "Black Magic Craft",
+      "similarity": 0.3382668,
+      "rank": 1,
+      "on_topic": false
+    },
+    {
+      "id": "1-2",
+      "topic": "laser engraver",
+      "title": "DIY Resin Art Tray #resinart #epoxy_resin #resin_art #diy #resinartist",
+      "channel_name": "Resin Art Mary ",
+      "similarity": 0.33644992,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "1-3",
+      "topic": "laser engraver",
+      "title": "Filament Loading and Change on A1 Mini from Target ",
+      "channel_name": "CHEP",
+      "similarity": 0.33025134,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "1-4",
+      "topic": "laser engraver",
+      "title": "my dad made feather damascus",
+      "channel_name": "Kyle Royer",
+      "similarity": 0.31857556,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "1-5",
+      "topic": "laser engraver",
+      "title": "NO WAY! Cordless DOMINO!",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.31481633,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "1-6",
+      "topic": "laser engraver",
+      "title": "The Mistake That Costs an Hour Per Print: xTool Omni O1 Review",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.31332877,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "1-7",
+      "topic": "laser engraver",
+      "title": "Building a Working LEGO ARCADE MACHINE!?! #shorts",
+      "channel_name": "Ethan The Artisan",
+      "similarity": 0.31226254,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "1-8",
+      "topic": "laser engraver",
+      "title": "Forging a flat ring on a flat bar on the flat.. with a flat cap 🙃 #blacksmith #craft #ireland #fypシ",
+      "channel_name": "James O'Connor Blacksmith",
+      "similarity": 0.30320162,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "1-9",
+      "topic": "laser engraver",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.2996345,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "1-10",
+      "topic": "laser engraver",
+      "title": "This patch gives you a permanent tattoo",
+      "channel_name": "The Verge",
+      "similarity": 0.29247513,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "1-11",
+      "topic": "laser engraver",
+      "title": "This simple print fixes an annoying problem with the Bambu Lab X2D. Makerworld ID: 2837498  #bambula",
+      "channel_name": "3D Printing Canada",
+      "similarity": 0.2898029,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "1-12",
+      "topic": "laser engraver",
+      "title": "The MISSING PIECE of Plug-In Solar",
+      "channel_name": "Artisan Electrics",
+      "similarity": 0.2841314,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "1-13",
+      "topic": "laser engraver",
+      "title": "Making Lids Inaccurately on Purpose",
+      "channel_name": "Florian Gadsby",
+      "similarity": 0.2825688,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "1-14",
+      "topic": "laser engraver",
+      "title": "I Spent 500 Hours Making This Tool... And I Had to Let It Go",
+      "channel_name": "NBR Works",
+      "similarity": 0.27883646,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "1-15",
+      "topic": "laser engraver",
+      "title": "The most Powerful PC Handheld I Own 😧",
+      "channel_name": "GG_Sheed",
+      "similarity": 0.27844074,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "1-16",
+      "topic": "laser engraver",
+      "title": "Claude Design Just Unlocked AI Motion Graphics",
+      "channel_name": "Futurepedia",
+      "similarity": 0.2782513,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "1-17",
+      "topic": "laser engraver",
+      "title": "CoCreate 2026, I’ll see you in LA. 🚀 @alibaba.com #CoCreate #MakeItReal #alibabacom",
+      "channel_name": "Mylo Prints",
+      "similarity": 0.27628624,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "1-18",
+      "topic": "laser engraver",
+      "title": "Quick INDX Update - Nozzle Purge & Waste Solution with Tommy",
+      "channel_name": "Prusa 3D",
+      "similarity": 0.27326643,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "1-19",
+      "topic": "laser engraver",
+      "title": "if you're building hardware, watch this",
+      "channel_name": "Founders, Inc.",
+      "similarity": 0.27264315,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "1-20",
+      "topic": "laser engraver",
+      "title": "3D Printing Is About to Change Forever (Just Not How You Think)",
+      "channel_name": "The Next Layer",
+      "similarity": 0.27240232,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "2-1",
+      "topic": "laser cutting",
+      "title": "How to cut a 2x4 octagon #woodworking",
+      "channel_name": "BeardedVikingWoodWorks",
+      "similarity": 0.34034628,
+      "rank": 1,
+      "on_topic": false
+    },
+    {
+      "id": "2-2",
+      "topic": "laser cutting",
+      "title": "Making Lids Inaccurately on Purpose",
+      "channel_name": "Florian Gadsby",
+      "similarity": 0.33693898,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "2-3",
+      "topic": "laser cutting",
+      "title": "my dad made feather damascus",
+      "channel_name": "Kyle Royer",
+      "similarity": 0.33479154,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "2-4",
+      "topic": "laser cutting",
+      "title": "How to do a Cold Pull on your 3D Printer?",
+      "channel_name": "3D Printing Canada",
+      "similarity": 0.32576835,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "2-5",
+      "topic": "laser cutting",
+      "title": "I Spent 500 Hours Making This Tool... And I Had to Let It Go",
+      "channel_name": "NBR Works",
+      "similarity": 0.32186896,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "2-6",
+      "topic": "laser cutting",
+      "title": "Filament Loading and Change on A1 Mini from Target ",
+      "channel_name": "CHEP",
+      "similarity": 0.3197195,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "2-7",
+      "topic": "laser cutting",
+      "title": "I Shut Down My $10 Million Woodworking Business",
+      "channel_name": "Cutting It Close",
+      "similarity": 0.3192716,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "2-8",
+      "topic": "laser cutting",
+      "title": "3D Printing Miniatures Has Entered a New Era",
+      "channel_name": "Black Magic Craft",
+      "similarity": 0.31153676,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "2-9",
+      "topic": "laser cutting",
+      "title": "The Mistake That Costs an Hour Per Print: xTool Omni O1 Review",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.30029166,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "2-10",
+      "topic": "laser cutting",
+      "title": "3D Printing Is About to Change Forever (Just Not How You Think)",
+      "channel_name": "The Next Layer",
+      "similarity": 0.28909254,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "2-11",
+      "topic": "laser cutting",
+      "title": "NO WAY! Cordless DOMINO!",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.28802451,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "2-12",
+      "topic": "laser cutting",
+      "title": "Forging a flat ring on a flat bar on the flat.. with a flat cap 🙃 #blacksmith #craft #ireland #fypシ",
+      "channel_name": "James O'Connor Blacksmith",
+      "similarity": 0.28785267,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "2-13",
+      "topic": "laser cutting",
+      "title": "Building a Working LEGO ARCADE MACHINE!?! #shorts",
+      "channel_name": "Ethan The Artisan",
+      "similarity": 0.2772248,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "2-14",
+      "topic": "laser cutting",
+      "title": "Digging in, faster",
+      "channel_name": "Massachusetts Institute of Technology (MIT)",
+      "similarity": 0.2738573,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "2-15",
+      "topic": "laser cutting",
+      "title": "How to Sharpen a Kitchen knife by Hand.",
+      "channel_name": "John McGrath (Man In Shed)",
+      "similarity": 0.27373573,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "2-16",
+      "topic": "laser cutting",
+      "title": "complex transitions made easy",
+      "channel_name": "Chris Hau",
+      "similarity": 0.25962988,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "2-17",
+      "topic": "laser cutting",
+      "title": "Quick INDX Update - Nozzle Purge & Waste Solution with Tommy",
+      "channel_name": "Prusa 3D",
+      "similarity": 0.25949803,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "2-18",
+      "topic": "laser cutting",
+      "title": "FINALLY! DEWALT’s NEW 20V Cordless Track Saw (DCS525)! ⚡",
+      "channel_name": "WorkshopAddict",
+      "similarity": 0.25935957,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "2-19",
+      "topic": "laser cutting",
+      "title": "A Better Workflow for Making Music",
+      "channel_name": "TAETRO",
+      "similarity": 0.25607437,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "2-20",
+      "topic": "laser cutting",
+      "title": "Instantly fix your shooting technique ⚽️🎯⚡️ #7mlctraining",
+      "channel_name": "7mlc",
+      "similarity": 0.25202304,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "3-1",
+      "topic": "woodworking",
+      "title": "Woodcraft is closing... and they kinda deserve it.",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.57265437,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "3-2",
+      "topic": "woodworking",
+      "title": "Simple is often best. How to get started. Woodworking and DIY with some life advice. ##woodworking",
+      "channel_name": "John McGrath (Man In Shed)",
+      "similarity": 0.525409,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "3-3",
+      "topic": "woodworking",
+      "title": "I Shut Down My $10 Million Woodworking Business",
+      "channel_name": "Cutting It Close",
+      "similarity": 0.52219296,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "3-4",
+      "topic": "woodworking",
+      "title": "How to cut a 2x4 octagon #woodworking",
+      "channel_name": "BeardedVikingWoodWorks",
+      "similarity": 0.44962767,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "3-5",
+      "topic": "woodworking",
+      "title": "I Build 2 Coffee Tables - Employee Vs Boss",
+      "channel_name": "John Malecki",
+      "similarity": 0.4376868,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "3-6",
+      "topic": "woodworking",
+      "title": "Digging / Building a WW1 Trench BY HAND!",
+      "channel_name": "The Strapped Woodsman",
+      "similarity": 0.42863017,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "3-7",
+      "topic": "woodworking",
+      "title": "DIY Side table made from stone and wood",
+      "channel_name": "HomeMadeModern",
+      "similarity": 0.40450504,
+      "rank": 7,
+      "on_topic": true
+    },
+    {
+      "id": "3-8",
+      "topic": "woodworking",
+      "title": "The Easiest Workbench I've Ever Built?!",
+      "channel_name": "Home RenoVision DIY",
+      "similarity": 0.38682306,
+      "rank": 8,
+      "on_topic": true
+    },
+    {
+      "id": "3-9",
+      "topic": "woodworking",
+      "title": "FINALLY! DEWALT’s NEW 20V Cordless Track Saw (DCS525)! ⚡",
+      "channel_name": "WorkshopAddict",
+      "similarity": 0.37443215,
+      "rank": 9,
+      "on_topic": true
+    },
+    {
+      "id": "3-10",
+      "topic": "woodworking",
+      "title": "The Trick to PERFECT Baseboard Joints!",
+      "channel_name": "Refresh Home Improvements",
+      "similarity": 0.35486388,
+      "rank": 10,
+      "on_topic": true
+    },
+    {
+      "id": "3-11",
+      "topic": "woodworking",
+      "title": "my dad made feather damascus",
+      "channel_name": "Kyle Royer",
+      "similarity": 0.3495885,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "3-12",
+      "topic": "woodworking",
+      "title": "Time to make some pots !",
+      "channel_name": "Jonthepotter",
+      "similarity": 0.33284724,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "3-13",
+      "topic": "woodworking",
+      "title": "Strings buried too deep?",
+      "channel_name": "StewMac",
+      "similarity": 0.32231504,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "3-14",
+      "topic": "woodworking",
+      "title": "Making Lids Inaccurately on Purpose",
+      "channel_name": "Florian Gadsby",
+      "similarity": 0.31938362,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "3-15",
+      "topic": "woodworking",
+      "title": "I Spent 500 Hours Making This Tool... And I Had to Let It Go",
+      "channel_name": "NBR Works",
+      "similarity": 0.31842715,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "3-16",
+      "topic": "woodworking",
+      "title": "You can make these from 2x4",
+      "channel_name": "Rex Krueger",
+      "similarity": 0.3121829,
+      "rank": 16,
+      "on_topic": true
+    },
+    {
+      "id": "3-17",
+      "topic": "woodworking",
+      "title": "Building a Working LEGO ARCADE MACHINE!?! #shorts",
+      "channel_name": "Ethan The Artisan",
+      "similarity": 0.30996624,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "3-18",
+      "topic": "woodworking",
+      "title": "Forging a flat ring on a flat bar on the flat.. with a flat cap 🙃 #blacksmith #craft #ireland #fypシ",
+      "channel_name": "James O'Connor Blacksmith",
+      "similarity": 0.30770642,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "3-19",
+      "topic": "woodworking",
+      "title": "Chainsaw Angle Grinder Review",
+      "channel_name": "You Betcha",
+      "similarity": 0.301465,
+      "rank": 19,
+      "on_topic": true
+    },
+    {
+      "id": "3-20",
+      "topic": "woodworking",
+      "title": "how it feels playing card drafting games sometimes",
+      "channel_name": "ProZD",
+      "similarity": 0.2996744,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "4-1",
+      "topic": "epoxy",
+      "title": "DIY Resin Art Tray #resinart #epoxy_resin #resin_art #diy #resinartist",
+      "channel_name": "Resin Art Mary ",
+      "similarity": 0.46657678,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "4-2",
+      "topic": "epoxy",
+      "title": "Forging a flat ring on a flat bar on the flat.. with a flat cap 🙃 #blacksmith #craft #ireland #fypシ",
+      "channel_name": "James O'Connor Blacksmith",
+      "similarity": 0.34268904,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "4-3",
+      "topic": "epoxy",
+      "title": "3D Printing Miniatures Has Entered a New Era",
+      "channel_name": "Black Magic Craft",
+      "similarity": 0.3396127,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "4-4",
+      "topic": "epoxy",
+      "title": "start to finish clay with me 💖",
+      "channel_name": "Uncomfy",
+      "similarity": 0.33718467,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "4-5",
+      "topic": "epoxy",
+      "title": "Fiber will never not be cool to me... except when it breaks 🦈",
+      "channel_name": "Becca Farsace",
+      "similarity": 0.32568687,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "4-6",
+      "topic": "epoxy",
+      "title": "NO WAY! Cordless DOMINO!",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.3197647,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "4-7",
+      "topic": "epoxy",
+      "title": "Filament Loading and Change on A1 Mini from Target ",
+      "channel_name": "CHEP",
+      "similarity": 0.31602332,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "4-8",
+      "topic": "epoxy",
+      "title": "my dad made feather damascus",
+      "channel_name": "Kyle Royer",
+      "similarity": 0.31320262,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "4-9",
+      "topic": "epoxy",
+      "title": "The xTool X1: Instant Reaction",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.3019541,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "4-10",
+      "topic": "epoxy",
+      "title": "This patch gives you a permanent tattoo",
+      "channel_name": "The Verge",
+      "similarity": 0.29300404,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "4-11",
+      "topic": "epoxy",
+      "title": "Making Lids Inaccurately on Purpose",
+      "channel_name": "Florian Gadsby",
+      "similarity": 0.28506702,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "4-12",
+      "topic": "epoxy",
+      "title": "You can make these from 2x4",
+      "channel_name": "Rex Krueger",
+      "similarity": 0.28205985,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "4-13",
+      "topic": "epoxy",
+      "title": "Time to make some pots !",
+      "channel_name": "Jonthepotter",
+      "similarity": 0.28194433,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "4-14",
+      "topic": "epoxy",
+      "title": "complex transitions made easy",
+      "channel_name": "Chris Hau",
+      "similarity": 0.28138196,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "4-15",
+      "topic": "epoxy",
+      "title": "3D Printing Is About to Change Forever (Just Not How You Think)",
+      "channel_name": "The Next Layer",
+      "similarity": 0.2810552,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "4-16",
+      "topic": "epoxy",
+      "title": "Building a Working LEGO ARCADE MACHINE!?! #shorts",
+      "channel_name": "Ethan The Artisan",
+      "similarity": 0.2791962,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "4-17",
+      "topic": "epoxy",
+      "title": "Strings buried too deep?",
+      "channel_name": "StewMac",
+      "similarity": 0.27571207,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "4-18",
+      "topic": "epoxy",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.27504438,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "4-19",
+      "topic": "epoxy",
+      "title": "ろ過キットを使って醤油をろ過してみた結果・・・",
+      "channel_name": "GENKI LABO",
+      "similarity": 0.2724381,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "4-20",
+      "topic": "epoxy",
+      "title": "A coffee drink with anchovies and soy sauce?",
+      "channel_name": "Morgan Eckroth",
+      "similarity": 0.27207524,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "5-1",
+      "topic": "3d printing",
+      "title": "3D Printing Is About to Change Forever (Just Not How You Think)",
+      "channel_name": "The Next Layer",
+      "similarity": 0.6100519,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "5-2",
+      "topic": "3d printing",
+      "title": "3D Printing Miniatures Has Entered a New Era",
+      "channel_name": "Black Magic Craft",
+      "similarity": 0.60086846,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "5-3",
+      "topic": "3d printing",
+      "title": "How to do a Cold Pull on your 3D Printer?",
+      "channel_name": "3D Printing Canada",
+      "similarity": 0.5399067,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "5-4",
+      "topic": "3d printing",
+      "title": "Quick INDX Update - Nozzle Purge & Waste Solution with Tommy",
+      "channel_name": "Prusa 3D",
+      "similarity": 0.43494943,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "5-5",
+      "topic": "3d printing",
+      "title": "This upgrade ruined my prints.",
+      "channel_name": "StuckAtPrototype",
+      "similarity": 0.41310766,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "5-6",
+      "topic": "3d printing",
+      "title": "Filament Loading and Change on A1 Mini from Target ",
+      "channel_name": "CHEP",
+      "similarity": 0.39848173,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "5-7",
+      "topic": "3d printing",
+      "title": "Making Lids Inaccurately on Purpose",
+      "channel_name": "Florian Gadsby",
+      "similarity": 0.37954092,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "5-8",
+      "topic": "3d printing",
+      "title": "Building a Working LEGO ARCADE MACHINE!?! #shorts",
+      "channel_name": "Ethan The Artisan",
+      "similarity": 0.3532953,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "5-9",
+      "topic": "3d printing",
+      "title": "making a clay fidget spinner 🥧♥︎",
+      "channel_name": "Uncomfy",
+      "similarity": 0.35265514,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "5-10",
+      "topic": "3d printing",
+      "title": "CoCreate 2026, I’ll see you in LA. 🚀 @alibaba.com #CoCreate #MakeItReal #alibabacom",
+      "channel_name": "Mylo Prints",
+      "similarity": 0.34918684,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "5-11",
+      "topic": "3d printing",
+      "title": "The Mistake That Costs an Hour Per Print: xTool Omni O1 Review",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.3479424,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "5-12",
+      "topic": "3d printing",
+      "title": "I Spent 500 Hours Making This Tool... And I Had to Let It Go",
+      "channel_name": "NBR Works",
+      "similarity": 0.34508228,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "5-13",
+      "topic": "3d printing",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.34335726,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "5-14",
+      "topic": "3d printing",
+      "title": "Digging in, faster",
+      "channel_name": "Massachusetts Institute of Technology (MIT)",
+      "similarity": 0.34076297,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "5-15",
+      "topic": "3d printing",
+      "title": "if you're building hardware, watch this",
+      "channel_name": "Founders, Inc.",
+      "similarity": 0.32447165,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "5-16",
+      "topic": "3d printing",
+      "title": "Building with Kimi K3 in VS Code",
+      "channel_name": "Visual Studio Code",
+      "similarity": 0.3187908,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "5-17",
+      "topic": "3d printing",
+      "title": "You can make these from 2x4",
+      "channel_name": "Rex Krueger",
+      "similarity": 0.30504093,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "5-18",
+      "topic": "3d printing",
+      "title": "This patch gives you a permanent tattoo",
+      "channel_name": "The Verge",
+      "similarity": 0.30122083,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "5-19",
+      "topic": "3d printing",
+      "title": "Partner Project Tamagotchi Plant Pot",
+      "channel_name": "Andrew Kim",
+      "similarity": 0.29885206,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "5-20",
+      "topic": "3d printing",
+      "title": "DIY Resin Art Tray #resinart #epoxy_resin #resin_art #diy #resinartist",
+      "channel_name": "Resin Art Mary ",
+      "similarity": 0.29698575,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "6-1",
+      "topic": "recipes",
+      "title": "Chef Techniques: Worth It or Gimmick?",
+      "channel_name": "MORE FALLOW",
+      "similarity": 0.46484846,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "6-2",
+      "topic": "recipes",
+      "title": "I Made Meal Prep as Easy as Possible",
+      "channel_name": "Remington James",
+      "similarity": 0.4597432,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "6-3",
+      "topic": "recipes",
+      "title": "The Best Recipe Using Ground Beef",
+      "channel_name": "Fallow",
+      "similarity": 0.44809914,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "6-4",
+      "topic": "recipes",
+      "title": "The 10 Cent Fix for Your Stand Mixer",
+      "channel_name": "America's Test Kitchen",
+      "similarity": 0.4253592,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "6-5",
+      "topic": "recipes",
+      "title": "The best thing to do with stale sourdough",
+      "channel_name": "That Sourdough Gal",
+      "similarity": 0.38242316,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "6-6",
+      "topic": "recipes",
+      "title": "Testing an AI Scrambled Eggs Hack from TikTok! 🍳",
+      "channel_name": "Honeysuckle",
+      "similarity": 0.38001248,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "6-7",
+      "topic": "recipes",
+      "title": "A Better Workflow for Making Music",
+      "channel_name": "TAETRO",
+      "similarity": 0.37958747,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "6-8",
+      "topic": "recipes",
+      "title": "Josh’s arm is actually a grocery list. #KrogerPartner #ad @KrogerCo",
+      "channel_name": "Mythical Kitchen",
+      "similarity": 0.36563104,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "6-9",
+      "topic": "recipes",
+      "title": "ろ過キットを使って醤油をろ過してみた結果・・・",
+      "channel_name": "GENKI LABO",
+      "similarity": 0.36403438,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "6-10",
+      "topic": "recipes",
+      "title": "NEW BEST RODS FISCH - FULL ROD Progression Guide FISCH! Roblox",
+      "channel_name": "ItzVexo",
+      "similarity": 0.3552016,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "6-11",
+      "topic": "recipes",
+      "title": "Experimenting with Sourdough",
+      "channel_name": "Ballerina Farm",
+      "similarity": 0.35419244,
+      "rank": 11,
+      "on_topic": true
+    },
+    {
+      "id": "6-12",
+      "topic": "recipes",
+      "title": "IMO this is the best way to cook a rump cap #beef",
+      "channel_name": "Andy Cooks",
+      "similarity": 0.35077822,
+      "rank": 12,
+      "on_topic": true
+    },
+    {
+      "id": "6-13",
+      "topic": "recipes",
+      "title": "making aspirin from lifesavers",
+      "channel_name": "Reactions",
+      "similarity": 0.34196186,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "6-14",
+      "topic": "recipes",
+      "title": "Step Right Up for a Circus-Themed Dessert Battle! | Dessert Masters",
+      "channel_name": "MasterChef World",
+      "similarity": 0.33942744,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "6-15",
+      "topic": "recipes",
+      "title": "average British cooking show",
+      "channel_name": "Trevor Wallace",
+      "similarity": 0.32869244,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "6-16",
+      "topic": "recipes",
+      "title": "Strings buried too deep?",
+      "channel_name": "StewMac",
+      "similarity": 0.3251112,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "6-17",
+      "topic": "recipes",
+      "title": "These Rhymes Will Help You Play Better Pickleball.",
+      "channel_name": "ThatPickleballGuy - Kyle Koszuta",
+      "similarity": 0.32311615,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "6-18",
+      "topic": "recipes",
+      "title": "Time to make some pots !",
+      "channel_name": "Jonthepotter",
+      "similarity": 0.32259214,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "6-19",
+      "topic": "recipes",
+      "title": "Hot Sauce Experts Blind Taste Test Every Hot Sauce (ft Smokin’ Ed Currie) | Epicurious",
+      "channel_name": "Epicurious",
+      "similarity": 0.31413853,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "6-20",
+      "topic": "recipes",
+      "title": "A coffee drink with anchovies and soy sauce?",
+      "channel_name": "Morgan Eckroth",
+      "similarity": 0.31235224,
+      "rank": 20,
+      "on_topic": true
+    },
+    {
+      "id": "7-1",
+      "topic": "AI tools",
+      "title": "The xTool X1: Instant Reaction",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.50741553,
+      "rank": 1,
+      "on_topic": false
+    },
+    {
+      "id": "7-2",
+      "topic": "AI tools",
+      "title": "I Spent 500 Hours Making This Tool... And I Had to Let It Go",
+      "channel_name": "NBR Works",
+      "similarity": 0.44076386,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "7-3",
+      "topic": "AI tools",
+      "title": "A Better Workflow for Making Music",
+      "channel_name": "TAETRO",
+      "similarity": 0.41799158,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "7-4",
+      "topic": "AI tools",
+      "title": "Obsidian replaced the app I built. ICOR for Life is free.",
+      "channel_name": "ICOR with Tom | AI Productivity",
+      "similarity": 0.4063264,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "7-5",
+      "topic": "AI tools",
+      "title": "complex transitions made easy",
+      "channel_name": "Chris Hau",
+      "similarity": 0.39672422,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "7-6",
+      "topic": "AI tools",
+      "title": "Beginner Guide To Spotting AI Images",
+      "channel_name": "kat 'n chat",
+      "similarity": 0.39620477,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "7-7",
+      "topic": "AI tools",
+      "title": "Chef Techniques: Worth It or Gimmick?",
+      "channel_name": "MORE FALLOW",
+      "similarity": 0.3918785,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "7-8",
+      "topic": "AI tools",
+      "title": "rainbolt found the exact table",
+      "channel_name": "rainbolt clips",
+      "similarity": 0.39120692,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "7-9",
+      "topic": "AI tools",
+      "title": "Partner Project Tamagotchi Plant Pot",
+      "channel_name": "Andrew Kim",
+      "similarity": 0.38979197,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "7-10",
+      "topic": "AI tools",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.387642,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "7-11",
+      "topic": "AI tools",
+      "title": "The MISSING PIECE of Plug-In Solar",
+      "channel_name": "Artisan Electrics",
+      "similarity": 0.36912304,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "7-12",
+      "topic": "AI tools",
+      "title": "Paste This Into Gemini And It Can Run Your Business",
+      "channel_name": "AI Founders",
+      "similarity": 0.36839613,
+      "rank": 12,
+      "on_topic": true
+    },
+    {
+      "id": "7-13",
+      "topic": "AI tools",
+      "title": "Chainsaw Angle Grinder Review",
+      "channel_name": "You Betcha",
+      "similarity": 0.36251244,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "7-14",
+      "topic": "AI tools",
+      "title": "Building with Kimi K3 in VS Code",
+      "channel_name": "Visual Studio Code",
+      "similarity": 0.35799438,
+      "rank": 14,
+      "on_topic": true
+    },
+    {
+      "id": "7-15",
+      "topic": "AI tools",
+      "title": "NO WAY! Cordless DOMINO!",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.35304987,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "7-16",
+      "topic": "AI tools",
+      "title": "if you're building hardware, watch this",
+      "channel_name": "Founders, Inc.",
+      "similarity": 0.35222214,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "7-17",
+      "topic": "AI tools",
+      "title": "Will AI replace programmers? | DHH and Lex Fridman",
+      "channel_name": "Lex Clips",
+      "similarity": 0.351215,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "7-18",
+      "topic": "AI tools",
+      "title": "Claude Design Just Unlocked AI Motion Graphics",
+      "channel_name": "Futurepedia",
+      "similarity": 0.35076433,
+      "rank": 18,
+      "on_topic": true
+    },
+    {
+      "id": "7-19",
+      "topic": "AI tools",
+      "title": "ろ過キットを使って醤油をろ過してみた結果・・・",
+      "channel_name": "GENKI LABO",
+      "similarity": 0.34967023,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "7-20",
+      "topic": "AI tools",
+      "title": "Swaging Copper Tubing On Air Conditioner Service Ports!",
+      "channel_name": "AC Service Tech LLC",
+      "similarity": 0.3489657,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "8-1",
+      "topic": "artificial intelligence",
+      "title": "Will AI replace programmers? | DHH and Lex Fridman",
+      "channel_name": "Lex Clips",
+      "similarity": 0.47727975,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "8-2",
+      "topic": "artificial intelligence",
+      "title": "AI-designed viruses: what you need to know",
+      "channel_name": "nature video",
+      "similarity": 0.46411088,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "8-3",
+      "topic": "artificial intelligence",
+      "title": "Claude Design Just Unlocked AI Motion Graphics",
+      "channel_name": "Futurepedia",
+      "similarity": 0.46241736,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "8-4",
+      "topic": "artificial intelligence",
+      "title": "Beginner Guide To Spotting AI Images",
+      "channel_name": "kat 'n chat",
+      "similarity": 0.44123453,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "8-5",
+      "topic": "artificial intelligence",
+      "title": "Travis Kalanick: How AI Will Transform the Physical World",
+      "channel_name": "a16z",
+      "similarity": 0.4284612,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "8-6",
+      "topic": "artificial intelligence",
+      "title": "Gemini 4 Is Confirmed and Google Just Rebuilt DeepMind!",
+      "channel_name": "Universe of AI",
+      "similarity": 0.39650396,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "8-7",
+      "topic": "artificial intelligence",
+      "title": "Sequoia Capital's $10 Billion Plan for the AI Economy",
+      "channel_name": "Bloomberg Tech",
+      "similarity": 0.39348403,
+      "rank": 7,
+      "on_topic": true
+    },
+    {
+      "id": "8-8",
+      "topic": "artificial intelligence",
+      "title": "What's behind the Google AI shakeup | The Vergecast",
+      "channel_name": "The Verge",
+      "similarity": 0.3638843,
+      "rank": 8,
+      "on_topic": true
+    },
+    {
+      "id": "8-9",
+      "topic": "artificial intelligence",
+      "title": "Amazon’s AI Chatbot Just Snitched on Amazon",
+      "channel_name": "More Perfect Union",
+      "similarity": 0.3579145,
+      "rank": 9,
+      "on_topic": true
+    },
+    {
+      "id": "8-10",
+      "topic": "artificial intelligence",
+      "title": "What's Next in High Energy Capacitors for AI Systems",
+      "channel_name": "Mouser",
+      "similarity": 0.31889978,
+      "rank": 10,
+      "on_topic": true
+    },
+    {
+      "id": "8-11",
+      "topic": "artificial intelligence",
+      "title": "Testing an AI Scrambled Eggs Hack from TikTok! 🍳",
+      "channel_name": "Honeysuckle",
+      "similarity": 0.30833733,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "8-12",
+      "topic": "artificial intelligence",
+      "title": "Paste This Into Gemini And It Can Run Your Business",
+      "channel_name": "AI Founders",
+      "similarity": 0.30641222,
+      "rank": 12,
+      "on_topic": true
+    },
+    {
+      "id": "8-13",
+      "topic": "artificial intelligence",
+      "title": "AI Expert Urges Governments to Bring Development to \"Grinding Halt\" Amid Fears of Rogue Technology",
+      "channel_name": "Democracy Now!",
+      "similarity": 0.2957223,
+      "rank": 13,
+      "on_topic": true
+    },
+    {
+      "id": "8-14",
+      "topic": "artificial intelligence",
+      "title": "The fate of a rejected robot - BBC",
+      "channel_name": "BBC",
+      "similarity": 0.29084387,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "8-15",
+      "topic": "artificial intelligence",
+      "title": "Inside China’s Race to Rule Robotics",
+      "channel_name": "The Wall Street Journal",
+      "similarity": 0.27961925,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "8-16",
+      "topic": "artificial intelligence",
+      "title": "What Is a Vision Language Model (VLM)?",
+      "channel_name": "Bernard Marr",
+      "similarity": 0.27940786,
+      "rank": 16,
+      "on_topic": true
+    },
+    {
+      "id": "8-17",
+      "topic": "artificial intelligence",
+      "title": "I’m not that smart",
+      "channel_name": "Wranglerstar",
+      "similarity": 0.27546197,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "8-18",
+      "topic": "artificial intelligence",
+      "title": "Obsidian replaced the app I built. ICOR for Life is free.",
+      "channel_name": "ICOR with Tom | AI Productivity",
+      "similarity": 0.27400303,
+      "rank": 18,
+      "on_topic": true
+    },
+    {
+      "id": "8-19",
+      "topic": "artificial intelligence",
+      "title": "Digging in, faster",
+      "channel_name": "Massachusetts Institute of Technology (MIT)",
+      "similarity": 0.27154607,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "8-20",
+      "topic": "artificial intelligence",
+      "title": "iPhone 18 Predictions! Will it FOLD?!",
+      "channel_name": "iJustine",
+      "similarity": 0.25242162,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "9-1",
+      "topic": "gardening",
+      "title": "Squeeze the weeds with native groundcovers! | Gardening Australia",
+      "channel_name": "Gardening Australia",
+      "similarity": 0.5049716,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "9-2",
+      "topic": "gardening",
+      "title": "Partner Project Tamagotchi Plant Pot",
+      "channel_name": "Andrew Kim",
+      "similarity": 0.37940603,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "9-3",
+      "topic": "gardening",
+      "title": "Now I can always keep an eye on my favorite little garden helpers🐾 #doglife #gardenpups #petlovers",
+      "channel_name": "Ashley Childers",
+      "similarity": 0.37146753,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "9-4",
+      "topic": "gardening",
+      "title": "I Planted an Invasive Grass on Purpose#BermudaGrass #HighDesert #OffGridLiving #Homesteading",
+      "channel_name": "Frugal Off Grid",
+      "similarity": 0.36925644,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "9-5",
+      "topic": "gardening",
+      "title": "What Does a Japanese Garden Center Look Like? ",
+      "channel_name": "Epic Homesteading",
+      "similarity": 0.3623647,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "9-6",
+      "topic": "gardening",
+      "title": "10 Plants I'll ALWAYS Use After 60 Years of Landscaping",
+      "channel_name": "John & Bob's Smart Soil Solutions",
+      "similarity": 0.36231256,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "9-7",
+      "topic": "gardening",
+      "title": "what to do with monstera roots",
+      "channel_name": "Everything Plants",
+      "similarity": 0.36018592,
+      "rank": 7,
+      "on_topic": true
+    },
+    {
+      "id": "9-8",
+      "topic": "gardening",
+      "title": "leaving the city behind: decluttering my room & starting fresh in the country",
+      "channel_name": "Jusuf",
+      "similarity": 0.35787386,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "9-9",
+      "topic": "gardening",
+      "title": "Time to make some pots !",
+      "channel_name": "Jonthepotter",
+      "similarity": 0.31883237,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "9-10",
+      "topic": "gardening",
+      "title": "Nature's Candies 🍓🫐",
+      "channel_name": "Planted in the Garden",
+      "similarity": 0.3031673,
+      "rank": 10,
+      "on_topic": true
+    },
+    {
+      "id": "9-11",
+      "topic": "gardening",
+      "title": "the end of august is bittersweet 🍃 self-employed artist diaries",
+      "channel_name": "Uncomfy",
+      "similarity": 0.28888303,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "9-12",
+      "topic": "gardening",
+      "title": "This Modern Tropical Home Designed Around Nature | Poolside Living | LuxuryHomes |ArchitectureIdeas",
+      "channel_name": "Design Seed",
+      "similarity": 0.2876495,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "9-13",
+      "topic": "gardening",
+      "title": "Digging / Building a WW1 Trench BY HAND!",
+      "channel_name": "The Strapped Woodsman",
+      "similarity": 0.2873738,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "9-14",
+      "topic": "gardening",
+      "title": "Beekeeping | I DIDN’T EXPECT TO FIND THIS IN MY HIVE!",
+      "channel_name": "David Burns",
+      "similarity": 0.2871359,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "9-15",
+      "topic": "gardening",
+      "title": "Betul at Ballerina Farm",
+      "channel_name": "Ballerina Farm",
+      "similarity": 0.27920377,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "9-16",
+      "topic": "gardening",
+      "title": "Simple is often best. How to get started. Woodworking and DIY with some life advice. ##woodworking",
+      "channel_name": "John McGrath (Man In Shed)",
+      "similarity": 0.27376455,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "9-17",
+      "topic": "gardening",
+      "title": "An 11-Meter Cantilever Over the Landscape | Grama House by Studio Arthur Casas",
+      "channel_name": "Architecture Hunter",
+      "similarity": 0.26497555,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "9-18",
+      "topic": "gardening",
+      "title": "Touring Nina of Greece’s London Townhouse",
+      "channel_name": "House & Garden",
+      "similarity": 0.24453934,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "9-19",
+      "topic": "gardening",
+      "title": "Dec can't wait to crack an egg on Ant after Gemini gives them a lesson in sauna etiquette 🧖‍♂️🥚",
+      "channel_name": "LADbible Entertainment",
+      "similarity": 0.23338547,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "9-20",
+      "topic": "gardening",
+      "title": "Ricky Gervais on Loving Cats, Hating People & Staying Grounded | This Morning",
+      "channel_name": "This Morning",
+      "similarity": 0.22958598,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "10-1",
+      "topic": "fitness",
+      "title": "4 Rules for Abs of Steel",
+      "channel_name": "Calisthenicmovement",
+      "similarity": 0.4569189,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "10-2",
+      "topic": "fitness",
+      "title": "These 4 Things Will Change Home Gyms",
+      "channel_name": "Gluck's Gym",
+      "similarity": 0.44512317,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "10-3",
+      "topic": "fitness",
+      "title": "Every Calisthenics Skill You Should Learn In Order for your First Year! 💪🏾",
+      "channel_name": "STRIQfit",
+      "similarity": 0.42059773,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "10-4",
+      "topic": "fitness",
+      "title": "15 Minute Full-Body Military Calisthenics Workout | Follow Along, Build Muscle, Burn Fat",
+      "channel_name": "Gritty Soldier",
+      "similarity": 0.41795638,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "10-5",
+      "topic": "fitness",
+      "title": "I have NO BUSINESS being this fast 💨 #fast #athlete #speed #speedtraining #sprint",
+      "channel_name": "Jason and Lauren",
+      "similarity": 0.3690365,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "10-6",
+      "topic": "fitness",
+      "title": "How we film our workout videos 🔥",
+      "channel_name": "Juice & Toya",
+      "similarity": 0.36878115,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "10-7",
+      "topic": "fitness",
+      "title": "making a clay fidget spinner 🥧♥︎",
+      "channel_name": "Uncomfy",
+      "similarity": 0.35150403,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "10-8",
+      "topic": "fitness",
+      "title": "this exercise is NOT a pullover... it's better!",
+      "channel_name": "Garage Strength",
+      "similarity": 0.34910566,
+      "rank": 8,
+      "on_topic": true
+    },
+    {
+      "id": "10-9",
+      "topic": "fitness",
+      "title": "The Best Swimwear for Every Body Shape | This Morning",
+      "channel_name": "This Morning",
+      "similarity": 0.33337826,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "10-10",
+      "topic": "fitness",
+      "title": "The Biggest Kettlebell Struggle",
+      "channel_name": "Lebe Stark",
+      "similarity": 0.33162114,
+      "rank": 10,
+      "on_topic": true
+    },
+    {
+      "id": "10-11",
+      "topic": "fitness",
+      "title": "I Tried Best Budget Shoes - Puma Nitro Velocity 4 #shivenderkanwar #running",
+      "channel_name": "Shivender Kanwar",
+      "similarity": 0.32703203,
+      "rank": 11,
+      "on_topic": true
+    },
+    {
+      "id": "10-12",
+      "topic": "fitness",
+      "title": "STOP, You're Training Your Triceps All Wrong!",
+      "channel_name": "ATHLEAN-X™",
+      "similarity": 0.32579863,
+      "rank": 12,
+      "on_topic": true
+    },
+    {
+      "id": "10-13",
+      "topic": "fitness",
+      "title": "YOUR WEIGHT IS TOO HEAVY",
+      "channel_name": "DanaLinnBailey",
+      "similarity": 0.3143633,
+      "rank": 13,
+      "on_topic": true
+    },
+    {
+      "id": "10-14",
+      "topic": "fitness",
+      "title": "Fiber will never not be cool to me... except when it breaks 🦈",
+      "channel_name": "Becca Farsace",
+      "similarity": 0.31007347,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "10-15",
+      "topic": "fitness",
+      "title": "Instantly fix your shooting technique ⚽️🎯⚡️ #7mlctraining",
+      "channel_name": "7mlc",
+      "similarity": 0.3082239,
+      "rank": 15,
+      "on_topic": true
+    },
+    {
+      "id": "10-16",
+      "topic": "fitness",
+      "title": "Average American vs. Nutrition Quiz (Increasing Difficulty)",
+      "channel_name": "Casey Kelly",
+      "similarity": 0.3029061,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "10-17",
+      "topic": "fitness",
+      "title": "Transforming My Sister... #shorts",
+      "channel_name": "TechJoyce",
+      "similarity": 0.302074,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "10-18",
+      "topic": "fitness",
+      "title": "These Used To Be \"Streetball Moves\" 👀",
+      "channel_name": "Get Handles Basketball",
+      "similarity": 0.30186105,
+      "rank": 18,
+      "on_topic": true
+    },
+    {
+      "id": "10-19",
+      "topic": "fitness",
+      "title": "Training to Race the Best in the World",
+      "channel_name": "Allie Ostrander",
+      "similarity": 0.3013611,
+      "rank": 19,
+      "on_topic": true
+    },
+    {
+      "id": "10-20",
+      "topic": "fitness",
+      "title": "Chef Techniques: Worth It or Gimmick?",
+      "channel_name": "MORE FALLOW",
+      "similarity": 0.2975145,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "11-1",
+      "topic": "weight loss",
+      "title": "YOUR WEIGHT IS TOO HEAVY",
+      "channel_name": "DanaLinnBailey",
+      "similarity": 0.48799965,
+      "rank": 1,
+      "on_topic": false
+    },
+    {
+      "id": "11-2",
+      "topic": "weight loss",
+      "title": "This Protein Breakfast Strategy Shrinks Fat and Improves Your Mood",
+      "channel_name": "Thomas DeLauer",
+      "similarity": 0.40846056,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "11-3",
+      "topic": "weight loss",
+      "title": "Average American vs. Nutrition Quiz (Increasing Difficulty)",
+      "channel_name": "Casey Kelly",
+      "similarity": 0.3513044,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "11-4",
+      "topic": "weight loss",
+      "title": "4 Rules for Abs of Steel",
+      "channel_name": "Calisthenicmovement",
+      "similarity": 0.31824043,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "11-5",
+      "topic": "weight loss",
+      "title": "Fluffy LDL particles and cardiovascular risk | Jim Otvos, Ph.D.",
+      "channel_name": "Peter Attia MD",
+      "similarity": 0.31013784,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "11-6",
+      "topic": "weight loss",
+      "title": "15 Minute Full-Body Military Calisthenics Workout | Follow Along, Build Muscle, Burn Fat",
+      "channel_name": "Gritty Soldier",
+      "similarity": 0.30904752,
+      "rank": 6,
+      "on_topic": true
+    },
+    {
+      "id": "11-7",
+      "topic": "weight loss",
+      "title": "Ranking Supplements That Actually Work vs Scams",
+      "channel_name": "Tanner Shuck",
+      "similarity": 0.3066377,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "11-8",
+      "topic": "weight loss",
+      "title": "The Easiest Way to do a 36 Hour Fast",
+      "channel_name": "Dr. Pradip Jamnadas, MD",
+      "similarity": 0.30384684,
+      "rank": 8,
+      "on_topic": true
+    },
+    {
+      "id": "11-9",
+      "topic": "weight loss",
+      "title": "These 4 Things Will Change Home Gyms",
+      "channel_name": "Gluck's Gym",
+      "similarity": 0.29021215,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "11-10",
+      "topic": "weight loss",
+      "title": "Running Marathon Pace in Training to \"Prove\" You Can Do It Is WRECKING Your Progress",
+      "channel_name": "Lee Grantham",
+      "similarity": 0.27939624,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "11-11",
+      "topic": "weight loss",
+      "title": "The Biggest Kettlebell Struggle",
+      "channel_name": "Lebe Stark",
+      "similarity": 0.26821357,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "11-12",
+      "topic": "weight loss",
+      "title": "Stop buying bone broth 🦴",
+      "channel_name": "Andy Cooks",
+      "similarity": 0.26627636,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "11-13",
+      "topic": "weight loss",
+      "title": "Olivia Attwood On the Hidden Risks of Surgery in Turkey | This Morning",
+      "channel_name": "This Morning",
+      "similarity": 0.26425427,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "11-14",
+      "topic": "weight loss",
+      "title": "Skinny 🦞 vs Big Back 🦞",
+      "channel_name": "Danny Kim",
+      "similarity": 0.2628256,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "11-15",
+      "topic": "weight loss",
+      "title": "I Made Meal Prep as Easy as Possible",
+      "channel_name": "Remington James",
+      "similarity": 0.25862598,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "11-16",
+      "topic": "weight loss",
+      "title": "I have NO BUSINESS being this fast 💨 #fast #athlete #speed #speedtraining #sprint",
+      "channel_name": "Jason and Lauren",
+      "similarity": 0.25633293,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "11-17",
+      "topic": "weight loss",
+      "title": "Recent Study Shows This Rather than Calcium May Be Most Important For Bone ",
+      "channel_name": "Talking With Docs",
+      "similarity": 0.256126,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "11-18",
+      "topic": "weight loss",
+      "title": "Save Your Meat From Freezer Burn",
+      "channel_name": "America's Test Kitchen",
+      "similarity": 0.25402793,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "11-19",
+      "topic": "weight loss",
+      "title": "Ignore This Financial Advice",
+      "channel_name": "Rachel Cruze",
+      "similarity": 0.25324818,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "11-20",
+      "topic": "weight loss",
+      "title": "STOP, You're Training Your Triceps All Wrong!",
+      "channel_name": "ATHLEAN-X™",
+      "similarity": 0.2492171,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "12-1",
+      "topic": "trading",
+      "title": "Growing a $2k Account to $65,662.04 in 30 Days (My Day Trading Strategy)",
+      "channel_name": "Ross Cameron - Warrior Trading",
+      "similarity": 0.39766335,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "12-2",
+      "topic": "trading",
+      "title": "How to Trade SKINS in Fortnite Chapter 7!",
+      "channel_name": "oShven",
+      "similarity": 0.36427313,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "12-3",
+      "topic": "trading",
+      "title": "how it feels playing card drafting games sometimes",
+      "channel_name": "ProZD",
+      "similarity": 0.33600408,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "12-4",
+      "topic": "trading",
+      "title": "Gold is EXPLODING!",
+      "channel_name": "TraderNick",
+      "similarity": 0.33574757,
+      "rank": 4,
+      "on_topic": true
+    },
+    {
+      "id": "12-5",
+      "topic": "trading",
+      "title": "How Ken Griffin Managed To Save Citadel In 2008 One Day At A Time",
+      "channel_name": "Bear Bull Traders",
+      "similarity": 0.33382922,
+      "rank": 5,
+      "on_topic": true
+    },
+    {
+      "id": "12-6",
+      "topic": "trading",
+      "title": "The xTool X1: Instant Reaction",
+      "channel_name": "Make or Break Shop",
+      "similarity": 0.3107078,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "12-7",
+      "topic": "trading",
+      "title": "I Opened a $1,000 Pokemon Box... #shorts @collectrapp #collectr",
+      "channel_name": "TechJoyce",
+      "similarity": 0.29554734,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "12-8",
+      "topic": "trading",
+      "title": "A Better Workflow for Making Music",
+      "channel_name": "TAETRO",
+      "similarity": 0.28943318,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "12-9",
+      "topic": "trading",
+      "title": "Iran says it has reached agreement with Oman on Strait of Hormuz shipping route",
+      "channel_name": "CBC News",
+      "similarity": 0.27596578,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "12-10",
+      "topic": "trading",
+      "title": "Agility Is Faster AND Easier Now! #osrs #tips",
+      "channel_name": "Kaoz OSRS",
+      "similarity": 0.27351278,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "12-11",
+      "topic": "trading",
+      "title": "I Build 2 Coffee Tables - Employee Vs Boss",
+      "channel_name": "John Malecki",
+      "similarity": 0.25742427,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "12-12",
+      "topic": "trading",
+      "title": "Lulu Onam Market",
+      "channel_name": "Gulf News",
+      "similarity": 0.2546402,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "12-13",
+      "topic": "trading",
+      "title": "Trump: Deal to open Strait of Hormuz could happen any moment | FOX 13 Seattle",
+      "channel_name": "FOX 13 Seattle",
+      "similarity": 0.2445928,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "12-14",
+      "topic": "trading",
+      "title": "complex transitions made easy",
+      "channel_name": "Chris Hau",
+      "similarity": 0.2434977,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "12-15",
+      "topic": "trading",
+      "title": "Secrets for more shooting range 🎯🏀",
+      "channel_name": "Get Handles Basketball",
+      "similarity": 0.2428453,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "12-16",
+      "topic": "trading",
+      "title": "I Shut Down My $10 Million Woodworking Business",
+      "channel_name": "Cutting It Close",
+      "similarity": 0.24241057,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "12-17",
+      "topic": "trading",
+      "title": "Instantly fix your shooting technique ⚽️🎯⚡️ #7mlctraining",
+      "channel_name": "7mlc",
+      "similarity": 0.24177806,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "12-18",
+      "topic": "trading",
+      "title": "Top 10 Collectible Games - with Tom and Zee",
+      "channel_name": "The Dice Tower",
+      "similarity": 0.24017482,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "12-19",
+      "topic": "trading",
+      "title": "Every Business Can Hit $100K/Month Profit",
+      "channel_name": "Alex Hormozi",
+      "similarity": 0.23861524,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "12-20",
+      "topic": "trading",
+      "title": "The cost of adding gold edges to a book",
+      "channel_name": "Tibees",
+      "similarity": 0.23608503,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "13-1",
+      "topic": "crypto",
+      "title": "Tokens Are the New Dollars | Stripe's Will Gaybrick & David George",
+      "channel_name": "a16z",
+      "similarity": 0.33543867,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "13-2",
+      "topic": "crypto",
+      "title": "AI Expert Urges Governments to Bring Development to \"Grinding Halt\" Amid Fears of Rogue Technology",
+      "channel_name": "Democracy Now!",
+      "similarity": 0.32682082,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "13-3",
+      "topic": "crypto",
+      "title": "I’ve kept this secret for months now",
+      "channel_name": "PointCrow",
+      "similarity": 0.32152647,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "13-4",
+      "topic": "crypto",
+      "title": "How Ken Griffin Managed To Save Citadel In 2008 One Day At A Time",
+      "channel_name": "Bear Bull Traders",
+      "similarity": 0.31987166,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "13-5",
+      "topic": "crypto",
+      "title": "MUSK publica ALGORITMO do X para EXPOR REGRA RIDÍCULA de CENSURA do TSE a CANDIDATOS",
+      "channel_name": "safesrc",
+      "similarity": 0.31981626,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "13-6",
+      "topic": "crypto",
+      "title": "I Opened a $1,000 Pokemon Box... #shorts @collectrapp #collectr",
+      "channel_name": "TechJoyce",
+      "similarity": 0.3186771,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "13-7",
+      "topic": "crypto",
+      "title": "Day 219 – Vibe Coding an App Until I Make $1,000,000 | ARR: $196,200",
+      "channel_name": "BridgeMind",
+      "similarity": 0.30952412,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "13-8",
+      "topic": "crypto",
+      "title": "Is Trump's new 'Truth API' insider trading? | About That",
+      "channel_name": "CBC News",
+      "similarity": 0.30866602,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "13-9",
+      "topic": "crypto",
+      "title": "Lenovo Just Tried to Scam Everyone...",
+      "channel_name": "Hipyo Tech",
+      "similarity": 0.30800474,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "13-10",
+      "topic": "crypto",
+      "title": "How ChatGPT Handles 900 Million Users",
+      "channel_name": "KodeKloud",
+      "similarity": 0.30644706,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "13-11",
+      "topic": "crypto",
+      "title": "Gold is EXPLODING!",
+      "channel_name": "TraderNick",
+      "similarity": 0.30534583,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "13-12",
+      "topic": "crypto",
+      "title": "$409,000 In Gold Coins",
+      "channel_name": "Rachel Cruze",
+      "similarity": 0.3041211,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "13-13",
+      "topic": "crypto",
+      "title": "if you're building hardware, watch this",
+      "channel_name": "Founders, Inc.",
+      "similarity": 0.29446754,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "13-14",
+      "topic": "crypto",
+      "title": "Testing an AI Scrambled Eggs Hack from TikTok! 🍳",
+      "channel_name": "Honeysuckle",
+      "similarity": 0.28856003,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "13-15",
+      "topic": "crypto",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.2847002,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "13-16",
+      "topic": "crypto",
+      "title": "making a clay fidget spinner 🥧♥︎",
+      "channel_name": "Uncomfy",
+      "similarity": 0.28388909,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "13-17",
+      "topic": "crypto",
+      "title": "Obsidian replaced the app I built. ICOR for Life is free.",
+      "channel_name": "ICOR with Tom | AI Productivity",
+      "similarity": 0.2830823,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "13-18",
+      "topic": "crypto",
+      "title": "When you trust a funfair fortune teller - BBC",
+      "channel_name": "BBC",
+      "similarity": 0.28247598,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "13-19",
+      "topic": "crypto",
+      "title": "The cost of adding gold edges to a book",
+      "channel_name": "Tibees",
+      "similarity": 0.282243,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "13-20",
+      "topic": "crypto",
+      "title": "AI-designed viruses: what you need to know",
+      "channel_name": "nature video",
+      "similarity": 0.27916402,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "14-1",
+      "topic": "smartphone",
+      "title": "LG G6 Review: 2 Reasons You SHOULDN'T Buy…",
+      "channel_name": "Smart Home Sounds",
+      "similarity": 0.43687373,
+      "rank": 1,
+      "on_topic": true
+    },
+    {
+      "id": "14-2",
+      "topic": "smartphone",
+      "title": "The Light Flip Phone Broke Marques",
+      "channel_name": "Waveform Clips",
+      "similarity": 0.41224885,
+      "rank": 2,
+      "on_topic": true
+    },
+    {
+      "id": "14-3",
+      "topic": "smartphone",
+      "title": "iPhone 18 Predictions! Will it FOLD?!",
+      "channel_name": "iJustine",
+      "similarity": 0.39853945,
+      "rank": 3,
+      "on_topic": true
+    },
+    {
+      "id": "14-4",
+      "topic": "smartphone",
+      "title": "The most Powerful PC Handheld I Own 😧",
+      "channel_name": "GG_Sheed",
+      "similarity": 0.39550063,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "14-5",
+      "topic": "smartphone",
+      "title": "Seestar S50 Pro Review: The Best Smart Telescope Ever!",
+      "channel_name": "AstroBackyard",
+      "similarity": 0.35731697,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "14-6",
+      "topic": "smartphone",
+      "title": "Lenovo Just Tried to Scam Everyone...",
+      "channel_name": "Hipyo Tech",
+      "similarity": 0.33368683,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "14-7",
+      "topic": "smartphone",
+      "title": "70mai A900 Dash Cam",
+      "channel_name": "Yorkshire Car Restoration",
+      "similarity": 0.31173944,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "14-8",
+      "topic": "smartphone",
+      "title": "Google Pixel 11 event in 8 minutes",
+      "channel_name": "The Verge",
+      "similarity": 0.3068281,
+      "rank": 8,
+      "on_topic": true
+    },
+    {
+      "id": "14-9",
+      "topic": "smartphone",
+      "title": "Paste This Into Gemini And It Can Run Your Business",
+      "channel_name": "AI Founders",
+      "similarity": 0.29083514,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "14-10",
+      "topic": "smartphone",
+      "title": "NO WAY! Cordless DOMINO!",
+      "channel_name": "Finish Carpentry TV",
+      "similarity": 0.2837775,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "14-11",
+      "topic": "smartphone",
+      "title": "The rumor that Disney framed HEXED for phones is…. weird 👀 #animation #movies",
+      "channel_name": "No The Robot",
+      "similarity": 0.27138847,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "14-12",
+      "topic": "smartphone",
+      "title": "making a clay fidget spinner 🥧♥︎",
+      "channel_name": "Uncomfy",
+      "similarity": 0.26161316,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "14-13",
+      "topic": "smartphone",
+      "title": "The FX5 is the end of the digital camera era.",
+      "channel_name": "Matti Haapoja",
+      "similarity": 0.2531659,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "14-14",
+      "topic": "smartphone",
+      "title": "A Better Workflow for Making Music",
+      "channel_name": "TAETRO",
+      "similarity": 0.24908206,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "14-15",
+      "topic": "smartphone",
+      "title": "Day 219 – Vibe Coding an App Until I Make $1,000,000 | ARR: $196,200",
+      "channel_name": "BridgeMind",
+      "similarity": 0.24589786,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "14-16",
+      "topic": "smartphone",
+      "title": "Firestick Sideloading BROKEN?! Downloader Suddenly Disappears",
+      "channel_name": "Triple M",
+      "similarity": 0.24127193,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "14-17",
+      "topic": "smartphone",
+      "title": "I had to assemble this laptop. Then I  installed #omarchy on it.",
+      "channel_name": "NetworkChuck",
+      "similarity": 0.24051252,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "14-18",
+      "topic": "smartphone",
+      "title": "The Best Computer Product Design EVER!",
+      "channel_name": "EEVblog",
+      "similarity": 0.2392216,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "14-19",
+      "topic": "smartphone",
+      "title": "Claude Design Just Unlocked AI Motion Graphics",
+      "channel_name": "Futurepedia",
+      "similarity": 0.2374674,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "14-20",
+      "topic": "smartphone",
+      "title": "This $10 dongle may be all you need #audiophile #headphones #inearmonitors",
+      "channel_name": "The Headphone Show",
+      "similarity": 0.23702155,
+      "rank": 20,
+      "on_topic": false
+    },
+    {
+      "id": "15-1",
+      "topic": "air fryer recipes",
+      "title": "The Best Recipe Using Ground Beef",
+      "channel_name": "Fallow",
+      "similarity": 0.4242118,
+      "rank": 1,
+      "on_topic": false
+    },
+    {
+      "id": "15-2",
+      "topic": "air fryer recipes",
+      "title": "Chef Techniques: Worth It or Gimmick?",
+      "channel_name": "MORE FALLOW",
+      "similarity": 0.4029035,
+      "rank": 2,
+      "on_topic": false
+    },
+    {
+      "id": "15-3",
+      "topic": "air fryer recipes",
+      "title": "ろ過キットを使って醤油をろ過してみた結果・・・",
+      "channel_name": "GENKI LABO",
+      "similarity": 0.3847322,
+      "rank": 3,
+      "on_topic": false
+    },
+    {
+      "id": "15-4",
+      "topic": "air fryer recipes",
+      "title": "Korean Fried Chicken🇰🇷 vs Black Fried Chicken✊🏿",
+      "channel_name": "Danny Kim",
+      "similarity": 0.37952584,
+      "rank": 4,
+      "on_topic": false
+    },
+    {
+      "id": "15-5",
+      "topic": "air fryer recipes",
+      "title": "Save Your Meat From Freezer Burn",
+      "channel_name": "America's Test Kitchen",
+      "similarity": 0.37616175,
+      "rank": 5,
+      "on_topic": false
+    },
+    {
+      "id": "15-6",
+      "topic": "air fryer recipes",
+      "title": "I Made Meal Prep as Easy as Possible",
+      "channel_name": "Remington James",
+      "similarity": 0.36472976,
+      "rank": 6,
+      "on_topic": false
+    },
+    {
+      "id": "15-7",
+      "topic": "air fryer recipes",
+      "title": "Testing an AI Scrambled Eggs Hack from TikTok! 🍳",
+      "channel_name": "Honeysuckle",
+      "similarity": 0.36197707,
+      "rank": 7,
+      "on_topic": false
+    },
+    {
+      "id": "15-8",
+      "topic": "air fryer recipes",
+      "title": "Josh’s arm is actually a grocery list. #KrogerPartner #ad @KrogerCo",
+      "channel_name": "Mythical Kitchen",
+      "similarity": 0.3311509,
+      "rank": 8,
+      "on_topic": false
+    },
+    {
+      "id": "15-9",
+      "topic": "air fryer recipes",
+      "title": "making a clay fidget spinner 🥧♥︎",
+      "channel_name": "Uncomfy",
+      "similarity": 0.3036979,
+      "rank": 9,
+      "on_topic": false
+    },
+    {
+      "id": "15-10",
+      "topic": "air fryer recipes",
+      "title": "IMO this is the best way to cook a rump cap #beef",
+      "channel_name": "Andy Cooks",
+      "similarity": 0.29338604,
+      "rank": 10,
+      "on_topic": false
+    },
+    {
+      "id": "15-11",
+      "topic": "air fryer recipes",
+      "title": "Coach A Fighter Guide! (Codes, Tips & Tricks, Best Fighters, Get MONEY FAST) ROBLOX",
+      "channel_name": "ItzVexo",
+      "similarity": 0.2931017,
+      "rank": 11,
+      "on_topic": false
+    },
+    {
+      "id": "15-12",
+      "topic": "air fryer recipes",
+      "title": "I Boiled Bacon... Again",
+      "channel_name": "TriggTube",
+      "similarity": 0.29135096,
+      "rank": 12,
+      "on_topic": false
+    },
+    {
+      "id": "15-13",
+      "topic": "air fryer recipes",
+      "title": "Experimenting with Sourdough",
+      "channel_name": "Ballerina Farm",
+      "similarity": 0.2886371,
+      "rank": 13,
+      "on_topic": false
+    },
+    {
+      "id": "15-14",
+      "topic": "air fryer recipes",
+      "title": "This Protein Breakfast Strategy Shrinks Fat and Improves Your Mood",
+      "channel_name": "Thomas DeLauer",
+      "similarity": 0.28633726,
+      "rank": 14,
+      "on_topic": false
+    },
+    {
+      "id": "15-15",
+      "topic": "air fryer recipes",
+      "title": "Hot Sauce Experts Blind Taste Test Every Hot Sauce (ft Smokin’ Ed Currie) | Epicurious",
+      "channel_name": "Epicurious",
+      "similarity": 0.28624356,
+      "rank": 15,
+      "on_topic": false
+    },
+    {
+      "id": "15-16",
+      "topic": "air fryer recipes",
+      "title": "Step Right Up for a Circus-Themed Dessert Battle! | Dessert Masters",
+      "channel_name": "MasterChef World",
+      "similarity": 0.28318977,
+      "rank": 16,
+      "on_topic": false
+    },
+    {
+      "id": "15-17",
+      "topic": "air fryer recipes",
+      "title": "Secrets for more shooting range 🎯🏀",
+      "channel_name": "Get Handles Basketball",
+      "similarity": 0.27846915,
+      "rank": 17,
+      "on_topic": false
+    },
+    {
+      "id": "15-18",
+      "topic": "air fryer recipes",
+      "title": "How we film our workout videos 🔥",
+      "channel_name": "Juice & Toya",
+      "similarity": 0.27659726,
+      "rank": 18,
+      "on_topic": false
+    },
+    {
+      "id": "15-19",
+      "topic": "air fryer recipes",
+      "title": "Landing my seaplane on Torch Lake to get a tasty double cheeseburger from the Burger Barge.",
+      "channel_name": "The Commercial Pilot",
+      "similarity": 0.27219796,
+      "rank": 19,
+      "on_topic": false
+    },
+    {
+      "id": "15-20",
+      "topic": "air fryer recipes",
+      "title": "Why does your popcorn never taste like movie theater popcorn? #food #business #history",
+      "channel_name": "Phil Edwards",
+      "similarity": 0.2710023,
+      "rank": 20,
+      "on_topic": false
+    }
+  ]
+}
