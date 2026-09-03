@@ -1,5 +1,6 @@
 // All admin SQL lives here so the CLI (next step) can reuse the same functions.
 import { unstable_cache } from 'next/cache';
+import type { BandTable } from '../scoring/bands';
 import { q, one } from './db';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
@@ -284,12 +285,14 @@ export type VideoPageData = {
   video: any;
   snapshots: { at: string; views: number; days_since_published: number; like_count: number; comment_count: number }[];
   samples: { at: string; views: number }[];
-  thumbs: { version: number; first_seen: string; last_checked: string; phash: string | null; r2_uploaded_at: string | null }[];
+  thumbs: { version: number; first_seen: string; last_checked: string; sha256: string | null; phash: string | null; r2_uploaded_at: string | null }[];
   titles: { version: number; title: string; first_seen: string }[];
   score: OutlierRow | null;
   mult: Record<number, number>;
   /** Fitted growth past day 30, so an old video's chart is not flat at the baseline. */
   longtail: { ages: number[]; mult: number[] } | null;
+  /** Fitted forecast band (lib/scoring/bands.ts); null until fit-forecast-bands has run. */
+  bands: BandTable | null;
 };
 
 export async function videoPage(id: string): Promise<VideoPageData> {
@@ -309,16 +312,17 @@ export async function videoPage(id: string): Promise<VideoPageData> {
     ),
     q<any>(`select sampled_at as at, view_count as views from view_samples where video_id = $1 order by sampled_at`, [id]),
     q<any>(
-      `select version, first_seen, last_checked, phash, r2_uploaded_at
+      `select version, first_seen, last_checked, sha256, phash, r2_uploaded_at
        from thumbnail_versions where video_id = $1 order by version`,
       [id]
     ),
     q<any>(`select version, title, first_seen from title_versions where video_id = $1 order by version`, [id]),
     one<OutlierRow>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
-    one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null }>(
-      `select params->'mult' as mult, params->'longtail' as longtail
+    one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null; bands: BandTable | null }>(
+      `select params->'mult' as mult, params->'longtail' as longtail, params->'bands' as bands
        from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
     ),
   ]);
-  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {}, longtail: params?.longtail ?? null };
+  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {},
+           longtail: params?.longtail ?? null, bands: params?.bands ?? null };
 }

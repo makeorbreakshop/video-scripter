@@ -8,15 +8,19 @@
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
 import { q, one } from '../admin/db';
 import {
-  mergeActuals, expectedCurve, packagingMarkers,
+  mergeActuals, packagingMarkers,
   type Actual, type CurvePoint, type Marker,
   expectedAtAge } from '../admin/video-curve';
-import { buildSeries, type SeriesPoint } from './chart-series';
+import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
 import { gapReasonWords, MIN_PRIORS } from '../scoring/score-gaps';
 import { thumbUrl } from '../thumbs/storage';
+import { thumbnailVariants, testState, type Variant, type TestState } from './packaging';
+import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
 import { experiments, type Experiment } from './experiment';
 
-export type ThumbVersionView = { version: number; first_seen: string; url: string };
+/** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
+ *  to an earlier image is a new version but the same variant (lib/app/packaging.ts). */
+export type ThumbVersionView = { version: number; first_seen: string; url: string; variant: string; isReturn: boolean };
 export type TitleVersionView = { version: number; title: string; first_seen: string };
 
 export type VideoPageView = {
@@ -47,6 +51,14 @@ export type VideoPageView = {
   markers: Marker[];
   experiments: Experiment[];
   thumbs: ThumbVersionView[];
+  /** distinct thumbnail images, in first-seen order, with the versions that showed each */
+  variants: Variant[];
+  /** is this a running Test & Compare, a settled one, or a single swap */
+  packaging: TestState;
+  /** the packaging history as the timeline's clips: published, the test, the changes, now */
+  timeline: TimelineClip[];
+  /** mono day ticks above the track */
+  timelineTicks: string[];
   titles: TitleVersionView[];
   thumbUrls: Record<number, string>;
   defaultZoom: '72h' | 'full';
@@ -160,7 +172,7 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
 }
 
 export async function loadVideoPage(id: string, now: number = Date.now()): Promise<VideoPageView | null> {
-  const { video: v, snapshots, samples, thumbs, titles, score, mult, longtail } = await adminVideoPage(id);
+  const { video: v, snapshots, samples, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
   if (!v) return null;
 
   const actuals = mergeActuals(v.published_at, snapshots, samples);
@@ -170,9 +182,6 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   // still speak to. Past a year the long tail is flat, so today is the end of the chart.
   const horizonDay = [30, 60, 90, 180, 365].find((d) => d > ageDays) ?? ageDays;
   const maxDay = Math.max(horizonDay, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays);
-  // Curves start at the first actual point or one hour: the launch ladder (hour buckets fitted
-  // from the 5-minute samples, see lib/scoring/core fitLaunchLadder) gives the first day a shape.
-  const startDay = Math.min(actuals.length ? actuals[0].day : 1 / 24, 1 / 24);
 
   const thumbUrls: Record<number, string> = {};
   for (const t of thumbs) thumbUrls[t.version] = versionThumbUrl(id, t.version);
@@ -183,6 +192,9 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     .sort((a, b) => b - a)[0];
 
   const hero = heroThumb(id, thumbs, v.thumbnail_url ?? null);
+  const thumbRows = thumbs.map((t) => ({ version: t.version, sha256: t.sha256 ?? null, phash: t.phash ?? null, first_seen: t.first_seen }));
+  const { variants, states } = thumbnailVariants(thumbRows);
+  const variantOf = new Map(states.map((s) => [s.version, s]));
 
   return {
     id,
@@ -200,22 +212,38 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     thumbFallbackUrl: hero.fallback,
     score,
     actuals,
-    curve: expectedCurve(score?.baseline ?? null, mult, maxDay, 60, startDay, longtail),
-    // The whole drawn line, in one pass: the implied launch we never sampled, the measurements,
-    // and the forecast onto est30. No count rule — a video with 20 samples and one with 3 get
-    // the same treatment (lib/app/chart-series.ts).
-    series: buildSeries({
-      actuals,
-      baseline: score?.baseline ?? null,
-      est30: score?.est30 ?? null,
-      mult,
-      longtail,
-      horizonDay: maxDay,
-      ageDays,
-    }),
+    ...(() => {
+      // One grid for both lines: the series days. See channelCurve for why they cannot differ.
+      const series = buildSeries({
+        actuals,
+        baseline: score?.baseline ?? null,
+        est30: score?.est30 ?? null,
+        mult,
+        longtail,
+        horizonDay: maxDay,
+        ageDays,
+        bands,
+      });
+      return { series, curve: channelCurve(series, score?.baseline ?? null, mult, longtail) };
+    })(),
     markers,
     experiments: experiments(v.published_at, samples, markers, now, snapshots.map((p: any) => ({ at: new Date(new Date(p.at).getTime()).toISOString(), views: p.views }))),
-    thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),
+    thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
+      variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),
+    variants,
+    packaging: testState(thumbRows, now),
+    ...(() => {
+      // The timeline is built here rather than in the page so the clip list is plain
+      // serialisable data by the time it crosses into the client component.
+      const clips = buildTimeline({
+        publishedAt: new Date(v.published_at).toISOString(),
+        thumbs: thumbRows.map((t) => ({ ...t, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),
+        titles: titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() })),
+        score: score?.score != null ? Number(score.score) : null,
+        now,
+      });
+      return { timeline: clips, timelineTicks: timelineTicks(clips) };
+    })(),
     titles: titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() })),
     thumbUrls,
     // The launch zoom is only meaningful while the 15-minute samples are still arriving.

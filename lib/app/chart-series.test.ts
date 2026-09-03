@@ -1,4 +1,4 @@
-import { buildSeries, type SeriesPoint } from './chart-series';
+import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -41,6 +41,9 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
       expect(p!.views).toBeGreaterThan(0);
     }
 
+    // the 3.48 -> 5.002 stretch is 1.5 days, inside the threshold, so it reads as measured
+    expect(kindsAt(s, 3.48, 5.33)).toEqual(new Set(['measured']));
+
     // the measurements themselves are measured, at their own view counts
     const first = s.find((p) => p.day === 3.48)!;
     expect(first.kind).toBe('measured');
@@ -62,9 +65,40 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
       baseline: 6808.5, est30: 19001, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 4.0,
     });
     expect(kindsAt(s, 0, 3.19)).toEqual(new Set(['implied']));
-    expect(s.find((p) => p.day === 3.2)!.kind).toBe('measured');
-    expect(s.find((p) => p.day === 4.0)!.kind).toBe('measured');
+    // the three samples are within 2 days of each other, so the stretch they span is measured
+    expect(kindsAt(s, 3.2, 4.0)).toEqual(new Set(['measured']));
     expect(kindsAt(s, 4.01, 30)).toEqual(new Set(['forecast']));
+  });
+
+  it('joins consecutive measurements with a measured segment when they are close together', () => {
+    // Two samples a day apart is a tracked stretch, not a reconstruction: the line between
+    // them is measured (linear between the samples), not a hole and not implied.
+    const s = buildSeries({
+      actuals: [{ day: 2.4, views: 13973 }, { day: 3.4, views: 14800 }],
+      baseline: 6808.5, est30: 19001, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 3.4,
+    });
+    const between = s.filter((p) => p.day > 2.4 && p.day < 3.4);
+    expect(between.length).toBeGreaterThan(0);
+    expect(new Set(between.map((p) => p.kind))).toEqual(new Set(['measured']));
+    // linear between the samples: day 2.9 is halfway
+    const mid = s.find((p) => p.day === 3)!;
+    expect(mid.views).toBeCloseTo(13973 + (14800 - 13973) * ((3 - 2.4) / (3.4 - 2.4)), 6);
+    // and no hole: every integer day from 0 to 30 exists
+    for (let d = 0; d <= 30; d++) expect(s.some((p) => p.day === d)).toBe(true);
+  });
+
+  it('a gap of exactly the threshold is still measured; past it, implied', () => {
+    const close = buildSeries({
+      actuals: [{ day: 1, views: 100 }, { day: 3, views: 300 }],
+      baseline: 200, est30: 500, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 3,
+    });
+    expect(close.find((p) => p.day === 2)!.kind).toBe('measured');
+    const far = buildSeries({
+      actuals: [{ day: 1, views: 100 }, { day: 3.5, views: 300 }],
+      baseline: 200, est30: 500, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 3.5,
+    });
+    expect(far.find((p) => p.day === 2)!.kind).toBe('implied');
+    expect(far.find((p) => p.day === 3)!.kind).toBe('implied');
   });
 
   it('marks the days between two measurements 6 days apart as implied', () => {
@@ -147,5 +181,30 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
     for (let i = 1; i < widths.length; i++) {
       expect(widths[i - 1]).toBeGreaterThan(widths[i]); // earlier day = wider band
     }
+  });
+});
+
+describe('channelCurve shares the series days', () => {
+  it('samples the typical curve on exactly the days the series has, and no others', () => {
+    // The chart zips both into one row per day. When the typical curve had its own log-spaced
+    // grid, its extra days became rows with no series value, and recharts broke the solid
+    // measured line into pieces at each of them (4 segments on GmIn1W9V8Rs).
+    const s = buildSeries(MALECKI);
+    const c = channelCurve(s, MALECKI.baseline, MULT, LONGTAIL);
+    expect(c.map((p) => p.day)).toEqual(s.map((p) => p.day));
+    for (const p of c) expect(p.expected).toBeGreaterThan(0);
+  });
+
+  it('is empty without a baseline, rather than a curve around nothing', () => {
+    const s = buildSeries({ ...MALECKI, baseline: null, est30: null });
+    expect(channelCurve(s, null, MULT, LONGTAIL)).toEqual([]);
+  });
+
+  it('leaves no day with a curve value but no series value, or the reverse', () => {
+    const s = buildSeries(MALECKI);
+    const c = channelCurve(s, MALECKI.baseline, MULT, LONGTAIL);
+    const sd = new Set(s.map((p) => p.day)), cd = new Set(c.map((p) => p.day));
+    expect([...cd].filter((d) => !sd.has(d))).toEqual([]);
+    expect([...sd].filter((d) => !cd.has(d))).toEqual([]);
   });
 });

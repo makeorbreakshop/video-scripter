@@ -11,7 +11,8 @@
 // expectedAt / the fitted global `mult`), used only as a SHAPE: each segment is re-anchored on
 // the real measurements next to it, so the implied path passes exactly through the first
 // measurement instead of floating beside it.
-import { expectedAt, forecastAt, type Mult, type Longtail } from '../admin/video-curve';
+import { expectedAt, forecastAt, type Mult, type Longtail, type CurvePoint } from '../admin/video-curve';
+import { forecastBand, FITTED_BANDS_2026_09_03, type BandTable } from '../scoring/bands';
 
 export type SeriesKind = 'measured' | 'implied' | 'forecast';
 export type SeriesPoint = { day: number; views: number; kind: SeriesKind; band?: [number, number] };
@@ -27,6 +28,11 @@ export interface BuildSeriesInput {
   horizonDay: number;
   /** Age now; only used when there is nothing measured at all. */
   ageDays?: number;
+  /**
+   * Fitted forecast band (score_params.params.bands). Falls back to the 2026-09-03 fit when
+   * absent; pass null explicitly for no band at all.
+   */
+  bands?: BandTable | null;
 }
 
 /** Integer days are drawn one by one up to here; past it the grid goes log-spaced. */
@@ -37,10 +43,14 @@ const LAUNCH_DAYS = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24, 18 / 24];
 /** Log-scale uncertainty of the implied past at the first measurement, and per log-day before it. */
 const IMPLIED_SIGMA0 = 0.06;
 const IMPLIED_SIGMA_PER_LOGDAY = 0.55;
+/**
+ * A stretch between two consecutive measurements this far apart or less is still `measured`:
+ * the tracker was running, and a straight line between two counts a day apart says nothing the
+ * samples do not. Past it we are reconstructing, so the stretch becomes `implied`.
+ */
+export const MEASURED_GAP_DAYS = 2;
 /** Interpolating a gap between two real points is a much smaller claim than the launch is. */
 const GAP_SIGMA = 0.12;
-/** Forecast uncertainty at day 30, per log-day past the last measurement. */
-const FORECAST_SIGMA_PER_LOGDAY = 0.30;
 
 const lg = (d: number) => Math.log(Math.max(d, 0) + 1);
 
@@ -84,6 +94,7 @@ export function seriesDays(horizonDay: number, actualDays: number[]): number[] {
 export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   const { mult, horizonDay } = input;
   const lt = input.longtail ?? null;
+  const bands = input.bands === undefined ? FITTED_BANDS_2026_09_03 : input.bands;
   const acts = dedupeActuals(input.actuals || []);
   const shape = shapeFn(input.baseline, mult, lt);
   const days = seriesDays(horizonDay, acts.map((a) => a.day));
@@ -114,8 +125,11 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       const views = est
         ? forecastAt(last.views, last.day, est, mult, day, lt)
         : anchored(day, last);
-      const sigma = FORECAST_SIGMA_PER_LOGDAY * Math.max(lg(day) - lg(last.day), 0);
-      out.push({ day, views, kind: 'forecast', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+      // The band is the corpus's own forecast error at the age of the LAST measurement, not a
+      // constant: it opens from nothing at that point (the video is there, we counted it) to
+      // the fitted 10-90 range at day 30. lib/scoring/bands.ts.
+      const band = forecastBand(views, day, last.day, bands) ?? undefined;
+      out.push({ day, views, kind: 'forecast', ...(band ? { band } : {}) });
       continue;
     }
 
@@ -138,10 +152,17 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       continue;
     }
 
-    // ---- implied gap: between two real measurements ----
+    // ---- between two real measurements ----
     let lo = acts[0], hi = acts[acts.length - 1];
     for (let i = 1; i < acts.length; i++) {
       if (acts[i].day >= day) { lo = acts[i - 1]; hi = acts[i]; break; }
+    }
+    if (hi.day - lo.day <= MEASURED_GAP_DAYS) {
+      // Close enough that the tracker was watching the whole way: a straight line between two
+      // counts a day apart claims nothing the samples do not. No band — nothing is inferred.
+      const t = (day - lo.day) / (hi.day - lo.day);
+      out.push({ day, views: lo.views + (hi.views - lo.views) * t, kind: 'measured' });
+      continue;
     }
     const span = lg(hi.day) - lg(lo.day);
     const w = span > 0 ? (lg(day) - lg(lo.day)) / span : 0;
@@ -153,4 +174,22 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
     out.push({ day, views, kind: 'implied', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
   }
   return out;
+}
+
+/**
+ * The channel's typical curve, sampled on exactly the series' days.
+ *
+ * The chart zips the two into one row per day. When the typical curve carried its own
+ * log-spaced grid, its extra days produced rows with a curve value and no series value — and
+ * recharts, told (correctly) not to connect nulls, broke the solid measured line into a piece
+ * per interleaved day. One grid, one row, one value each.
+ */
+export function channelCurve(
+  series: SeriesPoint[],
+  baseline: number | null | undefined,
+  mult: Mult,
+  lt?: Longtail | null
+): CurvePoint[] {
+  if (baseline == null || !(baseline > 0) || !Number.isFinite(baseline)) return [];
+  return series.map((p) => expectedAt(baseline, mult, p.day, lt));
 }

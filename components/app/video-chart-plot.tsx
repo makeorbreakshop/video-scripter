@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
+import { seriesStyle, SERIES_LABELS, trackingBeganLabel } from '@/lib/app/chart-style';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, tooltipDate, dayLabel, type Zoom } from './video-chart';
 
@@ -18,7 +19,7 @@ type Row = {
   day: number;
   expected?: number; band?: [number, number];
   projected?: number; projectedBand?: [number, number];
-  implied?: number; impliedBand?: [number, number];
+  implied?: number;
   views?: number; dot?: number;
 };
 
@@ -56,10 +57,8 @@ export default function VideoChartPlot({
       const prev = series[i - 1], next = series[i + 1];
       const touches = (k: SeriesPoint['kind']) => prev?.kind === k || next?.kind === k;
       if (p.kind === 'measured' || touches('measured')) row.views = p.views;
-      if (p.kind === 'implied' || touches('implied')) {
-        row.implied = p.views;
-        if (p.band) row.impliedBand = p.band;
-      }
+      // No impliedBand row: the reconstructed past is drawn without a ribbon (chart-style.ts).
+      if (p.kind === 'implied' || touches('implied')) row.implied = p.views;
       if (p.kind === 'forecast' || touches('forecast')) {
         row.projected = p.views;
         if (p.band) row.projectedBand = p.band;
@@ -106,6 +105,10 @@ export default function VideoChartPlot({
     }
     return keep;
   }, [clusters, maxDay, minDay, launch]);
+  const S = { measured: seriesStyle('measured'), implied: seriesStyle('implied'), forecast: seriesStyle('forecast') };
+  const stroke = (t: 'accent' | 'muted') => (t === 'accent' ? C.accent : C.muted);
+  const firstMeasuredDay = series.find((p) => p.kind === 'measured')?.day ?? null;
+  const trackingBegan = trackingBeganLabel(publishedAt ?? null, firstMeasuredDay);
   const hasImplied = series.some((p) => p.kind === 'implied');
   const hasMeasured = series.some((p) => p.kind === 'measured');
   const hasForecast = series.some((p) => p.kind === 'forecast');
@@ -161,27 +164,36 @@ export default function VideoChartPlot({
           {curve.length > 0 && (
             <Area dataKey="band" name="typical range" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
           )}
-          {hasImplied && (
-            <Area dataKey="impliedBand" name="likely range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.1} isAnimationActive={false} legendType="none" />
-          )}
           {hasForecast && (
-            <Area dataKey="projectedBand" name="forecast range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.07} isAnimationActive={false} legendType="none" />
+            <Area dataKey="projectedBand" name="likely range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.1} isAnimationActive={false} legendType="none" />
           )}
           {curve.length > 0 && (
-            <Line dataKey="expected" name="typical for this channel" connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
+            <Line dataKey="expected" name={SERIES_LABELS.expected} connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
           )}
-          {/* Days we never sampled — the launch before the first measurement, and any gap
-              between two of them. Same line, dashed, because the value is inferred. */}
+          {/* Days before we were watching, and any gap longer than MEASURED_GAP_DAYS. Muted and
+              dotted, with no band: it is a reconstruction of something that already happened,
+              and an uncertainty ribbon would make it read as a projection. */}
           {hasImplied && (
-            <Line dataKey="implied" name="implied (not sampled)" connectNulls dot={false} stroke={C.accent} strokeWidth={1.5} strokeDasharray="6 4" isAnimationActive={false} />
+            <Line
+              dataKey="implied" name={SERIES_LABELS.implied} connectNulls dot={false}
+              stroke={stroke(S.implied.strokeToken)} strokeWidth={S.implied.width}
+              strokeDasharray={S.implied.dash} strokeOpacity={S.implied.opacity} isAnimationActive={false}
+            />
           )}
           {hasForecast && (
-            <Line dataKey="projected" name="expected from here" connectNulls dot={false} stroke={C.accent} strokeWidth={1.25} strokeDasharray="5 4" strokeOpacity={0.6} isAnimationActive={false} />
+            <Line
+              dataKey="projected" name={SERIES_LABELS.forecast} connectNulls dot={false}
+              stroke={stroke(S.forecast.strokeToken)} strokeWidth={S.forecast.width}
+              strokeDasharray={S.forecast.dash} strokeOpacity={S.forecast.opacity} isAnimationActive={false}
+            />
           )}
           {hasMeasured && (
             /* connectNulls would bridge a gap between two measurements with a solid line —
                claiming we measured days we did not. The implied path already covers it. */
-            <Line dataKey="views" name="this video" connectNulls={false} dot={false} stroke={C.accent} strokeWidth={1.75} isAnimationActive={false} />
+            <Line
+              dataKey="views" name={SERIES_LABELS.measured} connectNulls={false} dot={false}
+              stroke={stroke(S.measured.strokeToken)} strokeWidth={S.measured.width} isAnimationActive={false}
+            />
           )}
           {/* The real measurements as points — a video with one or two snapshots is otherwise a
               model path with nothing of its own on it. */}
@@ -191,6 +203,15 @@ export default function VideoChartPlot({
               legendType="circle"
               dot={{ r: 3.5, fill: C.accent, stroke: C.surface, strokeWidth: 1.5 }}
               activeDot={{ r: 4, fill: C.accent }}
+            />
+          )}
+
+          {/* Without this the dotted stretch on the left reads as missing data rather than as
+              "we were not watching yet". */}
+          {trackingBegan && firstMeasuredDay != null && !launch && (
+            <ReferenceLine
+              x={firstMeasuredDay} stroke={C.muted} strokeWidth={1} strokeOpacity={0.35} strokeDasharray="2 3"
+              label={{ value: trackingBegan, fontSize: 10, fill: C.muted, position: 'insideBottomLeft', dx: 4, dy: -4 }}
             />
           )}
 
