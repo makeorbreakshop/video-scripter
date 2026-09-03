@@ -12,10 +12,22 @@
 // the real measurements next to it, so the implied path passes exactly through the first
 // measurement instead of floating beside it.
 import { expectedAt, forecastAt, type Mult, type Longtail, type CurvePoint } from '../admin/video-curve';
-import { forecastBand, FITTED_BANDS_2026_09_03, type BandTable } from '../scoring/bands';
+import {
+  forecastBand, trajectoryFactor, FITTED_BANDS_2026_09_03,
+  type BandTable, type ForecastBand, type TrajectoryPoint,
+} from '../scoring/bands';
 
 export type SeriesKind = 'measured' | 'implied' | 'forecast';
-export type SeriesPoint = { day: number; views: number; kind: SeriesKind; band?: [number, number] };
+/**
+ * Two nested ranges: `inner` is q25..q75 (half of videos land there), `outer` q10..q90 (four in
+ * five). The chart draws the inner solid and the outer as a fainter edge, so the reader sees the
+ * likely case without being told the tail does not exist.
+ */
+export type SeriesPoint = { day: number; views: number; kind: SeriesKind; band?: ForecastBand };
+
+/** A symmetric log range, for the segments whose uncertainty is not a fitted quantile. */
+const sym = (v: number, sigma: number): ForecastBand =>
+  ({ inner: [v * Math.exp(-sigma / 2), v * Math.exp(sigma / 2)], outer: [v * Math.exp(-sigma), v * Math.exp(sigma)] });
 
 export interface BuildSeriesInput {
   /** The video's real measurements, in any order; days are days since publish. */
@@ -102,6 +114,13 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
 
   const first = acts[0] ?? null;
   const last = acts[acts.length - 1] ?? null;
+  // What this video's OWN record says about how predictable it is. The fitted band answers
+  // "how wrong is a forecast made at day 4?" across the whole corpus; a video we have watched
+  // sit on its channel's curve for ten days is a different case, and the corpus covers both.
+  const traj: TrajectoryPoint[] = acts
+    .map((a) => ({ day: a.day, views: a.views, expected: shape(a.day) }))
+    .filter((p) => p.expected > 0 && Number.isFinite(p.expected));
+  const factor = trajectoryFactor(traj);
   // Nothing measured: the whole past is implied off the channel shape, the future forecast.
   const boundary = last ? last.day : Math.max(input.ageDays ?? 0, 0);
 
@@ -128,7 +147,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       // The band is the corpus's own forecast error at the age of the LAST measurement, not a
       // constant: it opens from nothing at that point (the video is there, we counted it) to
       // the fitted 10-90 range at day 30. lib/scoring/bands.ts.
-      const band = forecastBand(views, day, last.day, bands) ?? undefined;
+      const band = forecastBand(views, day, last.day, bands, factor) ?? undefined;
       out.push({ day, views, kind: 'forecast', ...(band ? { band } : {}) });
       continue;
     }
@@ -139,7 +158,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       const s = shape(day);
       const kind: SeriesKind = day > boundary ? 'forecast' : 'implied';
       const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * Math.abs(lg(boundary) - lg(day));
-      out.push({ day, views: Math.max(0, s), kind, band: [s * Math.exp(-sigma), s * Math.exp(sigma)] });
+      out.push({ day, views: Math.max(0, s), kind, band: sym(s, sigma) });
       continue;
     }
 
@@ -148,7 +167,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       const views = anchored(day, first!);
       // We know less about the launch the further it is from the first thing we measured.
       const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first!.day) - lg(day));
-      out.push({ day, views, kind: 'implied', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+      out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
       continue;
     }
 
@@ -171,7 +190,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
     // `hi` exactly, following the channel shape in between.
     const views = a > 0 && b > 0 ? Math.exp((1 - w) * Math.log(a) + w * Math.log(b)) : (1 - w) * a + w * b;
     const sigma = GAP_SIGMA * 2 * Math.min(w, 1 - w); // zero at both ends, widest mid-gap
-    out.push({ day, views, kind: 'implied', band: [views * Math.exp(-sigma), views * Math.exp(sigma)] });
+    out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
   }
   return out;
 }

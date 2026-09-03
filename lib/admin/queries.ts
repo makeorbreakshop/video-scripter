@@ -1,6 +1,6 @@
 // All admin SQL lives here so the CLI (next step) can reuse the same functions.
 import { unstable_cache } from 'next/cache';
-import type { BandTable } from '../scoring/bands';
+import { tableFromRows, type BandTable } from '../scoring/bands';
 import { q, one } from './db';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
@@ -291,7 +291,10 @@ export type VideoPageData = {
   mult: Record<number, number>;
   /** Fitted growth past day 30, so an old video's chart is not flat at the baseline. */
   longtail: { ages: number[]; mult: number[] } | null;
-  /** Fitted forecast band (lib/scoring/bands.ts); null until fit-forecast-bands has run. */
+  /**
+   * Fitted forecast band (lib/scoring/bands.ts). The channel's own table when it has one
+   * (already shrunk toward the corpus by n), else the global fit.
+   */
   bands: BandTable | null;
 };
 
@@ -323,6 +326,13 @@ export async function videoPage(id: string): Promise<VideoPageData> {
        from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
     ),
   ]);
+  // The channel's own band, if it has enough day-30 history to have been fitted one. One
+  // indexed read on (channel_id, age_bucket); it can only run once the video row is in hand.
+  const chBands = video?.channel_id
+    ? tableFromRows(await q<any>(
+        `select age_bucket, n, q10, q25, q50, q75, q90 from channel_forecast_bands
+          where channel_id = $1 order by age_bucket`, [video.channel_id]))
+    : null;
   return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {},
-           longtail: params?.longtail ?? null, bands: params?.bands ?? null };
+           longtail: params?.longtail ?? null, bands: chBands ?? params?.bands ?? null };
 }

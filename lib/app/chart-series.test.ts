@@ -1,4 +1,6 @@
 import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
+import { expectedAt } from '../admin/video-curve';
+import { BAND_FACTOR_FLOOR } from '../scoring/bands';
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -177,7 +179,7 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
     const past = s.filter((p) => p.day < 3.48 && p.day > 0 && p.band);
     expect(past.length).toBeGreaterThanOrEqual(3);
     // uncertainty is multiplicative: read it as the log width of the band
-    const widths = past.map((p) => Math.log(p.band![1] / p.band![0]));
+    const widths = past.map((p) => Math.log(p.band!.outer[1] / p.band!.outer[0]));
     for (let i = 1; i < widths.length; i++) {
       expect(widths[i - 1]).toBeGreaterThan(widths[i]); // earlier day = wider band
     }
@@ -206,5 +208,53 @@ describe('channelCurve shares the series days', () => {
     const sd = new Set(s.map((p) => p.day)), cd = new Set(c.map((p) => p.day));
     expect([...cd].filter((d) => !sd.has(d))).toEqual([]);
     expect([...sd].filter((d) => !cd.has(d))).toEqual([]);
+  });
+});
+
+describe('the band uses the video’s own trajectory', () => {
+  const BANDS = {
+    ages: [1, 4, 7], q10: [-0.4, -0.25, -0.16], q25: [-0.2, -0.14, -0.10],
+    q50: [0, 0, 0], q75: [0.3, 0.23, 0.16], q90: [0.6, 0.6, 0.42], n: [900, 900, 900],
+  };
+  const bandOf = (s: ReturnType<typeof buildSeries>) => s[s.length - 1].band!;
+
+  it('gives a long clean record a narrower band than a single measurement', () => {
+    // ten days of samples sitting exactly where the channel curve says they should
+    // exactly on the channel curve, so the fit residual is zero by construction
+    const many = Array.from({ length: 12 }, (_, i) => {
+      const day = 1 + i * (10 / 11);
+      return { day, views: 2 * expectedAt(543492.47, MULT, day, LONGTAIL).expected };
+    });
+    const long = buildSeries({ ...MALECKI, actuals: many, ageDays: 11, bands: BANDS as any });
+    const one = buildSeries({ ...MALECKI, actuals: [many[many.length - 1]], ageDays: 11, bands: BANDS as any });
+    const w = (b: any) => Math.log(b.outer[1] / b.outer[0]);
+    expect(w(bandOf(long))).toBeLessThan(w(bandOf(one)));
+    // a perfect long record is tightened to exactly the floor of the single-measurement width
+    expect(w(bandOf(long))).toBeCloseTo(w(bandOf(one)) * BAND_FACTOR_FLOOR, 6);
+  });
+
+  it('leaves a single measurement at the full fitted width', () => {
+    const one = buildSeries({ ...MALECKI, actuals: [{ day: 4, views: 800000 }], ageDays: 4, bands: BANDS as any });
+    const b = bandOf(one);
+    // day 30, last measured day 4: the day-4 bucket applied whole
+    expect(Math.log(b.outer[1] / b.outer[0])).toBeCloseTo(0.6 - -0.25, 6);
+  });
+
+  it('carries an inner and an outer range on every forecast point, inner inside outer', () => {
+    const s = buildSeries({ ...MALECKI, bands: BANDS as any });
+    const fc = s.filter((p) => p.kind === 'forecast');
+    expect(fc.length).toBeGreaterThan(5);
+    for (const p of fc) {
+      expect(p.band).toBeDefined();
+      expect(p.band!.inner[0]).toBeGreaterThanOrEqual(p.band!.outer[0] - 1e-9);
+      expect(p.band!.inner[1]).toBeLessThanOrEqual(p.band!.outer[1] + 1e-9);
+      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.views + 1e-6);
+      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.views - 1e-6);
+    }
+  });
+
+  it('draws no forecast band at all when there is no fitted table', () => {
+    const s = buildSeries({ ...MALECKI, bands: null });
+    for (const p of s.filter((x) => x.kind === 'forecast')) expect(p.band).toBeUndefined();
   });
 });

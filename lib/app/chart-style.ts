@@ -6,7 +6,8 @@
 // reconstruction of something that already happened, and dressing it in an uncertainty ribbon
 // invites the eye to read it as a projection — and the future keeps the accent, the dash and
 // its (now fitted, lib/scoring/bands.ts) band.
-import type { SeriesKind } from './chart-series';
+import type { SeriesKind, SeriesPoint } from './chart-series';
+import type { Actual, CurvePoint } from '../admin/video-curve';
 
 export type StrokeToken = 'accent' | 'muted';
 export interface SeriesStyle {
@@ -56,4 +57,79 @@ export function trackingBeganLabel(
   if (!Number.isFinite(t0)) return null;
   const at = new Date(t0 + firstMeasuredDay * 86_400_000);
   return `tracking began ${at.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' })}`;
+}
+
+// ------------------------------------------------------------- the ribbons ---
+
+export type BandRing = 'inner' | 'outer';
+
+/**
+ * Two ribbons, not one. A single band forces a choice between "honest about the tail" and
+ * "useful about the likely case"; drawing both lets the eye read the middle and still see how
+ * far the tail goes. The inner is the darker of the two so the middle reads as the claim.
+ */
+export const BAND_STYLES: Record<BandRing, { fillOpacity: number }> = {
+  inner: { fillOpacity: 0.16 },
+  outer: { fillOpacity: 0.06 },
+};
+
+export function bandStyle(ring: BandRing) {
+  return BAND_STYLES[ring];
+}
+
+/** Odds a reader can hold in their head, not percentile names. */
+export const BAND_LABELS: Record<BandRing, string> = {
+  inner: 'half of videos land here',
+  outer: '4 in 5 land here',
+};
+
+// ------------------------------------------------------------------ rows ----
+
+export interface ChartRow {
+  day: number;
+  expected?: number;
+  band?: [number, number];
+  projected?: number;
+  bandInner?: [number, number];
+  bandOuter?: [number, number];
+  implied?: number;
+  views?: number;
+  dot?: number;
+}
+
+/**
+ * The series, the channel curve and the real measurements zipped into one row per day — the
+ * shape recharts wants. Pure, so what the chart draws can be asserted without mounting it.
+ *
+ * Each segment also writes its value into its NEIGHBOUR's key at the boundary day, so the
+ * dotted past, the solid measured line and the dashed forecast meet instead of leaving a
+ * one-pixel hole where the kind changes. Only the forecast carries ribbons: an uncertainty
+ * band around a reconstruction of something that already happened would read as a projection.
+ */
+export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: Actual[]): ChartRow[] {
+  const byDay = new Map<number, ChartRow>();
+  const at = (d: number) => {
+    let r = byDay.get(d);
+    if (!r) { r = { day: d }; byDay.set(d, r); }
+    return r;
+  };
+  for (const c of curve) Object.assign(at(c.day), { expected: c.expected, band: [c.lo, c.hi] as [number, number] });
+  const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
+  for (let i = 0; i < series.length; i++) {
+    const p = series[i];
+    const row = at(p.day);
+    const prev = series[i - 1], next = series[i + 1];
+    const touches = (k: SeriesKind) => prev?.kind === k || next?.kind === k;
+    if (p.kind === 'measured' || touches('measured')) row.views = p.views;
+    if (p.kind === 'implied' || touches('implied')) row.implied = p.views;
+    if (p.kind === 'forecast' || touches('forecast')) {
+      row.projected = p.views;
+      if (p.kind === 'forecast' && p.band) {
+        row.bandInner = p.band.inner;
+        row.bandOuter = p.band.outer;
+      }
+    }
+  }
+  for (const a of actuals) if (kindAt.get(a.day) === 'measured') at(a.day).dot = a.views;
+  return [...byDay.values()].sort((a, b) => a.day - b.day);
 }

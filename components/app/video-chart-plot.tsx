@@ -11,17 +11,9 @@ import {
 } from 'recharts';
 import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
-import { seriesStyle, SERIES_LABELS, trackingBeganLabel } from '@/lib/app/chart-style';
+import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel } from '@/lib/app/chart-style';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, tooltipDate, dayLabel, type Zoom } from './video-chart';
-
-type Row = {
-  day: number;
-  expected?: number; band?: [number, number];
-  projected?: number; projectedBand?: [number, number];
-  implied?: number;
-  views?: number; dot?: number;
-};
 
 const HOUR_TICKS = [0, 6, 12, 24, 48, 72];
 const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 550, 730, 1095];
@@ -43,30 +35,7 @@ export default function VideoChartPlot({
   const [zoom, setZoom] = useState<Zoom>(defaultZoom);
   const C = useThemeColors();
 
-  const all = useMemo(() => {
-    const byDay = new Map<number, Row>();
-    const at = (d: number) => { let r = byDay.get(d); if (!r) { r = { day: d }; byDay.set(d, r); } return r; };
-    for (const c of curve) Object.assign(at(c.day), { expected: c.expected, band: [c.lo, c.hi] as [number, number] });
-    // One series, three styles. Each segment also writes its value into its NEIGHBOUR's key at
-    // the boundary day, so the dashed implied path and the solid measured line meet instead of
-    // leaving a one-pixel hole where the kind changes.
-    const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
-    for (let i = 0; i < series.length; i++) {
-      const p = series[i];
-      const row = at(p.day);
-      const prev = series[i - 1], next = series[i + 1];
-      const touches = (k: SeriesPoint['kind']) => prev?.kind === k || next?.kind === k;
-      if (p.kind === 'measured' || touches('measured')) row.views = p.views;
-      // No impliedBand row: the reconstructed past is drawn without a ribbon (chart-style.ts).
-      if (p.kind === 'implied' || touches('implied')) row.implied = p.views;
-      if (p.kind === 'forecast' || touches('forecast')) {
-        row.projected = p.views;
-        if (p.band) row.projectedBand = p.band;
-      }
-    }
-    for (const a of actuals) if (kindAt.get(a.day) === 'measured') at(a.day).dot = a.views;
-    return [...byDay.values()].sort((a, b) => a.day - b.day);
-  }, [actuals, curve, series]);
+  const all = useMemo(() => chartRows(series, curve, actuals), [actuals, curve, series]);
 
   const launch = zoom === '72h';
   const rows = launch ? all.filter((r) => r.day <= 3) : all;
@@ -154,6 +123,16 @@ export default function VideoChartPlot({
                   <div style={{ color: C.muted, marginBottom: 4 }}>{tooltipDate(publishedAt, Number(label))}</div>
                   {mine != null && <div style={{ color: C.accent, fontWeight: 600 }}>{fmtViews(Number(mine))} views</div>}
                   {row.expected != null && <div style={{ color: C.muted }}>typical {fmtViews(Number(row.expected))}</div>}
+                  {row.bandInner && (
+                    <div style={{ color: C.muted, marginTop: 3 }}>
+                      {BAND_LABELS.inner}: {fmtViews(row.bandInner[0])}–{fmtViews(row.bandInner[1])}
+                    </div>
+                  )}
+                  {row.bandOuter && (
+                    <div style={{ color: C.muted }}>
+                      {BAND_LABELS.outer}: {fmtViews(row.bandOuter[0])}–{fmtViews(row.bandOuter[1])}
+                    </div>
+                  )}
                 </div>
               );
             }}
@@ -164,8 +143,13 @@ export default function VideoChartPlot({
           {curve.length > 0 && (
             <Area dataKey="band" name="typical range" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
           )}
+          {/* Two ribbons: the middle half solid enough to read as the claim, the 10-90 tail
+              faint behind it. Outer first so the inner paints on top. */}
           {hasForecast && (
-            <Area dataKey="projectedBand" name="likely range" connectNulls stroke="none" fill={C.accent} fillOpacity={0.1} isAnimationActive={false} legendType="none" />
+            <Area dataKey="bandOuter" name={BAND_LABELS.outer} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('outer').fillOpacity} isAnimationActive={false} legendType="none" />
+          )}
+          {hasForecast && (
+            <Area dataKey="bandInner" name={BAND_LABELS.inner} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('inner').fillOpacity} isAnimationActive={false} legendType="none" />
           )}
           {curve.length > 0 && (
             <Line dataKey="expected" name={SERIES_LABELS.expected} connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
