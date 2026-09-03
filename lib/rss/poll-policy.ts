@@ -32,8 +32,6 @@ export const RSS_POLICY = {
   runIntervalSec: 300,
   /** How recent a feed entry must be to count as a new upload worth queueing. */
   newUploadWindowDays: 7,
-  /** How young a video must be for a free RSS view/like sample to be worth storing. */
-  sampleWindowDays: 30,
   /**
    * Hard ceiling on channels touched in one tick. Sized to cover the whole corpus in one go
    * (5,853 channels) now that a tick is fetch -> snapshot -> diff -> flush rather than a burst
@@ -128,22 +126,48 @@ export function isNewUpload(
 }
 
 /**
- * Is this video's view curve still worth a free dense sample?
+ * Should this reading be stored?
  *
- * The feed carries view/like counts for all 15 entries, and the first full-corpus shape wrote a
- * row for every one of them — ~9,000 rss_samples inserts per 950 channels per tick, which
- * dominated the tick's write cost. A year-old video's view count does not move meaningfully in
- * 15 minutes, and view_snapshots already holds the daily truth for it. Sampling is only
- * interesting while the launch curve is still bending.
+ * REPLACES the old 30-day age gate (isSampleWorthy). That gate threw away every free reading
+ * for a video older than a month — exactly the back-catalogue readings the long-tail fit has no
+ * data for — while still writing ~67K rows/hour (~200 MB/day) for the young ones, most of them
+ * a repeat of the number stored 15 minutes earlier.
+ *
+ * Change-based instead: store a reading when it actually says something.
+ *   - no reading on file      -> store (first point of the trace)
+ *   - the count moved         -> store (a real measurement)
+ *   - nothing moved for 24h   -> store (a heartbeat, so a flat curve is still evidence
+ *                                       of flatness rather than a gap)
+ * A young video keeps its dense trace (its counts move every tick); a dead 8-year-old costs one
+ * row a day instead of 96.
  */
-export function isSampleWorthy(
-  publishedAt: Date | string | null | undefined,
-  now: Date = new Date(),
-  windowDays: number = RSS_POLICY.sampleWindowDays
-): boolean {
-  if (!publishedAt) return false;
-  return now.getTime() - new Date(publishedAt).getTime() < windowDays * 86_400_000;
+export const SAMPLE_HEARTBEAT_MS = 24 * 3_600_000;
+
+export interface PrevSample {
+  views: number | null;
+  at: Date | string;
 }
+
+export function shouldStoreSample(
+  prev: PrevSample | null | undefined,
+  views: number | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (views == null) return false;
+  if (!prev) return true;
+  if (prev.views == null || Number(prev.views) !== Number(views)) return true;
+  const age = now.getTime() - new Date(prev.at).getTime();
+  return !(age < SAMPLE_HEARTBEAT_MS); // NaN-safe: an unparseable stamp stores
+}
+
+/**
+ * The last stored reading per video, for the ids this tick's feeds mentioned. ONE set-based
+ * query in the poller's SNAPSHOT phase — never a per-channel query inside the fetch loop
+ * (the shape that cost ~0.40 s/channel before the 2026-09-03 rewrite). $1 = video ids.
+ */
+export const LAST_SAMPLES_SQL = `select distinct on (video_id) video_id, views, at
+     from rss_samples where video_id = any($1)
+    order by video_id, at desc`;
 
 /**
  * What a 200 response is worth. The feed carries no ETag, so the body hash is our only

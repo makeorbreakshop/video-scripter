@@ -172,10 +172,10 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
 }
 
 export async function loadVideoPage(id: string, now: number = Date.now()): Promise<VideoPageView | null> {
-  const { video: v, snapshots, samples, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
+  const { video: v, snapshots, samples, rss, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
   if (!v) return null;
 
-  const actuals = mergeActuals(v.published_at, snapshots, samples);
+  const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
   const markers = packagingMarkers(v.published_at, thumbs, titles);
   const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
   // Draw the whole life, then a little forecast past today: the next milestone the model can

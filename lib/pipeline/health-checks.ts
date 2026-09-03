@@ -27,3 +27,35 @@ export const SHORTS_UNVERIFIED_SQL = `
     and shorts_checked_at is null
     and duration ~ '^PT[0-9HMS]+$'
     and extract(epoch from duration::interval) <= ${SHORT_MAX_SECONDS}`;
+
+/**
+ * Rows/day for the three measurement tables, so a pipeline change that quietly stops writing
+ * (or starts writing far too much) is visible on the dashboard.
+ *
+ * rss_samples is the one with a ceiling: the RSS poller reads the free view counts of 15 feed
+ * entries for every channel every 15 minutes. Before the change-based dedupe it wrote ~67K
+ * rows/hour (441K on 2026-09-03, ~200 MB/day) — mostly repeats of the count stored a tick
+ * earlier. With shouldStoreSample (lib/rss/poll-policy.ts) a steady state past 500K/day means
+ * the dedupe or its snapshot-phase lookup has regressed.
+ */
+export const RSS_SAMPLES_PER_DAY_WARN = 500_000;
+
+export function rssSamplesPerDayStatus(n: number): CheckStatus {
+  return n > RSS_SAMPLES_PER_DAY_WARN ? 'warn' : 'ok';
+}
+
+/** A measurement table that has written nothing today is a stalled job, not a quiet one. */
+export function rowsPerDayStatus(n: number): CheckStatus {
+  return n > 0 ? 'ok' : 'warn';
+}
+
+/** Rows written today, per measurement table. No parameters. */
+export const ROWS_PER_DAY_SQL = `
+  select 'view_samples' as table_name,
+         (select count(*)::bigint from view_samples where sampled_at >= current_date) as n
+  union all
+  select 'view_snapshots',
+         (select count(*)::bigint from view_snapshots where snapshot_date = current_date)
+  union all
+  select 'rss_samples',
+         (select count(*)::bigint from rss_samples where at >= current_date)`;

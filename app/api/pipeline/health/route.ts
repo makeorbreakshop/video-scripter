@@ -7,6 +7,7 @@ import path from 'path';
 import pg from 'pg';
 import {
   SHORTS_UNVERIFIED_SQL, SHORTS_UNVERIFIED_WARN, SHORTS_UNVERIFIED_FAIL, shortsUnverifiedStatus,
+  ROWS_PER_DAY_SQL, RSS_SAMPLES_PER_DAY_WARN, rssSamplesPerDayStatus, rowsPerDayStatus,
 } from '@/lib/pipeline/health-checks';
 
 export const runtime = 'nodejs';
@@ -53,7 +54,7 @@ function median(xs: number[]) {
 export async function GET() {
   const db = getPool();
   try {
-    const [snapshots, ingested, thumbDays, thumbTotals, quota, quotaLedger, shortsUnverified, logs] =
+    const [snapshots, ingested, thumbDays, thumbTotals, quota, quotaLedger, shortsUnverified, rowsPerDay, logs] =
       await Promise.all([
         db.query(
           `select snapshot_date::text as day, count(*)::int as n
@@ -85,6 +86,7 @@ export async function GET() {
            where date = current_date group by category order by units desc`
         ),
         db.query(SHORTS_UNVERIFIED_SQL),
+        db.query(ROWS_PER_DAY_SQL).catch(() => ({ rows: [] as { table_name: string; n: string }[] })),
         Promise.all(LOGS.map(async (l) => ({ job: l.job, ...(await readLog(l.file)) }))),
       ]);
 
@@ -187,6 +189,14 @@ export async function GET() {
         warnAbove: SHORTS_UNVERIFIED_WARN,
         failAbove: SHORTS_UNVERIFIED_FAIL,
       },
+      // Rows/day per measurement table. rss_samples carries the volume ceiling; the other two
+      // are simply "did the job write anything today".
+      ...(rowsPerDay.rows as { table_name: string; n: string }[]).map((r) => {
+        const n = Number(r.n);
+        return r.table_name === 'rss_samples'
+          ? { check: 'rss_samples_rows_today', status: rssSamplesPerDayStatus(n), value: n, warnAbove: RSS_SAMPLES_PER_DAY_WARN, failAbove: null }
+          : { check: `${r.table_name}_rows_today`, status: rowsPerDayStatus(n), value: n, warnAbove: null, failAbove: null };
+      }),
     ];
 
     return NextResponse.json({

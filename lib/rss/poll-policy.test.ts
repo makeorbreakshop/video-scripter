@@ -10,7 +10,9 @@ import {
   isUpdatedSince,
   shouldProcessEntries,
   isNewUpload,
-  isSampleWorthy,
+  shouldStoreSample,
+  SAMPLE_HEARTBEAT_MS,
+  LAST_SAMPLES_SQL,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -98,21 +100,69 @@ describe('perRunCap', () => {
   });
 });
 
-describe('isSampleWorthy (which videos get a free dense trace)', () => {
-  // The feed carries counts for all 15 entries; writing every one cost ~9,000 inserts per tick
-  // and dominated the flush. Only a curve that is still bending is worth 15-minute resolution.
-  it('samples videos inside the 30-day window', () => {
-    expect(isSampleWorthy(ago(days(1)), NOW)).toBe(true);
-    expect(isSampleWorthy(ago(days(29)), NOW)).toBe(true);
+describe('shouldStoreSample (the change-based rss_samples rule)', () => {
+  // Replaces the 30-day age gate. That gate wrote ~67K rows/hour (~200 MB/day) of mostly
+  // repeated counts for young videos while discarding every reading for the back catalogue —
+  // which is the population the long-tail fit has no data for.
+  it('stores the first ever reading for a video', () => {
+    expect(shouldStoreSample(null, 1000, NOW)).toBe(true);
+    expect(shouldStoreSample(undefined, 1000, NOW)).toBe(true);
   });
 
-  it('skips the back catalogue, where view_snapshots is already the daily truth', () => {
-    expect(isSampleWorthy(ago(days(31)), NOW)).toBe(false);
-    expect(isSampleWorthy(ago(days(400)), NOW)).toBe(false);
+  it('stores a reading whose count moved, however small the move', () => {
+    expect(shouldStoreSample({ views: 1000, at: ago(mins(15)) }, 1001, NOW)).toBe(true);
+    expect(shouldStoreSample({ views: 1000, at: ago(mins(1)) }, 999, NOW)).toBe(true);
   });
 
-  it('skips a video with no publish date rather than guessing', () => {
-    expect(isSampleWorthy(null, NOW)).toBe(false);
+  it('skips a repeat of the count already on file inside 24h — the row that was pure noise', () => {
+    expect(shouldStoreSample({ views: 1000, at: ago(mins(15)) }, 1000, NOW)).toBe(false);
+    expect(shouldStoreSample({ views: 1000, at: ago(hours(23)) }, 1000, NOW)).toBe(false);
+  });
+
+  it('stores an unchanged count once a day, so a flat curve is evidence and not a gap', () => {
+    expect(shouldStoreSample({ views: 1000, at: ago(hours(25)) }, 1000, NOW)).toBe(true);
+    expect(shouldStoreSample({ views: 1000, at: ago(days(400)) }, 1000, NOW)).toBe(true);
+    expect(SAMPLE_HEARTBEAT_MS).toBe(24 * 3_600_000);
+  });
+
+  it('keeps a dead 8-year-old at one row a day instead of 96, and a live video dense', () => {
+    // 24 hours of 15-minute ticks (97 samples) on an unchanged count: only the heartbeats survive.
+    let prev = { views: 500, at: ago(days(1) + mins(1)) };
+    let stored = 0;
+    for (let i = 0; i <= 96; i++) {
+      const at = new Date(NOW.getTime() + i * mins(15));
+      if (shouldStoreSample(prev, 500, at)) { stored++; prev = { views: 500, at }; }
+    }
+    expect(stored).toBe(2); // one at the start, one 24h later
+
+    let live = { views: 0, at: ago(mins(15)) };
+    let liveStored = 0;
+    for (let i = 1; i <= 96; i++) {
+      const at = new Date(NOW.getTime() + i * mins(15));
+      if (shouldStoreSample(live, i * 37, at)) { liveStored++; live = { views: i * 37, at }; }
+    }
+    expect(liveStored).toBe(96);
+  });
+
+  it('stores the back catalogue too — no age gate any more', () => {
+    // A 4-year-old video whose count moved is exactly the reading the long tail needs.
+    expect(shouldStoreSample({ views: 100_000, at: ago(days(1.5)) }, 100_050, NOW)).toBe(true);
+  });
+
+  it('never stores a reading the feed did not carry', () => {
+    expect(shouldStoreSample(null, null, NOW)).toBe(false);
+    expect(shouldStoreSample({ views: 5, at: ago(mins(1)) }, undefined, NOW)).toBe(false);
+  });
+
+  it('stores when the stored reading has no count, or an undatable stamp', () => {
+    expect(shouldStoreSample({ views: null, at: ago(mins(1)) }, 10, NOW)).toBe(true);
+    expect(shouldStoreSample({ views: 10, at: 'not a date' }, 10, NOW)).toBe(true);
+  });
+
+  it('the last-reading lookup is one set-based query keyed on the feed video ids', () => {
+    expect(LAST_SAMPLES_SQL).toContain('distinct on (video_id)');
+    expect(LAST_SAMPLES_SQL).toContain('video_id = any($1)');
+    expect(LAST_SAMPLES_SQL).toContain('order by video_id, at desc');
   });
 });
 

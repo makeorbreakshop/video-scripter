@@ -1,13 +1,32 @@
 // Nightly view tracking over the DIRECT Postgres connection (unmetered).
 // Replaces the supabase-js path after the 2026-08-31 egress incident.
-// Usage: npx tsx scripts/nightly-view-tracking.ts [maxApiCalls]
+// Usage: npx tsx scripts/nightly-view-tracking.ts [maxApiCalls] [--catalog N]
+//
+// Two passes:
+//   1. the DUE list, priority_tier asc, capped at maxApiCalls*50 (tiers 0-2 fill it every night)
+//   2. the CATALOG SLICE (--catalog N, default 15000): a reserved read of the OLDEST-READ
+//      tier>=3 archive. Without it the 678K videos older than ~2 years keep the single
+//      Jul/Aug 2025 snapshot they were imported with, and lib/scoring/core.ts fitLongTail has
+//      no support past 365 days. See lib/nightly/tracking-core.ts for the selection logic.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
-import { buildSnapshotRows, chunk, TrackedVideo, PrevSnapshot } from '../lib/nightly/tracking-core';
+import {
+  buildSnapshotRows, chunk, TrackedVideo, PrevSnapshot,
+  selectCatalogSlice, catalogCycleDays, catalogNextTrackDate,
+  CATALOG_MIN_TIER, CATALOG_CANDIDATES_SQL, CATALOG_POOL_SQL,
+} from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 
-const maxApiCalls = parseInt(process.argv[2] || '2000', 10);
+const argv = process.argv.slice(2);
+// First BARE numeric argument is the main cap. `0` is honoured (catalog-only run), so this
+// cannot use `|| default` on the raw string.
+const bareNum = argv.find((a, i) => /^\d+$/.test(a) && !argv[i - 1]?.startsWith('--'));
+const maxApiCalls = bareNum === undefined ? 2000 : parseInt(bareNum, 10);
+const catalogArg = argv.includes('--catalog')
+  ? parseInt(argv[argv.indexOf('--catalog') + 1] ?? '', 10)
+  : NaN;
+const catalogSize = Number.isFinite(catalogArg) ? catalogArg : 15000;
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 
@@ -28,7 +47,15 @@ console.log(`Videos due for tracking: ${due.rows.length} (cap ${maxApiCalls * 50
 let apiCalls = 0;
 let mainBucketCalls = 0;
 let written = 0;
-for (const batch of chunk(due.rows, 50)) {
+
+interface BatchRow { video_id: string; priority_tier: number; days_since_published: number | null }
+
+/**
+ * Read one batch of <=50 ids and write their snapshots. `overrideNextTrackDate` is what the
+ * catalogue pass uses to park a video a full rotation out instead of on its tier cadence.
+ * Returns false when the API failed and the caller should stop.
+ */
+async function processBatch(batch: BatchRow[], overrideNextTrackDate?: string): Promise<boolean> {
   const ids = batch.map((r) => r.video_id);
   // videos:batchGetStats lives in its own 10K-unit daily bucket (June 2026),
   // keeping the main quota pool free for ingest/discovery. Fallback to
@@ -45,7 +72,7 @@ for (const batch of chunk(due.rows, 50)) {
   apiCalls++;
   if (!res.ok) {
     console.error(`YouTube API error ${res.status}; stopping.`);
-    break;
+    return false;
   }
   const data: any = await res.json();
 
@@ -62,8 +89,11 @@ for (const batch of chunk(due.rows, 50)) {
     prevRes.rows.map((r) => [r.video_id, { view_count: r.view_count, snapshot_date: r.snapshot_date }])
   );
 
-  const rows = buildSnapshotRows(data.items || [], tracked, prev, today);
-  if (rows.length === 0) continue;
+  const built = buildSnapshotRows(data.items || [], tracked, prev, today);
+  const rows = overrideNextTrackDate
+    ? built.map((r) => ({ ...r, next_track_date: overrideNextTrackDate }))
+    : built;
+  if (rows.length === 0) return true;
   // Deterministic lock order across concurrent writers (launch-track, drain).
   rows.sort((a, b) => (a.video_id < b.video_id ? -1 : a.video_id > b.video_id ? 1 : 0));
 
@@ -109,7 +139,38 @@ for (const batch of chunk(due.rows, 50)) {
     client.release();
   }
   });
+  return true;
+}
+
+for (const batch of chunk(due.rows as BatchRow[], 50)) {
+  if (!(await processBatch(batch))) break;
   if (written % 5000 < 50) console.log(`Progress: ${written} snapshots, ${apiCalls} API calls`);
+}
+const dueWritten = written;
+const dueCalls = apiCalls;
+
+// ---------------------------------------------------------------- catalog slice
+let catalogVideos = 0;
+if (catalogSize > 0) {
+  const [poolRes, candRes] = await Promise.all([
+    pool.query(CATALOG_POOL_SQL, [CATALOG_MIN_TIER]),
+    // Ask for a little more than we need so selectCatalogSlice, not the LIMIT, decides.
+    pool.query(CATALOG_CANDIDATES_SQL, [CATALOG_MIN_TIER, catalogSize + 100]),
+  ]);
+  const poolSize = poolRes.rows[0]?.n ?? 0;
+  const slice = selectCatalogSlice(candRes.rows, catalogSize);
+  const parkUntil = catalogNextTrackDate(today, catalogCycleDays(poolSize, catalogSize));
+  console.log(
+    `catalog: selecting ${slice.length} of ${poolSize} tier>=${CATALOG_MIN_TIER} videos ` +
+    `(oldest read ${slice[0]?.last_tracked ?? 'never'}), parking until ${parkUntil}`
+  );
+  for (const batch of chunk(slice as unknown as BatchRow[], 50)) {
+    if (!(await processBatch(batch, parkUntil))) break;
+    catalogVideos = written - dueWritten;
+    if (catalogVideos % 5000 < 50) console.log(`Catalog progress: ${catalogVideos} snapshots`);
+  }
+  catalogVideos = written - dueWritten;
+  console.log(`catalog: ${catalogVideos} videos, ${apiCalls - dueCalls} calls`);
 }
 
 await pool.query(
@@ -120,5 +181,5 @@ await pool.query(
 await pool.query(`insert into quota_ledger (category, units) values ('snapshots-batch', $1)`, [apiCalls - mainBucketCalls]).catch(() => {});
 await pool.query(`insert into quota_ledger (category, units) values ('snapshots', $1)`, [mainBucketCalls]).catch(() => {});
 
-console.log(`Done. ${written} snapshots written, ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`);
+console.log(`Done. ${written} snapshots written (${dueWritten} due, ${catalogVideos} catalog), ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`);
 await pool.end();

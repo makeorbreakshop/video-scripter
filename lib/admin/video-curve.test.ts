@@ -168,6 +168,63 @@ describe('mergeActuals', () => {
   test('handles empty input', () => { expect(mergeActuals(pub, [], [])).toEqual([]); });
 });
 
+
+describe('mergeActuals source priority (snapshot > sample > rss)', () => {
+  const pub = '2026-08-01T12:00:00Z';
+
+  test('an rss reading fills a day with no paid reading at all', () => {
+    const out = mergeActuals(pub, [], [], [{ at: '2026-08-06T12:00:00Z', views: 900 }]);
+    expect(out).toEqual([{ day: 5, views: 900, source: 'rss', at: '2026-08-06T12:00:00.000Z' }]);
+  });
+
+  test('a snapshot within 12h shadows the rss reading', () => {
+    const out = mergeActuals(pub,
+      [{ at: '2026-08-06T12:00:00Z', views: 1000 }],
+      [],
+      [{ at: '2026-08-06T20:00:00Z', views: 1010 }]);
+    expect(out.map((p) => p.source)).toEqual(['snapshot']);
+    expect(out[0].views).toBe(1000);
+  });
+
+  test('a sample within 12h shadows the rss reading', () => {
+    const out = mergeActuals(pub,
+      [],
+      [{ at: '2026-08-06T12:00:00Z', views: 1000 }],
+      [{ at: '2026-08-06T18:00:00Z', views: 1010 }]);
+    expect(out.map((p) => p.source)).toEqual(['sample']);
+  });
+
+  test('an rss reading more than 12h from any paid reading survives', () => {
+    const out = mergeActuals(pub,
+      [{ at: '2026-08-06T12:00:00Z', views: 1000 }],
+      [],
+      [{ at: '2026-08-08T12:00:00Z', views: 1400 }]);
+    expect(out.map((p) => [p.source, p.views])).toEqual([['snapshot', 1000], ['rss', 1400]]);
+  });
+
+  test('on the exact same instant the stronger source wins, in either input order', () => {
+    const at = '2026-08-06T12:00:00Z';
+    expect(mergeActuals(pub, [{ at, views: 1 }], [{ at, views: 2 }], [{ at, views: 3 }])[0])
+      .toMatchObject({ source: 'snapshot', views: 1 });
+    expect(mergeActuals(pub, [], [{ at, views: 2 }], [{ at, views: 3 }])[0])
+      .toMatchObject({ source: 'sample', views: 2 });
+  });
+
+  test('rss is optional, so every existing caller keeps its two-source behaviour', () => {
+    const out = mergeActuals(pub, [{ at: '2026-08-03T12:00:00Z', views: 500 }], []);
+    expect(out.map((p) => p.source)).toEqual(['snapshot']);
+  });
+
+  test('rss points still collapse a repeated identical count', () => {
+    const out = mergeActuals(pub, [], [], [
+      { at: '2026-08-06T00:00:00Z', views: 900 },
+      { at: '2026-08-06T12:00:00Z', views: 900 },
+      { at: '2026-08-10T00:00:00Z', views: 1200 },
+    ]);
+    expect(out.map((p) => p.views)).toEqual([900, 1200]);
+  });
+});
+
 describe('packagingMarkers', () => {
   const pub = '2026-08-01T00:00:00Z';
   test('marks thumbnail versions after the first with a before -> after pair', () => {

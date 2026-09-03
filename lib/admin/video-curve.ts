@@ -12,7 +12,7 @@ export type Mult = Record<number, number>;
 export type Longtail = { ages: number[]; mult: number[] };
 export type CurvePoint = { day: number; expected: number; lo: number; hi: number };
 export type ProjPoint = { day: number; projected: number };
-export type Actual = { day: number; views: number; source: 'snapshot' | 'sample'; at: string };
+export type Actual = { day: number; views: number; source: 'snapshot' | 'sample' | 'rss'; at: string };
 export type Marker = {
   kind: 'thumb' | 'title';
   day: number;
@@ -157,8 +157,26 @@ export function forecastCurve(viewsNow: number, dayNow: number, est30: number | 
 
 type Point = { at: string | Date; views: number };
 
-// Daily snapshots + 15-minute launch samples on one days-since-publish axis. Snapshot wins on a tie.
-export function mergeActuals(publishedAt: string | Date, snapshots: Point[], samples: Point[]): Actual[] {
+/** How close a paid reading has to be for a free RSS reading to be redundant. */
+export const RSS_SHADOW_DAYS = 0.5; // 12 hours
+
+/** Measurement priority: a deliberate paid read beats whatever the feed happened to carry. */
+const RANK: Record<Actual['source'], number> = { rss: 0, sample: 1, snapshot: 2 };
+
+/**
+ * Daily snapshots + 15-minute launch samples + free RSS readings on one days-since-publish axis.
+ *
+ * PRIORITY: snapshot > sample > rss. The first two are deliberate paid reads; an RSS reading is
+ * whatever the channel feed happened to carry, so it fills gaps and never displaces a paid one.
+ * An rss point is dropped outright when a snapshot or sample sits within 12h of it, and loses
+ * any exact-day tie.
+ */
+export function mergeActuals(
+  publishedAt: string | Date,
+  snapshots: Point[],
+  samples: Point[],
+  rss: Point[] = []
+): Actual[] {
   const t0 = new Date(publishedAt).getTime();
   const byDay = new Map<number, Actual>();
   const add = (p: Point, source: Actual['source']) => {
@@ -166,17 +184,23 @@ export function mergeActuals(publishedAt: string | Date, snapshots: Point[], sam
     const day = (at.getTime() - t0) / 86400000;
     const views = Number(p.views);
     if (!Number.isFinite(day) || day < 0 || !(views > 0)) return;
-    if (source === 'sample' && byDay.has(day)) return;
+    // Exact-day collision: a stronger source replaces a weaker one, an equal one keeps the first.
+    const cur = byDay.get(day);
+    if (cur && RANK[source] <= RANK[cur.source]) return;
     byDay.set(day, { day, views, source, at: at.toISOString() });
   };
+  for (const p of rss) add(p, 'rss');
   for (const p of samples) add(p, 'sample');
   for (const p of snapshots) add(p, 'snapshot');
   const sorted = [...byDay.values()].sort((a, b) => a.day - b.day);
-  // Collapse noise: a snapshot within 12h of a real sample adds nothing, and a repeated
-  // identical count (a catalog re-read of an unchanged number) is not a second measurement.
+  const paid = sorted.filter((a) => a.source !== 'rss');
+  // Collapse noise: a snapshot within 12h of a real sample adds nothing, an RSS reading within
+  // 12h of any paid reading adds nothing, and a repeated identical count (a catalog re-read of
+  // an unchanged number) is not a second measurement.
   const kept: Actual[] = [];
   for (const a of sorted) {
-    if (a.source === 'snapshot' && sorted.some((b) => b.source === 'sample' && Math.abs(b.day - a.day) < 0.5)) continue;
+    if (a.source === 'snapshot' && sorted.some((b) => b.source === 'sample' && Math.abs(b.day - a.day) < RSS_SHADOW_DAYS)) continue;
+    if (a.source === 'rss' && paid.some((b) => Math.abs(b.day - a.day) < RSS_SHADOW_DAYS)) continue;
     const last = kept[kept.length - 1];
     if (last && last.views === a.views && a.day - last.day < 2) continue;
     kept.push(a);

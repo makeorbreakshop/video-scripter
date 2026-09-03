@@ -44,7 +44,8 @@ import {
   isUpdatedSince,
   shouldProcessEntries,
   isNewUpload,
-  isSampleWorthy,
+  shouldStoreSample,
+  LAST_SAMPLES_SQL,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
   DUE_CHANNELS_SQL,
@@ -321,6 +322,8 @@ const allIds = [...new Set(fetched.flatMap((f) => f.entries.map((e) => e.video_i
 interface Snap {
   title: string | null; description: string | null; published_at: Date | null;
   title_observed_at: Date | null;
+  /** Last stored rss_samples reading, for the change-based dedupe. */
+  lastSample?: { views: number | null; at: Date };
   descVersion?: number; descSha?: string;
   titleMaxVersion?: number;
   thumbVersion?: number; thumbLastChecked?: Date;
@@ -332,18 +335,22 @@ for (const part of chunk(allIds, CHUNK)) {
   // A partial snapshot is worse than none: a video missing from `snap` looks like an unknown id
   // and would be queued as a new upload, and its real title/description diff would be missed.
   if (job.signal.aborted) { snapshotComplete = false; break; }
-  const [v, d, t, th] = await Promise.all([
+  const [v, d, t, th, ls] = await Promise.all([
     pool.query(`select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [part]),
     pool.query(`select distinct on (video_id) video_id, version, sha256 from description_versions
                  where video_id = any($1) order by video_id, version desc`, [part]),
     pool.query(`select video_id, max(version)::int as v from title_versions where video_id = any($1) group by video_id`, [part]),
     pool.query(`select distinct on (video_id) video_id, version, last_checked from thumbnail_versions
                  where video_id = any($1) order by video_id, version desc`, [part]),
+    // The change-based rss_samples dedupe (shouldStoreSample). ONE set-based read per chunk,
+    // in the snapshot phase — never a per-channel query inside the fetch loop.
+    pool.query(LAST_SAMPLES_SQL, [part]),
   ]);
   for (const r of v.rows) snap.set(r.id, { title: r.title, description: r.description, published_at: r.published_at, title_observed_at: r.title_observed_at });
   for (const r of d.rows) { const s = snap.get(r.video_id); if (s) { s.descVersion = r.version; s.descSha = r.sha256; } }
   for (const r of t.rows) { const s = snap.get(r.video_id); if (s) s.titleMaxVersion = r.v; }
   for (const r of th.rows) { const s = snap.get(r.video_id); if (s) { s.thumbVersion = r.version; s.thumbLastChecked = r.last_checked; } }
+  for (const r of ls.rows) { const s = snap.get(r.video_id); if (s) s.lastSample = { views: r.views == null ? null : Number(r.views), at: r.at }; }
 }
 const snapSecs = secs(t1);
 if (!snapshotComplete) { fetched.length = 0; log('snapshot aborted mid-way; skipping the diff so no feed is half-read'); }
@@ -354,6 +361,7 @@ log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} al
 const t2 = Date.now();
 const nowIso = now.toISOString();
 let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
+let sampled = 0, skippedSamples = 0;
 const diffedChannels = new Set<string>();
 
 for (const f of fetched) {
@@ -372,10 +380,14 @@ for (const f of fetched) {
       continue;
     }
 
-    // Free stats trace, but only while the curve is still moving. A year-old video's view count
-    // does not need a 15-minute sample; that was ~9,000 wasted inserts per tick.
-    if (isSampleWorthy(cur.published_at, now) && (e.views != null || e.likes != null)) {
+    // Free stats trace for EVERY entry the feed carries, deduped on change rather than on age
+    // (shouldStoreSample). The old 30-day gate threw away the back-catalogue readings the
+    // long-tail fit has no data for, and still wrote a repeat row every tick for young videos.
+    if (shouldStoreSample(cur.lastSample ?? null, e.views, now)) {
       buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes });
+      sampled++;
+    } else {
+      skippedSamples++;
     }
 
     const evidence = { publishedAt: cur.published_at, titleObservedAt: cur.title_observed_at };
@@ -461,7 +473,7 @@ log(
   `${written['touch_queue'] ?? 0} new videos queued of ${buf.touchQueue.length} offered ` +
   `(${skippedOld} older unknown entries skipped), ` +
   `${titleChanges} title changes (${titleSyncs} synced), ${descChanges} description changes, ` +
-  `${buf.dueNow.length} marked due-now, ${buf.samples.length} rss_samples`
+  `${buf.dueNow.length} marked due-now, ${sampled} rss_samples (${skippedSamples} unchanged readings skipped)`
 );
 log(`rows written: ${JSON.stringify(written)}`);
 await pool.end();

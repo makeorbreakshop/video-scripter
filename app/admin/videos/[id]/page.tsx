@@ -12,10 +12,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { video: v, snapshots, samples, thumbs, titles, score: sc, mult } = await videoPage(id);
+  const { video: v, snapshots, samples, rss, thumbs, titles, score: sc, mult } = await videoPage(id);
   if (!v) notFound();
 
-  const actuals = mergeActuals(v.published_at, snapshots, samples);
+  const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
   const markers = packagingMarkers(v.published_at, thumbs, titles);
   const maxDay = Math.max(30, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays(v.published_at) ?? 0);
   // Curves start at the first actual point (or 1h, whichever is earlier) so the launch hours are drawn.

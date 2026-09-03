@@ -285,6 +285,8 @@ export type VideoPageData = {
   video: any;
   snapshots: { at: string; views: number; days_since_published: number; like_count: number; comment_count: number }[];
   samples: { at: string; views: number }[];
+  /** Free RSS readings, lowest priority in mergeActuals. */
+  rss: { at: string; views: number }[];
   thumbs: { version: number; first_seen: string; last_checked: string; sha256: string | null; phash: string | null; r2_uploaded_at: string | null }[];
   titles: { version: number; title: string; first_seen: string }[];
   score: OutlierRow | null;
@@ -299,7 +301,7 @@ export type VideoPageData = {
 };
 
 export async function videoPage(id: string): Promise<VideoPageData> {
-  const [video, snapshots, samples, thumbs, titles, score, params] = await Promise.all([
+  const [video, snapshots, samples, rss, thumbs, titles, score, params] = await Promise.all([
     one<any>(
       `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.like_count,
               v.comment_count, v.duration, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
@@ -314,6 +316,9 @@ export async function videoPage(id: string): Promise<VideoPageData> {
       [id]
     ),
     q<any>(`select sampled_at as at, view_count as views from view_samples where video_id = $1 order by sampled_at`, [id]),
+    // Free RSS readings — the lowest-priority measurement source (see mergeActuals). Same
+    // (video_id, at) index as the poller's dedupe read.
+    q<any>(`select at, views from rss_samples where video_id = $1 and views is not null order by at`, [id]),
     q<any>(
       `select version, first_seen, last_checked, sha256, phash, r2_uploaded_at
        from thumbnail_versions where video_id = $1 order by version`,
@@ -333,6 +338,6 @@ export async function videoPage(id: string): Promise<VideoPageData> {
         `select age_bucket, n, q10, q25, q50, q75, q90 from channel_forecast_bands
           where channel_id = $1 order by age_bucket`, [video.channel_id]))
     : null;
-  return { video, snapshots, samples, thumbs, titles, score, mult: params?.mult ?? {},
+  return { video, snapshots, samples, rss, thumbs, titles, score, mult: params?.mult ?? {},
            longtail: params?.longtail ?? null, bands: chBands ?? params?.bands ?? null };
 }
