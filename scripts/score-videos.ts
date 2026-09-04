@@ -35,6 +35,7 @@ import fs from 'node:fs';
 import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
+import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
@@ -368,6 +369,8 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
       extra: { params_version: MODEL_VERSION, observation_version: OBSERVATION_SCORE_VERSION, q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime },
     })));
     if (hist) await client.query(hist.text, hist.values);
+    // Headline scores commit with the score/history batch, including partial/stopped runs.
+    await refreshScoredChannels(client, rows.map(row => row.channel_id));
     await client.query('commit');
     for (const row of rows) if (row.channel_id) scoredChannels.add(row.channel_id);
   } catch (error) { await client.query('rollback'); throw error; }
@@ -449,8 +452,7 @@ async function score(signal: AbortSignal) {
   const cap = LIMIT ? `limit ${LIMIT}` : '';
   // --all drops the 60-day ceiling: a same-age score has no reason to freeze, so the cadence
   // comes from the SNAPSHOT tiers (daily <30d, every 3d to 180d, weekly after), not the scorer.
-  const ceiling = ALL ? '' : `and v.published_at > now() - interval '60 days'`;
-  const targets: { id: string; channel_id: string }[] = await q(
+  const bulkTargets: { id: string; channel_id: string }[] | null = SINCE || (ALL && FORCE) ? await q(
     SINCE
       ? `select v.id, v.channel_id from videos v
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
@@ -461,24 +463,39 @@ async function score(signal: AbortSignal) {
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
           order by v.published_at desc ${cap}`
       : `select v.id, v.channel_id from videos v
-          left join video_scores sc on sc.video_id = v.id
-          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceiling} ${chFilter}
-            and ${scoreRefreshSql(OBSERVATION_SCORE_VERSION)}
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
           order by v.published_at desc ${cap}`,
     args
-  );
-  log(`score: ${targets.length} videos to score${SINCE ? ` (--since ${SINCE}d)` : ALL ? ' (--all: whole corpus)' : ''}`);
-  let written = 0, noCurve = 0, tooYoung = 0;
-  for (const group of scoringTargetBatches(targets)) {
-    if (signal.aborted) break;
-    const readStartedAt = new Date();
-    const batch = await v5Batch(group, params);
-    for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
-    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, OBSERVATION_SCORE_VERSION, b.views, b.o)), readStartedAt);
-    if (written % 5000 < 500) log(`score: ${written} written`);
-    if (ALL) await sleep(SLEEP_MS);   // --all walks the whole corpus; pace it
+  ) : null;
+  let written = 0, selected = 0, noCurve = 0, tooYoung = 0;
+  const processTargets = async (targets: { id: string; channel_id: string }[]) => {
+    for (const group of scoringTargetBatches(targets)) {
+      if (signal.aborted) break;
+      const readStartedAt = new Date();
+      const batch = await v5Batch(group, params);
+      for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
+      written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, OBSERVATION_SCORE_VERSION, b.views, b.o)), readStartedAt);
+      if (written % 5000 < 100) log(`score: ${written} written`);
+      if (ALL) await sleep(SLEEP_MS);
+    }
+  };
+  if (bulkTargets) {
+    selected = bulkTargets.length;
+    log(`score: ${selected} videos to score${SINCE ? ` (--since ${SINCE}d)` : ' (--all --force)'}`);
+    await processTargets(bulkTargets);
+  } else {
+    selected = await walkIncrementalScoreTargets<ScoreTargetCursorRow>({
+      limit: LIMIT ?? Number.MAX_SAFE_INTEGER,
+      signal,
+      fetchPage: async (cursor, limit) => {
+        const query = incrementalScoreTargetsSql({ all: ALL, channels: CHANNELS, limit, cursor, version: OBSERVATION_SCORE_VERSION });
+        return q(query.text, query.values);
+      },
+      onPage: processTargets,
+    });
   }
-  log(`score: ${signal.aborted ? 'stopped' : 'done'}, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
+  if (selected === 0) log(`score: 0 videos to score${ALL ? ' (--all: whole corpus)' : ''}`);
+  log(`score: ${signal.aborted ? 'stopped' : 'done'}, ${selected} selected, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
 }
 
 // --final: videos past 60 days that the hourly pass does not select. Under v5 this is the same
@@ -578,14 +595,9 @@ try {
     args: process.argv.slice(2),
     run: async (signal) => {
       if (FIT) await fit(); else if (V5) await v5(signal); else if (FINAL) await final(signal); else await score(signal);
-      // Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
-      // refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
-      if (!FIT && !V5 && !signal.aborted) {
-        const statsRefreshed = await refreshScoredChannels(pool, scoredChannels)
-          .catch((e: any) => { console.error('channel_stats refresh:', e.message); return [] as string[]; });
-        // New scores change what the channel page and every video page on it say.
-        await revalidateRemote({ channels: statsRefreshed });
-      }
+        // The atomic batch already refreshed headlines. Invalidate every committed channel
+      // even on a cooperative stop; otherwise clean scores can leave cached headlines stale.
+      if (!FIT && !V5) await revalidateRemote({ channels: [...scoredChannels] });
     },
   });
 } finally {

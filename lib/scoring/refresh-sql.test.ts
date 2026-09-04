@@ -7,7 +7,7 @@ test('resumable all-age scoring still requires missing/stale/version-mismatched 
   expect(sql).toContain('r.at > sc.scored_at');
   expect(sql).toContain('s.sampled_at > sc.scored_at');
   const script = fs.readFileSync(path.join(process.cwd(), 'scripts/score-videos.ts'), 'utf8');
-  const hourly = script.slice(script.indexOf('async function score()'), script.indexOf('async function final()'));
+  const hourly = script.slice(script.indexOf('async function score('), script.indexOf('async function final('));
   expect(hourly).toContain(': ALL && FORCE');
-  expect(hourly).toContain('and ${scoreRefreshSql(OBSERVATION_SCORE_VERSION)}');
+  expect(hourly).toContain('incrementalScoreTargetsSql({');
 });
