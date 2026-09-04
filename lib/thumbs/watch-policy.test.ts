@@ -155,6 +155,12 @@ describe('SQL shape', () => {
     expect(HOT_TARGETS_SQL).toContain('order by v.published_at desc');
   });
 
+  it('looks up latest thumbnail state only for bounded hot-window videos', () => {
+    expect(HOT_TARGETS_SQL).toContain('left join lateral');
+    expect(HOT_TARGETS_SQL).toContain('where t.video_id = v.id order by t.version desc limit 1');
+    expect(HOT_TARGETS_SQL).not.toContain('select distinct on (video_id)');
+  });
+
   it('the long-tail query keeps its indexed published_at ranges and its own recheck windows', () => {
     expect(LONG_TAIL_TARGETS_SQL).toContain("interval '30 days'");
     expect(LONG_TAIL_TARGETS_SQL).toContain("interval '90 days'");

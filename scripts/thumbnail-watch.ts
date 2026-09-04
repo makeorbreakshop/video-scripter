@@ -53,14 +53,25 @@ const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 4,
 });
-// batch job: target selection legitimately scans the 30-day window; the 2min
-// statement_timeout was killing it (57014). pgbouncer strips startup options,
-// so SET per connection instead.
-pool.on('connect', (c) => { c.query('set statement_timeout = 0').catch(() => {}); });
+async function boundedRead(sql: string, values: unknown[]): Promise<pg.QueryResult<any>> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin read only');
+    await client.query("set local statement_timeout = '30s'");
+    const result = await client.query(sql, values);
+    await client.query('commit');
+    return result;
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 const STORE = path.join(path.dirname(new URL(import.meta.url).pathname), '../data/thumbnails');
 
 if (dry) {
-  const { rows } = await pool.query(TIER_COUNTS_SQL, [subset]);
+  const { rows } = await boundedRead(TIER_COUNTS_SQL, [subset]);
   console.log(`gate: ${subset ? 'watch_subset only (new cadence), rest legacy' : 'new cadence for everything'}`);
   console.log('tier    total      due now');
   for (const t of TIER_ORDER) {
@@ -74,14 +85,14 @@ if (dry) {
 }
 
 // Hot tiers first: they always get the budget they need.
-const { rows: hot } = await pool.query(HOT_TARGETS_SQL, [subset, maxVideos]);
+const { rows: hot } = await boundedRead(HOT_TARGETS_SQL, [subset, maxVideos]);
 let targets = hot;
 // Long tail fills whatever is left, capped, and only on the first LaunchAgent slot of the hour
 // (its anti-join spans ~850K rows; this DB has had IO incidents).
 if (isLongTailRun(new Date()) || forceLongTail) {
   const budget = Math.min(LONG_TAIL_MAX_PER_RUN, Math.max(0, maxVideos - hot.length));
   if (budget > 0) {
-    const { rows: tail } = await pool.query(LONG_TAIL_TARGETS_SQL, [subset, budget]);
+    const { rows: tail } = await boundedRead(LONG_TAIL_TARGETS_SQL, [subset, budget]);
     targets = hot.concat(tail);
     console.log(`Hot tiers: ${hot.length}; long tail: ${tail.length}`);
   }

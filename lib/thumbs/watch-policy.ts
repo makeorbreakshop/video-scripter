@@ -166,9 +166,11 @@ const dueBoth = (lastChecked: string, window: 'hot' | 'long-tail') =>
         or (not ${ON_NEW_LADDER} and (${dueSql('legacy', lastChecked, window)})))`;
 
 /** Everything under 30 days. $1 = subset gate on?, $2 = limit. */
-export const HOT_TARGETS_SQL = `${LATEST}
-   select v.id from videos v
-   left join latest l on l.video_id = v.id
+export const HOT_TARGETS_SQL = `select v.id from videos v
+   left join lateral (
+     select t.last_checked from thumbnail_versions t
+     where t.video_id = v.id order by t.version desc limit 1
+   ) l on true
    where v.published_at > now() - ${sql(LONG_TAIL_AFTER)}
      and ${ELIGIBLE}
      and ${dueBoth('l.last_checked', 'hot')}
