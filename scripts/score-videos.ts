@@ -23,6 +23,7 @@ import {
   priorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, channelBaseline, type PriorEstimate,
   fitLaunchLadder, fittedBuckets, bucketTolerance, HOUR_BUCKETS, type LaunchRow,
 } from '../lib/scoring/core';
+import { fitPast30, PAST30_AGES, type TailPair } from '../lib/scoring/growth';
 
 const FIT = process.argv.includes('--fit');
 const ALL = process.argv.includes('--all');
@@ -165,6 +166,19 @@ async function fit() {
   }
   const params = fitParams(fitRows);
   params.longtail = await fitLongtailTable();
+  // v5: prefer the snapshot-pair fit for the buckets it actually supports; fall back to the
+  // lifetime-count table bucket by bucket so an unsupported age never loses its multiplier.
+  const pairs = await fitPast30Table();
+  const past = fitPast30(pairs);
+  const lt0 = params.longtail;
+  const merged = { ages: [...lt0.ages], mult: [...lt0.mult], n: [...lt0.n] };
+  for (let i = 0; i < past.ages.length; i++) {
+    const j = merged.ages.indexOf(past.ages[i]);
+    if (j >= 0 && past.n[i] >= 20) { merged.mult[j] = past.mult[i]; merged.n[j] = past.n[i]; }
+  }
+  for (let i = 1; i < merged.mult.length; i++) merged.mult[i] = Math.max(merged.mult[i], merged.mult[i - 1], 1);
+  params.longtail = merged;
+  log(`fit: past-30 pairs ${past.ages.map((a, i) => `${a}d x${past.mult[i].toFixed(3)} (n=${past.n[i]})`).join('  ')}`);
   // Launch ladder: hour buckets chained through day 1 from the 5-minute samples (see core).
   const launch = fitLaunchLadder(await launchRows(), params.mult[1] ?? 0);
   Object.assign(params.mult, launch.mult);
@@ -227,6 +241,31 @@ async function fitLongtailTable() {
   const ltRows: LongtailRow[] = rows.map((r: any) => ({ age: Number(r.age), v30: Number(r.v30), lifetime: Number(r.later) }));
   log(`fit: longtail fed by ${ltRows.length} (video, later-count) observations`);
   return fitLongTail(ltRows);
+}
+
+
+// v5: the past-30 half of G, fitted from SNAPSHOT PAIRS in a trailing 12-month window.
+// Every (day-27..33 reading, later reading >= 60d) pair on the same video, bucketed by the later
+// reading's age. Pairs, not lifetime counts: a lifetime count is read TODAY while the day-30
+// reading is old, which mixes calendar time into what is supposed to be an age curve. The
+// 12-month window is on the day-30 reading, so the table is temporal like the rest of the fit.
+async function fitPast30Table(): Promise<TailPair[]> {
+  const rows = await q(
+    `with base as (
+       select distinct on (s.video_id) s.video_id, s.view_count as v30, s.snapshot_date as at30
+         from view_snapshots s
+         join videos v on v.id = s.video_id
+        where s.days_since_published between 27 and 33 and s.view_count > 0
+          and s.snapshot_date > (now() - interval '12 months')::date
+          and ${longformSql('v')}
+        order by s.video_id, abs(s.days_since_published - 30))
+     select b.v30, l.view_count as later, l.days_since_published::float as later_age
+       from base b
+       join view_snapshots l on l.video_id = b.video_id
+        and l.days_since_published >= 60 and l.view_count > 0`
+  );
+  log(`fit: past-30 fed by ${rows.length} (day-30, later-snapshot) pairs in the last 12 months`);
+  return rows.map((r: any) => ({ laterAge: Number(r.later_age), v30: Number(r.v30), later: Number(r.later) }));
 }
 
 async function score() {
