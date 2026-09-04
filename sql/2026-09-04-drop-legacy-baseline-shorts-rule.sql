@@ -1,0 +1,282 @@
+-- 2026-09-04: remove the last SQL copy of the Shorts rule.
+--
+-- lib/ingest/classify.ts is THE one Shorts rule (<=62s Short; 63-180s undecidable from
+-- duration and settled only by YouTube's own /shorts/<id> routing via lib/thumbs/shorts.ts;
+-- >180s long-form). `is_youtube_short(duration, title, description)` is a duration-only rule
+-- (<= 180s, or a #shorts hashtag) that predates it, and three pre-v3 temporal-baseline
+-- functions filter with `NOT is_youtube_short(...)`:
+--
+--   process_baseline_batch(integer)
+--   calculate_rolling_baselines_batch(integer, integer)
+--   get_packaging_performance(text,text,text,text,text,text,integer,integer)
+--
+-- Evidence they are dead (2026-09-04):
+--   * no caller in app/ or lib/ except the wrapper trigger_baseline_processing(integer),
+--     itself reachable only from the orphan route app/api/baseline/trigger/route.ts
+--     (nothing in the app fetches /api/baseline/trigger); that route is deleted with this
+--     migration.
+--   * cron.job has no job for any of them; cron.job_run_details last ran
+--     `SELECT process_baseline_batch(1000);` on 2025-08-08.
+--   * pg_stat_statements (reset 2026-09-04 15:08 UTC) shows no call;
+--     pg_stat_user_functions is empty because track_functions = none.
+--   * no other pg_proc body references them.
+--
+-- idx_videos_baseline_calc (86 MB) is a partial index on `videos` whose predicate calls
+-- is_youtube_short, so the function cannot be dropped while it exists; it only ever served
+-- the baseline batch above.
+--
+-- NOT DROPPED, and why: is_youtube_short() itself survives, because the materialized view
+-- public.packaging_performance (345 MB, 220,465 rows, last refreshed 2026-09-02, cron job 16
+-- inactive) embeds `NOT is_youtube_short(...)` in its definition and still backs the legacy
+-- /dashboard/youtube/packaging page via app/api/youtube/packaging/route.ts. Dropping the
+-- function means dropping that matview and retiring that page — a separate decision.
+-- lib/ingest/no-db-shorts-rule.test.ts holds the line for pg_proc in the meantime.
+--
+-- Idempotent: safe to re-run.
+--
+-- ============================ ROLLBACK (definitions as of 2026-09-04) ============================
+-- CREATE OR REPLACE FUNCTION public.is_youtube_short(duration text, title text DEFAULT ''::text, description text DEFAULT ''::text)
+--  RETURNS boolean
+--  LANGUAGE plpgsql
+--  IMMUTABLE
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+--   DECLARE
+--     duration_seconds INTEGER;
+--     combined_text TEXT;
+--   BEGIN
+--     -- Duration check: <= 3 minutes (180 seconds)
+--     duration_seconds := public.extract_duration_seconds(duration);
+--     IF duration_seconds > 0 AND duration_seconds <= 180 THEN
+--       RETURN TRUE;
+--     END IF;
+-- 
+--     -- Hashtag check: Look for #shorts, #short, #youtubeshorts (case insensitive)
+--     combined_text := LOWER(COALESCE(title, '') || ' ' || COALESCE(description,
+--   ''));
+--     IF combined_text ~ '\#shorts?\b' OR combined_text ~ '\#youtubeshorts?\b'
+--   THEN
+--       RETURN TRUE;
+--     END IF;
+-- 
+--     RETURN FALSE;
+--   END;
+--   $function$
+-- 
+-- ;
+-- CREATE OR REPLACE FUNCTION public.process_baseline_batch(batch_size integer DEFAULT 1000)
+--  RETURNS integer
+--  LANGUAGE plpgsql
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+-- DECLARE
+--   processed INTEGER;
+-- BEGIN
+--   WITH batch AS (
+--     SELECT v1.id
+--     FROM videos v1
+--     WHERE v1.rolling_baseline_views IS NULL
+--     AND NOT is_youtube_short(v1.duration, v1.title, v1.description)
+--     LIMIT batch_size
+--   )
+--   UPDATE videos 
+--   SET rolling_baseline_views = (
+--     SELECT AVG(v2.view_count)::INTEGER
+--     FROM videos v2
+--     WHERE v2.channel_id = videos.channel_id
+--     AND v2.published_at >= videos.published_at - INTERVAL '1 year'
+--     AND v2.published_at < videos.published_at
+--     AND NOT is_youtube_short(v2.duration, v2.title, v2.description)
+--     AND v2.view_count > 0
+--   )
+--   FROM batch
+--   WHERE videos.id = batch.id;
+--   
+--   GET DIAGNOSTICS processed = ROW_COUNT;
+--   RETURN processed;
+-- END;
+-- $function$
+-- 
+-- ;
+-- CREATE OR REPLACE FUNCTION public.calculate_rolling_baselines_batch(batch_size integer DEFAULT 500, offset_val integer DEFAULT 0)
+--  RETURNS TABLE(processed integer, batch_start integer, batch_end integer)
+--  LANGUAGE plpgsql
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+--   DECLARE
+--     video_record RECORD;
+--     baseline_avg INTEGER;
+--     updated_count INTEGER := 0;
+--     batch_count INTEGER := 0;
+--   BEGIN
+--     FOR video_record IN
+--       SELECT id, channel_id, published_at
+--       FROM videos
+--       ORDER BY channel_id, published_at
+--       LIMIT batch_size OFFSET offset_val
+--     LOOP
+--       SELECT COALESCE(AVG(view_count)::INTEGER, 0) INTO baseline_avg
+--       FROM videos v2
+--       WHERE v2.channel_id = video_record.channel_id
+--         AND v2.published_at < video_record.published_at
+--         AND v2.published_at >= video_record.published_at - INTERVAL '1 year'
+--         AND NOT is_youtube_short(v2.duration, v2.title, v2.description);
+-- 
+--       UPDATE videos
+--       SET rolling_baseline_views = CASE
+--         WHEN baseline_avg > 0 THEN baseline_avg
+--         ELSE NULL
+--       END
+--       WHERE id = video_record.id;
+-- 
+--       updated_count := updated_count + 1;
+--       batch_count := batch_count + 1;
+--     END LOOP;
+-- 
+--     RETURN QUERY SELECT updated_count, offset_val, offset_val + batch_count -
+--    1;
+--   END;
+--   $function$
+-- 
+-- ;
+-- CREATE OR REPLACE FUNCTION public.get_packaging_performance(search_term text DEFAULT ''::text, competitor_filter text DEFAULT 'all'::text, date_filter text DEFAULT 'all'::text, performance_filter text DEFAULT ''::text, sort_by text DEFAULT 'performance_ratio'::text, sort_order text DEFAULT 'desc'::text, page_limit integer DEFAULT 24, page_offset integer DEFAULT 0)
+--  RETURNS TABLE(id text, title text, view_count integer, published_at timestamp with time zone, baseline_views integer, performance_ratio numeric, thumbnail_url text, is_competitor boolean, channel_id text, channel_name text, channel_avg_views integer, total_count bigint)
+--  LANGUAGE plpgsql
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+-- DECLARE
+--   date_filter_condition TEXT;
+--   performance_filter_condition TEXT;
+--   competitor_filter_condition TEXT;
+--   search_condition TEXT;
+--   sort_condition TEXT;
+-- BEGIN
+--   -- Build date filter condition
+--   CASE date_filter
+--     WHEN '1week' THEN date_filter_condition := 'v.published_at >= NOW() - INTERVAL ''1 week''';
+--     WHEN '1month' THEN date_filter_condition := 'v.published_at >= NOW() - INTERVAL ''1 month''';
+--     WHEN '3months' THEN date_filter_condition := 'v.published_at >= NOW() - INTERVAL ''3 months''';
+--     WHEN '6months' THEN date_filter_condition := 'v.published_at >= NOW() - INTERVAL ''6 months''';
+--     WHEN '1year' THEN date_filter_condition := 'v.published_at >= NOW() - INTERVAL ''1 year''';
+--     ELSE date_filter_condition := 'TRUE';
+--   END CASE;
+--   
+--   -- Build performance filter condition
+--   CASE performance_filter
+--     WHEN 'high' THEN performance_filter_condition := 'v.rolling_baseline_views > 0 AND (v.view_count::float / v.rolling_baseline_views) >= 2.0';
+--     WHEN 'medium' THEN performance_filter_condition := 'v.rolling_baseline_views > 0 AND (v.view_count::float / v.rolling_baseline_views) >= 1.0 AND (v.view_count::float / v.rolling_baseline_views) < 2.0';
+--     WHEN 'low' THEN performance_filter_condition := 'v.rolling_baseline_views > 0 AND (v.view_count::float / v.rolling_baseline_views) < 1.0';
+--     ELSE performance_filter_condition := 'TRUE';
+--   END CASE;
+--   
+--   -- Build competitor filter condition
+--   CASE competitor_filter
+--     WHEN 'competitors' THEN competitor_filter_condition := 'v.is_competitor = true';
+--     WHEN 'mine' THEN competitor_filter_condition := 'v.is_competitor = false';
+--     WHEN 'user' THEN competitor_filter_condition := 'v.is_competitor = false';
+--     ELSE competitor_filter_condition := 'TRUE';
+--   END CASE;
+--   
+--   -- Build search condition
+--   IF search_term IS NOT NULL AND search_term != '' THEN
+--     search_condition := 'v.title ILIKE ''%' || search_term || '%''';
+--   ELSE
+--     search_condition := 'TRUE';
+--   END IF;
+--   
+--   -- Build sort condition
+--   CASE sort_by
+--     WHEN 'performance_ratio' THEN 
+--       IF sort_order = 'desc' THEN
+--         sort_condition := 'performance_ratio DESC NULLS LAST';
+--       ELSE
+--         sort_condition := 'performance_ratio ASC NULLS LAST';
+--       END IF;
+--     WHEN 'view_count' THEN sort_condition := 'view_count ' || sort_order;
+--     WHEN 'published_at' THEN sort_condition := 'published_at ' || sort_order;
+--     ELSE sort_condition := 'published_at DESC';
+--   END CASE;
+--   
+--   -- Execute query with channel_name included and proper type casting
+--   RETURN QUERY EXECUTE format('
+--     WITH filtered_videos AS (
+--       SELECT 
+--         v.id,
+--         v.title,
+--         v.view_count,
+--         v.published_at,
+--         v.rolling_baseline_views as baseline_views,
+--         CASE 
+--           WHEN v.rolling_baseline_views > 0 THEN 
+--             ROUND((v.view_count::float / v.rolling_baseline_views)::numeric, 2)
+--           ELSE NULL 
+--         END as performance_ratio,
+--         v.thumbnail_url,
+--         v.is_competitor,
+--         v.channel_id,
+--         COALESCE(v.channel_name, ''Unknown Channel'') as channel_name,
+--         v.rolling_baseline_views::integer as channel_avg_views,
+--         COUNT(*) OVER() as total_count
+--       FROM videos v
+--       WHERE NOT is_youtube_short(v.duration, v.title, v.description)  -- Exclude shorts
+--         AND %s  -- date filter
+--         AND %s  -- performance filter
+--         AND %s  -- competitor filter
+--         AND %s  -- search condition
+--     )
+--     SELECT 
+--       fv.id,
+--       fv.title,
+--       fv.view_count,
+--       fv.published_at,
+--       fv.baseline_views,
+--       fv.performance_ratio,
+--       fv.thumbnail_url,
+--       fv.is_competitor,
+--       fv.channel_id,
+--       fv.channel_name,
+--       fv.channel_avg_views,
+--       fv.total_count
+--     FROM filtered_videos fv
+--     ORDER BY %s
+--     LIMIT %s OFFSET %s',
+--     date_filter_condition,
+--     performance_filter_condition,
+--     competitor_filter_condition,
+--     search_condition,
+--     sort_condition,
+--     page_limit,
+--     page_offset
+--   );
+-- END;
+-- $function$
+-- 
+-- ;
+-- CREATE OR REPLACE FUNCTION public.trigger_baseline_processing(batch_size integer DEFAULT 1000)
+--  RETURNS integer
+--  LANGUAGE plpgsql
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+--   DECLARE
+--     processed_count INTEGER;
+--   BEGIN
+--     SELECT process_baseline_batch(batch_size) INTO
+--   processed_count;
+--     RETURN processed_count;
+--   END;
+--   $function$
+-- 
+-- ;
+-- CREATE INDEX idx_videos_baseline_calc ON public.videos USING btree (channel_id, published_at, view_count) WHERE ((NOT is_youtube_short(duration, title, description)) AND (view_count > 0))
+-- ================================= END ROLLBACK =================================
+
+begin;
+
+drop index if exists public.idx_videos_baseline_calc;
+
+drop function if exists public.trigger_baseline_processing(integer);
+drop function if exists public.process_baseline_batch(integer);
+drop function if exists public.calculate_rolling_baselines_batch(integer, integer);
+drop function if exists public.get_packaging_performance(text, text, text, text, text, text, integer, integer);
+
+commit;
