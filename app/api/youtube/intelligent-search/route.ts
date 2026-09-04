@@ -63,6 +63,10 @@ export async function POST(request: Request) {
 
     // Fast mode: Return immediate semantic + keyword results
     if (fastMode) {
+      // 2026-09-04: the keyword half of fast mode used to fetch /api/youtube/packaging, which read
+      // the `packaging_performance` materialized view. That view carried a duration-only Shorts
+      // rule (`NOT is_youtube_short(...)`) and had not been refreshed since 2026-09-02; it and the
+      // legacy page it backed were retired, so fast mode is semantic-only.
       const immediatePromises = [
         // Semantic search
         fetch(new URL('/api/youtube/pattern-search', request.url), {
@@ -73,19 +77,15 @@ export async function POST(request: Request) {
             relevance: 0.5, // Higher threshold for better quality
             performanceThreshold: 0.3,
             page,
-            limit: Math.ceil(limit * 0.4), // 40% semantic
+            limit, // semantic-only now that the keyword half is retired
             ...filters
           })
-        }),
-        // Keyword search via packaging API - prioritize this with higher limit
-        fetch(new URL(`/api/youtube/packaging?search=${encodeURIComponent(query)}&page=${page}&limit=${Math.ceil(limit * 0.6)}&competitorFilter=all&sortBy=performance_ratio&sortOrder=desc`, request.url))
+        })
       ];
 
-      const [semanticResponse, keywordResponse] = await Promise.all(immediatePromises);
-      const [semanticData, keywordData] = await Promise.all([
-        semanticResponse.json(),
-        keywordResponse.json()
-      ]);
+      const [semanticResponse] = await Promise.all(immediatePromises);
+      const semanticData = await semanticResponse.json();
+      const keywordData: { data?: any[] } = {};
 
       // Merge and deduplicate
       const allResults: SearchResult[] = [];

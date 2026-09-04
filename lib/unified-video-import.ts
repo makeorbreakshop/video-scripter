@@ -787,7 +787,10 @@ export class VideoImportService {
             like_count = EXCLUDED.like_count,
             comment_count = EXCLUDED.comment_count,
             thumbnail_url = EXCLUDED.thumbnail_url,
-            is_short = EXCLUDED.is_short,
+            -- is_short is settled by lib/ingest/classify.ts against YouTube's own /shorts/<id>
+            -- routing and stamped with shorts_checked_at. This path carries no such stamp, so it
+            -- must never overwrite a verified verdict with a duration-only guess.
+            is_short = case when EXCLUDED.shorts_checked_at is not null then EXCLUDED.is_short else videos.is_short end,
             performance_ratio = EXCLUDED.performance_ratio,
             channel_subscriber_count = EXCLUDED.channel_subscriber_count,
             tags = EXCLUDED.tags,

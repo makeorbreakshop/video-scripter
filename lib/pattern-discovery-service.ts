@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase.ts';
+import { isLongform } from './scoring/longform';
 import { openai } from './openai-client.ts';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { LLMPatternInterpreter, PatternCandidate, InterpretedPattern } from './llm-pattern-interpreter';
@@ -164,6 +165,8 @@ export class PatternDiscoveryService {
         published_at,
         format_type,
         duration,
+        is_short,
+        shorts_checked_at,
         rolling_baseline_views,
         channel_avg_views,
         topic_cluster_id
@@ -196,12 +199,10 @@ export class PatternDiscoveryService {
       const daysSincePublished = (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24);
       const ageConfidence = Math.min(daysSincePublished / 30, 1.0);
 
-      // Filter out shorts
-      const isShort = /^PT[0-9]+S$/.test(video.duration) || /^PT[1-5][0-9]S$/.test(video.duration);
-
       return performanceRatio >= context.min_performance && 
              ageConfidence >= context.min_confidence && 
-             !isShort;
+             // The one long-form rule (lib/scoring/longform.ts), not a duration-only regex.
+             isLongform(video as any);
     });
 
     return filteredVideos;

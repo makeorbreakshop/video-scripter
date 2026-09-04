@@ -1,0 +1,96 @@
+-- 2026-09-04: retire the legacy packaging dashboard and drop the last copy of the old Shorts rule.
+--
+-- sql/2026-09-04-drop-legacy-baseline-shorts-rule.sql dropped the three pre-v3 baseline functions
+-- that filtered with `NOT is_youtube_short(...)`, but left the helper itself alive because the
+-- materialized view public.packaging_performance (345 MB, 220,465 rows, last refreshed
+-- 2026-09-02) embeds it and backed the legacy page /dashboard/youtube/packaging through
+-- app/api/youtube/packaging/route.ts. That page, its API route, its components and hooks are
+-- deleted in this commit, so the matview and the helper go with them.
+--
+-- Evidence they are dead (2026-09-04):
+--   * cron.job has no job that refreshes packaging_performance (the six remaining jobs are
+--     refresh-competitor-channels, youtube-quota-reset-check, youtube-quota-midnight-reset,
+--     daily-temporal-baseline-update, refresh-heistable-videos,
+--     auto-complete-abandoned-thumbnail-battles).
+--   * pg_stat_statements (reset 2026-09-04 15:08 UTC) shows no query touching
+--     packaging_performance other than this audit's own size/count probe.
+--   * packaging_performance is the ONLY remaining database object whose definition references
+--     is_youtube_short: no other view, matview or pg_proc body mentions it.
+--   * the only application reader was app/api/youtube/packaging/route.ts (deleted). Its two
+--     remaining callers were app/api/youtube/intelligent-search/route.ts (fast mode, now
+--     semantic-only) and components/youtube/export-button.tsx (orphan, deleted).
+--
+-- The one Shorts rule is lib/ingest/classify.ts (<=62s Short; 63-180s undecidable from duration
+-- and settled only by YouTube's /shorts/<id> routing; >180s long-form). After this migration no
+-- duration-only Shorts rule exists anywhere in the database.
+-- lib/ingest/no-db-shorts-rule.test.ts fails if either object comes back.
+--
+-- Idempotent: safe to re-run.
+--
+-- ============================ ROLLBACK (definitions as of 2026-09-04) ============================
+-- CREATE OR REPLACE FUNCTION public.is_youtube_short(duration text, title text DEFAULT ''::text, description text DEFAULT ''::text)
+--  RETURNS boolean
+--  LANGUAGE plpgsql
+--  IMMUTABLE
+--  SET search_path TO 'pg_catalog', 'public', 'extensions'
+-- AS $function$
+--   DECLARE
+--     duration_seconds INTEGER;
+--     combined_text TEXT;
+--   BEGIN
+--     -- Duration check: <= 3 minutes (180 seconds)
+--     duration_seconds := public.extract_duration_seconds(duration);
+--     IF duration_seconds > 0 AND duration_seconds <= 180 THEN
+--       RETURN TRUE;
+--     END IF;
+-- 
+--     -- Hashtag check: Look for #shorts, #short, #youtubeshorts (case insensitive)
+--     combined_text := LOWER(COALESCE(title, '') || ' ' || COALESCE(description,
+--   ''));
+--     IF combined_text ~ '\#shorts?\b' OR combined_text ~ '\#youtubeshorts?\b'
+--   THEN
+--       RETURN TRUE;
+--     END IF;
+-- 
+--     RETURN FALSE;
+--   END;
+--   $function$
+--
+-- CREATE MATERIALIZED VIEW public.packaging_performance AS
+--  SELECT v.id,
+--     v.title,
+--     v.view_count,
+--     v.published_at,
+--     v.rolling_baseline_views AS baseline_views,
+--         CASE
+--             WHEN v.rolling_baseline_views > 0 THEN round((v.view_count::double precision / v.rolling_baseline_views::double precision)::numeric, 2)
+--             ELSE NULL::numeric
+--         END AS performance_ratio,
+--     v.thumbnail_url,
+--     v.is_competitor,
+--     v.channel_id,
+--     COALESCE(v.channel_name, 'Unknown Channel'::text) AS channel_name,
+--     v.rolling_baseline_views AS channel_avg_views,
+--     v.duration,
+--     v.description
+--    FROM videos v
+--   WHERE NOT is_youtube_short(v.duration, v.title, v.description);
+-- ;
+--
+-- CREATE INDEX idx_packaging_perf_ratio ON public.packaging_performance USING btree (performance_ratio DESC NULLS LAST);
+-- CREATE INDEX idx_packaging_competitor ON public.packaging_performance USING btree (is_competitor);
+-- CREATE INDEX idx_packaging_published ON public.packaging_performance USING btree (published_at DESC);
+-- CREATE INDEX idx_packaging_views ON public.packaging_performance USING btree (view_count DESC);
+-- CREATE INDEX idx_packaging_channel ON public.packaging_performance USING btree (channel_name);
+-- ================================= END ROLLBACK =================================
+
+begin;
+
+-- The indexes belong to the matview and are dropped with it; listed for the record:
+--   idx_packaging_perf_ratio, idx_packaging_competitor, idx_packaging_published,
+--   idx_packaging_views, idx_packaging_channel
+drop materialized view if exists public.packaging_performance cascade;
+
+drop function if exists public.is_youtube_short(text, text, text);
+
+commit;

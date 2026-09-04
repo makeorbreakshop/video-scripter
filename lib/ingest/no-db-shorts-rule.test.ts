@@ -50,8 +50,8 @@ maybe('no stored function re-derives the Shorts rule', () => {
       const sig = `${r.nspname}.${r.proname}(${r.args})`;
       if (ALLOWLIST.has(sig)) continue;
       const src = String(r.prosrc);
-      // The helper itself is not dropped yet (packaging_performance still depends on it);
-      // what must not exist is anything that *uses* a duration-only rule to decide Shorts.
+      // is_youtube_short() itself is asserted gone below; here we catch anything that *uses*
+      // a duration-only rule to decide Shorts.
       if (r.proname === 'is_youtube_short') continue;
       if (CALLS_LEGACY_HELPER.test(src)) offenders.push(`${sig}  [calls is_youtube_short()]`);
       else if (MENTIONS_SHORTS.test(src) && DURATION_CEILING.test(src)) offenders.push(`${sig}  [own duration-only rule]`);
@@ -66,5 +66,24 @@ maybe('no stored function re-derives the Shorts rule', () => {
           and proname in ('process_baseline_batch', 'calculate_rolling_baselines_batch',
                           'get_packaging_performance', 'trigger_baseline_processing')`);
     expect(rows.map((r) => r.proname).sort()).toEqual([]);
+  }, 60000);
+
+  // sql/2026-09-04-retire-legacy-packaging.sql. The legacy /dashboard/youtube/packaging page and
+  // its API route were the last readers of the `packaging_performance` materialized view, whose
+  // definition was the last database object embedding `NOT is_youtube_short(...)`; both are gone,
+  // and with them the helper itself.
+  it('no longer defines the duration-only is_youtube_short() helper', async () => {
+    const { rows } = await pool.query(
+      `select p.oid::regprocedure::text as sig
+         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where p.proname = 'is_youtube_short'`);
+    expect(rows.map((r) => r.sig)).toEqual([]);
+  }, 60000);
+
+  it('no longer defines the packaging_performance materialized view', async () => {
+    const { rows } = await pool.query(
+      `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relname = 'packaging_performance'`);
+    expect(rows.map((r) => r.relname)).toEqual([]);
   }, 60000);
 });
