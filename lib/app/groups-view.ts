@@ -230,3 +230,32 @@ export function importVisible<T>(subs: T[], expanded: boolean, visible = IMPORT_
 export function importButtonLabel(n: number): string {
   return n === 1 ? 'Track 1 channel' : `Track ${n} channels`;
 }
+
+// ---------------------------------------------------------------- recency --
+
+/**
+ * How long ago the channel last published, as the row's subline. Videos and subscribers are
+ * facts that change on no timescale this page cares about; when the last video landed is the
+ * one that decides whether you click the row.
+ */
+export function recencyLabel(iso: string | null | undefined, now: number = Date.now()): string {
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '—';
+  const days = Math.floor((now - t) / 86_400_000);
+  if (days < 0) return 'today';
+  if (days === 0) return 'today';
+  if (days === 1) return '1d ago';
+  if (days < 14) return `${days}d ago`;
+  if (days < 60) return `${Math.floor(days / 7)}w ago`;
+  if (days < 730) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
+/** Which way the sparkline is going. Colour is never the only carrier — the shape says it too. */
+export function sparkDirection(pct: number | null | undefined): 'up' | 'down' | 'flat' {
+  if (pct == null || !Number.isFinite(pct)) return 'flat';
+  if (pct > 0.5) return 'up';
+  if (pct < -0.5) return 'down';
+  return 'flat';
+}

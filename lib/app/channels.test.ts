@@ -236,13 +236,15 @@ describe('trackChannel', () => {
     await expect(trackChannel('u1', 'garbage')).rejects.toThrow('not a channel id');
   });
 
-  it('refuses a third channel on the free plan', async () => {
+  // Tracking is uncapped: the plan's number is now the NOTIFY limit (lib/app/groups-view.ts),
+  // because being notified about a channel is the part that costs us something.
+  it('tracks a third channel on the free plan — tracking is no longer capped', async () => {
     stubOne({ tracked: 2 });
-    await expect(trackChannel('u1', CH)).rejects.toBeInstanceOf(PlanLimitError);
-    expect(callsMatching(/insert into user_channels/)).toHaveLength(0);
+    await expect(trackChannel('u1', CH)).resolves.toMatchObject({ channel_id: CH });
+    expect(callsMatching(/insert into user_channels/)).toHaveLength(1);
   });
 
-  it('allows re-tracking a channel the user already has, even at the limit', async () => {
+  it('allows re-tracking a channel the user already has', async () => {
     stubOne({ already: true, tracked: 2 });
     await expect(trackChannel('u1', CH)).resolves.toMatchObject({ channel_id: CH });
   });
@@ -340,10 +342,13 @@ describe('listUserChannels', () => {
     expect(sql).toContain('left join channel_stats cs on cs.channel_id = uc.channel_id');
     expect(sql).toContain('coalesce(cs.video_count, 0)::int as video_count');
     expect(sql).toContain('cs.last_packaging_change');
-    // The three per-channel lateral aggregates are what made this 4.3 s cold.
-    expect(sql).not.toContain('left join lateral');
+    // The three per-channel lateral aggregates over videos, video_scores and the version
+    // tables are what made this 4.3 s cold. The one lateral left is the group ids, which
+    // probes channel_group_members_user_channel_idx.
     expect(sql).not.toContain('percentile_cont');
     expect(sql).not.toContain('thumbnail_versions');
+    expect(sql).toContain('coalesce(gm.groups');
+    expect(sql).toContain('uc.notify');
     expect(mq.mock.calls[0][1]).toEqual(['u1']);
   });
 

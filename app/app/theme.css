@@ -26,7 +26,9 @@
   --cs-ink: #10131A;
   --cs-muted: #5A6373;
   --cs-line: #DDE2EA;
+  --cs-line-soft: #EEF1F5;     /* rules inside a card — one step lighter than its own edge */
   --cs-line-strong: #C3CAD6;
+  --cs-muted-2: #8A93A3;       /* a falling line: present, but not carrying the accent */
   --cs-accent: #0E7A3C;
   --cs-accent-soft: #DFF5E7;
   --cs-accent-on: #FFFFFF;
@@ -37,14 +39,14 @@
   --cs-scanline: rgba(16, 19, 26, 0.16);
   /* Group colours. Eight keys, defined for both grounds so a group reads at the same
      weight in light and dark. A group's colour is a dot, never a fill. */
-  --cs-g-green:  #0E7A3C;
+  --cs-g-green:  #0F7A6A;
   --cs-g-amber:  #B4650A;
   --cs-g-teal:   #0E6F8C;
   --cs-g-red:    #B3261E;
   --cs-g-violet: #5B46E5;
   --cs-g-blue:   #1668C4;
   --cs-g-brown:  #7A5230;
-  --cs-g-slate:  #5A6373;
+  --cs-g-slate:  #3F5B7A;
   --cs-radius: 10px;
   --cs-max: 1120px;
 }
@@ -57,7 +59,9 @@
     --cs-ink: #EDF0F6;
     --cs-muted: #99A2B3;
     --cs-line: #232936;
+    --cs-line-soft: #1A1F2B;
     --cs-line-strong: #333B4B;
+    --cs-muted-2: #6B7488;
     --cs-accent: #3DF07A;
     --cs-accent-soft: #0F2A1A;
     --cs-accent-on: #041208;
@@ -66,14 +70,14 @@
     --cs-bad: #FF6B6B;
     --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     --cs-scanline: rgba(0, 0, 0, 0.45);
-    --cs-g-green:  #3DF07A;
+    --cs-g-green:  #35D6AE;
     --cs-g-amber:  #E8B339;
     --cs-g-teal:   #4CC9E8;
     --cs-g-red:    #FF6B6B;
     --cs-g-violet: #A99BFF;
     --cs-g-blue:   #6FB4F7;
     --cs-g-brown:  #C79A6B;
-    --cs-g-slate:  #99A2B3;
+    --cs-g-slate:  #8FB3D9;
   }
 }
 
@@ -84,7 +88,9 @@
   --cs-ink: #EDF0F6;
   --cs-muted: #99A2B3;
   --cs-line: #232936;
+  --cs-line-soft: #1A1F2B;
   --cs-line-strong: #333B4B;
+  --cs-muted-2: #6B7488;
   --cs-accent: #3DF07A;
   --cs-accent-soft: #0F2A1A;
   --cs-accent-on: #041208;
@@ -93,14 +99,14 @@
   --cs-bad: #FF6B6B;
   --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   --cs-scanline: rgba(0, 0, 0, 0.45);
-  --cs-g-green:  #3DF07A;
+  --cs-g-green:  #35D6AE;
   --cs-g-amber:  #E8B339;
   --cs-g-teal:   #4CC9E8;
   --cs-g-red:    #FF6B6B;
   --cs-g-violet: #A99BFF;
   --cs-g-blue:   #6FB4F7;
   --cs-g-brown:  #C79A6B;
-  --cs-g-slate:  #99A2B3;
+  --cs-g-slate:  #8FB3D9;
 }
 
 /* ------------------------------------------------------------------ base -- */
@@ -156,6 +162,10 @@
 /* ----------------------------------------------------------------- page --- */
 
 .cs-page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+/* The channels page's own head: Import and the meter are one statement, hard left. */
+.cs-chan-head { align-items: center; gap: 14px; margin-bottom: 20px; }
+.cs-chan-head .cs-btn { height: 36px; }
+.cs-chan-body { display: flex; flex-direction: column; gap: 20px; }
 .cs-h1 { font-size: 20px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
 .cs-sub { color: var(--cs-muted); font-size: 13px; margin: 2px 0 0; }
 .cs-hiscore {
@@ -441,6 +451,19 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
   width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 14px;
   border: 1px solid var(--cs-line); background: var(--cs-surface); color: var(--cs-ink);
 }
+/* The one box that both filters and adds. 44px with its magnifier, because it is the page's
+   primary control and the icon is what makes the dual role legible. */
+.cs-searchbox {
+  display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px;
+  border: 1px solid var(--cs-line); border-radius: 10px; background: var(--cs-surface);
+}
+.cs-searchbox:focus-within { border-color: var(--cs-accent); outline: 2px solid var(--cs-accent); outline-offset: -2px; }
+.cs-searchbox svg { flex: none; color: var(--cs-muted); }
+.cs-searchbox input {
+  flex: 1; min-width: 0; border: 0; background: none; outline: none;
+  color: var(--cs-ink); font: inherit; font-size: 15px;
+}
+.cs-searchbox input::placeholder { color: var(--cs-muted); }
 .cs-input::placeholder { color: var(--cs-muted); }
 .cs-input:focus { outline: 2px solid var(--cs-accent); outline-offset: -1px; border-color: var(--cs-accent); }
 
@@ -794,4 +817,192 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   .pt-clip, .pt-deck .pt-shot, .pt-chev { transition: none; }
   .pt-var { animation: none; }
   .pt-track { scroll-behavior: auto; }
+}
+
+/* ================================================================ groups === */
+/* Group colours live in the token block at the top of this file (--cs-g-*), and the menu,
+   chip and coin rules are the shared .cs-control block. What is left here is only what the
+   channel list itself owns: the chip row's layout, the meter, the rows and the sheet. */
+
+/* The filter row: chips on the left, Select and Sort on the right. */
+.cs-gchips { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 8px; }
+.cs-gchips .cs-chips { margin-bottom: 0; min-width: 0; }
+.cs-gchips-right { display: flex; align-items: center; gap: 14px; flex: none; }
+.cs-linkish { border: 0; background: none; padding: 0; font-size: 13px; color: var(--cs-muted); cursor: pointer; }
+.cs-linkish:hover:not(:disabled) { color: var(--cs-ink); }
+.cs-linkish:disabled { opacity: 0.45; cursor: not-allowed; }
+.cs-linkish:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 2px; border-radius: 4px; }
+
+/* --------------------------------------------------------- notify meter ---- */
+/* Segmented, one segment per channel the plan may be notified about. Lit segments are the
+   count. The label is the marquee face, like every other counter in the app. */
+
+.cs-nmeter { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.cs-nmeter-label {
+  font-family: var(--font-pixel), monospace; font-size: 8px; line-height: 10px;
+  letter-spacing: 0.06em; color: var(--cs-muted);
+}
+.cs-nmeter-bar { display: flex; gap: 2px; }
+.cs-nmeter-bar i { display: block; width: 9px; height: 10px; background: var(--cs-line); transition: background 120ms; }
+.cs-nmeter-bar i[data-on="true"] { background: var(--cs-accent); }
+@media (prefers-reduced-motion: reduce) { .cs-nmeter-bar i { transition: none; } }
+
+/* ------------------------------------------------------- channel rows v2 --- */
+/* Lanes, left to right: check (select mode only), avatar, name + mono subline, groups,
+   90-day sparkline, baseline + change, notify. Every lane is a fixed-width slot so the
+   columns hold across rows whether or not a row has anything in them. */
+
+/* The head and the rows are one object, not loose text on the page ground. */
+.cs-clist { background: var(--cs-surface); border: 1px solid var(--cs-line); border-radius: 12px; overflow: clip; }
+.cs-chead, .cs-crow { display: flex; align-items: center; gap: 14px; padding: 0 16px;
+  border-bottom: 1px solid var(--cs-line-soft); }
+.cs-clist > *:last-child { border-bottom: 0; }
+.cs-chead { height: 32px; }
+.cs-chead span {
+  font-family: var(--font-mono), monospace; font-size: 10px; line-height: 12px;
+  letter-spacing: 0.08em; color: var(--cs-muted); flex: none;
+}
+.cs-chead .cs-l-name { flex: 1; min-width: 0; }
+.cs-l-check { width: 18px; flex: none; }
+.cs-l-avatar { width: 36px; flex: none; }
+.cs-l-groups { width: 200px; flex: none; }
+.cs-l-spark { width: 120px; flex: none; }
+.cs-l-base { width: 80px; flex: none; text-align: right; justify-content: flex-end; display: flex; }
+.cs-l-notify { width: 44px; flex: none; text-align: center; justify-content: center; display: flex; }
+
+/* An empty list still has its card: one quiet line where the rows would be. */
+.cs-cnone { padding: 40px 16px; text-align: center; color: var(--cs-muted); font-size: 14px; }
+.cs-crow { height: 60px; position: relative; }
+.cs-crow:hover { background: var(--cs-surface-2); }
+.cs-crow[data-selected="true"] { background: var(--cs-accent-soft); }
+/* The whole row is the link; the lanes that are controls sit above it. */
+.cs-crow-link { position: absolute; inset: 0; z-index: 0; }
+.cs-crow-link:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -2px; }
+.cs-crow > * { position: relative; z-index: 1; }
+.cs-crow-id { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; pointer-events: none; }
+.cs-crow-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cs-crow-name b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-crow:hover .cs-crow-name b { color: var(--cs-accent); }
+.cs-crow-you {
+  flex: none; padding: 3px 5px; border-radius: 3px; background: var(--cs-accent-soft);
+  color: var(--cs-accent); font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 10px;
+}
+.cs-crow-sub { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
+
+.cs-crow-groups { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.cs-gtag {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  padding: 3px 9px 3px 7px; border-radius: 10px;
+  border: 1px solid var(--cs-line-soft); background: var(--cs-ground);
+  font-size: 12px; line-height: 16px; color: var(--cs-ink); max-width: 96px;
+}
+.cs-gtag span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-gtag i { width: 7px; height: 7px; border-radius: 4px; flex: none; background: var(--cs-dot, var(--cs-accent)); }
+
+/* Direction, three ways: rising in the accent, falling in the second muted, flat in muted.
+   The line's own shape carries it redundantly, so colour is never the only signal. */
+.cs-spark { display: block; color: var(--cs-muted); }
+.cs-spark[data-dir="up"] { color: var(--cs-accent); }
+.cs-spark[data-dir="down"] { color: var(--cs-muted-2); }
+.cs-spark-flat { display: block; color: var(--cs-line-strong); }
+.cs-crow-base { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.cs-crow-base b { font-family: var(--font-mono), monospace; font-size: 15px; font-weight: 700; line-height: 18px; }
+.cs-crow-base span { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
+.cs-crow-base span[data-dir="up"] { color: var(--cs-accent); }
+.cs-crow-base span[data-dir="down"] { color: var(--cs-bad); }
+
+/* Select mode's checkbox lane. */
+.cs-check {
+  flex: none; width: 18px; height: 18px; margin: 0; padding: 0; cursor: pointer;
+  border: 1.5px solid var(--cs-line-strong); border-radius: 4px; background: var(--cs-surface);
+  appearance: none; display: inline-flex; align-items: center; justify-content: center;
+}
+.cs-check:checked { background: var(--cs-accent); border-color: var(--cs-accent); }
+.cs-check:checked::after {
+  content: ''; width: 5px; height: 9px; margin-top: -2px; border: solid var(--cs-accent-on);
+  border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.cs-check:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 2px; }
+
+/* The row's overflow, where Remove lives. */
+.cs-crow-more { opacity: 0; flex: none; }
+.cs-crow:hover .cs-crow-more, .cs-crow-more:focus-within { opacity: 1; }
+/* A "+" on a row that already has tags is an affordance, not data: it waits for the pointer. */
+.cs-crow-plus { opacity: 0; flex: none; }
+.cs-crow:hover .cs-crow-plus, .cs-crow-plus:focus-within, .cs-crow-plus[data-empty="true"] { opacity: 1; }
+@media (hover: none) { .cs-crow-more, .cs-crow-plus { opacity: 1; } }
+
+/* ------------------------------------------------------- selection bar ----- */
+/* Replaces the chip row while select mode is on: what is selected, and what can be done
+   to it. Dark, because it is a mode and it should be obvious that one is running. */
+
+.cs-selbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  height: 44px; padding: 0 14px; margin-bottom: 8px;
+  border-radius: 10px; background: var(--cs-ink); color: var(--cs-ground);
+}
+.cs-selbar-left, .cs-selbar-right { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.cs-selbar-n { font-family: var(--font-mono), monospace; font-size: 13px; white-space: nowrap; }
+.cs-selbar button.cs-linkish { color: inherit; }
+.cs-selbar button.cs-linkish:hover:not(:disabled) { opacity: 1; }
+.cs-selbar button.cs-linkish:disabled { opacity: 0.35; cursor: not-allowed; }
+/* --cs-bad on the ink bar is 2.4:1. Tinted toward the bar's own foreground it clears 4.5:1
+   and still reads as the destructive one, because it is the only coloured word on the bar. */
+.cs-selbar button.cs-linkish[data-tone="bad"] {
+  color: color-mix(in srgb, var(--cs-bad) 45%, var(--cs-ground)); opacity: 1; font-weight: 600;
+}
+.cs-selbar button.cs-linkish[data-tone="bad"]:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--cs-bad) 30%, var(--cs-ground));
+}
+.cs-selbar-n { opacity: 0.9; }
+.cs-selbar button.cs-linkish { opacity: 0.92; }
+
+/* ------------------------------------------------------- import sheet ------ */
+
+.cs-sheet { max-width: 640px; width: calc(100vw - 32px); border-radius: 14px; }
+.cs-sheet-head { padding: 28px 28px 20px; display: flex; flex-direction: column; gap: 6px; }
+.cs-sheet-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 28px; }
+.cs-sheet-acct { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--font-mono), monospace; font-size: 12px; line-height: 16px; color: var(--cs-muted); }
+.cs-sheet-acct b { color: var(--cs-ink); font-weight: 500; }
+.cs-sheet-list { border-top: 1px solid var(--cs-line); border-bottom: 1px solid var(--cs-line);
+  max-height: 46vh; overflow-y: auto; }
+.cs-sheet-row { display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 28px;
+  border-bottom: 1px solid var(--cs-line); }
+.cs-sheet-row:last-child { border-bottom: 0; }
+.cs-sheet-row[data-tracked="true"] { opacity: 0.5; }
+.cs-sheet-row .cs-sheet-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-sheet-row .cs-sheet-n { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--cs-muted); flex: none; }
+.cs-sheet-more { display: flex; align-items: center; justify-content: center; width: 100%; height: 36px;
+  border: 0; border-top: 1px solid var(--cs-line); background: var(--cs-ground); cursor: pointer;
+  font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--cs-muted); }
+.cs-sheet-more:hover { color: var(--cs-ink); }
+.cs-sheet-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 28px; }
+.cs-sheet-foot-right { display: flex; align-items: center; gap: 10px; }
+.cs-sheet-foot .cs-btn[data-variant="primary"] { height: 38px; padding: 0 18px; font-size: 14px; font-weight: 600; }
+
+/* At 1000px the fixed lanes have committed 582px before the name gets a pixel. Drop the
+   sparkline and narrow groups so the identity stays readable; the percentage still carries
+   the direction on its own. */
+@media (max-width: 1000px) and (min-width: 721px) {
+  .cs-l-spark { display: none; }
+  .cs-l-groups { width: 140px; }
+}
+
+/* -------------------------------------------------------------- mobile ----- */
+@media (max-width: 720px) {
+  /* The row stacks: identity and the sparkline under it, then the numbers. The groups lane
+     rides with the name rather than holding a 200px column nothing can fill. */
+  .cs-chead { display: none; }
+  .cs-crow { height: auto; padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
+  .cs-crow-id { flex: 1 1 100%; order: 2; }
+  .cs-l-avatar { order: 1; }
+  .cs-l-groups { width: auto; order: 3; flex: 1 1 100%; }
+  .cs-l-spark { order: 4; width: 100px; }
+  .cs-l-base { order: 5; width: auto; flex: 1; }
+  .cs-l-notify { order: 6; width: 32px; }
+  .cs-selbar { height: auto; padding: 10px 12px; flex-wrap: wrap; gap: 10px; }
+  .cs-selbar-left, .cs-selbar-right { gap: 12px; flex-wrap: wrap; }
+  .cs-sheet-row, .cs-sheet-head, .cs-sheet-foot { padding-inline: 16px; }
 }

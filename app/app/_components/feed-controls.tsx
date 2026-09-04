@@ -3,16 +3,22 @@
 // The feed's whole control surface: a chips row for what to show and a Sort menu for whose.
 // Both are URL parameters, so a filtered feed is a link and the first page still renders on
 // the server. The chips stay links — the server keeps doing the filtering.
+//
+// The Sort menu holds groups and channels in one flat list: a group row carries its colour
+// dot and its member count, a channel row is bare. A native select could hold neither, and
+// its optgroups render as OS chrome that ignores every token in theme.css.
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Chips } from '@/components/app/chips';
-import { Sort } from '@/components/app/menu';
+import { Chips, groupColor } from '@/components/app/chips';
+import { Sort, type SortOption } from '@/components/app/menu';
 import { FEED_SEGMENTS, type FeedSegment } from '@/lib/app/feed-format';
 
-export function FeedControls({ segment, channelId, channels }: {
+export function FeedControls({ segment, channelId, channels, groups = [] }: {
   segment: FeedSegment;
+  /** A channel id, or "group:<id>". */
   channelId: string | null;
   channels: Array<{ id: string; name: string }>;
+  groups?: Array<{ id: string; name: string; count: number; color?: string | null }>;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -23,6 +29,14 @@ export function FeedControls({ segment, channelId, channels }: {
     const s = p.toString();
     return `/app/feed${s ? `?${s}` : ''}`;
   };
+
+  const options: SortOption[] = [
+    { key: 'all', label: 'All channels' },
+    ...groups.map((g) => ({
+      key: `group:${g.id}`, label: g.name, color: groupColor(g.color), count: g.count,
+    })),
+    ...channels.map((c) => ({ key: c.id, label: c.name })),
+  ];
 
   return (
     <div className="cs-controls">
@@ -38,7 +52,7 @@ export function FeedControls({ segment, channelId, channels }: {
       <Sort
         ariaLabel="Channel"
         value={channelId ?? 'all'}
-        options={[{ key: 'all', label: 'All channels' }, ...channels.map((c) => ({ key: c.id, label: c.name }))]}
+        options={options}
         onChange={(key) => {
           const p = new URLSearchParams(params?.toString() ?? '');
           if (key && key !== 'all') p.set('channel', key); else p.delete('channel');

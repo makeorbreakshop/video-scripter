@@ -120,22 +120,50 @@ export function FeedSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
-/** The tracked-channel list on /app/channels. */
-export function ChannelCardsSkeleton({ cards = 8 }: { cards?: number }) {
+/**
+ * The tracked-channel list on /app/channels. The lanes are the real row's lanes — 36px
+ * avatar, identity, 200 groups, 120 spark, 80 baseline, 44 notify inside one card — so the
+ * rows land into the shape the skeleton was already holding.
+ */
+export function ChannelListSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div aria-busy="true" aria-live="polite">
       <SkeletonStyles />
-      <ul className="cs-chan-list">
-        {Array.from({ length: cards }, (_, i) => (
-          <li className="cs-chan" key={i}>
-            <div className="cs-chan-link" style={{ pointerEvents: 'none' }}>
-              <div className="sk" style={{ width: 28, height: 28, borderRadius: '50%', flex: 'none' }} />
-              <div className="sk" style={{ width: 150 + ((i * 37) % 90), height: 14, borderRadius: 4 }} />
-              <div className="sk" style={{ width: 38, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+      <div className="cs-clist">
+        <div className="cs-chead" aria-hidden="true">
+          <span className="cs-l-avatar" />
+          <span className="cs-l-name">CHANNEL</span>
+          <span className="cs-l-groups">GROUPS</span>
+          <span className="cs-l-spark">90 DAYS</span>
+          <span className="cs-l-base">BASELINE</span>
+          <span className="cs-l-notify">NOTIFY</span>
+          <span className="cs-l-more" />
+        </div>
+        {Array.from({ length: rows }, (_, i) => (
+          <div className="cs-crow" key={i}>
+            <span className="cs-l-avatar">
+              <div className="sk" style={{ width: 36, height: 36, borderRadius: '50%' }} />
+            </span>
+            <div className="cs-crow-id">
+              <div className="sk" style={{ width: 130 + ((i * 37) % 90), height: 15, borderRadius: 4 }} />
+              <div className="sk" style={{ width: 54, height: 11, borderRadius: 4, marginTop: 4 }} />
             </div>
-          </li>
+            <div className="cs-l-groups">
+              {i % 3 !== 2 && <div className="sk" style={{ width: 70, height: 22, borderRadius: 10 }} />}
+            </div>
+            <span className="cs-l-spark">
+              <div className="sk" style={{ width: 120, height: 20, borderRadius: 4 }} />
+            </span>
+            <div className="cs-l-base">
+              <div className="sk" style={{ width: 52, height: 18, borderRadius: 4 }} />
+            </div>
+            <span className="cs-l-notify">
+              <div className="sk" style={{ width: 22, height: 22, borderRadius: 11 }} />
+            </span>
+            <span className="cs-l-more" style={{ width: 22 }} />
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

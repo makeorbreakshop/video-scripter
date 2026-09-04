@@ -550,6 +550,8 @@ export interface UserChannelRow {
   subscriber_count: number | null;
   /** Group ids this channel sits in, for this user. */
   groups: string[];
+  /** When this channel last published — the subline's fact. */
+  last_upload_at: string | null;
 }
 
 /**
@@ -578,7 +580,8 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             coalesce(cs.outliers, 0)::int as outliers,
             cs.last_packaging_change,
             cm.subscriber_count,
-            coalesce(gm.groups, '{}') as groups
+            coalesce(gm.groups, '{}') as groups,
+            lu.last_upload_at
        from user_channels uc
        left join channel_tracking ct on ct.channel_id = uc.channel_id
        left join channel_meta cm on cm.channel_id = uc.channel_id
@@ -589,6 +592,15 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
            from channel_group_members m
           where m.user_id = uc.user_id and m.channel_id = uc.channel_id
        ) gm on true
+       -- The subline's fact. idx_videos_channel_published makes this one backward index
+       -- probe per channel, so it rides along with the list instead of a second round trip.
+       left join lateral (
+         select v.published_at as last_upload_at
+           from videos v
+          where v.channel_id = uc.channel_id and v.published_at is not null
+          order by v.published_at desc
+          limit 1
+       ) lu on true
       where uc.user_id = $1
       order by uc.added_at asc`,
     [userId]
