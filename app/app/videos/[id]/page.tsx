@@ -8,10 +8,10 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { loadVideoHead, verdict } from '@/lib/app/video-page';
+import { loadVideoHead, headerLines } from '@/lib/app/video-page';
+import { etDateTime } from '@/lib/admin/format';
 import { cachedVideoPage } from '@/lib/app/cached';
 import { VideoBodySkeleton } from '@/components/app/skeletons';
-import { n, etDateTime, ageLabel } from '@/lib/admin/format';
 import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
 import { PackagingTimeline } from '@/components/app/packaging-timeline';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
@@ -35,9 +35,9 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
           curve={v.curve}
           series={v.series}
           markers={v.markers}
+          marks={v.marks}
           thumbUrls={v.thumbUrls}
           score={v.score?.score ?? null}
-          defaultZoom={v.defaultZoom}
         />
       </section>
 
@@ -76,7 +76,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
   const v = await loadVideoHead(id);
   if (!v) notFound();
 
-  const vd = verdict(v);
+  const h = headerLines({ ...v, id: v.id, publishedAt: v.publishedAt });
 
   return (
     <MarkerHoverProvider>
@@ -107,20 +107,21 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
             {v.channelName}
           </Link>
           <h1 className="cs-h1" style={{ marginTop: 4 }}>{v.title}</h1>
+          {/* ONE metadata line: the channel, when it went out, how old it is, the exact count,
+              and the link. The verdict below never repeats any of it. */}
           <p className="cs-sub">
-            <span className="cs-num">{etDateTime(v.publishedAt)}</span> ET · {ageLabel(v.publishedAt)} ·{' '}
-            <span className="cs-num">{n(v.views)}</span> views ·{' '}
-            <a href={`https://youtu.be/${v.id}`} target="_blank" rel="noreferrer"
+            <span className="cs-num">{h.meta.publishedET}</span> ET · {h.meta.age} ·{' '}
+            <span className="cs-num">{h.meta.views}</span> views ·{' '}
+            <a href={h.meta.youtubeUrl} target="_blank" rel="noreferrer"
                style={{ color: 'var(--cs-muted)', textDecoration: 'underline' }}>YouTube ↗</a>
           </p>
         </div>
       </div>
 
       <p className="vp-verdict">
-        {vd.big && <span className="vp-big" data-over={vd.over}>{vd.big}</span>}
-        <span className="vp-said">{vd.under}</span>
+        {h.big && <span className="vp-big" data-over={h.over}>{h.big}</span>}
+        <span className="vp-said">{h.verdict}</span>
       </p>
-      {vd.aside && <p className="cs-sub" style={{ marginTop: 6 }}>{vd.aside}</p>}
 
       <Suspense fallback={<VideoBodySkeleton />}>
         <VideoBody id={v.id} channelId={v.channelId} />

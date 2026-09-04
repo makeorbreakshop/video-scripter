@@ -63,3 +63,77 @@ describe('verdict names the reason there is no score', () => {
     expect(v.big).toBe('2.8×');
   });
 });
+
+// ------------------------------------------------------------- the header ----
+
+import { headerLines } from './video-page';
+
+describe('headerLines: one metadata line and one verdict line, and the views are said once', () => {
+  const young = {
+    id: 'Po_Dh7WLgmM',
+    title: 'The Most Overhyped and Underhyped New AI Models',
+    channelId: 'UCx', channelName: 'Matt Wolfe',
+    publishedAt: '2026-09-03T02:14:55.000Z',
+    views: 83_722,
+    ageDays: 1.4,
+    headline: 'day30' as const,
+    pace: null, expectedNow: null,
+    score: { score: 2.02, baseline: 92_000, est30: 186_000, confidence: 'early' } as any,
+    observations: 40,
+  };
+
+  it('puts the channel, the ET publish time, the age, the exact views and the link in the metadata', () => {
+    const h = headerLines(young);
+    expect(h.meta.channelName).toBe('Matt Wolfe');
+    expect(h.meta.publishedET).toBe('Sep 2, 10:14 PM');   // ET, not UTC
+    expect(h.meta.age).toBe('1d old');
+    expect(h.meta.views).toBe('83,722');
+    expect(h.meta.youtubeUrl).toBe('https://youtu.be/Po_Dh7WLgmM');
+  });
+
+  it('reads the verdict for a young video as the day-30 projection', () => {
+    const h = headerLines(young);
+    expect(h.big).toBe('2.0×');
+    expect(h.over).toBe(true);
+    expect(h.verdict).toBe('on pace for 186K by day 30 · typical 92K · early read');
+  });
+
+  it('never repeats the view count in the verdict line for a young video', () => {
+    // "84K views at 35h" was the metadata line said twice.
+    const h = headerLines(young);
+    expect(h.verdict).not.toMatch(/views/);
+    expect(h.verdict).not.toMatch(/84K|83,722/);
+  });
+
+  it('reads a video past day 30 as where it is now', () => {
+    const h = headerLines({
+      ...young, ageDays: 290, headline: 'now', views: 565_000,
+      pace: 0.948, expectedNow: 596_000,
+      score: { score: 0.9, baseline: 596_000, est30: 540_000, confidence: 'confirmed' } as any,
+    });
+    expect(h.big).toBe('0.9×');
+    expect(h.over).toBe(false);
+    expect(h.verdict).toBe('565K vs typical 596K by now · settled');
+  });
+
+  it('keeps the confidence word when the read is not settled yet', () => {
+    const h = headerLines({
+      ...young, ageDays: 40, headline: 'now', views: 565_000, pace: 1.2, expectedNow: 470_000,
+      score: { score: 1.2, baseline: 470_000, est30: 500_000, confidence: 'likely' } as any,
+    });
+    expect(h.verdict).toBe('565K vs typical 470K by now · likely read');
+  });
+
+  it('says why there is no number instead of leaving the line blank', () => {
+    const h = headerLines({ ...young, score: null as any, observations: 0 });
+    expect(h.big).toBeNull();
+    expect(h.verdict).toContain('No view measurements yet');
+    expect(h.verdict).not.toMatch(/83,722|84K views/);
+  });
+
+  it('is two lines and only two', () => {
+    const h = headerLines(young);
+    expect(Object.keys(h).sort()).toEqual(['big', 'meta', 'over', 'verdict']);
+    expect(h.verdict.split('\n')).toHaveLength(1);
+  });
+});

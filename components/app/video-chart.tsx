@@ -10,6 +10,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Actual, CurvePoint, Marker } from '@/lib/admin/video-curve';
+import type { PackagingMark } from '@/lib/app/packaging-groups';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ThemeMode } from '@/lib/app/chart-style';
 
@@ -17,13 +18,25 @@ export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
 }
 
-type HoverCtx = { hovered: string | null; setHovered: (k: string | null) => void };
-const MarkerHover = createContext<HoverCtx>({ hovered: null, setHovered: () => {} });
+type HoverCtx = {
+  hovered: string | null;
+  setHovered: (k: string | null) => void;
+  /** The packaging group the strip has OPEN. Set by a click, never by a hover. */
+  opened: string | null;
+  setOpened: (k: string | null) => void;
+};
+const MarkerHover = createContext<HoverCtx>({ hovered: null, setHovered: () => {}, opened: null, setOpened: () => {} });
 
-/** Wrap the chart, the timeline and the experiment cards in this so hovering one highlights the rest. */
+/**
+ * Wrap the chart, the timeline and the experiment cards in this so hovering one highlights the
+ * rest — and so a click on a test window in the chart can open that test's entry in the strip.
+ * Hover highlights; only a click opens. The two used to fight: the strip expanded on hover, so
+ * moving the mouse across the chart opened and closed the thing the reader was aiming at.
+ */
 export function MarkerHoverProvider({ children }: { children: React.ReactNode }) {
   const [hovered, setHovered] = useState<string | null>(null);
-  const value = useMemo(() => ({ hovered, setHovered }), [hovered]);
+  const [opened, setOpened] = useState<string | null>(null);
+  const value = useMemo(() => ({ hovered, setHovered, opened, setOpened }), [hovered, opened]);
   return <MarkerHover.Provider value={value}>{children}</MarkerHover.Provider>;
 }
 
@@ -101,8 +114,6 @@ export function dayLabel(d: number) {
   return d < 1 ? `${Math.round(d * 24)}h` : `day ${d < 10 ? d.toFixed(d % 1 ? 1 : 0) : Math.round(d)}`;
 }
 
-export type Zoom = '72h' | 'full';
-
 // The chart is the heaviest thing on this page and the least urgent: the reader's first
 // question is the ratio above it. Loading recharts on the client only, behind a plate of the
 // chart's own height, keeps it out of the first bundle without moving anything below it when
@@ -128,9 +139,9 @@ export function VideoChart(props: {
   curve: CurvePoint[];
   series: SeriesPoint[];
   markers: Marker[];
+  marks: PackagingMark[];
   thumbUrls: Record<number, string>;
   score: number | null;
-  defaultZoom?: Zoom;
 }) {
   return (
     <div style={{ minHeight: CHART_HEIGHT }}>

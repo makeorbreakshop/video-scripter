@@ -8,6 +8,7 @@
 // its (now fitted, lib/scoring/bands.ts) band.
 import type { SeriesKind, SeriesPoint } from './chart-series';
 import type { Actual, CurvePoint } from '../admin/video-curve';
+import { compactNumber } from './feed-format';
 
 export type StrokeToken = 'accent' | 'muted';
 export interface SeriesStyle {
@@ -204,4 +205,91 @@ export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: A
   }
   for (const a of actuals) if (kindAt.get(a.day) === 'measured') at(a.day).dot = a.views;
   return [...byDay.values()].sort((a, b) => a.day - b.day);
+}
+
+// ------------------------------------------------ chart v2: fewer things at rest ----
+
+/**
+ * Which rings are actually PAINTED. Two ribbons put two uncertainties on one plate and left
+ * the reader working out whose was whose; only the middle half is drawn now. The 10–90 range
+ * is not withdrawn — it is still fitted, still carried on every forecast point, and still said
+ * out loud in the tooltip's last line. Drawn and known are different things.
+ */
+export const BAND_DISPLAY: Record<BandRing, boolean> = { inner: true, outer: false };
+
+/** The rings the plot mounts, in paint order. */
+export const DRAWN_RINGS: BandRing[] = (['outer', 'inner'] as BandRing[]).filter((r) => BAND_DISPLAY[r]);
+
+/**
+ * The props the ribbon's <Area> is given.
+ *
+ * `activeDot: false` is the point of this function. recharts puts an active dot on every Area
+ * by default, so hovering anywhere near the forecast lit two dots on the ribbon's EDGES —
+ * quantiles of a fitted band, drawn exactly like the measurements below them. Nothing on this
+ * chart may look like a measurement unless we measured it. Returned as an object so a node
+ * test can assert it without mounting recharts.
+ */
+export function areaProps(ring: BandRing, accent: string, theme: ThemeMode = 'light') {
+  return {
+    stroke: 'none' as const,
+    fill: accent,
+    fillOpacity: bandStyle(ring, theme).fillOpacity,
+    dot: false as const,
+    activeDot: false as const,
+    connectNulls: true as const,
+    isAnimationActive: false as const,
+    legendType: 'none' as const,
+  };
+}
+
+/** The y-axis scales the legend's toggle offers. Linear first: it is the default. */
+export const SCALE_MODES = ['linear', 'log'] as const;
+export type ScaleMode = (typeof SCALE_MODES)[number];
+
+export function nextScale(mode: ScaleMode): ScaleMode {
+  return mode === 'linear' ? 'log' : 'linear';
+}
+
+/**
+ * The odds, said once, under the legend — instead of twice inside every tooltip, where
+ * "half of videos land here" and "4 in 5 land here" took two of the four lines a reader gets.
+ */
+export const BAND_FOOTNOTE =
+  'the shaded band is where half of this channel’s videos land; the range in the tooltip is 4 in 5';
+
+export interface TooltipPoint {
+  /** The moment under the cursor, as an ISO string or Date. */
+  at: string | Date;
+  views?: number | null;
+  typical?: number | null;
+  inner?: readonly [number, number] | null;
+  outer?: readonly [number, number] | null;
+}
+
+/**
+ * What the tooltip says, at most four lines: when, what it was, the likely range, the tail.
+ *
+ * It used to run to five or six — a date, a count, a typical, and both bands each carrying its
+ * own sentence of odds — which is a paragraph following the cursor. The odds moved to
+ * BAND_FOOTNOTE and each range is now a range.
+ */
+export function tooltipLines(p: TooltipPoint): string[] {
+  const lines: string[] = [];
+  const d = p.at instanceof Date ? p.at : new Date(p.at);
+  if (!Number.isNaN(d.getTime())) {
+    const date = d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
+    const time = d.toLocaleTimeString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' });
+    lines.push(`${date}, ${time} ET`);
+  }
+  const num = (n: number) => compactNumber(n);
+  if (p.views != null && Number.isFinite(p.views)) {
+    lines.push(
+      p.typical != null && Number.isFinite(p.typical)
+        ? `${num(p.views)} views · typical ${num(p.typical)}`
+        : `${num(p.views)} views`
+    );
+  }
+  if (p.inner) lines.push(`likely ${num(p.inner[0])}–${num(p.inner[1])}`);
+  if (p.outer) lines.push(`range ${num(p.outer[0])}–${num(p.outer[1])}`);
+  return lines.slice(0, 4);
 }

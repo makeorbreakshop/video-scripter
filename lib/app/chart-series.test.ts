@@ -386,3 +386,69 @@ describe('the reconstructed past is fitted through every non-stale measurement',
     expect(s.find((p) => p.day === 0.5)!.views / shape(0.5)).toBeCloseTo(2, 6);
   });
 });
+
+// ------------------------------------------------- chart v2: one continuous view ----
+
+import { horizonFor } from './chart-horizon';
+import { longtailAt } from '../admin/video-curve';
+
+describe('the series covers the whole data-driven horizon, and keeps going past day 30', () => {
+  // A twelve-day video: 3 × age is 36, which rounds to the 30-day tick.
+  const twelveDays = {
+    actuals: Array.from({ length: 12 }, (_, i) => ({ day: i + 1, views: 100_000 * (i + 1) })),
+    baseline: 800_000, est30: 1_600_000, mult: MULT, longtail: LONGTAIL,
+    horizonDay: horizonFor(12), ageDays: 12,
+  };
+
+  it('reaches the horizon the age asked for, with no day missing on the way', () => {
+    const s = buildSeries(twelveDays);
+    expect(twelveDays.horizonDay).toBe(30);
+    expect(Math.max(...s.map((p) => p.day))).toBe(30);
+    for (let d = 0; d <= 30; d++) expect(s.some((p) => p.day === d)).toBe(true);
+  });
+
+  const past30 = { ...twelveDays, horizonDay: horizonFor(60), ageDays: 60,
+    actuals: Array.from({ length: 20 }, (_, i) => ({ day: i + 1, views: 100_000 * (i + 1) })) };
+
+  it('draws every day out to a 180-day horizon', () => {
+    expect(past30.horizonDay).toBe(180);
+    const s = buildSeries(past30);
+    expect(Math.max(...s.map((p) => p.day))).toBe(180);
+    expect(s.filter((p) => p.day > 30 && p.kind === 'forecast').length).toBeGreaterThan(100);
+  });
+
+  it('continues past day 30 on the fitted long-tail curve, not flat', () => {
+    const s = buildSeries(past30);
+    const at = (d: number) => s.find((p) => p.day === d)!;
+    expect(at(30).views).toBeCloseTo(past30.est30, 0);
+    // Each later day is the day-30 estimate times the fitted long tail at that age.
+    for (const d of [60, 90, 180]) {
+      expect(at(d).views).toBeCloseTo(past30.est30 * longtailAt(LONGTAIL, d), 0);
+      expect(at(d).views).toBeGreaterThan(at(30).views);
+    }
+    expect(at(180).views).toBeGreaterThan(at(90).views);
+  });
+
+  it('keeps the day-30 estimate as a point ON the median, not a separate line', () => {
+    const s = buildSeries(past30);
+    const d30 = s.find((p) => p.day === 30)!;
+    expect(d30.kind).toBe('forecast');
+    expect(d30.views).toBeCloseTo(past30.est30, 0);
+  });
+
+  it('carries both rings on every forecast point — the outer is data, even undrawn', () => {
+    const s = buildSeries(past30).filter((p) => p.kind === 'forecast' && p.day > 25);
+    expect(s.length).toBeGreaterThan(0);
+    for (const p of s) {
+      expect(p.band!.inner[0]).toBeLessThanOrEqual(p.band!.inner[1]);
+      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.band!.inner[0]);
+      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.band!.inner[1]);
+    }
+  });
+
+  it('hands the outer ring to the rows so the tooltip can read it, drawn or not', () => {
+    const rows = chartRows(buildSeries(past30), [], []).filter((r) => r.bandInner);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => !!r.bandOuter)).toBe(true);
+  });
+});

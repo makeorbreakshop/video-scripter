@@ -6,9 +6,9 @@
 // the hover key that ties a clip to its marker on the chart above.
 //
 // Pure functions, no I/O.
-import { thumbnailVariants, testState, type ThumbRow } from './packaging';
+import { groupPackaging } from './packaging-groups';
 import { etTimestamp } from './feed-format';
-import { dayRange, etDayShort, times, type RowVariant, type ThumbRowWithUrl } from './test-row';
+import { etDayShort, times, type RowVariant, type ThumbRowWithUrl } from './test-row';
 
 export type TimelineTitle = { version: number; title: string; first_seen: string };
 
@@ -37,9 +37,6 @@ export type TimelineInput = {
   score?: number | null;
   now?: string | number | Date;
 };
-
-/** Same shape as components/app/video-chart.tsx markerKey(); duplicated here to keep this pure. */
-const key = (kind: string, version: number) => `${kind}-${version}`;
 
 /** The title the video wore at `at` — what a clip that is not itself a title change shows. */
 function titleAt(titles: TimelineTitle[], at: string): string {
@@ -70,47 +67,40 @@ export function buildTimeline(input: TimelineInput): TimelineClip[] {
     label: `PUBLISHED · ${etTimestamp(input.publishedAt)}`,
   });
 
-  const state = testState(thumbs, input.now ?? Date.now());
-  const { variants } = thumbnailVariants(thumbs);
-  const urlFor = new Map(thumbs.map((t) => [t.version, t.url]));
-  const changed = thumbs.filter((t) => t.version > first.version);
+  // The grouping is NOT decided here: lib/app/packaging-groups.ts is the one answer, and the
+  // chart above reads exactly the same call. When it lived in this file the two layers could
+  // (and did) disagree — one A/B test in the strip, "6 swaps" on the chart.
+  const groups = groupPackaging({
+    publishedAt: input.publishedAt, thumbs, titles, now: input.now ?? Date.now(),
+  });
 
-  if (state.status === 'testing' || state.status === 'settled') {
-    // One clip for the whole experiment. Rotation counts stay out of the words.
-    const rowVariants: RowVariant[] = variants.map((v) => ({
-      label: v.label, version: v.versions[0], url: urlFor.get(v.versions[0]) ?? '', current: v.current,
-    }));
-    const endAt = state.status === 'settled' ? (state.settledAt as string) : (state.lastFlipAt as string);
-    clips.push({
-      kind: 'test', key: 'test', at: state.startedAt as string, endAt,
-      url: rowVariants[rowVariants.length - 1]?.url ?? first.url,
-      backUrl: rowVariants[0]?.url ?? null,
-      variants: rowVariants,
-      title: titleAt(titles, state.startedAt as string),
-      headline: state.winner
-        ? `${variants.length} thumbnails · ${state.winner} won`
-        : `${variants.length} thumbnails`,
-      range: dayRange(state.startedAt, endAt),
-      markerKeys: changed.map((t) => key('thumb', t.version)),
-    });
-  } else if (state.status === 'swap') {
-    for (const t of changed) {
+  for (const g of groups) {
+    if (g.kind === 'test') {
       clips.push({
-        kind: 'swap', key: `swap-${t.version}`, at: t.first_seen, url: t.url,
-        title: titleAt(titles, t.first_seen),
-        label: `SWAP · ${etTimestamp(t.first_seen)}`,
-        markerKeys: [key('thumb', t.version)],
+        kind: 'test', key: g.key, at: g.at, endAt: g.endAt,
+        url: g.variants[g.variants.length - 1]?.url ?? first.url,
+        backUrl: g.variants[0]?.url ?? null,
+        variants: g.variants,
+        title: titleAt(titles, g.at),
+        headline: g.headline,
+        range: g.range,
+        markerKeys: g.markerKeys,
+      });
+    } else if (g.kind === 'swap') {
+      clips.push({
+        kind: 'swap', key: g.key, at: g.at, url: g.url,
+        title: titleAt(titles, g.at),
+        label: `SWAP · ${etTimestamp(g.at)}`,
+        markerKeys: g.markerKeys,
+      });
+    } else {
+      clips.push({
+        kind: 'title', key: g.key, at: g.at,
+        url: thumbAt(thumbs, g.at), title: g.title,
+        label: `TITLE · ${etTimestamp(g.at)}`,
+        markerKeys: g.markerKeys,
       });
     }
-  }
-
-  for (const t of titles.slice(1)) {
-    clips.push({
-      kind: 'title', key: `title-${t.version}`, at: t.first_seen,
-      url: thumbAt(thumbs, t.first_seen), title: t.title,
-      label: `TITLE · ${etTimestamp(t.first_seen)}`,
-      markerKeys: [key('title', t.version)],
-    });
   }
 
   clips.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));

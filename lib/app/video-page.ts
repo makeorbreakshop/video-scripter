@@ -17,6 +17,9 @@ import { thumbUrl } from '../thumbs/storage';
 import { thumbnailVariants, testState, type Variant, type TestState } from './packaging';
 import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
 import { experiments, type Experiment } from './experiment';
+import { horizonFor } from './chart-horizon';
+import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
+import { etDateTime } from '../admin/format';
 
 /** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
  *  to an earlier image is a new version but the same variant (lib/app/packaging.ts). */
@@ -28,7 +31,8 @@ export type VideoPageView = {
   pace: number | null; // views now ÷ what a typical video on the channel has at this age
   /** What a typical video on this channel has by now — the denominator of `pace`. */
   expectedNow: number | null;
-  /** Last day drawn: today for a video past the last forecast milestone, else the next milestone. */
+  /** Last day drawn: the age-driven forecast horizon (lib/app/chart-horizon.ts), never less
+   *  than what we have actually measured. */
   horizonDay: number;
   /** 'now' for a video past day 30 (pace leads), 'day30' for a young one (the projection leads). */
   headline: 'now' | 'day30';
@@ -49,6 +53,10 @@ export type VideoPageView = {
    */
   series: SeriesPoint[];
   markers: Marker[];
+  /** The packaging history grouped by TEST — the same call the strip below the chart makes. */
+  packagingGroups: PackagingGroup[];
+  /** Those groups placed on the chart's day axis: a test is a window, a swap or title a rule. */
+  marks: PackagingMark[];
   experiments: Experiment[];
   thumbs: ThumbVersionView[];
   /** distinct thumbnail images, in first-seen order, with the versions that showed each */
@@ -61,7 +69,6 @@ export type VideoPageView = {
   timelineTicks: string[];
   titles: TitleVersionView[];
   thumbUrls: Record<number, string>;
-  defaultZoom: '72h' | 'full';
   lastSeen: string | null;
   counts: { snapshots: number; samples: number };
 };
@@ -178,10 +185,11 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
   const markers = packagingMarkers(v.published_at, thumbs, titles);
   const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
-  // Draw the whole life, then a little forecast past today: the next milestone the model can
-  // still speak to. Past a year the long tail is flat, so today is the end of the chart.
-  const horizonDay = [30, 60, 90, 180, 365].find((d) => d > ageDays) ?? ageDays;
-  const maxDay = Math.max(horizonDay, actuals.length ? actuals[actuals.length - 1].day : 0, ageDays);
+  // The right edge is a fact about the video's age (lib/app/chart-horizon.ts), not a milestone
+  // ladder and not a button: roughly three times as far ahead as it has already lived. It is
+  // widened only to cover what we actually measured — a two-year-old video's readings are not
+  // cut off by a one-year horizon.
+  const maxDay = Math.max(horizonFor(ageDays), actuals.length ? actuals[actuals.length - 1].day : 0, ageDays);
 
   const thumbUrls: Record<number, string> = {};
   for (const t of thumbs) thumbUrls[t.version] = versionThumbUrl(id, t.version);
@@ -233,21 +241,29 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     variants,
     packaging: testState(thumbRows, now),
     ...(() => {
-      // The timeline is built here rather than in the page so the clip list is plain
-      // serialisable data by the time it crosses into the client component.
+      // ONE grouping, read by both layers. The timeline is built here rather than in the page
+      // so the clip list is plain serialisable data by the time it crosses into the client
+      // component; the chart's marks are the same groups on the day axis.
+      const publishedAt = new Date(v.published_at).toISOString();
+      const timelineThumbs = thumbRows.map((t) => ({ ...t, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] }));
+      const timelineTitles = titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() }));
+      const groups = groupPackaging({ publishedAt, thumbs: timelineThumbs, titles: timelineTitles, now });
       const clips = buildTimeline({
-        publishedAt: new Date(v.published_at).toISOString(),
-        thumbs: thumbRows.map((t) => ({ ...t, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version] })),
-        titles: titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() })),
+        publishedAt,
+        thumbs: timelineThumbs,
+        titles: timelineTitles,
         score: score?.score != null ? Number(score.score) : null,
         now,
       });
-      return { timeline: clips, timelineTicks: timelineTicks(clips) };
+      return {
+        packagingGroups: groups,
+        marks: packagingMarks(groups, publishedAt),
+        timeline: clips,
+        timelineTicks: timelineTicks(clips),
+      };
     })(),
     titles: titles.map((t) => ({ version: t.version, title: t.title, first_seen: new Date(t.first_seen).toISOString() })),
     thumbUrls,
-    // The launch zoom is only meaningful while the 15-minute samples are still arriving.
-    defaultZoom: ageDays < 3 && samples.length > 0 ? '72h' : 'full',
     lastSeen: lastSeen ? new Date(lastSeen).toISOString() : null,
     counts: { snapshots: snapshots.length, samples: samples.length },
   };
@@ -303,21 +319,95 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
       aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
     };
   }
-  // No score. Name the cause instead of leaving a blank: a reader who sees nothing assumes the
-  // product is broken, one who is told the channel has two prior videos knows to wait.
-  // (lib/scoring/score-gaps.ts is the one cause list; scripts/score-gaps.ts counts the same ones.)
-  const bucket =
-    v.observations === 0 ? 'no-observations'
-    : (v.priorLongform ?? 0) >= MIN_PRIORS ? 'priors-unusable'
-    : sc && sc.baseline == null ? 'no-channel-baseline'
-    : sc ? 'no-channel-baseline'
-    : 'never-scored-in-window';
   return {
     big: null,
     over: false,
-    under: `${fmt(v.views)} views at ${age(v.ageDays)} · ${gapReasonWords(bucket, v.channelName)}`,
+    under: `${fmt(v.views)} views at ${age(v.ageDays)} · ${gapWords(v)}`,
     aside: null,
   };
+}
+
+/**
+ * Why there is no score, in words. A reader who sees a blank assumes the product is broken;
+ * one who is told the channel has two prior videos knows to wait.
+ * (lib/scoring/score-gaps.ts is the one cause list; scripts/score-gaps.ts counts the same ones.)
+ */
+function gapWords(v: VideoVerdictInput): string {
+  const sc = v.score;
+  const bucket =
+    v.observations === 0 ? 'no-observations'
+    : (v.priorLongform ?? 0) >= MIN_PRIORS ? 'priors-unusable'
+    : sc ? 'no-channel-baseline'
+    : 'never-scored-in-window';
+  return gapReasonWords(bucket, v.channelName);
+}
+
+// --------------------------------------------------------------- the header ----
+
+export type HeaderInput = VideoVerdictInput & {
+  id: string;
+  publishedAt: string | Date;
+};
+
+export type HeaderLines = {
+  /** The metadata line's parts. The page draws them; the YouTube one is a link. */
+  meta: { channelName: string; publishedET: string; age: string; views: string; youtubeUrl: string };
+  /** The multiple, or null when we cannot score the video. */
+  big: string | null;
+  over: boolean;
+  /** The verdict line, one sentence. */
+  verdict: string;
+};
+
+/**
+ * Two lines under the title, and only two.
+ *
+ * The page used to say the view count twice: once in the metadata line and again in the
+ * verdict's aside as "84K views at 35h", rounded differently, so the same fact appeared as two
+ * numbers a few pixels apart. The exact count belongs to the metadata; the verdict line is the
+ * judgement and the numbers the judgement is MADE of, which never include a repeat of it.
+ */
+export function headerLines(v: HeaderInput): HeaderLines {
+  const sc = v.score;
+  const conf = sc?.confidence ? confidenceWord(sc.confidence) : null;
+  // 'confirmed' is a model word; a creator reading a two-month-old video wants 'settled'.
+  const read = conf ? (conf === 'confirmed' ? 'settled' : `${conf} read`) : null;
+  const meta = {
+    channelName: v.channelName,
+    publishedET: etDateTime(v.publishedAt),
+    age: ageWord(v.ageDays),
+    views: Number(v.views).toLocaleString('en-US'),
+    youtubeUrl: `https://youtu.be/${v.id}`,
+  };
+  const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
+
+  if (v.headline === 'now' && v.pace != null && v.expectedNow != null) {
+    return {
+      meta, big: pct(v.pace), over: v.pace >= 1,
+      verdict: [`${fmt(v.views)} vs typical ${fmt(Math.round(v.expectedNow))} by now`, read]
+        .filter(Boolean).join(' · '),
+    };
+  }
+  if (sc?.score != null && sc.baseline != null) {
+    return {
+      meta, big: pct(Number(sc.score)), over: Number(sc.score) >= 1,
+      verdict: [
+        `on pace for ${fmt(Math.round(sc.est30))} by day 30`,
+        `typical ${fmt(Math.round(sc.baseline))}`,
+        read,
+      ].filter(Boolean).join(' · '),
+    };
+  }
+  return { meta, big: null, over: false, verdict: gapWords(v) };
+}
+
+/** "1d old" / "18h old" — the same words the rest of the app uses for an age. */
+function ageWord(days: number): string {
+  if (!Number.isFinite(days) || days < 0) return '–';
+  const hrs = Math.floor(days * 24);
+  if (hrs < 1) return `${Math.max(0, Math.round(days * 1440))}m old`;
+  if (hrs < 24) return `${hrs}h old`;
+  return `${Math.floor(hrs / 24)}d old`;
 }
 
 function age(days: number): string {

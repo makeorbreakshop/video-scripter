@@ -37,10 +37,13 @@ function Chevron({ className, dir = 'down' }: { className?: string; dir?: 'down'
 }
 
 export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; ticks: string[] }) {
-  const { hovered, setHovered } = useMarkerHover();
-  const [open, setOpen] = useState(false);
+  // Which clip is open is shared state, not local: a click on that test's window in the chart
+  // above opens it here and scrolls it into view. Hover only highlights — when hover also
+  // expanded, moving the mouse across the strip opened and closed the thing under the cursor.
+  const { hovered, setHovered, opened, setOpened } = useMarkerHover();
   const [overflow, setOverflow] = useState(false);
   const track = useRef<HTMLDivElement | null>(null);
+  const openRef = useRef<HTMLButtonElement | null>(null);
 
   const measure = useCallback(() => {
     const el = track.current;
@@ -54,14 +57,20 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [measure, open]);
+  }, [measure, opened]);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpened(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+  }, [opened, setOpened]);
+
+  // Opened from the chart: bring the entry the reader clicked into view.
+  useEffect(() => {
+    if (!opened || !openRef.current) return;
+    openRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [opened]);
 
   const hot = (keys?: string[]) => !!(hovered && keys && keys.includes(hovered));
   const link = (keys?: string[]) => ({
@@ -84,10 +93,12 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
           if (c.kind === 'test') {
             const back = c.variants[0];
             const front = c.variants[c.variants.length - 1];
+            const open = opened === c.key;
             return (
               <button key={c.key} type="button" className="pt-clip" data-kind="test" data-open={open}
+                      ref={open ? openRef : undefined}
                       data-hot={hot(c.markerKeys)} aria-expanded={open}
-                      onClick={() => setOpen((o) => !o)} {...link(c.markerKeys)}>
+                      onClick={() => setOpened(open ? null : c.key)} {...link(c.markerKeys)}>
                 {open ? (
                   <>
                     <span className="pt-testline">

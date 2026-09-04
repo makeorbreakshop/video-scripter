@@ -278,3 +278,95 @@ describe('the legend reads outward from what is known', () => {
     expect(legendEntries({})).toEqual([]);
   });
 });
+
+// ------------------------------------------------------------- chart v2 ----
+
+import {
+  BAND_DISPLAY, areaProps, SCALE_MODES, nextScale, tooltipLines, BAND_FOOTNOTE,
+} from './chart-style';
+
+describe('only the inner ribbon is drawn', () => {
+  // Two ribbons put two uncertainties on one plate and the reader had to work out which was
+  // which. The 10–90 range is still true and still carried — it is a line in the tooltip now.
+  it('marks the outer ring as not drawn', () => {
+    expect(BAND_DISPLAY.inner).toBe(true);
+    expect(BAND_DISPLAY.outer).toBe(false);
+  });
+
+  it('still keeps the outer values, because the tooltip says them', () => {
+    expect(BAND_STYLES.light.outer).toBeDefined();
+    expect(tooltipLines({ at: '2026-09-23T22:14:00-04:00', views: 179_000, outer: [127_000, 395_000] }))
+      .toContain('range 127K–395K');
+  });
+});
+
+describe('the ribbon draws no dots on its edges', () => {
+  // recharts puts an activeDot on every Area by default, so hovering the forecast lit up two
+  // dots on the band edges — points nobody measured, drawn like measurements.
+  it('disables activeDot on the band area', () => {
+    const p = areaProps('inner', '#0E7A3C', 'light');
+    expect(p.activeDot).toBe(false);
+    expect(p.dot).toBe(false);
+    expect(p.stroke).toBe('none');
+    expect(p.fillOpacity).toBe(BAND_STYLES.light.inner.fillOpacity);
+  });
+
+  it('uses the dark plate’s own opacity on the dark plate', () => {
+    expect(areaProps('inner', '#3FBF6F', 'dark').fillOpacity).toBe(BAND_STYLES.dark.inner.fillOpacity);
+  });
+});
+
+describe('the legend’s scale toggle', () => {
+  it('offers linear and log, and starts linear', () => {
+    expect(SCALE_MODES).toEqual(['linear', 'log']);
+    expect(SCALE_MODES[0]).toBe('linear');
+  });
+
+  it('flips between the two', () => {
+    expect(nextScale('linear')).toBe('log');
+    expect(nextScale('log')).toBe('linear');
+  });
+});
+
+describe('the odds wording is a footnote, said once', () => {
+  it('reads as one sentence under the legend', () => {
+    expect(BAND_FOOTNOTE).toBe('the shaded band is where half of this channel’s videos land; the range in the tooltip is 4 in 5');
+  });
+});
+
+describe('tooltipLines: four lines at the most', () => {
+  const AT = '2026-09-23T22:14:00-04:00'; // 10:14 PM ET
+
+  it('reads date, count, likely, range — and nothing else', () => {
+    const lines = tooltipLines({
+      at: AT, views: 179_000, typical: 88_000, inner: [148_000, 258_000], outer: [127_000, 395_000],
+    });
+    expect(lines).toEqual([
+      'Sep 23, 10:14 PM ET',
+      '179K views · typical 88K',
+      'likely 148K–258K',
+      'range 127K–395K',
+    ]);
+  });
+
+  it('never says more than four things', () => {
+    const lines = tooltipLines({
+      at: AT, views: 1, typical: 2, inner: [1, 2], outer: [1, 2],
+    });
+    expect(lines.length).toBeLessThanOrEqual(4);
+  });
+
+  it('drops the lines it has nothing to say on', () => {
+    expect(tooltipLines({ at: AT, views: 179_000 })).toEqual(['Sep 23, 10:14 PM ET', '179K views']);
+    expect(tooltipLines({ at: AT })).toEqual(['Sep 23, 10:14 PM ET']);
+  });
+
+  it('puts the inner range before the outer one', () => {
+    const lines = tooltipLines({ at: AT, views: 10, inner: [8, 12], outer: [5, 20] });
+    expect(lines.findIndex((l) => l.startsWith('likely'))).toBeLessThan(lines.findIndex((l) => l.startsWith('range')));
+  });
+
+  it('says the time in ET, never UTC', () => {
+    expect(tooltipLines({ at: '2026-09-24T02:14:00Z' })[0]).toBe('Sep 23, 10:14 PM ET');
+  });
+});
