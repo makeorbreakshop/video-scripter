@@ -168,3 +168,88 @@ on 1,522 checks — target 50/80, and unchanged by this candidate since the band
 
 Not rescored and not deployed; both need Brandon's approval. `BASELINE.json` still points at
 `v3.0-2026-09-04.json`.
+
+## v5.0 — deploy build, 2026-09-04 (NOT DEPLOYED; stopped at the pre-flight)
+
+Branch `scoring/v5-same-age`. The build asked for by the deploy plan is complete and gated; the
+deploy was **stopped at Phase 2a** because the production checkout was being edited live (see
+"Why this is not deployed" below). No migration was applied, nothing was merged, nothing pushed.
+
+**Score history.** `video_score_history` (append-only, one row per video per write) plus
+`video_scores_by_version` (the latest history row per (video, model_version)). `video_scores`
+keeps its role as the current answer. Every write path — hourly, `--all`, `--final`, and the
+semantic backfill — appends to history in the same batch. This is what makes a rescore
+reversible in evidence, and it is what stops the v5 pass from erasing the 95,164
+`v3.1-semantic-backfill-2026-09` rows the semantic eval reads by that exact label; the two
+scripts that pin the label now read the view.
+
+**One place that says which version the app reads.** `scoreReadVersion` / `scoreParamsQuery`
+replace the hardcoded `'v3.0'` in `lib/app/video-page.ts` and `lib/admin/queries.ts`. Those were
+already wrong at v4 and would have drawn v3 growth curves under v5 scores. `SCORE_READ_VERSION`
+overrides for a rollback.
+
+**Sub-day ladder refit — a NULL RESULT.** The ladder is refitted in `growth.ts` (one G, one fit)
+from `view_samples` since 2026-08-01, samples only on the hour-h side, minRows 200, winsorised
+at the 5th/95th per bucket, and a starved bucket carries the younger one forward instead of
+being skipped for `logToRef` to interpolate across.
+
+Re-running the full harness read <1h 1.602 → 1.166 and 1h–4h 1.063 → 1.431. **Neither number is
+real** — the harness resamples its 5,000 targets each run, so that is two samples, not two
+models. `scripts/loo-paired.ts` reconstructs the SAME hidden readings under both params rows,
+on 5,697 videos with sub-day readings:
+
+| bucket | n | medALE old | medALE new | Δ |
+|---|--:|--:|--:|--:|
+| <1h | 147 | 2.756 | 2.816 | +0.061 |
+| 1h–4h | 196 | 1.724 | 1.725 | +0.001 |
+| 4h–12h | 499 | 0.414 | 0.408 | −0.006 |
+
+Nothing moved. The old 30-day publish window already covered the launch-tracker era, so every
+hour bucket already exceeded 200 rows and none was ever carried, and winsorising barely moves a
+median. The refit buys provenance and a failure mode, not accuracy. **The sub-day error is not a
+ladder-fit problem.** Any future before/after on this harness must be paired.
+
+**`AGE_FLOOR_HOURS = 4`** is what actually addresses the sub-day error: below it G's own
+reconstruction error is 170%+, so the score is null with confidence `early` and only the raw
+views are stored. The +0.061 regression at <1h sits under the floor, so no shipped score rests
+on it.
+
+**`PROJECTION_MAX_DAYS = 30`** with the v4 bands; 90/365 stay measured but behind
+`LONG_HORIZONS_ENABLED = false`. `project()` itself still answers any horizon.
+
+**Write paths are v5.** The guard is gone. `score()`, `final()` and the `--v5` dry run share one
+`v5Batch`, so the CSV and production cannot answer differently. The v3/v4 column names are
+remapped rather than left null, because the app, the API and the extension read them:
+`score` = v(t)/C(t), `baseline` = C(t), `n_baseline` = contributing priors, `est30` = the 30-day
+projection. `--all` drops the 60-day ceiling.
+
+**Copy.** Two surfaces printed the denominator unlabelled next to a day-30 projection
+("on pace for 186K by day 30 · typical 92K"), which reads as a day-30 baseline — the one thing
+C(t) is not. The age is on the line now.
+
+**Controls, all passing.**
+- `npx jest lib/scoring lib/app lib/semantic` — 65 suites, 750 tests, green.
+- `npx tsc --noEmit` — no new errors on any touched file.
+- `benchmark-scores.ts --params-version v3.0 --compare v3.0-2026-09-04.json` — **0 better / 42
+  wash / 0 worse**. The T=30 cells did not move; this run exercises the untouched v3 path and is
+  the control that says so.
+- `check-band-calibration.ts --params-version v3.0` — inner **50.6%**, outer **79.5%**, n=1,522,
+  against 50/80 nominal.
+
+**Known and unfixed:** v5's own projection band calibration (verification part 4) still fails —
+inner 15.4% / outer 61.5% at T=30 on n=13. Capping the shipped horizon at 30 does not fix it; it
+limits the blast radius. Do not present the projection range as calibrated.
+
+**Why this is not deployed.** Phase 2a requires the production checkout at
+`~/video-scripter-v2/video-scripter` to be clean apart from a known set of untracked files.
+At 14:05 ET it held a commit from 13:53 (`ecba5bc`, chart zoom) and uncommitted edits to
+`components/app/video-chart-plot.tsx`, `lib/app/chart-style.ts`, `lib/app/chart-zoom.ts` plus new
+untracked `lib/app/chart-brush.ts` and `lib/app/chart-copy.test.ts`, last written 2–7 minutes
+earlier. Someone is working in that checkout right now, in `lib/app` and `components/app` — the
+exact area the merge was flagged to conflict in. Merging into a tree with live uncommitted work,
+and pushing a `main` carrying a commit that was not part of the approved set, is not a thing to
+do on my own judgement. Stopped, nothing applied.
+
+`BASELINE.json` still points at `v3.0-2026-09-04.json`. **Leak check clean: zero `v5.0` rows in
+`video_scores`.** Two more `score_params` rows written for `v5.0` (id 29 carries the new ladder)
+— harmless, production reads `v3.0`.
