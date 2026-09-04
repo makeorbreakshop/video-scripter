@@ -19,6 +19,7 @@ import {
   channelVideoCount as channelVideoCountUncached,
   type ChannelHeader, type GridVideo, type SortKey, type RangeKey, GRID_PAGE,
 } from './channel-page';
+import { channelBaselineSeries as channelBaselineSeriesUncached, type BaselinePoint } from './channel-analytics';
 import { loadVideoPage as loadVideoPageUncached, type VideoPageView } from './video-page';
 import { channelTag, videoTag } from './cache-tags';
 
@@ -54,6 +55,15 @@ export function cachedChannelVideoCount(channelId: string, range: RangeKey): Pro
   return unstable_cache(
     () => channelVideoCountUncached(channelId, range),
     ['channel-video-count', channelId, range],
+    { revalidate: CHANNEL_TTL, tags: [channelTag(channelId)] }
+  )();
+}
+
+/** The Analytics tab's series. Same shape of read as the grid: channel + range, no user in it. */
+export function cachedChannelBaseline(channelId: string, range: RangeKey): Promise<BaselinePoint[]> {
+  return unstable_cache(
+    () => channelBaselineSeriesUncached(channelId, range),
+    ['channel-baseline', channelId, range],
     { revalidate: CHANNEL_TTL, tags: [channelTag(channelId)] }
   )();
 }
