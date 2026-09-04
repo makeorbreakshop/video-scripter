@@ -7,7 +7,13 @@
 //
 // Deliberately absent, per the product rules: share-of-time, percentages, rotation counts, and
 // any "live now" label. We only registered what the watcher saw, so a row says "detected <time>",
-// never "started", and during a test every variant is live.
+// never "started", and during a rotation every variant is live.
+//
+// And the words claim only what the watcher observed. It hashes images and diffs each against
+// the previous state: it sees an image change, and — when an earlier image comes back — a
+// rotation. It never sees an experiment, a hypothesis or a result. So the running state is
+// ROTATING, not TESTING, and the image a rotation ends on is KEPT, not WINNER: YouTube decides
+// winners on watch-time share, which is data we do not have.
 //
 // Pure functions, no I/O — the components render what these return.
 import { thumbnailVariants, testState, type ThumbRow } from './packaging';
@@ -40,12 +46,12 @@ export type TestRowModel = {
   status: TestRowStatus;
   /** every distinct image, in first-appearance order */
   variants: RowVariant[];
-  /** settled: the image that lost. swap: the image that was replaced. Drawn small and dimmed. */
+  /** settled: the image it stopped showing. swap: the image replaced. Drawn small and dimmed. */
   before: RowVariant | null;
-  /** settled: the winner. swap: the new image. Drawn large. */
+  /** settled: the image it ended on. swap: the new image. Drawn large. */
   after: RowVariant | null;
-  pill: 'TESTING' | 'SETTLED' | 'SWAP';
-  /** "2 thumbnails" · "B won" · "New thumbnail" */
+  pill: 'ROTATING' | 'SETTLED' | 'SWAP';
+  /** "2 thumbnails" · "kept B" · "New thumbnail" */
   headline: string;
   /** the mono line: when we detected it, or the range it was tested over */
   stamp: string;
@@ -127,7 +133,7 @@ export function buildTestRow(input: TestRowInput, now: string | number | Date = 
 
   let before: RowVariant | null = null;
   let after: RowVariant | null = null;
-  let pill: TestRowModel['pill'] = 'TESTING';
+  let pill: TestRowModel['pill'] = 'ROTATING';
   let headline = '';
   let stamp = '';
 
@@ -136,8 +142,9 @@ export function buildTestRow(input: TestRowInput, now: string | number | Date = 
     after = rowVariants.find((v) => v.label === state.winner) ?? null;
     // The most recently introduced image that is not the winner — the one it beat.
     before = [...rowVariants].reverse().find((v) => v.label !== state.winner) ?? null;
-    headline = `${state.winner} won`;
-    stamp = `tested ${dayRange(state.startedAt, state.settledAt)}`;
+    // "kept", not "won": we saw which image it settled on, not which one performed.
+    headline = `kept ${state.winner}`;
+    stamp = `rotated ${dayRange(state.startedAt, state.settledAt)}`;
   } else if (state.status === 'swap') {
     pill = 'SWAP';
     before = rowVariants[0] ?? null;
@@ -147,7 +154,7 @@ export function buildTestRow(input: TestRowInput, now: string | number | Date = 
     // "detected", never "started": we only registered what the watcher saw.
     stamp = since ? `${etTimestamp(state.lastFlipAt)} · ${since}` : etTimestamp(state.lastFlipAt);
   } else {
-    pill = 'TESTING';
+    pill = 'ROTATING';
     headline = `${variants.length} thumbnails`;
     stamp = `detected ${etTimestamp(state.lastFlipAt)}`;
   }

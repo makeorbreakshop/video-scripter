@@ -67,7 +67,7 @@ export default async function FeedPage({ searchParams }: {
   const channelIds = channelId ? [channelId] : tracked.map((t) => t.channel_id);
 
   return (
-    <>
+    <div className="cs-feed-page">
       {/* The heading stands alone — no subtitle explaining what a feed is. */}
       <div className="cs-page-head" style={{ alignItems: 'center' }}>
         <h1 className="cs-h1">Feed</h1>
@@ -77,6 +77,6 @@ export default async function FeedPage({ searchParams }: {
       <Suspense key={`${segment}:${channelId ?? 'all'}`} fallback={<FeedSkeleton />}>
         <FeedBody channelIds={channelIds} segment={segment} />
       </Suspense>
-    </>
+    </div>
   );
 }

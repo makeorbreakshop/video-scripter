@@ -83,10 +83,10 @@ describe('feed card scores follow video_scores, not the frozen event payload', (
 describe('the badge tooltip documents what the number is', () => {
   it('names the comparison, that it is current, and the 2x entry threshold', () => {
     const t = scoreTooltip(2.79077390431535);
-    expect(t).toContain('2.8x');
+    expect(t).toContain('2.8×');
     expect(t).toContain('day-30');
     expect(t).toContain('as of now');
-    expect(t).toContain('2x');
+    expect(t).toContain('2×');
   });
   it('says so plainly when there is no score', () => {
     expect(scoreTooltip(null)).toBe('No score yet');

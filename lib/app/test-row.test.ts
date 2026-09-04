@@ -42,11 +42,11 @@ describe('buildTestRow', () => {
     expect(buildTestRow({ ...base, thumbs: [row(1, 'a', T(9))] }, T(16))).toBeNull();
   });
 
-  it('reads a live rotation as one test, counting thumbnails and never rotations', () => {
+  it('reads a live rotation as one experiment, counting thumbnails and never rotations', () => {
     const thumbs = [row(2, 'ram', T(12)), row(3, 'fake', T(13, 40)), row(4, 'ram', T(15, 21))];
     const r = buildTestRow({ ...base, thumbs }, T(16))!;
     expect(r.status).toBe('testing');
-    expect(r.pill).toBe('TESTING');
+    expect(r.pill).toBe('ROTATING');
     expect(r.headline).toBe('2 thumbnails');
     expect(r.variants.map((v) => v.label)).toEqual(['A', 'B']);
     // A is current: the last state rotated back to it. Never labelled "live now".
@@ -57,15 +57,15 @@ describe('buildTestRow', () => {
     expect(r.headline).not.toMatch(/rotation|%|share/i);
   });
 
-  it('names the winner and the range once a variant has held 48h, loser first', () => {
+  it('names the image it kept and the range once a variant has held 48h, dropped one first', () => {
     const thumbs = [row(1, 'a', T(9)), row(2, 'b', T(10)), row(3, 'a', T(11)), row(4, 'b', T(12))];
     const r = buildTestRow({ ...base, thumbs }, new Date(Date.UTC(2026, 8, 6, 12)).toISOString())!;
     expect(r.status).toBe('settled');
     expect(r.pill).toBe('SETTLED');
-    expect(r.headline).toBe('B won');
+    expect(r.headline).toBe('kept B');
     expect(r.after?.label).toBe('B');
     expect(r.before?.label).toBe('A');
-    expect(r.stamp).toBe('tested Sep 3 – Sep 5');
+    expect(r.stamp).toBe('rotated Sep 3 – Sep 5');
     expect(r.expandable).toBe(true);
   });
 

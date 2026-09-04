@@ -44,8 +44,8 @@ describe('sincePublish', () => {
 
 describe('formatScore', () => {
   it('shows one decimal under 10x and whole numbers above', () => {
-    expect(formatScore(2.34)).toBe('2.3x');
-    expect(formatScore(12.6)).toBe('13x');
+    expect(formatScore(2.34)).toBe('2.3×');
+    expect(formatScore(12.6)).toBe('13×');
     expect(formatScore(null)).toBe('—');
   });
   it('flags a high score at the documented threshold', () => {
@@ -257,8 +257,9 @@ describe('card kind, verb and meta', () => {
       ev({ type: 'ab_rotation', at: '2026-09-01T18:00:00.000Z', payload: { after_url: 'y', version: 3, hours_since_publish: 48 } }),
       ev({ type: 'ab_rotation', at: '2026-09-01T19:00:00.000Z', payload: { after_url: 'z', version: 4, hours_since_publish: 48 } }),
     ]);
-    expect(cardVerb(many)).toBe('tested 3 thumbnails');
-    expect(cardMeta(many)).toBe('A/B test · 2 rotations · 2d after publish');
+    expect(cardVerb(many)).toBe('rotated 3 thumbnails');
+    // No 'A/B test' and no rotation count: the watcher saw images change, not an experiment.
+    expect(cardMeta(many)).toBe('4th thumbnail · 2d after publish');
   });
 
   it('a same-day title and thumbnail change is one package', () => {

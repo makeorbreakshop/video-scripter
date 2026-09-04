@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
-import { cardKind, cardMeta, cardScoreNote, cardVerb, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
+import { cardKind, cardMeta, cardScoreNote, cardVerb, compactNumber, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
+import { rowMeta } from '@/lib/app/test-row';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
 import { installThumbFallback } from '@/components/app/thumb-runtime';
@@ -13,19 +14,38 @@ installThumbFallback();
 /**
  * One video, one day, as a social post: a byline that says in words what the channel did,
  * then the evidence for it. A title change shows the old title struck through next to the
- * new one; a thumbnail test shows before and after side by side. Only the upload gets the
+ * new one; a thumbnail change shows before and after side by side. Only the upload gets the
  * big hero treatment, so an edit can no longer read as a new video.
+ *
+ * The card is not itself a link. Wrapping it in one nests the title, the score and every
+ * future control inside an anchor, which produces an empty tab stop and makes a screen reader
+ * announce the whole card as the link name. The media and the title carry the link instead.
+ *
+ * The score lives in the text line, not on the thumbnail. YouTube's duration badge earns its
+ * corner because duration is intrinsic to the video; an outlier score is a judgement about it,
+ * and judgements go where Letterboxd and IMDb put ratings — in the metadata line.
  */
 
+/** Renders a link when the card has a video page, and the same box when it does not. */
 function Arrow() {
   return (
-    <svg className="cs-fcard-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden focusable="false">
+    <svg className="cs-fcard-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden focusable="false">
       <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-export default function FeedCard({ card, avatarUrl, now, priority = false }: { card: Card; avatarUrl?: string | null; now?: Date; priority?: boolean }) {
+function Go({ href, className, children, ...rest }: {
+  href: string | null; className: string; children: React.ReactNode; [k: string]: unknown;
+}) {
+  return href
+    ? <Link className={className} href={href} {...rest}>{children}</Link>
+    : <div className={className} {...rest}>{children}</div>;
+}
+
+export default function FeedCard({ card, avatarUrl, now, priority = false }: {
+  card: Card; avatarUrl?: string | null; now?: Date; priority?: boolean;
+}) {
   // Only the first couple of cards are on screen at load; everything below waits.
   const load = priority ? ('eager' as const) : ('lazy' as const);
   const kind = cardKind(card);
@@ -36,6 +56,31 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
   const meta = cardMeta(card);
   // A blank where the badge goes reads as a broken product. Say why there is no number.
   const scoreNote = cardScoreNote(card);
+  // The numbers. A change card keeps the one line a rotation row shows — "Sep 2 · 103K views ·
+  // 2.5×" plus what the change added. An upload, the biggest thing a channel does, gets the
+  // score as the headline and the two numbers it is made of under it: what this video is on
+  // pace for by day 30, and what this channel's videos normally reach. Same words as the video
+  // page's verdict, so the feed never says something the page would contradict.
+  const facts = card.events.find((e) => e.view_count != null || e.published_at) ?? card.events[0];
+  const line = [
+    rowMeta({ publishedAt: facts?.published_at ?? card.uploadedAt, views: facts?.view_count ?? null, score: card.score }),
+    meta, scoreNote,
+  ].filter(Boolean).join(' · ');
+  const subLine = line ? <p className="cs-fcard-sub" title={scoreTooltip(card.score)}>{line}</p> : null;
+  const est30 = facts?.score_est30 ?? null, base = facts?.score_baseline ?? null;
+  const published = facts?.published_at ?? card.uploadedAt;
+  const stats = (
+    <div className="cs-fcard-stats">
+      {card.score !== null
+        ? <span className="cs-num cs-fcard-score" data-hot={(card.score ?? 0) >= 2 || undefined} title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
+        : scoreNote && <span className="cs-fcard-sub">{scoreNote}</span>}
+      <span className="cs-fcard-sub">{[facts?.view_count != null ? `${compactNumber(facts.view_count)} views` : null,
+        published ? relativeTime(published, now) : null].filter(Boolean).join(' · ')}</span>
+      {est30 != null && base != null && base > 0 && (
+        <span className="cs-fcard-sub">{compactNumber(Math.round(est30))} by day 30 · typical {compactNumber(Math.round(base))}</span>
+      )}
+    </div>
+  );
 
   // Before/after pair for a swap day: the previous version when we have two, otherwise the
   // `before_url` the change event carried.
@@ -44,112 +89,62 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: { c
     ? swaps[swaps.length - 2].url
     : ((swapEvent?.payload?.before_url as string | undefined) || card.thumbnail_url || cdn);
   const beforeVersion = swaps.length > 1 ? swaps[swaps.length - 2].version : null;
-  const afterVersion = swaps.length ? swaps[swaps.length - 1].version : null;
-  const olderSwaps = swaps.length > 2 ? swaps.slice(0, -2) : [];
 
-  const scoreChip = card.score !== null
-    ? <span className="cs-score cs-fcard-score" title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
-    : null;
-
-  const beforeAfter = (
-    <>
-      <div className="cs-fcard-ba">
-        <figure className="cs-fcard-ba-item">
-          <Thumb src={beforeUrl} fallbackSrc={cdn} alt="thumbnail before the change" loading={load} style={{ width: '100%', height: '100%' }} />
-          <figcaption>{beforeVersion ? `v${beforeVersion}` : 'before'}</figcaption>
-        </figure>
-        <Arrow />
-        <figure className="cs-fcard-ba-item">
-          <Thumb src={latest} fallbackSrc={cdn} alt="thumbnail after the change" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
-          <figcaption>{afterVersion ? `v${afterVersion} · now` : 'now'}</figcaption>
-        </figure>
-      </div>
-      {olderSwaps.length > 0 && (
-        <span className="cs-versions cs-fcard-older">
-          {olderSwaps.slice(-6).map((s, i) => (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img key={`${s.url}-${i}`} src={s.url} alt={`version ${s.version ?? ''}`} title={`v${s.version ?? '?'} · ${etTimestamp(s.at)}`}
-                 width={136} height={76} loading="lazy" decoding="async" referrerPolicy="no-referrer" />
-          ))}
-        </span>
-      )}
-    </>
+  // The unit inside every card is a small YouTube card — thumbnail, title under it — at one
+  // fixed width. An upload is one of them with the numbers beside it. A change is two of
+  // them, before → after, each with its own title, and nothing else: the pair is the
+  // information. Every card lands at the same height because every card is built from the
+  // same unit.
+  const changedThumb = (kind === 'thumb' || kind === 'combo') && !!beforeUrl && beforeUrl !== latest;
+  const changed = changedThumb || kind === 'title' || kind === 'combo';
+  const vid = (src: string | null, t: string, opts: { dim?: boolean; old?: boolean; priority?: boolean } = {}) => (
+    <Go className="cs-vid" href={card.href} data-dim={opts.dim || undefined}>
+      <span className="cs-vid-thumb">
+        <Thumb src={src} fallbackSrc={cdn} alt="" loading={load} fetchPriority={opts.priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
+      </span>
+      <span className="cs-vid-title" data-old={opts.old || undefined}>{t}</span>
+    </Go>
   );
-
-  const titleChange = (
-    <div className="cs-fcard-titles">
-      {card.titleChange?.from && <p className="cs-fcard-oldtitle">{card.titleChange.from}</p>}
-      <p className="cs-title" data-size="large">{title}</p>
+  const evidence = changed ? (
+    <div className="cs-fcard-row" data-change="">
+      {/* Dim only what actually changed: a title change keeps the same picture on both sides. */}
+      {vid(changedThumb ? beforeUrl : latest, card.titleChange?.from ?? title, { dim: changedThumb, old: !!card.titleChange?.from })}
+      <Arrow />
+      {vid(latest, title, { priority })}
+    </div>
+  ) : (
+    <div className="cs-fcard-row" data-upload="">
+      {vid(latest, title, { priority })}
+      {stats}
     </div>
   );
-
-  let evidence: React.ReactNode = null;
-  if (kind === 'upload') {
-    evidence = (
-      <div className="cs-fcard-upload">
-        <div className="cs-fcard-media">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
-          {scoreChip}
-        </div>
-        <div className="cs-fcard-body">
-          <p className="cs-title" data-size="large">{title}</p>
-          <p className="cs-fcard-sub">Published {etTimestamp(card.uploadedAt || card.at)}</p>
-        </div>
-      </div>
-    );
-  } else if (kind === 'title') {
-    evidence = (
-      <div className="cs-fcard-upload">
-        <div className="cs-fcard-media" data-size="ident">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
-          {scoreChip}
-        </div>
-        <div className="cs-fcard-body">{titleChange}</div>
-      </div>
-    );
-  } else if (kind === 'thumb') {
-    evidence = (
-      <div className="cs-fcard-evidence">
-        {beforeAfter}
-        <p className="cs-title" data-size="small">{title}</p>
-      </div>
-    );
-  } else if (kind === 'combo') {
-    evidence = (
-      <div className="cs-fcard-evidence">
-        {beforeAfter}
-        {titleChange}
-      </div>
-    );
-  } else {
-    evidence = (
-      <div className="cs-fcard-upload">
-        <div className="cs-fcard-media" data-size="outlier">
-          <Thumb src={latest} fallbackSrc={cdn} alt="" loading={load} fetchPriority={priority ? 'high' : undefined} style={{ width: '100%', height: '100%' }} />
-        </div>
-        <div className="cs-fcard-body">
-          <p className="cs-title" data-size="large">{title}</p>
-        </div>
-        <span className="cs-score cs-fcard-bigscore" title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
-      </div>
-    );
-  }
 
   const body = (
     <>
       <div className="cs-byline cs-fcard-head">
-        <ChannelAvatar src={avatarUrl} name={card.channel_name} size={20} />
-        {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
-        <span className="cs-fcard-verb">{cardVerb(card)}</span>
-        <time className="cs-num cs-fcard-time" dateTime={card.at} title={`${relativeTime(card.at, now)} ago`}>{etTimestamp(card.at)}</time>
+        <Go className="cs-byline-chan" href={card.channel_id ? `/app/channels/${card.channel_id}` : null}>
+          <ChannelAvatar src={avatarUrl} name={card.channel_name} size={36} channelId={card.channel_id} />
+          {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
+        </Go>
+        {changed ? (
+          // The feed has two packaging events: a rotation, and a swap — of the title, the
+          // thumbnail, or both. Same pill and words as the rotation row's swap.
+          <>
+            <span className="tr-pill" data-status="swap">SWAP</span>
+            <span className="tr-headline">
+              {kind === 'combo' ? 'New title + thumbnail' : kind === 'title' ? 'New title' : 'New thumbnail'}
+            </span>
+          </>
+        ) : (
+          <span className="cs-fcard-verb">{cardVerb(card)}</span>
+        )}
+        <time className="cs-num cs-fcard-time" dateTime={kind === 'upload' ? (published ?? card.at) : card.at}
+              title={`${relativeTime(kind === 'upload' ? (published ?? card.at) : card.at, now)} ago`}>
+          {etTimestamp(kind === 'upload' ? (published ?? card.at) : card.at)}
+        </time>
       </div>
       {evidence}
-      {(meta || scoreNote) && (
-        <p className="cs-fcard-meta">{[meta, scoreNote].filter(Boolean).join(' · ')}</p>
-      )}
     </>
   );
-  return card.href
-    ? <Link className="cs-fcard" data-kind={kind} href={card.href}>{body}</Link>
-    : <div className="cs-fcard" data-kind={kind}>{body}</div>;
+  return <article className="cs-fcard" data-kind={kind}>{body}</article>;
 }

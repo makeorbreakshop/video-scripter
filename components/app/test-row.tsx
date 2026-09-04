@@ -1,16 +1,25 @@
 'use client';
 
-// One packaging TEST as a row. The same primitive is used by the feed, by a channel's Changes
-// tab, and (in clip form) by the video page, so a test looks the same everywhere.
+// One packaging ROTATION as a row. The same primitive is used by the feed, by a channel's
+// Changes tab, and (in clip form) by the video page, so it looks the same everywhere.
 //
 // The product rules this encodes, none of which are negotiable:
-//   - the unit is the test, not the version: A → B → A is one experiment, one row;
+//   - the unit is the experiment, not the version: A → B → A is one row;
 //   - no share-of-time, no percentages, no rotation counts — we only registered what the
 //     watcher saw, so the row says "detected <time>", never "started";
-//   - no variant is ever labelled "live now": during a test every variant is live;
-//   - a settled test puts the winner on the right and dims the image it beat;
-//   - a swap is one picture replacing another and is never styled like a test.
+//   - no variant is ever labelled "live now": during a rotation every variant is live;
+//   - a settled rotation puts the image it kept on the right and dims the one it stopped
+//     showing; a swap is one picture replacing another and is never styled like a rotation.
 // The words themselves come from lib/app/test-row.ts, which is pure and tested.
+//
+// Anatomy: a byline line — who, what state we saw, when — then the media on the left and the
+// title and numbers on the right, top-aligned. The same two columns every other feed card
+// uses, so this reads as one more item in the feed instead of a foreign three-column row.
+//
+// One click rule for the whole feed: A STACK OPENS; A PICTURE NAVIGATES. The deck is the only
+// stacked object here, and being a stack is what earns it the exception — everything else,
+// including every variant once the row is open, links to the video. macOS Stacks works this
+// way: click the stack to expand it, click an item inside it to open that item.
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -20,9 +29,14 @@ import { installThumbFallback } from './thumb-runtime';
 
 installThumbFallback();
 
-function Shot({ v, className, badge, priority }: { v: RowVariant; className?: string; badge?: React.ReactNode; priority?: boolean }) {
+/** How many cards the deck shows. Any beyond this appear when the row opens. */
+const DECK_MAX = 3;
+
+function Shot({ v, className, badge, priority, style }: {
+  v: RowVariant; className?: string; badge?: React.ReactNode; priority?: boolean; style?: React.CSSProperties;
+}) {
   return (
-    <span className={`tr-shot ${className ?? ''}`}>
+    <span className={`tr-shot ${className ?? ''}`} style={style}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img data-cs-thumb="" src={v.url} alt="" width={480} height={270}
            loading={priority ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" />
@@ -48,6 +62,14 @@ function Arrow() {
   );
 }
 
+function Close() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden focusable="false">
+      <path d="M3.5 3.5l8 8M11.5 3.5l-8 8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
@@ -55,137 +77,151 @@ function prefersReducedMotion() {
 export function TestRow({ row, avatarUrl, priority = false }: { row: TestRowModel; avatarUrl?: string | null; priority?: boolean }) {
   const [open, setOpen] = useState(false);
   const inner = useRef<HTMLDivElement | null>(null);
+  const deckBtn = useRef<HTMLButtonElement | null>(null);
+  const closeBtn = useRef<HTMLButtonElement | null>(null);
+  const anim = useRef<HTMLDivElement | null>(null);
   const lastHeight = useRef(0);
   const settled = useRef(false);
-  // undefined means "auto": the row owns its own height again once the transition has landed.
-  const [height, setHeight] = useState<number | undefined>(undefined);
+  const wasOpen = useRef(false);
 
   // Height is the information here, so it is the property that animates — but from a measured
-  // number to a measured number, never to `auto`, which does not interpolate.
+  // number to a measured number, never to `auto`, which does not interpolate. Written straight
+  // to the element with a forced reflow between the two values: no state round trip and no
+  // requestAnimationFrame, so it cannot be starved by a throttled frame clock.
   useLayoutEffect(() => {
-    const el = inner.current;
-    if (!el) return;
+    const box = anim.current, el = inner.current;
+    if (!box || !el) return;
     const next = el.offsetHeight;
-    if (settled.current && next !== lastHeight.current && !prefersReducedMotion()) {
-      const from = lastHeight.current;
-      setHeight(from);
-      requestAnimationFrame(() => requestAnimationFrame(() => setHeight(next)));
-    }
+    const from = lastHeight.current;
     lastHeight.current = next;
-    settled.current = true;
+    if (!settled.current) { settled.current = true; return; }
+    if (next === from || prefersReducedMotion()) return;
+    box.style.transition = 'none';
+    box.style.height = `${from}px`;
+    void box.offsetHeight;
+    box.style.transition = '';
+    box.style.height = `${next}px`;
+    const done = (e: TransitionEvent) => {
+      if (e.target !== box || e.propertyName !== 'height') return;
+      box.style.height = '';
+      box.removeEventListener('transitionend', done);
+    };
+    box.addEventListener('transitionend', done);
+    return () => { box.removeEventListener('transitionend', done); box.style.height = ''; box.style.transition = ''; };
   }, [open]);
 
+  // Opening moves focus to the close control; closing hands it back to the deck. The button
+  // that opened the row has unmounted by then, so without this focus falls to the body
+  // (ARIA APG: a disclosure returns focus to the control that opened it).
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      if (wasOpen.current) deckBtn.current?.focus();
+      wasOpen.current = false;
+      return;
+    }
+    wasOpen.current = true;
+    closeBtn.current?.focus();
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const byline = (
-    <span className="tr-by">
-      <ChannelAvatar src={avatarUrl} name={row.channelName} size={18} channelId={row.channelId} />
-      {row.channelName && <span className="tr-chan">{row.channelName}</span>}
-    </span>
-  );
+  const shown = row.variants.slice(0, DECK_MAX);
 
-  const status = (
-    <span className="tr-status">
-      <span className="tr-status-line">
-        <Pill row={row} />
-        <span className="tr-headline">{row.headline}</span>
-      </span>
-      <span className="cs-num tr-stamp">{row.stamp}</span>
-    </span>
-  );
-
-  // Open, the row already shows the variants, so the header keeps only the state and the time.
-  const statusInline = (
-    <span className="tr-status-inline">
-      <Pill row={row} />
-      <span className="cs-num tr-stamp">{row.stamp}</span>
-    </span>
-  );
-
-  // Collapsed middle. A test is a deck you can open; a swap is a before and an after.
-  let middle: React.ReactNode;
-  if (row.status === 'swap') {
-    middle = (
-      <span className="tr-swap">
-        {row.before && <Shot v={row.before} className="tr-shot-sm tr-dim" />}
-        <Arrow />
-        {row.after && <Shot v={row.after} className="tr-shot-lg tr-shot-new" priority={priority} />}
-      </span>
-    );
-  } else if (row.status === 'settled') {
-    middle = (
-      <span className="tr-settled">
-        {row.before && <Shot v={row.before} className="tr-shot-sm tr-dim" />}
-        {row.after && (
-          <Shot v={row.after} className="tr-shot-lg tr-shot-win" priority={priority}
-                badge={<span className="cs-num tr-winner">WINNER</span>} />
-        )}
-      </span>
-    );
-  } else {
-    middle = (
-      <span className="tr-deck">
-        {row.variants.slice(0, 3).reverse().map((v, i, a) => (
-          <Shot key={v.label} v={v} className={`tr-deck-card tr-deck-${a.length - 1 - i}`} priority={priority && i === a.length - 1} />
-        ))}
-      </span>
-    );
-  }
-
-  const collapsed = (
-    <div className="tr-collapsed">
-      <div className="tr-left">
-        {byline}
-        <Link className="tr-title" href={row.href}>{row.title}</Link>
-        <span className="tr-meta">{row.meta}</span>
-      </div>
-      {row.expandable ? (
-        <button type="button" className="tr-open" aria-expanded={open}
-                aria-label={`${row.headline} — show the thumbnails`} onClick={() => setOpen(true)}>
-          {middle}
-        </button>
+  // The byline line, kept in both states: who, what state we saw, and when we saw it.
+  const head = (
+    <div className="cs-byline tr-head">
+      {row.channelId ? (
+        <Link className="cs-byline-chan" href={`/app/channels/${row.channelId}`}>
+          <ChannelAvatar src={avatarUrl} name={row.channelName} size={36} channelId={row.channelId} />
+          {row.channelName && <span className="cs-byline-name">{row.channelName}</span>}
+        </Link>
       ) : (
-        <span className="tr-open" aria-hidden={false}>{middle}</span>
+        <span className="cs-byline-chan">
+          <ChannelAvatar src={avatarUrl} name={row.channelName} size={36} />
+          {row.channelName && <span className="cs-byline-name">{row.channelName}</span>}
+        </span>
       )}
-      {status}
+      <Pill row={row} />
+      <span className="tr-headline">{row.headline}</span>
+      <span className="cs-num tr-stamp">{row.stamp}</span>
+      {open && (
+        <button ref={closeBtn} type="button" className="tr-close" onClick={() => setOpen(false)}
+                aria-label="Close the thumbnails"><Close /></button>
+      )}
     </div>
   );
 
-  const expanded = (
-    <div className="tr-expanded">
-      <button type="button" className="tr-head" aria-expanded onClick={() => setOpen(false)}>
-        <span className="tr-head-left">
-          {byline}
+  // The same unit every feed card is built from: a thumbnail with the title under it, at one
+  // width. A settled rotation or a swap is two of them, before → after. A running rotation is
+  // one of them whose thumbnail is the deck, with the numbers beside it; hover deals the
+  // second card out into that space, so both images are in view without the row changing
+  // shape. Click shows them large.
+  const unit = (v: RowVariant, extra: { dim?: boolean; badge?: React.ReactNode; priority?: boolean }) => (
+    <Link className="cs-vid" href={`${row.href}?v=${v.version}`} data-dim={extra.dim || undefined}>
+      <Shot v={v} className="cs-vid-thumb" priority={extra.priority} badge={extra.badge} />
+      <span className="cs-vid-title">{row.title}</span>
+    </Link>
+  );
+  let collapsed: React.ReactNode;
+  if (row.status !== 'testing') {
+    collapsed = (
+      <div className="cs-fcard-row" data-change="">
+        {row.before && unit(row.before, { dim: true })}
+        <Arrow />
+        {row.after && unit(row.after, {
+          priority, badge: row.status === 'settled' ? <span className="cs-num tr-kept">KEPT</span> : null,
+        })}
+      </div>
+    );
+  } else {
+    collapsed = (
+      <div className="cs-fcard-row tr-live">
+        <div className="cs-vid tr-deckvid">
+          <button ref={deckBtn} type="button" className="tr-media" aria-expanded={open}
+                  aria-label={`${row.headline} — open the thumbnails`} onClick={() => setOpen(true)}>
+            <span className="tr-deck" style={{ ['--tr-n' as string]: shown.length } as React.CSSProperties}>
+              {shown.map((v, i) => (
+                <Shot key={v.label} v={v} className="tr-deck-card" priority={priority && i === 0}
+                      style={{ ['--tr-i' as string]: i } as React.CSSProperties} />
+              ))}
+            </span>
+          </button>
+          <Link className="cs-vid-title tr-title" href={row.href}>{row.title}</Link>
           <span className="tr-meta">{row.meta}</span>
-        </span>
-        <span className="tr-head-right">{statusInline}</span>
-      </button>
+        </div>
+      </div>
+    );
+  }
+
+  const expanded = (
+    <div className="tr-open">
       <div className="tr-variants">
-        {row.variants.map((v, i) => (
-          <figure key={v.label} className="tr-variant" style={{ ['--tr-i' as any]: i }}>
+      {row.variants.map((v, i) => (
+        <figure key={v.label} className="tr-variant" style={{ ['--tr-i' as string]: i } as React.CSSProperties}>
+          {/* Every picture navigates. The version rides along so the video page can open on
+              the image the reader clicked rather than on whatever is current. */}
+          <Link className="tr-variant-link" href={`${row.href}?v=${v.version}`}>
             <Shot v={v} className="tr-shot-full"
                   badge={<span className="cs-num tr-badge" data-current={v.current}>{v.label}</span>} />
-            {/* Thumbnails and the title under each, YouTube-card style. Nothing else: the
-                channel and the numbers are already in the row header above. */}
-            <figcaption className="tr-variant-title">{row.title}</figcaption>
-          </figure>
-        ))}
+            <span className="tr-variant-title">{row.title}</span>
+          </Link>
+        </figure>
+      ))}
       </div>
+      <span className="tr-meta">{row.meta}</span>
     </div>
   );
 
   return (
-    <div className="tr-row" data-status={row.status} data-open={open}>
-      <div className="tr-anim" style={height === undefined ? undefined : { height }}
-           onTransitionEnd={(e) => { if (e.propertyName === 'height') setHeight(undefined); }}>
-        <div ref={inner}>{open ? expanded : collapsed}</div>
+    <article className="tr-row" data-status={row.status} data-open={open}>
+      <div ref={anim} className="tr-anim">
+        <div ref={inner}>
+          {head}
+          {open ? expanded : collapsed}
+        </div>
       </div>
-    </div>
+    </article>
   );
 }
 

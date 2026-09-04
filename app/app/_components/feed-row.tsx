@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { etTimestamp, feedRowView, formatScore, relativeTime, type FeedEventLike } from '@/lib/app/feed-format';
+import { etTimestamp, feedRowView, formatScore, OUTLIER_AT, relativeTime, type FeedEventLike } from '@/lib/app/feed-format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { installThumbFallback } from '@/components/app/thumb-runtime';
 
@@ -48,7 +48,8 @@ export default function FeedRow({ event, now, avatarUrl, priority = false }: { e
 
       {v.score !== null && (
         <div className="cs-row-right">
-          <span className="cs-score" title={`${v.score}x the channel baseline`}>{formatScore(v.score)}</span>
+          <span className="cs-score" data-hot={(v.score ?? 0) >= OUTLIER_AT}
+                title={`${formatScore(v.score)} the channel baseline`}>{formatScore(v.score)}</span>
         </div>
       )}
     </>

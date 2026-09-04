@@ -28,6 +28,9 @@ export interface FeedEventLike {
   /** video_scores.n_baseline / .confidence, for saying WHY there is no score. */
   score_n_baseline?: number | null;
   score_confidence?: string | null;
+  /** What the score is made of: the day-30 estimate and the channel's normal (video_scores). */
+  score_est30?: number | null;
+  score_baseline?: number | null;
   /** Prior long-form videos on the channel — what separates "new channel" from "young priors". */
   prior_longform?: number | null;
 }
@@ -127,14 +130,14 @@ export const OUTLIER_AT = 2;
 export function scoreTooltip(score: number | null | undefined): string {
   if (score === null || score === undefined || !Number.isFinite(score)) return 'No score yet';
   return `${formatScore(score)} of this channel's normal day-30 views, as of now. `
-    + `Videos enter the feed as outliers at ${OUTLIER_AT}x.`;
+    + `Videos enter the feed as outliers at ${OUTLIER_AT}×.`;
 }
 
 /** Scores are multiples of baseline: one decimal under 10, whole numbers above. */
 export function formatScore(score: number | null | undefined): string {
   if (score === null || score === undefined || !Number.isFinite(score)) return '—';
-  if (score >= 10) return `${Math.round(score)}x`;
-  return `${(Math.round(score * 10) / 10).toFixed(1)}x`;
+  if (score >= 10) return `${Math.round(score)}×`;
+  return `${(Math.round(score * 10) / 10).toFixed(1)}×`;
 }
 
 export function isHighScore(score: number | null | undefined): boolean {
@@ -389,7 +392,7 @@ export function cardVerb(card: FeedCard): string {
     case 'combo': return 'changed the title and thumbnail';
     case 'title': return 'changed the title';
     case 'thumb': return card.thumbSwaps.length > 1
-      ? `tested ${card.thumbSwaps.length} thumbnails`
+      ? `rotated ${card.thumbSwaps.length} thumbnails`
       : 'swapped the thumbnail';
     case 'outlier': return 'is beating its baseline';
   }
@@ -413,16 +416,15 @@ const payloadNums = (card: FeedCard, types: string[], key: string): number[] =>
 const THUMB_TYPES = ['thumbnail_change', 'ab_rotation'];
 
 /**
- * The muted line under the evidence: what number of change this is, whether it looks like
- * an A/B test, and how long after publish it happened. No effect or delta numbers — we
- * tested those and per-change deltas were noise.
+ * The muted line under the evidence: what number of change this is and how long after publish
+ * it happened. No effect or delta numbers — we tested those and per-change deltas were noise —
+ * and no rotation counts or "A/B test": the watcher saw images change, not an experiment.
  */
 export function cardMeta(card: FeedCard): string | null {
   const kind = cardKind(card);
   const bits: string[] = [];
   const titleV = Math.max(0, ...payloadNums(card, ['title_change'], 'version'));
   const thumbV = Math.max(0, ...payloadNums(card, THUMB_TYPES, 'version'));
-  const rotations = card.thumbSwaps.filter((s) => s.rotation).length;
 
   if (kind === 'combo') {
     const pkg = ordinal(Math.max(titleV, thumbV) || null);
@@ -431,13 +433,9 @@ export function cardMeta(card: FeedCard): string | null {
     const o = ordinal(titleV || null);
     if (o) bits.push(`${o} title`);
   } else if (kind === 'thumb') {
-    if (rotations > 0) bits.push('A/B test', `${rotations} rotation${rotations === 1 ? '' : 's'}`);
-    else {
-      const o = ordinal(thumbV || null);
-      if (o) bits.push(`${o} thumbnail`);
-    }
+    const o = ordinal(thumbV || null);
+    if (o) bits.push(`${o} thumbnail`);
   }
-  if (kind !== 'thumb' && rotations > 0) bits.push(`${rotations} rotation${rotations === 1 ? '' : 's'}`);
 
   const hours = card.events
     .map((e) => num((e.payload || {}).hours_since_publish))
