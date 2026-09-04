@@ -142,7 +142,8 @@ const tierOf = (videoId: string, channelId: string | null): Tier =>
 const apiCapacity = maxCalls * 50;
 const candidateCap = apiCapacity * 4;
 const due = await pool.query(
-  `select video_id, channel_id, published_at, last_views, last_sample_at, next_check, updated_at,
+  `select video_id, channel_id, published_at, last_views, last_sample_at,
+          next_check::text as next_check, updated_at::text as updated_at,
           case when entered_reason in ('thumbnail_change', 'title_change') then launch_until end as change_until
      from track_schedule where next_check <= now()
     order by phase = 'launch' desc, next_check asc
@@ -209,6 +210,7 @@ if (DRY) {
 
 // Advancing these rows is the only scheduler write performed for an RSS-satisfied deadline.
 // last_sample_at remains the last API observation so the six-hour crosscheck cannot drift.
+let rssAdvanced = 0;
 for (const group of chunk(rssSatisfied, 500)) {
   const values: any[] = [];
   const tuples = group.map((r, i) => {
@@ -216,13 +218,17 @@ for (const group of chunk(rssSatisfied, 500)) {
     values.push(r.row.video_id, r.phase, r.next, r.views, r.row.next_check, r.row.updated_at);
     return `($${n + 1}::text,$${n + 2}::text,$${n + 3}::timestamptz,$${n + 4}::integer,$${n + 5}::timestamptz,$${n + 6}::timestamptz)`;
   });
-  await pool.query(
+  const advanced = await pool.query(
     `update track_schedule s set phase = x.phase, next_check = x.next_check,
             checks = checks + 1, last_views = x.views, updated_at = now()
        from (values ${tuples.join(',')}) as x(video_id, phase, next_check, views, prior_next_check, prior_updated_at)
       where s.video_id = x.video_id and s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at`,
     values
   );
+  rssAdvanced += advanced.rowCount ?? 0;
+}
+if (rssSatisfied.length) {
+  log(`RSS schedule updates: ${rssAdvanced} advanced, ${rssSatisfied.length - rssAdvanced} raced`);
 }
 
 let calls = 0, mainCalls = 0, samples = 0;
