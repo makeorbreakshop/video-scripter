@@ -19,6 +19,8 @@ export const RSS_POLICY = {
   dormantAfterDays: 60,
   /** Cadence per state. */
   activeIntervalSec: 15 * 60,
+  /** LaunchAgent starts jitter by seconds. Avoid missing the third tick and waiting 20m. */
+  activeDueSlackSec: 60,
   dormantIntervalSec: 24 * 3600,
   /** Back-off on 429/5xx: double, capped. Reset on 200/304. */
   backoffCapSec: 6 * 3600,
@@ -71,7 +73,8 @@ export function isDue(c: ChannelPollState, now: Date = new Date()): boolean {
   if (c.rss_backoff_until && new Date(c.rss_backoff_until).getTime() > now.getTime()) return false;
   if (!c.rss_last_polled) return true; // never polled
   const interval = c.rss_interval_sec ?? intervalSecFor(c.rss_state);
-  return now.getTime() - new Date(c.rss_last_polled).getTime() >= interval * MS;
+  const slack = c.rss_state !== 'dormant' && c.rss_interval_sec == null ? RSS_POLICY.activeDueSlackSec : 0;
+  return now.getTime() - new Date(c.rss_last_polled).getTime() >= (interval - slack) * MS;
 }
 
 /**
@@ -321,7 +324,9 @@ export const DUE_CHANNELS_SQL = `select c.channel_id, c.rss_state, c.rss_etag, c
       and (c.rss_last_polled is null
            or c.rss_last_polled < now() - (coalesce(c.rss_interval_sec,
                 case when c.rss_state = 'dormant' then ${RSS_POLICY.dormantIntervalSec}
-                     else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second'))
+                     else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')
+             + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null
+                    then interval '${RSS_POLICY.activeDueSlackSec} seconds' else interval '0 seconds' end)
     order by c.rss_last_polled nulls first
     limit $2`;
 
@@ -333,7 +338,9 @@ export const STATE_COUNTS_SQL = `select c.rss_state,
             and (c.rss_last_polled is null
                  or c.rss_last_polled < now() - (coalesce(c.rss_interval_sec,
                       case when c.rss_state = 'dormant' then ${RSS_POLICY.dormantIntervalSec}
-                           else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')))::int as due
+                           else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')
+                   + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null
+                          then interval '${RSS_POLICY.activeDueSlackSec} seconds' else interval '0 seconds' end))::int as due
      from channel_rss_state c
     where (not $1::boolean or exists (select 1 from watch_subset w where w.channel_id = c.channel_id))
     group by 1`;

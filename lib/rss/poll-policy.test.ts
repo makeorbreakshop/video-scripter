@@ -247,7 +247,7 @@ describe('the 60-day dormancy rule end to end', () => {
     const active = { rss_state: stateForLastUpload(ago(days(3)), NOW), rss_last_polled: ago(mins(16)) } as const;
     expect(active.rss_state).toBe('active');
     expect(isDue(active, NOW)).toBe(true);
-    expect(isDue({ ...active, rss_last_polled: ago(mins(14)) }, NOW)).toBe(false);
+    expect(isDue({ ...active, rss_last_polled: ago(mins(13)) }, NOW)).toBe(false); // one minute scheduling slack
 
     const dormant = { rss_state: stateForLastUpload(ago(days(120)), NOW), rss_last_polled: ago(hours(25)) } as const;
     expect(dormant.rss_state).toBe('dormant');
@@ -361,4 +361,11 @@ describe('collector completion and unknown samples', () => {
     expect(completedChannelRows(rows, new Set(['fetched']), new Set())).toEqual([{ channel_id: 'error' }]);
     expect(completedChannelRows(rows, new Set(['fetched']), new Set(['fetched']))).toEqual(rows);
   });
+});
+
+test('scheduler jitter does not turn the third five-minute tick into a fourth', () => {
+  expect(isDue({ rss_state: 'active', rss_last_polled: ago(mins(15) - 12_000) }, NOW)).toBe(true);
+  expect(isDue({ rss_state: 'active', rss_last_polled: ago(mins(13)) }, NOW)).toBe(false);
+  expect(isDue({ rss_state: 'dormant', rss_last_polled: ago(days(1) - 12_000) }, NOW)).toBe(false);
+  expect(isDue({ rss_state: 'active', rss_interval_sec: 1800, rss_last_polled: ago(mins(30) - 12_000) }, NOW)).toBe(false);
 });
