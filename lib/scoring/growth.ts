@@ -26,7 +26,7 @@
 // than adding keeps antisymmetry and monotonicity for every (from, to) pair.
 import {
   DAY_BUCKETS, HOUR_BUCKETS, K_SHRINK, type GlobalParams, type LongtailTable,
-  longtailAt, median, qResidual,
+  bucketFor, fittedBuckets, longtailAt, median, qResidual,
 } from './core';
 
 /** Hour buckets this params table actually has a fitted multiplier for, ascending. */
@@ -86,7 +86,11 @@ export interface GrowthContext {
   chMultLogs?: readonly number[];
   /** The video's own growth exponent, or null when it has fewer than 2 samples. */
   q?: number | null;
-  /** Bucket the channel multiplier and the Q bins were read at (defaults to the anchor bucket). */
+  /**
+   * Bucket the channel multiplier and the Q bins were read at. Defaults to the fitted bucket
+   * nearest the anchor age -- NOT the raw age, which indexes nothing and silently zeroes both
+   * the global multiplier and the Q residual.
+   */
   bucket?: number;
 }
 
@@ -101,13 +105,13 @@ function anchorAdjust(params: GlobalParams, ctx: GrowthContext, bucket: number):
 }
 
 /** Positive scale on the cumulative curve that carries the channel blend and the Q correction. */
-export function blendScale(params: GlobalParams, ctx: GrowthContext | null | undefined, bucketOf: (age: number) => number): number {
+export function blendScale(params: GlobalParams, ctx: GrowthContext | null | undefined): number {
   if (!ctx) return 1;
   const anchor = ctx.anchorAge;
   if (!(anchor > 0) || anchor >= 30) return 1;      // past day 30 v3 makes no channel claim
   const base = logToRef(params, anchor);
   if (!(base > 1e-6)) return 1;                      // nothing to scale
-  const adj = anchorAdjust(params, ctx, ctx.bucket ?? bucketOf(anchor));
+  const adj = anchorAdjust(params, ctx, ctx.bucket ?? bucketFor(anchor, fittedBuckets(params)));
   const s = 1 + adj / base;
   return Math.min(Math.max(s, 0.1), 10);             // never invert or explode the curve
 }
@@ -126,10 +130,9 @@ export function growthLog(
   params: GlobalParams,
   fromAge: number,
   toAge: number,
-  ctx?: GrowthContext | null,
-  bucketOf: (age: number) => number = (a) => a
+  ctx?: GrowthContext | null
 ): number {
-  const s = blendScale(params, ctx, bucketOf);
+  const s = blendScale(params, ctx);
   return s * (logToRef(params, fromAge) - logToRef(params, toAge));
 }
 
@@ -139,10 +142,9 @@ export function slide(
   views: number,
   fromAge: number,
   toAge: number,
-  ctx?: GrowthContext | null,
-  bucketOf?: (age: number) => number
+  ctx?: GrowthContext | null
 ): number {
-  return views * Math.exp(growthLog(params, fromAge, toAge, ctx, bucketOf));
+  return views * Math.exp(growthLog(params, fromAge, toAge, ctx));
 }
 
 // ---- fitting the past-30 buckets -------------------------------------------------------

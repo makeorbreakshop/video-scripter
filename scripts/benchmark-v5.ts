@@ -35,7 +35,7 @@ import { medALE, bias, spearman, prf, distanceBucket, ageBucket, fmt } from '../
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const MONTHS = Number(arg('--months') ?? 18);
-const TEST_LIMIT = Number(arg('--test-limit') ?? 1500);
+const TEST_LIMIT = Number(arg('--test-limit') ?? 5000);
 const TIME_FRAC = Number(arg('--time-frac') ?? 0.2);
 const HOLDOUT_SHARE = Number(arg('--holdout') ?? 1 / 16);
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
@@ -102,7 +102,8 @@ const pop: { id: string; channel_id: string; pub: number }[] = (await q(
      from videos v
     where v.published_at > now() - ($1 || ' months')::interval
       and ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
-      and exists (select 1 from view_snapshots s where s.video_id = v.id and s.view_count > 0)`,
+      and exists (select 1 from view_snapshots s where s.video_id = v.id and s.view_count > 0)
+    order by v.id`,
   [MONTHS]
 )).map((r: any) => ({ id: r.id, channel_id: r.channel_id, pub: Number(r.pub) }));
 log(`population: ${pop.length} videos`);
@@ -320,6 +321,11 @@ log('part 3: score accuracy');
     `## 3. Score accuracy — model ratio vs fully measured ratio\n\n` +
     `Rows where this video AND ≥3 priors have a real reading at t, so \`v(t)/C_real(t)\` is a measurement. ` +
     `The model column is production's answer: the same priors, interpolated as production would.\n\n` +
+    `**Read medALE 0.000 correctly.** C is a weighted MEDIAN, so adding interpolated contributions ` +
+    `to a set that already has three real ones usually does not move it at all -- the median stays ` +
+    `on a real contribution. A zero cell means "interpolation did not distort this denominator", ` +
+    `not "the score is exact". The cells that move are the ones where the measured share drops ` +
+    `below 1, and those are the ones to read.\n\n` +
     `| split | t | n | medALE | bias | Spearman | F1@2× | prec | recall | med measured share |\n|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n` +
     out3.map((r) => `| ${r.split} | ${r.t} | ${r.n} | ${fmt(r.medALE)} | ${fmt(r.bias)} | ${fmt(r.spearman)} | ${fmt(r.f1)} | ${fmt(r.precision)} | ${fmt(r.recall)} | ${fmt(r.measuredShare, 2)} |`).join('\n') + '\n'
   );
@@ -349,7 +355,7 @@ log('part 4: projection accuracy and band calibration');
           .sort((a, b) => Math.abs(a.day - 30) - Math.abs(b.day - 30))[0];
         if (nearB && at30) chLogs.push(Math.log(at30.views / nearB.views));
       }
-      const ctx = { anchorAge: start.day, chMultLogs: chLogs, q: growthExponent(upto) };
+      const ctx = { anchorAge: start.day, chMultLogs: chLogs, q: growthExponent(upto), bucket };
       for (const T of HORIZONS) {
         if (T <= from) continue;
         const truth = readingAt(obs, T);
@@ -366,24 +372,39 @@ log('part 4: projection accuracy and band calibration');
     return { from, to, n: g.length, medALE: medALE(pairs), bias: bias(pairs) };
   }).sort((a, b) => a.from - b.from || a.to - b.to);
 
-  // bands: fit the residual quantiles on the TRAIN videos, measure coverage on the held-out ones
+  // Bands: fit the residual quantiles on TRAIN videos, measure coverage on the held-out ones.
+  // ONE TABLE PER HORIZON -- a band keyed only on the reading age would pool a 7-day projection
+  // with a 365-day one, which are not the same uncertainty. The fitted ages are exactly the
+  // from-ages present: fitBands carries a thin bucket forward and then forces width to be
+  // non-increasing, so a single unpopulated first bucket collapses the whole table to zero
+  // width (which is what a naive BAND_AGES fit did here -- 0%/0% coverage, a harness artifact).
   const resid = (r: PRow) => Math.log(r.truth / r.pred);
-  const trainB = rows4.filter((r) => !r.held).map((r) => ({ age: r.from, resid: resid(r) }));
-  const table = fitBands(trainB, BAND_AGES, 30);
-  const heldB = rows4.filter((r) => r.held);
-  let inner = 0, outer = 0;
-  for (const r of heldB) {
-    const b = bandAt(table, r.from); const x = resid(r);
-    if (x >= b.q25 && x <= b.q75) inner++;
-    if (x >= b.q10 && x <= b.q90) outer++;
+  const FROM_AGES = [...new Set(rows4.map((r) => r.from))].sort((a, b) => a - b);
+  const cal: any[] = [];
+  let pi = 0, po = 0, pn = 0, pf = 0;
+  for (const T of HORIZONS) {
+    const g = rows4.filter((r) => r.to === T);
+    const trainB = g.filter((r) => !r.held).map((r) => ({ age: r.from, resid: resid(r) }));
+    const heldB = g.filter((r) => r.held);
+    if (!trainB.length || !heldB.length) { cal.push({ horizon: T, fitRows: trainB.length, n: heldB.length, inner: null, outer: null }); continue; }
+    const table = fitBands(trainB, FROM_AGES, 20);
+    let inner = 0, outer = 0;
+    for (const r of heldB) {
+      const b = bandAt(table, r.from); const x = resid(r);
+      if (x >= b.q25 && x <= b.q75) inner++;
+      if (x >= b.q10 && x <= b.q90) outer++;
+    }
+    pi += inner; po += outer; pn += heldB.length; pf += trainB.length;
+    cal.push({ horizon: T, fitRows: trainB.length, n: heldB.length, inner: inner / heldB.length, outer: outer / heldB.length });
   }
-  const cal = { n: heldB.length, inner: heldB.length ? inner / heldB.length : null, outer: heldB.length ? outer / heldB.length : null, fitRows: trainB.length };
-  json.parts.projection = { cells: out4, calibration: cal };
+  const pooled = { horizon: 'pooled', fitRows: pf, n: pn, inner: pn ? pi / pn : null, outer: pn ? po / pn : null };
+  json.parts.projection = { cells: out4, calibration: [...cal, pooled] };
   tables.push(
     `## 4. Projection accuracy — v̂(T) from a reading at t\n\n| from t | horizon T | n | medALE | bias |\n|--:|--:|--:|--:|--:|\n` +
     out4.map((r) => `| ${r.from} | ${r.to} | ${r.n} | ${fmt(r.medALE)} | ${fmt(r.bias)} |`).join('\n') +
-    `\n\n**Band calibration** (quantiles fitted on ${trainB.length} train residuals, measured on ${cal.n} held-out): ` +
-    `inner (50% nominal) **${fmt(cal.inner != null ? cal.inner * 100 : null, 1)}%**, outer (80% nominal) **${fmt(cal.outer != null ? cal.outer * 100 : null, 1)}%**.\n`
+    `\n\n### Band calibration — residual quantiles fitted on train videos, coverage measured on held-out\n\n` +
+    `| horizon | fit rows | held-out n | inner (50% nominal) | outer (80% nominal) |\n|---|--:|--:|--:|--:|\n` +
+    [...cal, pooled].map((c) => `| ${c.horizon} | ${c.fitRows} | ${c.n} | ${fmt(c.inner != null ? c.inner * 100 : null, 1)}% | ${fmt(c.outer != null ? c.outer * 100 : null, 1)}% |`).join('\n') + '\n'
   );
 }
 

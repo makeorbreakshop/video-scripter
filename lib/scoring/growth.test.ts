@@ -89,16 +89,16 @@ describe('channel blend and Q', () => {
     expect(growthLog(P, 1, 7, ctx) + growthLog(P, 7, 1, ctx)).toBeCloseTo(0, 12);
   });
   it('is a no-op with no priors and no Q', () => {
-    expect(blendScale(P, { anchorAge: 1 }, () => 1)).toBeCloseTo(1, 12);
+    expect(blendScale(P, { anchorAge: 1 })).toBeCloseTo(1, 12);
   });
   it('never inverts the curve, however extreme the channel', () => {
     const wild = { anchorAge: 1, chMultLogs: [-50, -50, -50, -50, -50, -50, -50, -50, -50, -50], q: null };
-    expect(blendScale(P, wild, () => 1)).toBeGreaterThan(0);
+    expect(blendScale(P, wild)).toBeGreaterThan(0);
     expect(growthLog(P, 1, 30, wild)).toBeGreaterThanOrEqual(0);
   });
   it('makes no channel claim at or past day 30', () => {
-    expect(blendScale(P, { ...ctx, anchorAge: 30 }, () => 1)).toBe(1);
-    expect(blendScale(P, { ...ctx, anchorAge: 400 }, () => 1)).toBe(1);
+    expect(blendScale(P, { ...ctx, anchorAge: 30 })).toBe(1);
+    expect(blendScale(P, { ...ctx, anchorAge: 400 })).toBe(1);
   });
 });
 

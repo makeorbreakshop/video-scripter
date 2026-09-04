@@ -1,6 +1,6 @@
 import type { GlobalParams } from './core';
 import { channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
-import { growthLog } from './growth';
+import { growthLog, logToRef } from './growth';
 
 const P: GlobalParams = {
   mult: {
@@ -142,5 +142,39 @@ describe('scoreV5', () => {
   });
   it('project() is the same curve, so it round-trips', () => {
     expect(project(P, project(P, 1000, 3, 90), 90, 3)).toBeCloseTo(1000, 6);
+  });
+});
+
+describe('scoreV5 projection reproduces the v3/v4 est30 exactly at horizon 30', () => {
+  // The blend is anchored on the FITTED bucket nearest the reading age. Indexing it by the raw
+  // age instead silently zeroes both the global multiplier and the Q residual, which showed up
+  // as a 28% gap between v5's projection and v4's stored est30 on a real video (Allrecipes
+  // MpGDoiSH_PQ at 3.008d, 2026-09-04). This test is that bug.
+  const P2: GlobalParams = { ...P, qBins: { 3: { edges: [0.2, 0.4, 0.6, 0.8], resid: [-0.2, -0.1, 0, 0.1, 0.25] } } };
+  it('matches w*chm + (1-w)*g + qResidual at a non-bucket age', () => {
+    const priorMultLogs = [0.4, 0.5, 0.6];
+    const out = scoreV5({
+      vt: 500000, age: 3.0082, snaps: [{ day: 1, views: 200000 }, { day: 3.0082, views: 500000 }],
+      priors: [prior(3, [[3, 200000]]), prior(10, [[3, 220000]]), prior(20, [[3, 240000]])],
+      priorMultLogs, params: P2,
+    });
+    const g = P2.mult[3]!, w = 3 / (3 + 1), chm = 0.5, qr = 0.25;   // q > 0.8 => top bin
+    expect(out.q!).toBeGreaterThan(0.8);
+    // v5 reads the global term at TRUE age, so it is logToRef(3.0082) rather than mult[3];
+    // the channel and Q terms are read at the bucket, exactly as v3 does.
+    const adj = w * (chm - g) + qr;
+    expect(out.projection).toBeCloseTo(500000 * Math.exp(logToRef(P2, 3.0082) + adj), 2);
+    // and it is within 0.1% of the v3 bucket-snapped form -- the gap is age, not a dropped term
+    const v3 = 500000 * Math.exp(w * chm + (1 - w) * g + qr);
+    expect(Math.abs(Math.log(out.projection / v3))).toBeLessThan(0.001);
+  });
+  it('is EXACTLY the v3 form at a bucket age', () => {
+    const out = scoreV5({
+      vt: 500000, age: 3, snaps: [{ day: 1, views: 200000 }, { day: 3, views: 500000 }],
+      priors: [prior(3, [[3, 200000]]), prior(10, [[3, 220000]]), prior(20, [[3, 240000]])],
+      priorMultLogs: [0.4, 0.5, 0.6], params: P2,
+    });
+    const g = P2.mult[3]!, w = 3 / (3 + 1);
+    expect(out.projection).toBeCloseTo(500000 * Math.exp(w * 0.5 + (1 - w) * g + 0.25), 6);
   });
 });

@@ -17,7 +17,7 @@
 // (Allrecipes "18 Microwave Hacks" at 3d: null, n_same_age 0).
 import {
   BASELINE_HALF_LIFE_DAYS, MIN_BASELINE_NEFF, MIN_BASELINE_PRIORS,
-  baselineWeight, effectiveN, growthExponent, weightedMedian,
+  baselineWeight, bucketFor, effectiveN, fittedBuckets, growthExponent, weightedMedian,
   type GlobalParams, type Snapshot,
 } from './core';
 import { growthLog, type GrowthContext } from './growth';
@@ -88,7 +88,7 @@ export function contributionAt(
   const near = samples.length ? samples.reduce((a, b) => (dist(b) < dist(a) ? b : a)) : null;
   if (near) {
     const ctx: GrowthContext | null = samples.length >= 2
-      ? { anchorAge: near.day, q: growthExponent([...samples]), bucket: undefined }
+      ? { anchorAge: near.day, q: growthExponent([...samples]) }
       : null;
     const views = near.views * Math.exp(growthLog(params, near.day, targetAge, ctx));
     if (views > 0 && Number.isFinite(views)) {
@@ -183,7 +183,10 @@ export function scoreV5(inp: V5Input): V5Output {
   const horizon = inp.projectionHorizon ?? 30;
   const c = channelCurve(inp.priors, inp.age, inp.params);
   const q = growthExponent([...inp.snaps]);
-  const ctx: GrowthContext = { anchorAge: inp.age, chMultLogs: inp.priorMultLogs ?? [], q };
+  const ctx: GrowthContext = {
+    anchorAge: inp.age, chMultLogs: inp.priorMultLogs ?? [], q,
+    bucket: bucketFor(inp.age, fittedBuckets(inp.params)),
+  };
   const projection = project(inp.params, inp.vt, inp.age, horizon, ctx);
   const score = c.typical && c.typical > 0 ? inp.vt / c.typical : null;
   const confidence =
