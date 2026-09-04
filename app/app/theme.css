@@ -35,6 +35,16 @@
   --cs-bad: #B3261E;
   --cs-shadow: 0 1px 2px rgba(16, 19, 26, 0.06), 0 8px 24px rgba(16, 19, 26, 0.05);
   --cs-scanline: rgba(16, 19, 26, 0.16);
+  /* Group colours. Eight keys, defined for both grounds so a group reads at the same
+     weight in light and dark. A group's colour is a dot, never a fill. */
+  --cs-g-green:  #0E7A3C;
+  --cs-g-amber:  #B4650A;
+  --cs-g-teal:   #0E6F8C;
+  --cs-g-red:    #B3261E;
+  --cs-g-violet: #5B46E5;
+  --cs-g-blue:   #1668C4;
+  --cs-g-brown:  #7A5230;
+  --cs-g-slate:  #5A6373;
   --cs-radius: 10px;
   --cs-max: 1120px;
 }
@@ -56,6 +66,14 @@
     --cs-bad: #FF6B6B;
     --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     --cs-scanline: rgba(0, 0, 0, 0.45);
+    --cs-g-green:  #3DF07A;
+    --cs-g-amber:  #E8B339;
+    --cs-g-teal:   #4CC9E8;
+    --cs-g-red:    #FF6B6B;
+    --cs-g-violet: #A99BFF;
+    --cs-g-blue:   #6FB4F7;
+    --cs-g-brown:  #C79A6B;
+    --cs-g-slate:  #99A2B3;
   }
 }
 
@@ -75,6 +93,14 @@
   --cs-bad: #FF6B6B;
   --cs-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   --cs-scanline: rgba(0, 0, 0, 0.45);
+  --cs-g-green:  #3DF07A;
+  --cs-g-amber:  #E8B339;
+  --cs-g-teal:   #4CC9E8;
+  --cs-g-red:    #FF6B6B;
+  --cs-g-violet: #A99BFF;
+  --cs-g-blue:   #6FB4F7;
+  --cs-g-brown:  #C79A6B;
+  --cs-g-slate:  #99A2B3;
 }
 
 /* ------------------------------------------------------------------ base -- */
@@ -137,16 +163,143 @@
   color: var(--cs-muted); letter-spacing: 0.04em; text-transform: uppercase;
 }
 
-/* ---------------------------------------------------------------- chips --- */
+/* ------------------------------------------------------------- controls --- */
+/* The five controls — tab, chip, menu, sort, toggle — and the one block they share.
+ * Every filter, sort and popover in /app is one of them. One control radius (8px), one plate
+ * radius (10px), one border (--cs-line), one hover (border → --cs-line-strong, text → ink),
+ * one focus ring (2px --cs-accent, inset), one floating shadow (--cs-shadow). Nothing in a
+ * page's own CSS restates any of it, and a native <select> appears nowhere.
+ */
 
-.cs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.cs-control {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  border: 1px solid var(--cs-line); border-radius: 8px;
+  background: var(--cs-surface); color: var(--cs-ink);
+  font-size: 13px; font-weight: 550; line-height: 1; white-space: nowrap; cursor: pointer;
+}
+.cs-control:hover:not(:disabled) { border-color: var(--cs-line-strong); color: var(--cs-ink); }
+.cs-control:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
+.cs-control:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* The floating plate every popover is drawn on. */
+.cs-plate {
+  background: var(--cs-surface); border: 1px solid var(--cs-line);
+  border-radius: 10px; box-shadow: var(--cs-shadow);
+}
+
+/* The colour dot a group carries, in a fixed slot so labels line up down a list. */
+.cs-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+/* -- chip ------------------------------------------------------------------ */
+/* Exclusive filter within a row. On = ink fill + ground text. Counts in mono. On a narrow
+   viewport the row scrolls sideways rather than wrapping into a block. */
+
+.cs-chips {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none; padding-bottom: 1px;
+}
+.cs-chips::-webkit-scrollbar { display: none; }
+.cs-chip-slot { display: inline-flex; flex: none; }
 .cs-chip {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
   border: 1px solid var(--cs-line); background: var(--cs-surface);
   color: var(--cs-muted); border-radius: 999px; padding: 5px 11px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; white-space: nowrap;
 }
 .cs-chip:hover { border-color: var(--cs-line-strong); color: var(--cs-ink); }
-.cs-chip[data-on="true"] { background: var(--cs-accent); border-color: var(--cs-accent); color: var(--cs-accent-on); }
+.cs-chip:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
+.cs-chip[data-on="true"] { background: var(--cs-ink); border-color: var(--cs-ink); color: var(--cs-ground); }
+.cs-chip[data-on="true"] .cs-chip-count { color: var(--cs-ground); opacity: 0.75; }
+.cs-chip-count { font-size: 11px; font-weight: 500; color: var(--cs-muted); }
+.cs-chip-new { border-style: dashed; }
+.cs-chip-new:hover, .cs-chip-new[data-editing="true"] { border-color: var(--cs-accent); color: var(--cs-accent); }
+.cs-chip-input {
+  width: 96px; border: 0; background: none; color: var(--cs-ink);
+  font: inherit; letter-spacing: inherit; outline: none;
+}
+
+/* -- menu ------------------------------------------------------------------ */
+/* One popover in three modes. The panel is a fixed-position plate in a portal, so a scrolling
+   chip row or an overflowing cell cannot clip it. */
+
+.cs-menu-trigger { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.cs-menu-trigger[data-variant="quiet"] {
+  border: 0; background: none; color: var(--cs-muted);
+  font-size: 13px; font-weight: 550; padding: 4px 2px;
+}
+.cs-menu-trigger[data-variant="quiet"]:hover:not(:disabled),
+.cs-menu-trigger[data-variant="quiet"][data-open] { color: var(--cs-ink); }
+.cs-menu-trigger[data-variant="icon"] {
+  width: 22px; height: 22px; padding: 0; justify-content: center;
+  border: 1px solid var(--cs-line); border-radius: 8px;
+  background: var(--cs-surface); color: var(--cs-muted);
+}
+.cs-menu-trigger[data-variant="icon"]:hover:not(:disabled),
+.cs-menu-trigger[data-variant="icon"][data-open] { border-color: var(--cs-accent); color: var(--cs-accent); }
+.cs-menu-trigger:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; border-radius: 8px; }
+.cs-menu-trigger:disabled { opacity: 0.5; cursor: not-allowed; }
+.cs-menu-trigger-label { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cs-menu-prefix { color: var(--cs-muted); font-weight: 500; }
+.cs-caret { flex: none; color: var(--cs-muted); }
+
+.cs-menu-panel {
+  z-index: 60; min-width: 180px; max-width: min(300px, calc(100vw - 16px));
+  max-height: min(420px, calc(100vh - 24px)); overflow-y: auto; padding: 4px;
+}
+.cs-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  height: 40px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: none; color: var(--cs-muted); font-size: 14px; text-align: left; cursor: pointer;
+}
+.cs-menu-item:hover:not(:disabled) { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-menu-item:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -2px; }
+.cs-menu-item[data-on="true"] { color: var(--cs-ink); font-weight: 600; }
+.cs-menu-item[data-bad="true"] { color: var(--cs-bad); }
+.cs-menu-item:disabled { opacity: 0.45; cursor: not-allowed; }
+.cs-menu-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-menu-count { flex: none; font-size: 11px; color: var(--cs-muted); }
+.cs-menu-check { flex: none; color: var(--cs-accent); }
+
+/* multi: a tri-state box, tinted with the group's colour when it is on. */
+.cs-menu-box {
+  width: 15px; height: 15px; flex: none; border-radius: 4px;
+  border: 1px solid var(--cs-line-strong); background: var(--cs-surface);
+  position: relative;
+}
+.cs-menu-box[data-state="on"] { background: var(--cs-dot, var(--cs-accent)); border-color: var(--cs-dot, var(--cs-accent)); }
+.cs-menu-box[data-state="on"]::after {
+  content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+  border: solid var(--cs-accent-on); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg);
+}
+.cs-menu-box[data-state="mixed"]::after {
+  content: ''; position: absolute; left: 3px; right: 3px; top: 6px; height: 1.6px;
+  background: var(--cs-line-strong); border-radius: 1px;
+}
+.cs-menu-foot {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 8px 10px;
+  border-top: 1px solid var(--cs-line); color: var(--cs-muted); font-size: 13px;
+}
+.cs-menu-foot input {
+  flex: 1; min-width: 0; border: 0; background: none; color: var(--cs-ink); font: inherit; outline: none;
+}
+
+/* -- toggle ---------------------------------------------------------------- */
+/* The 22px coin: on = accent fill + light glyph, off = line outline + muted glyph. */
+
+.cs-coin-toggle {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 22px; height: 22px; padding: 0; border-radius: 8px;
+  border: 1px solid var(--cs-line); background: var(--cs-surface); color: var(--cs-muted);
+  cursor: pointer;
+}
+.cs-coin-toggle:hover:not(:disabled) { border-color: var(--cs-line-strong); color: var(--cs-ink); }
+.cs-coin-toggle[data-on="true"] {
+  background: var(--cs-accent); border-color: var(--cs-accent); color: var(--cs-accent-on);
+}
+.cs-coin-toggle[data-on="true"]:hover:not(:disabled) { color: var(--cs-accent-on); }
+.cs-coin-toggle:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 2px; }
+.cs-coin-toggle:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ----------------------------------------------------------------- feed --- */
 /* A real feed: standalone items with air between them, no container box, no chips. */
@@ -559,22 +712,12 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 }
 
 /* -------------------------------------------------------- control row ----- */
-/* One right-aligned line of controls, on the same line as the page heading: a segmented
-   control, then any dropdowns. Replaces the two stacked rows of chips. */
+/* One right-aligned line of controls on the heading's line. Whatever sits in it is one of the
+   five controls above — there is no segmented switch and no native select. */
 
 .cs-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
-.cs-seg { display: inline-flex; align-items: center; gap: 2px; padding: 3px;
-  border: 1px solid var(--cs-line); border-radius: 9px; background: var(--cs-surface); }
-.cs-seg > * { padding: 4px 10px; border-radius: 6px; border: 0; background: none;
-  color: var(--cs-muted); font-size: 13px; font-weight: 550; line-height: 18px; cursor: pointer; white-space: nowrap; }
-.cs-seg > *:hover { color: var(--cs-ink); }
-.cs-seg > [data-on="true"] { background: var(--cs-surface-2); color: var(--cs-ink); }
-.cs-seg > *:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
-.cs-select { appearance: none; padding: 6px 26px 6px 10px; border-radius: 8px; font-size: 13px;
-  border: 1px solid var(--cs-line); background: var(--cs-surface); color: var(--cs-ink); cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, var(--cs-muted) 50%), linear-gradient(135deg, var(--cs-muted) 50%, transparent 50%);
-  background-position: calc(100% - 14px) 13px, calc(100% - 9px) 13px; background-size: 5px 5px; background-repeat: no-repeat; }
-.cs-select:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
+/* A chips row inside the control line is one item on it, not a block above it. */
+.cs-controls .cs-chips { margin-bottom: 0; max-width: 100%; }
 .cs-showing { font-size: 12px; color: var(--cs-muted); white-space: nowrap; }
 
 /* Tabs: Videos / Changes on a channel, sharing the line with the control row. */
