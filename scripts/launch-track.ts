@@ -20,6 +20,7 @@ import {
   changeAtFromLaunchUntil, type Tier,
 } from '../lib/nightly/launch-core';
 import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
+import { readStatsResponse } from '../lib/nightly/stats-response';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
 import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
 import { LAST_SAMPLES_SQL } from '../lib/rss/poll-policy';
@@ -232,31 +233,27 @@ if (rssSatisfied.length) {
 let calls = 0, mainCalls = 0, samples = 0;
 const tierSamples: Record<Tier, number> = { standard: 0, dense: 0 };
 for (const batch of chunk(apiDue, 50)) {
-  if (job.signal.aborted) break;
+  if (job.signal.aborted || calls >= maxCalls) break;
   const ids = batch.map((r) => r.video_id);
-  let res: Response | null = null;
-  for (let attempt = 0; attempt < 3 && !res; attempt++) {
-    try {
-      res = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos:batchGetStats?part=statistics&id=${ids.join(',')}&key=${API_KEY}`,
-        { signal: AbortSignal.timeout(15000) }
-      );
-    } catch (e) {
-      console.error(`fetch attempt ${attempt + 1} failed: ${(e as Error).message}`);
-      await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
-    }
+  let result = await readStatsResponse({
+    maxAttempts: Math.min(3, maxCalls - calls), signal: job.signal,
+    onAttempt: () => { calls++; },
+    fetchResponse: () => fetch(
+      `https://www.googleapis.com/youtube/v3/videos:batchGetStats?part=statistics&id=${ids.join(',')}&key=${API_KEY}`,
+      { signal: AbortSignal.timeout(15000) }),
+  });
+  if (!result) { console.error('YouTube response unavailable after bounded retries; leaving remaining videos due.'); break; }
+  if (!result.response.ok && result.response.status !== 403) {
+    result = await readStatsResponse({
+      maxAttempts: Math.min(1, maxCalls - calls), signal: job.signal,
+      onAttempt: () => { calls++; mainCalls++; },
+      fetchResponse: () => fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`,
+        { signal: AbortSignal.timeout(15000) }),
+    });
+    if (!result) { console.error('Fallback unavailable or request budget exhausted; leaving remaining videos due.'); break; }
   }
-  if (!res) { console.error('YouTube API unreachable; stopping this run.'); break; }
-  if (!res.ok && res.status !== 403) {
-    try {
-      res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`,
-        { signal: AbortSignal.timeout(15000) });
-      mainCalls++;
-    } catch { console.error('fallback fetch failed; stopping this run.'); break; }
-  }
-  calls++;
-  if (!res.ok) { console.error(`YouTube API error ${res.status}; stopping.`); break; }
-  const data: any = await res.json();
+  if (!result.response.ok) { console.error(`YouTube API error ${result.response.status}; stopping.`); break; }
+  const data = result.data;
   const items: any[] = data.items || [];
   const meta = new Map<string, DueRow>(batch.map((r) => [r.video_id, r]));
 
@@ -323,7 +320,7 @@ for (const batch of chunk(apiDue, 50)) {
   }
 }
 
-// Ledger holds the exact batch-bucket units spent; the per-tier split is logged for attribution
+// Ledger conservatively counts HTTP attempts, including failed/truncated responses; the per-tier split is logged for attribution
 // (units are per 50-id call, so the tier share is samples/50).
 const batchUnits = calls - mainCalls;
 await pool.query(`insert into quota_ledger (category, units) values ('launch-track-batch', $1)`, [batchUnits]).catch(() => {});
