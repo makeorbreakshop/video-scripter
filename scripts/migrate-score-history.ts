@@ -34,17 +34,29 @@ const SELECT_COLS = `
     'backfilled_from', 'video_scores'
   )) as extra`;
 
+// The cursor is computed by POSTGRES (`max(video_id)` over the page), never in JS. This database
+// is en_US.UTF-8, whose text ordering is not codepoint order, while JS string comparison is; a
+// first run took the page maximum with a JS reduce and the keyset ranges overlapped, copying
+// 193,545 rows for 186,743 videos (nothing skipped, 6,802 duplicated). Collating the scan as "C"
+// to match JS would instead cost a full sort per batch, so the page keeps the index's own order
+// and only the cursor moves into SQL.
 const INSERT_SQL = `
-insert into video_score_history
-  (video_id, channel_id, model_version, scored_at, age_days, views, score, same_age_ratio,
-   typical_at_age, n_typical, typical_measured_share, projection, projection_horizon,
-   est30, baseline, n_baseline, confidence, extra)
-select ${SELECT_COLS}
-  from video_scores s
- where s.video_id > $1
- order by s.video_id
- limit $2
-returning video_id`;
+with page as (
+  select ${SELECT_COLS}
+    from video_scores s
+   where s.video_id > $1
+   order by s.video_id
+   limit $2
+), ins as (
+  insert into video_score_history
+    (video_id, channel_id, model_version, scored_at, age_days, views, score, same_age_ratio,
+     typical_at_age, n_typical, typical_measured_share, projection, projection_horizon,
+     est30, baseline, n_baseline, confidence, extra)
+  select * from page
+  returning 1
+)
+select (select max(video_id) from page) as next_cursor,
+       (select count(*)::int from ins)  as n`;
 
 async function main() {
   // Before the DDL the v5 columns do not exist, so the pre-flight plan is the shape that
@@ -96,11 +108,10 @@ async function main() {
   let copied = 0;
   for (;;) {
     const r = await pool.query(INSERT_SQL, [cursor, BATCH]);
-    if (!r.rows.length) break;
-    copied += r.rows.length;
-    // RETURNING order is not the SELECT's order, but the batch is a contiguous keyset range,
-    // so its maximum is the range end whatever order the rows come back in.
-    cursor = r.rows.reduce((a: string, x: any) => (x.video_id > a ? x.video_id : a), cursor);
+    const n = Number(r.rows[0]?.n ?? 0);
+    if (!n) break;
+    copied += n;
+    cursor = r.rows[0].next_cursor;
     log(`copied ${copied} (cursor ${cursor})`);
     await new Promise((res) => setTimeout(res, 200));
   }
