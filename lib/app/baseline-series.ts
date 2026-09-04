@@ -15,7 +15,7 @@ export type BaselinePoint = {
   /** This video's day-30 estimate. */
   est30: number | null;
   score: number | null;
-  /** True when the model could not stand behind the score — the dot is drawn faded. */
+  /** True when the model could not stand behind the score — the tick is drawn faintest. */
   weak: boolean;
 };
 
@@ -34,18 +34,15 @@ export function hasBaselineLine(points: BaselinePoint[]): boolean {
 }
 
 /**
- * The y domain, in views. A log axis is the right one here — a channel's dots span three or
- * four orders of magnitude and a single 5M video would otherwise flatten the baseline line
- * into the axis — and a log axis cannot show zero or a negative, so the floor is clamped to 1
- * and every value on the plot is already filtered to > 0 by `num` above. Padded by a factor
- * rather than by a constant, because on a log scale that is what "a bit of headroom" means.
+ * The y domain, in views. It covers the BASELINE and nothing else — the value axis carries one
+ * series now, so letting a single 5M video widen the domain would push the line the chart is
+ * about into a flat band at the bottom. A log axis is still the right one: a channel's normal
+ * can move by an order of magnitude across a decade, and a log axis cannot draw zero or a
+ * negative, so the floor is clamped to 1 and every value is already filtered to > 0 by `num`.
+ * Padded by a factor rather than a constant, because on a log scale that is what headroom is.
  */
-export function viewsDomain(points: BaselinePoint[]): [number, number] {
-  const vals: number[] = [];
-  for (const p of points) {
-    if (p.baseline != null) vals.push(p.baseline);
-    if (p.est30 != null) vals.push(p.est30);
-  }
+export function baselineDomain(points: BaselinePoint[]): [number, number] {
+  const vals = points.map((p) => p.baseline).filter((v): v is number => v != null);
   if (!vals.length) return [1, 10];
   const lo = Math.max(1, Math.min(...vals) / 1.6);
   const hi = Math.max(...vals) * 1.6;
@@ -74,14 +71,47 @@ export function tickFormat(points: BaselinePoint[]): TickFormat {
   return points[points.length - 1].t - points[0].t > A_SEASON ? 'month' : 'day';
 }
 
+/** The first and last publish time on the plot — the time axis the video band shares. */
+export function timeExtent(points: BaselinePoint[]): [number, number] {
+  if (!points.length) return [0, 1];
+  const first = points[0].t, last = points[points.length - 1].t;
+  return last > first ? [first, last] : [first, first + 1];
+}
+
 /**
- * A news channel puts 700 dots on this plot and a maker channel puts 15. At 700 the 4px dot
- * with its surface ring is a white haze; the ring is what has to go first, because at that
- * density it is separating dots from each other that the reader is not reading individually
- * anyway — the cloud's SHAPE against the line is the reading.
+ * What a video is drawn as on the time axis. Three kinds, one channel of ink each: a video the
+ * model would not stand behind is the faintest, a video that cleared twice its channel's
+ * baseline is the accent one, everything else is the plain tick.
  */
-export function dotSize(count: number): { r: number; ring: number } {
-  if (count > 400) return { r: 2, ring: 0 };
-  if (count > 150) return { r: 3, ring: 0 };
-  return { r: 4, ring: 1.5 };
+export type MarkKind = 'insufficient' | 'outlier' | 'normal';
+
+/** Twice the channel's normal. The same threshold the score badge reads as an outlier. */
+export const OUTLIER_SCORE = 2;
+
+export function markKind(p: BaselinePoint): MarkKind {
+  if (p.weak || p.score == null) return 'insufficient';
+  return p.score >= OUTLIER_SCORE ? 'outlier' : 'normal';
+}
+
+/** Tick height in px per kind. Nothing here encodes views — only which of the three it is. */
+export const MARK_HEIGHT: Record<MarkKind, number> = { insufficient: 5, normal: 7, outlier: 11 };
+
+/** The band the ticks live in, just above the x axis. */
+export const BAND_HEIGHT = 14;
+
+/** How far from a tick the pointer still counts as on it. A tick is 1px; a finger is not. */
+export const HIT_PX = 6;
+
+/**
+ * Which tick the pointer is on. Ticks merge on a daily channel and that is fine — they are not
+ * stacked, so at a shared x the reader gets the nearest one and the rest are the same day.
+ * `xs` is ascending; ties go to the earlier video.
+ */
+export function nearestByX(xs: number[], x: number, maxDist = HIT_PX): number | null {
+  let best = -1, bestD = Infinity;
+  for (let i = 0; i < xs.length; i++) {
+    const d = Math.abs(xs[i] - x);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best >= 0 && bestD <= maxDist ? best : null;
 }

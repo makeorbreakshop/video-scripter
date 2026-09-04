@@ -1,7 +1,8 @@
 jest.mock('../admin/db', () => ({ q: jest.fn(), one: jest.fn() }));
 import { q } from '../admin/db';
 import {
-  channelBaselineSeries, hasBaselineLine, viewsDomain, timeTicks, tickFormat, dotSize, MIN_BASELINE_POINTS,
+  channelBaselineSeries, hasBaselineLine, baselineDomain, timeTicks, tickFormat, timeExtent,
+  markKind, nearestByX, MARK_HEIGHT, MIN_BASELINE_POINTS,
   type BaselinePoint,
 } from './channel-analytics';
 
@@ -50,7 +51,7 @@ describe('channelBaselineSeries', () => {
     expect(mq.mock.calls[0][0]).toMatch(/interval '90 days'/);
   });
 
-  it('marks an unbacked score weak and drops its number, but keeps the dot', async () => {
+  it('marks an unbacked score weak and drops its number, but keeps the video', async () => {
     mq.mockResolvedValue([row({ confidence: 'insufficient' }), row({ id: 'v2', confidence: null })]);
     const s = await channelBaselineSeries('UC123');
     for (const p of s) {
@@ -77,17 +78,21 @@ describe('hasBaselineLine', () => {
   });
 });
 
-describe('viewsDomain', () => {
+describe('baselineDomain', () => {
   it('stays strictly positive so the log axis has a floor it can draw', () => {
-    const [lo, hi] = viewsDomain([pt({ baseline: 1, est30: 2 })]);
+    const [lo, hi] = baselineDomain([pt({ baseline: 1 })]);
     expect(lo).toBeGreaterThanOrEqual(1);
     expect(hi).toBeGreaterThan(lo);
-    expect(viewsDomain([])[0]).toBeGreaterThanOrEqual(1);
+    expect(baselineDomain([])[0]).toBeGreaterThanOrEqual(1);
   });
-  it('covers both the line and the dots', () => {
-    const [lo, hi] = viewsDomain([pt({ baseline: 1000, est30: 4_000_000 })]);
+  it('covers the line and ignores the videos — est30 is not on this axis', () => {
+    const [lo, hi] = baselineDomain([pt({ baseline: 1000, est30: 4_000_000 })]);
     expect(lo).toBeLessThan(1000);
-    expect(hi).toBeGreaterThan(4_000_000);
+    expect(hi).toBeLessThan(4_000_000);
+  });
+  it('ignores points with no baseline', () => {
+    expect(baselineDomain([pt({ baseline: null }), pt({ baseline: 500 })])[1])
+      .toBeCloseTo(500 * 1.6);
   });
 });
 
@@ -116,10 +121,48 @@ describe('tickFormat', () => {
   });
 });
 
-describe('dotSize', () => {
-  it('drops the ring before it drops the dot, as the cloud thickens', () => {
-    expect(dotSize(15).ring).toBeGreaterThan(0);
-    expect(dotSize(15).r).toBeGreaterThan(dotSize(800).r);
-    expect(dotSize(800).ring).toBe(0);
+describe('timeExtent', () => {
+  it('spans first to last, and never collapses to a zero-width axis', () => {
+    expect(timeExtent([pt({ t: 10 }), pt({ t: 90 })])).toEqual([10, 90]);
+    const [a, b] = timeExtent([pt({ t: 7 })]);
+    expect(b).toBeGreaterThan(a);
+    expect(timeExtent([])[1]).toBeGreaterThan(timeExtent([])[0]);
+  });
+});
+
+describe('markKind', () => {
+  it('reads a video the model would not stand behind as insufficient', () => {
+    expect(markKind(pt({ weak: true, score: 4 }))).toBe('insufficient');
+    expect(markKind(pt({ weak: false, score: null }))).toBe('insufficient');
+  });
+  it('calls twice the channel baseline an outlier, and the threshold is inclusive', () => {
+    expect(markKind(pt({ score: 2 }))).toBe('outlier');
+    expect(markKind(pt({ score: 6.2 }))).toBe('outlier');
+    expect(markKind(pt({ score: 1.99 }))).toBe('normal');
+    expect(markKind(pt({ score: 0.3 }))).toBe('normal');
+  });
+  it('draws the outlier tallest and the unbacked one shortest', () => {
+    expect(MARK_HEIGHT.outlier).toBeGreaterThan(MARK_HEIGHT.normal);
+    expect(MARK_HEIGHT.normal).toBeGreaterThan(MARK_HEIGHT.insufficient);
+  });
+});
+
+describe('nearestByX', () => {
+  const xs = [0, 40, 41, 200];
+  it('gives back the tick under the pointer, within the hit width', () => {
+    expect(nearestByX(xs, 199)).toBe(3);
+    expect(nearestByX(xs, 3)).toBe(0);
+  });
+  it('picks one of a merged pair rather than stacking them', () => {
+    expect(nearestByX(xs, 40.4)).toBe(1);
+    expect(nearestByX(xs, 41)).toBe(2);
+  });
+  it('is nothing when the pointer is off every tick', () => {
+    expect(nearestByX(xs, 120)).toBeNull();
+    expect(nearestByX([], 10)).toBeNull();
+  });
+  it('hits from at least 6px away', () => {
+    expect(nearestByX([100], 106)).toBe(0);
+    expect(nearestByX([100], 107)).toBeNull();
   });
 });
