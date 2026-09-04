@@ -10,6 +10,22 @@
 // quota) before it counts as long-form. A clip we could not reach is still inserted, but with
 // shorts_checked_at NULL, which longformSql treats as a Short until the scheduled verifier
 // (scripts/verify-shorts.ts) settles it.
+//
+// THE ONE RULE, and it lives here and nowhere else:
+//   <= 62 s            -> Short, no question asked (the classic ceiling; nothing else is that short)
+//   63-180 s ('clip')  -> UNDECIDABLE FROM DURATION. Only YouTube's own /shorts/<id> routing
+//                         settles it (lib/thumbs/shorts.ts). A verdict we could not obtain leaves
+//                         shorts_checked_at NULL so the verifier asks again — never a guess.
+//   > 180 s            -> long-form.
+// Above 62 s, duration alone is NEVER evidence. No other layer — no trigger, no database
+// function, no backfill script, no read-side filter — may re-derive is_short from duration,
+// title or description. `trigger_set_video_is_short` did exactly that until 2026-09-04: it
+// recomputed is_short from a <= 180 s duration on every INSERT and on every title/description
+// UPDATE, overwriting the routing-verified verdict this module had just written while
+// shorts_checked_at = now() was stamped beside it. 68% of the re-checked 61-180 s band was
+// long-form wrongly stored as a Short, invisible to every channel baseline.
+// sql/2026-09-04-drop-is-short-trigger.sql removed it; lib/ingest/is-short-trigger.test.ts
+// fails if any trigger on `videos` ever touches is_short again.
 import { durationSeconds, SHORT_MAX_SECONDS } from '../scoring/longform';
 import { isShortByRedirect } from '../thumbs/shorts';
 
