@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
 import { LocalTime } from '@/components/app/local-time';
 import { requireAppUser } from '@/lib/app/session';
+import { canSeeInspiration } from '@/lib/app/flags';
 import {
   inspirationFeedbackFor,
   listInspirationTargets,
@@ -85,6 +86,7 @@ export default async function InspirationPage({
 }) {
   const user = await requireAppUser();
   if (!user) redirect('/sign-in');
+  if (!canSeeInspiration(user)) redirect('/app/feed');
   const [targets, params] = await Promise.all([listInspirationTargets(user.id), searchParams]);
   const askedChannel = Array.isArray(params.channel) ? params.channel[0] : params.channel;
   const target = targets.find((item) => item.channelId === askedChannel) ?? targets[0];

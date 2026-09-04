@@ -11,12 +11,13 @@ const NAV = [
   { href: '/app/settings', label: 'Settings' },
 ];
 
-function Nav({ className }: { className: string }) {
+function Nav({ className, showInspiration }: { className: string; showInspiration: boolean }) {
   const path = usePathname() || '';
   if (path.startsWith('/app/onboarding')) return null;
+  const items = NAV.filter((n) => showInspiration || n.href !== '/app/inspiration');
   return (
     <nav className={className}>
-      {NAV.map((n) => (
+      {items.map((n) => (
         <Link key={n.href} href={n.href} data-active={path.startsWith(n.href)}>
           {n.label}
         </Link>
@@ -25,7 +26,7 @@ function Nav({ className }: { className: string }) {
   );
 }
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, showInspiration = false }: { children: React.ReactNode; showInspiration?: boolean }) {
   return (
     <ThemeProvider>
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
@@ -36,14 +37,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             CHANNELSMITH
             <span className="cs-marquee-cursor" aria-hidden />
           </Link>
-          <Nav className="cs-nav" />
+          <Nav className="cs-nav" showInspiration={showInspiration} />
           <div className="cs-header-right">
             <ThemeToggle />
             <UserButton />
           </div>
         </div>
         <div className="cs-wrap">
-          <Nav className="cs-nav cs-nav-mobile" />
+          <Nav className="cs-nav cs-nav-mobile" showInspiration={showInspiration} />
         </div>
       </header>
       <main className="cs-wrap cs-main">{children}</main>

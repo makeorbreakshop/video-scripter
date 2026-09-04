@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono, Press_Start_2P } from 'next/font/google';
 import './theme.css';
 import { requireAppUser } from '@/lib/app/session';
+import { canSeeInspiration } from '@/lib/app/flags';
 import AppShell from './_components/app-shell';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
@@ -50,7 +51,7 @@ function Preconnects() {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // ensureUser is idempotent; first load after sign-up is what creates the row.
-  await requireAppUser().catch((e) => {
+  const user = await requireAppUser().catch((e) => {
     console.error('app layout ensureUser:', e?.message);
     return null;
   });
@@ -58,7 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className={`${inter.variable} ${mono.variable} ${pixel.variable} cs-app`}>
       <Preconnects />
-      <AppShell>{children}</AppShell>
+      <AppShell showInspiration={canSeeInspiration(user)}>{children}</AppShell>
     </div>
   );
 }
