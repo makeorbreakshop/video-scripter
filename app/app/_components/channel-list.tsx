@@ -32,6 +32,7 @@ import {
   sparkDirection, sparkPath, triState, triStateAction, type GroupLike, type SparkPoint,
 } from '@/lib/app/groups-view';
 import type { PlanLimits, PlanName } from '@/lib/app/plans';
+import { CHANNEL_PAGE, hasMore, moreLabel, nextLimit } from '@/lib/app/channel-list-page';
 
 export interface ChannelRow extends ChannelRowLike {
   notify: boolean;
@@ -47,7 +48,6 @@ export interface ChannelRow extends ChannelRowLike {
  * still run over the whole list — only the rendered slice is capped, and it grows as you
  * reach the bottom.
  */
-const PAGE = 60;
 
 const SORTS = [
   { key: 'baseline', label: 'Baseline' },
@@ -174,14 +174,21 @@ function ChannelRows({
   const [confirming, setConfirming] = useState<string[] | null>(null);
 
   const activeGroup = params?.get('group') || null;
-  const [limit, setLimit] = useState(PAGE);
+  const [limit, setLimit] = useState(CHANNEL_PAGE);
 
   const sorted = useMemo(() => sortRows(rows, sort), [rows, sort]);
   const searched = useMemo(() => filterChannels(sorted, query), [sorted, query]);
   const shown = useMemo(() => filterByGroup(searched, activeGroup), [searched, activeGroup]);
   const visible = useMemo(() => shown.slice(0, limit), [shown, limit]);
   // A new filter is a new list: start it at the top again.
-  useEffect(() => { setLimit(PAGE); }, [query, sort, activeGroup]);
+  useEffect(() => { setLimit(CHANNEL_PAGE); }, [query, sort, activeGroup]);
+  // Stable, and it has to be: MoreRows re-creates its observer whenever this identity
+  // changes, and an observer re-created every render never lives long enough to deliver.
+  // The total is read from the setter's argument rather than closed over, so the callback
+  // does not need rebuilding when the list is filtered either.
+  const totalRef = useRef(shown.length);
+  totalRef.current = shown.length;
+  const showMore = useCallback(() => setLimit((n) => nextLimit(n, totalRef.current)), []);
   const counts = useMemo(() => groupCounts(rows, groups), [rows, groups]);
   // Built once for the whole list, not once per row on every keystroke.
   const byId = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
@@ -404,8 +411,11 @@ function ChannelRows({
             notifyBlocked={meter.atLimit && !c.notify}
           />
         ))}
-        {visible.length < shown.length && (
-          <MoreRows onReach={() => setLimit((n) => n + PAGE)} />
+        {hasMore(shown.length, limit) && (
+          <MoreRows
+            onReach={showMore}
+            label={moreLabel(visible.length, shown.length)}
+          />
         )}
       </div>
 
@@ -421,10 +431,16 @@ function ChannelRows({
 }
 
 /**
- * The bottom of the rendered slice. Reaching it loads the next page — no button, because the
- * list has no page boundary to name.
+ * The foot of the rendered slice. Reaching it loads the next page, and so does clicking it.
+ *
+ * It used to be an observer and nothing else, and the observer never fired: the effect
+ * depended on an `onReach` the parent rebuilt on every render, so it tore the observer down
+ * and started a new one before any could deliver its first entry. The list sat at 60 rows
+ * with channels 61-500 unreachable — no error, no spinner, just a foot with nothing under
+ * it. `onReach` is stable now, but the button is the part that does not depend on being
+ * right about that: a list you cannot get to the bottom of is not a list.
  */
-function MoreRows({ onReach }: { onReach: () => void }) {
+function MoreRows({ onReach, label }: { onReach: () => void; label: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = ref.current;
@@ -437,7 +453,12 @@ function MoreRows({ onReach }: { onReach: () => void }) {
     io.observe(el);
     return () => io.disconnect();
   }, [onReach]);
-  return <div ref={ref} className="cs-cmore" aria-hidden="true" />;
+  return (
+    <div ref={ref} className="cs-cmore">
+      <button type="button" className="cs-linkish" onClick={onReach}>Show more</button>
+      <span className="cs-num">{label}</span>
+    </div>
+  );
 }
 
 /** What an empty list says. A name, never a sentence explaining the page. */

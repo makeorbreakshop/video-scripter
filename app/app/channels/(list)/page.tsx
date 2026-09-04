@@ -15,6 +15,11 @@ import { q } from '@/lib/admin/db';
 import ChannelsClient from '../../_components/channel-list';
 
 export const dynamic = 'force-dynamic';
+// Stated, not defaulted. The sparkline lane used to take 26 s of server render on a
+// 500-channel account; what turned that into a page that never resolved — rather than a page
+// that was slow — was the platform's default function ceiling cutting the RSC stream
+// mid-flight, leaving the skeleton up with nothing to replace it and no error to show.
+export const maxDuration = 60;
 
 export default async function ChannelsPage() {
   const user = await requireAppUser();
