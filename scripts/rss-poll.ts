@@ -8,7 +8,7 @@
 //   2. FETCH    every due feed concurrently. Zero DB calls inside this loop.
 //   3. SNAPSHOT one set-based read of everything the diff needs, keyed on the video ids the
 //               feeds actually mentioned: current title, latest description hash, latest
-//               title_versions version, title_observed_at, latest thumbnail last_checked.
+//               title_versions version, video_title_watch.title_observed_at, latest thumbnail last_checked.
 //   4. DIFF + FLUSH   diff entirely in memory, then write each table once in ~5K chunks.
 //
 // Why: the previous shape did a burst of set-based statements PER CHANNEL, inside the fetch
@@ -35,7 +35,7 @@ import { chunk } from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { reenter } from '../lib/nightly/launch-core';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
-import { classifyTitleDiff, titleVersionPlan } from '../lib/rss/title-change';
+import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../lib/rss/title-change';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -163,17 +163,20 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
 
   // Titles that moved. Set-based UPDATE ... FROM the incoming values.
   await insert('videos.title',
-    `update videos v set title = x.title, title_observed_at = $3, updated_at = now()
+    `update videos v set title = x.title, updated_at = now()
        from unnest($1::text[], $2::text[]) as x(video_id, title)
       where v.id = x.video_id`,
-    b.videoTitles, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.title), now]);
+    b.videoTitles, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.title)]);
 
   // Every title we LOOKED at, changed or not — the evidence the CHANGE/SYNC rule reads next tick.
-  await insert('videos.title_observed_at',
-    `update videos set title_observed_at = $2
-      where id = any($1) and (title_observed_at is null or title_observed_at < now() - ${STAMP_MAX_AGE})
-      returning 1`,
-    b.observed, (p) => [p, now], true);
+  // Since 2026-09-04 this lands in the narrow `video_title_watch` table, not on `videos`: stamping
+  // a 45-index, 1.8 KB-row table every five minutes was 22 % of all execution on the instance
+  // (sql/2026-09-04-video-title-watch.sql). The STAMP_MAX_AGE skip now lives in the shared
+  // TITLE_WATCH_UPSERT_SQL. A title we CHANGED is an observation too, so its id is stamped here as
+  // well — the diff phase only pushes unchanged ids onto b.observed.
+  await insert('video_title_watch', TITLE_WATCH_UPSERT_SQL,
+    [...new Set([...b.observed, ...b.videoTitles.map((r: any) => r.video_id)])].sort(),
+    (p) => [p, now], true);
 
   await insert('track_schedule.reentry',
     `update track_schedule set phase = 'launch', launch_until = $2, next_check = $3,
@@ -336,7 +339,9 @@ for (const part of chunk(allIds, CHUNK)) {
   // and would be queued as a new upload, and its real title/description diff would be missed.
   if (job.signal.aborted) { snapshotComplete = false; break; }
   const [v, d, t, th, ls] = await Promise.all([
-    pool.query(`select id, title, description, published_at, title_observed_at from videos where id = any($1)`, [part]),
+    pool.query(`select v.id, v.title, v.description, v.published_at, w.title_observed_at
+                  from videos v left join video_title_watch w on w.video_id = v.id
+                 where v.id = any($1)`, [part]),
     pool.query(`select distinct on (video_id) video_id, version, sha256 from description_versions
                  where video_id = any($1) order by video_id, version desc`, [part]),
     pool.query(`select video_id, max(version)::int as v from title_versions where video_id = any($1) group by video_id`, [part]),

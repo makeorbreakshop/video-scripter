@@ -57,3 +57,31 @@ describe('classifyTitleDiff', () => {
     expect(classifyTitleDiff({ publishedAt: ago(days(7.1)), titleObservedAt: ago(days(6.9)) }, NOW)).toBe('change');
   });
 });
+
+// --- the observation stamp now lives in video_title_watch (2026-09-04) -----------------------
+import { TITLE_WATCH_UPSERT_SQL, TITLE_WATCH_STAMP_ONE_SQL, STAMP_MAX_AGE_SQL } from './title-change';
+
+describe('title-observation stamp SQL', () => {
+  it('targets the narrow side table, never videos', () => {
+    for (const sql of [TITLE_WATCH_UPSERT_SQL, TITLE_WATCH_STAMP_ONE_SQL]) {
+      expect(sql).toContain('video_title_watch');
+      expect(sql).not.toMatch(/update\s+videos/i);
+    }
+  });
+
+  it('the bulk upsert skips stamps younger than STAMP_MAX_AGE, so a 5-minute poller writes ~1/hour', () => {
+    expect(TITLE_WATCH_UPSERT_SQL).toContain(
+      `where video_title_watch.title_observed_at < excluded.title_observed_at - ${STAMP_MAX_AGE_SQL}`
+    );
+    expect(STAMP_MAX_AGE_SQL).toBe("interval '1 hour'");
+  });
+
+  it('the bulk upsert RETURNs, so callers can count rows actually written rather than offered', () => {
+    expect(TITLE_WATCH_UPSERT_SQL.trimEnd().endsWith('returning 1')).toBe(true);
+  });
+
+  it('a title we CHANGED is stamped unconditionally and monotonically (a change IS the evidence)', () => {
+    expect(TITLE_WATCH_STAMP_ONE_SQL).toContain('greatest(video_title_watch.title_observed_at, excluded.title_observed_at)');
+    expect(TITLE_WATCH_STAMP_ONE_SQL).not.toContain(STAMP_MAX_AGE_SQL);
+  });
+});

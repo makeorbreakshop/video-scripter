@@ -201,7 +201,8 @@ console.log(
 const OEMBED_MIN_AGE = "interval '14 days'";
 const OEMBED_MAX_AGE = "interval '90 days'";
 const { rows: oembedTargets } = await pool.query(
-  `select v.id, v.title, v.published_at, v.title_observed_at from videos v
+  `select v.id, v.title, v.published_at, w.title_observed_at
+     from videos v left join video_title_watch w on w.video_id = v.id
     where v.id = any($2)
       and v.published_at <= now() - ${OEMBED_MIN_AGE}
       and v.published_at > now() - ${OEMBED_MAX_AGE}

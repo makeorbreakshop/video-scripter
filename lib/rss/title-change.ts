@@ -11,8 +11,16 @@
 //
 // The evidence has to be recorded on purpose. videos.updated_at does not work: it is bumped by
 // duration refreshes in the drainer and by the title write itself. track_schedule.last_title_check
-// only ever covered videos under 30 days old. So videos.title_observed_at is a dedicated column
-// that EVERY detector bumps on EVERY observation, changed or not.
+// only ever covered videos under 30 days old. So there is a dedicated observation stamp that EVERY
+// detector bumps on EVERY observation, changed or not.
+//
+// WHERE THE STAMP LIVES (2026-09-04). It used to be videos.title_observed_at. Stamping it there was
+// measured at 22 % of all execution on the instance (181 s in a clean 9-minute window, 30.2 s mean,
+// 701 MB read): `videos` has a 1,819-byte average row, 794 MB of TOAST and 45 indexes, and only
+// 18.2 % of its updates are HOT, so a 50-byte fact that changes every five minutes was rewriting a
+// 1.8 KB tuple and up to 45 index entries each time. The stamp now lives in `video_title_watch`
+// (video_id primary key, title_observed_at) — see sql/2026-09-04-video-title-watch.sql.
+// videos.title_observed_at still exists but is NO LONGER WRITTEN OR READ; it is the rollback.
 import type pg from 'pg';
 import { reenter } from '../nightly/launch-core';
 import { revalidateRemote } from '../app/revalidate-remote';
@@ -25,7 +33,7 @@ export type TitleDiffKind = 'change' | 'sync';
 export interface TitleDiffEvidence {
   /** When the video was published. Inside the window we have watched it since launch. */
   publishedAt: Date | string | null | undefined;
-  /** When any detector last observed this video's title (videos.title_observed_at). */
+  /** When any detector last observed this video's title (video_title_watch.title_observed_at). */
   titleObservedAt: Date | string | null | undefined;
 }
 
@@ -64,6 +72,36 @@ export function titleVersionPlan(maxVersion: number): TitleVersionPlan {
 }
 
 /**
+ * How stale a stamp must be before a detector bothers rewriting it. The evidence window is 7 days,
+ * so re-stamping the same video every five minutes buys nothing and costs a write per tick.
+ */
+export const STAMP_MAX_AGE_SQL = "interval '1 hour'";
+
+/**
+ * Bulk observation upsert against `video_title_watch`. Takes an id array and one timestamp, skips
+ * rows already stamped inside STAMP_MAX_AGE_SQL, and RETURNs only the rows it actually wrote so
+ * callers can count honestly. Shared by scripts/rss-poll.ts's flush and recordTitleObservations
+ * below, so the two detectors cannot drift.
+ *   $1 = text[] video ids, $2 = timestamptz observation time
+ */
+export const TITLE_WATCH_UPSERT_SQL = `insert into video_title_watch (video_id, title_observed_at)
+     select unnest($1::text[]), $2::timestamptz
+     on conflict (video_id) do update set title_observed_at = excluded.title_observed_at
+      where video_title_watch.title_observed_at < excluded.title_observed_at - ${STAMP_MAX_AGE_SQL}
+     returning 1`;
+
+/**
+ * Unconditional observation upsert for a single video whose title we just WROTE. A change is
+ * authoritative evidence, so it is never skipped for being recent; greatest() keeps it monotonic
+ * if two detectors race.
+ *   $1 = text video id, $2 = timestamptz
+ */
+export const TITLE_WATCH_STAMP_ONE_SQL = `insert into video_title_watch (video_id, title_observed_at)
+     values ($1, $2)
+     on conflict (video_id) do update
+        set title_observed_at = greatest(video_title_watch.title_observed_at, excluded.title_observed_at)`;
+
+/**
  * Bump the observation stamp for titles we looked at and found unchanged. Every detector must
  * call this on every poll, or the evidence window silently empties and real changes start being
  * classified as syncs.
@@ -74,7 +112,7 @@ export async function recordTitleObservations(
   now: Date
 ): Promise<void> {
   if (!videoIds.length) return;
-  await pool.query(`update videos set title_observed_at = $2 where id = any($1)`, [videoIds, now]);
+  await pool.query(TITLE_WATCH_UPSERT_SQL, [[...new Set(videoIds)].sort(), now]);
 }
 
 /**
@@ -111,9 +149,10 @@ export async function recordTitleChange(
     [videoId, plan.newVersion, newTitle, backfill]
   );
   await pool.query(
-    `update videos set title = $1, title_observed_at = $3, updated_at = now() where id = $2`,
-    [newTitle, videoId, now]
+    `update videos set title = $1, updated_at = now() where id = $2`,
+    [newTitle, videoId]
   );
+  await pool.query(TITLE_WATCH_STAMP_ONE_SQL, [videoId, now]);
 
   // A version > 1 is a packaging change, which the channel list surfaces from the
   // materialized channel_stats row (lib/app/channel-stats.ts). Single-row touch, no
