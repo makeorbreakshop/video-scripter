@@ -1,4 +1,4 @@
-import type { GlobalParams } from './core';
+import { growthExponent, type GlobalParams } from './core';
 import { channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
 import { growthLog, logToRef } from './growth';
 
@@ -43,7 +43,7 @@ describe('contributionAt -- the three branches', () => {
     expect(c.kind).toBe('interpolated');
     expect(c.fromAge).toBe(14);   // nearer in LOG age than day 1 is
     expect(c.logDistance).toBeCloseTo(Math.abs(Math.log(14) - Math.log(5)), 10);
-    // two samples => the prior's own Q corrects the slide, so assert the sign and the route
+    // sliding BACKWARD from the anchor: the global curve only, no per-prior blend (2026-09-04)
     expect(c.views).toBeLessThan(900);
     expect(c.views).toBeGreaterThan(100);
   });
@@ -202,5 +202,109 @@ describe('typicalAt30 (the display anchor)', () => {
     } as any);
     expect(out.typicalAtAge).toBeCloseTo(100, 0);
     expect(out.typicalAt30).toBeCloseTo(1000, 0);
+  });
+});
+
+
+// ---------------------------------------------------------------------------------------------
+// The 2026-09-04 sub-day bug, pinned to the case that found it: KFVqHUvp-0w ("I FINALLY Fixed My
+// Master Sword!", 3D Printing Nerd) at age 0.2268d (5.44h) with 5,345 views. The v5 row said
+// typical_at_age = 15,477 (score 0.35) while the video page drew ~5K and the v3 row an hour
+// earlier had same_age_ratio 1.52 -- channelCurve's sub-day typical was 3.6x too high.
+//
+// Two causes, both fixed:
+//   1. contributionAt applied `blendScale` when sliding a prior BACKWARD below its anchor. The
+//      scale is 1 + qResidual(anchor) / logToRef(anchor); logToRef is ~0.069 at day 17, so a
+//      -0.070 residual gave the 0.10 clamp floor, flattening the slide: the day-17 prior kept
+//      24,092 of its 29,327 views at five hours instead of 4,105.
+//   2. Nothing stopped a day-17 snapshot (or a day-300 lifetime count) standing in for hour five
+//      at all. Below one day a prior needs a real sample, or a sample under SUBDAY_SLIDE_MAX_AGE.
+// ---------------------------------------------------------------------------------------------
+describe('sub-day channel curve (KFVqHUvp-0w, 3D Printing Nerd, 2026-09-04)', () => {
+  // score_params v5.0, fitted 2026-09-04T18:27:03Z.
+  const PROD: GlobalParams = {
+    mult: {
+      [1 / 24]: 4.308, [2 / 24]: 3.632, [4 / 24]: 2.488, [8 / 24]: 1.469, [12 / 24]: 1.181,
+      [18 / 24]: 0.983, 1: 0.874, 2: 0.610, 3: 0.452, 5: 0.303, 7: 0.225, 14: 0.096, 21: 0.038, 30: 0,
+    },
+    qBins: {
+      3: { edges: [0.05, 0.12, 0.2, 0.33], resid: [-0.217, -0.11, 0, 0.09, 0.2] },
+      5: { edges: [0.05, 0.12, 0.2, 0.33], resid: [-0.2, -0.166, 0, 0.08, 0.18] },
+      14: { edges: [0.05, 0.12, 0.2, 0.33], resid: [-0.07, -0.04, -0.017, 0.02, 0.06] },
+    },
+    longtail: { ages: [60, 90, 180, 365, 730, 1500], mult: [1.087, 1.125, 1.125, 1.342, 1.342, 1.342], n: [900, 800, 700, 600, 400, 200] },
+    fittedAt: '2026-09-04T18:27:03.001Z', nVideos: 5000,
+  };
+  const AGE = 0.2268;      // 5.44 hours
+  const VIEWS = 5345;
+  // The channel's real last 15 long-form priors, as loaded by scripts/score-videos.ts.
+  const PRIORS: CurvePrior[] = [
+    prior(7.00, [[3.9581, 30884], [4.4056, 30884], [4.9581, 31269], [5.0095, 31269], [5.9581, 31551], [6.9581, 31889], [7.0012, 31889]], [31889, 7.2]),
+    prior(7.44, [[4.3999, 37270], [4.8475, 37270], [5.0022, 37528], [5.3999, 38105], [6.3999, 39605], [7.0021, 40976], [7.3999, 40976]], [40976, 7.7]),
+    prior(14.00, [[10.958, 95994], [11.4056, 95994], [11.958, 96945], [13.958, 100438], [14.0012, 100438]], [100438, 14.2]),
+    prior(20.00, [[16.958, 29327], [17.4056, 29327], [17.958, 29404]], [29404, 20.2]),
+    prior(29.00, [[25.9583, 17157], [26.4479, 17157], [26.9583, 17210]], [17210, 29.2]),
+    prior(35.00, [[31.9581, 36866]], [36866, 35.2]),
+    prior(42.00, [[38.9579, 23467]], [23467, 42.2]),
+    prior(49.00, [[45.9583, 11201]], [11201, 49.2]),
+    prior(56.00, [[52.9579, 54149]], [54149, 56.2]),
+    prior(63.00, [[59.9583, 30563]], [30563, 63.2]),
+    prior(69.64, [[66.5936, 66102]], [66102, 69.9]),
+    prior(77.00, [[75.9581, 17488]], [17488, 77.2]),
+    prior(84.00, [[82.9582, 71553]], [71553, 84.2]),
+    prior(91.00, [[89.9579, 25381]], [25381, 91.2]),
+    prior(98.00, [[96.958, 185024]], [185024, 98.2]),
+  ];
+
+  // The day-30 path is untouched by the fix: sliding FORWARD from the anchor is the interval
+  // blendScale was calibrated on, so the prior's own Q still corrects it and C(30) still reads
+  // 34,820 on the live params (scripts/diagnose-curve.ts KFVqHUvp-0w). The unit fixture's qBins
+  // are illustrative, so the invariant asserted here is the ROUTE, not that fixture's arithmetic.
+  it('C(30) is untouched: the forward blend still applies toward day 30', () => {
+    const p = PRIORS[0];                       // samples 3.96..7.00, so day 30 is forward of them
+    const blended = contributionAt(p, 30, PROD)!;
+    const q = growthExponent(p.samples.map((x) => ({ ...x })));
+    expect(blended.kind).toBe('interpolated');
+    expect(blended.fromAge).toBe(7.0012);
+    expect(blended.views).toBeCloseTo(
+      31889 * Math.exp(growthLog(PROD, 7.0012, 30, { anchorAge: 7.0012, q })), 6);
+    const c30 = channelCurve(PRIORS, 30, PROD).typical!;
+    expect(c30).toBeGreaterThan(20000);
+    expect(c30).toBeLessThan(60000);
+  });
+
+  it('no prior stands in for hour five off a day-17 snapshot or a lifetime count', () => {
+    const day17 = PRIORS[3];
+    expect(contributionAt(day17, AGE, PROD)).toBeNull();          // was 24,092
+    expect(contributionAt(prior(500, [], [150000, 400]), AGE, PROD)).toBeNull();
+    // ...and the same prior still contributes normally at an age it can speak to.
+    expect(contributionAt(day17, 25, PROD)!.kind).toBe('interpolated');
+  });
+
+  it('with no usable prior below a day the score is withheld, not invented', () => {
+    const c = channelCurve(PRIORS, AGE, PROD);
+    expect(c.n).toBe(0);
+    expect(c.typical).toBeNull();
+    const o = scoreV5({ vt: VIEWS, age: AGE, snaps: [{ day: 0.05, views: 900 }, { day: AGE, views: VIEWS }], priors: PRIORS, params: PROD });
+    expect(o.score).toBeNull();
+    expect(o.typicalAtAge).toBeNull();
+    expect(o.confidence).toBe('early');          // a fact about the clock, not the channel
+    expect(o.typicalAt30).toBeGreaterThan(33000); // the display anchor survives
+  });
+
+  it('a prior WITH a sub-day sample does contribute, and C(t) then agrees with the page', () => {
+    // Give three priors a five-hour reading on the channel's own curve, anchored on C(30).
+    const c30 = channelCurve(PRIORS, 30, PROD).typical!;
+    const pageTypical = c30 * Math.exp(-logToRef(PROD, AGE));   // what video-curve.expectedAtAge draws
+    const seeded = PRIORS.map((p, i) =>
+      i < 3 ? { ...p, samples: [{ day: 0.22, views: Math.round(pageTypical) }, ...p.samples] } : p);
+    const c = channelCurve(seeded, AGE, PROD);
+    expect(c.n).toBe(3);
+    expect(c.measuredShare).toBe(1);
+    // one source of truth: lib/admin/video-curve.multAt defers to growth.logToRef when the params
+    // carry a fitted launch ladder, so the page's typical and the score's denominator agree.
+    expect(Math.abs(Math.log(c.typical! / pageTypical))).toBeLessThan(0.10);
+    expect(VIEWS / c.typical!).toBeGreaterThan(1);   // 5,345 views is ABOVE typical, not 0.35x
+    expect(VIEWS / c.typical!).toBeLessThan(1.6);
   });
 });

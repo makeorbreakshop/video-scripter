@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
 import { cardKind, cardMeta, cardScoreNote, cardVerb, compactNumber, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
 import { rowMeta } from '@/lib/app/test-row';
+import { sameAge } from '@/lib/app/age-words';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { Thumb } from '@/components/app/thumb';
 import { installThumbFallback } from '@/components/app/thumb-runtime';
@@ -59,8 +60,10 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
   // The numbers. A change card keeps the one line a rotation row shows — "Sep 2 · 103K views ·
   // 2.5×" plus what the change added. An upload, the biggest thing a channel does, gets the
   // score as the headline and the two numbers it is made of under it: what this video is on
-  // pace for by day 30, and what this channel's videos normally reach. Same words as the video
-  // page's verdict, so the feed never says something the page would contradict.
+  // v5 scores against the channel's typical AT THIS VIDEO'S AGE, so that is the comparison the
+  // card leads with, carrying the age it was read at -- "typical 241K at 3d". The day-30
+  // projection follows as the secondary number. Same words and same order as the video page's
+  // verdict, so the feed never says something the page would contradict.
   const facts = card.events.find((e) => e.view_count != null || e.published_at) ?? card.events[0];
   const line = [
     rowMeta({ publishedAt: facts?.published_at ?? card.uploadedAt, views: facts?.view_count ?? null, score: card.score }),
@@ -68,7 +71,17 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
   ].filter(Boolean).join(' · ');
   const subLine = line ? <p className="cs-fcard-sub" title={scoreTooltip(card.score)}>{line}</p> : null;
   const est30 = facts?.score_est30 ?? null, base = facts?.score_baseline ?? null;
+  const typicalAtAge = facts?.score_typical_at_age ?? null;
   const published = facts?.published_at ?? card.uploadedAt;
+  // Prefer the same-age comparison; fall back to the day-30 anchor for a row scored before the
+  // v5 rescore reached it, which has no typical_at_age yet.
+  const ageDays = published ? ((now ?? new Date()).getTime() - new Date(published).getTime()) / 86_400_000 : null;
+  const scoreLine = typicalAtAge != null && typicalAtAge > 0 && ageDays != null
+    ? `typical ${compactNumber(Math.round(typicalAtAge))} at ${sameAge(ageDays)}`
+      + (est30 != null ? ` · on pace for ${compactNumber(Math.round(est30))} by day 30` : '')
+    : est30 != null && base != null && base > 0
+      ? `${compactNumber(Math.round(est30))} by day 30 · typical ${compactNumber(Math.round(base))}`
+      : null;
   const stats = (
     <div className="cs-fcard-stats">
       {card.score !== null
@@ -76,9 +89,7 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
         : scoreNote && <span className="cs-fcard-sub">{scoreNote}</span>}
       <span className="cs-fcard-sub">{[facts?.view_count != null ? `${compactNumber(facts.view_count)} views` : null,
         published ? relativeTime(published, now) : null].filter(Boolean).join(' · ')}</span>
-      {est30 != null && base != null && base > 0 && (
-        <span className="cs-fcard-sub">{compactNumber(Math.round(est30))} by day 30 · typical {compactNumber(Math.round(base))}</span>
-      )}
+      {scoreLine && <span className="cs-fcard-sub">{scoreLine}</span>}
     </div>
   );
 

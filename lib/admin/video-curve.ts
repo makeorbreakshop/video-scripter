@@ -7,6 +7,9 @@
 //     expected(day) = baseline * exp(-m(day))
 // and the band is the model's own median absolute log error at that age: expected * exp(±ale).
 
+import { logToRef } from '../scoring/growth';
+import type { GlobalParams } from '../scoring/core';
+
 export type Mult = Record<number, number>;
 /** Fitted long tail past day 30: `mult[i]` is views at `ages[i]` as a multiple of day-30 views. */
 export type Longtail = { ages: number[]; mult: number[] };
@@ -74,12 +77,26 @@ export function longtailAt(lt: Longtail | null | undefined, day: number): number
   return pts[pts.length - 1][1];
 }
 
+/**
+ * Remaining log growth to day 30 at `day`.
+ *
+ * When the params carry a fitted launch ladder (any bucket under one day), this defers to
+ * `lib/scoring/growth.logToRef` -- THE growth curve, the same one the score's channel curve
+ * slides priors along. That is the single source of truth: the "typical for this channel" the
+ * page draws and the denominator the score divides by are then the same function of age. Before
+ * 2026-09-04 they were not, and on a sub-day video they disagreed by 3.6x.
+ *
+ * Without a ladder there is nothing to defer to, so the old log(day+1) extrapolation off the
+ * day-1 -> day-2 slope stands: better than drawing the launch hours flat at m(1).
+ */
 export function multAt(mult: Mult, day: number): number {
   const pts = Object.entries(mult)
     .map(([d, v]) => [Number(d), Number(v)] as [number, number])
     .filter(([d, v]) => Number.isFinite(d) && Number.isFinite(v))
     .sort((a, b) => a[0] - b[0]);
   if (!pts.length) return 0;
+  if (day >= 30) return 0;
+  if (pts.some(([d]) => d < 1)) return Math.max(logToRef({ mult } as GlobalParams, Math.max(day, 1 / 1440)), 0);
   if (day >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
   return interp(pts, day, true);
 }

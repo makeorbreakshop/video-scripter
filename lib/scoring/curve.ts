@@ -22,6 +22,13 @@ import {
 } from './core';
 import { growthLog, allowedHorizon, belowAgeFloor, type GrowthContext } from './growth';
 
+/**
+ * Below one day a prior may only be slid from a sample YOUNGER than this. Sliding a day-17
+ * reading back to five hours is a 2-nat extrapolation on a curve fitted forward, and it was the
+ * larger half of the 2026-09-04 sub-day bug (see the header note on the blend scale).
+ */
+export const SUBDAY_SLIDE_MAX_AGE = 3;
+
 /** How close a prior's reading has to be to age `t` to count as MEASURED at t. */
 export function sameAgeTolerance(age: number): number {
   if (!(age > 0)) return 1 / 48;
@@ -76,6 +83,9 @@ export function contributionAt(
   const samples = [...prior.samples].filter((s) => s.views > 0 && Number.isFinite(s.day) && s.day >= 0)
     .sort((a, b) => a.day - b.day);
   const tol = sameAgeTolerance(targetAge);
+  // Under one day the denominator has to be MEASURED, or slid from something close to it. A
+  // lifetime count at day 300 and a snapshot at day 17 both say nothing about hour five.
+  const subDay = targetAge < 1;
 
   // 1. a real sample at this age
   const real = samples.filter((s) => Math.abs(s.day - targetAge) <= tol)
@@ -86,8 +96,15 @@ export function contributionAt(
   //    than one at 7d even though both are 2 days away, because growth is log-linear in age.
   const dist = (s: Snapshot) => Math.abs(Math.log(Math.max(s.day, 1 / 1440)) - Math.log(Math.max(targetAge, 1 / 1440)));
   const near = samples.length ? samples.reduce((a, b) => (dist(b) < dist(a) ? b : a)) : null;
-  if (near) {
-    const ctx: GrowthContext | null = samples.length >= 2
+  if (near && !(subDay && near.day > SUBDAY_SLIDE_MAX_AGE)) {
+    // The per-prior blend is only applied FORWARD, from the anchor toward day 30 -- the interval
+    // `blendScale` was calibrated on. It is a positive scale, s = 1 + adj / logToRef(anchor),
+    // dividing the anchor's Q residual by the growth LEFT at the anchor, which is near zero for a
+    // prior read at day 17-26. Sliding BACKWARD past the anchor turns that into an extrapolation
+    // with a long lever arm: at day 17 a -0.070 residual over a base of 0.069 gave s = 0.100 (the
+    // clamp floor), which flattened the whole slide back to five hours and left the prior with
+    // 82% of its day-17 views there. Below the anchor, the global curve only.
+    const ctx: GrowthContext | null = targetAge >= near.day && samples.length >= 2
       ? { anchorAge: near.day, q: growthExponent([...samples]) }
       : null;
     const views = near.views * Math.exp(growthLog(params, near.day, targetAge, ctx));
@@ -97,7 +114,7 @@ export function contributionAt(
   }
 
   // 3. a lifetime count, slid back down G
-  const lt = prior.lifetime;
+  const lt = subDay ? null : prior.lifetime;
   if (lt && lt.views > 0 && Number.isFinite(lt.ageDays) && lt.ageDays > 0) {
     const views = lt.views * Math.exp(growthLog(params, lt.ageDays, targetAge));
     if (views > 0 && Number.isFinite(views)) {
@@ -204,7 +221,10 @@ export function scoreV5(inp: V5Input): V5Output {
   const score = !tooYoung && c.typical && c.typical > 0 ? inp.vt / c.typical : null;
   const confidence: V5Output['confidence'] =
     tooYoung ? 'early'
-    : c.typical == null ? 'insufficient'
+    // Under a day, "no usable prior at this age" is a fact about the CLOCK, not about the
+    // channel's history: the same priors will produce a denominator tomorrow. So it reads
+    // 'early', not 'insufficient'. Views are still stored; only the ratio is withheld.
+    : c.typical == null ? (inp.age < 1 ? 'early' : 'insufficient')
     : inp.age < 3 ? 'early' : inp.age < 7 ? 'likely' : 'confirmed';
   return {
     score, ageDays: inp.age, typicalAtAge: tooYoung ? null : c.typical,
@@ -214,3 +234,4 @@ export function scoreV5(inp: V5Input): V5Output {
     belowAgeFloor: tooYoung,
   };
 }
+

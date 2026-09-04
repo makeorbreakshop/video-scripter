@@ -28,9 +28,12 @@ export interface FeedEventLike {
   /** video_scores.n_baseline / .confidence, for saying WHY there is no score. */
   score_n_baseline?: number | null;
   score_confidence?: string | null;
-  /** What the score is made of: the day-30 estimate and the channel's normal (video_scores). */
+  /** What the score is made of: the day-30 projection, the channel's normal at day 30 (the
+   *  display anchor), and -- the score's actual denominator under v5 -- its normal at the
+   *  video's own age. */
   score_est30?: number | null;
   score_baseline?: number | null;
+  score_typical_at_age?: number | null;
   /** Prior long-form videos on the channel — what separates "new channel" from "young priors". */
   prior_longform?: number | null;
 }
@@ -252,8 +255,9 @@ export function feedRowView(e: FeedEventLike): FeedRowView {
       const est30 = num(p.est30), baseline = num(p.baseline);
       const bits: string[] = [];
       if (est30 !== null) bits.push(`${compactNumber(est30)} est. 30-day views`);
-      // v5: the denominator is typical AT THE VIDEO'S AGE, not a day-30 baseline.
-      if (baseline !== null) bits.push(`typical ${compactNumber(baseline)} at this age`);
+      // v5: the score's denominator is the channel's typical AT THE VIDEO'S AGE. `baseline` is
+      // C(30), the display anchor, so it is the wrong number to call "at this age".
+      if (baseline !== null) bits.push(`typical ${compactNumber(baseline)} by day 30`);
       base.detail = bits.length ? bits.join(' · ') : 'Beat its channel baseline';
       return base;
     }

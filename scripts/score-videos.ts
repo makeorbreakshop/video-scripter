@@ -3,6 +3,7 @@
 //   npx tsx scripts/score-videos.ts [--all]      score videos published <=60d whose latest snapshot/sample
 //                                                is newer than their stored score (hourly); --all rescoress all
 //   npx tsx scripts/score-videos.ts --final      one-shot final score for videos older than 60 days
+//   npx tsx scripts/score-videos.ts --since 3    rescore every video published in the last 3 days
 // Common flags: --channels <id,id>  restrict to those channels; --limit <n>  cap the target list.
 //
 // Baselines: a prior video's day-30 views come from its day-27..33 snapshot when it has one,
@@ -43,6 +44,11 @@ const arg = (name: string): string | null => {
 };
 const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filter(Boolean);
 const LIMIT = Number(arg('--limit') ?? 0) || null;
+// --since <days>: rescore EVERY video published within the last <days>, whether or not a new
+// reading has landed since its stored score. The hourly pass only picks up videos with a fresh
+// reading, so after a scoring-math fix the young rows would otherwise keep a stale number until
+// their next snapshot. Added 2026-09-04 with the sub-day curve fix.
+const SINCE = Number(arg('--since') ?? 0) || null;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
@@ -431,7 +437,12 @@ async function score() {
   // comes from the SNAPSHOT tiers (daily <30d, every 3d to 180d, weekly after), not the scorer.
   const ceiling = ALL ? '' : `and v.published_at > now() - interval '60 days'`;
   const targets: { id: string; channel_id: string }[] = await q(
-    ALL
+    SINCE
+      ? `select v.id, v.channel_id from videos v
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
+            and v.published_at > now() - interval '${SINCE} days'
+          order by v.published_at desc ${cap}`
+    : ALL
       ? `select v.id, v.channel_id from videos v
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
           order by v.published_at desc ${cap}`
@@ -444,7 +455,7 @@ async function score() {
           order by v.published_at desc ${cap}`,
     args
   );
-  log(`score: ${targets.length} videos to score${ALL ? ' (--all: whole corpus)' : ''}`);
+  log(`score: ${targets.length} videos to score${SINCE ? ` (--since ${SINCE}d)` : ALL ? ' (--all: whole corpus)' : ''}`);
   let written = 0, noCurve = 0, tooYoung = 0;
   for (const group of chunk(targets, 500)) {
     const batch = await v5Batch(group, params);

@@ -118,7 +118,8 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
     `select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload,
             v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_count,
             sc.score::float8 as score, sc.n_baseline as score_n_baseline, sc.confidence as score_confidence,
-            sc.est30::float8 as score_est30, sc.baseline::float8 as score_baseline
+            sc.est30::float8 as score_est30, sc.baseline::float8 as score_baseline,
+            sc.typical_at_age::float8 as score_typical_at_age
        from (
          select x.*
            from unnest($${p.channels}::text[]) as c(channel_id)
