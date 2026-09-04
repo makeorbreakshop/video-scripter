@@ -49,12 +49,21 @@ BUFFERS)` against the real 500-channel set for the 60-row page.
 | `?seg=changes` | 154 → 101 ms | 187–313 ms | 313 ms | 20.0 | 19,497 | 60 | 307 KB |
 | `?seg=outliers` | **967** → 102 ms | **1,275** ms | 1,277 ms | 21.0 | 18,906 | 60 | 290 KB |
 | `/api/app/feed` page 2 | **615** → 111 ms | — | — | 26.2 | 12,728 | 60 | 43 KB |
-| **After** |
-| `/app/feed` | see "After, measured" below | | | 3.6 | **1,331** | 60 | |
-| `?seg=uploads` | | | | 3.8 | **2,309** | 60 | |
-| `?seg=tests` | | | | 5.7 | **3,040** | 60 | |
-| `?seg=changes` | | | | 7.6 | **4,552** | 60 | |
-| `?seg=outliers` | | | | 6.3 | **1,707** | 60 | |
+| **After** (deployed, same account, same browser) |
+| `/app/feed` | 131 → 106 ms | 187–259 ms | 259 ms | 3.6 | **1,331** | 60 | **211 KB** |
+| `?seg=uploads` | 158 → 134 ms | 194–202 ms | 202 ms | 3.8 | **2,309** | 60 | **218 KB** |
+| `?seg=tests` | 119 → 114 ms | 162–176 ms | 176 ms | 5.7 | **3,040** | 60 | **142 KB** |
+| `?seg=changes` | 158 → 111 ms | 193–250 ms | 250 ms | 7.6 | **4,552** | 60 | **240 KB** |
+| `?seg=outliers` | 146 → 108 ms | **190–268** ms | 268 ms | 6.3 | **1,707** | 60 | **226 KB** |
+| `/api/app/feed` page 2 | 167 → 140 ms | — | — | 3.6 | 1,331 | 60 | 49 KB |
+
+The number Brandon was feeling is the Outliers row: **first row 1,275 ms → 190–268 ms**, and
+its cold TTFB spike (967 ms) is gone because the chip no longer reads 18,906 buffers. The
+default view's worst first-row went 386 ms → 259 ms. Payloads are 22–33% smaller across every
+route — that is the 500-entry avatar map no longer being shipped to decorate 60 cards.
+
+Paging is flat, which is what keyset pagination is for: page 1 / 2 / 3 of the default view
+came back in 156 / 152 / 321 ms, 60 events each, and each page brings its own avatars.
 
 Worst case across every segment: **19,520 → 4,552 buffers**. Default view: **9.6× less IO**.
 Round trips before the first card: **4 → 2** (shell, then feed; the avatar and packaging
