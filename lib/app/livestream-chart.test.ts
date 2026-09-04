@@ -24,7 +24,9 @@ test('reported archived stream starts its performance chart at actual broadcast 
  expect(v.comparison).toBeNull();
  const h=headerLines(v);
  expect(h.big).toBeNull();
- expect(h.verdict).toContain('Livestream');
+ expect(h.verdict).toBe('');
+ expect(h.meta.timeLabel).toBe('Stream started');
+ expect(h.meta.contextNote).toContain('Comparison and forecast');
  expect(h.verdict).not.toContain('0.8');
 });
 test('broadcast with unknown actual start does not infer a history or forecast from its publication date',async()=>{

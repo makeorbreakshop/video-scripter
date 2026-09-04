@@ -31,7 +31,6 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
     <>
       <section className="cs-section" style={{ marginTop: 18 }}>
         {!v.broadcastNotice && <h2>Views since publish</h2>}
-        {v.broadcastNotice && <p className="cs-sub">{v.timeLabel === 'Stream started' ? 'Views since stream start' : 'Recorded views · stream start unknown'}</p>}
         <VideoChart
           actuals={v.actuals}
           publishedAt={v.chartOriginAt}
@@ -120,7 +119,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           {/* ONE metadata line: the channel, when it went out, how old it is, the exact count,
               and the link. The verdict below never repeats any of it. */}
           <p className="cs-sub">
-            {h.meta.timeLabel && <>{h.meta.timeLabel} · </>}<LocalTime className="cs-num" ms={h.meta.publishedMs} /> · {h.meta.age} ·{' '}
+            {h.meta.timeLabel && <><span title={h.meta.contextNote ?? undefined}>{h.meta.timeLabel}</span> · </>}<LocalTime className="cs-num" ms={h.meta.publishedMs} /> · {h.meta.age} ·{' '}
             <span className="cs-num">{h.meta.views}</span> views ·{' '}
             <a href={h.meta.youtubeUrl} target="_blank" rel="noreferrer"
                style={{ color: 'var(--cs-muted)', textDecoration: 'underline' }}>YouTube ↗</a>
@@ -128,10 +127,10 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <p className="vp-verdict">
+      {(h.big || h.verdict) && <p className="vp-verdict">
         {h.big && <span className="vp-big" data-over={h.over}>{h.big}</span>}
         <span className="vp-said">{h.verdict}</span>
-      </p>
+      </p>}
 
       <Suspense fallback={<VideoBodySkeleton />}>
         <VideoBody id={v.id} channelId={v.channelId} />

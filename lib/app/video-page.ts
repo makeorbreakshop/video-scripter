@@ -391,7 +391,7 @@ export type HeaderLines = {
    * would write, so the number crosses and components/app/local-time.tsx formats it.
    * (Admin pages and scripts still use lib/admin/format's ET helpers — one reader, one zone.)
    */
-  meta: { timeLabel?: string | null; channelName: string; publishedMs: number | null; age: string; views: string; youtubeUrl: string };
+  meta: { contextNote?: string | null; timeLabel?: string | null; channelName: string; publishedMs: number | null; age: string; views: string; youtubeUrl: string };
   /** The multiple, or null when we cannot score the video. */
   big: string | null;
   over: boolean;
@@ -415,12 +415,13 @@ export function headerLines(v: HeaderInput): HeaderLines {
   const meta = {
     channelName: v.channelName,
     timeLabel: v.timeLabel,
+    contextNote: v.broadcastNotice,
     publishedMs: (() => { const t = new Date(v.timeLabel === 'Stream started' ? v.chartOriginAt ?? v.publishedAt : v.publishedAt).getTime(); return Number.isFinite(t) ? t : null; })(),
     age: v.broadcastNotice && v.timeLabel !== 'Stream started' ? 'stream age unknown' : ageWord(v.ageDays),
     views: Number(v.views).toLocaleString('en-US'),
     youtubeUrl: `https://youtu.be/${v.id}`,
   };
-  if (v.broadcastNotice) return { meta, big: null, over: false, verdict: v.broadcastNotice };
+  if (v.broadcastNotice) return { meta, big: null, over: false, verdict: '' };
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
 
   if (!isSameAgeScore(sc) && v.headline === 'now' && v.pace != null && v.expectedNow != null) {

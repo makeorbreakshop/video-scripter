@@ -57,3 +57,6 @@ The final command is a dry-run by default and was verified without a database co
 ## Release boundary
 
 All changes are local in scoring/v5-evaluation based on 8f39086. No production data, score model, scheduler, canonical checkout, push, merge or deployment changes. The test suite is the regression prevention mechanism; broad livestream scoring/calibration remains separate work. The old 0.8× is withheld here, not silently recalculated with normal-upload priors.
+
+## Compact presentation correction
+Brandon rejected the standalone livestream explanation and duplicate chart heading as contrary to the design rules. Removed both, including the empty verdict container. Stream context remains in the existing date line, with secondary detail in its title attribute. The corrected header test failed on the old paragraph before implementation, then passed; 21 focused tests pass. The browser regression now rejects visible model-explanation copy/repeated headings and checks that chart controls follow compact metadata. Desktop/mobile screenshots refreshed and inspected; source lint passes. This replaces the verbose presentation in the first livestream preview.
