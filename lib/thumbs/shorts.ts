@@ -17,7 +17,14 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 /** Pure mapping from the /shorts/<id> response to a verdict, so it can be unit-tested. */
 export function verdictFromResponse(status: number, location: string | null): ShortsVerdict {
   if (status === 200) return 'short';
-  if (status >= 300 && status < 400) return /\/watch\?v=/.test(location ?? '') ? 'long' : 'gone';
+  // A redirect to /watch?v= is YouTube saying "not a Short" — the authoritative answer.
+  // ANY OTHER 3xx is not evidence of anything: a consent interstitial, /sorry/ rate-limiting, a
+  // locale or region bounce, a login wall. Until 2026-09-04 those all returned 'gone', which
+  // stamped shorts_checked_at and left is_short untouched — freezing whatever the old CDN
+  // detector had guessed (it had ~10 % false positives) as permanent, unrecheckable truth.
+  // They are 'unknown': try again later.
+  if (status >= 300 && status < 400) return /\/watch\?v=/.test(location ?? '') ? 'long' : 'unknown';
+  // Only an explicit not-found is a deletion.
   if (status === 404 || status === 410) return 'gone';
   return 'unknown'; // 429 / 5xx / network: try again later
 }

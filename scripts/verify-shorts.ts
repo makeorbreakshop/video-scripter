@@ -67,13 +67,15 @@ async function worker() {
     const v = await check(id);
     if (v === 'unknown') { retry++; continue; }
     if (v === 'short') shorts++; else if (v === 'long') long++; else gone++;
-    // 'gone' (private/deleted) is stamped too so we stop asking; it keeps its current flag.
-    await pool.query(
-      v === 'gone'
-        ? `update videos set shorts_checked_at = now() where id = $1`
-        : `update videos set is_short = $2, shorts_checked_at = now() where id = $1`,
-      v === 'gone' ? [id] : [id, v === 'short']
-    );
+    // 'gone' (404/410) does NOT stamp shorts_checked_at (2026-09-04). Stamping it recorded
+    // "we have checked this video" while leaving is_short at whatever the old CDN detector had
+    // guessed — and lib/scoring/longform.ts trusts a stamped row, so a false positive became
+    // permanent and no later run could ever re-check it. A deleted video costs one HEAD per run
+    // and is filtered out of every user-facing surface anyway; that is the cheaper mistake.
+    if (v !== 'gone') {
+      await pool.query(`update videos set is_short = $2, shorts_checked_at = now() where id = $1`,
+        [id, v === 'short']);
+    }
     // The verdict flips this video's longform status, and feed_events carries that as a stored
     // column (lib/feed/query.ts filters on it), so re-stamp the video's events in the same pass.
     await pool.query(
