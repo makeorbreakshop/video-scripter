@@ -282,8 +282,8 @@ badly-timed IO event.
 
 ### Hot-update patterns worth fixing
 
-- **`videos` at 18.2 % HOT with 46 indexes.** 10.59 M of 12.95 M updates were non-HOT, and each one had
-  to insert a new tuple version into every one of the 46 indexes. Two of those indexes (75 MB) were dead
+- **`videos` at 18.2 % HOT with 47 indexes.** 10.59 M of 12.95 M updates were non-HOT, and each one had
+  to insert a new tuple version into every one of the 47 indexes. Two of those indexes (75 MB) were dead
   weight and are now dropped. The `title_observed_at` stamping statement alone
   (`update videos set title_observed_at = $2 where id = any($1) ...`, 352 calls, 14,108 ms mean,
   411,474 rows) rewrites full tuples on a table with a 1,819 byte average row and 794 MB of TOAST.
@@ -370,8 +370,8 @@ DROP INDEX CONCURRENTLY IF EXISTS public.idx_patterns_centroid_embedding;    -- 
 **Measured effect:** total index bytes removed **150,872,064 B = 143.9 MiB**.
 `pg_database_size` 6,422 MB → **6,257 MB (−165 MB)`. `videos` total 3,981 MB → 3,887 MB; `videos`
 index total 1,453 MB → 1,359 MB. Verified: `select count(*) from pg_class where relname in (…)` = **0**.
-Two of the ten sat on `videos`, so every one of its 10.59 M non-HOT updates now writes 44 index entries
-instead of 46 (−4.3 % index write amplification on the hottest table in the database).
+Two of the ten sat on `videos`, so every one of its 10.59 M non-HOT updates now writes 45 index entries
+instead of 47 (−4.3 % index write amplification on the hottest table in the database).
 
 **Rollback** (each is a single statement; run off-peak, `CONCURRENTLY`):
 ```sql
@@ -518,7 +518,7 @@ The `latest` CTE materialises all 125,540 `thumbnail_versions` rows every 5 minu
 ### P2 — later
 
 **P2-1.** Move `videos.title_observed_at` / `shorts_checked_at` stamping to a narrow side table keyed
-by `video_id`. Today each stamp rewrites a 1,819-byte row plus up to 44 index entries; the
+by `video_id`. Today each stamp rewrites a 1,819-byte row plus up to 45 index entries; the
 `title_observed_at` statement alone touched 411,474 rows at a 14.1 s mean.
 *Rollback:* keep the columns and dual-write during migration.
 
@@ -535,3 +535,54 @@ statements into one `update … where (video_id, version) in (…)` per chunk of
 **P2-5.** Compute: the instance is Small (2 vCPU / 2 GB). Do **not** upsize before P0-3 lands — 18 % of
 the CPU is being spent parsing ISO-8601 strings, and Medium at ~$60/mo would buy time rather than fix it.
 Revisit after measuring.
+
+---
+
+## 8. Live load, measured (not cumulative): `pg_stat_statements` delta
+
+Because `pg_stat_statements` has never been reset and PG15 has no `stats_since`, the cumulative figures
+above cover an unbounded window and include statements that no longer run. Two snapshots were taken
+**18.9 minutes apart (10:48:40 → 11:07:35 UTC)** — long enough to cover ~4 ticks of every 5-minute agent —
+and differenced. Everything below is what the database actually did in those 18.9 minutes.
+
+- **Total execution time added: 2,616,785 ms = 2,617 s in 1,134 s of wall clock = 2.31 CPU-seconds per
+  wall-second.** On a 2-vCPU Small instance that is **~115 % of one core / ~58 % of both**, sustained.
+- **Total blocks read: 1,941,516 = 15.90 GB.**
+
+| Exec (ms) | Calls | Mean | MB read | Statement |
+|---|---|---|---|---|
+| 319,823 | 2,984 | 107 ms | 465 | `insert into view_snapshots … on conflict` |
+| **240,752** | 1 | 240.8 s | **3,108** | `create index concurrently … videos_shorts_backfill_idx` (concurrent agent) |
+| 196,839 | 3 | 65.6 s | 678 | scoring gap query (`videos` self-join on prior upload) |
+| 195,692 | 4 | 48.9 s | 401 | thumbnail-watch `HOT_TARGETS_SQL` |
+| 187,011 | 2 | 93.5 s | 757 | score-videos candidate select (`videos` ⟕ `video_scores`) |
+| **114,533** | 1 | 114.5 s | 0 | `drop index concurrently … videos_shorts_unchecked_idx` (concurrent agent) |
+| 98,797 | 5 | 19.8 s | 918 | `update videos set title_observed_at = …` |
+| 95,158 | 3 | 31.7 s | 281 | launch-track `insert into track_schedule … select from videos` |
+| **85,329** | 1 | 85.3 s | **3,140** | `create index concurrently … videos_shorts_flagged_unchecked_idx` (concurrent agent) |
+| 83,843 | 1 | 83.8 s | 1,568 | verify-shorts progress count over `videos` (concurrent agent) |
+| 74,100 | 1 | 74.1 s | 101 | *this audit's* `EXPLAIN ANALYZE` (§3 B) |
+| 72,037 | 3 | 24.0 s | 67 | `distinct on (video_id) … from view_snapshots` |
+| 65,591 | 3 | 21.9 s | 117 | feed-materialize candidate select |
+| 59,141 | 2 | 29.6 s | 79 | `distinct on (video_id) … from rss_samples` |
+| 55,003 | 1 | 55.0 s | 238 | *this audit's* `ANALYZE packaging_performance` |
+
+### IO impact of the concurrent verify-shorts backfill
+
+The four statements attributable to the other agent's in-flight work (two `CREATE INDEX CONCURRENTLY`,
+one `DROP INDEX CONCURRENTLY`, one progress count) consumed **524,457 ms = 20 % of all execution time**
+and **7,816 MB = 49 % of all blocks read** in the window. That is a one-off build cost, not a steady
+state, and it is the correct trade: it buys the P0-3 fix. But it means **any other heavy work should be
+deferred until those index builds finish** — the instance was already at ~58 % of both cores without them.
+
+This audit itself contributed 129,103 ms (5 % of execution) — the one `EXPLAIN ANALYZE` and the eight
+`ANALYZE` statements. That is disclosed rather than netted out.
+
+### Steady state, excluding both
+
+Excluding the concurrent agent's DDL and this audit's own statements, the recurring pipeline used
+**~1,963 s of execution in 1,134 s of wall clock = 1.73 CPU-seconds per wall-second ≈ 87 % of one core**.
+Of that, the four queries carrying the longform eligibility predicate (thumbnail-watch 195,692 ms,
+score-videos 187,011 ms, launch-track 95,158 ms, feed-materialize 65,591 ms) account for
+**543,452 ms = 28 % of all execution in the window** — the single largest addressable block of CPU on
+this instance, and the direct justification for P0-3.
