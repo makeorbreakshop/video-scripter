@@ -12,10 +12,10 @@ import { OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/obse
 
 const arg = (name: string) => { const i = process.argv.indexOf(name); return i >= 0 ? process.argv[i + 1] : null; };
 const LIMIT = Math.min(20, Math.max(1, Number(arg('--limit') || 20)));
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
-pool.on('connect', (c) => { c.query(`set default_transaction_read_only = on; set statement_timeout = 30000`).catch(() => {}); });
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
 const client = await pool.connect();
 await client.query('begin isolation level repeatable read read only');
+await client.query(`set local statement_timeout = '30s'`);
 const q = async (sql: string, params: any[] = []) => (await client.query(sql, params)).rows as any[];
 const elapsed = async <T>(fn: () => Promise<T>): Promise<[T, number]> => { const s = performance.now(); return [await fn(), performance.now() - s]; };
 const evaluationClock = new Date((await q('select transaction_timestamp() as at'))[0].at);
