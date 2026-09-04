@@ -15,6 +15,11 @@ import {
 } from '../lib/feed/materialize';
 import { longformSql } from '../lib/scoring/longform';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
+import {
+  buildUserUploadBackfillUnits, unfinishedUserUploadChannelsSql,
+  userUploadBackfillPageSql, USER_UPLOAD_BACKFILL_COMPLETE, USER_UPLOAD_BACKFILL_PREFIX,
+  type BackfillChannel,
+} from '../lib/feed/user-upload-backfill';
 
 const DRY = process.argv.includes('--dry-run');
 const CATCH_UP = process.argv.includes('--catch-up');
@@ -38,8 +43,22 @@ const OVERLAP_MS = 60_000;
 const SOURCES = ['videos.published_at', 'videos.import_date', 'thumbnail_versions', 'title_versions', 'video_scores'];
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
-const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
+type QueryRows = (sql: string, params?: any[]) => Promise<any[]>;
+const q: QueryRows = async (sql, params) => {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    await client.query("set local statement_timeout = '60s'");
+    const result = await client.query(sql, params);
+    await client.query('commit');
+    return result.rows as any[];
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 interface Cursor { at: Date; id: string }
@@ -62,12 +81,12 @@ async function setCursor(source: string, c: Cursor) {
   );
 }
 
-async function insertEvents(events: FeedEvent[]): Promise<number> {
+async function insertEvents(events: FeedEvent[], query: QueryRows = q): Promise<number> {
   if (!events.length || DRY) return 0;
   let written = 0;
   for (let i = 0; i < events.length; i += 500) {
     const batch = events.slice(i, i + 500);
-    const rows = await q(
+    const rows = await query(
       // is_longform is denormalized onto the event so the feed read never has to join videos
       // before its LIMIT (lib/feed/query.ts). Computed here from the video row rather than in
       // lib/feed/materialize.ts because only two of the five sources carry duration/is_short.
@@ -126,7 +145,12 @@ async function runOnce(s: Source): Promise<{ seen: number; written: number; more
 const IMPORT_FRESH_WINDOW = "30 days";
 
 function uploadSource(column: 'published_at' | 'import_date'): Source {
-  const freshOnly = column === 'import_date' ? `and published_at > import_date - interval '${IMPORT_FRESH_WINDOW}'` : '';
+  // Historical imports are feed-worthy only for explicitly user-tracked channels. This also
+  // catches rows imported after that channel's one-time historical cursor reached completion.
+  const freshOnly = column === 'import_date'
+    ? `and (published_at > import_date - interval '${IMPORT_FRESH_WINDOW}'
+            or exists (select 1 from channel_tracking ct where ct.channel_id = videos.channel_id and ct.lane = 'user'))`
+    : '';
   return {
     name: `videos.${column}`,
     read: (c) => q(
@@ -220,21 +244,55 @@ const outlierSource: Source = {
   },
 };
 
-// User-tracked channels get their whole upload history in the feed (reverse-chronological
-// timeline), not just what arrived after tracking. Bounded per run; idempotent via dedupe_key.
+const USER_BACKFILL_CHANNELS = 10;
+const USER_BACKFILL_PAGE = 500;
+const USER_BACKFILL_GLOBAL_LIMIT = 5000;
+
+// Each tracked channel owns a descending keyset cursor in feed_watermarks. A completed channel
+// stays out of later runs; videos imported afterward are handled by the normal import_date source.
+// Re-tracking is also safe because its prior upload events remain deduped and imports remain live.
 async function backfillUserChannelUploads(): Promise<number> {
-  const rows = await q(
-    `select v.id as video_id, v.channel_id, v.title, v.published_at, v.import_date
-       from videos v
-       join channel_tracking ct on ct.channel_id = v.channel_id and ct.lane = 'user'
-      where v.published_at is not null and ${longformSql('v')}
-        and not exists (select 1 from feed_events f where f.type = 'upload' and f.video_id = v.id)
-      order by v.published_at desc
-      limit 5000`,
-    []
-  );
-  if (!rows.length) return 0;
-  return insertEvents(uploadEvents(rows));
+  const candidates = await q(unfinishedUserUploadChannelsSql(USER_BACKFILL_CHANNELS));
+  const channels: BackfillChannel[] = candidates.map((r) => ({
+    channelId: r.channel_id,
+    cursor: r.cursor_at && r.cursor_id ? { at: r.cursor_at, id: r.cursor_id } : null,
+  }));
+  const units = await buildUserUploadBackfillUnits({
+    channels, pageSize: USER_BACKFILL_PAGE, globalLimit: USER_BACKFILL_GLOBAL_LIMIT,
+    aborted: () => job.signal.aborted,
+    fetchPage: async (channel, limit) => {
+      const sql = userUploadBackfillPageSql(!!channel.cursor, limit, longformSql('v'));
+      return q(sql, channel.cursor
+        ? [channel.channelId, channel.cursor.at, channel.cursor.id]
+        : [channel.channelId]);
+    },
+  });
+
+  let written = 0;
+  for (const unit of units) {
+    if (job.signal.aborted) break;
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await client.query("set local statement_timeout = '60s'");
+      const query: QueryRows = async (sql, params) => (await client.query(sql, params)).rows as any[];
+      written += await insertEvents(uploadEvents(unit.rows as any[]), query);
+      const at = unit.cursor?.at ?? unit.channel.cursor?.at ?? '1970-01-01 00:00:00+00';
+      const id = unit.complete ? USER_UPLOAD_BACKFILL_COMPLETE : unit.cursor!.id;
+      await client.query(
+        `insert into feed_watermarks (source, last_at, last_id) values ($1, $2::timestamptz, $3)
+         on conflict (source) do update set last_at = excluded.last_at, last_id = excluded.last_id`,
+        [`${USER_UPLOAD_BACKFILL_PREFIX}${unit.channel.channelId}`, at, id]
+      );
+      await client.query('commit');
+    } catch (error) {
+      await client.query('rollback').catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  return written;
 }
 
 async function main() {
