@@ -3,7 +3,8 @@
 // from series kind to how it is drawn — the one place the two are made to look different.
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel,
-  seriesStroke, TYPICAL_STYLE, trackingLabelPlacement,
+  seriesStroke, TYPICAL_STYLE, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
+  LEGEND_ORDER, legendEntries, type ThemeMode,
 } from './chart-style';
 import type { SeriesPoint } from './chart-series';
 
@@ -42,7 +43,7 @@ describe('a series kind decides how it is drawn, and the kinds do not look alike
 
   it('never draws the reconstruction in the channel curve’s colour or dash', () => {
     // What the plot actually hands recharts: the reconstruction must not be confusable with
-    // "typical for this channel", which is the grey dashed line with the grey band.
+    // "typical for this channel", which is a plain grey dashed line.
     const C = { accent: '#0E7A3C', muted: '#5A6373' };
     expect(seriesStroke('implied', C)).toBe(C.accent);
     expect(seriesStroke('measured', C)).toBe(C.accent);
@@ -190,5 +191,90 @@ describe('the band legend explains both ribbons', () => {
     expect(BAND_LABELS.inner).toBe('half of videos land here');
     expect(BAND_LABELS.outer).toBe('4 in 5 land here');
     expect(bandStyle('inner').fillOpacity).toBeGreaterThan(bandStyle('outer').fillOpacity);
+  });
+});
+
+// ------------------------------------------------- the baseline is a line ----
+//
+// Brandon, 2026-09-04: "I just want a baseline line, but then I want our range for the
+// predictions." The channel's typical curve had a ribbon of its own, so the chart carried two
+// uncertainties and the reader had to work out whose was whose. The forecast keeps the range.
+describe('only the forecast carries a range', () => {
+  const series: SeriesPoint[] = [
+    { day: 0, views: 100, kind: 'implied', band: { inner: [90, 110], outer: [80, 120] } },
+    { day: 1, views: 200, kind: 'measured' },
+    { day: 2, views: 300, kind: 'forecast', band: { inner: [280, 320], outer: [250, 350] } },
+  ];
+  const curve = [
+    { day: 0, expected: 50, lo: 40, hi: 60 },
+    { day: 1, expected: 90, lo: 80, hi: 100 },
+    { day: 2, expected: 150, lo: 130, hi: 170 },
+  ];
+
+  it('gives the channel’s typical curve no band field at all', () => {
+    expect(TYPICAL_STYLE.band).toBe(false);
+    const rows = chartRows(series, curve, []);
+    for (const r of rows) {
+      expect(r.expected).toBeGreaterThan(0);
+      expect('band' in r).toBe(false);   // its lo/hi are never handed to the chart
+    }
+  });
+
+  it('still gives the forecast its two ribbons', () => {
+    const rows = chartRows(series, curve, []);
+    const fc = rows.find((r) => r.day === 2)!;
+    expect(fc.bandInner).toEqual([280, 320]);
+    expect(fc.bandOuter).toEqual([250, 350]);
+  });
+});
+
+describe('the ribbons are visible on both grounds', () => {
+  const THEMES: ThemeMode[] = ['light', 'dark'];
+
+  it('keeps every ribbon above the readable floor in each theme', () => {
+    for (const theme of THEMES) {
+      expect(bandStyle('inner', theme).fillOpacity).toBeGreaterThanOrEqual(BAND_OPACITY_FLOOR.inner);
+      expect(bandStyle('outer', theme).fillOpacity).toBeGreaterThanOrEqual(BAND_OPACITY_FLOOR.outer);
+    }
+    expect(Object.keys(BAND_STYLES).sort()).toEqual(['dark', 'light']);
+  });
+
+  it('keeps the inner ribbon the darker of the two, on both grounds', () => {
+    for (const theme of THEMES) {
+      expect(bandStyle('inner', theme).fillOpacity).toBeGreaterThan(bandStyle('outer', theme).fillOpacity);
+      expect(bandStyle('outer', theme).fillOpacity).toBeLessThan(bandStyle('inner', theme).fillOpacity / 2 + 0.05);
+    }
+  });
+
+  it('paints the dark ground harder — the same alpha is not the same ribbon', () => {
+    expect(bandStyle('inner', 'dark').fillOpacity).toBeGreaterThan(bandStyle('inner', 'light').fillOpacity);
+    expect(bandStyle('outer', 'dark').fillOpacity).toBeGreaterThan(bandStyle('outer', 'light').fillOpacity);
+  });
+
+  it('defaults to the light values when no theme is given', () => {
+    expect(bandStyle('inner')).toEqual(bandStyle('inner', 'light'));
+  });
+});
+
+describe('the legend reads outward from what is known', () => {
+  it('orders it measured, reconstructed, forecast, channel', () => {
+    expect(LEGEND_ORDER).toEqual(['measured', 'implied', 'forecast', 'expected']);
+    const all = legendEntries({ measured: true, implied: true, forecast: true, expected: true });
+    expect(all.map((e) => e.label)).toEqual([
+      'this video · measured',
+      'this video · estimated before tracking',
+      'expected from here',
+      'typical for this channel',
+    ]);
+  });
+
+  it('gives the swatch with the ribbon to the forecast, and to nothing else', () => {
+    const all = legendEntries({ measured: true, implied: true, forecast: true, expected: true });
+    expect(all.filter((e) => e.ribbon).map((e) => e.key)).toEqual(['forecast']);
+  });
+
+  it('lists only what the chart actually drew, still in order', () => {
+    expect(legendEntries({ measured: true, expected: true }).map((e) => e.key)).toEqual(['measured', 'expected']);
+    expect(legendEntries({})).toEqual([]);
   });
 });

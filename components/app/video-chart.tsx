@@ -11,6 +11,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Actual, CurvePoint, Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
+import type { ThemeMode } from '@/lib/app/chart-style';
 
 export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
@@ -33,7 +34,17 @@ export function useMarkerHover() {
 // Recharts writes colours into SVG attributes, where var() is unreliable, so read the theme's
 // tokens once and again whenever the theme flips (the header toggle sets data-cs-theme).
 // Only used for the first paint before the effect reads the real tokens; theme.css is the source of truth.
-const FALLBACK = { ink: '#10131A', muted: '#5A6373', line: '#DDE2EA', accent: '#0E7A3C', surface: '#FFFFFF' };
+const FALLBACK = { ink: '#10131A', muted: '#5A6373', line: '#DDE2EA', accent: '#0E7A3C', surface: '#FFFFFF', mode: 'light' as ThemeMode };
+
+/**
+ * Which ground the chart is painted on, resolved the way theme.css resolves it: an explicit
+ * [data-cs-theme] wins, and "system" (no attribute) falls through to prefers-color-scheme.
+ * The ribbons need it — the same alpha is a clear band on white and a smudge on the dark plate.
+ */
+export function resolveThemeMode(attr: string | null, prefersDark: boolean): ThemeMode {
+  if (attr === 'dark' || attr === 'light') return attr;
+  return prefersDark ? 'dark' : 'light';
+}
 
 export function useThemeColors() {
   const [c, setC] = useState(FALLBACK);
@@ -47,6 +58,10 @@ export function useThemeColors() {
         line: get('--cs-line', FALLBACK.line),
         accent: get('--cs-accent', FALLBACK.accent),
         surface: get('--cs-surface', FALLBACK.surface),
+        mode: resolveThemeMode(
+          document.documentElement.getAttribute('data-cs-theme'),
+          window.matchMedia('(prefers-color-scheme: dark)').matches
+        ),
       });
     };
     read();

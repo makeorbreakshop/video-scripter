@@ -42,8 +42,14 @@ export interface BuildSeriesInput {
   /** Age now; only used when there is nothing measured at all. */
   ageDays?: number;
   /**
-   * Fitted forecast band (score_params.params.bands). Falls back to the 2026-09-03 fit when
-   * absent; pass null explicitly for no band at all.
+   * Fitted forecast band: the channel's own table, else score_params.params.bands.
+   *
+   * Correction of 2026-09-04: `null` used to mean "no band at all", and null is exactly what
+   * lib/admin/queries hands over for every video today — score_params carries no `bands` key
+   * and most channels have no channel_forecast_bands rows — so no forecast point ever got a
+   * band and the ribbons were missing from the chart in BOTH zooms. Nothing to say is not a
+   * reason to say nothing: absent or null now falls back to the corpus fit, which is what the
+   * band is fitted for. To draw no band, pass a table with no ages.
    */
   bands?: BandTable | null;
 }
@@ -118,7 +124,7 @@ export function seriesDays(horizonDay: number, actualDays: number[]): number[] {
 export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   const { mult, horizonDay } = input;
   const lt = input.longtail ?? null;
-  const bands = input.bands === undefined ? FITTED_BANDS_2026_09_03 : input.bands;
+  const bands = input.bands == null ? FITTED_BANDS_2026_09_03 : input.bands;
   // A reading YouTube had already cached when we took it is not a measurement (see
   // ./observations): it is excluded from the line, the anchors and the fit alike.
   const marked = markObservations(dedupeActuals(input.actuals || []));

@@ -1,4 +1,5 @@
 import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
+import { chartRows } from './chart-style';
 import { expectedAt } from '../admin/video-curve';
 import { BAND_FACTOR_FLOOR } from '../scoring/bands';
 
@@ -253,9 +254,45 @@ describe('the band uses the video’s own trajectory', () => {
     }
   });
 
-  it('draws no forecast band at all when there is no fitted table', () => {
-    const s = buildSeries({ ...MALECKI, bands: null });
+  it('draws no forecast band at all when the table is empty', () => {
+    const empty = { ages: [], q10: [], q25: [], q50: [], q75: [], q90: [], n: [] };
+    const s = buildSeries({ ...MALECKI, bands: empty });
     for (const p of s.filter((x) => x.kind === 'forecast')) expect(p.band).toBeUndefined();
+  });
+
+  // Regression, 2026-09-04: the ribbons were missing from the chart in BOTH zooms, and the
+  // cause was here rather than in the drawing — lib/admin/queries hands `bands: null` for
+  // every video today (score_params carries no `bands` key, and most channels have no
+  // channel_forecast_bands rows), and null used to mean "no band at all".
+  it('falls back to the corpus fit when the caller has no table — null included', () => {
+    for (const bands of [undefined, null] as const) {
+      const s = buildSeries({ ...MALECKI, bands });
+      const fc = s.filter((p) => p.kind === 'forecast');
+      expect(fc.length).toBeGreaterThan(5);
+      for (const p of fc) expect(p.band).toBeDefined();
+    }
+  });
+
+  // The 72h zoom draws rows with day <= 3 (video-chart-plot). A forecast day inside that
+  // window must carry its band, or the ribbons vanish exactly where the launch is.
+  it('bands every forecast day inside the 72h window', () => {
+    const s = buildSeries({
+      ...MALECKI,
+      actuals: [{ day: 0.8, views: 120_000 }, { day: 1.1, views: 180_000 }],
+      horizonDay: 30,
+    });
+    const window = s.filter((p) => p.day <= 3);
+    const fc = window.filter((p) => p.kind === 'forecast');
+    expect(fc.length).toBeGreaterThanOrEqual(2);   // days 2 and 3 of the integer grid
+    for (const p of fc) {
+      expect(p.band).toBeDefined();
+      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.band!.inner[0] + 1e-9);
+      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.band!.inner[1] - 1e-9);
+    }
+    // and the rows the plot hands recharts carry both ribbons on every one of those days
+    const rows = chartRows(window, [], []).filter((r) => r.projected != null && r.day > 1.1);
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    for (const r of rows) { expect(r.bandInner).toBeDefined(); expect(r.bandOuter).toBeDefined(); }
   });
 });
 

@@ -36,10 +36,15 @@ export function seriesStyle(kind: SeriesKind): SeriesStyle {
 
 /**
  * The channel's typical curve. Not a SeriesKind — it is a different subject, not a different
- * part of this video — and it keeps the grey dashed line with the grey band it always had.
- * Declared here so a test can assert the video's lines never look like it.
+ * part of this video — so it is a plain grey dashed LINE and nothing else.
+ *
+ * Correction of 2026-09-04: it used to carry a grey ribbon of its own, which put two bands on
+ * one chart and made the reader ask which uncertainty was whose. The channel curve is a
+ * BASELINE — where a typical video sat — and the only thing this page is actually uncertain
+ * about is what happens next, so the ribbons belong to the forecast alone. Declared here so a
+ * test can assert the video's lines never look like it, and that it has no band fields.
  */
-export const TYPICAL_STYLE = { strokeToken: 'muted' as StrokeToken, dash: '4 3', width: 1.5 };
+export const TYPICAL_STYLE = { strokeToken: 'muted' as StrokeToken, dash: '4 3', width: 1.5, band: false as const };
 
 /** The colour a kind is actually stroked with, given the theme's two tokens. */
 export function seriesStroke(kind: SeriesKind, colors: Record<StrokeToken, string>): string {
@@ -53,6 +58,22 @@ export const SERIES_LABELS = {
   forecast: 'expected from here',
   expected: 'typical for this channel',
 } as const;
+
+export type LegendKey = keyof typeof SERIES_LABELS;
+
+/**
+ * The order the legend reads in, and it is not the order recharts would give (which is the
+ * order the shapes happen to be painted in, so the measured line — the only thing on the chart
+ * we actually counted — came last, after the channel's curve). It reads outward from what is
+ * known: what we measured, what we reconstructed behind it, what we expect ahead of it, and
+ * only then the other subject on the plot, the channel.
+ */
+export const LEGEND_ORDER: readonly LegendKey[] = ['measured', 'implied', 'forecast', 'expected'];
+
+/** The legend entries actually present, in LEGEND_ORDER. `ribbon` marks the one with a band. */
+export function legendEntries(has: Partial<Record<LegendKey, boolean>>): Array<{ key: LegendKey; label: string; ribbon: boolean }> {
+  return LEGEND_ORDER.filter((k) => has[k]).map((key) => ({ key, label: SERIES_LABELS[key], ribbon: key === 'forecast' }));
+}
 
 const ET = 'America/New_York';
 
@@ -98,18 +119,32 @@ export function trackingLabelPlacement(
 
 export type BandRing = 'inner' | 'outer';
 
+/** Which ground the ribbon is painted on. The same alpha is not the same ribbon on both. */
+export type ThemeMode = 'light' | 'dark';
+
+/**
+ * Below this a ribbon is not a ribbon, it is a rumour: on either ground it disappears into the
+ * plate at the sizes this chart is drawn at. Asserted per theme, so a future palette change
+ * cannot quietly take the forecast's uncertainty off the page again.
+ */
+export const BAND_OPACITY_FLOOR: Record<BandRing, number> = { inner: 0.16, outer: 0.06 };
+
 /**
  * Two ribbons, not one. A single band forces a choice between "honest about the tail" and
  * "useful about the likely case"; drawing both lets the eye read the middle and still see how
  * far the tail goes. The inner is the darker of the two so the middle reads as the claim.
+ *
+ * Per theme, because alpha is not perception: the accent green over the dark plate loses more
+ * contrast per unit of alpha than the same green over white, so the dark values are the higher
+ * pair. Both are above BAND_OPACITY_FLOOR.
  */
-export const BAND_STYLES: Record<BandRing, { fillOpacity: number }> = {
-  inner: { fillOpacity: 0.16 },
-  outer: { fillOpacity: 0.06 },
+export const BAND_STYLES: Record<ThemeMode, Record<BandRing, { fillOpacity: number }>> = {
+  light: { inner: { fillOpacity: 0.20 }, outer: { fillOpacity: 0.08 } },
+  dark: { inner: { fillOpacity: 0.28 }, outer: { fillOpacity: 0.11 } },
 };
 
-export function bandStyle(ring: BandRing) {
-  return BAND_STYLES[ring];
+export function bandStyle(ring: BandRing, theme: ThemeMode = 'light') {
+  return BAND_STYLES[theme][ring];
 }
 
 /** Odds a reader can hold in their head, not percentile names. */
@@ -123,7 +158,6 @@ export const BAND_LABELS: Record<BandRing, string> = {
 export interface ChartRow {
   day: number;
   expected?: number;
-  band?: [number, number];
   projected?: number;
   bandInner?: [number, number];
   bandOuter?: [number, number];
@@ -139,7 +173,8 @@ export interface ChartRow {
  * Each segment also writes its value into its NEIGHBOUR's key at the boundary day, so the
  * dotted past, the solid measured line and the dashed forecast meet instead of leaving a
  * one-pixel hole where the kind changes. Only the forecast carries ribbons: an uncertainty
- * band around a reconstruction of something that already happened would read as a projection.
+ * band around a reconstruction of something that already happened would read as a projection,
+ * and the channel's typical curve is a baseline, not a prediction.
  */
 export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: Actual[]): ChartRow[] {
   const byDay = new Map<number, ChartRow>();
@@ -148,7 +183,9 @@ export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: A
     if (!r) { r = { day: d }; byDay.set(d, r); }
     return r;
   };
-  for (const c of curve) Object.assign(at(c.day), { expected: c.expected, band: [c.lo, c.hi] as [number, number] });
+  // The channel curve contributes its LINE and nothing else — see TYPICAL_STYLE. Its lo/hi are
+  // read (and still fitted) but never drawn: one chart, one uncertainty, and it is the forecast's.
+  for (const c of curve) at(c.day).expected = c.expected;
   const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
   for (let i = 0; i < series.length; i++) {
     const p = series[i];

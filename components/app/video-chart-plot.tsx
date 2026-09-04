@@ -11,11 +11,51 @@ import {
 } from 'recharts';
 import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
-import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel, trackingLabelPlacement, TYPICAL_STYLE } from '@/lib/app/chart-style';
+import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel, trackingLabelPlacement, TYPICAL_STYLE, legendEntries } from '@/lib/app/chart-style';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, tooltipDate, dayLabel, type Zoom } from './video-chart';
 
 const HOUR_TICKS = [0, 6, 12, 24, 48, 72];
+
+/**
+ * The legend, drawn by hand rather than by recharts.
+ *
+ * Two reasons. Order: recharts lists series in the order they are PAINTED, which put the
+ * channel's curve first and the one line we actually measured last. And the swatch: the
+ * forecast is the only series carrying uncertainty, so its swatch shows the ribbon — the same
+ * two fills at the same opacities the chart uses — instead of a bare dash that says nothing
+ * about the band it stands for. See chart-style.legendEntries for the order itself.
+ */
+function ChartLegend({ entries, accent, muted, mode }: {
+  entries: ReturnType<typeof legendEntries>;
+  accent: string; muted: string; mode: 'light' | 'dark';
+}) {
+  const styleFor = (key: string) =>
+    key === 'expected'
+      ? { color: muted, dash: TYPICAL_STYLE.dash, width: TYPICAL_STYLE.width, opacity: 1 }
+      : (() => { const st = seriesStyle(key as any); return { color: accent, dash: st.dash, width: st.width, opacity: st.opacity }; })();
+  return (
+    <ul style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 16px', margin: 0, padding: 0, listStyle: 'none' }}>
+      {entries.map((e) => {
+        const st = styleFor(e.key);
+        return (
+          <li key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
+            <svg width={24} height={12} aria-hidden style={{ overflow: 'visible', flex: '0 0 auto' }}>
+              {e.ribbon && (
+                <>
+                  <rect x={0} y={1} width={24} height={10} fill={accent} fillOpacity={bandStyle('outer', mode).fillOpacity} />
+                  <rect x={0} y={3.5} width={24} height={5} fill={accent} fillOpacity={bandStyle('inner', mode).fillOpacity} />
+                </>
+              )}
+              <line x1={0} y1={6} x2={24} y2={6} stroke={st.color} strokeWidth={st.width} strokeDasharray={st.dash} strokeOpacity={st.opacity} />
+            </svg>
+            <span>{e.label}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 const DAY_TICKS = [0, 1, 2, 3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 550, 730, 1095];
 
 export default function VideoChartPlot({
@@ -140,23 +180,32 @@ export default function VideoChartPlot({
               );
             }}
           />
-          <Legend wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }} />
+          <Legend
+            wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }}
+            content={() => (
+              <ChartLegend
+                entries={legendEntries({ measured: hasMeasured, implied: hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
+                accent={C.accent} muted={C.muted} mode={C.mode}
+              />
+            )}
+          />
           {/* Recharts puts every declared series in the legend whether or not it has data, so
               each one is mounted only in the states where it actually draws something. */}
-          {curve.length > 0 && (
-            <Area dataKey="band" name="typical range" connectNulls stroke="none" fill={C.muted} fillOpacity={0.13} isAnimationActive={false} legendType="none" />
-          )}
-          {/* Two ribbons: the middle half solid enough to read as the claim, the 10-90 tail
-              faint behind it. Outer first so the inner paints on top. */}
+          {/* The channel's typical curve is a LINE and nothing else — its grey ribbon used to sit
+              here, and two bands on one chart made the reader work out whose uncertainty was
+              whose. The only thing this page is uncertain about is what happens next.
+
+              Two ribbons on the forecast: the middle half solid enough to read as the claim,
+              the 10-90 tail faint behind it. Outer first so the inner paints on top. */}
           {hasForecast && (
-            <Area dataKey="bandOuter" name={BAND_LABELS.outer} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('outer').fillOpacity} isAnimationActive={false} legendType="none" />
+            <Area dataKey="bandOuter" name={BAND_LABELS.outer} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('outer', C.mode).fillOpacity} isAnimationActive={false} legendType="none" />
           )}
           {hasForecast && (
-            <Area dataKey="bandInner" name={BAND_LABELS.inner} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('inner').fillOpacity} isAnimationActive={false} legendType="none" />
+            <Area dataKey="bandInner" name={BAND_LABELS.inner} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('inner', C.mode).fillOpacity} isAnimationActive={false} legendType="none" />
           )}
           {curve.length > 0 && (
             <Line
-              dataKey="expected" name={SERIES_LABELS.expected} connectNulls dot={false}
+              dataKey="expected" name={SERIES_LABELS.expected} legendType="none" connectNulls dot={false}
               stroke={C[TYPICAL_STYLE.strokeToken]} strokeWidth={TYPICAL_STYLE.width}
               strokeDasharray={TYPICAL_STYLE.dash} isAnimationActive={false}
             />
@@ -166,14 +215,14 @@ export default function VideoChartPlot({
               and an uncertainty ribbon would make it read as a projection. */}
           {hasImplied && (
             <Line
-              dataKey="implied" name={SERIES_LABELS.implied} connectNulls dot={false}
+              dataKey="implied" name={SERIES_LABELS.implied} legendType="none" connectNulls dot={false}
               stroke={stroke(S.implied.strokeToken)} strokeWidth={S.implied.width}
               strokeDasharray={S.implied.dash} strokeOpacity={S.implied.opacity} isAnimationActive={false}
             />
           )}
           {hasForecast && (
             <Line
-              dataKey="projected" name={SERIES_LABELS.forecast} connectNulls dot={false}
+              dataKey="projected" name={SERIES_LABELS.forecast} legendType="none" connectNulls dot={false}
               stroke={stroke(S.forecast.strokeToken)} strokeWidth={S.forecast.width}
               strokeDasharray={S.forecast.dash} strokeOpacity={S.forecast.opacity} isAnimationActive={false}
             />
@@ -182,7 +231,7 @@ export default function VideoChartPlot({
             /* connectNulls would bridge a gap between two measurements with a solid line —
                claiming we measured days we did not. The implied path already covers it. */
             <Line
-              dataKey="views" name={SERIES_LABELS.measured} connectNulls={false} dot={false}
+              dataKey="views" name={SERIES_LABELS.measured} legendType="none" connectNulls={false} dot={false}
               stroke={stroke(S.measured.strokeToken)} strokeWidth={S.measured.width} isAnimationActive={false}
             />
           )}
@@ -191,7 +240,7 @@ export default function VideoChartPlot({
           {hasMeasured && actuals.length <= 6 && (
             <Line
               dataKey="dot" name="measured" connectNulls={false} stroke={C.accent} strokeWidth={0} isAnimationActive={false}
-              legendType="circle"
+              legendType="none"
               dot={{ r: 3.5, fill: C.accent, stroke: C.surface, strokeWidth: 1.5 }}
               activeDot={{ r: 4, fill: C.accent }}
             />
