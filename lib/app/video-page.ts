@@ -314,13 +314,13 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
       aside: day30 && !day30.startsWith(pct(v.pace)) ? day30 : null,
     };
   }
-  if (sc?.score != null && sc.baseline != null) {
+  if (sc?.score != null && (sc.typical_at_age ?? sc.baseline) != null) {
     return {
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
-      // v5: `baseline` is C(t) -- typical AT THIS AGE, not at day 30. The age has to be on
-      // the line, or the number reads as a day-30 claim sitting next to a day-30 projection.
-      under: `${fmt(v.views)} vs typical ${fmt(Math.round(sc.baseline))} at ${age(v.ageDays)} · on pace for ${fmt(Math.round(sc.est30))} by day 30`,
+      // v5: `typical_at_age` is C(t), the score's denominator, so the age goes on the line.
+      // `baseline` is C(30), the channel's normal at day 30 -- the chart's anchor, not this line.
+      under: `${fmt(v.views)} vs typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${age(v.ageDays)} · on pace for ${fmt(Math.round(sc.est30))} by day 30`,
       // One multiplier per page, and only numbers the headline is made of. The measured count
       // and the read's confidence are the whole second line.
       aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
@@ -403,11 +403,11 @@ export function headerLines(v: HeaderInput): HeaderLines {
         .filter(Boolean).join(' · '),
     };
   }
-  if (sc?.score != null && sc.baseline != null) {
+  if (sc?.score != null && (sc.typical_at_age ?? sc.baseline) != null) {
     return {
       meta, big: pct(Number(sc.score)), over: Number(sc.score) >= 1,
       verdict: [
-        `typical ${fmt(Math.round(sc.baseline))} at ${ageWord(v.ageDays)}`,
+        `typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${ageWord(v.ageDays)}`,
         `on pace for ${fmt(Math.round(sc.est30))} by day 30`,
         read,
       ].filter(Boolean).join(' · '),

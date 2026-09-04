@@ -78,7 +78,7 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     ageDays: 1.4,
     headline: 'day30' as const,
     pace: null, expectedNow: null,
-    score: { score: 2.02, baseline: 92_000, est30: 186_000, confidence: 'early' } as any,
+    score: { score: 2.02, baseline: 140_000, typical_at_age: 92_000, est30: 186_000, confidence: 'early' } as any,
     observations: 40,
   };
 
