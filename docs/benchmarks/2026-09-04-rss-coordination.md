@@ -38,12 +38,12 @@ A VPS gives continuous execution and isolation from laptop use. It does not expa
 
 ## Live rollout
 
-Integrated into the live local main checkout on September 4, 2026. Commits through `2e3ba84` (implementation, evaluator isolation, sampler timestamp precision, cadence jitter and incremental scoring). Hosted app/API deployment awaits separate approval; no VPS migration or parameter refit was performed.
+Integrated into the live local main checkout on September 4, 2026. Implementation commits `df66be0` through `2e3ba84`; initial verification report `8f6819f` (implementation, evaluator isolation, sampler timestamp precision, cadence jitter and incremental scoring). Hosted app/API deployment awaits separate approval; no VPS migration or parameter refit was performed.
 
 - 3:53 PM ET: pending RSS buffer replayed successfully (196 samples), then the canary wrote 20 more observations without error. Journal cleared.
 - 3:58–3:59 PM ET: full RSS sweep of **5,013 channels completed in 99 seconds**: fetch 61.4s, snapshot 28.4s, diff 0.3s, flush 8.9s; 0 HTTP errors, 28,880 RSS samples, 94 newly queued videos, 19 title changes. Subsequent scheduled RSS tick completed successfully.
 - 4:01 PM ET canary: **79 RSS deadlines advanced, 0 concurrency losses; 50 API samples using one request**. Database independently confirmed all 50 API schedule rows advanced.
-- 4:07 PM ET scheduled sampler: **1,806 RSS deadlines advanced, 0 concurrency losses**; 1,250 candidates remained for API within its normal 25-call cap. These are actual updates, not estimated savings. It continues to preserve bursts and crosschecks.
+- 4:07 PM ET scheduled sampler: **1,806 RSS deadlines advanced, 0 concurrency losses**; It then completed 1,250 API samples using 25 calls, with exit code 0. These are actual updates, not estimated savings. It continues to preserve bursts and crosschecks.
 - Scorer canary: 13 scores and 13 matching history rows, 12 usable channel curves; 7 scores used RSS as the latest observed count. Parameters remained v5.0. Nine additional all-age eligible rows were scored; repeating the identical command found **zero work**, demonstrating incremental convergence.
 - Nightly snapshot path canary: 47 snapshots from one API call (catalog pass disabled for this bounded check). The preexisting LaunchAgent last-exit failure was from the morning run; this canary is not a claim that the full next nightly run has already completed.
 - RSS discovery→drainer check: 97 recent feed queue entries reached terminal processing, 54 had video rows plus API hydration samples, and all 97 retained RSS observations. The drainer currently labels terminal classifications `imported` even when its insert classifier skips a row; terminal count must not be reported as successful video imports.
