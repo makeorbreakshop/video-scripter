@@ -5,19 +5,16 @@
 // is the admin chart's data — lib/admin/video-curve.ts is the only place the curve math lives.
 //
 // This file also owns the hover link between the chart and the packaging timeline below it:
-// both draw the same markers, so hovering either highlights the other.
+// both draw the same packaging groups, so hovering either highlights the other. A test has
+// exactly one card — the strip's entry. The chart never opens a second one.
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { Actual, CurvePoint, Marker } from '@/lib/admin/video-curve';
+import type { Actual, CurvePoint } from '@/lib/admin/video-curve';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ThemeMode } from '@/lib/app/chart-style';
 import { localDay, localDayHour, localDateTimeZone } from '@/lib/app/local-time';
-
-export function markerKey(m: { kind: string; version: number }) {
-  return `${m.kind}-${m.version}`;
-}
 
 type HoverCtx = {
   hovered: string | null;
@@ -29,8 +26,8 @@ type HoverCtx = {
 const MarkerHover = createContext<HoverCtx>({ hovered: null, setHovered: () => {}, opened: null, setOpened: () => {} });
 
 /**
- * Wrap the chart, the timeline and the experiment cards in this so hovering one highlights the
- * rest — and so a click on a test window in the chart can open that test's entry in the strip.
+ * Wrap the chart and the packaging strip in this so hovering one highlights the other — and so
+ * a click on a test window in the chart can open that test's entry in the strip.
  * Hover highlights; only a click opens. The two used to fight: the strip expanded on hover, so
  * moving the mouse across the chart opened and closed the thing the reader was aiming at.
  */
@@ -169,9 +166,7 @@ export function VideoChart(props: {
   actuals: Actual[];
   curve: CurvePoint[];
   series: SeriesPoint[];
-  markers: Marker[];
   marks: PackagingMark[];
-  thumbUrls: Record<number, string>;
   score: number | null;
 }) {
   return (

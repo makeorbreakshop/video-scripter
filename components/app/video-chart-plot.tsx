@@ -20,7 +20,7 @@ import {
   Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
   ReferenceDot, ReferenceArea,
 } from 'recharts';
-import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
+import { type Actual, type CurvePoint } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
@@ -34,8 +34,7 @@ import {
   BRUSH_HEIGHT, HANDLE_HIT, HANDLE_WIDTH, PLOT_INSET, brushPaths, clampWindow, dragEdge,
   nudgeEdge, panWindow, partAt, windowRect, type Edge,
 } from '@/lib/app/chart-brush';
-import { Thumb } from './thumb';
-import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, dayLabel, HoverCard } from './video-chart';
+import { useMarkerHover, useThemeColors, fmtViews, axisDate, HoverCard } from './video-chart';
 
 /**
  * The legend, drawn by hand rather than by recharts, and three entries long.
@@ -308,17 +307,15 @@ function BrushTrack({ full, view, onView, points, C }: {
 }
 
 export default function VideoChartPlot({
-  actuals, curve, series, markers, marks, thumbUrls, score, publishedAt,
+  actuals, curve, series, marks, score, publishedAt,
 }: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
   curve: CurvePoint[];
   /** One value per day with its kind; kind decides styling, never whether a value exists. */
   series: SeriesPoint[];
-  markers: Marker[];
   /** The packaging groups on the day axis — lib/app/packaging-groups.ts, the strip's own call. */
   marks: PackagingMark[];
-  thumbUrls: Record<number, string>;
   score: number | null;
 }) {
   const { hovered, setHovered, setOpened } = useMarkerHover();
@@ -369,8 +366,6 @@ export default function VideoChartPlot({
     const hit = markAt(laid, Number(e.activeLabel), domain);
     if (hit) setOpened(hit.groupKeys[0] ?? null);
   };
-
-  const hoveredMarker = markers.find((m) => markerKey(m) === hovered) ?? null;
 
   // Which part of the line the cursor is on. The boundary rows carry their neighbour's keys so
   // the segments meet, so "the row has a band" is NOT the same question as "this is a forecast"
@@ -620,29 +615,6 @@ export default function VideoChartPlot({
         />
       </div>
       </div>
-
-      {hoveredMarker && (
-        <div className="cs-note" style={{ marginTop: 10 }}>
-          <div style={{ color: 'var(--cs-muted)', fontSize: 12, marginBottom: 8 }}>
-            {hoveredMarker.kind === 'thumb' ? 'Thumbnail' : 'Title'} detected at {dayLabel(hoveredMarker.day)}
-          </div>
-          {hoveredMarker.kind === 'thumb' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {[hoveredMarker.fromVersion, hoveredMarker.version].map((v, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {i === 1 && <span aria-hidden className="cs-arrow">→</span>}
-                  <Thumb src={v != null ? thumbUrls[v] : null} alt={`thumbnail v${v}`} style={{ width: 120 }} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ fontSize: 12 }}>
-              <div style={{ color: 'var(--cs-muted)', textDecoration: 'line-through' }}>{hoveredMarker.from}</div>
-              <div>{hoveredMarker.to}</div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

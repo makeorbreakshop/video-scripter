@@ -34,9 +34,7 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
           publishedAt={v.publishedAt}
           curve={v.curve}
           series={v.series}
-          markers={v.markers}
           marks={v.marks}
-          thumbUrls={v.thumbUrls}
           score={v.score?.score ?? null}
         />
       </section>

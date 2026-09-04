@@ -3,20 +3,19 @@
 // The reads and the curve math are NOT reimplemented here: lib/admin/queries.ts videoPage()
 // is the single query for a video's series and packaging history, and lib/admin/video-curve.ts
 // is the single source of truth for the expected/projected curves and the change markers.
-// This module only composes them, adds the thumbnail URLs and the experiment read, and hands
+// This module only composes them, adds the thumbnail URLs and the packaging groups, and hands
 // the result to the page as plain serialisable data.
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
 import { q, one } from '../admin/db';
 import {
-  mergeActuals, packagingMarkers,
-  type Actual, type CurvePoint, type Marker,
+  mergeActuals,
+  type Actual, type CurvePoint,
   expectedAtAge } from '../admin/video-curve';
 import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
 import { gapReasonWords, MIN_PRIORS } from '../scoring/score-gaps';
 import { thumbUrl } from '../thumbs/storage';
 import { thumbnailVariants, testState, type Variant, type TestState } from './packaging';
 import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
-import { experiments, type Experiment } from './experiment';
 import { horizonFor } from './chart-horizon';
 import { snapshotTimeIso } from './observations';
 import { scoreParamsQuery } from './score-version';
@@ -53,12 +52,10 @@ export type VideoPageView = {
    * whole line the chart draws; `curve` is only the channel's typical path behind it.
    */
   series: SeriesPoint[];
-  markers: Marker[];
   /** The packaging history grouped by TEST — the same call the strip below the chart makes. */
   packagingGroups: PackagingGroup[];
   /** Those groups placed on the chart's day axis: a test is a window, a swap or title a rule. */
   marks: PackagingMark[];
-  experiments: Experiment[];
   thumbs: ThumbVersionView[];
   /** distinct thumbnail images, in first-seen order, with the versions that showed each */
   variants: Variant[];
@@ -194,7 +191,6 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   const snapshots = rawSnapshots.map((s) => ({ ...s, at: snapshotTimeIso(s.at, s.created_at) }));
 
   const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
-  const markers = packagingMarkers(v.published_at, thumbs, titles);
   const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
   // The right edge is a fact about the video's age (lib/app/chart-horizon.ts), not a milestone
   // ladder and not a button: roughly three times as far ahead as it has already lived. It is
@@ -245,8 +241,6 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
       });
       return { series, curve: channelCurve(series, score?.baseline ?? null, mult, longtail) };
     })(),
-    markers,
-    experiments: experiments(v.published_at, samples, markers, now, snapshots.map((p: any) => ({ at: new Date(new Date(p.at).getTime()).toISOString(), views: p.views }))),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
       variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),
     variants,
