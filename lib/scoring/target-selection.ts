@@ -2,7 +2,7 @@ import { longformSql } from './longform';
 import { scoreRefreshSql } from './refresh-sql';
 import { OBSERVATION_SCORE_VERSION } from './observations';
 
-interface Cursor { publishedAt: string; id: string }
+export interface Cursor { publishedAt: string; id: string }
 interface Options { all: boolean; channels: string[]; limit: number; cursor: Cursor | null; version?: string }
 
 export function incrementalScoreTargetsSql(options: Options): { text: string; values: unknown[] } {
@@ -30,12 +30,15 @@ export interface ScoreTargetCursorRow { id: string; channel_id: string; publishe
 interface WalkOptions<T extends ScoreTargetCursorRow> {
   limit: number;
   signal: AbortSignal;
+  initialCursor?: Cursor | null;
   fetchPage: (cursor: Cursor | null, limit: number) => Promise<T[]>;
-  onPage: (page: T[]) => Promise<void>;
+  onPage: (page: T[]) => Promise<void | boolean>;
+  onCheckpoint?: (cursor: Cursor) => Promise<void> | void;
+  onComplete?: () => Promise<void> | void;
 }
 
 export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow>(options: WalkOptions<T>): Promise<number> {
-  let cursor: Cursor | null = null;
+  let cursor: Cursor | null = options.initialCursor ?? null;
   let selected = 0;
   // IDs only (roughly 2 MB at the cap), not observations. A wide enough window lets
   // interleaved uploads share channel priors; database pages and score transactions stay 100.
@@ -44,7 +47,12 @@ export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow
     const pageSize = Math.min(100, options.limit - selected);
     const page = await options.fetchPage(cursor, pageSize);
     if (!page.length) {
-      if (lookahead.length) await options.onPage(lookahead);
+      if (lookahead.length) {
+        const completed = await options.onPage(lookahead);
+        if (completed === false) break;
+        await options.onCheckpoint?.(cursor!);
+      }
+      await options.onComplete?.();
       break;
     }
     selected += page.length;
@@ -53,10 +61,15 @@ export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow
     lookahead.push(...page);
     const exhausted = page.length < pageSize || selected === options.limit;
     if (lookahead.length >= 10_000 || exhausted) {
-      await options.onPage(lookahead);
+      const completed = await options.onPage(lookahead);
+      if (completed === false) break;
+      await options.onCheckpoint?.(cursor);
       lookahead = [];
     }
-    if (exhausted) break;
+    if (exhausted) {
+      if (page.length < pageSize) await options.onComplete?.();
+      break;
+    }
   }
   return selected;
 }

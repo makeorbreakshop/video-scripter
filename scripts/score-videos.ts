@@ -36,6 +36,7 @@ import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
+import { readScoreCheckpoint, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
@@ -50,11 +51,15 @@ const arg = (name: string): string | null => {
 };
 const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filter(Boolean);
 const LIMIT = Number(arg('--limit') ?? 0) || null;
+const CHECKPOINT_PATH = arg('--checkpoint');
 // --since <days>: rescore EVERY video published within the last <days>, whether or not a new
 // reading has landed since its stored score. The hourly pass only picks up videos with a fresh
 // reading, so after a scoring-math fix the young rows would otherwise keep a stale number until
 // their next snapshot. Added 2026-09-04 with the sub-day curve fix.
 const SINCE = Number(arg('--since') ?? 0) || null;
+if (CHECKPOINT_PATH && (!ALL || FORCE || SINCE || FINAL || FIT)) {
+  throw new Error('--checkpoint is only valid with incremental --all');
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
@@ -468,9 +473,9 @@ async function score(signal: AbortSignal) {
     args
   ) : null;
   let written = 0, selected = 0, noCurve = 0, tooYoung = 0;
-  const processTargets = async (targets: { id: string; channel_id: string }[]) => {
+  const processTargets = async (targets: { id: string; channel_id: string }[]): Promise<boolean> => {
     for (const group of scoringTargetBatches(targets)) {
-      if (signal.aborted) break;
+      if (signal.aborted) return false;
       const readStartedAt = new Date();
       const batch = await v5Batch(group, params);
       for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
@@ -478,20 +483,33 @@ async function score(signal: AbortSignal) {
       if (written % 1000 < 100) log(`score: ${written} written`);
       if (ALL) await sleep(SLEEP_MS);
     }
+    return true;
   };
   if (bulkTargets) {
     selected = bulkTargets.length;
     log(`score: ${selected} videos to score${SINCE ? ` (--since ${SINCE}d)` : ' (--all --force)'}`);
     await processTargets(bulkTargets);
   } else {
+    const checkpoint = CHECKPOINT_PATH ? readScoreCheckpoint(CHECKPOINT_PATH) : null;
+    if (checkpoint?.complete) {
+      log(`score: checkpoint complete (${CHECKPOINT_PATH})`);
+      return;
+    }
     selected = await walkIncrementalScoreTargets<ScoreTargetCursorRow>({
       limit: LIMIT ?? Number.MAX_SAFE_INTEGER,
       signal,
+      initialCursor: checkpoint && !checkpoint.complete ? checkpoint.cursor : null,
       fetchPage: async (cursor, limit) => {
         const query = incrementalScoreTargetsSql({ all: ALL, channels: CHANNELS, limit, cursor, version: OBSERVATION_SCORE_VERSION });
         return q(query.text, query.values);
       },
       onPage: processTargets,
+      onCheckpoint: CHECKPOINT_PATH
+        ? async (cursor) => writeScoreCheckpoint(CHECKPOINT_PATH, { complete: false, cursor })
+        : undefined,
+      onComplete: CHECKPOINT_PATH
+        ? async () => writeScoreCheckpoint(CHECKPOINT_PATH, { complete: true })
+        : undefined,
     });
   }
   if (selected === 0) log(`score: 0 videos to score${ALL ? ' (--all: whole corpus)' : ''}`);
