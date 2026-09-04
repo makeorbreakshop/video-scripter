@@ -11,6 +11,7 @@ import { avatarAt } from '@/lib/app/channel-view';
 import {
   importDefaults, importVisible, importButtonLabel, type SubscriptionLike,
 } from '@/lib/app/groups-view';
+import { chunkIds, CLIENT_BATCH } from '@/lib/app/import-batch';
 
 interface Sub extends SubscriptionLike {
   avatar_url: string | null;
@@ -28,6 +29,9 @@ export default function ImportSubscriptions({ open, onClose, onImported }: {
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [missed, setMissed] = useState<string[]>([]);
+  const cancelled = useRef(false);
   const [error, setError] = useState<{ message: string; connect?: string } | null>(null);
 
   useEffect(() => {
@@ -41,6 +45,7 @@ export default function ImportSubscriptions({ open, onClose, onImported }: {
     if (!open) return;
     let live = true;
     setSubs(null); setError(null); setExpanded(false);
+    setProgress(null); setMissed([]); cancelled.current = false;
     (async () => {
       const res = await fetch('/api/app/subscriptions');
       const body = await res.json().catch(() => ({}));
@@ -67,18 +72,40 @@ export default function ImportSubscriptions({ open, onClose, onImported }: {
     });
   }
 
+  /**
+   * Import in sequential batches of 50. The batching is the progress bar — the sheet knows
+   * exactly how many are done because it is the one deciding when to send the next fifty —
+   * and it keeps any one request far inside the route's ceiling. Cancel stops sending; the
+   * batch already in flight finishes, because half-tracking a channel is worse than tracking it.
+   */
   async function track() {
+    const ids = Array.from(picked);
+    const byId = new Map((subs || []).map((s) => [s.channel_id, s.name] as const));
+    cancelled.current = false;
     setBusy(true);
+    setProgress({ done: 0, total: ids.length });
+    const bad: string[] = [];
+    let tracked = 0;
     try {
-      const res = await fetch('/api/app/subscriptions', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ channel_ids: Array.from(picked) }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) { setError({ message: body?.error || 'Could not import those channels.' }); return; }
-      await onImported(body.tracked ?? 0);
-      onClose();
+      let done = 0;
+      for (const batch of chunkIds(ids, CLIENT_BATCH)) {
+        if (cancelled.current) break;
+        const res = await fetch('/api/app/subscriptions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ channel_ids: batch }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) { setError({ message: body?.error || 'Could not import those channels.' }); return; }
+        tracked += body.tracked ?? 0;
+        for (const f of body.failed || []) bad.push(byId.get(f.channel_id) || f.channel_id);
+        done += batch.length;
+        setProgress({ done, total: ids.length });
+      }
+      await onImported(tracked);
+      // Failures are worth naming, so the sheet stays open to say so once. A clean run has
+      // nothing to report and gets out of the way.
+      if (bad.length) setMissed(bad); else onClose();
     } finally {
       setBusy(false);
     }
@@ -86,6 +113,11 @@ export default function ImportSubscriptions({ open, onClose, onImported }: {
 
   return (
     <dialog ref={ref} className="cs-dialog cs-sheet" onClose={onClose} aria-label="Import subscriptions">
+      {progress && progress.total > 0 && (
+        <div className="cs-sheet-prog" aria-hidden="true">
+          <i style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+        </div>
+      )}
       <div className="cs-sheet-head">
         <h2>Import subscriptions</h2>
         {account && (
@@ -131,19 +163,34 @@ export default function ImportSubscriptions({ open, onClose, onImported }: {
         </div>
       )}
 
+      {missed.length > 0 && (
+        <div className="cs-sheet-miss" title={missed.join(', ')}>
+          {missed.length} could not be added
+        </div>
+      )}
+
       <div className="cs-sheet-foot">
-        <button type="button" className="cs-linkish" onClick={onClose}>Not now</button>
+        <button type="button" className="cs-linkish"
+                onClick={() => { if (busy) cancelled.current = true; else onClose(); }}>
+          {busy ? 'Cancel' : 'Not now'}
+        </button>
         <div className="cs-sheet-foot-right">
           {error?.connect ? (
             <a className="cs-btn" data-variant="primary" href={error.connect}>Connect YouTube</a>
           ) : (
             <>
-              <button type="button" className="cs-linkish" disabled={!picked.size}
+              <button type="button" className="cs-linkish" disabled={busy || !picked.size}
                       onClick={() => setPicked(new Set())}>Deselect all</button>
-              <button type="button" className="cs-btn" data-variant="primary"
-                      disabled={busy || !picked.size} onClick={track}>
-                {busy ? 'Tracking…' : importButtonLabel(picked.size)}
-              </button>
+              {missed.length > 0 && !busy ? (
+                <button type="button" className="cs-btn" data-variant="primary" onClick={onClose}>Done</button>
+              ) : (
+                <button type="button" className="cs-btn" data-variant="primary"
+                        disabled={busy || !picked.size} onClick={track}>
+                  {busy && progress
+                    ? <span className="cs-num">Tracking {progress.done} / {progress.total}</span>
+                    : importButtonLabel(picked.size)}
+                </button>
+              )}
             </>
           )}
         </div>
