@@ -4,6 +4,7 @@
 import dotenv from 'dotenv'; dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { contributionAt } from '../lib/scoring/curve';
+import { longformSql } from '../lib/scoring/longform';
 import { medALE, bias } from '../lib/scoring/v5-metrics';
 import type { GlobalParams, Snapshot } from '../lib/scoring/core';
 
@@ -14,7 +15,7 @@ const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const ids: string[] = (await q(
   `select v.id from videos v
-    where v.published_at >= '2026-08-01' and coalesce(v.is_short,false) = false
+    where v.published_at >= '2026-08-01' and ${longformSql('v')}
       and coalesce(v.privacy_status,'public') = 'public'
       and exists (select 1 from view_samples s where s.video_id = v.id
                    and s.sampled_at < v.published_at + interval '12 hours')
