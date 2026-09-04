@@ -20,6 +20,7 @@ import {
   changeAtFromLaunchUntil, type Tier,
 } from '../lib/nightly/launch-core';
 import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
+import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
 import { LAST_SAMPLES_SQL } from '../lib/rss/poll-policy';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
@@ -36,8 +37,7 @@ const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
 const now = new Date();
-const today = now.toISOString().slice(0, 10);
-const log = (m: string) => console.log(`${now.toISOString()} ${m}`);
+const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 // --- 1. Enroll: any non-short video published in the last 30 days not yet scheduled ---
 const enrolled = DRY ? { rowCount: 0 } : await pool.query(
@@ -262,52 +262,32 @@ for (const batch of chunk(apiDue, 50)) {
   const items: any[] = data.items || [];
   const meta = new Map<string, DueRow>(batch.map((r) => [r.video_id, r]));
 
-  // Deterministic write order (by video_id) + retry on deadlock (40P01): the nightly tracker and the drain
-  // touch the same snapshot rows, and two transactions upserting overlapping ids in different orders deadlock.
-  items.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  // Timestamp the returned observation, not the start of a potentially long worker run.
+  const sampledAt = new Date();
+  const batchTiers: Record<Tier, number> = { standard: 0, dense: 0 };
+  const writes: SampleWrite[] = [];
+  for (const it of items) {
+    const m = meta.get(it.id);
+    if (!m) continue;
+    const st = it.statistics || {};
+    const views = clampCount(parseInt(st.viewCount || '0', 10));
+    const tier = tierOf(it.id, m.channel_id);
+    const published = new Date(m.published_at);
+    const nx = nextCheck({ published_at: published,
+      change_at: changeAtFromLaunchUntil(m.change_until ? new Date(m.change_until) : null), tier, last_views: views }, sampledAt);
+    writes.push({videoId: it.id, sampledAt, views,
+      likes: clampCount(parseInt(st.likeCount || '0', 10)), comments: clampCount(parseInt(st.commentCount || '0', 10)),
+      daysSincePublished: daysSincePublished(published, sampledAt), phase: nx.phase, nextCheck: nx.next_check,
+      priorNextCheck: m.next_check, priorUpdatedAt: m.updated_at});
+    batchTiers[tier]++;
+  }
+  // Retry the entire atomic batch; counters advance only after a successful commit.
   for (let attempt = 0; attempt < 3; attempt++) {
   const client = await pool.connect();
   try {
     await client.query('begin');
-    for (const it of items) {
-      const m = meta.get(it.id);
-      if (!m) continue;
-      const st = it.statistics || {};
-      const views = clampCount(parseInt(st.viewCount || '0', 10));
-      const likes = clampCount(parseInt(st.likeCount || '0', 10));
-      const comments = clampCount(parseInt(st.commentCount || '0', 10));
-      const published = new Date(m.published_at);
-      await client.query(
-        `insert into view_samples (video_id, sampled_at, view_count, like_count, comment_count)
-         values ($1, $2, $3, $4, $5) on conflict do nothing`,
-        [it.id, now, views, likes, comments]
-      );
-      await client.query(
-        `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
-         values ($1, $2, $3, $4, $5, $6)
-         on conflict (video_id, snapshot_date) do update set
-           view_count = excluded.view_count, like_count = excluded.like_count, comment_count = excluded.comment_count`,
-        [it.id, today, views, likes, comments, daysSincePublished(published, now)]
-      );
-      const tier = tierOf(it.id, m.channel_id);
-      const nx = nextCheck(
-        {
-          published_at: published,
-          change_at: changeAtFromLaunchUntil(m.change_until ? new Date(m.change_until) : null),
-          tier,
-          last_views: views,
-        },
-        now
-      );
-      tierSamples[tier]++;
-      await client.query(
-        `update track_schedule set phase = $1, next_check = $2, checks = checks + 1, last_sample_at = $3,
-                last_views = $4, updated_at = now()
-          where video_id = $5 and next_check = $6 and updated_at = $7`,
-        [nx.phase, nx.next_check, now, views, it.id, m.next_check, m.updated_at]
-      );
-      samples++;
-    }
+    await client.query("set local statement_timeout = '30s'");
+    const advanced = await writeSampleBatch(client, writes);
     // ids the API didn't return (deleted/private): push out a day so they don't spin
     const got = new Set(items.map((i) => i.id));
     const missing = batch.filter((r) => !got.has(r.video_id));
@@ -326,6 +306,10 @@ for (const batch of chunk(apiDue, 50)) {
       );
     }
     await client.query('commit');
+    samples += writes.length;
+    tierSamples.standard += batchTiers.standard;
+    tierSamples.dense += batchTiers.dense;
+    log(`API batch: ${writes.length} samples, ${advanced} schedules advanced, ${writes.length - advanced} raced`);
     break;
   } catch (e: any) {
     await client.query('rollback').catch(() => {});

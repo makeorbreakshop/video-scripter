@@ -61,7 +61,8 @@ describe('launch scheduler exact optimistic tokens', () => {
     expect(source).toMatch(/next_check::text as next_check/i);
     expect(source).toMatch(/updated_at::text as updated_at/i);
     expect(source).toContain('s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at');
-    expect(source).toContain('next_check = $6 and updated_at = $7');
+    const persistence = fs.readFileSync(path.join(process.cwd(), 'lib/nightly/sample-batch.ts'), 'utf8');
+    expect(persistence).toContain('s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at');
   });
 
   test('reports successful and raced RSS schedule updates from rowCount', () => {
