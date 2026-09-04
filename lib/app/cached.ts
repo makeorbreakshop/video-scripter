@@ -90,8 +90,12 @@ export function cachedVideoPage(videoId: string, channelId?: string | null): Pro
 
 /**
  * The /app/channels sparkline lane. Not per-user in substance — the series belong to the
- * channels, not to whoever tracks them — so the key is the sorted id list and the entry is
- * tagged with every channel in it: a rescore of any one of them drops the row of lines.
+ * channels, not to whoever tracks them — so the key is the sorted id list.
+ *
+ * Deliberately untagged. Tagging the entry with all 500 channels in it meant any one of them
+ * being rescored dropped the whole row of lines, and with a list this size something is
+ * always being rescored: the entry never survived to be used. The lane is a 90-day trend, so
+ * the five-minute TTL is the whole freshness requirement.
  */
 export function cachedSparklines(channelIds: string[]): Promise<Record<string, Sparkline>> {
   const ids = Array.from(new Set((channelIds || []).filter(Boolean))).sort();
@@ -99,6 +103,6 @@ export function cachedSparklines(channelIds: string[]): Promise<Record<string, S
   return unstable_cache(
     () => channelSparklinesUncached(ids),
     ['channel-sparklines', ids.join(',')],
-    { revalidate: CHANNEL_TTL, tags: ids.map(channelTag) }
+    { revalidate: CHANNEL_TTL }
   )();
 }
