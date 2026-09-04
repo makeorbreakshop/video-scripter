@@ -876,7 +876,7 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 /* An empty list still has its card: one quiet line where the rows would be. */
 .cs-cnone { padding: 40px 16px; text-align: center; color: var(--cs-muted); font-size: 14px; }
 /* The paging sentinel: one row's worth of space at the bottom of the rendered slice. */
-.cs-cmore { height: 60px; }
+.cs-cmore { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 20px 16px; color: var(--cs-muted); font-size: 12px; }
 .cs-crow { height: 60px; position: relative; }
 .cs-crow:hover { background: var(--cs-surface-2); }
 .cs-crow[data-selected="true"] { background: var(--cs-accent-soft); }
