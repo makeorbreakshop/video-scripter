@@ -268,6 +268,7 @@ describe('trackChannel', () => {
     const promote = callsMatching(/insert into channel_tracking/)[0];
     expect(promote[1]).toEqual([CH, BACKFILL_DEPTH]);
     expect(sqlOf(promote)).toContain("lane = 'user'");
+    expect(sqlOf(promote)).toContain("when channel_tracking.lane <> 'user' then now()");
     const kinds = callsMatching(/insert into backfill_jobs/).map((c) => c[1][1]);
     expect(kinds).toEqual(['catalog', 'snapshots']);
   });

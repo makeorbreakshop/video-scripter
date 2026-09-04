@@ -17,7 +17,7 @@ import { longformSql } from '../lib/scoring/longform';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import {
   buildUserUploadBackfillUnits, unfinishedUserUploadChannelsSql,
-  userUploadBackfillPageSql, USER_UPLOAD_BACKFILL_COMPLETE, USER_UPLOAD_BACKFILL_PREFIX,
+  userUploadBackfillPageSql, USER_UPLOAD_BACKFILL_COMPLETE,
   type BackfillChannel,
 } from '../lib/feed/user-upload-backfill';
 
@@ -255,13 +255,14 @@ async function backfillUserChannelUploads(): Promise<number> {
   const candidates = await q(unfinishedUserUploadChannelsSql(USER_BACKFILL_CHANNELS));
   const channels: BackfillChannel[] = candidates.map((r) => ({
     channelId: r.channel_id,
+    watermarkSource: r.watermark_source,
     cursor: r.cursor_at && r.cursor_id ? { at: r.cursor_at, id: r.cursor_id } : null,
   }));
   const units = await buildUserUploadBackfillUnits({
     channels, pageSize: USER_BACKFILL_PAGE, globalLimit: USER_BACKFILL_GLOBAL_LIMIT,
     aborted: () => job.signal.aborted,
     fetchPage: async (channel, limit) => {
-      const sql = userUploadBackfillPageSql(!!channel.cursor, limit, longformSql('v'));
+      const sql = userUploadBackfillPageSql(!!channel.cursor, limit);
       return q(sql, channel.cursor
         ? [channel.channelId, channel.cursor.at, channel.cursor.id]
         : [channel.channelId]);
@@ -282,7 +283,7 @@ async function backfillUserChannelUploads(): Promise<number> {
       await client.query(
         `insert into feed_watermarks (source, last_at, last_id) values ($1, $2::timestamptz, $3)
          on conflict (source) do update set last_at = excluded.last_at, last_id = excluded.last_id`,
-        [`${USER_UPLOAD_BACKFILL_PREFIX}${unit.channel.channelId}`, at, id]
+        [unit.channel.watermarkSource, at, id]
       );
       await client.query('commit');
     } catch (error) {

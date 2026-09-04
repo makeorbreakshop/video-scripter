@@ -500,7 +500,8 @@ export async function trackChannel(
      values ($1, 'user', now(), 'queued', $2)
      on conflict (channel_id) do update
        set lane = 'user',
-           promoted_at = coalesce(channel_tracking.promoted_at, now()),
+           promoted_at = case when channel_tracking.lane <> 'user' then now()
+                              else coalesce(channel_tracking.promoted_at, now()) end,
            backfill_status = case when channel_tracking.backfill_status in ('done','running')
                                   then channel_tracking.backfill_status else 'queued' end,
            backfill_depth = coalesce(channel_tracking.backfill_depth, $2)`,
