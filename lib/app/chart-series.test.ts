@@ -154,6 +154,10 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
         horizonDay,
         ageDays,
       });
+      if (!actuals.length) {
+        expect(s).toEqual([]);
+        continue;
+      }
 
       const days = s.map((p) => p.day);
       // sorted, unique
@@ -213,6 +217,13 @@ describe('channelCurve shares the series days', () => {
 });
 
 describe('forecast intervals require exact-horizon support', () => {
+  it('does not fabricate a history, projection or ribbon without observations', () => {
+    for (const assumeZeroOrigin of [undefined, true, false]) {
+      const forecastBandAt = jest.fn();
+      expect(buildSeries({ ...MALECKI, actuals: [], assumeZeroOrigin, forecastBandAt })).toEqual([]);
+      expect(forecastBandAt).not.toHaveBeenCalled();
+    }
+  });
   it('does not substitute legacy corpus or channel residuals for a validated chart range', () => {
     const old = { ages: [1], q10: [-.4], q25: [-.2], q50: [0], q75: [.2], q90: [.4], n: [900] };
     for (const bands of [undefined, null, old]) {

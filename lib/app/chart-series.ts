@@ -35,7 +35,7 @@ export interface BuildSeriesInput {
   longtail?: Longtail | null;
   /** Last day drawn. */
   horizonDay: number;
-  /** Age now; only used when there is nothing measured at all. */
+  /** Retained for caller compatibility; observation age determines the plotted boundary. */
   ageDays?: number;
   /** Legacy day-30 tables are accepted for compatibility but cannot validate chart ribbons. */
   bands?: BandTable | null;
@@ -124,14 +124,15 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   // Inputs have already passed the shared scorer observation contract. A sharp rise alone
   // cannot convict a real launch count as stale; preserve corrections and zero readings too.
   const acts = dedupeActuals(input.actuals || []);
+  // Without a single observation there is no video trajectory to reconstruct or project.
+  // A channel shape alone is not this video's history (including live/premiere placeholders).
+  if (!acts.length) return [];
   const shape = shapeFn(input.baseline, mult, lt);
   const days = seriesDays(horizonDay, acts.map((a) => a.day));
   const byDay = new Map(acts.map((a) => [a.day, a.views] as const));
 
-  const first = acts[0] ?? null;
-  const last = acts[acts.length - 1] ?? null;
-  // Nothing measured: the whole past is implied off the channel shape, the future forecast.
-  const boundary = last ? last.day : Math.max(input.ageDays ?? 0, 0);
+  const first = acts[0];
+  const last = acts[acts.length - 1];
 
   // Anchored value: the shape rescaled so it passes exactly through `anchor`.
   const anchored = (d: number, anchor: { day: number; views: number }) => {
@@ -147,7 +148,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       continue;
     }
 
-    if (last && day > last.day) {
+    if (day > last.day) {
       // ---- forecast: continue from the last measurement, landing on est30 at day 30 ----
       const est = input.est30 != null && input.est30 > 0 && Number.isFinite(input.est30) ? input.est30 : null;
       const views = est
@@ -160,24 +161,14 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       continue;
     }
 
-    if (!last) {
-      // No measurement anywhere. Past is implied off the shape (nothing to anchor to, so the
-      // channel's own typical curve stands in); future is the same curve continued.
-      const s = shape(day);
-      const kind: SeriesKind = day > boundary ? 'forecast' : 'implied';
-      const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * Math.abs(lg(boundary) - lg(day));
-      out.push({ day, views: Math.max(0, s), kind, band: sym(s, sigma) });
-      continue;
-    }
-
-    if (day < first!.day) {
+    if (day < first.day) {
       if (input.assumeZeroOrigin === false) continue;
       // ---- implied past: the launch we never saw ----
       // The first observation bounds everything before it. Later growth never lifts this
       // history above that known endpoint. The max also protects against a noisy fitted ladder.
-      const views = Math.min(first!.views, Math.max(out.at(-1)?.views ?? 0, anchored(day, first!)));
+      const views = Math.min(first.views, Math.max(out.at(-1)?.views ?? 0, anchored(day, first)));
       // We know less about the launch the further it is from the first thing we measured.
-      const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first!.day) - lg(day));
+      const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first.day) - lg(day));
       out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
       continue;
     }
