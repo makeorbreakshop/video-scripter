@@ -256,6 +256,8 @@ export type OutlierRow = {
   day: number; views: number; est30: number; baseline: number | null; n_baseline: number;
   /** v5: C(t), the score's denominator at the video's age. Null on pre-v5 rows. */
   typical_at_age?: number | null;
+  age_days?: number | null;
+  model_version?: string;
   score: number | null; same_age_ratio: number | null; n_same_age: number; confidence: string; scored_at: string;
 };
 

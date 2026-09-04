@@ -79,7 +79,7 @@ export const LEGEND_LABELS = {
 export type LegendKey = keyof typeof LEGEND_LABELS;
 
 /** How the entry's swatch is drawn: the video's three segments, the ribbon, the grey dash. */
-export type LegendSwatch = 'segments' | 'ribbon' | 'dashed';
+export type LegendSwatch = 'segments' | 'ribbon' | 'dashed' | 'projection';
 
 /**
  * The order the legend reads in, and it is not the order recharts would give (which is the
@@ -95,10 +95,14 @@ const SWATCHES: Record<LegendKey, LegendSwatch> = {
 
 /** The legend entries actually present, in LEGEND_ORDER. `ribbon` marks the one with a band. */
 export function legendEntries(
-  has: Partial<Record<LegendKey, boolean>>
+  has: Partial<Record<LegendKey, boolean>>,
+  hasForecastBand = true,
 ): Array<{ key: LegendKey; label: string; swatch: LegendSwatch; ribbon: boolean }> {
   return LEGEND_ORDER.filter((k) => has[k]).map((key) => ({
-    key, label: LEGEND_LABELS[key], swatch: SWATCHES[key], ribbon: SWATCHES[key] === 'ribbon',
+    key,
+    label: key === 'forecast' && !hasForecastBand ? 'tentative projection' : LEGEND_LABELS[key],
+    swatch: key === 'forecast' && !hasForecastBand ? 'projection' : SWATCHES[key],
+    ribbon: SWATCHES[key] === 'ribbon' && hasForecastBand,
   }));
 }
 
@@ -198,9 +202,8 @@ export interface ChartRow {
  * The series, the channel curve and the real measurements zipped into one row per day — the
  * shape recharts wants. Pure, so what the chart draws can be asserted without mounting it.
  *
- * Each segment also writes its value into its NEIGHBOUR's key at the boundary day, so the
- * dotted past, the solid measured line and the dashed forecast meet instead of leaving a
- * one-pixel hole where the kind changes. Only the forecast carries ribbons: an uncertainty
+ * Estimated segments borrow the measured endpoint at each boundary, so the dotted past,
+ * solid connector and dashed forecast meet without inventing observations. Only the forecast carries ribbons: an uncertainty
  * band around a reconstruction of something that already happened would read as a projection,
  * and the channel's typical curve is a baseline, not a prediction.
  */
@@ -220,9 +223,11 @@ export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: A
     const row = at(p.day);
     const prev = series[i - 1], next = series[i + 1];
     const touches = (k: SeriesKind) => prev?.kind === k || next?.kind === k;
-    if (p.kind === 'measured' || touches('measured')) row.views = p.views;
-    if (p.kind === 'implied' || touches('implied')) row.implied = p.views;
-    if (p.kind === 'forecast' || touches('forecast')) {
+    if (p.kind === 'measured') row.views = p.views;
+    // Estimates borrow the real endpoint, never the reverse. Otherwise one invented point
+    // before tracking and one after it acquire a solid, apparently observed segment.
+    if (p.kind === 'implied' || (p.kind === 'measured' && touches('implied'))) row.implied = p.views;
+    if (p.kind === 'forecast' || (p.kind === 'measured' && next?.kind === 'forecast')) {
       row.projected = p.views;
       if (p.kind === 'forecast' && p.band) {
         row.bandInner = p.band.inner;
@@ -312,7 +317,7 @@ export function nextScale(mode: ScaleMode): ScaleMode {
 }
 
 /** Which part of the line the cursor is on. Only the forecast has a range to talk about. */
-export type TooltipKind = 'measured' | 'implied' | 'forecast';
+export type TooltipKind = 'measured' | 'implied' | 'interpolated' | 'forecast';
 
 export interface TooltipPoint {
   /** The moment under the cursor, as an ISO string or Date. */
@@ -360,7 +365,10 @@ export function tooltipLines(p: TooltipPoint): string[] {
         : `${num(p.views)} views`
     );
   }
+  if (p.kind === 'implied') lines.push('Estimated history · assumes zero at publish');
+  if (p.kind === 'interpolated') lines.push('Interpolated between observations');
   if (p.kind !== 'forecast') return lines.slice(0, 3);
+  if (!p.inner && !p.outer) lines.push('Tentative projection');
   /** A band whose two ends print the same number is a point, and a point is not a range. */
   const range = (word: string, b: readonly [number, number] | null | undefined) => {
     if (!b) return;

@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { type Actual, type CurvePoint } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
+import type { ScoreComparison } from '@/lib/app/chart-comparison';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel, trackingLabelPlacement,
@@ -50,7 +51,7 @@ import { useMarkerHover, useThemeColors, fmtViews, axisDate, HoverCard } from '.
  * the words "likely" and "range" in the tooltip and nowhere else.
  */
 function LegendSwatchMark({ swatch, accent, muted, mode }: {
-  swatch: 'segments' | 'ribbon' | 'dashed'; accent: string; muted: string; mode: 'light' | 'dark';
+  swatch: 'segments' | 'ribbon' | 'dashed' | 'projection'; accent: string; muted: string; mode: 'light' | 'dark';
 }) {
   const S = { measured: seriesStyle('measured'), implied: seriesStyle('implied'), forecast: seriesStyle('forecast') };
   return (
@@ -64,6 +65,9 @@ function LegendSwatchMark({ swatch, accent, muted, mode }: {
       )}
       {swatch === 'dashed' && (
         <line x1={0} y1={6} x2={26} y2={6} stroke={muted} strokeWidth={TYPICAL_STYLE.width} strokeDasharray={TYPICAL_STYLE.dash} />
+      )}
+      {swatch === 'projection' && (
+        <line x1={0} y1={6} x2={26} y2={6} stroke={accent} strokeWidth={S.forecast.width} strokeDasharray={S.forecast.dash} />
       )}
       {/* One line, three stretches: what we reconstructed, what we counted, what we expect. */}
       {swatch === 'segments' && (
@@ -92,30 +96,6 @@ function ChartLegend({ entries, accent, muted, mode }: {
         </li>
       ))}
     </ul>
-  );
-}
-
-/**
- * "tracking began Sep 3", at the top of the plot with a halo behind it.
- *
- * At the bottom — where it was — it landed exactly on the channel's typical curve, which in the
- * first hours of a video's life is flat and near the floor: on Matt Wolfe's GPT-6 video the
- * words and the grey line were the same pixels. Top of the plot, and a rect in the surface
- * token behind the text so nothing that crosses that height ever runs through the letters.
- * Where it sits (and which side of the rule it is written on) is chart-style's decision.
- */
-function TrackingLabel({ viewBox, text, muted, surface, flip }: {
-  viewBox?: { x?: number; y?: number }; text: string; muted: string; surface: string; flip: boolean;
-}) {
-  const x = viewBox?.x ?? 0;
-  const y = (viewBox?.y ?? 0) + 13;
-  const w = text.length * 5.6 + 8;          // 11px system text, near enough for a halo
-  const left = flip ? x - 4 - w : x + 4;
-  return (
-    <g aria-hidden>
-      <rect x={left} y={y - 9.5} width={w} height={13} rx={3} fill={surface} fillOpacity={0.92} />
-      <text x={left + 4} y={y} fontSize={CHART_TYPE.label} fill={muted}>{text}</text>
-    </g>
   );
 }
 
@@ -287,6 +267,7 @@ function BrushTrack({ full, view, onView, points, C }: {
                   strokeDasharray={F.dash} strokeOpacity={0.7} />
           )}
           {paths.solid && <path d={paths.solid} fill="none" stroke={C.accent} strokeWidth={1.25} />}
+          {paths.implied && <path d={paths.implied} fill="none" stroke={C.accent} strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.55} />}
           {/* Outside the window, washed back — far enough that the window reads as the subject,
               not so far that the shape disappears: a mini-map you cannot see is not a map. */}
           {!whole && (
@@ -317,7 +298,7 @@ function BrushTrack({ full, view, onView, points, C }: {
 }
 
 export default function VideoChartPlot({
-  actuals, curve, series, marks, score, publishedAt,
+  actuals, curve, series, marks, comparison, publishedAt,
 }: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
@@ -327,6 +308,7 @@ export default function VideoChartPlot({
   /** The packaging groups on the day axis — lib/app/packaging-groups.ts, the strip's own call. */
   marks: PackagingMark[];
   score: number | null;
+  comparison?: ScoreComparison | null;
 }) {
   const { hovered, setHovered, setOpened } = useMarkerHover();
   const C = useThemeColors();
@@ -380,7 +362,7 @@ export default function VideoChartPlot({
   // Which part of the line the cursor is on. The boundary rows carry their neighbour's keys so
   // the segments meet, so "the row has a band" is NOT the same question as "this is a forecast"
   // — asking the row was what put "likely" and "range" under a measurement we actually counted.
-  const kindByDay = useMemo(() => new Map(series.map((p) => [p.day, p.kind] as const)), [series]);
+  const kindByDay = useMemo(() => new Map(series.map((p) => [p.day, p.interpolated ? 'interpolated' : p.kind] as const)), [series]);
 
   const S = { measured: seriesStyle('measured'), implied: seriesStyle('implied'), forecast: seriesStyle('forecast') };
   const stroke = (t: 'accent' | 'muted') => (t === 'accent' ? C.accent : C.muted);
@@ -407,7 +389,8 @@ export default function VideoChartPlot({
     return null;
   }, [series]);
   const nowPoint = lastMeasured && inView(lastMeasured.day) ? lastMeasured : null;
-  /** Day 30 is the number the score is written against, so it is named where it happens. */
+  const comparisonPoint = comparison && inView(comparison.day) ? comparison : null;
+  /** Day 30 is a forecast milestone, separate from the same-age score. */
   const day30 = useMemo(
     () => series.find((p) => Math.abs(p.day - 30) < 1e-9 && p.kind === 'forecast') ?? null,
     [series]
@@ -421,7 +404,9 @@ export default function VideoChartPlot({
   // only line worth reading was flat on the floor. lib/app/chart-style.visibleYDomain is the
   // rule — measured, reconstruction, forecast median, drawn band and the typical line, inside
   // the current domain and nothing else. ('auto' remains the fallback for an empty view.)
-  const fitted = useMemo(() => visibleYDomain(rows, domain, scale), [rows, domain, scale]);
+  const fitted = useMemo(() => visibleYDomain(comparison
+    ? [...rows, { day: comparison.day, views: comparison.views, expected: comparison.typical }]
+    : rows, domain, scale), [rows, domain, scale, comparison]);
   const yDomain: [any, any] = fitted ?? (scale === 'log' ? [1, 'auto'] : [0, 'auto']);
   // Round numbers, and no tick stranded in the 8% of headroom visibleYDomain leaves for the end
   // label. On a log axis recharts' own ticks are the powers, which is what a log axis is for.
@@ -436,6 +421,10 @@ export default function VideoChartPlot({
       <RangeChips chips={chips} active={active} muted={C.muted} accent={C.accent} line={C.line}
                   surface={C.surface} ink={C.ink} scale={scale} onScale={() => setScale(nextScale(scale))}
                   onPick={pickChip} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', color: C.muted, fontSize: CHART_TYPE.label, marginBottom: 4 }}>
+        {trackingBegan && <span>{trackingBegan} · dotted history is estimated</span>}
+        {lastMeasured && <span>Last observed {axisDate(publishedAt, lastMeasured.day, true)}</span>}
+      </div>
 
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
           screen is wider than the chart and would stretch the whole page. Clipping it here is
@@ -500,7 +489,7 @@ export default function VideoChartPlot({
           )}
           {hasImplied && (
             <Line
-              dataKey="implied" name={SERIES_LABELS.implied} legendType="none" connectNulls dot={false} activeDot={false}
+              dataKey="implied" name={SERIES_LABELS.implied} legendType="none" connectNulls={false} dot={false} activeDot={false}
               stroke={stroke(S.implied.strokeToken)} strokeWidth={S.implied.width}
               strokeDasharray={S.implied.dash} strokeOpacity={S.implied.opacity} isAnimationActive={false}
             />
@@ -532,11 +521,9 @@ export default function VideoChartPlot({
 
           {/* Without this the dotted stretch on the left reads as missing data rather than as
               "we were not watching yet". */}
-          {trackingBegan && trackingAt && (
+          {trackingBegan && trackingAt && firstMeasuredDay != null && inView(firstMeasuredDay) && (
             <ReferenceLine
               x={trackingAt.x} stroke={C.muted} strokeWidth={1} strokeOpacity={0.35} strokeDasharray="2 3"
-              label={<TrackingLabel text={trackingBegan} muted={C.muted} surface={C.surface}
-                                    flip={trackingAt.position === 'insideTopRight'} />}
             />
           )}
 
@@ -549,15 +536,24 @@ export default function VideoChartPlot({
           {endProjected && (
             <ReferenceDot
               x={endProjected.day} y={endProjected.projected} r={3} fill={C.accent} stroke="none" isFront
-              label={{ value: fmtViews(endProjected.projected), fontSize: CHART_TYPE.label, fill: C.accent, position: 'left', offset: 10, dy: -12 }}
+              label={{ value: `${hasForecast ? 'projected ' : ''}${fmtViews(endProjected.projected)}`, fontSize: CHART_TYPE.label, fill: C.accent, position: 'left', offset: 10, dy: -12 }}
             />
           )}
-          {endBaseline && endProjected && score != null && (
-            <ReferenceLine
-              segment={[{ x: endBaseline.day, y: endBaseline.expected }, { x: endProjected.day, y: endProjected.projected }]}
-              stroke={C.ink} strokeWidth={1}
-              label={{ value: `${score.toFixed(1)}×`, fontSize: CHART_TYPE.emphasis, fontWeight: 700, fill: C.ink, position: 'right' }}
+          {comparisonPoint && (
+            <ReferenceDot
+              x={comparisonPoint.day} y={comparisonPoint.typical} r={3} fill={C.muted} stroke="none" isFront
+              label={{ value: `typical ${fmtViews(comparisonPoint.typical)}`, fontSize: CHART_TYPE.label, fill: C.muted, position: 'bottom', offset: 8 }}
             />
+          )}
+          {comparisonPoint && (
+            <ReferenceLine
+              segment={[{ x: comparisonPoint.day, y: comparisonPoint.typical }, { x: comparisonPoint.day, y: comparisonPoint.views }]}
+              stroke={C.ink} strokeWidth={1}
+              label={{ value: `${comparisonPoint.score.toFixed(1)}×`, fontSize: CHART_TYPE.emphasis, fontWeight: 700, fill: C.ink, position: 'right' }}
+            />
+          )}
+          {nowPoint && hasForecast && (
+            <ReferenceLine x={nowPoint.day} stroke={C.muted} strokeOpacity={0.3} strokeDasharray="3 3" />
           )}
 
           {/* Where the video is now: the last count we took, with its number. */}
@@ -620,7 +616,7 @@ export default function VideoChartPlot({
           brush, which put three names in the gap where the timeline handle belongs. */}
       <div style={{ marginTop: 8 }}>
         <ChartLegend
-          entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
+          entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 }, series.some(p => p.kind === 'forecast' && !!p.band))}
           accent={C.accent} muted={C.muted} mode={C.mode}
         />
       </div>

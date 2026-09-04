@@ -263,19 +263,20 @@ describe('brushPaths: two lines, one scale', () => {
   ];
 
   it('scales both paths to the same top, so they meet instead of stepping', () => {
-    const { solid, dashed } = brushPaths(pts, [0, 3], W, BRUSH_HEIGHT);
-    const lastSolid = solid.split('L').pop()!.trim();
+    const { implied, dashed } = brushPaths(pts, [0, 3], W, BRUSH_HEIGHT);
+    const lastSolid = implied.split('L').pop()!.trim();
     const firstDashed = dashed.slice(1).split('L')[0].trim();
     expect(firstDashed).toBe(lastSolid);
   });
 
-  it('draws what happened solid and what is expected dashed', () => {
-    const { solid, dashed } = brushPaths(pts, [0, 3], W, BRUSH_HEIGHT);
-    expect(solid.split(/[ML]/).filter(Boolean).length).toBe(2);
+  it('does not turn reconstructed history solid in the overview either', () => {
+    const { solid, dashed, implied } = brushPaths(pts, [0, 3], W, BRUSH_HEIGHT);
+    expect(solid).toBe(''); // only one actual observation; no measured segment exists
+    expect(implied.split(/[ML]/).filter(Boolean).length).toBe(2);
     expect(dashed.split(/[ML]/).filter(Boolean).length).toBe(3);   // the join + two forecasts
   });
 
   it('has nothing to draw when there is nothing measured yet', () => {
-    expect(brushPaths([], [0, 3], W, BRUSH_HEIGHT)).toEqual({ solid: '', dashed: '' });
+    expect(brushPaths([], [0, 3], W, BRUSH_HEIGHT)).toEqual({ solid: '', dashed: '', implied: '' });
   });
 });

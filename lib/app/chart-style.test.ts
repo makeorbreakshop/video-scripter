@@ -181,7 +181,7 @@ describe('chartRows: what the plot actually feeds recharts', () => {
     expect(at(0).implied).toBe(100);
     expect(at(1).implied).toBe(200);   // boundary: implied reaches into the first measured day
     expect(at(1).views).toBe(200);
-    expect(at(3).views).toBe(400);     // boundary: measured reaches into the first forecast day
+    expect(at(3).views).toBeUndefined(); // estimates never enter the solid measured key
     expect(at(3).projected).toBe(400);
     expect(at(2).projected).toBe(300); // and back the other way
   });
@@ -371,7 +371,7 @@ describe('tooltipLines: three lines on a point we counted', () => {
 
   it('treats the reconstructed past the same way', () => {
     const lines = tooltipLines({ at: AT, kind: 'implied', views: 12_000, typical: 9_000, inner: [1, 2] });
-    expect(lines).toEqual(['Sep 23, 10:14 PM EDT', '12K views · typical 9.0K']);
+    expect(lines).toEqual(['Sep 23, 10:14 PM EDT', '12K views · typical 9.0K', 'Estimated history · assumes zero at publish']);
   });
 
   it('defaults to a counted point when no kind is given', () => {
@@ -403,7 +403,7 @@ describe('tooltipLines: three lines on a point we counted', () => {
   });
 
   it('says nothing about ranges it does not have', () => {
-    expect(tooltipLines({ at: AT, kind: 'forecast', views: 179_000 })).toEqual(['Sep 23, 10:14 PM EDT', '179K views']);
+    expect(tooltipLines({ at: AT, kind: 'forecast', views: 179_000 })).toEqual(['Sep 23, 10:14 PM EDT', '179K views', 'Tentative projection']);
     expect(tooltipLines({ at: AT })).toEqual(['Sep 23, 10:14 PM EDT']);
   });
 

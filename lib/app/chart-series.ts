@@ -12,11 +12,7 @@
 // the real measurements next to it, so the implied path passes exactly through the first
 // measurement instead of floating beside it.
 import { expectedAt, forecastAt, type Mult, type Longtail, type CurvePoint } from '../admin/video-curve';
-import {
-  forecastBand, fitTrajectory, trajectoryFactor, FITTED_BANDS_2026_09_03,
-  type BandTable, type ForecastBand, type TrajectoryPoint,
-} from '../scoring/bands';
-import { markObservations } from './observations';
+import { type BandTable, type ForecastBand } from '../scoring/bands';
 
 export type SeriesKind = 'measured' | 'implied' | 'forecast';
 /**
@@ -24,7 +20,7 @@ export type SeriesKind = 'measured' | 'implied' | 'forecast';
  * five). The chart draws the inner solid and the outer as a fainter edge, so the reader sees the
  * likely case without being told the tail does not exist.
  */
-export type SeriesPoint = { day: number; views: number; kind: SeriesKind; band?: ForecastBand };
+export type SeriesPoint = { day: number; views: number; kind: SeriesKind; interpolated?: boolean; band?: ForecastBand };
 
 /** A symmetric log range, for the segments whose uncertainty is not a fitted quantile. */
 const sym = (v: number, sigma: number): ForecastBand =>
@@ -41,17 +37,12 @@ export interface BuildSeriesInput {
   horizonDay: number;
   /** Age now; only used when there is nothing measured at all. */
   ageDays?: number;
-  /**
-   * Fitted forecast band: the channel's own table, else score_params.params.bands.
-   *
-   * Correction of 2026-09-04: `null` used to mean "no band at all", and null is exactly what
-   * lib/admin/queries hands over for every video today — score_params carries no `bands` key
-   * and most channels have no channel_forecast_bands rows — so no forecast point ever got a
-   * band and the ribbons were missing from the chart in BOTH zooms. Nothing to say is not a
-   * reason to say nothing: absent or null now falls back to the corpus fit, which is what the
-   * band is fitted for. To draw no band, pass a table with no ages.
-   */
+  /** Legacy day-30 tables are accepted for compatibility but cannot validate chart ribbons. */
   bands?: BandTable | null;
+  /** Only supply a range validated for this exact observation age and forecast horizon. */
+  forecastBandAt?: (views: number, day: number, fromAge: number) => ForecastBand | null;
+  /** Live/premiere publication may precede the public launch; do not invent its origin. */
+  assumeZeroOrigin?: boolean;
 }
 
 /** Integer days are drawn one by one up to here; past it the grid goes log-spaced. */
@@ -77,18 +68,6 @@ const IMPLIED_SIGMA_PER_LOGDAY = 0.55;
 export const MEASURED_GAP_DAYS = 2;
 /** Interpolating a gap between two real points is a much smaller claim than the launch is. */
 const GAP_SIGMA = 0.12;
-/**
- * The join rule. The reconstructed past is the channel shape at the scale fitted through ALL
- * the video's non-stale measurements (fitTrajectory), which in general does NOT pass through
- * the first of them — that is the point: one reading should not set the whole launch. But a
- * line that ends a hand's breadth from the line it is supposed to run into reads as a bug, so
- * over the LAST 10% of the implied span in log(day+1) the fitted value is blended, in log
- * space, toward the value anchored exactly on that first measurement: weight 0 at 90% of the
- * span, weight 1 at the measurement itself. The seam is closed by moving the reconstruction,
- * never by moving a measurement. The same rule closes both ends of a between-measurement gap.
- */
-export const JOIN_BLEND = 0.1;
-
 const lg = (d: number) => Math.log(Math.max(d, 0) + 1);
 
 /**
@@ -99,7 +78,14 @@ const lg = (d: number) => Math.log(Math.max(d, 0) + 1);
  */
 function shapeFn(baseline: number | null | undefined, mult: Mult, lt: Longtail | null | undefined) {
   const hasBaseline = baseline != null && baseline > 0 && Number.isFinite(baseline);
-  if (hasBaseline) return (d: number) => expectedAt(baseline as number, mult, d, lt).expected;
+  if (hasBaseline) {
+    // The fitted ladder starts after publication. Join its first bucket to an assumed zero;
+    // clamping the ladder at day zero used to invent views before anything happened.
+    const first = Math.min(...Object.keys(mult).map(Number).filter((d) => d > 0), 1);
+    return (d: number) => d < first
+      ? expectedAt(baseline as number, mult, first, lt).expected * Math.max(d, 0) / first
+      : expectedAt(baseline as number, mult, d, lt).expected;
+  }
   return (d: number) => lg(d);
 }
 
@@ -135,30 +121,15 @@ export function seriesDays(horizonDay: number, actualDays: number[]): number[] {
 export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   const { mult, horizonDay } = input;
   const lt = input.longtail ?? null;
-  const bands = input.bands == null ? FITTED_BANDS_2026_09_03 : input.bands;
-  // A reading YouTube had already cached when we took it is not a measurement (see
-  // ./observations): it is excluded from the line, the anchors and the fit alike.
-  const marked = markObservations(dedupeActuals(input.actuals || []));
-  const acts = marked.filter((m) => !m.stale).map(({ day, views }) => ({ day, views }));
-  const fittable = marked.filter((m) => !m.stale && !m.duplicate).map(({ day, views }) => ({ day, views }));
+  // Inputs have already passed the shared scorer observation contract. A sharp rise alone
+  // cannot convict a real launch count as stale; preserve corrections and zero readings too.
+  const acts = dedupeActuals(input.actuals || []);
   const shape = shapeFn(input.baseline, mult, lt);
   const days = seriesDays(horizonDay, acts.map((a) => a.day));
   const byDay = new Map(acts.map((a) => [a.day, a.views] as const));
 
   const first = acts[0] ?? null;
   const last = acts[acts.length - 1] ?? null;
-  // What this video's OWN record says about how predictable it is. The fitted band answers
-  // "how wrong is a forecast made at day 4?" across the whole corpus; a video we have watched
-  // sit on its channel's curve for ten days is a different case, and the corpus covers both.
-  const traj: TrajectoryPoint[] = fittable
-    .map((a) => ({ day: a.day, views: a.views, expected: shape(a.day) }))
-    .filter((p) => p.expected > 0 && Number.isFinite(p.expected));
-  const factor = trajectoryFactor(traj);
-  // ONE free parameter — the log scale — fitted through every non-stale measurement, weighted
-  // by the log-time span each stands for, so twenty samples inside one launch hour do not
-  // outvote a daily record. This, not the first reading, is what the implied past is drawn at.
-  const fitScale = traj.length ? Math.exp(fitTrajectory(traj).logScale) : 1;
-  const fitted = (d: number) => Math.max(0, shape(d) * fitScale);
   // Nothing measured: the whole past is implied off the channel shape, the future forecast.
   const boundary = last ? last.day : Math.max(input.ageDays ?? 0, 0);
 
@@ -182,10 +153,9 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       const views = est
         ? forecastAt(last.views, last.day, est, mult, day, lt)
         : anchored(day, last);
-      // The band is the corpus's own forecast error at the age of the LAST measurement, not a
-      // constant: it opens from nothing at that point (the video is there, we counted it) to
-      // the fitted 10-90 range at day 30. lib/scoring/bands.ts.
-      const band = forecastBand(views, day, last.day, bands, factor) ?? undefined;
+      // A day-30 residual table with a heuristic shrinking factor is not a calibrated
+      // hour-to-hour interval. No default ribbon until the exact displayed path is validated.
+      const band = input.forecastBandAt?.(views, day, last.day) ?? undefined;
       out.push({ day, views, kind: 'forecast', ...(band ? { band } : {}) });
       continue;
     }
@@ -201,14 +171,11 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
     }
 
     if (day < first!.day) {
+      if (input.assumeZeroOrigin === false) continue;
       // ---- implied past: the launch we never saw ----
-      // The fitted shape, blended into the first measurement over the last JOIN_BLEND of the
-      // span so the dotted line meets the solid one instead of stopping beside it.
-      const L = lg(first!.day);
-      const t = L > 0 ? Math.min(Math.max((lg(day) - (1 - JOIN_BLEND) * L) / (JOIN_BLEND * L), 0), 1) : 1;
-      const f = fitted(day), a = anchored(day, first!);
-      const views = t <= 0 ? f : t >= 1 ? a
-        : f > 0 && a > 0 ? Math.exp((1 - t) * Math.log(f) + t * Math.log(a)) : (1 - t) * f + t * a;
+      // The first observation bounds everything before it. Later growth never lifts this
+      // history above that known endpoint. The max also protects against a noisy fitted ladder.
+      const views = Math.min(first!.views, Math.max(out.at(-1)?.views ?? 0, anchored(day, first!)));
       // We know less about the launch the further it is from the first thing we measured.
       const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first!.day) - lg(day));
       out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
@@ -221,27 +188,19 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
       if (acts[i].day >= day) { lo = acts[i - 1]; hi = acts[i]; break; }
     }
     if (hi.day - lo.day <= MEASURED_GAP_DAYS) {
-      // Close enough that the tracker was watching the whole way: a straight line between two
-      // counts a day apart claims nothing the samples do not. No band — nothing is inferred.
+      // Retain the familiar solid connector for a short observed interval. The intermediate
+      // grid points are explicitly interpolated in the tooltip and never get observation dots.
       const t = (day - lo.day) / (hi.day - lo.day);
-      out.push({ day, views: lo.views + (hi.views - lo.views) * t, kind: 'measured' });
+      out.push({ day, views: lo.views + (hi.views - lo.views) * t, kind: 'measured', interpolated: true });
       continue;
     }
     const span = lg(hi.day) - lg(lo.day);
     const w = span > 0 ? (lg(day) - lg(lo.day)) / span : 0;
-    const a = anchored(day, lo), b = anchored(day, hi);
-    // The middle of the gap follows the SAME fitted scale as the implied past; only the last
-    // JOIN_BLEND at each end is blended toward that end's own measurement, so the path leaves
-    // `lo` exactly and arrives at `hi` exactly (see JOIN_BLEND).
-    const wa = Math.min(Math.max(1 - w / JOIN_BLEND, 0), 1);
-    const wb = Math.min(Math.max(1 - (1 - w) / JOIN_BLEND, 0), 1);
-    const f = fitted(day);
-    const parts: Array<[number, number]> = [[f, Math.max(1 - wa - wb, 0)], [a, wa], [b, wb]];
-    const views = parts.every(([v]) => v > 0)
-      ? Math.exp(parts.reduce((acc, [v, k]) => acc + k * Math.log(v), 0))
-      : parts.reduce((acc, [v, k]) => acc + k * v, 0);
+    // Both endpoints constrain the entire gap. Preserve genuine count corrections as a
+    // decline between those observations; never manufacture an overshoot in between.
+    const views = lo.views + (hi.views - lo.views) * w;
     const sigma = GAP_SIGMA * 2 * Math.min(w, 1 - w); // zero at both ends, widest mid-gap
-    out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
+    out.push({ day, views, kind: 'implied', interpolated: true, band: sym(views, sigma) });
   }
   return out;
 }

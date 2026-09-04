@@ -40,6 +40,7 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
           series={v.series}
           marks={v.marks}
           score={v.score?.score ?? null}
+          comparison={v.comparison}
         />
       </section>
 

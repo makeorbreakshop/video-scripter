@@ -101,7 +101,7 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     expect(h.over).toBe(true);
     // v5's denominator is C(t). Without the age on the line the number reads as a day-30
     // claim sitting next to a day-30 projection, which is the one thing it is not.
-    expect(h.verdict).toBe('typical 92K at 1d old · on pace for 186K by day 30 · early read');
+    expect(h.verdict).toBe('typical 92K at 1d old · tentative 186K by day 30 · early read');
   });
 
   it('never repeats the view count in the verdict line for a young video', () => {

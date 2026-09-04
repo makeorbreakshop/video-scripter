@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import type { Actual, CurvePoint } from '@/lib/admin/video-curve';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import type { SeriesPoint } from '@/lib/app/chart-series';
+import type { ScoreComparison } from '@/lib/app/chart-comparison';
 import type { ThemeMode } from '@/lib/app/chart-style';
 import { localDay, localDayHour, localDateTimeZone } from '@/lib/app/local-time';
 
@@ -168,6 +169,7 @@ export function VideoChart(props: {
   series: SeriesPoint[];
   marks: PackagingMark[];
   score: number | null;
+  comparison?: ScoreComparison | null;
 }) {
   return (
     <div style={{ minHeight: CHART_HEIGHT }}>

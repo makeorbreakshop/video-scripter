@@ -211,13 +211,25 @@ export function brushPaths(
   full: [number, number],
   width: number,
   height: number
-): { solid: string; dashed: string } {
+): { solid: string; dashed: string; implied: string } {
   const top = Math.max(1, ...points.filter((p) => Number.isFinite(p.views)).map((p) => p.views));
-  const past = points.filter((p) => p.kind !== 'forecast');
+  const measured = (p: BrushPoint) => !p.kind || p.kind === 'measured';
+  const pathFor = (select: (p: BrushPoint, i: number) => boolean) => {
+    const runs: BrushPoint[][] = [];
+    let run: BrushPoint[] = [];
+    points.forEach((p, i) => {
+      if (select(p, i)) run.push(p);
+      else if (run.length) { runs.push(run); run = []; }
+    });
+    if (run.length) runs.push(run);
+    return runs.map(r => brushPath(r, full, width, height, top)).filter(Boolean).join(' ');
+  };
+  const past = points.filter(measured);
   const ahead = points.filter((p) => p.kind === 'forecast');
   const joined = past.length && ahead.length ? [past[past.length - 1], ...ahead] : ahead;
   return {
-    solid: brushPath(past, full, width, height, top),
+    solid: pathFor(measured),
     dashed: brushPath(joined, full, width, height, top),
+    implied: pathFor((p, i) => p.kind === 'implied' || (measured(p) && (points[i - 1]?.kind === 'implied' || points[i + 1]?.kind === 'implied'))),
   };
 }

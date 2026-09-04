@@ -1,7 +1,7 @@
 import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
 import { chartRows } from './chart-style';
 import { expectedAt } from '../admin/video-curve';
-import { BAND_FACTOR_FLOOR } from '../scoring/bands';
+
 
 // The fitted global params (2026-09-02): median log(v30 / v_t) per day bucket.
 const MULT = { 1: 0.8688779524, 2: 0.6064517819, 3: 0.4529065479, 5: 0.3022398317, 7: 0.2243642038, 14: 0.0957340325, 21: 0.0379776014, 30: 0 };
@@ -41,7 +41,7 @@ describe('buildSeries — invariant 1: no gap between publish and the horizon', 
       const p = s.find((x) => x.day === d);
       expect(p).toBeDefined();
       expect(p!.kind).toBe('implied');
-      expect(p!.views).toBeGreaterThan(0);
+      expect(p!.views).toBeGreaterThanOrEqual(0);
     }
 
     // the 3.48 -> 5.002 stretch is 1.5 days, inside the threshold, so it reads as measured
@@ -212,178 +212,62 @@ describe('channelCurve shares the series days', () => {
   });
 });
 
-describe('the band uses the video’s own trajectory', () => {
-  const BANDS = {
-    ages: [1, 4, 7], q10: [-0.4, -0.25, -0.16], q25: [-0.2, -0.14, -0.10],
-    q50: [0, 0, 0], q75: [0.3, 0.23, 0.16], q90: [0.6, 0.6, 0.42], n: [900, 900, 900],
-  };
-  const bandOf = (s: ReturnType<typeof buildSeries>) => s[s.length - 1].band!;
-
-  it('gives a long clean record a narrower band than a single measurement', () => {
-    // ten days of samples sitting exactly where the channel curve says they should
-    // exactly on the channel curve, so the fit residual is zero by construction
-    const many = Array.from({ length: 12 }, (_, i) => {
-      const day = 1 + i * (10 / 11);
-      return { day, views: 2 * expectedAt(543492.47, MULT, day, LONGTAIL).expected };
-    });
-    const long = buildSeries({ ...MALECKI, actuals: many, ageDays: 11, bands: BANDS as any });
-    const one = buildSeries({ ...MALECKI, actuals: [many[many.length - 1]], ageDays: 11, bands: BANDS as any });
-    const w = (b: any) => Math.log(b.outer[1] / b.outer[0]);
-    expect(w(bandOf(long))).toBeLessThan(w(bandOf(one)));
-    // a perfect long record is tightened to exactly the floor of the single-measurement width
-    expect(w(bandOf(long))).toBeCloseTo(w(bandOf(one)) * BAND_FACTOR_FLOOR, 6);
-  });
-
-  it('leaves a single measurement at the full fitted width', () => {
-    const one = buildSeries({ ...MALECKI, actuals: [{ day: 4, views: 800000 }], ageDays: 4, bands: BANDS as any });
-    const b = bandOf(one);
-    // day 30, last measured day 4: the day-4 bucket applied whole
-    expect(Math.log(b.outer[1] / b.outer[0])).toBeCloseTo(0.6 - -0.25, 6);
-  });
-
-  it('carries an inner and an outer range on every forecast point, inner inside outer', () => {
-    const s = buildSeries({ ...MALECKI, bands: BANDS as any });
-    const fc = s.filter((p) => p.kind === 'forecast');
-    expect(fc.length).toBeGreaterThan(5);
-    for (const p of fc) {
-      expect(p.band).toBeDefined();
-      expect(p.band!.inner[0]).toBeGreaterThanOrEqual(p.band!.outer[0] - 1e-9);
-      expect(p.band!.inner[1]).toBeLessThanOrEqual(p.band!.outer[1] + 1e-9);
-      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.views + 1e-6);
-      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.views - 1e-6);
-    }
-  });
-
-  it('draws no forecast band at all when the table is empty', () => {
-    const empty = { ages: [], q10: [], q25: [], q50: [], q75: [], q90: [], n: [] };
-    const s = buildSeries({ ...MALECKI, bands: empty });
-    for (const p of s.filter((x) => x.kind === 'forecast')) expect(p.band).toBeUndefined();
-  });
-
-  // Regression, 2026-09-04: the ribbons were missing from the chart in BOTH zooms, and the
-  // cause was here rather than in the drawing — lib/admin/queries hands `bands: null` for
-  // every video today (score_params carries no `bands` key, and most channels have no
-  // channel_forecast_bands rows), and null used to mean "no band at all".
-  it('falls back to the corpus fit when the caller has no table — null included', () => {
-    for (const bands of [undefined, null] as const) {
+describe('forecast intervals require exact-horizon support', () => {
+  it('does not substitute legacy corpus or channel residuals for a validated chart range', () => {
+    const old = { ages: [1], q10: [-.4], q25: [-.2], q50: [0], q75: [.2], q90: [.4], n: [900] };
+    for (const bands of [undefined, null, old]) {
       const s = buildSeries({ ...MALECKI, bands });
-      const fc = s.filter((p) => p.kind === 'forecast');
-      expect(fc.length).toBeGreaterThan(5);
-      for (const p of fc) expect(p.band).toBeDefined();
+      expect(s.filter(p => p.kind === 'forecast').every(p => !p.band)).toBe(true);
     }
   });
-
-  // The 72h zoom draws rows with day <= 3 (video-chart-plot). A forecast day inside that
-  // window must carry its band, or the ribbons vanish exactly where the launch is.
-  it('bands every forecast day inside the 72h window', () => {
-    const s = buildSeries({
-      ...MALECKI,
-      actuals: [{ day: 0.8, views: 120_000 }, { day: 1.1, views: 180_000 }],
-      horizonDay: 30,
-    });
-    const window = s.filter((p) => p.day <= 3);
-    const fc = window.filter((p) => p.kind === 'forecast');
-    expect(fc.length).toBeGreaterThanOrEqual(2);   // days 2 and 3 of the integer grid
-    for (const p of fc) {
-      expect(p.band).toBeDefined();
-      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.band!.inner[0] + 1e-9);
-      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.band!.inner[1] - 1e-9);
-    }
-    // and the rows the plot hands recharts carry both ribbons on every one of those days
-    const rows = chartRows(window, [], []).filter((r) => r.projected != null && r.day > 1.1);
-    expect(rows.length).toBeGreaterThanOrEqual(2);
-    for (const r of rows) { expect(r.bandInner).toBeDefined(); expect(r.bandOuter).toBeDefined(); }
+  it('carries only exact horizons supported by the interval provider', () => {
+    const forecastBandAt = jest.fn((views: number, day: number) => day === 30
+      ? { inner: [views * .8, views * 1.2] as [number, number], outer: [views * .6, views * 1.4] as [number, number] }
+      : null);
+    const series = buildSeries({ ...MALECKI, forecastBandAt });
+    expect(series.filter(p => p.kind === 'forecast' && p.band).map(p => p.day)).toEqual([30]);
+    expect(forecastBandAt).toHaveBeenCalledWith(MALECKI.est30, 30, 5.33);
+    expect(chartRows(series, [], []).filter(r => r.bandInner)).toHaveLength(1);
   });
 });
 
-// ------------------------------------------------------- fixes of 2026-09-04 ----
-//
-// Two faults the BPS.space launch showed: the reconstructed past was anchored on the SINGLE
-// first reading, and that reading was a stale ingest-time count. Together they scaled the whole
-// implied launch to a number YouTube had cached hours earlier, and the solid measured line then
-// climbed 42% in four minutes.
-describe('the reconstructed past is fitted through every non-stale measurement', () => {
-  const BASE = 543492.47;
-  const shape = (d: number) => expectedAt(BASE, MULT, d, LONGTAIL).expected;
-
-  /** Twenty points sitting exactly 2x the channel curve, days 3..12. */
-  const onCurve = Array.from({ length: 20 }, (_, i) => {
-    const day = 3 + (i * 9) / 19;
-    return { day, views: 2 * shape(day) };
-  });
-
-  it('draws the implied past as the channel shape times the fitted scale', () => {
-    const s = buildSeries({ actuals: onCurve, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 12 });
-    for (const d of [0.5, 1, 2]) {
-      const p = s.find((x) => x.day === d)!;
-      expect(p.kind).toBe('implied');
-      expect(p.views / shape(d)).toBeCloseTo(2, 6);
+describe('reconstruction respects the observed endpoints', () => {
+  it('starts at assumed zero, rises monotonically, and never exceeds the first count', () => {
+    const actuals = [{ day: 2.1, views: 199 }, { day: 3.1, views: 1800 }];
+    const s = buildSeries({ ...MALECKI, actuals });
+    const past = s.filter(p => p.day <= 2.1);
+    expect(past[0].views).toBe(0);
+    expect(past.at(-1)!.views).toBe(199);
+    for (let i = 1; i < past.length; i++) {
+      expect(past[i].views).toBeGreaterThanOrEqual(past[i - 1].views);
+      expect(past[i].views).toBeLessThanOrEqual(199);
     }
   });
-
-  it('ignores a stale first reading instead of anchoring the whole launch on it', () => {
-    // 77,993 at 20:27:58 ET, then 110,729 four minutes later: the first is a cached count.
-    const stale = { day: 0.2597, views: 77_993 };
-    const real = [
-      { day: 0.26260, views: 110_729 },
-      { day: 0.27292, views: 110_729 },
-      { day: 0.28333, views: 144_192 },
-      { day: 0.29375, views: 160_000 },
-      { day: 0.32500, views: 202_000 },
-      { day: 0.39583, views: 243_000 },
-      { day: 1.26, views: 400_000 },
-    ];
-    const withStale = buildSeries({ actuals: [stale, ...real], baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 1.3 });
-    const without = buildSeries({ actuals: real, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 1.3 });
-
-    // the stale reading is not part of the measured line
-    expect(withStale.find((p) => p.day === stale.day)?.kind).not.toBe('measured');
-    expect(withStale.find((p) => p.kind === 'measured')!.day).toBeCloseTo(0.26260, 6);
-    // and the reconstruction is the same as if it had never been recorded
-    for (const d of [1 / 24, 2 / 24, 4 / 24]) {
-      const a = withStale.find((p) => p.day === d)!, b = without.find((p) => p.day === d)!;
-      expect(a.views).toBeCloseTo(b.views, 6);
+  it('preserves all accepted measurements including rapid growth, zero, and count corrections', () => {
+    const actuals = [{ day: 0, views: 0 }, { day: .2597, views: 77993 }, { day: .2626, views: 110729 }, { day: .2729, views: 110729 }, { day: .2833, views: 144192 }, { day: .29375, views: 160000 }, { day: .325, views: 159000 }];
+    const s = buildSeries({ ...MALECKI, actuals });
+    for (const actual of actuals) expect(s.find(p => p.day === actual.day)).toEqual({ ...actual, kind: 'measured' });
+  });
+  it('does not invent an origin for live/premiere timing', () => {
+    const s = buildSeries({ ...MALECKI, assumeZeroOrigin: false });
+    expect(s[0]).toEqual({ ...MALECKI.actuals[0], kind: 'measured' });
+  });
+  it('does not move past history when later growth changes', () => {
+    const first = { day: 3, views: 1000 };
+    const before = buildSeries({ ...MALECKI, actuals: [first] }).filter(p => p.day < 3);
+    const after = buildSeries({ ...MALECKI, actuals: [first, { day: 4, views: 100000 }] }).filter(p => p.day < 3);
+    expect(after).toEqual(before);
+  });
+  it('bounds sparse gaps by both endpoints, including observed corrections', () => {
+    for (const end of [1100, 100]) {
+      const actuals = [{ day: 2, views: 1000 }, { day: 100, views: end }, { day: 101, views: 1000000 }];
+      const gap = buildSeries({ ...MALECKI, actuals, horizonDay: 110 }).filter(p => p.day > 2 && p.day < 100);
+      for (const p of gap) {
+        expect(p.views).toBeGreaterThanOrEqual(Math.min(1000, end));
+        expect(p.views).toBeLessThanOrEqual(Math.max(1000, end));
+        expect(p.interpolated).toBe(true);
+      }
     }
-    // the old behaviour: anchored on 77,993 the day-4h value would have been well below this
-    const anchoredOnStale = (shape(4 / 24) / shape(stale.day)) * 77_993;
-    expect(withStale.find((p) => p.day === 4 / 24)!.views).toBeGreaterThan(anchoredOnStale * 1.1);
-  });
-
-  it('joins the measured line exactly: the implied value at the first measurement is that measurement', () => {
-    // A video found late (first measurement on day 100), whose record sits well ABOVE the
-    // fitted scale at that first point — so the fit and the anchor genuinely disagree and the
-    // blend has work to do. The last tenth of the span in log(day+1) is days ~63..100.
-    const acts = [
-      { day: 100, views: 3 * shape(100) },
-      { day: 140, views: 1.5 * shape(140) },
-      { day: 200, views: 1.2 * shape(200) },
-    ];
-    const s = buildSeries({ actuals: acts, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 365, ageDays: 200 });
-    const anchoredAt = (d: number) => (shape(d) / shape(100)) * 3 * shape(100);
-    // continuity: by the last drawn day before the join the implied path IS the anchored path
-    const join = s.find((p) => p.day === 99)!;
-    expect(join.kind).toBe('implied');
-    expect(join.views / anchoredAt(99)).toBeCloseTo(1, 1); // within ~1.3%
-    // and the series value AT the first measurement is that measurement, exactly
-    expect(s.find((p) => p.day === 100)!.views).toBeCloseTo(3 * shape(100), 6);
-    // the blend only moves one way: it closes monotonically as the join approaches
-    const gaps = [70, 80, 90, 99].map((d) => Math.abs(Math.log(s.find((p) => p.day === d)!.views / anchoredAt(d))));
-    for (let i = 1; i < gaps.length; i++) expect(gaps[i]).toBeLessThan(gaps[i - 1]);
-    // the far past follows the fitted scale, not the first point's anchor
-    expect(s.find((p) => p.day === 0)!.views).toBeLessThan(anchoredAt(0));
-    expect(s.find((p) => p.day === 10)!.views / shape(10)).toBeCloseTo(
-      s.find((p) => p.day === 20)!.views / shape(20), 6);
-  });
-
-  it('lets a launch burst not outvote a daily record in the fit (span weighting)', () => {
-    // one daily point at 2x, twenty samples inside ten minutes of day 5 at 2x as well:
-    // the fit is 2x either way, but with per-point weights the burst would dominate.
-    const burst = Array.from({ length: 20 }, (_, i) => {
-      const day = 5 + i / (24 * 6 * 20);
-      return { day, views: 2 * shape(day) };
-    });
-    const s = buildSeries({ actuals: [{ day: 1, views: 2 * shape(1) }, ...burst], baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 5.1 });
-    expect(s.find((p) => p.day === 0.5)!.views / shape(0.5)).toBeCloseTo(2, 6);
   });
 });
 
@@ -436,21 +320,10 @@ describe('the series covers the whole data-driven horizon, and keeps going past 
     expect(d30.views).toBeCloseTo(past30.est30, 0);
   });
 
-  it('carries both rings on every forecast point — the outer is data, even undrawn', () => {
-    const s = buildSeries(past30).filter((p) => p.kind === 'forecast' && p.day > 25);
-    expect(s.length).toBeGreaterThan(0);
-    for (const p of s) {
-      expect(p.band!.inner[0]).toBeLessThanOrEqual(p.band!.inner[1]);
-      expect(p.band!.outer[0]).toBeLessThanOrEqual(p.band!.inner[0]);
-      expect(p.band!.outer[1]).toBeGreaterThanOrEqual(p.band!.inner[1]);
-    }
+  it('does not attach unvalidated bands past day 30 either', () => {
+    expect(buildSeries(past30).filter(p => p.kind === 'forecast').every(p => !p.band)).toBe(true);
   });
 
-  it('hands the outer ring to the rows so the tooltip can read it, drawn or not', () => {
-    const rows = chartRows(buildSeries(past30), [], []).filter((r) => r.bandInner);
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows.every((r) => !!r.bandOuter)).toBe(true);
-  });
 });
 
 // --------------------------------------------- the launch window is the whole chart ----

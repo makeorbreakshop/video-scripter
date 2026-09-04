@@ -17,7 +17,7 @@ import { thumbUrl } from '../thumbs/storage';
 import { thumbnailVariants, testState, type Variant, type TestState } from './packaging';
 import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
 import { horizonFor } from './chart-horizon';
-import { snapshotTimeIso } from './observations';
+import { isSameAgeScore, scoreComparison, type ScoreComparison } from './chart-comparison';
 import { scoreParamsQuery } from './score-version';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
 
@@ -47,6 +47,7 @@ export type VideoPageView = {
   score: VideoPageData['score'];
   actuals: Actual[];
   curve: CurvePoint[];
+  comparison: ScoreComparison | null;
   /**
    * One value per day from publish to the horizon — measured / implied / forecast. This is the
    * whole line the chart draws; `curve` is only the channel's typical path behind it.
@@ -154,7 +155,8 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
   const longtail = params?.longtail ?? null;
   const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
   const views = Number(v.view_count ?? 0);
-  const expectedNow = expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail);
+  const expectedNow = isSameAgeScore(score) ? score?.typical_at_age ?? null
+    : expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail);
   const hero = heroThumb(id, thumbs, v.thumbnail_url ?? null);
 
   return {
@@ -166,8 +168,8 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     views,
     ageDays,
     expectedNow,
-    pace: expectedNow && views > 0 ? views / expectedNow : null,
-    headline: ageDays >= 30 ? 'now' : 'day30',
+    pace: isSameAgeScore(score) ? score?.score ?? null : expectedNow && views > 0 ? views / expectedNow : null,
+    headline: isSameAgeScore(score) || ageDays >= 30 ? 'now' : 'day30',
     thumbUrl: hero.src,
     thumbFallbackUrl: hero.fallback,
     score,
@@ -179,18 +181,11 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   const { video: v, snapshots: rawSnapshots, samples, rss, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
   if (!v) return null;
 
-  /**
-   * Where each snapshot goes on the chart. view_snapshots stores a DATE, so the page has always
-   * drawn one at noon UTC (8 AM ET) on that day; the row's own created_at is a better time for
-   * 87% of them and a backfill import time for the tail. lib/app/observations.snapshotTimeIso is
-   * the rule, and it is the CHART's rule only — the scorer still reads snapshot_date.
-   *
-   * MythBusters aiadrt1mKEc: the Sep 4 reading was taken Sep 3 20:17 ET and was drawn twelve
-   * hours later, which put the measured line into the future.
-   */
-  const snapshots = rawSnapshots.map((s) => ({ ...s, at: snapshotTimeIso(s.at, s.created_at) }));
+  // Use the scorer's accepted date-only anchor; created_at may be an import or an earlier
+  // value's write time. The shared selector suppresses a daily aggregate when timed reads exist.
+  const snapshots = rawSnapshots;
 
-  const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
+  const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? [], now);
   const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
   // The right edge is a fact about the video's age (lib/app/chart-horizon.ts), not a milestone
   // ladder and not a button: roughly three times as far ahead as it has already lived. It is
@@ -219,27 +214,32 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     publishedAt: new Date(v.published_at).toISOString(),
     views: Number(v.view_count ?? 0),
     ageDays,
-    expectedNow: expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail),
-    pace: (() => { const exp = expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail); const views = Number(v.view_count ?? 0); return exp && views > 0 ? views / exp : null; })(),
+    expectedNow: isSameAgeScore(score) ? score?.typical_at_age ?? null : expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail),
+    pace: isSameAgeScore(score) ? score?.score ?? null : (() => { const exp = expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail); const views = Number(v.view_count ?? 0); return exp && views > 0 ? views / exp : null; })(),
     horizonDay: maxDay,
-    headline: ageDays >= 30 ? 'now' : 'day30',
+    headline: isSameAgeScore(score) || ageDays >= 30 ? 'now' : 'day30',
     thumbUrl: hero.src,
     thumbFallbackUrl: hero.fallback,
     score,
     actuals,
+    comparison: scoreComparison(score),
     ...(() => {
       // One grid for both lines: the series days. See channelCurve for why they cannot differ.
       const series = buildSeries({
         actuals,
         baseline: score?.baseline ?? null,
-        est30: score?.est30 ?? null,
+        est30: score?.age_days != null && actuals.length && Math.abs(Number(score.age_days) - actuals[actuals.length - 1].day) > 1e-6
+          ? null : score?.est30 ?? null,
         mult,
         longtail,
         horizonDay: maxDay,
         ageDays,
         bands,
+        assumeZeroOrigin: v.duration !== 'P0D',
       });
-      return { series, curve: channelCurve(series, score?.baseline ?? null, mult, longtail) };
+      // C(30) scaled by global growth is not V5's weighted C(t). Until scoring stores the
+      // frozen prior/fit context, show the exact scored comparison instead of a false curve.
+      return { series, curve: isSameAgeScore(score) ? [] : channelCurve(series, score?.baseline ?? null, mult, longtail) };
     })(),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
       variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),
@@ -304,7 +304,7 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
     ? `${pct(Number(sc.score))} of this channel's normal at day 30${conf && conf !== 'confirmed' ? ` · ${conf} read` : ''}`
     : null;
 
-  if (v.headline === 'now' && v.pace != null && v.expectedNow != null) {
+  if (!isSameAgeScore(sc) && v.headline === 'now' && v.pace != null && v.expectedNow != null) {
     return {
       big: pct(v.pace),
       over: v.pace >= 1,
@@ -315,15 +315,18 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
     };
   }
   if (sc?.score != null && (sc.typical_at_age ?? sc.baseline) != null) {
+    const observedAge = Number(sc.age_days ?? v.ageDays);
+    const observedViews = Number(sc.views ?? v.views);
     return {
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
       // v5: `typical_at_age` is C(t), the score's denominator, so the age goes on the line.
       // `baseline` is C(30), the channel's normal at day 30 -- the chart's anchor, not this line.
-      under: `${fmt(v.views)} vs typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${age(v.ageDays)} · on pace for ${fmt(Math.round(sc.est30))} by day 30`,
+      under: `${fmt(observedViews)} vs typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${age(observedAge)}`
+        + (observedAge < 30 ? ` · tentative ${fmt(Math.round(sc.est30))} by day 30` : ''),
       // One multiplier per page, and only numbers the headline is made of. The measured count
       // and the read's confidence are the whole second line.
-      aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
+      aside: [`${fmt(observedViews)} views at ${age(observedAge)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
     };
   }
   return {
@@ -397,7 +400,7 @@ export function headerLines(v: HeaderInput): HeaderLines {
   };
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
 
-  if (v.headline === 'now' && v.pace != null && v.expectedNow != null) {
+  if (!isSameAgeScore(sc) && v.headline === 'now' && v.pace != null && v.expectedNow != null) {
     return {
       meta, big: pct(v.pace), over: v.pace >= 1,
       verdict: [`${fmt(v.views)} vs typical ${fmt(Math.round(v.expectedNow))} by now`, read]
@@ -408,8 +411,9 @@ export function headerLines(v: HeaderInput): HeaderLines {
     return {
       meta, big: pct(Number(sc.score)), over: Number(sc.score) >= 1,
       verdict: [
-        `typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${ageWord(v.ageDays)}`,
-        `on pace for ${fmt(Math.round(sc.est30))} by day 30`,
+        `typical ${fmt(Math.round(sc.typical_at_age ?? sc.baseline!))} at ${ageWord(Number(sc.age_days ?? v.ageDays))}`,
+        ...(Number(sc.age_days ?? v.ageDays) < 30 ? [`tentative ${fmt(Math.round(sc.est30))} by day 30`] : []),
+        ...(sc.views != null && Number(sc.views) !== v.views ? [`comparison used ${fmt(Number(sc.views))} views`] : []),
         read,
       ].filter(Boolean).join(' · '),
     };
