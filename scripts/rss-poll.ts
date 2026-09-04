@@ -339,7 +339,10 @@ for (const part of chunk(allIds, CHUNK)) {
   // and would be queued as a new upload, and its real title/description diff would be missed.
   if (job.signal.aborted) { snapshotComplete = false; break; }
   const [v, d, t, th, ls] = await Promise.all([
-    pool.query(`select v.id, v.title, v.description, v.published_at, w.title_observed_at
+    // No description TEXT here: 3,500 multi-KB descriptions per chunk was ~10 GB/day of
+    // egress (measured 2026-09-04). The hash is enough to diff; the text is fetched below only
+    // for videos that still need their version-1 baseline row.
+    pool.query(`select v.id, v.title, v.published_at, w.title_observed_at
                   from videos v left join video_title_watch w on w.video_id = v.id
                  where v.id = any($1)`, [part]),
     pool.query(`select distinct on (video_id) video_id, version, sha256 from description_versions
@@ -351,8 +354,14 @@ for (const part of chunk(allIds, CHUNK)) {
     // in the snapshot phase — never a per-channel query inside the fetch loop.
     pool.query(LAST_SAMPLES_SQL, [part]),
   ]);
-  for (const r of v.rows) snap.set(r.id, { title: r.title, description: r.description, published_at: r.published_at, title_observed_at: r.title_observed_at });
+  for (const r of v.rows) snap.set(r.id, { title: r.title, description: null, published_at: r.published_at, title_observed_at: r.title_observed_at });
   for (const r of d.rows) { const s = snap.get(r.video_id); if (s) { s.descVersion = r.version; s.descSha = r.sha256; } }
+  // Baseline text only for videos with no description_versions row yet (rare after the first pass).
+  const needText = v.rows.filter((r: any) => !d.rows.some((x: any) => x.video_id === r.id)).map((r: any) => r.id);
+  if (needText.length) {
+    const tx = await pool.query(`select id, description from videos where id = any($1)`, [needText]);
+    for (const r of tx.rows) { const s = snap.get(r.id); if (s) s.description = r.description; }
+  }
   for (const r of t.rows) { const s = snap.get(r.video_id); if (s) s.titleMaxVersion = r.v; }
   for (const r of th.rows) { const s = snap.get(r.video_id); if (s) { s.thumbVersion = r.version; s.thumbLastChecked = r.last_checked; } }
   for (const r of ls.rows) { const s = snap.get(r.video_id); if (s) s.lastSample = { views: r.views == null ? null : Number(r.views), at: r.at }; }
