@@ -965,7 +965,7 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 
 /* ------------------------------------------------------- import sheet ------ */
 
-.cs-sheet { max-width: 640px; width: calc(100vw - 32px); border-radius: 14px; }
+.cs-sheet { position: relative; max-width: 640px; width: calc(100vw - 32px); border-radius: 14px; }
 .cs-sheet-head { padding: 28px 28px 20px; display: flex; flex-direction: column; gap: 6px; }
 .cs-sheet-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 28px; }
 .cs-sheet-acct { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -984,6 +984,12 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   border: 0; border-top: 1px solid var(--cs-line); background: var(--cs-ground); cursor: pointer;
   font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--cs-muted); }
 .cs-sheet-more:hover { color: var(--cs-ink); }
+/* Import progress: a thin accent rule across the top of the sheet, and the quiet line that
+   names what did not make it. No red box — a handful of dead channels is not an error. */
+.cs-sheet-prog { position: absolute; inset: 0 auto auto 0; width: 100%; height: 3px; background: var(--cs-accent-soft);
+                 border-radius: 14px 14px 0 0; overflow: hidden; }
+.cs-sheet-prog i { display: block; height: 100%; background: var(--cs-accent); transition: width 180ms linear; }
+.cs-sheet-miss { padding: 0 28px 8px; font-size: 12px; color: var(--cs-muted); cursor: default; }
 .cs-sheet-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 28px; }
 .cs-sheet-foot-right { display: flex; align-items: center; gap: 10px; }
 .cs-sheet-foot .cs-btn[data-variant="primary"] { height: 38px; padding: 0 18px; font-size: 14px; font-weight: 600; }

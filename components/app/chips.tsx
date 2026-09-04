@@ -8,6 +8,7 @@
 // so the row stays one line no matter how many groups exist.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createOnceGuard } from '@/lib/app/import-batch';
 
 export interface Chip {
   key: string;
@@ -76,14 +77,24 @@ export function NewChip({ label, onCreate }: { label: string; onCreate: (name: s
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
   const input = useRef<HTMLInputElement | null>(null);
+  // Enter commits and closes the field, which fires blur, which commits again — two creates
+  // and a "You already have a group called …" the user never asked for. One guard per open
+  // field: whichever trigger arrives first is the one that counts.
+  const guard = useRef(createOnceGuard());
 
-  useEffect(() => { if (editing) input.current?.focus(); }, [editing]);
+  useEffect(() => {
+    if (!editing) return;
+    guard.current = createOnceGuard();
+    input.current?.focus();
+  }, [editing]);
 
   const commit = () => {
-    const name = text.trim();
-    setEditing(false);
-    setText('');
-    if (name) onCreate(name);
+    guard.current.run(() => {
+      const name = text.trim();
+      setEditing(false);
+      setText('');
+      if (name) onCreate(name);
+    });
   };
 
   if (!editing) {
@@ -104,7 +115,10 @@ export function NewChip({ label, onCreate }: { label: string; onCreate: (name: s
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') { e.preventDefault(); commit(); }
-          if (e.key === 'Escape') { e.preventDefault(); setEditing(false); setText(''); }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            guard.current.run(() => { setEditing(false); setText(''); });
+          }
         }}
       />
     </span>

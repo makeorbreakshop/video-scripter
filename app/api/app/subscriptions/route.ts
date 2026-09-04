@@ -10,15 +10,18 @@ import {
   googleAccessToken, fetchSubscriptions, subscriptionsForImport, recordImported,
   MissingScopeError, NoGoogleAccountError,
 } from '@/lib/app/subscriptions-import';
-import { trackChannel } from '@/lib/app/channels';
+import { trackChannel, resolveChannelsByIds } from '@/lib/app/channels';
+import { chunkIds, planImport, mapWithConcurrency, SERVER_CHUNK, SERVER_CONCURRENCY } from '@/lib/app/import-batch';
+import { q } from '@/lib/admin/db';
 import { CHANNEL_ID_RE } from '@/lib/app/channels-core';
 import { requireAppUser, unauthorized } from '@/lib/app/session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-/** How many channels one POST may add. Each one can cost a resolve plus a fast sync. */
-const IMPORT_CAP = 100;
+// The sheet posts in batches of 50 (lib/app/import-batch, CLIENT_BATCH) so it can draw real
+// progress, and 50 channels finish well inside this. 300s is the ceiling this project already
+// runs its long routes at (app/api/view-tracking/run), i.e. the Vercel plan's limit.
+export const maxDuration = 300;
 
 function scopeError(e: unknown) {
   if (e instanceof MissingScopeError) {
@@ -68,16 +71,38 @@ export async function POST(req: Request) {
     (Array.isArray(body?.channel_ids) ? body.channel_ids : []).filter((s: any) => typeof s === 'string' && CHANNEL_ID_RE.test(s))
   ));
   if (!ids.length) return Response.json({ error: 'channel_ids must be an array of UC… ids' }, { status: 400 });
-  if (ids.length > IMPORT_CAP) return Response.json({ error: `Import at most ${IMPORT_CAP} channels at a time.` }, { status: 400 });
 
-  // Serial on purpose: trackChannel can resolve, fast-sync and queue backfills, and a
-  // hundred of those in parallel is a YouTube-quota incident.
+  // No cap. Anything already tracked is skipped rather than re-added, so re-posting the same
+  // ids is a no-op — a retry after a dropped batch costs nothing and changes nothing.
+  const have = await q<{ channel_id: string }>(
+    `select channel_id from user_channels where user_id = $1 and channel_id = any($2::text[])`,
+    [user.id, ids]
+  );
+  const { add, skip } = planImport(ids, have.map((r) => r.channel_id));
+
+  // channels.list takes 50 ids per unit, so the identities for the whole request cost a
+  // handful of units up front and trackChannel spends none of its own resolving them.
+  const resolved = add.length ? await resolveChannelsByIds(add).catch(() => new Map()) : new Map();
+
   let tracked = 0;
-  const failed: string[] = [];
-  for (const id of ids) {
-    try { await trackChannel(user.id, id, 'competitor'); tracked += 1; }
-    catch (e: any) { failed.push(id); console.error('subscriptions import:', id, e.message); }
+  const failed: Array<{ channel_id: string; reason: string }> = [];
+  const done: string[] = [];
+  // Chunks of 25 with four in flight: enough parallelism that 50 channels land in seconds,
+  // bounded enough that a big import is a trickle of YouTube calls rather than a spike.
+  for (const group of chunkIds(add, SERVER_CHUNK)) {
+    const results = await mapWithConcurrency(group, SERVER_CONCURRENCY, (id) =>
+      trackChannel(user.id, id, 'competitor', { resolved: resolved.get(id) ?? null })
+    );
+    results.forEach((r, i) => {
+      const id = group[i];
+      if (r.ok) { tracked += 1; done.push(id); }
+      else {
+        failed.push({ channel_id: id, reason: String(r.error?.message || 'could not be added') });
+        console.error('subscriptions import:', id, r.error?.message);
+      }
+    });
   }
-  await recordImported(user.id, ids.filter((id) => !failed.includes(id)));
-  return Response.json({ requested: ids.length, tracked, failed });
+
+  await recordImported(user.id, [...done, ...skip]);
+  return Response.json({ requested: ids.length, tracked, skipped: skip.length, failed });
 }

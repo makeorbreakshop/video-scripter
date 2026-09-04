@@ -260,6 +260,52 @@ export async function resolveChannel(ref: ChannelRef): Promise<ResolvedChannel |
   };
 }
 
+/**
+ * Resolve many channel ids at once. channels.list takes up to 50 ids for the same 1 unit as
+ * one, so a 474-channel subscription import costs 10 calls here instead of 474 — the single
+ * biggest reason the import no longer needs a cap to be safe. Ids YouTube does not answer
+ * for are simply absent from the map.
+ */
+export async function resolveChannelsByIds(channelIds: string[]): Promise<Map<string, ResolvedChannel>> {
+  const ids = Array.from(new Set((channelIds || []).filter((id) => CHANNEL_ID_RE.test(id))));
+  const out = new Map<string, ResolvedChannel>();
+  if (!ids.length) return out;
+
+  let units = 0;
+  const items: any[] = [];
+  try {
+    for (const group of chunk(ids, 50)) {
+      units += 1;
+      const d = await ytJson(
+        `${YT}/channels?part=snippet,statistics,contentDetails&id=${group.join(',')}&maxResults=50&key=${apiKey()}`
+      );
+      for (const it of d.items || []) items.push(it);
+    }
+  } finally {
+    await logQuota('app-resolve', units);
+  }
+  // One write for every identity the calls paid for: this is what feeds the avatars, and
+  // what keeps trackChannel from spending a second unit per channel.
+  if (items.length) await saveChannelMeta(items.map(metaFromListItem));
+
+  for (const item of items) {
+    const sn = item.snippet || {};
+    const st = item.statistics || {};
+    out.set(item.id, {
+      channel_id: item.id,
+      name: sn.title || item.id,
+      handle: sn.customUrl || null,
+      thumbnail_url: sn.thumbnails?.high?.url || sn.thumbnails?.default?.url || null,
+      subscriber_count: st.subscriberCount != null ? clampCount(parseInt(st.subscriberCount, 10)) : null,
+      video_count: st.videoCount != null ? clampCount(parseInt(st.videoCount, 10)) : null,
+      uploads_playlist_id: item.contentDetails?.relatedPlaylists?.uploads || uploadsPlaylistId(item.id),
+      units: 0, // already logged above, and shared across the batch
+      known: await isKnownChannel(item.id),
+    });
+  }
+  return out;
+}
+
 /** Convenience: parse then resolve, falling back to search results. */
 export async function resolveInput(input: string) {
   const ref = parseChannelInput(input);
