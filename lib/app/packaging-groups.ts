@@ -133,6 +133,6 @@ export function packagingMarks(groups: PackagingGroup[], publishedAt: string | D
       startDay: day(g.at),
       endDay: g.endAt ? day(g.endAt) : null,
     }))
-    .filter((m) => Number.isFinite(m.startDay) && m.startDay >= 0)
+    .filter((m) => Number.isFinite(m.startDay) && (m.startDay >= 0 || (m.endDay != null && Number.isFinite(m.endDay) && m.endDay >= 0)))
     .sort((a, b) => a.startDay - b.startDay);
 }

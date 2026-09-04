@@ -151,3 +151,11 @@ describe('testChip', () => {
     expect(testChip(['A'])).toBe('A');
   });
 });
+
+test('a packaging test crossing stream start retains its visible portion, but earlier point changes stay outside the chart',()=>{
+ const group:any={key:'test',kind:'test',at:'2026-09-03T15:00:00Z',endAt:'2026-09-03T17:00:00Z',chip:'A/B',markerKeys:[],variants:[]};
+ const marks=packagingMarks([group,{...group,key:'point',kind:'title',endAt:null}],'2026-09-03T16:00:00Z');
+ expect(marks).toHaveLength(1);
+ expect(marks[0].startDay).toBeCloseTo(-1/24);
+ expect(marks[0].endDay).toBeCloseTo(1/24);
+});

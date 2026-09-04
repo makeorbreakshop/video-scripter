@@ -1,3 +1,4 @@
+import { broadcastMetadataWrite } from '../lib/ingest/first-sample';
 // Paced back-catalog backfill for user-tracked channels.
 // Drains backfill_jobs (kind 'catalog') one channel at a time: walks the
 // uploads playlist (UU + channel id) via playlistItems (1 unit / 50 ids),
@@ -89,6 +90,8 @@ async function insertVideo(v: any, cls: InsertClassification): Promise<boolean> 
        sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null, SYSTEM_USER,
        cls.is_short, cls.shorts_checked_at === 'now']
     );
+    const broadcast = broadcastMetadataWrite(v);
+    if (broadcast) await pool.query(broadcast.sql, broadcast.params);
     await pool.query(
       `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
        values ($1, current_date, $2, $3, $4, greatest(0, current_date - $5::date))
@@ -151,7 +154,7 @@ async function backfillChannel(channelId: string, depth: number): Promise<Outcom
   let inserted = 0;
   for (const group of chunk(newIds, 50)) {
     if (!takeUnit()) { exhausted = true; break; }
-    const d = await ytJson(`${YT}/videos?part=snippet,statistics,contentDetails&id=${group.join(',')}&key=${API_KEY}`);
+    const d = await ytJson(`${YT}/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${group.join(',')}&key=${API_KEY}`);
     for (const v of d.items || []) {
       // One shared Shorts/live rule (lib/ingest/classify.ts): 63-180s clips are settled against
       // YouTube, or inserted unverified so longformSql keeps them out until verify-shorts runs.

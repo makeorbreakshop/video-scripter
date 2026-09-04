@@ -37,7 +37,7 @@ log(`${rows.length} videos under ${DAYS}d with no observation at all${DRY ? ' (d
 let quota = 0, written = 0, gone = 0;
 for (const group of chunk(rows.map((r) => r.id), 50)) {
   const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${group.join(',')}&key=${API_KEY}`
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,liveStreamingDetails&id=${group.join(',')}&key=${API_KEY}`
   );
   quota++;
   if (!res.ok) { log(`videos.list failed: ${res.status}`); break; }

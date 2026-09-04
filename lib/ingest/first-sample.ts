@@ -1,3 +1,4 @@
+import { broadcastMetadata } from '../youtube/broadcast';
 // The writes that follow a video row into the database at import time.
 //
 // A video found by RSS 1-2 days after it went up used to get only a view_snapshots row on the
@@ -32,6 +33,8 @@ export function firstSampleWrite(item: any, at: Date): Write | null {
 /** The per-video writes that follow the `videos` upsert: the sample, the daily snapshot, the tracking row. */
 export function ingestWrites(item: any, tier: number, at: Date): Write[] {
   const out: Write[] = [];
+  const broadcast = broadcastMetadataWrite(item);
+  if (broadcast) out.push(broadcast);
   const sample = firstSampleWrite(item, at);
   if (sample) out.push(sample);
   if (!item?.id) return out;
@@ -48,4 +51,19 @@ export function ingestWrites(item: any, tier: number, at: Date): Write[] {
     params: [item.id, tier],
   });
   return out;
+}
+
+/** Merge only broadcast fields; retain existing start/end when an API part omits them. */
+export function broadcastMetadataWrite(item: any): Write | null {
+  const patch = broadcastMetadata(item);
+  if (!item?.id || !patch) return null;
+  return {
+    sql: `update videos set metadata = jsonb_set(
+      (case when jsonb_typeof(metadata) = 'object' then metadata else '{}'::jsonb end) || jsonb_build_object('live_broadcast_content', $2::text),
+      '{live_streaming_details}',
+      (case when jsonb_typeof(metadata->'live_streaming_details') = 'object'
+        then metadata->'live_streaming_details' else '{}'::jsonb end) || $3::jsonb, true)
+      where id = $1`,
+    params: [item.id, patch.live_broadcast_content, JSON.stringify(patch.live_streaming_details)],
+  };
 }

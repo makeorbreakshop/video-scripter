@@ -30,16 +30,15 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
   return (
     <>
       <section className="cs-section" style={{ marginTop: 18 }}>
-        {/* The page's biggest region was the only one without a heading, so it read as an
-            unlabelled remainder above "Packaging history". */}
-        <h2>Views since publish</h2>
+        {!v.broadcastNotice && <h2>Views since publish</h2>}
+        {v.broadcastNotice && <p className="cs-sub">{v.timeLabel === 'Stream started' ? 'Views since stream start' : 'Recorded views · stream start unknown'}</p>}
         <VideoChart
           actuals={v.actuals}
-          publishedAt={v.publishedAt}
+          publishedAt={v.chartOriginAt}
           curve={v.curve}
           series={v.series}
           marks={v.marks}
-          score={v.score?.score ?? null}
+          score={v.broadcastNotice ? null : v.score?.score ?? null}
           comparison={v.comparison}
         />
       </section>
@@ -121,7 +120,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           {/* ONE metadata line: the channel, when it went out, how old it is, the exact count,
               and the link. The verdict below never repeats any of it. */}
           <p className="cs-sub">
-            <LocalTime className="cs-num" ms={h.meta.publishedMs} /> · {h.meta.age} ·{' '}
+            {h.meta.timeLabel && <>{h.meta.timeLabel} · </>}<LocalTime className="cs-num" ms={h.meta.publishedMs} /> · {h.meta.age} ·{' '}
             <span className="cs-num">{h.meta.views}</span> views ·{' '}
             <a href={h.meta.youtubeUrl} target="_blank" rel="noreferrer"
                style={{ color: 'var(--cs-muted)', textDecoration: 'underline' }}>YouTube ↗</a>

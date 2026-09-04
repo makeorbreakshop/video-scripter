@@ -14,7 +14,7 @@ import {
 import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 import { classifyForInsert, skipForInsert } from '../ingest/classify';
-import { firstSampleWrite } from '../ingest/first-sample';
+import { firstSampleWrite, broadcastMetadataWrite } from '../ingest/first-sample';
 import { refreshChannelStats } from './channel-stats';
 import { revalidateChannel } from './revalidate';
 
@@ -373,7 +373,7 @@ export async function fastSync(channelId: string): Promise<{ inserted: number; u
     for (const group of chunk(newIds, 50)) {
       units += 1;
       const d = await ytJson(
-        `${YT}/videos?part=snippet,statistics,contentDetails&id=${group.join(',')}&key=${apiKey()}`
+        `${YT}/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${group.join(',')}&key=${apiKey()}`
       );
       inserted += await insertVideos(d.items || [], 'user');
     }
@@ -416,6 +416,8 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
       // The response we just read IS an observation at a known instant, so it is recorded as
       // a sample too: a video imported days after publish is otherwise unmeasured until the
       // next tracker tick (lib/ingest/first-sample.ts).
+      const broadcast = broadcastMetadataWrite(v);
+      if (broadcast) await q(broadcast.sql, broadcast.params);
       const sample = firstSampleWrite(v, new Date());
       if (sample) await q(sample.sql, sample.params).catch(() => {});
       await q(

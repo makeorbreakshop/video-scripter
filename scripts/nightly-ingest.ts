@@ -8,7 +8,7 @@ import pg from 'pg';
 import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-core';
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
-import { firstSampleWrite } from '../lib/ingest/first-sample';
+import { firstSampleWrite, broadcastMetadataWrite } from '../lib/ingest/first-sample';
 import { refreshChannelStatsSql } from '../lib/app/channel-stats';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
 
@@ -153,7 +153,7 @@ let apiCalls = 0;
 let inserted = 0;
 for (const group of chunk(newIds, 50)) {
   const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${group.join(',')}&key=${API_KEY}`
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${group.join(',')}&key=${API_KEY}`
   );
   apiCalls++;
   if (!res.ok) {
@@ -199,6 +199,8 @@ for (const group of chunk(newIds, 50)) {
       // has its view count at a known instant, so record it as a sample now instead of leaving
       // the video unmeasured until the next tracker tick (lib/ingest/first-sample.ts).
       {
+        const broadcast = broadcastMetadataWrite(v);
+        if (broadcast) await pool.query(broadcast.sql, broadcast.params);
         const sample = firstSampleWrite(v, new Date());
         if (sample) await pool.query(sample.sql, sample.params);
       }

@@ -65,7 +65,7 @@ async function fetchVideos(ids: string[]): Promise<any[]> {
   const out: any[] = [];
   for (const group of chunk(ids, 50)) {
     const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${group.join(',')}&key=${API_KEY}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${group.join(',')}&key=${API_KEY}`
     );
     quota++;
     if (res.ok) out.push(...(((await res.json()) as any).items || []));

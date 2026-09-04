@@ -1,3 +1,4 @@
+import { broadcastContext } from '../youtube/broadcast';
 // Everything the user-facing video page renders, assembled in one place.
 //
 // The reads and the curve math are NOT reimplemented here: lib/admin/queries.ts videoPage()
@@ -41,6 +42,9 @@ export type VideoPageView = {
   channelId: string;
   channelName: string;
   publishedAt: string;
+  chartOriginAt: string;
+  broadcastNotice: string | null;
+  timeLabel: string | null;
   views: number;
   thumbUrl: string | null;
   thumbFallbackUrl: string | null;
@@ -114,6 +118,9 @@ export type VideoHeadView = {
   channelId: string;
   channelName: string;
   publishedAt: string;
+  chartOriginAt: string;
+  broadcastNotice: string | null;
+  timeLabel: string | null;
   views: number;
   ageDays: number;
   pace: number | null;
@@ -129,7 +136,7 @@ export type VideoHeadView = {
 export async function loadVideoHead(id: string, now: number = Date.now()): Promise<VideoHeadView | null> {
   const [v, score, params, thumbs, obs] = await Promise.all([
     one<any>(
-      `select id, title, channel_id, channel_name, published_at, view_count, thumbnail_url
+      `select id, title, channel_id, channel_name, published_at, view_count, thumbnail_url, duration, metadata
          from videos where id = $1`,
       [id]
     ),
@@ -153,7 +160,8 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
 
   const mult = params?.mult ?? {};
   const longtail = params?.longtail ?? null;
-  const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
+  const broadcast = broadcastContext(v, now);
+  const ageDays = (now - new Date(broadcast.chartOriginAt).getTime()) / 86_400_000;
   const views = Number(v.view_count ?? 0);
   const expectedNow = isSameAgeScore(score) ? score?.typical_at_age ?? null
     : expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail);
@@ -165,6 +173,9 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     channelId: v.channel_id,
     channelName: v.channel_name,
     publishedAt: new Date(v.published_at).toISOString(),
+    chartOriginAt: broadcast.chartOriginAt,
+    broadcastNotice: broadcast.broadcastNotice,
+    timeLabel: broadcast.timeLabel,
     views,
     ageDays,
     expectedNow,
@@ -185,8 +196,9 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   // value's write time. The shared selector suppresses a daily aggregate when timed reads exist.
   const snapshots = rawSnapshots;
 
-  const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? [], now);
-  const ageDays = (now - new Date(v.published_at).getTime()) / 86_400_000;
+  const broadcast = broadcastContext(v, now, [...snapshots, ...samples, ...(rss ?? [])]);
+  const actuals = mergeActuals(broadcast.chartOriginAt, snapshots, samples, rss ?? [], now);
+  const ageDays = (now - new Date(broadcast.chartOriginAt).getTime()) / 86_400_000;
   // The right edge is a fact about the video's age (lib/app/chart-horizon.ts), not a milestone
   // ladder and not a button: roughly three times as far ahead as it has already lived. It is
   // widened only to cover what we actually measured — a two-year-old video's readings are not
@@ -212,6 +224,9 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     channelId: v.channel_id,
     channelName: v.channel_name,
     publishedAt: new Date(v.published_at).toISOString(),
+    chartOriginAt: broadcast.chartOriginAt,
+    broadcastNotice: broadcast.broadcastNotice,
+    timeLabel: broadcast.timeLabel,
     views: Number(v.view_count ?? 0),
     ageDays,
     expectedNow: isSameAgeScore(score) ? score?.typical_at_age ?? null : expectedAtAge(score?.baseline ?? null, mult, ageDays, longtail),
@@ -222,10 +237,12 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     thumbFallbackUrl: hero.fallback,
     score,
     actuals,
-    comparison: scoreComparison(score),
+    comparison: broadcast.isBroadcast ? null : scoreComparison(score),
     ...(() => {
       // One grid for both lines: the series days. See channelCurve for why they cannot differ.
-      const series = buildSeries({
+      const series: SeriesPoint[] = broadcast.isBroadcast
+        ? actuals.map(a => ({ day: a.day, views: a.views, kind: 'measured' as const }))
+        : buildSeries({
         actuals,
         baseline: score?.baseline ?? null,
         est30: score?.age_days != null && actuals.length && Math.abs(Number(score.age_days) - actuals[actuals.length - 1].day) > 1e-6
@@ -239,7 +256,7 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
       });
       // C(30) scaled by global growth is not V5's weighted C(t). Until scoring stores the
       // frozen prior/fit context, show the exact scored comparison instead of a false curve.
-      return { series, curve: isSameAgeScore(score) ? [] : channelCurve(series, score?.baseline ?? null, mult, longtail) };
+      return { series, curve: broadcast.isBroadcast || isSameAgeScore(score) ? [] : channelCurve(series, score?.baseline ?? null, mult, longtail) };
     })(),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
       variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),
@@ -257,12 +274,12 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
         publishedAt,
         thumbs: timelineThumbs,
         titles: timelineTitles,
-        score: score?.score != null ? Number(score.score) : null,
+        score: !broadcast.isBroadcast && score?.score != null ? Number(score.score) : null,
         now,
       });
       return {
         packagingGroups: groups,
-        marks: packagingMarks(groups, publishedAt),
+        marks: packagingMarks(groups, broadcast.chartOriginAt),
         timeline: clips,
         timelineTicks: timelineTicks(clips),
       };
@@ -287,6 +304,9 @@ export type VideoVerdictInput = Pick<VideoPageView,
   'score' | 'headline' | 'pace' | 'expectedNow' | 'views' | 'ageDays' | 'channelName'> & {
   /** Snapshots + samples we hold for this video; 0 means we have not measured it at all. */
   observations?: number;
+  broadcastNotice?: string | null;
+  chartOriginAt?: string;
+  timeLabel?: string | null;
   /** Prior long-form videos on the channel, when the caller knows it. */
   priorLongform?: number | null;
 };
@@ -297,6 +317,7 @@ export type VideoVerdictInput = Pick<VideoPageView,
  * as the comparable figure); a young one is judged on where day 30 is heading.
  */
 export function verdict(v: VideoVerdictInput): { big: string | null; under: string; aside: string | null; over: boolean } {
+  if (v.broadcastNotice) return { big: null, under: v.broadcastNotice, aside: null, over: false };
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
   const sc = v.score;
   const conf = sc?.confidence ? confidenceWord(sc.confidence) : null;
@@ -370,7 +391,7 @@ export type HeaderLines = {
    * would write, so the number crosses and components/app/local-time.tsx formats it.
    * (Admin pages and scripts still use lib/admin/format's ET helpers — one reader, one zone.)
    */
-  meta: { channelName: string; publishedMs: number | null; age: string; views: string; youtubeUrl: string };
+  meta: { timeLabel?: string | null; channelName: string; publishedMs: number | null; age: string; views: string; youtubeUrl: string };
   /** The multiple, or null when we cannot score the video. */
   big: string | null;
   over: boolean;
@@ -393,11 +414,13 @@ export function headerLines(v: HeaderInput): HeaderLines {
   const read = conf ? (conf === 'confirmed' ? 'settled' : `${conf} read`) : null;
   const meta = {
     channelName: v.channelName,
-    publishedMs: (() => { const t = new Date(v.publishedAt).getTime(); return Number.isFinite(t) ? t : null; })(),
-    age: ageWord(v.ageDays),
+    timeLabel: v.timeLabel,
+    publishedMs: (() => { const t = new Date(v.timeLabel === 'Stream started' ? v.chartOriginAt ?? v.publishedAt : v.publishedAt).getTime(); return Number.isFinite(t) ? t : null; })(),
+    age: v.broadcastNotice && v.timeLabel !== 'Stream started' ? 'stream age unknown' : ageWord(v.ageDays),
     views: Number(v.views).toLocaleString('en-US'),
     youtubeUrl: `https://youtu.be/${v.id}`,
   };
+  if (v.broadcastNotice) return { meta, big: null, over: false, verdict: v.broadcastNotice };
   const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
 
   if (!isSameAgeScore(sc) && v.headline === 'now' && v.pace != null && v.expectedNow != null) {

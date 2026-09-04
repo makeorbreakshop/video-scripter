@@ -377,7 +377,7 @@ export default function VideoChartPlot({
   const inView = (d: number) => d >= domain[0] && d <= domain[1];
   const endBaseline = curve.length && inView(curve[curve.length - 1].day) ? curve[curve.length - 1] : null;
   const lastSeries = series.length ? series[series.length - 1] : null;
-  const endProjected = lastSeries && inView(lastSeries.day) ? { day: lastSeries.day, projected: lastSeries.views } : null;
+  const endProjected = lastSeries?.kind === 'forecast' && inView(lastSeries.day) ? { day: lastSeries.day, projected: lastSeries.views } : null;
   /**
    * Where the video IS. The chart drew the horizon's projection with a value on it and left the
    * last thing we actually counted as an unmarked bend in the line — the one number on this

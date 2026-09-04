@@ -315,7 +315,7 @@ export async function videoPage(id: string): Promise<VideoPageData> {
   const [video, snapshots, samples, rss, thumbs, titles, score, params] = await Promise.all([
     one<any>(
       `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.like_count,
-              v.comment_count, v.duration, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
+              v.comment_count, v.duration, v.metadata, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
               p.priority_tier, p.last_tracked, p.next_track_date
        from videos v left join view_tracking_priority p on p.video_id = v.id where v.id = $1`,
       [id]
