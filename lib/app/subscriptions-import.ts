@@ -58,11 +58,18 @@ export async function googleAccessToken(userId: string): Promise<string> {
 const PAGE = 50;
 /** 40 pages of 50 is 2,000 subscriptions — past any real account, and a hard stop. */
 const MAX_PAGES = 40;
+/**
+ * Per page and overall. Forty pages that each answer in nineteen seconds is a sheet that
+ * never opens and a request that never ends, so the walk gets its own deadline as well.
+ */
+const PAGE_TIMEOUT_MS = 20_000;
+const OVERALL_TIMEOUT_MS = 90_000;
 
 /** subscriptions.list(mine=true), paged. Throws MissingScopeError on Google's 403. */
 export async function fetchSubscriptions(accessToken: string): Promise<Array<{ channel_id: string; name: string; avatar_url: string | null }>> {
   const out: Array<{ channel_id: string; name: string; avatar_url: string | null }> = [];
   let pageToken: string | undefined;
+  const overall = AbortSignal.timeout(OVERALL_TIMEOUT_MS);
   for (let page = 0; page < MAX_PAGES; page++) {
     const u = new URL('https://www.googleapis.com/youtube/v3/subscriptions');
     u.searchParams.set('part', 'snippet');
@@ -72,7 +79,7 @@ export async function fetchSubscriptions(accessToken: string): Promise<Array<{ c
     if (pageToken) u.searchParams.set('pageToken', pageToken);
     const res = await fetch(u, {
       headers: { authorization: `Bearer ${accessToken}` },
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.any([overall, AbortSignal.timeout(PAGE_TIMEOUT_MS)]),
     });
     const body: any = await res.json().catch(() => ({}));
     if (res.status === 403 || res.status === 401) {
