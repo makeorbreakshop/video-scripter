@@ -199,8 +199,14 @@ describe('insertVideos Shorts handling', () => {
   });
 
   it('asks YouTube about a 63-180s clip and drops it when it is a Short', async () => {
-    // lib/thumbs/shorts.ts HEADs /shorts/<id>: 200 means it IS a Short.
-    (global.fetch as jest.Mock).mockResolvedValue({ status: 200, headers: { get: () => null } });
+    // lib/thumbs/shorts.ts GETs /shorts/<id>: a 200 is a Short only if the body is that video's
+    // Shorts page (2026-09-04 — a bare 200 used to be enough and mislabelled thousands of rows).
+    (global.fetch as jest.Mock).mockResolvedValue({
+      status: 200,
+      headers: { get: () => null },
+      body: null,
+      text: async () => '/shorts/clip00000001?referring_app=com.apple.mobilesafari-smartbanner',
+    });
     expect(await insertVideos([vid('clip00000001', 'PT2M')], 'competitor')).toBe(0);
     expect(insertedIds()).toEqual([]);
   });
