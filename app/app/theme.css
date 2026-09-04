@@ -239,6 +239,37 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-stat-l { font-size: 10px; color: var(--cs-muted); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 1px; }
 .cs-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
+/* ------------------------------------------------------ channel list ------ */
+/* One row per tracked channel: avatar, name, day-30 baseline. Quiet until hovered. */
+.cs-chan-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--cs-line); }
+.cs-chan {
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--cs-line);
+}
+.cs-chan:hover { background: var(--cs-surface-2); }
+.cs-chan-link {
+  display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  padding: 9px 8px; color: inherit; text-decoration: none;
+}
+.cs-chan-name {
+  font-size: 14px; font-weight: 550; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cs-chan:hover .cs-chan-name { color: var(--cs-accent); }
+.cs-chan-you {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--cs-accent); flex: none;
+}
+.cs-chan-baseline { margin-left: auto; font-size: 13px; color: var(--cs-muted); flex: none; }
+.cs-chan-remove {
+  flex: none; margin-right: 8px; padding: 4px 6px; border: 0; background: none; cursor: pointer;
+  font-size: 12px; color: var(--cs-muted); opacity: 0;
+}
+.cs-chan:hover .cs-chan-remove, .cs-chan-remove:focus-visible { opacity: 1; color: var(--cs-bad); }
+.cs-chan-remove:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Touch and keyboard-only users never hover: keep Remove visible there. */
+@media (hover: none) { .cs-chan-remove { opacity: 1; } }
+
 /* -------------------------------------------------------------- controls -- */
 
 .cs-btn {

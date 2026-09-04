@@ -542,6 +542,7 @@ export interface UserChannelRow {
   backfill_status: string | null;
   thumbnail_url: string | null;
   avatar_url: string | null;
+  handle: string | null;
   video_count: number;
   baseline: number | null;
   outliers: number;
@@ -567,6 +568,7 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             coalesce(cm.title, cs.name) as name,
             cs.latest_thumbnail_url as thumbnail_url,
             cm.avatar_url,
+            cd.handle,
             coalesce(cs.video_count, 0)::int as video_count,
             cs.baseline,
             coalesce(cs.outliers, 0)::int as outliers,
@@ -575,6 +577,7 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
        left join channel_tracking ct on ct.channel_id = uc.channel_id
        left join channel_meta cm on cm.channel_id = uc.channel_id
        left join channel_stats cs on cs.channel_id = uc.channel_id
+       left join channel_directory cd on cd.channel_id = uc.channel_id
       where uc.user_id = $1
       order by uc.added_at asc`,
     [userId]

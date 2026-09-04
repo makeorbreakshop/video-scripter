@@ -2,7 +2,7 @@
 // no database — so the "what does this input mean" and "are we at the limit" rules
 // are testable on their own.
 import { parseChannelInput } from './channels-core';
-import { compactNumber, relativeTime } from './feed-format';
+import { compactNumber } from './feed-format';
 import type { PlanLimits, PlanName } from './plans';
 
 /**
@@ -31,29 +31,54 @@ export interface ChannelRowLike {
   backfill_status: string | null;
   thumbnail_url: string | null;
   avatar_url: string | null;
+  handle?: string | null;
   video_count: number;
   baseline: number | null;
   outliers: number;
   last_packaging_change: string | null;
 }
 
-export interface Stat { label: string; value: string }
-
-/** The four numbers each channel card shows, already formatted. */
-export function channelStats(row: ChannelRowLike, now: Date = new Date()): Stat[] {
-  return [
-    { label: 'videos', value: compactNumber(row.video_count) },
-    { label: 'baseline', value: row.baseline === null ? '—' : compactNumber(row.baseline) },
-    { label: 'outliers', value: compactNumber(row.outliers) },
-    {
-      label: 'last change',
-      value: row.last_packaging_change ? relativeTime(row.last_packaging_change, now) + ' ago' : '—',
-    },
-  ];
+/** The one number a channel row shows: the day-30 baseline, formatted as the feed formats views. */
+export function baselineLabel(row: Pick<ChannelRowLike, 'baseline'>): string {
+  return row.baseline === null || row.baseline === undefined ? '—' : compactNumber(row.baseline);
 }
 
-export function roleLabel(role: string): string {
-  return role === 'self' ? 'Your channel' : 'Competitor';
+/** The user's own channel first, then the biggest baselines. An unknown baseline sorts last. */
+export function sortChannels<T extends ChannelRowLike>(rows: T[]): T[] {
+  return [...(rows || [])].sort((a, b) => {
+    const self = Number(b.role === 'self') - Number(a.role === 'self');
+    if (self) return self;
+    const av = a.baseline ?? -1;
+    const bv = b.baseline ?? -1;
+    if (bv !== av) return bv - av;
+    return (a.name || a.channel_id).localeCompare(b.name || b.channel_id);
+  });
+}
+
+/** Does this tracked channel match what has been typed? Name and @handle, case- and @-insensitive. */
+export function matchesChannel(row: ChannelRowLike, query: string): boolean {
+  const q = (query || '').trim().toLowerCase().replace(/^@/, '');
+  if (!q) return true;
+  const name = (row.name || '').toLowerCase();
+  const handle = (row.handle || '').toLowerCase().replace(/^@/, '');
+  return name.includes(q) || (!!handle && handle.includes(q)) || row.channel_id.toLowerCase() === q;
+}
+
+export function filterChannels<T extends ChannelRowLike>(rows: T[], query: string): T[] {
+  const q = (query || '').trim();
+  if (!q) return rows || [];
+  return (rows || []).filter((r) => matchesChannel(r, q));
+}
+
+/**
+ * What the one search box should offer beneath the filtered list: nothing while the box is
+ * empty or the text still matches something tracked, and the add flow as soon as the text
+ * identifies a channel (@handle, URL, UC id) or matches nothing we already track.
+ */
+export function shouldOfferAdd(query: string, matches: number): boolean {
+  const mode = addChannelMode(query);
+  if (mode === 'idle') return false;
+  return mode === 'resolve' || matches === 0;
 }
 
 export interface UsageView {

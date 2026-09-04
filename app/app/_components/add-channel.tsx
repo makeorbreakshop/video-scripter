@@ -29,10 +29,22 @@ export interface AddChannelProps {
   onAdded: (channelId: string) => void | Promise<void>;
   placeholder?: string;
   autoFocus?: boolean;
+  /**
+   * Controlled mode. When `value` is given the component renders no input of its own — the
+   * page owns the box (see /app/channels, where one field both filters and adds) and this
+   * component is just the lookup and the add action beneath it.
+   */
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
-export default function AddChannel({ trackedIds, role = 'competitor', onAdded, placeholder, autoFocus }: AddChannelProps) {
-  const [input, setInput] = useState('');
+export default function AddChannel({ trackedIds, role = 'competitor', onAdded, placeholder, autoFocus, value, onValueChange }: AddChannelProps) {
+  const controlled = value !== undefined;
+  const [ownInput, setOwnInput] = useState('');
+  const input = controlled ? (value as string) : ownInput;
+  const setInput = useCallback((next: string) => {
+    if (controlled) onValueChange?.(next); else setOwnInput(next);
+  }, [controlled, onValueChange]);
   const [results, setResults] = useState<PickerItem[]>([]);
   const [resolved, setResolved] = useState<Resolved | null>(null);
   const [busy, setBusy] = useState(false);
@@ -118,14 +130,16 @@ export default function AddChannel({ trackedIds, role = 'competitor', onAdded, p
 
   return (
     <div>
-      <input
-        className="cs-input"
-        value={input}
-        autoFocus={autoFocus}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder={placeholder || 'Channel name, @handle, or any YouTube URL'}
-        aria-label="Add a channel"
-      />
+      {!controlled && (
+        <input
+          className="cs-input"
+          value={input}
+          autoFocus={autoFocus}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={placeholder || 'Channel name, @handle, or any YouTube URL'}
+          aria-label="Add a channel"
+        />
+      )}
       <div className="cs-sub" style={{ minHeight: 18, marginTop: 6 }}>
         {busy ? 'Searching…' : note ? note : mode === 'resolve' && !resolved && !results.length ? 'Looks like a channel link — we will look it up.' : ''}
       </div>

@@ -124,6 +124,27 @@ export function dayLabel(d: number) {
   return d < 1 ? `${Math.round(d * 24)}h` : `day ${d < 10 ? d.toFixed(d % 1 ? 1 : 0) : Math.round(d)}`;
 }
 
+/**
+ * The card every chart hover is drawn on: the plate, the border, the radius, the type size.
+ * The video chart's recharts tooltip and the channel baseline chart's thumbnail card are the
+ * same object to a reader, so they are one component here — `style` carries only the things
+ * that genuinely differ (where a floating card sits, how wide it is, its shadow).
+ */
+export function HoverCard({ C, style, children }: {
+  C: { surface: string; line: string; ink: string };
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{
+      background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8,
+      padding: '8px 10px', fontSize: 12, color: C.ink, ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
 // The chart is the heaviest thing on this page and the least urgent: the reader's first
 // question is the ratio above it. Loading recharts on the client only, behind a plate of the
 // chart's own height, keeps it out of the first bundle without moving anything below it when

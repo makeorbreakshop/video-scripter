@@ -1,5 +1,5 @@
 import {
-  addChannelMode, channelStats, roleLabel, planLabel, usageView,
+  addChannelMode, baselineLabel, sortChannels, matchesChannel, filterChannels, shouldOfferAdd, planLabel, usageView,
   markAlreadyTracked, addChannelError, MIN_SEARCH_LEN, avatarAt, pickerMeta,
 } from './channel-view';
 import { PLANS } from './plans';
@@ -26,24 +26,67 @@ describe('addChannelMode', () => {
   });
 });
 
-describe('channelStats', () => {
-  it('formats the four headline numbers', () => {
-    expect(channelStats(row(), NOW).map((s) => s.value)).toEqual(['1.2K', '52K', '3', '—']);
-  });
-  it('shows how long ago packaging last moved', () => {
-    const at = new Date(NOW.getTime() - 3 * 86400_000).toISOString();
-    expect(channelStats(row({ last_packaging_change: at }), NOW)[3].value).toBe('3d ago');
+describe('baselineLabel', () => {
+  it('formats the day-30 baseline the way the feed formats views', () => {
+    expect(baselineLabel(row())).toBe('52K');
+    expect(baselineLabel(row({ baseline: 22400 }))).toBe('22K');
   });
   it('renders a missing baseline rather than zero', () => {
-    expect(channelStats(row({ baseline: null }), NOW)[1].value).toBe('—');
+    expect(baselineLabel(row({ baseline: null }))).toBe('—');
+  });
+});
+
+describe('sortChannels', () => {
+  const rows = [
+    row({ channel_id: 'UC1', name: 'Small', baseline: 1000 }),
+    row({ channel_id: 'UC2', name: 'Mine', baseline: 500, role: 'self' }),
+    row({ channel_id: 'UC3', name: 'Big', baseline: 90000 }),
+    row({ channel_id: 'UC4', name: 'Unknown', baseline: null }),
+  ];
+  it('pins the user own channel first, then sorts by baseline descending', () => {
+    expect(sortChannels(rows).map((r) => r.name)).toEqual(['Mine', 'Big', 'Small', 'Unknown']);
+  });
+  it('does not mutate the input', () => {
+    const copy = [...rows];
+    sortChannels(rows);
+    expect(rows).toEqual(copy);
+  });
+});
+
+describe('matchesChannel / filterChannels', () => {
+  const rows = [
+    row({ channel_id: 'UC1', name: 'Make or Break Shop', handle: 'makeorbreakshop' }),
+    row({ channel_id: 'UC2', name: 'John Malecki', handle: null }),
+  ];
+  it('matches on name, case-insensitively and mid-word', () => {
+    expect(filterChannels(rows, 'malecki').map((r) => r.channel_id)).toEqual(['UC2']);
+    expect(filterChannels(rows, 'BREAK').map((r) => r.channel_id)).toEqual(['UC1']);
+  });
+  it('matches on the handle, with or without the @', () => {
+    expect(matchesChannel(rows[0], '@makeorbreak')).toBe(true);
+    expect(matchesChannel(rows[1], '@makeorbreak')).toBe(false);
+  });
+  it('returns everything for an empty query', () => {
+    expect(filterChannels(rows, '   ')).toHaveLength(2);
+  });
+});
+
+describe('shouldOfferAdd', () => {
+  it('stays quiet while the text still matches something tracked', () => {
+    expect(shouldOfferAdd('malecki', 1)).toBe(false);
+    expect(shouldOfferAdd('', 0)).toBe(false);
+    expect(shouldOfferAdd('a', 0)).toBe(false);
+  });
+  it('offers the add flow when nothing tracked matches', () => {
+    expect(shouldOfferAdd('malecki', 0)).toBe(true);
+  });
+  it('offers the add flow for a handle or link even when something matches', () => {
+    expect(shouldOfferAdd('@makeorbreakshop', 1)).toBe(true);
+    expect(shouldOfferAdd('https://youtube.com/channel/UC4tAgeVdaNB5vD_mBoxg50w', 1)).toBe(true);
   });
 });
 
 describe('labels', () => {
-  it('names the two roles in plain words, with no lane or tier language', () => {
-    expect(roleLabel('self')).toBe('Your channel');
-    expect(roleLabel('competitor')).toBe('Competitor');
-  });
   it('capitalises the plan for display', () => {
     expect(planLabel('owner')).toBe('Owner');
     expect(planLabel('pro')).toBe('Pro');

@@ -1,6 +1,6 @@
 // /app/channels/[id] — one channel: what it publishes, and how its packaging has moved.
 //
-// Two tabs, both URL state (`tab`, plus `sort` / `kind` / `range`), so Postgres does the
+// Three tabs, all URL state (`tab`, plus `sort` / `kind` / `range`), so Postgres does the
 // ORDER BY and the LIMIT (lib/app/channel-page.ts, lib/app/packaging-rows.ts) and nothing
 // sorts a full catalogue in the browser.
 //
@@ -14,7 +14,9 @@ import { requireAppUser } from '@/lib/app/session';
 import { isTracked, parseSort, parseRange, GRID_PAGE, type SortKey, type RangeKey } from '@/lib/app/channel-page';
 import { changedVideoCount, changedVideos, parseChangeKind, type ChangeKind } from '@/lib/app/packaging-rows';
 import { buildTestRow } from '@/lib/app/test-row';
-import { cachedChannelHeader, cachedChannelVideos, cachedChannelVideoCount } from '@/lib/app/cached';
+import { cachedChannelHeader, cachedChannelVideos, cachedChannelVideoCount, cachedChannelBaseline } from '@/lib/app/cached';
+import { hasBaselineLine } from '@/lib/app/channel-analytics';
+import { ChannelBaselineChart } from '@/components/app/channel-baseline-chart';
 import { compact, n } from '@/lib/admin/format';
 import { ChannelAvatar } from '@/components/app/avatar';
 import { VideoGrid, VideoGridStyles, LoadMore } from '@/components/app/video-grid';
@@ -71,6 +73,23 @@ async function ChangesTab({ channelId, kind, range, avatarUrl }: {
   );
 }
 
+async function AnalyticsTab({ channelId, range }: { channelId: string; range: RangeKey }) {
+  const [points, videoCount, changeCount] = await Promise.all([
+    cachedChannelBaseline(channelId, range),
+    cachedChannelVideoCount(channelId, range),
+    changedVideoCount(channelId, range),
+  ]);
+  return (
+    <>
+      <ChannelBar channelId={channelId} tab="analytics" videoCount={videoCount} changeCount={changeCount}
+                  sort="published" range={range} kind="all" showing={points.length} total={points.length} />
+      {hasBaselineLine(points)
+        ? <ChannelBaselineChart points={points} />
+        : <p className="vg-meta" style={{ marginTop: 18 }}>No baseline in this range.</p>}
+    </>
+  );
+}
+
 export default async function AppChannelPage({
   params, searchParams,
 }: {
@@ -81,9 +100,13 @@ export default async function AppChannelPage({
   const user = await requireAppUser();
   if (!user) redirect('/sign-in');
 
-  const tab = (Array.isArray(sp.tab) ? sp.tab[0] : sp.tab) === 'changes' ? 'changes' : 'videos';
+  const rawTab = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
+  const tab = rawTab === 'changes' ? 'changes' : rawTab === 'analytics' ? 'analytics' : 'videos';
   const sort = parseSort(sp.sort);
-  const range = parseRange(sp.range);
+  // Analytics opens on the last twelve months. All-time is one dropdown away, but a decade of
+  // uploads squeezed into 900px is a smear, and the question this tab answers is "where is the
+  // channel's normal NOW".
+  const range = tab === 'analytics' && sp.range == null ? '1y' : parseRange(sp.range);
   const kind = parseChangeKind(sp.kind);
   const asked = parseInt(Array.isArray(sp.n) ? sp.n[0] ?? '' : sp.n ?? '', 10);
   const limit = Number.isFinite(asked) ? Math.min(Math.max(asked, GRID_PAGE), MAX_ROWS) : GRID_PAGE;
@@ -122,7 +145,9 @@ export default async function AppChannelPage({
       <Suspense key={`${tab}:${sort}:${kind}:${range}:${limit}`} fallback={<GridSkeleton />}>
         {tab === 'changes'
           ? <ChangesTab channelId={header.channelId} kind={kind} range={range} avatarUrl={header.avatarUrl} />
-          : <VideosTab channelId={header.channelId} sort={sort} range={range} limit={limit} />}
+          : tab === 'analytics'
+            ? <AnalyticsTab channelId={header.channelId} range={range} />
+            : <VideosTab channelId={header.channelId} sort={sort} range={range} limit={limit} />}
       </Suspense>
 
       <p style={{ fontSize: 12, marginTop: 24 }}>
