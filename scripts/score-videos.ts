@@ -34,6 +34,7 @@ import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
 import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
+import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
@@ -128,7 +129,7 @@ async function priorsFor(ids: string[]): Promise<Map<string, Prior[]>> {
                       where p.channel_id = v.channel_id and p.published_at < v.published_at
                         and ${longformSql('p')}
                         and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
-                      order by p.published_at desc limit ${PRIOR_WINDOW}) p on true
+                      order by p.published_at desc nulls last limit ${PRIOR_WINDOW}) p on true
       order by r.id, p.published_at desc`,
     [ids]
   );
@@ -439,7 +440,7 @@ async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
 }
 
 // The hourly pass. Under 60 days, whichever videos got a reading newer than their stored score.
-async function score() {
+async function score(signal: AbortSignal) {
   const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const args = CHANNELS.length ? [CHANNELS] : [];
@@ -466,7 +467,8 @@ async function score() {
   );
   log(`score: ${targets.length} videos to score${SINCE ? ` (--since ${SINCE}d)` : ALL ? ' (--all: whole corpus)' : ''}`);
   let written = 0, noCurve = 0, tooYoung = 0;
-  for (const group of chunk(targets, 500)) {
+  for (const group of scoringTargetBatches(targets)) {
+    if (signal.aborted) break;
     const readStartedAt = new Date();
     const batch = await v5Batch(group, params);
     for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
@@ -474,13 +476,13 @@ async function score() {
     if (written % 5000 < 500) log(`score: ${written} written`);
     if (ALL) await sleep(SLEEP_MS);   // --all walks the whole corpus; pace it
   }
-  log(`score: done, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
+  log(`score: ${signal.aborted ? 'stopped' : 'done'}, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
 }
 
 // --final: videos past 60 days that the hourly pass does not select. Under v5 this is the same
 // score at a later age -- there is no day-30 anchor to freeze against any more -- so it runs the
 // identical math and only the version label and the pacing differ.
-async function final() {
+async function final(signal: AbortSignal) {
   const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const targets: { id: string; channel_id: string }[] = await q(
@@ -496,7 +498,8 @@ async function final() {
   );
   log(`final: ${targets.length} videos older than 60 days`);
   let written = 0, noCurve = 0;
-  for (const group of chunk(targets, 500)) {
+  for (const group of scoringTargetBatches(targets)) {
+    if (signal.aborted) break;
     const readStartedAt = new Date();
     const batch = await v5Batch(group, params);
     for (const b of batch) if (b.o.score == null) noCurve++;
@@ -504,7 +507,7 @@ async function final() {
     if (written % 5000 < 500) log(`final: ${written} written`);
     await sleep(SLEEP_MS);   // paced: this walks the long tail of the corpus
   }
-  log(`final: done, ${written} scored (${noCurve} with no channel curve)`);
+  log(`final: ${signal.aborted ? 'stopped' : 'done'}, ${written} scored (${noCurve} with no channel curve)`);
 }
 
 // ---------------------------------------------------------------- v5 (--v5)
@@ -520,7 +523,7 @@ async function final() {
 //
 // OUTPUT. A CSV under docs/benchmarks -- the dry run. It shares v5Batch with the write paths,
 // so it cannot answer differently from what the hourly pass would store.
-async function v5() {
+async function v5(signal: AbortSignal) {
   const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const args = CHANNELS.length ? [CHANNELS] : [];
@@ -549,7 +552,8 @@ async function v5() {
   const lines = ['video_id,channel_id,model_version,age_days,views,score,typical_at_age,n_typical,typical_neff,typical_measured_share,projection,projection_horizon,q,confidence'];
   let scored = 0, noCurve = 0;
 
-  for (const group of chunk(targets, 500)) {
+  for (const group of scoringTargetBatches(targets)) {
+    if (signal.aborted) break;
     for (const { t, views, o } of await v5Batch(group, params)) {
       if (o.score == null) noCurve++;
       scored++;
@@ -564,16 +568,24 @@ async function v5() {
     await sleep(SLEEP_MS);
   }
   fs.writeFileSync(out, lines.join('\n'));
-  log(`v5: ${scored} scored (${noCurve} with no channel curve) -> ${out}`);
+  log(`v5: ${signal.aborted ? 'stopped, ' : ''}${scored} scored (${noCurve} with no channel curve) -> ${out}`);
 }
 
-if (FIT) await fit(); else if (V5) await v5(); else if (FINAL) await final(); else await score();
-// Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
-// refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
-if (!FIT && !V5) {
-  const statsRefreshed = await pool.query(refreshChannelStatsSql(CHANNELS.length > 0), CHANNELS.length ? [CHANNELS] : [])
-    .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
-  // New scores change what the channel page and every video page on it say.
-  await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
+try {
+  await runScoringWorker({
+    args: process.argv.slice(2),
+    run: async (signal) => {
+      if (FIT) await fit(); else if (V5) await v5(signal); else if (FINAL) await final(signal); else await score(signal);
+      // Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
+      // refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
+      if (!FIT && !V5 && !signal.aborted) {
+        const statsRefreshed = await pool.query(refreshChannelStatsSql(CHANNELS.length > 0), CHANNELS.length ? [CHANNELS] : [])
+          .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
+        // New scores change what the channel page and every video page on it say.
+        await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
+      }
+    },
+  });
+} finally {
+  await pool.end();
 }
-await pool.end();
