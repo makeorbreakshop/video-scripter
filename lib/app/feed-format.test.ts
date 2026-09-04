@@ -99,7 +99,7 @@ describe('feedRowView', () => {
     const v = feedRowView(event({ type: 'outlier', payload: { score: 4.2, est30: 1_200_000, baseline: 300000 } }));
     expect(v.score).toBe(4.2);
     expect(v.highScore).toBe(true);
-    expect(v.detail).toBe('1.2M est. 30-day views · baseline 300K');
+    expect(v.detail).toBe('1.2M est. 30-day views · typical 300K at this age');
   });
 
   it('survives an unknown type and an empty payload', () => {

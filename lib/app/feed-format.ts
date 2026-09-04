@@ -249,7 +249,8 @@ export function feedRowView(e: FeedEventLike): FeedRowView {
       const est30 = num(p.est30), baseline = num(p.baseline);
       const bits: string[] = [];
       if (est30 !== null) bits.push(`${compactNumber(est30)} est. 30-day views`);
-      if (baseline !== null) bits.push(`baseline ${compactNumber(baseline)}`);
+      // v5: the denominator is typical AT THE VIDEO'S AGE, not a day-30 baseline.
+      if (baseline !== null) bits.push(`typical ${compactNumber(baseline)} at this age`);
       base.detail = bits.length ? bits.join(' · ') : 'Beat its channel baseline';
       return base;
     }

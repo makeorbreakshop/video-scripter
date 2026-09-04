@@ -313,7 +313,9 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
     return {
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
-      under: `on pace for ${fmt(Math.round(sc.est30))} by day 30 · typical ${fmt(Math.round(sc.baseline))}`,
+      // v5: `baseline` is C(t) -- typical AT THIS AGE, not at day 30. The age has to be on
+      // the line, or the number reads as a day-30 claim sitting next to a day-30 projection.
+      under: `${fmt(v.views)} vs typical ${fmt(Math.round(sc.baseline))} at ${age(v.ageDays)} · on pace for ${fmt(Math.round(sc.est30))} by day 30`,
       // One multiplier per page, and only numbers the headline is made of. The measured count
       // and the read's confidence are the whole second line.
       aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
@@ -392,8 +394,8 @@ export function headerLines(v: HeaderInput): HeaderLines {
     return {
       meta, big: pct(Number(sc.score)), over: Number(sc.score) >= 1,
       verdict: [
+        `typical ${fmt(Math.round(sc.baseline))} at ${ageWord(v.ageDays)}`,
         `on pace for ${fmt(Math.round(sc.est30))} by day 30`,
-        `typical ${fmt(Math.round(sc.baseline))}`,
         read,
       ].filter(Boolean).join(' · '),
     };
