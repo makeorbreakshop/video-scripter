@@ -8,7 +8,7 @@
 // Baselines: a prior video's day-30 views come from its day-27..33 snapshot when it has one,
 // otherwise (age >= 45d) from its current lifetime count divided back down the fitted long-tail
 // curve. That is what lets sparsely tracked channels get a baseline at all.
-// Reads: videos, view_snapshots, view_samples, rss_samples, score_params. Writes: video_scores, score_params (--fit).
+// Reads: videos, view_snapshots, view_samples, score_params. Writes: video_scores, score_params (--fit).
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
@@ -46,25 +46,17 @@ const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.que
 async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
   const out = new Map<string, Snapshot[]>();
   const rows = await q(
-    // Three sources, lowest priority last: an RSS reading is only used for a day with no
-    // view_samples and no view_snapshots row within 12h (the same rule as mergeActuals in
-    // lib/admin/video-curve.ts). `rank` makes that precedence explicit in SQL.
-    `with src as (
-        select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views, 2 as rank
-          from view_snapshots where video_id = any($1)
-        union all
-        select video_id, sampled_at, view_count, 1 from view_samples where video_id = any($1)
-        union all
-        select video_id, at, views, 0 from rss_samples where video_id = any($1) and views is not null
-      ), paid as (select video_id, at from src where rank > 0)
-      select x.video_id, extract(epoch from (x.at - v.published_at))/86400.0 as day, x.views
-        from src x
-        join videos v on v.id = x.video_id
-       where x.views > 0 and x.at >= v.published_at
-         and (x.rank > 0 or not exists (
-               select 1 from paid p
-                where p.video_id = x.video_id and abs(extract(epoch from (p.at - x.at))) < 43200))
-       order by x.video_id, x.at`,
+    // Two sources only. rss_samples is deliberately NOT read here: the 2026-09-04 benchmark
+    // (docs/benchmarks/CHANGELOG.md, v3.1-candidate-3) rejected it for doubling day-1->2 churn,
+    // and the correlated 12h dedupe it needed ran >150 s on 5,000 prior ids, killing the hourly
+    // run (57014). Re-propose through the outlier-score skill's protocol, never here directly.
+    `select x.video_id, extract(epoch from (x.at - v.published_at))/86400.0 as day, x.views
+       from (select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views from view_snapshots where video_id = any($1)
+             union all
+             select video_id, sampled_at, view_count from view_samples where video_id = any($1)) x
+       join videos v on v.id = x.video_id
+      where x.views > 0 and x.at >= v.published_at
+      order by x.video_id, x.at`,
     [ids]
   );
   for (const r of rows) {
