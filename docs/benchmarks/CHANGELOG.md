@@ -6,6 +6,85 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-04 — v5.0 same-age score: BUILT AND VERIFIED, not accepted, not deployed
+
+Worktree `vs-v5-same-age`, branch `scoring/v5-same-age`, cut from the accepted v4 branch.
+Spec: `~/shared-memory/knowledge/projects/video-scripter/v5-same-age-score-spec.md`.
+Main checkout confirmed on `main` before every DB step. **Zero `v5.0` rows in `video_scores`** —
+`scripts/score-videos.ts` refuses to run its v4 write paths under a v5 `MODEL_VERSION`, and the
+`--v5` mode writes a CSV. Two `score_params` rows keyed `v5.0` written (harmless: production
+reads `v3.0`).
+
+**What changed.** `score(t) = v(t) / C(t)` at true age; day 30 is no longer the anchor and the
+day-30 number becomes a projection at a selectable horizon.
+- `lib/scoring/growth.ts` — ONE growth function. `logToRef(params, age)` is a single cumulative
+  curve from the first launch bucket to the last long-tail age, so the v3/v4 sub-day disagreement
+  (`logMultTo30`'s day-1 clamp ~2.4× vs `scoreVideo`'s fitted ladder ~3.24×) no longer exists.
+  `growthLog(from, to)` is its difference: identity at `from == to`, monotone, continuous at the
+  day-1 and day-30 seams, exactly antisymmetric. The channel blend and the per-video Q correction
+  ride as a positive scale chosen so `anchor → 30` reproduces v3's `remaining` term.
+- `lib/scoring/curve.ts` — `C(t)`, the v4 time-weighted log median read at ANY age. Each prior
+  contributes a real sample at `t`, else its nearest sample slid along G, else its lifetime count
+  slid back. Every contribution carries kind and log-distance, so a score reports its measured
+  share.
+- `scripts/benchmark-v5.ts` — the spec's parts 1–7. `docs/benchmarks/v5.0-2026-09-04.verification.{md,json}`.
+
+**Verdicts** (5,000 target videos, 87,835 neighbours, 18-month window; every n in the report).
+- **1 G accuracy (leave-one-out), PASS.** Gate: medALE ≤ .10 within 30d at distance ≤ 1 bucket —
+  **.013 on n=2,774**. By distance: .011 / .041 / .112 / .180 at ≤.35 / .35–.7 / .7–1.4 / >1.4.
+- **1b where G is weakest.** Below 4 hours it is not usable: medALE **1.60 (n=55) under 1h** and
+  **1.06 (n=139) 1h–4h**, against .048 at 3–7d and .010 at 60–180d. The 365d–1500d bucket is the
+  other weak spot (**.171, n=8,272**). The fitted ladder says a video has 69× its 1-hour count
+  still to come by day 30; that number is chained through day 1 from 1,167 pairs and it is the
+  single largest error source in the model.
+- **2 C accuracy.** Interpolated vs real-only: medALE .088/.125/.090/.132/.115 at t=1/3/7/30/90
+  (n 399–909), bias 0.000 everywhere. Censored vs centered oracle: .320/.323/.318/.347/.355
+  (n=968), bias ≈ −.007 — the trailing rule is unbiased but noisy, unchanged in character from v4.
+- **3 score accuracy.** On rows where the ratio is fully measured, medALE is **0.000 in 15 of 17
+  cells** — but read that correctly: `C` is a weighted MEDIAN, so adding interpolated
+  contributions to three real ones usually does not move it. Spearman .90–.99, F1@2× .89–1.00
+  (time split n 35–156, heldout n 3–24). The cells that move are the low-measured-share ones.
+- **4 projection.** medALE .061 (14→30, n=100), .147 (7→30, n=57), .204 (3→30, n=35), .357
+  (1→30, n=34); to 365d, .236 (from 30d, n=145) up to .615 (from 1d, n=143). Band calibration on
+  held-out: inner **38–56%**, outer **63–67%** against 50/80 nominal, on n=9–76 per horizon.
+  **Not passing, and n is too small to call.** The projection bands need their own fit.
+- **5 stability.** .148 (0.5→1), .102 (1→2), .072, .046, .029, .042, .056, .034. The 1→2 step is
+  **.102 against v4's .208** — halved, because the denominator no longer moves with a forecast.
+- **6 backfill fidelity.** Lifetime slid back to a real reading: medALE .246 at 30d (n=5,041),
+  .147 at 90d (n=8,788), bias −.08/−.09. Weak, and the reason `measured_share` exists.
+- **7 regression to v4 at t=30.** medALE **.002**, Spearman **.999**, **97.8% within ±10%**,
+  **100% same outlier call** on n=368. Nothing silently changed at the one age both models define.
+- **8 gates.** Leak query returns zero v5 rows. Prod on `main`. Rescore + deploy NOT done.
+
+**Controls on the v4 path, which v5 does not touch.** `benchmark-scores.ts --params-version v3.0`
+reproduces the accepted v4 verdict exactly: **10 better / 32 wash / 0 worse → better**. Run at
+`--params-version v4.0` instead it reads **10 / 30 / 2 → worse** on the two sub-day cells — the
+launch-ladder confound the v4 round documented, reproduced here as a control.
+`check-band-calibration.ts --params-version v3.0`: inner **50.6%**, outer **79.5%** on 1,522
+held-out checks.
+
+**Two defects found and fixed during the build.**
+1. `blendScale` indexed the channel multiplier and Q bins by the RAW age (`params.mult[3.0082]`),
+   so both terms were silently dropped for every reading not landing exactly on a bucket. Caught
+   on a real video: v5 projected 797,287 at day 30 against v4's stored `est30` of 1,105,421.
+   Now bucketed via `bucketFor`, and pinned by two tests.
+2. Fitting projection bands over `BAND_AGES` collapsed the whole table to zero width (a thin
+   first bucket carries forward as zeros, and `fitBands` then forces width non-increasing),
+   reporting 0%/0% coverage. Fit over the ages actually present instead.
+
+**One thing the spec asked for that the data cannot supply.** The past-30 half of G was to be
+refit from snapshot pairs in a trailing 12-month window. There are **ZERO** same-video
+(day-30, ≥60d) snapshot pairs inside 12 months — the snapshot store starts 2025-06-30 and every
+video with a recent day-30 reading is either under 60 days old or was never re-snapshotted past
+60. All 26,447 such pairs in the corpus come from the first weeks of tracking. The fit falls back
+to an all-time window and logs it. **The long tail is not temporal.**
+
+**Cost of the old-video revisit.** v5 drops the 60-day ceiling, so a video is rescored whenever a
+new snapshot lands. **No extra YouTube API calls** — it consumes snapshots the tracker already
+takes. DB: ~53,700 snapshots/day land on videos past 30 days (against ~17,900/day under 30), and
+the scorer runs at ~27 videos/s measured on a 2,000-video pass, so the revisit adds ~33 min/day
+spread across the hourly ticks. A full-corpus v5 pass is 693,806 videos ≈ 7.1 hours.
+
 ## 2026-09-03 — v3.0 baseline recorded
 
 First run of `scripts/benchmark-scores.ts`. No model change; this establishes
