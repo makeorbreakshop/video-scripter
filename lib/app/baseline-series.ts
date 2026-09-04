@@ -17,6 +17,10 @@ export type BaselinePoint = {
   score: number | null;
   /** True when the model could not stand behind the score — the tick is drawn faintest. */
   weak: boolean;
+  /** The video's thumbnail for the hover card. YouTube's current image, which is always live. */
+  thumbUrl: string | null;
+  /** The archived copy, shown only if the CDN url 404s (components/app/thumb-runtime.ts). */
+  thumbFallbackUrl: string | null;
 };
 
 
@@ -114,4 +118,28 @@ export function nearestByX(xs: number[], x: number, maxDist = HIT_PX): number | 
     if (d < bestD) { bestD = d; best = i; }
   }
   return best >= 0 && bestD <= maxDist ? best : null;
+}
+
+/**
+ * The hover card's width, and the thumbnail inside it: the same 120px plate the video chart's
+ * packaging-marker card uses, plus the card's own padding and border.
+ */
+export const CARD_THUMB = 120;
+export const CARD_W = CARD_THUMB + 24;
+
+/**
+ * Where the hover card's left edge goes, in the plot's own pixels.
+ *
+ * Two rules, both from the same complaint: the card sat ON the tick it was describing, and it
+ * ran off the right edge of the chart. So it is placed BESIDE the tick — right of it by
+ * default, left of it when the right side has no room — and then clamped into [0, plotW - w]
+ * so it can never leave the plot on either edge. When the plot is narrower than the card the
+ * clamp wins and returns 0; a card half off-screen is worse than one that overlaps.
+ */
+export function cardLeft(x: number, plotW: number, cardW = CARD_W, gap = 12): number {
+  const max = Math.max(0, plotW - cardW);
+  const right = x + gap;
+  const left = x - gap - cardW;
+  const pick = right + cardW <= plotW ? right : left >= 0 ? left : right;
+  return Math.min(Math.max(pick, 0), max);
 }

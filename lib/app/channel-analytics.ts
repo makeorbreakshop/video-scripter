@@ -15,6 +15,7 @@
 import { q } from '../admin/db';
 import { longformSql } from '../scoring/longform';
 import type { RangeKey } from './channel-page';
+import { versionThumbUrl } from './video-page';
 import type { BaselinePoint } from './baseline-series';
 
 export * from './baseline-series';
@@ -29,7 +30,7 @@ const MAX_POINTS = 2000;
 export async function channelBaselineSeries(channelId: string, range: RangeKey = '1y'): Promise<BaselinePoint[]> {
   const iv = RANGE_INTERVAL[range];
   const rows = await q<any>(
-    `select v.id, v.title, v.published_at, s.baseline, s.est30, s.score, s.confidence
+    `select v.id, v.title, v.published_at, v.thumbnail_url, s.baseline, s.est30, s.score, s.confidence
        from videos v
        join video_scores s on s.video_id = v.id
       where v.channel_id = $1
@@ -57,6 +58,12 @@ function toPoint(r: any): BaselinePoint {
     est30: num(r.est30),
     score: weak ? null : num(r.score),
     weak,
+    // The imported CDN url is YouTube's own image and is always the current thumbnail. The
+    // archived v1 is the fallback for the handful of rows imported before that column existed;
+    // finding the LATEST archived version would cost a lateral per row on a 2,000-row read,
+    // and the hover card does not need version history — the video page owns that.
+    thumbUrl: r.thumbnail_url || versionThumbUrl(r.id, 1),
+    thumbFallbackUrl: r.thumbnail_url ? versionThumbUrl(r.id, 1) : null,
   };
 }
 

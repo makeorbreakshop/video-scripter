@@ -14,6 +14,10 @@ import type { PackagingMark } from '@/lib/app/packaging-groups';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ThemeMode } from '@/lib/app/chart-style';
 
+// The number and date formatting both charts share now lives under lib/app so it can be
+// asserted; re-exported here because the chart components already import it from this file.
+export { fmtViews, dayLabel, axisDate, tooltipDate, etDate, ET, AXIS_DATE, FULL_DATE, MONTH_YEAR } from '@/lib/app/chart-format';
+
 export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
 }
@@ -87,31 +91,25 @@ export function useThemeColors() {
   return c;
 }
 
-export function fmtViews(v: number) {
-  return v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(v >= 1e4 ? 0 : 1) + 'K' : String(Math.round(v));
-}
-
-const ET = 'America/New_York';
-function dateAtDay(publishedAt: string | Date | null | undefined, day: number): Date | null {
-  if (!publishedAt) return null;
-  const t0 = new Date(publishedAt).getTime();
-  return Number.isFinite(t0) ? new Date(t0 + day * 86_400_000) : null;
-}
-export function axisDate(publishedAt: string | Date | null | undefined, day: number, launch: boolean): string {
-  const d = dateAtDay(publishedAt, day);
-  if (!d) return dayLabel(day);
-  return launch
-    ? d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric' }).replace(',', '')
-    : d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
-}
-export function tooltipDate(publishedAt: string | Date | null | undefined, day: number): string {
-  const d = dateAtDay(publishedAt, day);
-  if (!d) return dayLabel(day);
-  return d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
-}
-
-export function dayLabel(d: number) {
-  return d < 1 ? `${Math.round(d * 24)}h` : `day ${d < 10 ? d.toFixed(d % 1 ? 1 : 0) : Math.round(d)}`;
+/**
+ * The card every chart hover is drawn on: the plate, the border, the radius, the type size.
+ * The video chart's recharts tooltip and the channel baseline chart's thumbnail card are the
+ * same object to a reader, so they are one component here — `style` carries only the things
+ * that genuinely differ (where a floating card sits, how wide it is, its shadow).
+ */
+export function HoverCard({ C, style, children }: {
+  C: { surface: string; line: string; ink: string };
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{
+      background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8,
+      padding: '8px 10px', fontSize: 12, color: C.ink, ...style,
+    }}>
+      {children}
+    </div>
+  );
 }
 
 // The chart is the heaviest thing on this page and the least urgent: the reader's first

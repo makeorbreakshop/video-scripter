@@ -12,6 +12,12 @@
 // the x axis. Nothing about a tick's height encodes views — height says only which of three
 // kinds it is (lib/app/baseline-series.markKind), and the accent is spent on the outliers.
 //
+// The hover is the video chart's hover: the same <HoverCard> chrome, the same Eastern date
+// formatting (lib/app/chart-format), the same theme colours, and the same 120px <Thumb> the
+// packaging-marker card shows. What is still this chart's own is the tick strip — a daily
+// channel puts two thousand marks on this axis, and one <svg> with a nearest-x hit test is the
+// only version of that which does not rebuild two thousand recharts components per hover.
+//
 // The y axis is LOG. A channel's normal can move by an order of magnitude across a decade, and
 // log is chosen here rather than offered as a toggle: the reading is the SHAPE of the line.
 // (baselineDomain owns the floor — a log axis cannot draw zero.)
@@ -23,18 +29,19 @@ import {
 } from 'recharts';
 import type { BaselinePoint, MarkKind } from '@/lib/app/baseline-series';
 import {
-  baselineDomain, timeTicks, tickFormat, timeExtent, markKind, MARK_HEIGHT, BAND_HEIGHT, HIT_PX,
-  nearestByX,
+  baselineDomain, timeTicks, tickFormat, timeExtent, markKind, MARK_HEIGHT, BAND_HEIGHT,
+  nearestByX, cardLeft, CARD_W, CARD_THUMB,
 } from '@/lib/app/baseline-series';
-import { useThemeColors, fmtViews } from './video-chart';
+import { useThemeColors, fmtViews, etDate, AXIS_DATE, FULL_DATE, MONTH_YEAR, HoverCard } from './video-chart';
+import { Thumb } from './thumb';
+import { installThumbFallback } from './thumb-runtime';
 
-const ET = 'America/New_York';
-const axisTick = (t: number, fmt: 'month' | 'day') =>
-  new Date(t).toLocaleDateString('en-US', fmt === 'month'
-    ? { timeZone: ET, month: 'short', year: '2-digit' }
-    : { timeZone: ET, month: 'short', day: 'numeric' });
-const fullDay = (t: number) =>
-  new Date(t).toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric', year: 'numeric' });
+// One delegated listener for the card's thumbnail, the way every other client component that
+// renders a <Thumb> does it — a version that never reached the archive 404s, and a broken
+// image in a hover card reads as a bug.
+installThumbFallback();
+
+const axisTick = (t: number, fmt: 'month' | 'day') => etDate(t, fmt === 'month' ? MONTH_YEAR : AXIS_DATE);
 
 const CHART_H = 300;
 // recharts' default XAxis height, plus the chart's own bottom margin: what the band has to
@@ -132,23 +139,35 @@ function VideoBand({ points, C, onOpen }: {
         </svg>
       )}
       {hovered && (
-        <div
-          role="tooltip"
+        /* Beside the tick, never on it, and never past either edge — lib/app/baseline-series
+           .cardLeft owns both rules. The card sits above the band, so the tick and the guide
+           line stay visible under it. */
+        <HoverCard
+          C={C}
           style={{
             position: 'absolute', bottom: BAND_HEIGHT + 6, pointerEvents: 'none', zIndex: 2,
-            left: Math.min(Math.max((xs[hover!] ?? 0) - 110, -PLOT_LEFT + 4), Math.max(w - 220, -PLOT_LEFT + 4)),
-            width: 220, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8,
-            padding: '8px 10px', fontSize: 12, color: C.ink,
+            left: cardLeft(xs[hover!] ?? 0, w), width: CARD_W,
             boxShadow: '0 6px 20px rgba(0,0,0,0.14)',
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: 3 }}>{hovered.title}</div>
-          <div style={{ color: C.muted }}>{fullDay(hovered.t)}</div>
+          <Thumb
+            src={hovered.thumbUrl}
+            fallbackSrc={hovered.thumbFallbackUrl}
+            alt=""
+            loading="eager"
+            style={{ width: CARD_THUMB, marginBottom: 6 }}
+          />
+          <div style={{ fontWeight: 600, marginBottom: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+            {hovered.title}
+          </div>
+          <div style={{ color: C.muted }}>{etDate(hovered.t, FULL_DATE)}</div>
           <div style={{ color: C.muted }}>
             {hovered.est30 != null ? `${fmtViews(hovered.est30)} at day 30` : 'no day-30 estimate'}
-            {hovered.score != null ? ` · ${hovered.score.toFixed(1)}×` : ''}
           </div>
-        </div>
+          <div style={{ color: markKind(hovered) === 'outlier' ? C.accent : C.muted }}>
+            {hovered.score != null ? `${hovered.score.toFixed(1)}×` : 'no score yet'}
+          </div>
+        </HoverCard>
       )}
     </div>
   );

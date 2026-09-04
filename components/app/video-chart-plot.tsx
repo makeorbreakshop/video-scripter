@@ -27,7 +27,7 @@ import {
 import { markerLayout, markAt } from '@/lib/app/chart-marks';
 import { zoomDomain, axisTicks, isFullDomain } from '@/lib/app/chart-zoom';
 import { Thumb } from './thumb';
-import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, dayLabel } from './video-chart';
+import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, dayLabel, HoverCard } from './video-chart';
 
 /**
  * The legend, drawn by hand rather than by recharts.
@@ -194,11 +194,11 @@ export default function VideoChartPlot({
                 inner: row.bandInner ?? null, outer: row.bandOuter ?? null,
               });
               return (
-                <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8, padding: '8px 10px', fontSize: 12, color: C.ink }}>
+                <HoverCard C={C}>
                   {lines.map((l, i) => (
                     <div key={i} style={{ color: i === 1 ? C.ink : C.muted, fontWeight: i === 1 ? 600 : 400, marginTop: i === 2 ? 3 : 0 }}>{l}</div>
                   ))}
-                </div>
+                </HoverCard>
               );
             }}
           />

@@ -2,7 +2,7 @@ jest.mock('../admin/db', () => ({ q: jest.fn(), one: jest.fn() }));
 import { q } from '../admin/db';
 import {
   channelBaselineSeries, hasBaselineLine, baselineDomain, timeTicks, tickFormat, timeExtent,
-  markKind, nearestByX, MARK_HEIGHT, MIN_BASELINE_POINTS,
+  markKind, nearestByX, MARK_HEIGHT, MIN_BASELINE_POINTS, HIT_PX, cardLeft, CARD_W,
   type BaselinePoint,
 } from './channel-analytics';
 
@@ -15,7 +15,8 @@ const row = (over: Partial<Record<string, any>> = {}) => ({
 });
 const pt = (over: Partial<BaselinePoint> = {}): BaselinePoint => ({
   videoId: 'v', title: 't', t: 0, publishedAt: '2026-01-01T00:00:00Z',
-  baseline: 100, est30: 200, score: 2, weak: false, ...over,
+  baseline: 100, est30: 200, score: 2, weak: false,
+  thumbUrl: null, thumbFallbackUrl: null, ...over,
 });
 
 describe('channelBaselineSeries', () => {
@@ -66,6 +67,27 @@ describe('channelBaselineSeries', () => {
     const [p] = await channelBaselineSeries('UC123');
     expect(p.baseline).toBeNull();
     expect(p.est30).toBeNull();
+  });
+});
+
+describe('the hover card\'s thumbnail', () => {
+  it('reads the CDN url off the same row, with no extra join', async () => {
+    mq.mockResolvedValue([row({ thumbnail_url: 'https://i.ytimg.com/vi/v1/hqdefault.jpg' })]);
+    const [p] = await channelBaselineSeries('UC123');
+    const sql = mq.mock.calls[0][0];
+    expect(sql).toMatch(/v\.thumbnail_url/);
+    expect(sql).not.toMatch(/lateral/i);
+    expect(sql).not.toMatch(/thumbnail_versions/);
+    expect(p.thumbUrl).toBe('https://i.ytimg.com/vi/v1/hqdefault.jpg');
+    expect(p.thumbFallbackUrl).toContain('v1');
+  });
+
+  it('falls back to the archived first version when the row never carried one', async () => {
+    mq.mockResolvedValue([row({ thumbnail_url: null })]);
+    const [p] = await channelBaselineSeries('UC123');
+    expect(p.thumbUrl).toBeTruthy();
+    // Nothing left to fall back TO once the archive is already the source.
+    expect(p.thumbFallbackUrl).toBeNull();
   });
 });
 
@@ -164,5 +186,44 @@ describe('nearestByX', () => {
   it('hits from at least 6px away', () => {
     expect(nearestByX([100], 106)).toBe(0);
     expect(nearestByX([100], 107)).toBeNull();
+  });
+});
+
+describe('cardLeft', () => {
+  const W = 600;
+  it('sits beside the tick, never on top of it', () => {
+    const x = 300;
+    const left = cardLeft(x, W);
+    expect(left).toBeGreaterThan(x);
+    expect(left + CARD_W).toBeLessThanOrEqual(W);
+  });
+
+  it('flips to the left of the tick when the right edge has no room', () => {
+    const x = W - 4;
+    const left = cardLeft(x, W);
+    expect(left + CARD_W).toBeLessThanOrEqual(x);
+    expect(left).toBeGreaterThanOrEqual(0);
+  });
+
+  it('stays inside the plot on both edges, wherever the tick is', () => {
+    for (let x = -20; x <= W + 20; x += 7) {
+      const left = cardLeft(x, W);
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(left + CARD_W).toBeLessThanOrEqual(W);
+    }
+  });
+
+  it('gives up on the gap rather than the plot when the plot is narrower than the card', () => {
+    expect(cardLeft(10, CARD_W - 40)).toBe(0);
+  });
+
+  it('holds the video chart\'s 120px thumbnail plus the card\'s own padding', () => {
+    expect(CARD_W).toBeGreaterThanOrEqual(120);
+  });
+});
+
+describe('the tick hit target', () => {
+  it('stays at least 6px so a dense channel is still hoverable', () => {
+    expect(HIT_PX).toBeGreaterThanOrEqual(6);
   });
 });
