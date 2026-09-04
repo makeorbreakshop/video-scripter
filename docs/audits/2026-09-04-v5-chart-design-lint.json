@@ -11,10 +11,12 @@
     "lib/admin/queries.ts",
     "lib/app/chart-brush.test.ts",
     "lib/app/chart-brush.ts",
+    "lib/app/chart-comparison.ts",
     "lib/app/chart-series.test.ts",
     "lib/app/chart-series.ts",
     "lib/app/chart-style.test.ts",
     "lib/app/chart-style.ts",
+    "lib/app/v5-chart-regression.test.ts",
     "lib/app/video-page.test.ts",
     "lib/app/video-page.ts"
   ],
@@ -40,7 +42,7 @@
   "findings": [],
   "waivers": [],
   "summary": {
-    "files_scanned": 12,
+    "files_scanned": 14,
     "blockers": 0,
     "waived_findings": 0,
     "rules_failed": 0
