@@ -18,8 +18,8 @@ import { thumbnailVariants, testState, type Variant, type TestState } from './pa
 import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
 import { experiments, type Experiment } from './experiment';
 import { horizonFor } from './chart-horizon';
+import { snapshotTimeIso } from './observations';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
-import { etDateTime } from '../admin/format';
 
 /** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
  *  to an earlier image is a new version but the same variant (lib/app/packaging.ts). */
@@ -65,8 +65,8 @@ export type VideoPageView = {
   packaging: TestState;
   /** the packaging history as the timeline's clips: published, the test, the changes, now */
   timeline: TimelineClip[];
-  /** mono day ticks above the track */
-  timelineTicks: string[];
+  /** the ruler above the track, as epoch ms — the strip writes them in the reader's zone */
+  timelineTicks: number[];
   titles: TitleVersionView[];
   thumbUrls: Record<number, string>;
   lastSeen: string | null;
@@ -179,8 +179,19 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
 }
 
 export async function loadVideoPage(id: string, now: number = Date.now()): Promise<VideoPageView | null> {
-  const { video: v, snapshots, samples, rss, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
+  const { video: v, snapshots: rawSnapshots, samples, rss, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
   if (!v) return null;
+
+  /**
+   * Where each snapshot goes on the chart. view_snapshots stores a DATE, so the page has always
+   * drawn one at noon UTC (8 AM ET) on that day; the row's own created_at is a better time for
+   * 87% of them and a backfill import time for the tail. lib/app/observations.snapshotTimeIso is
+   * the rule, and it is the CHART's rule only — the scorer still reads snapshot_date.
+   *
+   * MythBusters aiadrt1mKEc: the Sep 4 reading was taken Sep 3 20:17 ET and was drawn twelve
+   * hours later, which put the measured line into the future.
+   */
+  const snapshots = rawSnapshots.map((s) => ({ ...s, at: snapshotTimeIso(s.at, s.created_at) }));
 
   const actuals = mergeActuals(v.published_at, snapshots, samples, rss ?? []);
   const markers = packagingMarkers(v.published_at, thumbs, titles);
@@ -350,8 +361,16 @@ export type HeaderInput = VideoVerdictInput & {
 };
 
 export type HeaderLines = {
-  /** The metadata line's parts. The page draws them; the YouTube one is a link. */
-  meta: { channelName: string; publishedET: string; age: string; views: string; youtubeUrl: string };
+  /**
+   * The metadata line's parts. The page draws them; the YouTube one is a link.
+   *
+   * `publishedMs` is epoch milliseconds, NOT a formatted string, and that is deliberate: this
+   * function runs on the server, where the zone is the server's, and the app shows times in the
+   * READER's zone. A string formatted here would be a different time from the one the browser
+   * would write, so the number crosses and components/app/local-time.tsx formats it.
+   * (Admin pages and scripts still use lib/admin/format's ET helpers — one reader, one zone.)
+   */
+  meta: { channelName: string; publishedMs: number | null; age: string; views: string; youtubeUrl: string };
   /** The multiple, or null when we cannot score the video. */
   big: string | null;
   over: boolean;
@@ -374,7 +393,7 @@ export function headerLines(v: HeaderInput): HeaderLines {
   const read = conf ? (conf === 'confirmed' ? 'settled' : `${conf} read`) : null;
   const meta = {
     channelName: v.channelName,
-    publishedET: etDateTime(v.publishedAt),
+    publishedMs: (() => { const t = new Date(v.publishedAt).getTime(); return Number.isFinite(t) ? t : null; })(),
     age: ageWord(v.ageDays),
     views: Number(v.views).toLocaleString('en-US'),
     youtubeUrl: `https://youtu.be/${v.id}`,

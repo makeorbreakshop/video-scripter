@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TimelineClip } from '@/lib/app/packaging-timeline';
 import { nowLabel } from '@/lib/app/packaging-timeline';
+import { localDay, localDateTime, localDayRange } from '@/lib/app/local-time';
 import { useMarkerHover } from './video-chart';
 import { installThumbFallback } from './thumb-runtime';
 
@@ -36,12 +37,22 @@ function Chevron({ className, dir = 'down' }: { className?: string; dir?: 'down'
   );
 }
 
-export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; ticks: string[] }) {
+/**
+ * The strip's times are written HERE, in the browser, so they are the reader's own clock rather
+ * than the server's. The clips carry instants and the ruler carries epoch milliseconds
+ * (lib/app/packaging-timeline.ts); nothing about a zone crosses from the server.
+ *
+ * They are written after mount for the same reason: a server-rendered string and a
+ * browser-rendered one would be two different times, and React would hydrate one over the other.
+ */
+export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; ticks: number[] }) {
   // Which clip is open is shared state, not local: a click on that test's window in the chart
   // above opens it here and scrolls it into view. Hover only highlights — when hover also
   // expanded, moving the mouse across the strip opened and closed the thing under the cursor.
   const { hovered, setHovered, opened, setOpened } = useMarkerHover();
   const [overflow, setOverflow] = useState(false);
+  const [local, setLocal] = useState(false);
+  useEffect(() => setLocal(true), []);
   const track = useRef<HTMLDivElement | null>(null);
   const openRef = useRef<HTMLButtonElement | null>(null);
 
@@ -84,8 +95,12 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
 
   return (
     <div className="pt-wrap">
-      <div className="pt-ruler cs-num" aria-hidden>
-        {ticks.map((t, i) => <span key={`${t}-${i}`}>{t}</span>)}
+      <div className="pt-ruler cs-num" aria-hidden suppressHydrationWarning>
+        {/* Two ticks that land on the same day in the READER's zone collapse to one, which is
+            why the ruler is de-duplicated here rather than in the pure builder. */}
+        {(local ? ticks.map((t) => localDay(t)) : ticks.map(() => ''))
+          .filter((label, i, all) => i === 0 || label !== all[i - 1])
+          .map((label, i) => <span key={`${label}-${i}`}>{label}</span>)}
       </div>
 
       <div className="pt-track" ref={track} onScroll={measure}>
@@ -104,7 +119,7 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
                     <span className="pt-testline">
                       <span className="tr-pill" data-status="settled">TEST</span>
                       <span>{c.headline}</span>
-                      <span className="cs-num pt-label">· {c.range}</span>
+                      <span className="cs-num pt-label" suppressHydrationWarning>· {local ? localDayRange(c.at, c.endAt) : ''}</span>
                       <Chevron className="pt-chev" />
                     </span>
                     <span className="pt-vars">
@@ -128,7 +143,7 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
                       <span>{c.headline}</span>
                       <Chevron className="pt-chev" />
                     </span>
-                    <span className="cs-num pt-label">{c.range}</span>
+                    <span className="cs-num pt-label" suppressHydrationWarning>{local ? localDayRange(c.at, c.endAt) : ''}</span>
                   </>
                 )}
               </button>
@@ -139,8 +154,8 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
             <div key={c.key} className="pt-clip" data-kind={c.kind} data-hot={hot(keys)} tabIndex={keys ? 0 : -1} {...link(keys)}>
               <Shot src={c.url} />
               <span className="pt-title">{c.title}</span>
-              <span className="cs-num pt-label" data-now={c.kind === 'now'}>
-                {c.kind === 'now' ? nowLabel(c.score) : c.label}
+              <span className="cs-num pt-label" data-now={c.kind === 'now'} suppressHydrationWarning>
+                {c.kind === 'now' ? nowLabel(c.score) : `${c.label}${local ? ` · ${localDateTime(c.at)}` : ''}`}
               </span>
             </div>
           );

@@ -111,6 +111,14 @@ describe('the chart says when tracking began', () => {
     expect(trackingBeganLabel('2026-09-01T00:00:00.000Z', 0.1458)).toBe('tracking began Aug 31');
   });
 
+  it('reads in the zone it is given, and defaults to the runtime\u2019s', () => {
+    // 2026-09-01T00:00Z + 0.1458d = 03:30Z — the 31st in New York, the 1st in UTC.
+    expect(trackingBeganLabel('2026-09-01T00:00:00.000Z', 0.1458, 'UTC')).toBe('tracking began Sep 1');
+    expect(trackingBeganLabel('2026-09-01T00:00:00.000Z', 0.1458, 'America/Los_Angeles')).toBe('tracking began Aug 31');
+    const runtime = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    expect(trackingBeganLabel(PUB, 3.48)).toBe(trackingBeganLabel(PUB, 3.48, runtime));
+  });
+
   it('says nothing when there is nothing measured, or no publish time', () => {
     expect(trackingBeganLabel(PUB, null)).toBeNull();
     expect(trackingBeganLabel(null, 3.48)).toBeNull();
@@ -342,7 +350,7 @@ describe('tooltipLines: four lines at the most', () => {
       at: AT, views: 179_000, typical: 88_000, inner: [148_000, 258_000], outer: [127_000, 395_000],
     });
     expect(lines).toEqual([
-      'Sep 23, 10:14 PM ET',
+      'Sep 23, 10:14 PM EDT',
       '179K views · typical 88K',
       'likely 148K–258K',
       'range 127K–395K',
@@ -357,8 +365,8 @@ describe('tooltipLines: four lines at the most', () => {
   });
 
   it('drops the lines it has nothing to say on', () => {
-    expect(tooltipLines({ at: AT, views: 179_000 })).toEqual(['Sep 23, 10:14 PM ET', '179K views']);
-    expect(tooltipLines({ at: AT })).toEqual(['Sep 23, 10:14 PM ET']);
+    expect(tooltipLines({ at: AT, views: 179_000 })).toEqual(['Sep 23, 10:14 PM EDT', '179K views']);
+    expect(tooltipLines({ at: AT })).toEqual(['Sep 23, 10:14 PM EDT']);
   });
 
   it('puts the inner range before the outer one', () => {
@@ -366,7 +374,68 @@ describe('tooltipLines: four lines at the most', () => {
     expect(lines.findIndex((l) => l.startsWith('likely'))).toBeLessThan(lines.findIndex((l) => l.startsWith('range')));
   });
 
-  it('says the time in ET, never UTC', () => {
-    expect(tooltipLines({ at: '2026-09-24T02:14:00Z' })[0]).toBe('Sep 23, 10:14 PM ET');
+  // The app's clock is the READER's clock, not Brandon's (lib/app/local-time.ts). The zone is
+  // named once, here in the header line, so a screenshot is still unambiguous.
+  it('says the time in the reader\u2019s zone, and names that zone once', () => {
+    const at = '2026-09-24T02:14:00Z';
+    expect(tooltipLines({ at, timeZone: 'America/New_York' })[0]).toBe('Sep 23, 10:14 PM EDT');
+    expect(tooltipLines({ at, timeZone: 'America/Los_Angeles' })[0]).toBe('Sep 23, 7:14 PM PDT');
+    expect(tooltipLines({ at, timeZone: 'UTC' })[0]).toBe('Sep 24, 2:14 AM UTC');
+  });
+
+  it('never writes a bare "ET" any more', () => {
+    expect(tooltipLines({ at: AT, timeZone: 'UTC' })[0]).not.toMatch(/\bET\b/);
+  });
+});
+
+// ------------------------------------------- the axis fits what is on screen ----
+//
+// kUcMWnhDF4U, 2026-09-04: an hour-old video with 1,446 views drawn on an axis whose top was
+// the channel's typical curve at day 3 (148,000). The data was there; it was a flat line on the
+// floor. `[0, 'auto']` fits the DATA SET, and the data set runs to the horizon.
+import { visibleYDomain } from './chart-style';
+
+describe('visibleYDomain: the y axis is set by what is in the domain, not by the horizon', () => {
+  const rows = [
+    { day: 0, views: 0, expected: 40 },
+    { day: 0.02, views: 216, expected: 900, dot: 216 },
+    { day: 0.036, views: 1446, expected: 1600, dot: 1446 },
+    { day: 0.25, projected: 4000, expected: 6000, bandInner: [2600, 6200] as [number, number], bandOuter: [900, 40_000] as [number, number] },
+    { day: 3, projected: 90_000, expected: 148_000, bandInner: [40_000, 200_000] as [number, number] },
+  ];
+
+  it('ignores everything past the right edge of the view', () => {
+    const [lo, hi] = visibleYDomain(rows, [0, 0.25])!;
+    expect(lo).toBe(0);
+    expect(hi).toBeLessThan(10_000);       // not 148,000
+    expect(hi).toBeGreaterThanOrEqual(6200); // but the inner band's top is still in frame
+  });
+
+  it('covers the measured line, the typical line and the drawn band', () => {
+    const [, hi] = visibleYDomain(rows, [0, 0.25])!;
+    expect(hi).toBeGreaterThanOrEqual(6000);
+  });
+
+  it('never lets the undrawn outer band set the scale', () => {
+    const [, hi] = visibleYDomain(rows, [0, 0.25])!;
+    expect(hi).toBeLessThan(40_000);
+  });
+
+  it('starts a linear axis at zero — a view axis that does not exaggerates', () => {
+    expect(visibleYDomain(rows, [0, 3])![0]).toBe(0);
+  });
+
+  it('starts a log axis above zero, since a log axis cannot draw it', () => {
+    const [lo] = visibleYDomain(rows, [0, 0.25], 'log')!;
+    expect(lo).toBeGreaterThanOrEqual(1);
+  });
+
+  it('grows with the view: the full domain reaches the horizon values', () => {
+    expect(visibleYDomain(rows, [0, 3])![1]).toBeGreaterThan(148_000);
+  });
+
+  it('is null when nothing is in view, so recharts can decide', () => {
+    expect(visibleYDomain(rows, [10, 20])).toBeNull();
+    expect(visibleYDomain([], [0, 3])).toBeNull();
   });
 });

@@ -7,11 +7,18 @@
 //
 // Pure functions, no I/O.
 import { groupPackaging } from './packaging-groups';
-import { etTimestamp } from './feed-format';
-import { etDayShort, times, type RowVariant, type ThumbRowWithUrl } from './test-row';
+import { times, type RowVariant, type ThumbRowWithUrl } from './test-row';
 
 export type TimelineTitle = { version: number; title: string; first_seen: string };
 
+/**
+ * The clips carry INSTANTS, not formatted times.
+ *
+ * They are built on the server and read by a client component, and the app writes every time in
+ * the reader's own zone (lib/app/local-time.ts) — so a string formatted here would be the
+ * server's zone and would disagree with the browser's. `label` is the kind word alone
+ * ("PUBLISHED", "SWAP", "TITLE") and the strip appends the local time it renders itself.
+ */
 export type TimelineClip =
   | { kind: 'published'; key: string; at: string; url: string; title: string; label: string }
   | {
@@ -22,6 +29,7 @@ export type TimelineClip =
       title: string;
       /** "2 thumbnails · B won", or just "2 thumbnails" while it is still running */
       headline: string;
+      /** ET, kept for any server-side reader; the strip draws `at`..`endAt` in the local zone. */
       range: string;               // "Aug 30 – Sep 1"
       /** every thumbnail marker this test covers, so hovering the clip lights all of them */
       markerKeys: string[];
@@ -64,7 +72,7 @@ export function buildTimeline(input: TimelineInput): TimelineClip[] {
   clips.push({
     kind: 'published', key: 'published', at: input.publishedAt,
     url: first.url, title: titles[0]?.title ?? '',
-    label: `PUBLISHED · ${etTimestamp(input.publishedAt)}`,
+    label: 'PUBLISHED',
   });
 
   // The grouping is NOT decided here: lib/app/packaging-groups.ts is the one answer, and the
@@ -90,14 +98,14 @@ export function buildTimeline(input: TimelineInput): TimelineClip[] {
       clips.push({
         kind: 'swap', key: g.key, at: g.at, url: g.url,
         title: titleAt(titles, g.at),
-        label: `SWAP · ${etTimestamp(g.at)}`,
+        label: 'SWAP',
         markerKeys: g.markerKeys,
       });
     } else {
       clips.push({
         kind: 'title', key: g.key, at: g.at,
         url: thumbAt(thumbs, g.at), title: g.title,
-        label: `TITLE · ${etTimestamp(g.at)}`,
+        label: 'TITLE',
         markerKeys: g.markerKeys,
       });
     }
@@ -120,20 +128,22 @@ export function nowLabel(score: number | null | undefined): string {
 }
 
 /**
- * The mono date ruler above the track: evenly spaced ET days from publish to the last clip.
- * Ticks are a reading aid, not a scale — the clips are equal width, so this says roughly
- * "when", never "how long each thing lasted".
+ * The mono date ruler above the track: evenly spaced INSTANTS from publish to the last clip, as
+ * epoch milliseconds. Ticks are a reading aid, not a scale — the clips are equal width, so this
+ * says roughly "when", never "how long each thing lasted".
+ *
+ * Milliseconds rather than day strings, for the same reason the clips carry instants: the strip
+ * is a client component and writes them in the reader's zone. Two ticks that fall on one of the
+ * reader's days collapse THERE, not here — which day two instants share depends on the zone.
  */
-export function timelineTicks(clips: TimelineClip[], max = 5): string[] {
+export function timelineTicks(clips: TimelineClip[], max = 5): number[] {
   if (!clips.length) return [];
   const from = new Date(clips[0].at).getTime();
   const to = new Date(clips[clips.length - 1].at).getTime();
-  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return [etDayShort(clips[0].at)];
+  if (!Number.isFinite(from)) return [];
+  if (!Number.isFinite(to) || to <= from) return [from];
   const n = Math.max(2, Math.min(max, clips.length));
-  const out: string[] = [];
-  for (let i = 0; i < n; i++) {
-    const label = etDayShort(new Date(from + ((to - from) * i) / (n - 1)).toISOString());
-    if (label !== out[out.length - 1]) out.push(label);
-  }
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) out.push(from + ((to - from) * i) / (n - 1));
   return out;
 }

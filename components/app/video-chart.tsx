@@ -13,6 +13,7 @@ import type { Actual, CurvePoint, Marker } from '@/lib/admin/video-curve';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ThemeMode } from '@/lib/app/chart-style';
+import { localDay, localDayHour, localDateTimeZone } from '@/lib/app/local-time';
 
 export function markerKey(m: { kind: string; version: number }) {
   return `${m.kind}-${m.version}`;
@@ -91,23 +92,32 @@ export function fmtViews(v: number) {
   return v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(v >= 1e4 ? 0 : 1) + 'K' : String(Math.round(v));
 }
 
-const ET = 'America/New_York';
+// The chart's labels are in the READER's zone, not Brandon's — this file runs in the browser,
+// so the default zone IS the viewer's. The zone is named once, in the tooltip header
+// (lib/app/chart-style.tooltipLines); every axis label is bare. lib/app/local-time.ts.
 function dateAtDay(publishedAt: string | Date | null | undefined, day: number): Date | null {
   if (!publishedAt) return null;
   const t0 = new Date(publishedAt).getTime();
   return Number.isFinite(t0) ? new Date(t0 + day * 86_400_000) : null;
 }
-export function axisDate(publishedAt: string | Date | null | undefined, day: number, launch: boolean): string {
+export function axisDate(
+  publishedAt: string | Date | null | undefined,
+  day: number,
+  launch: boolean,
+  timeZone?: string
+): string {
   const d = dateAtDay(publishedAt, day);
   if (!d) return dayLabel(day);
-  return launch
-    ? d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric' }).replace(',', '')
-    : d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
+  return launch ? localDayHour(d, timeZone) : localDay(d, timeZone);
 }
-export function tooltipDate(publishedAt: string | Date | null | undefined, day: number): string {
+export function tooltipDate(
+  publishedAt: string | Date | null | undefined,
+  day: number,
+  timeZone?: string
+): string {
   const d = dateAtDay(publishedAt, day);
   if (!d) return dayLabel(day);
-  return d.toLocaleString('en-US', { timeZone: ET, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
+  return localDateTimeZone(d, timeZone);
 }
 
 export function dayLabel(d: number) {

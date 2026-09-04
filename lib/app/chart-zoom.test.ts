@@ -70,3 +70,29 @@ describe('axisTicks: one axis that reads at every scale a drag can reach', () =>
     expect(axisTicks([5, 5])).toEqual([]);
   });
 });
+
+// A six-hour horizon is a real domain now (lib/app/chart-horizon.ts), not just something a
+// drag can produce, so the axis has to read in hours without the reader doing anything.
+describe('axisTicks on the sub-day domains the horizon itself can produce', () => {
+  it('puts an hourly tick across a six-hour chart', () => {
+    const t = axisTicks([0, 6 / 24]);
+    expect(t.length).toBeGreaterThanOrEqual(4);
+    expect(t[0]).toBe(0);
+    expect(t[t.length - 1]).toBeCloseTo(6 / 24, 6);
+    for (const x of t) expect(x).toBeLessThanOrEqual(6 / 24 + 1e-9);
+    // every tick is a whole number of hours
+    for (const x of t) expect(Math.abs(x * 24 - Math.round(x * 24))).toBeLessThan(1e-3); // ticks are rounded to 6dp
+  });
+
+  it('steps in hours, never in days, under a day', () => {
+    for (const end of [6 / 24, 12 / 24, 1]) {
+      const t = axisTicks([0, end]);
+      expect(t.length).toBeGreaterThanOrEqual(3);
+      expect(t[1] - t[0]).toBeLessThanOrEqual(1 / 4 + 1e-9);
+    }
+  });
+
+  it('never returns more ticks than the axis has room for', () => {
+    for (const end of [6 / 24, 12 / 24, 1, 3, 30, 365]) expect(axisTicks([0, end]).length).toBeLessThanOrEqual(8);
+  });
+});

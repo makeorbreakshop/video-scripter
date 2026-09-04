@@ -283,7 +283,12 @@ export async function channelScores(channelId: string) {
 // the stored model-v3 score, and the fitted global multipliers that draw the expected curve.
 export type VideoPageData = {
   video: any;
-  snapshots: { at: string; views: number; days_since_published: number; like_count: number; comment_count: number }[];
+  /**
+   * `at` is the historical noon-UTC anchor on snapshot_date. `created_at` is when the tracker
+   * actually wrote the row, which is the better time for most of them and an import time for
+   * the rest — lib/app/observations.snapshotTimeIso decides, for the CHART only.
+   */
+  snapshots: { at: string; created_at: string | null; views: number; days_since_published: number; like_count: number; comment_count: number }[];
   samples: { at: string; views: number }[];
   /** Free RSS readings, lowest priority in mergeActuals. */
   rss: { at: string; views: number }[];
@@ -310,7 +315,7 @@ export async function videoPage(id: string): Promise<VideoPageData> {
       [id]
     ),
     q<any>(
-      `select (snapshot_date::timestamptz + interval '12 hours') as at, view_count as views,
+      `select (snapshot_date::timestamptz + interval '12 hours') as at, created_at, view_count as views,
               days_since_published, like_count, comment_count
        from view_snapshots where video_id = $1 order by snapshot_date`,
       [id]

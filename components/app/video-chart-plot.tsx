@@ -22,7 +22,7 @@ import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel, trackingLabelPlacement,
   TYPICAL_STYLE, legendEntries, areaProps, DRAWN_RINGS, SCALE_MODES, nextScale, tooltipLines,
-  BAND_FOOTNOTE, type ScaleMode,
+  BAND_FOOTNOTE, visibleYDomain, type ScaleMode,
 } from '@/lib/app/chart-style';
 import { markerLayout, markAt } from '@/lib/app/chart-marks';
 import { zoomDomain, axisTicks, isFullDomain } from '@/lib/app/chart-zoom';
@@ -101,7 +101,11 @@ export default function VideoChartPlot({
   const [scale, setScale] = useState<ScaleMode>(SCALE_MODES[0]);
 
   const rows = useMemo(() => chartRows(series, curve, actuals), [actuals, curve, series]);
-  const maxDay = Math.max(...rows.map((r) => r.day), 1);
+  // The right edge is the series' own last day — the horizon lib/app/chart-horizon.ts chose.
+  // It used to be floored at 1, which quietly overrode a six-hour horizon with a full day and
+  // put the hour-old launch back in the leftmost tenth of the plate. The floor is only there
+  // for an empty chart, which has no last day at all.
+  const maxDay = rows.length ? Math.max(...rows.map((r) => r.day)) : 1;
   const full = useMemo<[number, number]>(() => [0, maxDay], [maxDay]);
 
   // The zoom is a VIEWPORT over the same rows: nothing is recomputed, refetched or re-fitted
@@ -151,8 +155,15 @@ export default function VideoChartPlot({
   const lastSeries = series.length ? series[series.length - 1] : null;
   const endProjected = lastSeries && inView(lastSeries.day) ? { day: lastSeries.day, projected: lastSeries.views } : null;
 
-  // A log axis cannot show zero, and day 0 is zero views — so the log view starts at one.
-  const yDomain: [any, any] = scale === 'log' ? [1, 'auto'] : [0, 'auto'];
+  // The y axis fits WHAT IS ON SCREEN, not the whole data set.
+  //
+  // `[0, 'auto']` let recharts scale to every row, horizon included: kUcMWnhDF4U at an hour old
+  // had 1,446 views on an axis topped by the channel's typical curve at day 3 (148,000), so the
+  // only line worth reading was flat on the floor. lib/app/chart-style.visibleYDomain is the
+  // rule — measured, reconstruction, forecast median, drawn band and the typical line, inside
+  // the current domain and nothing else. ('auto' remains the fallback for an empty view.)
+  const fitted = useMemo(() => visibleYDomain(rows, domain, scale), [rows, domain, scale]);
+  const yDomain: [any, any] = fitted ?? (scale === 'log' ? [1, 'auto'] : [0, 'auto']);
 
   if (!series.length && !actuals.length && !curve.length) {
     return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;

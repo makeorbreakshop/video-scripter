@@ -82,3 +82,55 @@ export function fittablePoints(readings: Reading[]): Reading[] {
     .filter((r) => !r.stale && !r.duplicate)
     .map(({ day, views }) => ({ day, views }));
 }
+
+// ------------------------------------------------ where a snapshot goes on the chart ----
+
+/**
+ * `view_snapshots` carries a DATE, not a time: `snapshot_date` is a calendar day, and the page
+ * has always drawn a snapshot at noon UTC on that day (8 AM ET) because noon is the least wrong
+ * single guess for an unknown time. The row also carries `created_at`, which is when the tracker
+ * actually wrote it — usually the truth, and sometimes not: a backfill import writes today's
+ * timestamp onto a row for a day months ago.
+ *
+ * Measured over the corpus on 2026-09-04: for 87% of rows `created_at` sits within six hours of
+ * the noon anchor, and the tail runs out to +228 hours, which is exactly the backfill case. So:
+ * within a day of the anchor, `created_at` is a better time than a guess and is used; beyond it,
+ * it is an import time and the anchor stands.
+ *
+ * THE CHART ONLY. The scorer keeps reading snapshot_date as it always has — a candidate change
+ * to it was benchmarked and rejected on 2026-09-04 — and this function is not imported there.
+ *
+ * The visible fix: MythBusters aiadrt1mKEc's Sep 4 snapshot was created 2026-09-03 20:17 ET and
+ * was being drawn at 8 AM ET on the 4th, so the measured line ran twelve hours into the future.
+ */
+export const SNAPSHOT_TRUST_MS = 24 * 3_600_000;
+/** Noon UTC on the snapshot's calendar day: the anchor, and the fallback. */
+export const SNAPSHOT_ANCHOR_MS = 12 * 3_600_000;
+
+export function snapshotAnchor(snapshotDate: string | Date): number {
+  const d = new Date(snapshotDate);
+  const t = d.getTime();
+  if (!Number.isFinite(t)) return NaN;
+  // A bare 'YYYY-MM-DD' parses as UTC midnight; a timestamptz already carries its own time, and
+  // pg hands this column over as a date, so the day is what is used either way.
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + SNAPSHOT_ANCHOR_MS;
+}
+
+/**
+ * When to draw a snapshot, as epoch ms. `createdAt` when it is within a day of the anchor,
+ * otherwise the anchor. Exactly a day counts as within — the boundary belongs to the reading.
+ */
+export function snapshotTimeMs(snapshotDate: string | Date, createdAt: string | Date | null | undefined): number {
+  const anchor = snapshotAnchor(snapshotDate);
+  if (!Number.isFinite(anchor)) return anchor;
+  if (createdAt == null) return anchor;
+  const c = new Date(createdAt).getTime();
+  if (!Number.isFinite(c)) return anchor;
+  return Math.abs(c - anchor) <= SNAPSHOT_TRUST_MS ? c : anchor;
+}
+
+/** The same answer as an ISO string, which is what the series builder is fed. */
+export function snapshotTimeIso(snapshotDate: string | Date, createdAt: string | Date | null | undefined): string {
+  const t = snapshotTimeMs(snapshotDate, createdAt);
+  return Number.isFinite(t) ? new Date(t).toISOString() : new Date(snapshotDate).toISOString();
+}

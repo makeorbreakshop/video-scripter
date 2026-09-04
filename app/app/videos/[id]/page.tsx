@@ -9,12 +9,12 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { loadVideoHead, headerLines } from '@/lib/app/video-page';
-import { etDateTime } from '@/lib/admin/format';
 import { cachedVideoPage } from '@/lib/app/cached';
 import { VideoBodySkeleton } from '@/components/app/skeletons';
 import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
 import { PackagingTimeline } from '@/components/app/packaging-timeline';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
+import { LocalTime } from '@/components/app/local-time';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,8 +59,10 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
               <li key={t.version} style={{ fontSize: 13 }}>
                 <div style={{ color: 'var(--cs-muted)', textDecoration: 'line-through' }}>{v.titles[i].title}</div>
                 <div>{t.title}</div>
+                {/* The reader's own clock, written in the browser — the app is not an admin
+                    page (lib/app/local-time.ts). */}
                 <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 2 }}>
-                  <span className="cs-num">{etDateTime(t.first_seen)}</span> ET
+                  <LocalTime className="cs-num" ms={Date.parse(t.first_seen)} />
                 </div>
               </li>
             ))}
@@ -110,7 +112,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
           {/* ONE metadata line: the channel, when it went out, how old it is, the exact count,
               and the link. The verdict below never repeats any of it. */}
           <p className="cs-sub">
-            <span className="cs-num">{h.meta.publishedET}</span> ET · {h.meta.age} ·{' '}
+            <LocalTime className="cs-num" ms={h.meta.publishedMs} /> · {h.meta.age} ·{' '}
             <span className="cs-num">{h.meta.views}</span> views ·{' '}
             <a href={h.meta.youtubeUrl} target="_blank" rel="noreferrer"
                style={{ color: 'var(--cs-muted)', textDecoration: 'underline' }}>YouTube ↗</a>

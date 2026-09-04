@@ -35,7 +35,11 @@ describe('buildTimeline', () => {
     const thumbs = [th(1, 'a', D(30)), th(2, 'b', D(31))];
     const clips = buildTimeline({ publishedAt: D(30), thumbs, titles: [], now: D(31, 18) });
     expect(clips.map((c) => c.kind)).toEqual(['published', 'swap', 'now']);
-    expect((clips[1] as any).label).toMatch(/^SWAP · Aug 31 · .* ET$/);
+    // The clip carries the WORD and the INSTANT; the strip writes the time in the reader's own
+    // zone (components/app/packaging-timeline.tsx), so no zone crosses from the server.
+    expect((clips[1] as any).label).toBe('SWAP');
+    expect((clips[1] as any).at).toBe(D(31));
+    expect(clips.map((c: any) => c.label).join(' ')).not.toMatch(/\bET\b/);
   });
 
   it('interleaves title changes in time order and shows the image worn then', () => {
@@ -60,18 +64,22 @@ describe('buildTimeline', () => {
 });
 
 describe('timelineTicks', () => {
-  it('reads as ET days across the span, without repeats', () => {
+  it('spans publish to the last clip as instants, evenly, in order', () => {
     const clips = buildTimeline({
       publishedAt: D(30), thumbs: [th(1, 'a', D(30)), th(2, 'b', new Date(Date.UTC(2026, 8, 2, 12)).toISOString())],
       titles: [], now: D(4 + 30),
     });
     const ticks = timelineTicks(clips);
-    expect(ticks[0]).toBe('Aug 30');
-    expect(ticks[ticks.length - 1]).toBe('Sep 2');
-    expect(new Set(ticks).size).toBe(ticks.length);
+    // epoch ms, not day strings: which day two instants share depends on the reader's zone,
+    // so the ruler is formatted (and collapsed) in the browser.
+    for (const t of ticks) expect(typeof t).toBe('number');
+    expect(ticks[0]).toBe(Date.parse(clips[0].at));
+    expect(ticks[ticks.length - 1]).toBe(Date.parse(clips[clips.length - 1].at));
+    for (let i = 1; i < ticks.length; i++) expect(ticks[i]).toBeGreaterThan(ticks[i - 1]);
   });
-  it('is one tick for a same-day history', () => {
-    expect(timelineTicks([{ kind: 'now', key: 'now', at: D(30), url: '', title: '', score: null }])).toEqual(['Aug 30']);
+  it('is one tick for a same-instant history', () => {
+    expect(timelineTicks([{ kind: 'now', key: 'now', at: D(30), url: '', title: '', score: null }]))
+      .toEqual([Date.parse(D(30))]);
   });
   it('is empty for no clips', () => {
     expect(timelineTicks([])).toEqual([]);

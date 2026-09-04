@@ -79,3 +79,48 @@ describe('markObservations: a reading contradicted minutes later is stale', () =
     expect(markObservations([{ day: NaN, views: 5 }, { day: 1, views: -3 } as any])).toEqual([]);
   });
 });
+
+// ------------------------------------------------ where a snapshot goes on the chart ----
+import { snapshotTimeMs, snapshotTimeIso, snapshotAnchor, SNAPSHOT_TRUST_MS } from './observations';
+
+describe('snapshotTimeMs: a snapshot is drawn when it was taken, unless that is an import time', () => {
+  const DAY = '2026-09-04';
+  const anchor = Date.UTC(2026, 8, 4, 12); // noon UTC = 8 AM ET
+
+  it('anchors at noon UTC on the snapshot day', () => {
+    expect(snapshotAnchor(DAY)).toBe(anchor);
+    expect(snapshotAnchor('2026-09-04T00:00:00.000Z')).toBe(anchor);
+  });
+
+  it('uses created_at when it is within a day of the anchor', () => {
+    // MythBusters aiadrt1mKEc: the Sep 4 row was written 2026-09-03 20:17 ET = 2026-09-04 00:17Z.
+    const created = '2026-09-04T00:17:00.000Z';
+    expect(snapshotTimeMs(DAY, created)).toBe(new Date(created).getTime());
+    // and it is EARLIER than the anchor, which is the whole point: the line stops going forward
+    expect(snapshotTimeMs(DAY, created)).toBeLessThan(anchor);
+    expect(snapshotTimeIso(DAY, created)).toBe('2026-09-04T00:17:00.000Z');
+  });
+
+  it('falls back to the anchor when created_at is a backfill import time', () => {
+    // The measured tail: +228h, which is an import, not a reading.
+    const created = new Date(anchor + 228 * 3_600_000).toISOString();
+    expect(snapshotTimeMs(DAY, created)).toBe(anchor);
+  });
+
+  it('holds the boundary: exactly a day either side is still the reading', () => {
+    expect(snapshotTimeMs(DAY, new Date(anchor + SNAPSHOT_TRUST_MS).toISOString())).toBe(anchor + SNAPSHOT_TRUST_MS);
+    expect(snapshotTimeMs(DAY, new Date(anchor - SNAPSHOT_TRUST_MS).toISOString())).toBe(anchor - SNAPSHOT_TRUST_MS);
+    expect(snapshotTimeMs(DAY, new Date(anchor + SNAPSHOT_TRUST_MS + 1000).toISOString())).toBe(anchor);
+    expect(snapshotTimeMs(DAY, new Date(anchor - SNAPSHOT_TRUST_MS - 1000).toISOString())).toBe(anchor);
+  });
+
+  it('keeps the anchor when there is no created_at at all', () => {
+    expect(snapshotTimeMs(DAY, null)).toBe(anchor);
+    expect(snapshotTimeMs(DAY, undefined)).toBe(anchor);
+    expect(snapshotTimeMs(DAY, 'not a date')).toBe(anchor);
+  });
+
+  it('reads a Date as happily as a string', () => {
+    expect(snapshotTimeMs(new Date(Date.UTC(2026, 8, 4)), new Date(anchor - 3_600_000))).toBe(anchor - 3_600_000);
+  });
+});

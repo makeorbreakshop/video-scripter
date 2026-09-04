@@ -9,6 +9,7 @@
 import type { SeriesKind, SeriesPoint } from './chart-series';
 import type { Actual, CurvePoint } from '../admin/video-curve';
 import { compactNumber } from './feed-format';
+import { localDay, localDateTimeZone } from './local-time';
 
 export type StrokeToken = 'accent' | 'muted';
 export interface SeriesStyle {
@@ -76,8 +77,6 @@ export function legendEntries(has: Partial<Record<LegendKey, boolean>>): Array<{
   return LEGEND_ORDER.filter((k) => has[k]).map((key) => ({ key, label: SERIES_LABELS[key], ribbon: key === 'forecast' }));
 }
 
-const ET = 'America/New_York';
-
 /**
  * The label pinned at the first measurement: "tracking began Sep 1". Without it the dotted
  * stretch on the left reads as missing data rather than as the honest statement that we were
@@ -86,7 +85,9 @@ const ET = 'America/New_York';
  */
 export function trackingBeganLabel(
   publishedAt: string | Date | null | undefined,
-  firstMeasuredDay: number | null | undefined
+  firstMeasuredDay: number | null | undefined,
+  /** The reader's zone. Absent means the runtime's, which in the browser is the viewer's own. */
+  timeZone?: string
 ): string | null {
   if (publishedAt == null || firstMeasuredDay == null || !Number.isFinite(firstMeasuredDay)) return null;
   // Under ~2 hours after publish there is no reconstructed past worth naming.
@@ -94,7 +95,7 @@ export function trackingBeganLabel(
   const t0 = new Date(publishedAt).getTime();
   if (!Number.isFinite(t0)) return null;
   const at = new Date(t0 + firstMeasuredDay * 86_400_000);
-  return `tracking began ${at.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' })}`;
+  return `tracking began ${localDay(at, timeZone)}`;
 }
 
 /**
@@ -207,6 +208,40 @@ export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: A
   return [...byDay.values()].sort((a, b) => a.day - b.day);
 }
 
+/**
+ * The y range the reader is actually looking at.
+ *
+ * recharts' `domain={[0, 'auto']}` fits the whole DATA SET, not the visible slice, which was the
+ * second half of the kUcMWnhDF4U bug (2026-09-04): an hour-old video with 1,446 views drawn on
+ * an axis whose top was the channel's typical curve at day 3 — 148,000 — so the only line worth
+ * reading was a flat smear on the floor. The axis is computed here instead, from the rows inside
+ * the current domain and only the series a reader is being shown: what we measured, the
+ * reconstruction, the forecast median and its drawn (inner) band, and the channel's typical line.
+ * The undrawn outer band never sets the scale — it is a tooltip fact, not a picture.
+ *
+ * Null when there is nothing in view, which is the caller's cue to let recharts decide.
+ */
+export function visibleYDomain(
+  rows: ChartRow[],
+  domain: [number, number],
+  scale: ScaleMode = 'linear'
+): [number, number] | null {
+  const vals: number[] = [];
+  for (const r of rows) {
+    if (!(r.day >= domain[0] && r.day <= domain[1])) continue;
+    for (const v of [r.views, r.implied, r.projected, r.expected, r.dot, r.bandInner?.[0], r.bandInner?.[1]]) {
+      if (v != null && Number.isFinite(v)) vals.push(v as number);
+    }
+  }
+  const usable = scale === 'log' ? vals.filter((v) => v > 0) : vals;
+  if (!usable.length) return null;
+  const hi = Math.max(...usable), lo = Math.min(...usable);
+  // A little air above the top line so its end label is not clipped by the frame.
+  if (scale === 'log') return [Math.max(1, lo / 1.6), Math.max(hi * 1.25, 2)];
+  // Linear starts at zero: a view count axis that does not is a chart that exaggerates.
+  return [0, Math.max(hi * 1.08, 1)];
+}
+
 // ------------------------------------------------ chart v2: fewer things at rest ----
 
 /**
@@ -264,6 +299,8 @@ export interface TooltipPoint {
   typical?: number | null;
   inner?: readonly [number, number] | null;
   outer?: readonly [number, number] | null;
+  /** The reader's zone; absent means the runtime's. Only the header line uses it. */
+  timeZone?: string;
 }
 
 /**
@@ -272,14 +309,17 @@ export interface TooltipPoint {
  * It used to run to five or six — a date, a count, a typical, and both bands each carrying its
  * own sentence of odds — which is a paragraph following the cursor. The odds moved to
  * BAND_FOOTNOTE and each range is now a range.
+ *
+ * The header line is in the READER's zone and names it once: "Sep 4, 10:31 AM EDT".
  */
 export function tooltipLines(p: TooltipPoint): string[] {
   const lines: string[] = [];
   const d = p.at instanceof Date ? p.at : new Date(p.at);
   if (!Number.isNaN(d.getTime())) {
-    const date = d.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' });
-    const time = d.toLocaleTimeString('en-US', { timeZone: ET, hour: 'numeric', minute: '2-digit' });
-    lines.push(`${date}, ${time} ET`);
+    // The ONE place the chart names a zone. Every other label on the page is bare, because
+    // forty labels each ending in "EDT" is a chart shouting one fact; a tooltip that never says
+    // it is a screenshot nobody can read. (lib/app/local-time.ts)
+    lines.push(localDateTimeZone(d, p.timeZone));
   }
   const num = (n: number) => compactNumber(n);
   if (p.views != null && Number.isFinite(p.views)) {

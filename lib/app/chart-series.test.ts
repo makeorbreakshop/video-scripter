@@ -452,3 +452,39 @@ describe('the series covers the whole data-driven horizon, and keeps going past 
     expect(rows.every((r) => !!r.bandOuter)).toBe(true);
   });
 });
+
+// --------------------------------------------- the launch window is the whole chart ----
+//
+// A video an hour old is drawn to a SIX HOUR horizon now (lib/app/chart-horizon.ts). The grid
+// that was enough when the narrowest chart was three days — hours 1, 2, 4, 8, 12, 18 — puts one
+// point inside a six-hour domain, which is not a line.
+import { seriesDays as launchDays, FINE_STEP_DAYS } from './chart-series';
+
+describe('seriesDays on a sub-day domain', () => {
+  it('samples every quarter hour across a six-hour horizon', () => {
+    const days = launchDays(6 / 24, []);
+    const inside = days.filter((d) => d > 0 && d <= 6 / 24);
+    expect(inside.length).toBeGreaterThanOrEqual(24);
+    // no gap wider than a quarter hour anywhere in the domain
+    for (let i = 1; i < days.length; i++) expect(days[i] - days[i - 1]).toBeLessThanOrEqual(FINE_STEP_DAYS + 1e-9);
+  });
+
+  it('still starts at publish and ends exactly on the horizon', () => {
+    const days = launchDays(6 / 24, []);
+    expect(days[0]).toBe(0);
+    expect(days[days.length - 1]).toBeCloseTo(6 / 24, 9);
+  });
+
+  it('keeps the real measurements, whatever minute they landed on', () => {
+    const days = launchDays(6 / 24, [7 / 1440, 52 / 1440]);
+    expect(days).toContain(7 / 1440);
+    expect(days).toContain(52 / 1440);
+  });
+
+  it('leaves a multi-day domain on the day grid it already had', () => {
+    const days = launchDays(3, []);
+    expect(days.filter((d) => d > 0 && d < 1).length).toBeLessThan(10);
+    expect(days).toContain(1);
+    expect(days).toContain(3);
+  });
+});

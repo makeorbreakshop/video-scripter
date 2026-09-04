@@ -82,10 +82,14 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     observations: 40,
   };
 
-  it('puts the channel, the ET publish time, the age, the exact views and the link in the metadata', () => {
+  // The publish time crosses as EPOCH MS, not as a string: the app renders times in the
+  // reader's own zone (components/app/local-time.tsx), and a string formatted on the server
+  // would be formatted in the server's. Admin pages keep ET.
+  it('puts the channel, the publish INSTANT, the age, the exact views and the link in the metadata', () => {
     const h = headerLines(young);
     expect(h.meta.channelName).toBe('Matt Wolfe');
-    expect(h.meta.publishedET).toBe('Sep 2, 10:14 PM');   // ET, not UTC
+    expect(h.meta.publishedMs).toBe(Date.parse('2026-09-03T02:14:55.000Z'));
+    expect(typeof h.meta.publishedMs).toBe('number');
     expect(h.meta.age).toBe('1d old');
     expect(h.meta.views).toBe('83,722');
     expect(h.meta.youtubeUrl).toBe('https://youtu.be/Po_Dh7WLgmM');
@@ -129,6 +133,12 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     expect(h.big).toBeNull();
     expect(h.verdict).toContain('No view measurements yet');
     expect(h.verdict).not.toMatch(/83,722|84K views/);
+  });
+
+  it('hands the page a number it can format locally, never a pre-formatted zone', () => {
+    const h = headerLines(young);
+    expect(JSON.stringify(h.meta)).not.toMatch(/\bET\b/);
+    expect(headerLines({ ...young, publishedAt: 'nonsense' }).meta.publishedMs).toBeNull();
   });
 
   it('is two lines and only two', () => {

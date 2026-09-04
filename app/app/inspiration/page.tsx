@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
+import { LocalTime } from '@/components/app/local-time';
 import { requireAppUser } from '@/lib/app/session';
 import {
   inspirationFeedbackFor,
@@ -21,11 +22,8 @@ const DISTANCES: Array<{ value: InspirationDistance; label: string }> = [
   { value: 'far', label: 'Far' },
 ];
 
-function etDate(value: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York',
-  }).format(new Date(value));
-}
+// Dates in the app are the READER's, not Brandon's, so nothing is formatted on the server here:
+// the instant crosses and <LocalTime> writes it. (lib/app/local-time.ts)
 
 function words(signals: string[]): string {
   if (!signals.length) return 'Loose title-pattern match';
@@ -181,7 +179,7 @@ export default async function InspirationPage({
                   <div className={styles.body}>
                     <div className={styles.byline}>
                       <span className={styles.channel}>{result.channelName}</span>
-                      {result.publishedAt && <time dateTime={result.publishedAt}>{etDate(result.publishedAt)}</time>}
+                      {result.publishedAt && <time dateTime={result.publishedAt}><LocalTime ms={Date.parse(result.publishedAt)} format="dayYear" /></time>}
                       <span className={styles.outlier} title={`${result.outlierScore.toFixed(2)} times this channel's baseline`}>
                         {result.outlierScore.toFixed(1)}× typical
                       </span>
@@ -213,7 +211,7 @@ export default async function InspirationPage({
             })}
           </div>
           <p className={styles.receipt}>
-            Ranked {search.candidatePoolSize.toLocaleString('en-US')} candidates from the scored one-year outlier corpus as of {etDate(search.corpusAsOf)}.
+            Ranked {search.candidatePoolSize.toLocaleString('en-US')} candidates from the scored one-year outlier corpus as of <LocalTime ms={Date.parse(search.corpusAsOf)} format="dayYear" />.
             {' '}Text model: {search.model}; recipe: {search.recipe}. No transcript or runtime LLM call.
           </p>
         </>

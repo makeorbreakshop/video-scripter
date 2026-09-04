@@ -58,6 +58,13 @@ export interface BuildSeriesInput {
 export const DENSE_DAYS = 400;
 /** Sub-day grid so the launch window is readable at all (hours 1,2,4,8,12,18). */
 const LAUNCH_DAYS = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24, 18 / 24];
+/**
+ * When the whole chart IS the launch window — a video hours old, drawn to a 6h or 12h horizon
+ * (lib/app/chart-horizon.ts) — six hourly points are six points, and the forecast between them
+ * is drawn as straight segments across an hour of the steepest growth the video will ever have.
+ * A sub-day domain is sampled every quarter hour instead, end to end.
+ */
+export const FINE_STEP_DAYS = 15 / 1440;
 
 /** Log-scale uncertainty of the implied past at the first measurement, and per log-day before it. */
 const IMPLIED_SIGMA0 = 0.06;
@@ -117,6 +124,10 @@ export function seriesDays(horizonDay: number, actualDays: number[]): number[] {
     for (let i = 1; i <= 60; i++) set.add(Math.exp(lo + ((hi - lo) * i) / 60) - 1);
   }
   for (const h of LAUNCH_DAYS) if (h <= end) set.add(h);
+  // A sub-day domain is all launch: the hourly grid above is far too coarse to draw it.
+  if (end < 1) {
+    for (let t = FINE_STEP_DAYS; t <= end + 1e-9; t += FINE_STEP_DAYS) set.add(Number(t.toFixed(9)));
+  }
   for (const d of actualDays) if (d >= 0 && d <= end) set.add(d);
   return [...set].sort((a, b) => a - b);
 }
