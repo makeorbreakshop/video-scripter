@@ -1,7 +1,7 @@
 // Reading the feed. Keyset pagination on (at desc, id desc) — offsets drift as the materializer
 // inserts underneath a scrolling reader, and get slower the further down you go.
 import { q } from '../admin/db';
-import { FEED_TYPES } from './event-types';
+import { FEED_TYPES, DENSE_FEED_TYPES } from './event-types';
 
 export { FEED_TYPES };
 export type { FeedEventType } from './event-types';
@@ -80,38 +80,94 @@ export function normalizeTypes(types: string[] | null | undefined): string[] | n
 
 
 /**
+ * Above this many channels, one walk down the global (at desc, id desc) index reaches a
+ * 60-row page with less IO than one index probe per channel. Below it, the probes win — and
+ * win by a lot, because a small tracked set is sparse in the recent global window.
+ * See docs/perf/2026-09-04-feed-speed-audit.md for the measured curves.
+ */
+export const FLAT_SCAN_MIN_CHANNELS = 300;
+
+/**
+ * Which shape of scan to use. Pure, so the choice is testable without a database.
+ *
+ * `lateral` probes idx_feed_events_channel_type_at_longform once per channel: it reads
+ * min(limit, that channel's events of that type) entries, which is bounded and tiny for a
+ * sparse segment but degenerates to n × limit for a dense one.
+ *
+ * `flat` walks idx_feed_events_at_id once and discards untracked channels as it goes: cheap
+ * only when the tracked set fills a page from the recent window quickly, which needs both a
+ * large channel set and a segment that is not rare.
+ *
+ * Measured for the 500-channel account, buffers read for a 60-row page:
+ *
+ *   segment    lateral   flat
+ *   all         12,728   1,331   -> flat
+ *   uploads     20,125   2,309   -> flat
+ *   outliers     1,707  13,016   -> lateral
+ *   tests        3,040   3,040   -> either
+ *   changes      4,552   4,552   -> either
+ */
+export function scanShape(channelCount: number, types: string[] | null | undefined): 'lateral' | 'flat' {
+  if (channelCount < FLAT_SCAN_MIN_CHANNELS) return 'lateral';
+  if (!types || !types.length) return 'flat';
+  return types.some((t) => DENSE_FEED_TYPES.includes(t)) ? 'flat' : 'lateral';
+}
+
+/**
  * One page of events for an explicit channel list. `feedFor` layers the user's tracked channels
  * on top of this; the public API uses it directly.
+ *
+ * Keyset paginated on (at desc, id desc): offsets drift as the materializer inserts underneath
+ * a scrolling reader, and get slower the further down you go.
+ *
+ * The longform test is a stored column (feed_events.is_longform, written at insert time and
+ * maintained by the shorts verifier) rather than a join to videos: joining thousands of events
+ * to videos before the LIMIT was expensive. videos is still LEFT JOINed for the display
+ * columns, but for the page's 60 rows only.
  */
 export async function feedForChannels(channelIds: string[], opts: FeedOptions = {}): Promise<FeedPage> {
   if (!channelIds.length) return { events: [], next_cursor: null };
   const limit = clampLimit(opts.limit);
   const cursor = decodeCursor(opts.cursor);
   const types = normalizeTypes(opts.types);
+  const shape = scanShape(channelIds.length, types);
 
-  // Per-channel top-N, then merge. One index scan per tracked channel on
-  // idx_feed_events_channel_at_longform reads at most `limit + 1` rows in index order; the
-  // outer sort picks the global page out of those. The flat form scanned the global
-  // (at desc) index and threw away every event belonging to an untracked channel — 32K rows
-  // discarded to produce 60 on a 19-channel account.
-  //
-  // The longform test is a stored column (feed_events.is_longform, written at insert time and
-  // maintained by the shorts verifier) rather than a join to videos: joining 4,266 events to
-  // videos before the LIMIT was the other half of the cost. videos is still LEFT JOINed for
-  // the display columns, but now for the page's 60 rows only.
   const p = { channels: 1, limit: 2, cursorAt: 3, cursorId: 4 };
   let n = cursor ? 5 : 3;
   const typesParam = types ? n++ : 0;
   const sinceParam = opts.since ? n++ : 0;
-  const inner = `select e2.id, e2.type, e2.at, e2.channel_id, e2.video_id, e2.payload
-                   from feed_events e2
-                  where e2.channel_id = c.channel_id
-                    and e2.is_longform
-                    ${cursor ? `and (e2.at, e2.id) < ($${p.cursorAt}::timestamptz, $${p.cursorId}::bigint)` : ''}
-                    ${types ? `and e2.type = any($${typesParam}::text[])` : ''}
-                    ${opts.since ? `and e2.at >= $${sinceParam}::timestamptz` : ''}
-                  order by e2.at desc, e2.id desc
-                  limit $${p.limit}`;
+
+  // The predicate is the same either way; only how it is reached differs.
+  const where = (t: string) => `${t}.is_longform
+                    ${cursor ? `and (${t}.at, ${t}.id) < ($${p.cursorAt}::timestamptz, $${p.cursorId}::bigint)` : ''}
+                    ${types ? `and ${t}.type = any($${typesParam}::text[])` : ''}
+                    ${opts.since ? `and ${t}.at >= $${sinceParam}::timestamptz` : ''}`;
+
+  // Per-channel top-N, then merge. One index scan per tracked channel on
+  // idx_feed_events_channel_at_longform reads at most `limit + 1` rows in index order; the
+  // outer sort picks the global page out of those.
+  const lateral = `select x.*
+       from unnest($${p.channels}::text[]) as c(channel_id)
+       cross join lateral (
+         select e2.id, e2.type, e2.at, e2.channel_id, e2.video_id, e2.payload
+           from feed_events e2
+          where e2.channel_id = c.channel_id
+            and ${where('e2')}
+          order by e2.at desc, e2.id desc
+          limit $${p.limit}
+       ) x
+      order by x.at desc, x.id desc
+      limit $${p.limit}`;
+
+  // One walk down the global (at desc, id desc) index, discarding untracked channels as it
+  // goes. At 500 channels the page fills within the first couple of thousand entries, which
+  // is an order of magnitude less IO than 500 separate probes.
+  const flat = `select e0.id, e0.type, e0.at, e0.channel_id, e0.video_id, e0.payload
+       from feed_events e0
+      where e0.channel_id = any($${p.channels}::text[])
+        and ${where('e0')}
+      order by e0.at desc, e0.id desc
+      limit $${p.limit}`;
 
   // One extra row tells us whether another page exists without a second count query.
   const rows = await q<FeedRow>(
@@ -120,13 +176,7 @@ export async function feedForChannels(channelIds: string[], opts: FeedOptions = 
             sc.score::float8 as score, sc.n_baseline as score_n_baseline, sc.confidence as score_confidence,
             sc.est30::float8 as score_est30, sc.baseline::float8 as score_baseline,
             sc.typical_at_age::float8 as score_typical_at_age
-       from (
-         select x.*
-           from unnest($${p.channels}::text[]) as c(channel_id)
-           cross join lateral (${inner}) x
-          order by x.at desc, x.id desc
-          limit $${p.limit}
-       ) e
+       from (${shape === 'flat' ? flat : lateral}) e
        left join videos v on v.id = e.video_id
        left join video_scores sc on sc.video_id = e.video_id
       order by e.at desc, e.id desc`,
