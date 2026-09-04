@@ -1,10 +1,12 @@
 'use client';
 
-// A channel page's controls: the Videos / Changes / Analytics tabs and, on the same line, one right-aligned
-// row — a segmented switch and a dropdown. Everything is a URL parameter, so the server keeps
-// doing the ORDER BY and the LIMIT and a filtered view is a link.
+// A channel page's controls: the Videos / Changes / Analytics tabs and, on the same line, one
+// right-aligned row — chips for what to narrow to, a Sort menu for the range. Everything is a
+// URL parameter, so the server keeps doing the ORDER BY and the LIMIT and a filtered view is a link.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Chips } from '@/components/app/chips';
+import { Sort } from '@/components/app/menu';
 import type { SortKey, RangeKey } from '@/lib/app/channel-page';
 import type { ChangeKind } from '@/lib/app/packaging-rows';
 
@@ -36,6 +38,11 @@ export function ChannelBar({
       ? { tab: 'analytics' }
       : { sort: sort === 'published' ? null : sort };
 
+  const chipLink = (chip: { href?: string }, props: { className: string; 'data-on'?: boolean; children: React.ReactNode }) => (
+    <Link href={chip.href!} className={props.className} data-on={props['data-on']}
+          aria-current={props['data-on'] ? 'true' : undefined}>{props.children}</Link>
+  );
+
   return (
     <div className="cs-tabbar">
       <nav className="cs-tabs" aria-label="Channel views">
@@ -60,24 +67,31 @@ export function ChannelBar({
           <span className="cs-showing">showing <span className="cs-num">{showing}</span> of <span className="cs-num">{total}</span></span>
         )}
         {tab === 'analytics' ? null : tab === 'videos' ? (
-          <div className="cs-seg" role="group" aria-label="Sort videos">
-            {SORTS.map(([key, label]) => (
-              <Link key={key} href={build(channelId, { sort: key === 'published' ? null : key, range: range === 'all' ? null : range })}
-                    data-on={sort === key} aria-current={sort === key ? 'true' : undefined}>{label}</Link>
-            ))}
-          </div>
+          <Sort
+            ariaLabel="Sort videos"
+            value={sort}
+            options={SORTS.map(([key, label]) => ({ key, label }))}
+            onChange={(key) => router.push(build(channelId, {
+              sort: key === 'published' ? null : key, range: range === 'all' ? null : range,
+            }))}
+          />
         ) : (
-          <div className="cs-seg" role="group" aria-label="Filter changes">
-            {KINDS.map(([key, label]) => (
-              <Link key={key} href={build(channelId, { tab: 'changes', kind: key === 'all' ? null : key, range: range === 'all' ? null : range })}
-                    data-on={kind === key} aria-current={kind === key ? 'true' : undefined}>{label}</Link>
-            ))}
-          </div>
+          <Chips
+            ariaLabel="Filter changes"
+            value={kind}
+            items={KINDS.map(([key, label]) => ({
+              key, label,
+              href: build(channelId, { tab: 'changes', kind: key === 'all' ? null : key, range: range === 'all' ? null : range }),
+            }))}
+            renderLink={chipLink}
+          />
         )}
-        <select className="cs-select" aria-label="Published within" value={range}
-                onChange={(e) => router.push(build(channelId, { ...keep, range: e.target.value === 'all' ? null : e.target.value }))}>
-          {RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-        </select>
+        <Sort
+          ariaLabel="Published within"
+          value={range}
+          options={RANGES.map(([key, label]) => ({ key, label }))}
+          onChange={(key) => router.push(build(channelId, { ...keep, range: key === 'all' ? null : key }))}
+        />
       </div>
     </div>
   );

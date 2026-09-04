@@ -6,7 +6,7 @@
 import { channelMeta } from './channel-meta';
 import { q, one } from '../admin/db';
 import { chunk, clampCount, parseRssVideoIds } from '../nightly/tracking-core';
-import { canTrackMore, canWatchMoreClosely } from './plans';
+import { canWatchMoreClosely } from './plans';
 import { planUsage } from './users';
 import {
   ChannelRef, CHANNEL_ID_RE, bareHandle, parseChannelInput, uploadsPlaylistId,
@@ -429,11 +429,10 @@ export async function trackChannel(
     `select 1 as x from user_channels where user_id = $1 and channel_id = $2`,
     [userId, channelId]
   );
+  // Tracking is no longer capped by plan: the number a plan buys is how many channels it can
+  // be NOTIFIED about (lib/app/groups-view.ts, notifyGate), which is the cost we actually
+  // carry. Watching closely still costs dense sampling, so that limit stays.
   const usage = await planUsage(userId);
-  if (!already) {
-    const check = canTrackMore(usage.plan, usage.tracked);
-    if (!check.ok) throw new PlanLimitError(check.reason!);
-  }
   const watched = !!opts.watchedClosely;
   if (watched) {
     const check = canWatchMoreClosely(usage.plan, usage.watchedClosely);
@@ -547,6 +546,12 @@ export interface UserChannelRow {
   baseline: number | null;
   outliers: number;
   last_packaging_change: string | null;
+  notify: boolean;
+  subscriber_count: number | null;
+  /** Group ids this channel sits in, for this user. */
+  groups: string[];
+  /** When this channel last published — the subline's fact. */
+  last_upload_at: string | null;
 }
 
 /**
@@ -562,6 +567,7 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
     `select uc.channel_id,
             uc.role,
             uc.watched_closely,
+            uc.notify,
             uc.added_at,
             ct.lane,
             ct.backfill_status,
@@ -572,12 +578,31 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             coalesce(cs.video_count, 0)::int as video_count,
             cs.baseline,
             coalesce(cs.outliers, 0)::int as outliers,
-            cs.last_packaging_change
+            cs.last_packaging_change,
+            -- bigint arrives from pg as a string; float8 comes back as a number, which is
+            -- what compactNumber needs and is exact well past any subscriber count.
+            cm.subscriber_count::float8 as subscriber_count,
+            coalesce(gm.groups, '{}') as groups,
+            lu.last_upload_at
        from user_channels uc
        left join channel_tracking ct on ct.channel_id = uc.channel_id
        left join channel_meta cm on cm.channel_id = uc.channel_id
        left join channel_stats cs on cs.channel_id = uc.channel_id
        left join channel_directory cd on cd.channel_id = uc.channel_id
+       left join lateral (
+         select array_agg(m.group_id::text) as groups
+           from channel_group_members m
+          where m.user_id = uc.user_id and m.channel_id = uc.channel_id
+       ) gm on true
+       -- The subline's fact. idx_videos_channel_published makes this one backward index
+       -- probe per channel, so it rides along with the list instead of a second round trip.
+       left join lateral (
+         select v.published_at as last_upload_at
+           from videos v
+          where v.channel_id = uc.channel_id and v.published_at is not null
+          order by v.published_at desc
+          limit 1
+       ) lu on true
       where uc.user_id = $1
       order by uc.added_at asc`,
     [userId]

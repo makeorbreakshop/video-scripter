@@ -21,6 +21,7 @@ import {
 } from './channel-page';
 import { channelBaselineSeries as channelBaselineSeriesUncached, type BaselinePoint } from './channel-analytics';
 import { loadVideoPage as loadVideoPageUncached, type VideoPageView } from './video-page';
+import { channelSparklines as channelSparklinesUncached, type Sparkline } from './channel-sparklines';
 import { channelTag, videoTag } from './cache-tags';
 
 export { channelTag, videoTag };
@@ -84,5 +85,20 @@ export function cachedVideoPage(videoId: string, channelId?: string | null): Pro
     () => loadVideoPageUncached(videoId),
     ['video-page', videoId],
     { revalidate: VIDEO_TTL, tags }
+  )();
+}
+
+/**
+ * The /app/channels sparkline lane. Not per-user in substance — the series belong to the
+ * channels, not to whoever tracks them — so the key is the sorted id list and the entry is
+ * tagged with every channel in it: a rescore of any one of them drops the row of lines.
+ */
+export function cachedSparklines(channelIds: string[]): Promise<Record<string, Sparkline>> {
+  const ids = Array.from(new Set((channelIds || []).filter(Boolean))).sort();
+  if (!ids.length) return Promise.resolve({});
+  return unstable_cache(
+    () => channelSparklinesUncached(ids),
+    ['channel-sparklines', ids.join(',')],
+    { revalidate: CHANNEL_TTL, tags: ids.map(channelTag) }
   )();
 }

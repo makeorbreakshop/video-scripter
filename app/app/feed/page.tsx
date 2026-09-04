@@ -13,6 +13,7 @@ import { q } from '@/lib/admin/db';
 import { requireAppUser } from '@/lib/app/session';
 import { feedForChannels } from '@/lib/feed/query';
 import { avatarsFor } from '@/lib/app/channel-meta';
+import { listGroups, listMemberships } from '@/lib/app/channel-groups';
 import { parseSegment, segmentTypes, type FeedSegment } from '@/lib/app/feed-format';
 import { packagingVideoIds, testRowsForEvents } from '@/lib/app/feed-tests';
 import { thumbRowsFor } from '@/lib/app/packaging-rows';
@@ -61,20 +62,39 @@ export default async function FeedPage({ searchParams }: {
   // A user with nothing tracked has nowhere to start; onboarding is that starting point.
   if (!tracked.length) redirect('/app/onboarding');
 
+  // The same dropdown narrows by group ("group:<id>") or by one channel. Groups are read
+  // here rather than in the client so the first render already knows their names and counts.
+  const [groups, memberships] = await Promise.all([listGroups(user.id), listMemberships(user.id)]);
+
   const segment = parseSegment(sp.seg);
   const asked = Array.isArray(sp.channel) ? sp.channel[0] : sp.channel;
-  const channelId = asked && tracked.some((t) => t.channel_id === asked) ? asked : null;
-  const channelIds = channelId ? [channelId] : tracked.map((t) => t.channel_id);
+  const askedGroup = asked?.startsWith('group:') ? asked.slice(6) : null;
+  const groupId = askedGroup && groups.some((g) => g.id === askedGroup) ? askedGroup : null;
+  const channelId = !groupId && asked && tracked.some((t) => t.channel_id === asked) ? asked : null;
+
+  const inGroup = groupId
+    ? tracked.filter((t) => (memberships[t.channel_id] || []).includes(groupId)).map((t) => t.channel_id)
+    : null;
+  const channelIds = channelId ? [channelId] : inGroup?.length ? inGroup : tracked.map((t) => t.channel_id);
+  const selected = groupId ? `group:${groupId}` : channelId;
 
   return (
     <div className="cs-feed-page">
       {/* The heading stands alone — no subtitle explaining what a feed is. */}
       <div className="cs-page-head" style={{ alignItems: 'center' }}>
         <h1 className="cs-h1">Feed</h1>
-        <FeedControls segment={segment} channelId={channelId}
-                      channels={tracked.map((t) => ({ id: t.channel_id, name: t.name || t.channel_id }))} />
+        <FeedControls
+          segment={segment}
+          channelId={selected}
+          groups={groups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            color: g.color,
+            count: tracked.filter((t) => (memberships[t.channel_id] || []).includes(g.id)).length,
+          }))}
+          channels={tracked.map((t) => ({ id: t.channel_id, name: t.name || t.channel_id }))} />
       </div>
-      <Suspense key={`${segment}:${channelId ?? 'all'}`} fallback={<FeedSkeleton />}>
+      <Suspense key={`${segment}:${selected ?? 'all'}`} fallback={<FeedSkeleton />}>
         <FeedBody channelIds={channelIds} segment={segment} />
       </Suspense>
     </div>
