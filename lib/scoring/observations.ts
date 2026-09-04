@@ -32,6 +32,9 @@ export function mergeObservations(
 
 /** Keyed unions avoid the old correlated +/-12h RSS anti-join (quadratic on dense records). */
 export const OBSERVATION_RECORDS_SQL = `
+  with target_videos as materialized (
+    select id, published_at from videos where id = any($1)
+  )
   select x.video_id, x.at, x.views, x.source, v.published_at
   from (
     select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views, 'snapshot' as source
@@ -40,7 +43,7 @@ export const OBSERVATION_RECORDS_SQL = `
     select video_id, sampled_at, view_count, 'sample' from view_samples where video_id = any($1)
     union all
     select video_id, at, views, 'rss' from rss_samples where video_id = any($1)
-  ) x join videos v on v.id = x.video_id
+  ) x join target_videos v on v.id = x.video_id
   where x.views >= 0 and x.at >= v.published_at and x.at <= now()`;
 
 export function observationRecords(rows: { video_id: string; published_at: string | Date; at: string | Date; views: number; source: Observation['source'] }[], asOf = Date.now()): Map<string, Observation[]> {
