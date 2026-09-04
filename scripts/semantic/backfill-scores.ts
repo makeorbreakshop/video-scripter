@@ -20,6 +20,7 @@ dotenv.config({ path: '.env.local' });
 import fs from 'fs';
 import path from 'path';
 import pg from 'pg';
+import { historyInsert, type HistoryRow } from '../../lib/scoring/history';
 import { chunk } from '../../lib/nightly/tracking-core';
 import {
   bucketFor,
@@ -29,6 +30,7 @@ import {
   median,
   scoreVideo,
   Snapshot,
+  channelBaseline,
 } from '../../lib/scoring/core';
 import {
   coverageBandSql,
@@ -153,14 +155,15 @@ function v30Of(
   return estimateV30(truth.get(id) ?? null, m?.views ?? null, m?.age ?? 0, longtail);
 }
 
-async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
+async function priorsFor(ids: string[]): Promise<Map<string, { id: string; ageDays: number }[]>> {
   if (!ids.length) return new Map();
-  const rows: { video_id: string; prior_id: string }[] = await q(
-    `select r.id as video_id, p.id as prior_id
+  const rows: { video_id: string; prior_id: string; gap_days: number }[] = await q(
+    `select r.id as video_id, p.id as prior_id,
+            extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days
        from unnest($1::text[]) as r(id)
        join videos v on v.id = r.id
        join lateral (
-         select p.id
+         select p.id, p.published_at
            from videos p
           where p.channel_id = v.channel_id
             and p.published_at < v.published_at
@@ -173,10 +176,10 @@ async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
        ) p on true`,
     [ids]
   );
-  const out = new Map<string, string[]>();
+  const out = new Map<string, { id: string; ageDays: number }[]>();
   for (const r of rows) {
     if (!out.has(r.video_id)) out.set(r.video_id, []);
-    out.get(r.video_id)!.push(r.prior_id);
+    out.get(r.video_id)!.push({ id: r.prior_id, ageDays: Number(r.gap_days) });
   }
   return out;
 }
@@ -222,7 +225,7 @@ async function nextTargets(cursor: Cursor | null, remaining: number | null): Pro
 async function writeScores(targets: Target[], globalParams: GlobalParams): Promise<{ written: number; skipped: number }> {
   const ids = targets.map((target) => target.id);
   const priorsOf = await priorsFor(ids);
-  const priorIds = [...new Set([...priorsOf.values()].flat())];
+  const priorIds = [...new Set([...priorsOf.values()].flat().map((p) => p.id))];
   const allIds = [...new Set([...ids, ...priorIds])];
   const [targetRecords, priorRecords, truth, metas] = await Promise.all([
     records(ids),
@@ -233,10 +236,12 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
 
   const values: unknown[] = [];
   const tuples: string[] = [];
+  const hist: HistoryRow[] = [];
   let skipped = 0;
 
   for (const target of targets) {
     const priorV30: number[] = [];
+    const priorAgeDays: number[] = [];
     const priorSameAge: number[] = [];
     const priorMultLogs: number[] = [];
     let fromLifetime = 0;
@@ -261,10 +266,11 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
     const bucket = bucketFor(latest.day);
     const tol = bucket <= 3 ? 1 : bucket <= 7 ? 2 : 3;
 
-    for (const priorId of priorsOf.get(target.id) ?? []) {
+    for (const { id: priorId, ageDays } of priorsOf.get(target.id) ?? []) {
       const est = v30Of(priorId, truth, metas, globalParams.longtail);
       if (est) {
         priorV30.push(est.v30);
+        priorAgeDays.push(ageDays);
         if (est.fromLifetime) fromLifetime++;
       }
 
@@ -287,7 +293,7 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
 
     const out = finalPath
       ? (() => {
-          const baseline = priorV30.length >= 3 ? median(priorV30) : null;
+          const baseline = channelBaseline(priorV30, priorAgeDays).baseline;
           const score = baseline && baseline > 0 ? self!.v30 / baseline : null;
           return {
             q: null,
@@ -297,7 +303,7 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
             score,
             sameAgeRatio: null,
             nSameAge: 0,
-            confidence: priorV30.length < 3 ? 'insufficient' as const : 'confirmed' as const,
+            confidence: baseline == null ? 'insufficient' as const : 'confirmed' as const,
             priorsFromLifetime: fromLifetime,
           };
         })()
@@ -307,11 +313,19 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
           snaps: targetSnaps!,
           priorMultLogs,
           priorV30,
+          priorAgeDays,
           priorSameAge,
           priorsFromLifetime: fromLifetime,
           params: globalParams,
         });
 
+    hist.push({
+      video_id: target.id, channel_id: target.channel_id, model_version: opts.modelVersion,
+      age_days: latest.day, views: latest.views, score: out.score,
+      same_age_ratio: out.sameAgeRatio, est30: out.est30, baseline: out.baseline,
+      n_baseline: out.nBaseline, confidence: out.confidence,
+      extra: { q: out.q, n_same_age: out.nSameAge, priors_from_lifetime: out.priorsFromLifetime, params_version: opts.paramsVersion },
+    });
     const offset = values.length;
     values.push(
       target.id,
@@ -342,6 +356,10 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
        confidence=excluded.confidence, priors_from_lifetime=excluded.priors_from_lifetime`,
     values
   );
+  // Every write path appends to the append-only history too, so a later rescore of
+  // video_scores cannot erase this labelled corpus. See sql/score-history.sql.
+  const h = historyInsert(hist);
+  if (h) await pool.query(h.text, h.values);
 
   return { written: tuples.length, skipped };
 }

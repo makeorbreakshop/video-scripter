@@ -4,6 +4,7 @@ import { tableFromRows, type BandTable } from '../scoring/bands';
 import { q, one } from './db';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
+import { scoreParamsQuery } from '../app/score-version';
 
 export type DayCount = { day: string; n: number };
 
@@ -332,8 +333,7 @@ export async function videoPage(id: string): Promise<VideoPageData> {
     q<any>(`select version, title, first_seen from title_versions where video_id = $1 order by version`, [id]),
     one<OutlierRow>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
     one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null; bands: BandTable | null }>(
-      `select params->'mult' as mult, params->'longtail' as longtail, params->'bands' as bands
-       from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+      ...scoreParamsQuery(`params->'mult' as mult, params->'longtail' as longtail, params->'bands' as bands`)
     ),
   ]);
   // The channel's own band, if it has enough day-30 history to have been fitted one. One

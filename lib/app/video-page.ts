@@ -19,6 +19,7 @@ import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-tim
 import { experiments, type Experiment } from './experiment';
 import { horizonFor } from './chart-horizon';
 import { snapshotTimeIso } from './observations';
+import { scoreParamsQuery } from './score-version';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
 
 /** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
@@ -136,8 +137,7 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     ),
     one<any>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
     one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null }>(
-      `select params->'mult' as mult, params->'longtail' as longtail
-         from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+      ...scoreParamsQuery(`params->'mult' as mult, params->'longtail' as longtail`)
     ),
     q<{ version: number; r2_uploaded_at: string | null }>(
       `select version, r2_uploaded_at from thumbnail_versions where video_id = $1 order by version`,
@@ -324,7 +324,9 @@ export function verdict(v: VideoVerdictInput): { big: string | null; under: stri
     return {
       big: pct(Number(sc.score)),
       over: Number(sc.score) >= 1,
-      under: `on pace for ${fmt(Math.round(sc.est30))} by day 30 · typical ${fmt(Math.round(sc.baseline))}`,
+      // v5: `baseline` is C(t) -- typical AT THIS AGE, not at day 30. The age has to be on
+      // the line, or the number reads as a day-30 claim sitting next to a day-30 projection.
+      under: `${fmt(v.views)} vs typical ${fmt(Math.round(sc.baseline))} at ${age(v.ageDays)} · on pace for ${fmt(Math.round(sc.est30))} by day 30`,
       // One multiplier per page, and only numbers the headline is made of. The measured count
       // and the read's confidence are the whole second line.
       aside: [`${fmt(v.views)} views at ${age(v.ageDays)}`, conf ? `${conf} read` : null].filter(Boolean).join(' · '),
@@ -411,8 +413,8 @@ export function headerLines(v: HeaderInput): HeaderLines {
     return {
       meta, big: pct(Number(sc.score)), over: Number(sc.score) >= 1,
       verdict: [
+        `typical ${fmt(Math.round(sc.baseline))} at ${ageWord(v.ageDays)}`,
         `on pace for ${fmt(Math.round(sc.est30))} by day 30`,
-        `typical ${fmt(Math.round(sc.baseline))}`,
         read,
       ].filter(Boolean).join(' · '),
     };

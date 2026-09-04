@@ -47,6 +47,13 @@ const TIME_FRAC = Number(arg('--time-frac') ?? 0.2);
 const TEST_LIMIT = Number(arg('--test-limit') ?? 2500);
 const FIT_SAMPLE = Number(arg('--fit-sample') ?? 8000);
 const WRITE_BASELINE = has('--baseline');
+// Which stored score_params row supplies the two tables this harness cannot refit from train
+// rows: the long tail and the sub-day launch ladder. Defaults to this build's MODEL_VERSION.
+// Point it at the reference's version to compare a model change against a run made with the
+// SAME carried-over tables -- otherwise a MODEL_VERSION bump silently also swaps in a freshly
+// fitted launch ladder, and the sub-day cells move for a reason that has nothing to do with
+// the change under test.
+const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
 const AGES = [0.5, 1, 2, 3, 5, 7, 14];
 const SPLITS = ['heldout', 'time'];
 const HOLDOUT_SHARE = Number(arg('--holdout') ?? 1 / 16);
@@ -166,8 +173,9 @@ log(`train ${trainPop.length}  test ${testPop.length} (heldout ${testPop.filter(
 
 // -------------------------------------------------------------- refit params
 const stored: GlobalParams = (await q(
-  `select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]
+  `select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [PARAMS_VERSION]
 ))[0].params;
+log(`stored params (long tail + launch ladder) from score_params model_version=${PARAMS_VERSION}`);
 
 const shuffle = <T,>(xs: T[], seed = 42): T[] => {
   const a = [...xs]; let s = seed;
@@ -266,23 +274,29 @@ function channelAsOf(vid: string, T: number, bucket: number) {
   const all = priorsOf.get(vid) ?? [];
   const pub = testById.get(vid)!.pub;
   const fresh = all.filter((p) => (pub - p.pub) / DAY <= PRIOR_STALE_DAYS);
-  const pool = fresh.slice(0, priorWindow(publishGapDays(fresh.map((p) => p.pub))));
+  // v4.0: the baseline sees the whole fresh pool (age-weighted); est30 keeps the v3 window.
+  const estWindow = priorWindow(publishGapDays(fresh.map((p) => p.pub)));
+  const pool = fresh;
   const tol = bucketTolerance(bucket);
-  const priorMultLogs: number[] = []; const priorV30: number[] = []; const priorSameAge: number[] = [];
+  const priorMultLogs: number[] = []; const priorV30: number[] = []; const priorAgeDays: number[] = []; const priorSameAge: number[] = [];
   let fromLifetime = 0, projected = 0;
-  for (const p of pool) {
+  for (let i = 0; i < pool.length; i++) {
+    const p = pool[i];
     const obs = (priorRec.get(p.id) ?? []).filter((o) => o.at <= T);
     const tr = priorTruth.get(p.id);
     const realV30 = tr && tr.at <= T ? tr.v30 : null;      // day-30 not yet observable => hidden
     const latest = obs.length ? obs[obs.length - 1] : null;
     const est = corePriorV30(realV30, latest, params);
-    if (est) { priorV30.push(est.v30); if (est.kind === 'lifetime') fromLifetime++; if (est.kind === 'projected') projected++; }
-    if (obs.length) {
+    if (est) {
+      priorV30.push(est.v30); priorAgeDays.push((pub - p.pub) / DAY);
+      if (est.kind === 'lifetime') fromLifetime++; if (est.kind === 'projected') projected++;
+    }
+    if (i < estWindow && obs.length) {
       const nearB = obs.filter((o) => Math.abs(o.day - bucket) <= tol).sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
       if (nearB && realV30) priorMultLogs.push(Math.log(realV30 / nearB.views));
     }
   }
-  return { priorMultLogs, priorV30, priorSameAge, fromLifetime, projected, pool };
+  return { priorMultLogs, priorV30, priorAgeDays, priorSameAge, fromLifetime, projected, pool };
 }
 
 const rows: BenchRow[] = [];
@@ -309,7 +323,7 @@ for (const vid of testIds) {
     const ch = channelAsOf(vid, T, bucket);
     const out = scoreVideo({
       vt: near.views, day: near.day, snaps: upto,
-      priorMultLogs: ch.priorMultLogs, priorV30: ch.priorV30, priorSameAge: ch.priorSameAge,
+      priorMultLogs: ch.priorMultLogs, priorV30: ch.priorV30, priorAgeDays: ch.priorAgeDays, priorSameAge: ch.priorSameAge,
       priorsFromLifetime: ch.fromLifetime, priorsProjected: ch.projected, params,
     });
     for (const split of splits) {
@@ -333,7 +347,7 @@ for (const vid of testIds) {
     const ch = channelAsOf(vid, last.at, bucket);
     const out = scoreVideo({
       vt: last.views, day: last.day, snaps: before.map((o) => ({ day: o.day, views: o.views })),
-      priorMultLogs: ch.priorMultLogs, priorV30: ch.priorV30, priorSameAge: ch.priorSameAge, params,
+      priorMultLogs: ch.priorMultLogs, priorV30: ch.priorV30, priorAgeDays: ch.priorAgeDays, priorSameAge: ch.priorSameAge, params,
     });
     if (out.est30 > 0) {
       liftRows.push({ videoId: vid, type: c.type, changeAge: c.age, forecastBefore: out.est30, actual30: truth.v30, lift: truth.v30 / out.est30 });
@@ -361,7 +375,7 @@ const config = {
 const rep = buildReport(rows, { modelVersion: MODEL_VERSION, ages: AGES, splits: SPLITS, config, notes, lift: liftRows });
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
-const stem = `${MODEL_VERSION}-${today}`;
+const stem = `${MODEL_VERSION}${PARAMS_VERSION === MODEL_VERSION ? '' : `-p${PARAMS_VERSION}`}-${today}`;
 fs.writeFileSync(path.join(OUT_DIR, `${stem}.json`), JSON.stringify(rep, null, 2));
 fs.writeFileSync(path.join(OUT_DIR, `${stem}.md`), reportMarkdown(rep));
 // Per-row dump, so a later run can be compared on exactly the same videos.

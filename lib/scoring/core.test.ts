@@ -1,4 +1,4 @@
-import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams, logMultTo30, longtailFrom30, priorV30, publishGapDays, priorWindow, DAY_BUCKETS, HOUR_BUCKETS, fitLaunchLadder, fittedBuckets, bucketTolerance } from './core';
+import { bucketFor, growthExponent, median, scoreVideo, fitParams, qResidual, fitLongTail, longtailAt, estimateV30, GlobalParams, logMultTo30, longtailFrom30, priorV30, publishGapDays, priorWindow, DAY_BUCKETS, HOUR_BUCKETS, fitLaunchLadder, fittedBuckets, bucketTolerance, channelBaseline, weightedMedian, effectiveN, baselineWeight, MIN_BASELINE_NEFF } from './core';
 
 const params: GlobalParams = {
   mult: { 1: Math.log(2.2), 2: Math.log(1.9), 3: Math.log(1.4), 5: Math.log(1.25), 7: Math.log(1.12), 14: Math.log(1.05), 21: Math.log(1.02), 30: 0 },
@@ -43,6 +43,7 @@ describe('scoreVideo', () => {
     vt: 1000, day: 3,
     snaps: [{ day: 1, views: 500 }, { day: 3, views: 1000 }],
     priorV30: [900, 1000, 1100, 1200, 800],
+    priorAgeDays: [0, 0, 0, 0, 0],
     priorSameAge: [400, 500, 600, 450, 550],
     params,
   };
@@ -51,7 +52,7 @@ describe('scoreVideo', () => {
     const out = scoreVideo({ ...base, priorMultLogs: [] });
     const q = growthExponent(base.snaps)!;                 // log(2)/log(2) = 1 -> top bin (+0.25)
     expect(out.est30).toBeCloseTo(1000 * Math.exp(Math.log(1.4) + 0.25), 6);
-    expect(out.baseline).toBe(1000);
+    expect(out.baseline).toBeCloseTo(1000, 6);
     expect(out.score).toBeCloseTo(out.est30 / 1000, 6);
     expect(out.sameAgeRatio).toBeCloseTo(1000 / 500, 6);
     expect(out.confidence).toBe('likely');
@@ -68,7 +69,7 @@ describe('scoreVideo', () => {
   test('confidence follows age and history', () => {
     expect(scoreVideo({ ...base, day: 1, priorMultLogs: [] }).confidence).toBe('early');
     expect(scoreVideo({ ...base, day: 9, priorMultLogs: [] }).confidence).toBe('confirmed');
-    expect(scoreVideo({ ...base, priorMultLogs: [], priorV30: [1, 2], priorSameAge: [] }).confidence).toBe('insufficient');
+    expect(scoreVideo({ ...base, priorMultLogs: [], priorV30: [1, 2], priorAgeDays: [0, 0], priorSameAge: [] }).confidence).toBe('insufficient');
   });
 
   test('at day 30+ the estimate is the observed count', () => {
@@ -164,13 +165,13 @@ describe('fitLongTail / longtailAt / estimateV30', () => {
 
 describe('confidence with lifetime-derived baselines', () => {
   test("'insufficient' only below 3 priors, regardless of same-age history", () => {
-    const base = { vt: 1000, day: 20, snaps: [{ day: 1, views: 500 }, { day: 20, views: 1000 }], priorMultLogs: [], priorSameAge: [], params };
+    const base = { vt: 1000, day: 20, snaps: [{ day: 1, views: 500 }, { day: 20, views: 1000 }], priorMultLogs: [], priorAgeDays: [0, 0, 0], priorSameAge: [], params };
     expect(scoreVideo({ ...base, priorV30: [900, 1000, 1100] }).confidence).toBe('confirmed');
     expect(scoreVideo({ ...base, priorV30: [900, 1000] }).confidence).toBe('insufficient');
     expect(scoreVideo({ ...base, priorV30: [900, 1000], priorSameAge: [1, 2, 3] }).confidence).toBe('insufficient');
   });
   test('priorsFromLifetime is carried through to the output', () => {
-    const out = scoreVideo({ vt: 1000, day: 20, snaps: [], priorMultLogs: [], priorV30: [900, 1000, 1100], priorSameAge: [], priorsFromLifetime: 2, params });
+    const out = scoreVideo({ vt: 1000, day: 20, snaps: [], priorMultLogs: [], priorV30: [900, 1000, 1100], priorAgeDays: [0, 0, 0], priorSameAge: [], priorsFromLifetime: 2, params });
     expect(out.priorsFromLifetime).toBe(2);
     expect(out.nBaseline).toBe(3);
   });
@@ -224,7 +225,7 @@ describe('prior day-30 estimation (baseline from young priors)', () => {
   });
   it('a daily channel with 10 young priors now gets a baseline', () => {
     const v30s = Array.from({ length: 10 }, (_, i) => priorV30(null, { day: 2 + i, views: 10000 }, params)!.v30);
-    const out = scoreVideo({ vt: 5000, day: 0.5, snaps: [{ day: 0.5, views: 5000 }], priorMultLogs: [], priorV30: v30s, priorSameAge: [], priorsProjected: 10, params });
+    const out = scoreVideo({ vt: 5000, day: 0.5, snaps: [{ day: 0.5, views: 5000 }], priorMultLogs: [], priorV30: v30s, priorAgeDays: v30s.map(() => 0), priorSameAge: [], priorsProjected: 10, params });
     expect(out.baseline).not.toBeNull();
     expect(out.nBaseline).toBe(10);
     expect(out.priorsProjected).toBe(10);
@@ -268,11 +269,11 @@ describe('launch ladder (sub-day buckets)', () => {
   });
   it('scoreVideo uses the hour multiplier when fitted, else falls back to the day-1 bucket', () => {
     const base: GlobalParams = { mult: { 1: Math.log(2.27), 3: Math.log(1.52), 30: 0 }, qBins: {}, fittedAt: 'x', nVideos: 0 };
-    const without = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorSameAge: [], params: base });
+    const without = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorAgeDays: [], priorSameAge: [], params: base });
     expect(without.bucket).toBe(1);
     expect(without.est30).toBeCloseTo(22700, 0);
     const withLadder: GlobalParams = { ...base, mult: { ...base.mult, [12 / 24]: Math.log(3.4) } };
-    const w = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorSameAge: [], params: withLadder });
+    const w = scoreVideo({ vt: 10000, day: 0.5, snaps: [{ day: 0.5, views: 10000 }], priorMultLogs: [], priorV30: [], priorAgeDays: [], priorSameAge: [], params: withLadder });
     expect(w.bucket).toBeCloseTo(12 / 24, 9);
     expect(w.est30).toBeCloseTo(34000, 0);
     expect(fittedBuckets(withLadder)).toEqual([12 / 24, 1, 3, 30]);
@@ -282,5 +283,89 @@ describe('launch ladder (sub-day buckets)', () => {
     expect(bucketTolerance(1 / 24)).toBeCloseTo(1 / 48, 9);
     expect(bucketTolerance(3)).toBe(1);
     expect(bucketTolerance(14)).toBe(3);
+  });
+});
+
+// ---- v4.0 channel baseline: time-weighted median in log space ----
+describe('channelBaseline (v4.0)', () => {
+  const ages = (n: number, a = 0) => Array.from({ length: n }, () => a);
+
+  it('equal weights reduce to the plain median', () => {
+    const odd = [800, 900, 1000, 1100, 1200];
+    expect(channelBaseline(odd, ages(5)).baseline).toBeCloseTo(median(odd)!, 9);
+    // even count: the tie-break averages the two middles -- in log space, i.e. geometrically
+    const even = [800, 900, 1000, 1200];
+    expect(channelBaseline(even, ages(4)).baseline).toBeCloseTo(Math.sqrt(900 * 1000), 9);
+    // ...and identical ages give the same answer whatever that age is
+    expect(channelBaseline(odd, ages(5, 240)).baseline).toBeCloseTo(median(odd)!, 9);
+  });
+
+  it('weightedMedian with equal weights matches median, and honours weight mass', () => {
+    expect(weightedMedian([3, 1, 2], [1, 1, 1])).toBe(2);
+    expect(weightedMedian([1, 2, 3, 4], [1, 1, 1, 1])).toBe(2.5);
+    // all the mass on one value picks that value
+    expect(weightedMedian([1, 2, 3], [0.01, 100, 0.01])).toBe(2);
+    expect(weightedMedian([], [])).toBeNull();
+    expect(weightedMedian([1, 2], [0, 0])).toBeNull();
+  });
+
+  it('down-weights old priors', () => {
+    // the channel's level moved: its two most recent videos do 1,000, its older ones did 50,000
+    const v30 = [1000, 1000, 50000, 50000, 50000];
+    // unweighted, the three stale videos outvote the two recent ones
+    expect(channelBaseline(v30, ages(5)).baseline).toBeCloseTo(50000, 6);
+    // weighted by age the recent pair carries most of the mass and decides
+    const w = channelBaseline(v30, [0, 10, 60, 70, 80]);
+    expect(w.baseline).toBeCloseTo(1000, 6);
+    expect(w.neff).toBeGreaterThan(MIN_BASELINE_NEFF);
+    // and a lone ancient freak cannot move a baseline the recent pack agrees on
+    const freak = channelBaseline([1000, 1050, 950, 1100, 100000], [2, 9, 16, 23, 500]);
+    expect(freak.baseline).toBeCloseTo(1000, 6);
+  });
+
+  it('half-life 30 halves a prior weight every 30 days', () => {
+    expect(baselineWeight(0)).toBe(1);
+    expect(baselineWeight(30)).toBeCloseTo(0.5, 12);
+    expect(baselineWeight(60)).toBeCloseTo(0.25, 12);
+    expect(baselineWeight(-5)).toBe(1);          // a prior cannot be published after the target
+    expect(baselineWeight(NaN)).toBe(1);
+  });
+
+  it('applies the effective-n floor', () => {
+    expect(effectiveN([1, 1, 1, 1])).toBeCloseTo(4, 9);
+    // one recent prior plus a tail of near-zero weights is not a channel history
+    const thin = channelBaseline([1000, 900, 1100], [0, 400, 500]);
+    expect(thin.neff).toBeLessThan(MIN_BASELINE_NEFF);
+    expect(thin.baseline).toBeNull();
+    expect(thin.nPriors).toBe(3);
+    // the same three priors spread over a month clear the floor
+    const ok = channelBaseline([1000, 900, 1100], [0, 15, 30]);
+    expect(ok.neff).toBeGreaterThanOrEqual(MIN_BASELINE_NEFF);
+    expect(ok.baseline).not.toBeNull();
+  });
+
+  it('applies the 3-prior floor', () => {
+    expect(channelBaseline([1000, 1000], [0, 0]).baseline).toBeNull();
+    expect(channelBaseline([1000, 1000, 1000], [0, 0, 0]).baseline).toBeCloseTo(1000, 9);
+    // non-positive / non-finite estimates do not count toward the floor
+    expect(channelBaseline([1000, 0, -5, NaN], [0, 0, 0, 0]).nPriors).toBe(1);
+    expect(channelBaseline([1000, 0, -5, NaN], [0, 0, 0, 0]).baseline).toBeNull();
+    expect(channelBaseline([], []).baseline).toBeNull();
+  });
+
+  it('scoreVideo reports the baseline neff and calls it insufficient when the floors fail', () => {
+    const base = {
+      vt: 1000, day: 9, snaps: [{ day: 1, views: 500 }, { day: 9, views: 1000 }],
+      priorMultLogs: [], priorSameAge: [], params,
+    };
+    const good = scoreVideo({ ...base, priorV30: [1000, 900, 1100], priorAgeDays: [0, 15, 30] });
+    expect(good.baseline).not.toBeNull();
+    expect(good.confidence).toBe('confirmed');
+    expect(good.baselineNeff).toBeGreaterThanOrEqual(MIN_BASELINE_NEFF);
+    const thin = scoreVideo({ ...base, priorV30: [1000, 900, 1100], priorAgeDays: [0, 400, 500] });
+    expect(thin.baseline).toBeNull();
+    expect(thin.score).toBeNull();
+    expect(thin.confidence).toBe('insufficient');
+    expect(thin.nBaseline).toBe(3);          // still reports how many priors there were
   });
 });

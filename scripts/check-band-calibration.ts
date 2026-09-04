@@ -40,15 +40,29 @@ const NO_TRAJECTORY = process.argv.includes('--no-trajectory');
 const FLOOR = arg('--floor') != null ? Number(arg('--floor')) : null;
 /** Terse one-line output, for sweeps. */
 const BRIEF = process.argv.includes('--brief');
+/**
+ * Which stored score_params row to read the fitted bands and multipliers from. Defaults to this
+ * build's MODEL_VERSION. A candidate whose `--fit` row has no bands yet (fit-forecast-bands is a
+ * separate job) points this at the champion's version: the bands measure `logMultTo30`, which a
+ * baseline-only change does not touch.
+ */
+const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]) => (await pool.query(sql, params)).rows as any[];
 
-const p = await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
+// The nightly `--fit` rewrites score_params WITHOUT bands (fit-forecast-bands.ts is a separate
+// job that writes its own row), so "the newest row for this version" is usually band-less and
+// this check would exit before doing anything. Take the newest row that actually carries bands.
+const p = await q(
+  `select params, fitted_at from score_params where model_version=$1 and params ? 'bands'
+    order by fitted_at desc limit 1`, [PARAMS_VERSION]
+);
+if (!p.length) { console.error(`no score_params row for ${PARAMS_VERSION} carries bands; run fit-forecast-bands first`); process.exit(1); }
 const params: GlobalParams = p[0].params;
 const globalBands: BandTable = (params as any).bands;
-if (!globalBands) { console.error('score_params has no bands; run fit-forecast-bands first'); process.exit(1); }
+log(`bands from score_params model_version=${PARAMS_VERSION} fitted_at=${new Date(p[0].fitted_at).toISOString()}`);
 
 const chRows = await q(`select channel_id, age_bucket, n, q10, q25, q50, q75, q90 from channel_forecast_bands`);
 const chTables = new Map<string, BandTable>();

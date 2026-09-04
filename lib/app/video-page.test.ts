@@ -95,11 +95,13 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     expect(h.meta.youtubeUrl).toBe('https://youtu.be/Po_Dh7WLgmM');
   });
 
-  it('reads the verdict for a young video as the day-30 projection', () => {
+  it('says what typical means -- typical AT THIS AGE, then the day-30 projection', () => {
     const h = headerLines(young);
     expect(h.big).toBe('2.0×');
     expect(h.over).toBe(true);
-    expect(h.verdict).toBe('on pace for 186K by day 30 · typical 92K · early read');
+    // v5's denominator is C(t). Without the age on the line the number reads as a day-30
+    // claim sitting next to a day-30 projection, which is the one thing it is not.
+    expect(h.verdict).toBe('typical 92K at 1d old · on pace for 186K by day 30 · early read');
   });
 
   it('never repeats the view count in the verdict line for a young video', () => {

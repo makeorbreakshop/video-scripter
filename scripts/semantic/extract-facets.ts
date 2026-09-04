@@ -43,7 +43,9 @@ async function loadCandidates(limit: number): Promise<CandidateRow[]> {
             coalesce(v.channel_name, cm.title, v.channel_id) as channel_name,
             v.description,
             coalesce(v.topic_micro, v.topic_niche, v.topic_domain) as topic_label
-       from video_scores s
+       -- video_scores holds only the CURRENT model's answer; the v5 rescore (2026-09-04)
+       -- overwrote every backfill row. The frozen corpus lives in the score history.
+       from video_scores_by_version s
        join videos v on v.id = s.video_id
        left join channel_meta cm on cm.channel_id = v.channel_id
       where s.model_version = $1

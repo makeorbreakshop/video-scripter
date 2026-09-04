@@ -150,7 +150,7 @@ for (const t of T_LIST) {
       const nb = ps.filter((s) => Math.abs(s.day - bucket) <= btol).sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
       if (nb && p30) priorMultLogs.push(Math.log(p30 / nb.views));
     }
-    const est30 = scoreVideo({ vt: near.views, day: near.day, snaps: upto, priorMultLogs, priorV30: [], priorSameAge: [], params }).est30;
+    const est30 = scoreVideo({ vt: near.views, day: near.day, snaps: upto, priorMultLogs, priorV30: [], priorAgeDays: [], priorSameAge: [], params }).est30;
 
     for (const rule of ['current', 'proposed'] as Rule[]) {
       const fresh = priors.filter((p) => (v.pub - p.pub) / 86_400_000 <= PRIOR_STALE_DAYS);
