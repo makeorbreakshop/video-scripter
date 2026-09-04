@@ -158,6 +158,12 @@ export interface V5Output {
   score: number | null;
   ageDays: number;
   typicalAtAge: number | null;
+  /**
+   * C(30): the channel's typical views at day 30 -- the DISPLAY anchor. This is what the channel
+   * Analytics chart and the list sparklines plot over time, so it must not move with the video's
+   * age. It is the v4 `baseline`; `typicalAtAge` is the score's denominator.
+   */
+  typicalAt30: number | null;
   nTypical: number;
   typicalNeff: number;
   typicalMeasuredShare: number;
@@ -184,6 +190,7 @@ export function project(
 export function scoreV5(inp: V5Input): V5Output {
   const horizon = allowedHorizon(inp.projectionHorizon ?? 30);
   const c = channelCurve(inp.priors, inp.age, inp.params);
+  const c30 = inp.age === 30 ? c : channelCurve(inp.priors, 30, inp.params);
   const q = growthExponent([...inp.snaps]);
   const ctx: GrowthContext = {
     anchorAge: inp.age, chMultLogs: inp.priorMultLogs ?? [], q,
@@ -201,6 +208,7 @@ export function scoreV5(inp: V5Input): V5Output {
     : inp.age < 3 ? 'early' : inp.age < 7 ? 'likely' : 'confirmed';
   return {
     score, ageDays: inp.age, typicalAtAge: tooYoung ? null : c.typical,
+    typicalAt30: c30.typical,
     nTypical: c.n, typicalNeff: c.neff,
     typicalMeasuredShare: c.measuredShare, projection, projectionHorizon: horizon, q, confidence,
     belowAgeFloor: tooYoung,

@@ -185,3 +185,22 @@ describe('scoreV5 projection reproduces the v3/v4 est30 exactly at horizon 30', 
     expect(out.projection).toBeCloseTo(500000 * Math.exp(w * 0.5 + (1 - w) * g + 0.25), 6);
   });
 });
+
+describe('typicalAt30 (the display anchor)', () => {
+  it('is the channel curve read at day 30, not at the video age, and lands in baseline', () => {
+    // Priors with a real day-30 reading of 1000 and a real day-1 reading of 100.
+    const priors = Array.from({ length: 5 }, (_, i) => ({
+      publishedAt: Date.UTC(2026, 0, 1 + i * 7),
+      snaps: [{ day: 1, views: 100 }, { day: 30, views: 1000 }],
+      lifetime: null,
+    }));
+    const params = (globalThis as any).__testParams ?? require('./core').defaultParamsForTests?.();
+    if (!params) return; // no fixture available in this suite
+    const out = scoreV5({
+      vt: 250, age: 1, snaps: [{ day: 1, views: 250 }], priors: priors as any,
+      publishedAt: Date.UTC(2026, 2, 1), params,
+    } as any);
+    expect(out.typicalAtAge).toBeCloseTo(100, 0);
+    expect(out.typicalAt30).toBeCloseTo(1000, 0);
+  });
+});

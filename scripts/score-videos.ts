@@ -310,7 +310,8 @@ async function fitPast30Table(months: number): Promise<TailPair[]> {
 // The v3/v4 column names are kept and remapped rather than left null, because the app, the API
 // and the extension all read them:
 //   score      -> the same-age ratio v(t)/C(t)   (this IS the score now)
-//   baseline   -> C(t), the denominator          (was: median day-30 views of the priors)
+//   baseline   -> C(30), the channel's typical at day 30 (the display anchor the channel chart
+//                 and sparklines plot; unchanged in meaning from v4). C(t) is typical_at_age.
 //   n_baseline -> priors that contributed to C(t)
 //   est30      -> the projection at horizon 30   (was: the score's numerator)
 // and the v5-only facts land in their own columns (sql/scoring-v5.sql).
@@ -362,7 +363,7 @@ function rowFromV5(
   return {
     video_id: id, channel_id: channelId, model_version: version,
     snapshot_day: o.ageDays, views, q: o.q,
-    est30: o.projection, baseline: o.typicalAtAge, n_baseline: o.nTypical,
+    est30: o.projection, baseline: o.typicalAt30, n_baseline: o.nTypical,
     score: o.score, same_age_ratio: o.score, n_same_age: nReal, confidence: o.confidence,
     priors_from_lifetime: o.nTypical - nReal,
     age_days: o.ageDays, typical_at_age: o.typicalAtAge, n_typical: o.nTypical,
