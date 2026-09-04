@@ -12,6 +12,10 @@ import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { ingestWrites } from '../lib/ingest/first-sample';
+import {
+  PRIORITY_LANE, PRIORITY_MODES, selectPriorityRows, orderByPublishedDesc,
+  isPriorityImport, quotaUnits, channelFromSourceUrl,
+} from '../lib/nightly/priority-lane';
 
 const job = startManagedJob({ name: 'touch-drain' });
 if (!job.acquired) process.exit(0);
@@ -86,6 +90,93 @@ async function loadKnownChannels(ids: string[]): Promise<KnownChannels> {
   leg.rows.forEach((r) => known.legacy.add(r.id));
   known.withVideos = corpusTrackedChannels(wv.rows);
   return known;
+}
+
+// --- 0. PRIORITY LANE: tracked-channel uploads, ahead of every discovery budget ------------
+// A new upload on a channel we already watch is not discovery, so it is not capped by discovery
+// and it is not queued behind a back-catalogue backfill. lib/nightly/priority-lane.ts carries
+// the full incident note (BPS.space PpwewkOCFuE, 2026-09-03) and the definition of "covered".
+// This block runs BEFORE the DISCOVERY_DAILY_CAP / GLOBAL_FLOOR exits below, on its own
+// 200-id/run budget charged to quota_ledger category 'tracked-upload'.
+
+/** The channels rss-poll polls and websub-subscribe subscribes, restricted to `ids`. */
+async function loadCoveredChannels(ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const res = await pool.query(
+    `select channel_id from channel_rss_state where channel_id = any($1)
+     union select youtube_channel_id from competitor_youtube_channels where youtube_channel_id = any($1)
+     union select channel_id from discovered_channels where channel_id = any($1)`,
+    [ids]
+  );
+  return new Set(res.rows.map((r: any) => r.channel_id));
+}
+
+let priorityImported = 0;
+let priorityQuota = 0;
+{
+  // Newest sighting first, and its OWN query: the discovery lane's `order by id limit 1000` put
+  // ~17K back-catalogue rows in front of every new upload.
+  const { rows: pending } = await pool.query(
+    `select id, kind, ref, mode, source_url, seen_at from touch_queue
+      where processed_at is null and kind = 'video' and mode = any($1)
+      order by seen_at desc, id desc limit $2`,
+    [[...PRIORITY_MODES], PRIORITY_LANE.scanLimit]
+  );
+  if (pending.length) {
+    const have = new Set<string>();
+    for (const group of chunk(pending, 500)) {
+      const r = await pool.query(`select id from videos where id = any($1)`, [group.map((x: any) => x.ref)]);
+      r.rows.forEach((x: any) => have.add(x.id));
+    }
+    // Membership is only ever tested for channels a source_url actually names, so the covered
+    // lookup is an `= any($1)` probe, never a scan of all ~6K watched channels every 5 minutes.
+    const namedChannels = [...new Set(pending.map((r: any) => channelFromSourceUrl(r.source_url)).filter(Boolean))] as string[];
+    const covered = await loadCoveredChannels(namedChannels);
+    const { priority, overflow } = selectPriorityRows(pending as any, covered, have);
+
+    // Rows for videos we already hold cost nothing to retire, and leaving them pending is how
+    // the BPS.space row sat unprocessed for eleven hours.
+    const settled = (pending as any[]).filter((r) => have.has(r.ref)).map((r) => r.id);
+    if (settled.length) {
+      await pool.query(`update touch_queue set processed_at = now(), result = 'already-tracked' where id = any($1)`, [settled]);
+    }
+
+    if (priority.length) {
+      const before = quota;
+      const items = orderByPublishedDesc(await fetchVideos(priority.map((r) => r.ref)));
+      priorityQuota = quota - before;
+      quota = before; // charged to 'tracked-upload' below, never to 'discovery'
+      const fetchedChannels = [...new Set(items.map((v: any) => v.snippet?.channelId).filter(Boolean))] as string[];
+      const coveredNow = await loadCoveredChannels(fetchedChannels);
+      const done: number[] = [];
+      for (const v of items) {
+        if (job.signal.aborted) break;
+        const row = priority.find((r) => r.ref === v.id);
+        if (!row) continue;
+        // Channel-less extension rows were admitted on spec; only import the ones the fetch
+        // proves are on a watched channel. The rest fall through to the discovery lane below,
+        // still pending, exactly as before.
+        if (!isPriorityImport(v.snippet?.channelId, coveredNow)) continue;
+        if (await insertVideo(v, 0)) priorityImported++;
+        done.push(row.id);
+      }
+      if (done.length) {
+        await pool.query(`update touch_queue set processed_at = now(), result = 'imported' where id = any($1)`, [done]);
+      }
+      if (priorityQuota) {
+        await pool.query(`insert into quota_ledger (category, units) values ($1, $2)`,
+          [PRIORITY_LANE.quotaCategory, priorityQuota]).catch(() => {});
+        await pool.query(
+          `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
+           on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`, [priorityQuota]
+        ).catch(() => {});
+      }
+      console.log(
+        `priority lane: ${priority.length} tracked-upload ids fetched (${quotaUnits(priority.length)} expected units, ` +
+        `${priorityQuota} spent), ${priorityImported} imported, ${overflow.length} over budget, ${settled.length} already tracked`
+      );
+    }
+  }
 }
 
 // Budget guards: discovery has a daily cap so browsing can never starve the
@@ -330,7 +421,7 @@ await pool.query(
    on conflict (day) do update set videos_added = excluded.videos_added`
 ).catch(() => {});
 console.log(
-  `Drained ${rows.length} rows: ${imported} clicked videos imported, ${candidatesSeen} channel candidates surfaced, ${channelsEnrolled} channels enrolled (+${channelVideos} videos), ${quota} quota units`
+  `Drained ${rows.length} rows: ${priorityImported} tracked-channel uploads (priority lane), ${imported} clicked videos imported, ${candidatesSeen} channel candidates surfaced, ${channelsEnrolled} channels enrolled (+${channelVideos} videos), ${quota} quota units`
 );
 await pool.end();
 job.finish();

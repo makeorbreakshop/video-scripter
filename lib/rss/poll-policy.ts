@@ -161,6 +161,29 @@ export function shouldStoreSample(
 }
 
 /**
+ * What to do with a feed entry whose video id is NOT in `videos` yet.
+ *
+ * Before 2026-09-04 the poller did `continue` here, so the launch-minute view count of a brand
+ * new upload was thrown away and the first stored reading came from whenever the drainer got
+ * round to importing it. `rss_samples` has NO foreign key to `videos` — verified on the live
+ * database 2026-09-04, its only constraint is `PRIMARY KEY (video_id, at)` — so the reading can
+ * be written straight away and simply predates the video row. No holding table is needed.
+ *
+ * Only genuinely new uploads are queued (isNewUpload); an old catalogue entry we never ingested
+ * is a backfill question. The reading is kept in both cases: it is free, and a back-catalogue
+ * trace is exactly the data the long-tail fit lacks.
+ */
+export function unknownEntryPlan(
+  entry: { published?: string | null; views?: number | null },
+  now: Date = new Date(),
+): { queue: boolean; sample: boolean } {
+  return {
+    queue: isNewUpload(entry.published, now),
+    sample: entry.views != null,
+  };
+}
+
+/**
  * The last stored reading per video, for the ids this tick's feeds mentioned. ONE set-based
  * query in the poller's SNAPSHOT phase — never a per-channel query inside the fetch loop
  * (the shape that cost ~0.40 s/channel before the 2026-09-03 rewrite). $1 = video ids.

@@ -44,6 +44,7 @@ import {
   isUpdatedSince,
   shouldProcessEntries,
   isNewUpload,
+  unknownEntryPlan,
   shouldStoreSample,
   LAST_SAMPLES_SQL,
   SEED_SUBSET_SQL,
@@ -389,8 +390,13 @@ for (const f of fetched) {
     // Unknown id: queue it only if it is a genuinely NEW upload. An old catalogue entry the
     // feed still lists is a backfill question, not discovery (see isNewUpload).
     if (!cur) {
-      if (isNewUpload(e.published, now)) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
+      // Keep the reading either way (unknownEntryPlan): rss_samples has no FK to videos, so the
+      // launch-minute view count survives the wait for the drainer to import the video. Before
+      // 2026-09-04 this branch dropped it and the first stored reading came from import time.
+      const plan = unknownEntryPlan(e, now);
+      if (plan.queue) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
       else skippedOld++;
+      if (plan.sample) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
       continue;
     }
 

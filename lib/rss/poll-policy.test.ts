@@ -321,3 +321,30 @@ describe('SQL shape', () => {
     expect(SEED_ALL_SQL).toContain("rss_state = 'woken'");
   });
 });
+
+describe('unknownEntryPlan (a feed entry we have no video row for)', () => {
+  const { unknownEntryPlan } = require('./poll-policy');
+  const now = new Date('2026-09-03T18:17:00Z');
+
+  it('queues a genuinely new upload AND keeps its launch-minute reading', () => {
+    expect(unknownEntryPlan({ published: '2026-09-03T18:14:00Z', views: 412 }, now))
+      .toEqual({ queue: true, sample: true });
+  });
+
+  it('keeps the reading for an old catalogue entry it will not queue', () => {
+    // rss_samples has no FK to videos (live check 2026-09-04: only PRIMARY KEY (video_id, at)),
+    // so a back-catalogue trace can be stored for a video we may never import.
+    expect(unknownEntryPlan({ published: '2024-01-01T00:00:00Z', views: 900_000 }, now))
+      .toEqual({ queue: false, sample: true });
+  });
+
+  it('stores nothing when the feed carried no view count', () => {
+    expect(unknownEntryPlan({ published: '2026-09-03T18:14:00Z', views: null }, now))
+      .toEqual({ queue: true, sample: false });
+    expect(unknownEntryPlan({ published: '2026-09-03T18:14:00Z' }, now).sample).toBe(false);
+  });
+
+  it('treats a missing published date as not-news', () => {
+    expect(unknownEntryPlan({ published: null, views: 5 }, now).queue).toBe(false);
+  });
+});
