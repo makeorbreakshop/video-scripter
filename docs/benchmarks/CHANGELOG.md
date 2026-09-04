@@ -6,6 +6,89 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-04, 2:10-3:00 PM ET — v5.0 DEPLOYED
+
+Brandon approved the merge, rescore and deploy explicitly. The v5 build entry below stands as the
+record of what was verified; this entry is what shipping it actually cost.
+
+**Migration.** `video_score_history` + `video_scores_by_version` + the v5 `video_scores` columns,
+DDL in one transaction, then every current `video_scores` row copied into history verbatim.
+187,344 rows in, 187,344 out, 187,344 distinct `video_id`, **95,164** still carrying
+`v3.1-semantic-backfill-2026-09`.
+
+**The migration was wrong the first time, and the way it was wrong is worth keeping.**
+`scripts/migrate-score-history.ts` paged `video_scores` on a `video_id` keyset but took each
+page's maximum with a JavaScript `reduce`. This database is `en_US.UTF-8`, whose text ordering is
+not codepoint order; JS string comparison is. The keyset ranges therefore overlapped and the first
+apply wrote **193,545 rows for 186,743 videos** — nothing skipped (the distinct count matched
+exactly), 6,802 duplicated. Caught by comparing history against `video_scores` per
+`model_version` mid-run, killed, table truncated, re-applied clean. Collating the scan `"C"` to
+match JS was the obvious fix and the wrong one — it costs a full sort per batch instead of the
+`video_scores_pkey` index scan. The page keeps the index's own order and the cursor moved into
+SQL (`max(video_id)` over the page). **Any keyset page whose cursor is computed outside the
+database must be collated the way the database collates, or computed by it.**
+
+**Merge.** `git merge --no-ff scoring/v5-same-age` into `main` at `f5bfb47`. One conflict,
+`lib/app/video-page.ts`, and it was two imports both sides needed. No stash: the chart WIP that
+stopped the previous attempt had been committed (`b102b77`) before this session started, and the
+tree's remaining dirt was untracked scratch.
+
+`main`'s `longform-guard` test — added after this branch was cut — failed on the merge:
+`scripts/loo-paired.ts` filtered Shorts with a hand-rolled `coalesce(is_short,false) = false`,
+which re-admits the 63-180s clips ingest never flagged. Migrated to `longformSql` rather than
+allowlisted. Gates after that: jest `lib/scoring lib/app lib/semantic` **73 suites / 942 tests
+green**; `tsc --noEmit` **zero** errors in `lib/scoring`, `lib/app`, `scripts/score-videos.ts`
+(the repo's 1,662 pre-existing legacy errors and its `scripts/` TS1378 noise are unchanged).
+
+**Fit.** `score_params` **id 30**, `v5.0`, n=22,883, 18:27:40Z. The past-30 half of G again found
+**zero** (day-30, >=60d) snapshot pairs inside 12 months and fell back to all time, logging it —
+the long tail is still not temporal, as the build entry predicted.
+
+**Rescore.** 695,156 videos. The first `--all` died silently at ~7,700 rows with no error and no
+completion line. It is now run as bounded passes (`scripts/scratch/rescore-loop.sh`,
+`--all --limit 20000`): `--all` selects videos whose stored score is older than their latest
+reading, so each pass converges on the remainder and a killed pass costs one pass, not the run.
+~26 videos/s, so roughly 7 hours. **In progress at the time of writing.**
+
+**What the history table bought, measured.** As the rescore overwrites `video_scores`, the
+`v3.1-semantic-backfill-2026-09` count there falls (95,164 -> 95,107 within the first twenty
+minutes) while `video_score_history` holds all **95,164**, and
+`select count(*) from video_scores_by_version where model_version = '...'` returns **95,164**.
+That is the whole point of the migration, and it is now demonstrated rather than argued.
+
+**Deployed.** Vercel production build Ready. Feed and video page verified signed-in: the video
+page reads *"1.2x — typical 7K at 2d old · on pace for 17K by day 30 · early read"*. Same-age
+leads, the age is on the line, day 30 is the secondary number.
+
+**Two defects found on the deployed page, both fixed here.**
+1. `app/app/_components/feed-card.tsx` was never touched by the v5 branch and still printed
+   `"1.1M by day 30 · typical 458K"` — day 30 first, and an unlabelled `typical` that `cec3b48`
+   had just redefined as C(30). Beside a day-30 projection that reads as a day-30 number, and it
+   contradicted the video page's verdict, which the card's own comment says it must match.
+   `typical_at_age` now comes out of `video_scores` through `lib/feed/query.ts` and the card leads
+   with it; a row the rescore has not reached has no `typical_at_age`, so the old line remains as
+   the fallback. `lib/app/age-words.ts` holds the age words so the two surfaces cannot drift.
+2. `lib/app/feed-format.ts` labelled `baseline` "at this age". After `cec3b48` that column is
+   C(30). It says "by day 30".
+
+**The corpus is being rescored while the model is being changed, and that is a real problem.**
+Three commits landed on `main` from another session during the rescore that alter what a v5 row
+means: `cec3b48` (`baseline` = C(30), not C(t)), `d2d9a57` (the video page reads
+`typical_at_age`), and `2aa381c` (a genuine bug — `curve.contributionAt` applied the forward
+blend when sliding a prior BACKWARD, giving a 3.6x too-high `typical_at_age` on sparse channels
+sub-day). Each pass spawns a fresh `tsx` and picks up whatever is committed then, so **the corpus
+will carry mixed semantics**: rows written before a fix keep the old meaning and `--all` will not
+reselect them, because their `scored_at` is newer than their latest reading. The 828 rows written
+before `cec3b48` were corrected by rolling their `scored_at` back so the loop re-picked them; the
+rows written before `2aa381c` have not been. **Once the model stops changing, the corpus needs one
+more full pass** — `update video_scores set scored_at = '2000-01-01' where model_version like
+'v5%'` and let the loop run — or the sub-day scores on sparse channels stay wrong for as long as
+their next snapshot takes to arrive.
+
+**Still true, and unchanged by shipping it:** v5's own projection band calibration fails (inner
+15.4% / outer 61.5% at T=30 on n=13). `PROJECTION_MAX_DAYS = 30` caps the blast radius. Do not
+present the projection range as calibrated.
+
 ## 2026-09-04 — v5.0 same-age score: BUILT AND VERIFIED, not accepted, not deployed
 
 Worktree `vs-v5-same-age`, branch `scoring/v5-same-age`, cut from the accepted v4 branch.
