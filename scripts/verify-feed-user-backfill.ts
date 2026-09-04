@@ -1,3 +1,4 @@
+import { longformSql } from '../lib/scoring/longform';
 /** Rollback-only integration check for the durable user-upload history cursor. */
 import assert from 'node:assert/strict';
 import dotenv from 'dotenv';
@@ -23,7 +24,7 @@ try {
     );
     create temp table videos (
       id text primary key, channel_id text, title text, published_at timestamptz,
-      import_date timestamptz, is_short boolean, shorts_checked_at timestamptz
+      import_date timestamptz, is_short boolean, shorts_checked_at timestamptz, duration text default 'PT2M'
     );
     create temp table feed_events (
       dedupe_key text primary key, video_id text, is_longform boolean
@@ -44,7 +45,7 @@ try {
   assert.match(promoted[0].watermark_source, new RegExp(`^${USER_UPLOAD_BACKFILL_PREFIX}c:`));
 
   const tied = '2025-01-01 00:00:00.123456+00';
-  await client.query(`insert into videos values
+  await client.query(`insert into videos (id,channel_id,title,published_at,import_date,is_short,shorts_checked_at) values
     ('z','c','z',$1,now(),false,now()),
     ('a','c','a',$1,now(),false,now()),
     ('unresolved','c','u','2024-01-01+00',now(),null,null)`, [tied]);
@@ -59,8 +60,8 @@ try {
   // Production inserts unresolved uploads as hidden feed rows; Shorts verification later restamps
   // the same event instead of needing the completed historical scan to revisit it.
   await client.query(`insert into feed_events values ('upload:unresolved', 'unresolved', false)`);
-  await client.query(`update videos set is_short=false, shorts_checked_at=now() where id='unresolved'`);
-  await client.query(`update feed_events e set is_longform = (v.is_short = false)
+  await client.query(`update videos set is_short=$1, shorts_checked_at=now() where id='unresolved'`, [false]);
+  await client.query(`update feed_events e set is_longform = ${longformSql('v')}
                        from videos v where e.video_id=v.id and v.id='unresolved'`);
   assert.equal((await client.query(`select is_longform from feed_events where video_id='unresolved'`)).rows[0].is_longform, true);
 
