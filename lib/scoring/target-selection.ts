@@ -37,15 +37,24 @@ interface WalkOptions<T extends ScoreTargetCursorRow> {
 export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow>(options: WalkOptions<T>): Promise<number> {
   let cursor: Cursor | null = null;
   let selected = 0;
+  let lookahead: T[] = [];
   while (!options.signal.aborted && selected < options.limit) {
     const pageSize = Math.min(100, options.limit - selected);
     const page = await options.fetchPage(cursor, pageSize);
-    if (!page.length) break;
+    if (!page.length) {
+      if (lookahead.length) await options.onPage(lookahead);
+      break;
+    }
     selected += page.length;
     const last = page[page.length - 1];
     cursor = { publishedAt: last.published_at, id: last.id };
-    await options.onPage(page);
-    if (page.length < pageSize) break;
+    lookahead.push(...page);
+    const exhausted = page.length < pageSize || selected === options.limit;
+    if (lookahead.length >= 1_000 || exhausted) {
+      await options.onPage(lookahead);
+      lookahead = [];
+    }
+    if (exhausted) break;
   }
   return selected;
 }

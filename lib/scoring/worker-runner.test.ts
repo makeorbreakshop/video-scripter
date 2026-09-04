@@ -40,6 +40,18 @@ describe('scoring worker coordination', () => {
     expect(batches.flat()).toEqual(targets);
   });
 
+  it('groups a bounded lookahead by channel to avoid repeating the same prior reads', () => {
+    const targets = Array.from({ length: 10 }, (_, round) =>
+      Array.from({ length: 100 }, (_, channel) => ({ id: `${round}-${channel}`, channel_id: `c-${channel}` }))).flat();
+    const batches = scoringTargetBatches(targets);
+    const priorLookups = batches.reduce((sum, batch) => sum + new Set(batch.flatMap((target) =>
+      Array.from({ length: 20 }, (_, prior) => `${target.channel_id}-p-${prior}`))).size, 0);
+
+    expect(priorLookups).toBeLessThanOrEqual(4_000);
+    expect(new Set(batches.flat().map((target) => target.id))).toEqual(new Set(targets.map((target) => target.id)));
+    expect(batches.every((batch) => batch.length <= 100)).toBe(true);
+  });
+
   it('requests a stop after 45 minutes for an hourly run with no explicit runtime budget', async () => {
     jest.useFakeTimers();
     let workSignal!: AbortSignal;
