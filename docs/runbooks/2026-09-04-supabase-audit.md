@@ -517,7 +517,7 @@ The `latest` CTE materialises all 125,540 `thumbnail_versions` rows every 5 minu
 
 ### P2 — later
 
-**P2-1.** Move `videos.title_observed_at` / `shorts_checked_at` stamping to a narrow side table keyed
+**P2-1. → promoted to P1-8, see §8b.** Move `videos.title_observed_at` / `shorts_checked_at` stamping to a narrow side table keyed
 by `video_id`. Today each stamp rewrites a 1,819-byte row plus up to 45 index entries; the
 `title_observed_at` statement alone touched 411,474 rows at a 14.1 s mean.
 *Rollback:* keep the columns and dual-write during migration.
@@ -586,3 +586,44 @@ Of that, the four queries carrying the longform eligibility predicate (thumbnail
 score-videos 187,011 ms, launch-track 95,158 ms, feed-materialize 65,591 ms) account for
 **543,452 ms = 28 % of all execution in the window** — the single largest addressable block of CPU on
 this instance, and the direct justification for P0-3.
+
+### 8b. Clean steady state — 9.0 minutes with no audit and no backfill DDL
+
+A third snapshot at **11:16:35 UTC** gives a 9.0-minute window (11:07:35 → 11:16:35) containing **no
+statement from this audit** and **none of the concurrent agent's index builds** — they had finished. This
+is the truest picture of the recurring pipeline.
+
+- **Execution added: 818,575 ms = 819 s in 540 s of wall clock = 1.52 CPU-seconds per wall-second
+  ≈ 76 % of both cores, sustained, doing nothing but routine work.**
+- Blocks read: 272,305 = **2.23 GB** in 9 minutes (≈ 357 GB/day).
+
+| Exec (ms) | Calls | Mean | MB read | Statement | Writer |
+|---|---|---|---|---|---|
+| 191,796 | 1,340 | 143 ms | 170 | `insert into view_snapshots … on conflict` | nightly/tracking |
+| **181,033** | 6 | **30.2 s** | 701 | `update videos set title_observed_at = $2 where id = any($1) …` | title watcher |
+| 175,399 | 2 | 87.7 s | 402 | `insert into track_schedule … select from videos` | launch-track |
+| 140,813 | 2 | 70.4 s | 349 | thumbnail-watch `HOT_TARGETS_SQL` | thumbnail-watch |
+| 45,284 | 2 | 22.6 s | 84 | feed-materialize candidate select | feed-materialize |
+| 9,635 | 9,466 | 1 ms | 19 | `update thumbnail_versions set last_checked=now()` | thumbnail-watch |
+| 8,902 | 2 | 4.5 s | 31 | changed-packaging rollup | feed-materialize |
+| 8,815 | 2 | 4.4 s | 28 | `feed_events` type histogram | feed-materialize |
+| 7,997 | 1 | 8.0 s | 194 | `select id from videos where duration = $1 …` | ingest |
+
+Two conclusions the cumulative counters could not give:
+
+1. **The longform eligibility predicate is 361,496 ms = 44 % of all execution in a clean window**
+   (launch-track 175,399 + thumbnail-watch 140,813 + feed-materialize 45,284), with score-videos not even
+   running in this window because it is hourly. Note the means are *worse* than the isolated EXPLAINs in
+   §3 — 87.7 s vs 74.1 s and 70.4 s vs 22.0 s — because these agents contend with each other. This
+   confirms P0-3 as the highest-value change in the system.
+2. **`update videos set title_observed_at` is 181,033 ms = 22 % of all execution at a 30.2 s mean over
+   6 calls and 701 MB read.** That is far larger than the cumulative counters suggested and moves it out
+   of P2. See P1-8 below.
+
+**P1-8 (promoted from P2-1). `videos.title_observed_at` stamping is 22 % of steady-state CPU.**
+Six statements in nine minutes, 30.2 s mean, 701 MB read, on a table with a 1,819-byte average row,
+794 MB of TOAST, 45 indexes and only 18.2 % HOT updates — every stamp rewrites the whole row and up to
+45 index entries. *Action:* move the stamp to a narrow side table `video_title_watch (video_id primary key,
+title_observed_at timestamptz)`, or at minimum land the P1-4 fillfactor change first and re-measure.
+*Expected effect:* a ~50-byte row update against one index instead of a 1.8 KB row against 45.
+*Rollback:* keep `videos.title_observed_at` and dual-write during the migration; drop the side table.
