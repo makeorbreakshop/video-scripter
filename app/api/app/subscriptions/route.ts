@@ -1,10 +1,11 @@
 // GET  /api/app/subscriptions -> the user's YouTube subscriptions, flagged already-tracked
 // POST /api/app/subscriptions { channel_ids } -> track them through the normal add path
 //
-// The Google token is Clerk's, from the connection the user signed in with. If the
-// youtube.readonly scope has not been added to that connection Google answers 403; that
-// becomes { code: 'missing_scope' } so the sheet can offer "Connect YouTube" instead of
-// showing an error nobody can act on.
+// The Google token is the app's own — the grant made at /api/app/youtube/connect, whose
+// refresh token lives encrypted in youtube_connections. With no connection the sheet gets
+// { code: 'no_google' }; with a grant that predates youtube.readonly Google answers 403 and
+// that becomes { code: 'missing_scope' }. Both carry connect_url, so the sheet always has
+// something to click instead of an error nobody can act on.
 import {
   googleAccessToken, fetchSubscriptions, subscriptionsForImport, recordImported,
   MissingScopeError, NoGoogleAccountError,
@@ -29,7 +30,7 @@ function scopeError(e: unknown) {
   }
   if (e instanceof NoGoogleAccountError) {
     return Response.json({
-      error: 'This account is not connected to Google.',
+      error: e.message || 'This account is not connected to YouTube.',
       code: 'no_google',
       connect_url: '/api/app/youtube/connect',
     }, { status: 403 });
@@ -42,9 +43,7 @@ export async function GET() {
   if (!user) return unauthorized();
 
   try {
-    // The app_users row carries the clerk_id, so this works on the dev preview path too,
-    // where middleware skips Clerk entirely and auth() would throw.
-    const token = await googleAccessToken(user.clerk_id);
+    const token = await googleAccessToken(user.id);
     const subs = await fetchSubscriptions(token);
     const items = await subscriptionsForImport(user.id, subs);
     return Response.json({

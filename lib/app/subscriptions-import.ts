@@ -1,11 +1,15 @@
 // Import the channels a user already subscribes to on YouTube.
 //
-// The access token comes from Clerk's Google connection, not from our own OAuth client:
-// Clerk already holds the grant for the account the user signed in with. It needs the
-// youtube.readonly scope added to that connection (see the report in the PR) — without it
-// Google answers 403 and we surface a "Connect YouTube" action rather than a stack trace.
-import { clerkClient } from '@clerk/nextjs/server';
+// The access token is the app's own: the grant the user made at /api/app/youtube/connect,
+// stored in youtube_connections with its refresh token encrypted at rest (lib/app/crypto).
+// That grant already carries youtube.readonly, so the same connection that powers the
+// Analytics sync reads the subscription list — no second identity provider, and nothing that
+// depends on which button the user signed in with. With no connection at all the sheet gets
+// a "Connect YouTube" action pointing back at that route; Google's 403 is still surfaced as
+// a missing scope, because a grant made before the scope was added would answer that way.
 import { q } from '../admin/db';
+import { decryptSecret } from './crypto';
+import { accessTokenFromRefresh, listConnections } from './youtube-connect';
 
 export class MissingScopeError extends Error {
   code = 'missing_scope' as const;
@@ -22,25 +26,33 @@ export interface Subscription {
   tracked: boolean;
 }
 
-/** Clerk holds the Google OAuth token for the signed-in user; ask it, do not store one. */
-export async function googleAccessToken(clerkUserId: string): Promise<string> {
-  let list: any[] = [];
+/**
+ * A live access token for this user's own YouTube connection. The first connection is the
+ * one: a user with two owned channels granted the same account both times, and the
+ * subscription list is the account's, not the channel's.
+ */
+export async function googleAccessToken(userId: string): Promise<string> {
+  const connections = await listConnections(userId);
+  const first = connections[0];
+  if (!first) throw new NoGoogleAccountError('This account is not connected to YouTube.');
+
+  const row = await q<{ refresh_token: string }>(
+    `select refresh_token from youtube_connections where user_id = $1 and channel_id = $2`,
+    [userId, first.channel_id]
+  );
+  const stored = row[0]?.refresh_token;
+  if (!stored) throw new NoGoogleAccountError('This account is not connected to YouTube.');
+
   try {
-    const client = await clerkClient();
-    const res: any = await client.users.getUserOauthAccessToken(clerkUserId, 'oauth_google');
-    list = Array.isArray(res) ? res : (res?.data ?? []);
+    return await accessTokenFromRefresh(decryptSecret(stored));
   } catch (e: any) {
-    // Clerk answers 404 when this instance does not know the user (a live clerk_id read by a
-    // dev instance) and 4xx when the account has no Google connection. Either way the person
-    // needs to connect an account, which is something they can act on — not a 500.
-    if (e?.status >= 400 && e.status < 500) {
-      throw new NoGoogleAccountError('This account is not connected to Google.');
+    // A revoked or expired grant is something the user can act on: reconnect. Anything else
+    // is ours.
+    if (/invalid_grant|unauthorized_client|invalid_client/.test(e?.message || '')) {
+      throw new NoGoogleAccountError('Your YouTube connection needs to be renewed.');
     }
     throw e;
   }
-  const token = list[0]?.token;
-  if (!token) throw new NoGoogleAccountError('This account is not connected to Google.');
-  return token;
 }
 
 const PAGE = 50;
