@@ -21,6 +21,7 @@ import {
 } from '../lib/nightly/launch-core';
 import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
+import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
 import { LAST_SAMPLES_SQL } from '../lib/rss/poll-policy';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
@@ -36,7 +37,6 @@ if (!job.acquired) process.exit(0);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
-const now = new Date();
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 // --- 1. Enroll: any non-short video published in the last 30 days not yet scheduled ---
@@ -141,16 +141,12 @@ const tierOf = (videoId: string, channelId: string | null): Tier =>
 // unbounded schedule scan.
 const apiCapacity = maxCalls * 50;
 const candidateCap = apiCapacity * 4;
-const due = await pool.query(
-  `select video_id, channel_id, published_at, last_views, last_sample_at,
-          next_check::text as next_check, updated_at::text as updated_at,
-          case when entered_reason in ('thumbnail_change', 'title_change') then launch_until end as change_until
-     from track_schedule where next_check <= now()
-    order by phase = 'launch' desc, next_check asc
-    limit $1`,
-  [candidateCap]
-);
-log(`due candidates: ${due.rowCount} (scan cap ${candidateCap}, API capacity ${apiCapacity})`);
+const candidateQuery = dueSamplingCandidatesSql({
+  denseVideoIds: [...denseVideos], denseChannelIds: [...denseChannels],
+  urgentLimit: apiCapacity, oldestLimit: candidateCap,
+});
+const due = await pool.query(candidateQuery.text, candidateQuery.values);
+log(`due candidates: ${due.rowCount} (scan cap ${candidateCap + apiCapacity}, API capacity ${apiCapacity})`);
 
 type DueRow = {
   video_id: string; channel_id: string | null; published_at: string;
@@ -165,8 +161,9 @@ const rssRows: RssRow[] = candidateIds.length
   ? (await pool.query(LAST_SAMPLES_SQL, [candidateIds])).rows
   : [];
 const rssById = new Map(rssRows.map((r) => [r.video_id, r]));
+const now = new Date();
 
-const apiDue: DueRow[] = [];
+const apiCandidates: Array<{ row: DueRow; reason: string }> = [];
 const rssSatisfied: Array<{ row: DueRow; views: number; phase: string; next: Date }> = [];
 const reasons = new Map<string, number>();
 for (const row of candidates) {
@@ -189,7 +186,7 @@ for (const row of candidates) {
   }, now);
   reasons.set(decision.reason, (reasons.get(decision.reason) || 0) + 1);
   if (decision.source === 'api') {
-    if (apiDue.length < apiCapacity) apiDue.push(row);
+    apiCandidates.push({ row, reason: decision.reason });
     continue;
   }
   rssSatisfied.push({
@@ -199,6 +196,7 @@ for (const row of candidates) {
     next: schedule.next_check,
   });
 }
+const apiDue = prioritizeApiCandidates(apiCandidates, apiCapacity);
 log(`sampling plan: ${apiDue.length} API, ${rssSatisfied.length} RSS; ${Array.from(reasons).map(([k, v]) => `${k}=${v}`).join(', ')}`);
 
 if (DRY) {

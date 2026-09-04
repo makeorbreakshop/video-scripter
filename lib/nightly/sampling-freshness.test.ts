@@ -58,8 +58,9 @@ describe('launch scheduler exact optimistic tokens', () => {
   const source = fs.readFileSync(path.join(process.cwd(), 'scripts/launch-track.ts'), 'utf8');
 
   test('keeps PostgreSQL microseconds as text through every schedule CAS', () => {
-    expect(source).toMatch(/next_check::text as next_check/i);
-    expect(source).toMatch(/updated_at::text as updated_at/i);
+    const candidates = fs.readFileSync(path.join(process.cwd(), 'lib/nightly/sampling-candidates.ts'), 'utf8');
+    expect(candidates).toMatch(/next_check::text as next_check/i);
+    expect(candidates).toMatch(/updated_at::text as updated_at/i);
     expect(source).toContain('s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at');
     const persistence = fs.readFileSync(path.join(process.cwd(), 'lib/nightly/sample-batch.ts'), 'utf8');
     expect(persistence).toContain('s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at');
@@ -69,4 +70,9 @@ describe('launch scheduler exact optimistic tokens', () => {
     expect(source).toMatch(/rssAdvanced\s*\+=\s*advanced\.rowCount/);
     expect(source).toContain('rssSatisfied.length - rssAdvanced');
   });
+});
+
+test('classifies freshness after RSS reads complete, so concurrent observations are not falsely future-dated',()=>{
+ const source=fs.readFileSync(path.join(process.cwd(),'scripts/launch-track.ts'),'utf8');
+ expect(source.indexOf('const now = new Date()')).toBeGreaterThan(source.indexOf('await pool.query(LAST_SAMPLES_SQL'));
 });
