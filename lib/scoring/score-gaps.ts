@@ -21,6 +21,8 @@ export const GAP_BUCKETS = [
   /** Inside the window with everything it needs, and still no row: a run was skipped. */
   'never-scored-in-window',
   /** Everything present and a row exists, but the score is still null. */
+  /** v5: the channel has a curve, but the video is under the age at which a same-age comparison is honest. */
+  'video-too-young',
   'other',
 ] as const;
 export type GapBucket = (typeof GAP_BUCKETS)[number];
@@ -37,6 +39,10 @@ export interface GapFacts {
   priorLongform: number;
   /** videos.view_count — the lifetime count --final can normalize down the long tail. */
   viewCount: number;
+  /** v5: video_scores.confidence; 'early' with no score means the clock, not the channel. */
+  confidence?: string | null;
+  /** v5: video_scores.baseline (C(30)) — non-null proves the channel has a curve. */
+  baseline?: number | null;
 }
 
 /** The scorer's hourly window; past it only the one-shot --final pass writes a row. */
@@ -51,6 +57,7 @@ export function gapBucket(f: GapFacts): GapBucket | null {
   // no row is scoreable from its lifetime count alone, observations or not, so that comes first.
   if (!f.hasScoreRow && f.ageDays > HOURLY_WINDOW_DAYS && f.viewCount > 0) return 'outside-scoring-window';
   if (f.observations === 0) return 'no-observations';
+  if (f.hasScoreRow && f.confidence === 'early' && f.baseline != null) return 'video-too-young';
   if (f.priorLongform < MIN_PRIORS) return 'no-channel-baseline';
   if (f.hasScoreRow && f.nBaseline < MIN_PRIORS) return 'priors-unusable';
   if (!f.hasScoreRow) return 'never-scored-in-window';
@@ -69,6 +76,8 @@ export function isFixable(b: GapBucket): boolean {
 export function gapReasonWords(b: GapBucket, channelName: string | null | undefined): string {
   const ch = channelName && channelName.trim() ? channelName.trim() : null;
   switch (b) {
+    case 'video-too-young':
+      return ch ? `Too young to compare with ${ch} yet` : 'Too young to compare yet';
     case 'no-channel-baseline':
       return ch ? `Not enough ${ch} history yet for a baseline` : 'Not enough channel history yet for a baseline';
     case 'priors-unusable':

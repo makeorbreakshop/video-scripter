@@ -149,3 +149,15 @@ describe('headerLines: one metadata line and one verdict line, and the views are
     expect(h.verdict.split('\n')).toHaveLength(1);
   });
 });
+
+describe('gap words for a video that is simply too young (v5)', () => {
+  it('does not say the channel lacks history when it has a curve', () => {
+    const v = verdict({
+      score: null as any, headline: 'day30' as const, pace: null, expectedNow: null,
+      views: 5345, ageDays: 0.23, channelName: '3D Printing Nerd', observations: 3, priorLongform: 15,
+      score: { score: null, baseline: 34_820, typical_at_age: null, est30: 40_898, confidence: 'early' } as any,
+    });
+    expect(v.under).toContain('Too young to compare with');
+    expect(v.under).not.toContain('Not enough');
+  });
+});

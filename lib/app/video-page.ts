@@ -343,6 +343,7 @@ function gapWords(v: VideoVerdictInput): string {
   const sc = v.score;
   const bucket =
     v.observations === 0 ? 'no-observations'
+    : sc && sc.confidence === 'early' && sc.baseline != null ? 'video-too-young'
     : (v.priorLongform ?? 0) >= MIN_PRIORS ? 'priors-unusable'
     : sc ? 'no-channel-baseline'
     : 'never-scored-in-window';

@@ -75,3 +75,14 @@ describe('an unscorable video says why, in words', () => {
     for (const b of GAP_BUCKETS) expect(gapReasonWords(b, 'X').length).toBeGreaterThan(10);
   });
 });
+
+describe('video-too-young (v5)', () => {
+  const base: GapFacts = { ageDays: 0.23, hasScoreRow: true, score: null, nBaseline: 0, observations: 3, priorLongform: 15, viewCount: 5345 };
+  it('names the clock, not the channel, when the row is early and the channel has a curve', () => {
+    expect(gapBucket({ ...base, confidence: 'early', baseline: 34820 })).toBe('video-too-young');
+    expect(gapReasonWords('video-too-young', '3D Printing Nerd')).toBe('Too young to compare with 3D Printing Nerd yet');
+  });
+  it('still blames the channel when there is no curve', () => {
+    expect(gapBucket({ ...base, confidence: 'early', baseline: null, priorLongform: 2 })).toBe('no-channel-baseline');
+  });
+});
