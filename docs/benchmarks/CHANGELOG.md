@@ -6,6 +6,34 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-04 — Shorts repair: 1,289 long-form videos returned to the corpus (BASELINE not moved)
+
+Not a model change. `trigger_set_video_is_short` on `videos` was recomputing `is_short` from
+duration (<= 180 s => Short) on every INSERT and on every title/description UPDATE, overwriting the
+`/shorts/<id>` routing verdict the ingest path had just written — while `shorts_checked_at = now()`
+was stamped beside it, so `longform.ts` trusted the wrong value and nothing ever re-checked it. The
+trigger and `set_video_is_short()` were dropped (`sql/2026-09-04-drop-is-short-trigger.sql`);
+`lib/ingest/is-short-trigger.test.ts` now fails if any trigger on `videos` touches `is_short`.
+
+Re-verified the whole 61-180 s band stamped since 2026-09-03: **66,445 rows re-asked, 1,282
+short->long, 65,163 confirmed short, 0 unknown, 0 gone**, plus 7 title-change stragglers outside the
+window (all 7 long-form — the UPDATE-OF-title re-fire). A live spot check of 40 random flipped rows
+agreed 40/40. Long-form videos published in the last 60 days: 68,052 -> 70,904. Channels whose
+median stored baseline moved more than 10%: 310 of 5,440.
+
+Benchmark after `--fit` + the incremental pass: `docs/benchmarks/v5.0-2026-09-04.json`, compared
+against BASELINE (`v3.0-2026-09-04.json`) — **10 better / 30 wash / 2 worse => worse**. The gains are
+F1: heldout t=2 .560->.667, t=3 .645->.769, t=5 .791->.837; time t=1 .507->.548, t=2 .633->.667.
+The two `worse` cells are heldout medALE at t=0.5 (.568 -> .591, n=23), the smallest and already
+worst cell in the table and the one the open sub-day/`logMultTo30` finding owns.
+
+**BASELINE.json was NOT moved**, for two reasons. (1) The rule: not every cell is wash-or-better.
+(2) More importantly this is not a controlled comparison — the reference is a v3.0 run and the
+candidate is v5.0 (production moved to v5.0 in a concurrent session while this repair was running),
+and the corpus population changed underneath both. Model change and population change are confounded
+here, so no cell in this table should be read as the effect of either one alone. The next clean
+v5.0-vs-v5.0 run is the one that should move the pointer.
+
 ## 2026-09-04, 2:10-3:00 PM ET — v5.0 DEPLOYED
 
 Brandon approved the merge, rescore and deploy explicitly. The v5 build entry below stands as the

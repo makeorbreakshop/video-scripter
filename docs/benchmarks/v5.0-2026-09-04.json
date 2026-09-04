@@ -1,0 +1,1668 @@
+{
+  "modelVersion": "v5.0",
+  "generatedAt": "2026-09-04T19:11:51.710Z",
+  "config": {
+    "populationRule": "long-form, public, day-27..33 truth, >=1 reading within the first 14 days",
+    "months": 18,
+    "timeCut": "2025-08-05T12:30:21.000Z",
+    "timeFrac": 0.2,
+    "holdoutShare": 0.0625,
+    "population": 5143,
+    "trainPop": 3860,
+    "testPop": 1283,
+    "testSampled": 1283,
+    "fitSample": 3860,
+    "fitRows": 15274,
+    "ages": [
+      0.5,
+      1,
+      2,
+      3,
+      5,
+      7,
+      14
+    ],
+    "storedParamsFittedAt": "2026-09-04T19:02:37.835Z",
+    "refitMult": {
+      "1": 0.8757907855834054,
+      "2": 0.6261629709865041,
+      "3": 0.46092359029119423,
+      "5": 0.30732422418176536,
+      "7": 0.23054198898006095,
+      "14": 0.10275225802257854,
+      "21": 0.04490852402778896,
+      "30": 0,
+      "0.5": 1.1807361012043744,
+      "0.75": 0.983242197255026,
+      "0.3333333333333333": 1.4652123680231033,
+      "0.08333333333333333": 3.6331510314839175,
+      "0.16666666666666666": 2.489581625715664,
+      "0.041666666666666664": 4.3097712693137575
+    }
+  },
+  "ages": [
+    0.5,
+    1,
+    2,
+    3,
+    5,
+    7,
+    14
+  ],
+  "cells": [
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 0.5,
+      "n": 23,
+      "medALE": 0.5912316055494232,
+      "bias": 0.19146065942383786,
+      "outlier": {
+        "n": 23,
+        "tp": 0,
+        "fp": 2,
+        "fn": 4,
+        "tn": 17,
+        "precision": 0,
+        "recall": 0,
+        "f1": null,
+        "baseRate": 0.17391304347826086
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 23,
+          "calls": 2,
+          "hits": 0,
+          "hitRate": 0,
+          "baseRate": 0.17391304347826086
+        }
+      },
+      "medianDay": 0.5487037037037037,
+      "coverage": {
+        "full": 0,
+        "none": 23
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 1,
+      "n": 104,
+      "medALE": 0.3905916744710746,
+      "bias": 0.013259022906868824,
+      "outlier": {
+        "n": 100,
+        "tp": 9,
+        "fp": 8,
+        "fn": 10,
+        "tn": 73,
+        "precision": 0.5294117647058824,
+        "recall": 0.47368421052631576,
+        "f1": 0.5,
+        "baseRate": 0.19
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 100,
+          "calls": 17,
+          "hits": 9,
+          "hitRate": 0.5294117647058824,
+          "baseRate": 0.19
+        }
+      },
+      "medianDay": 0.9829340277777778,
+      "coverage": {
+        "full": 0,
+        "none": 104
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 2,
+      "n": 91,
+      "medALE": 0.1863530089309936,
+      "bias": -0.008334740209772441,
+      "outlier": {
+        "n": 87,
+        "tp": 8,
+        "fp": 3,
+        "fn": 5,
+        "tn": 71,
+        "precision": 0.7272727272727273,
+        "recall": 0.6153846153846154,
+        "f1": 0.6666666666666667,
+        "baseRate": 0.14942528735632185
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 87,
+          "calls": 11,
+          "hits": 8,
+          "hitRate": 0.7272727272727273,
+          "baseRate": 0.14942528735632185
+        }
+      },
+      "medianDay": 1.9270023148148148,
+      "coverage": {
+        "full": 0,
+        "none": 91
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 3,
+      "n": 105,
+      "medALE": 0.1693372593284496,
+      "bias": 0.029764083096902712,
+      "outlier": {
+        "n": 99,
+        "tp": 10,
+        "fp": 1,
+        "fn": 5,
+        "tn": 83,
+        "precision": 0.9090909090909091,
+        "recall": 0.6666666666666666,
+        "f1": 0.7692307692307692,
+        "baseRate": 0.15151515151515152
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 42,
+          "calls": 6,
+          "hits": 6,
+          "hitRate": 1,
+          "baseRate": 0.16666666666666666
+        },
+        "early": {
+          "n": 57,
+          "calls": 5,
+          "hits": 4,
+          "hitRate": 0.8,
+          "baseRate": 0.14035087719298245
+        }
+      },
+      "medianDay": 2.9525,
+      "coverage": {
+        "full": 0,
+        "none": 105
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 5,
+      "n": 168,
+      "medALE": 0.13489004880556663,
+      "bias": 0.017334446886100367,
+      "outlier": {
+        "n": 155,
+        "tp": 18,
+        "fp": 2,
+        "fn": 5,
+        "tn": 130,
+        "precision": 0.9,
+        "recall": 0.782608695652174,
+        "f1": 0.8372093023255814,
+        "baseRate": 0.14838709677419354
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 155,
+          "calls": 20,
+          "hits": 18,
+          "hitRate": 0.9,
+          "baseRate": 0.14838709677419354
+        }
+      },
+      "medianDay": 4.954728009259259,
+      "coverage": {
+        "full": 0,
+        "none": 168
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 7,
+      "n": 191,
+      "medALE": 0.10051227181462018,
+      "bias": 0.002429283456300392,
+      "outlier": {
+        "n": 175,
+        "tp": 22,
+        "fp": 4,
+        "fn": 4,
+        "tn": 145,
+        "precision": 0.8461538461538461,
+        "recall": 0.8461538461538461,
+        "f1": 0.8461538461538461,
+        "baseRate": 0.14857142857142858
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 108,
+          "calls": 17,
+          "hits": 13,
+          "hitRate": 0.7647058823529411,
+          "baseRate": 0.14814814814814814
+        },
+        "confirmed": {
+          "n": 67,
+          "calls": 9,
+          "hits": 9,
+          "hitRate": 1,
+          "baseRate": 0.14925373134328357
+        }
+      },
+      "medianDay": 6.915625,
+      "coverage": {
+        "full": 0,
+        "none": 191
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "pooled",
+      "t": 14,
+      "n": 287,
+      "medALE": 0.04475717444057586,
+      "bias": 0.0024686655544655825,
+      "outlier": {
+        "n": 269,
+        "tp": 41,
+        "fp": 3,
+        "fn": 7,
+        "tn": 218,
+        "precision": 0.9318181818181818,
+        "recall": 0.8541666666666666,
+        "f1": 0.8913043478260869,
+        "baseRate": 0.17843866171003717
+      },
+      "withinChannel": {
+        "channels": 2,
+        "medianRho": 1,
+        "meanRho": 1
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 269,
+          "calls": 44,
+          "hits": 41,
+          "hitRate": 0.9318181818181818,
+          "baseRate": 0.17843866171003717
+        }
+      },
+      "medianDay": 13.874976851851851,
+      "coverage": {
+        "full": 0,
+        "none": 287
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 0.5,
+      "n": 23,
+      "medALE": 0.5912316055494232,
+      "bias": 0.19146065942383786,
+      "outlier": {
+        "n": 23,
+        "tp": 0,
+        "fp": 2,
+        "fn": 4,
+        "tn": 17,
+        "precision": 0,
+        "recall": 0,
+        "f1": null,
+        "baseRate": 0.17391304347826086
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 23,
+          "calls": 2,
+          "hits": 0,
+          "hitRate": 0,
+          "baseRate": 0.17391304347826086
+        }
+      },
+      "medianDay": 0.5487037037037037,
+      "coverage": {
+        "full": 0,
+        "none": 23
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 1,
+      "n": 104,
+      "medALE": 0.3905916744710746,
+      "bias": 0.013259022906868824,
+      "outlier": {
+        "n": 100,
+        "tp": 9,
+        "fp": 8,
+        "fn": 10,
+        "tn": 73,
+        "precision": 0.5294117647058824,
+        "recall": 0.47368421052631576,
+        "f1": 0.5,
+        "baseRate": 0.19
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 100,
+          "calls": 17,
+          "hits": 9,
+          "hitRate": 0.5294117647058824,
+          "baseRate": 0.19
+        }
+      },
+      "medianDay": 0.9829340277777778,
+      "coverage": {
+        "full": 0,
+        "none": 104
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 2,
+      "n": 91,
+      "medALE": 0.1863530089309936,
+      "bias": -0.008334740209772441,
+      "outlier": {
+        "n": 87,
+        "tp": 8,
+        "fp": 3,
+        "fn": 5,
+        "tn": 71,
+        "precision": 0.7272727272727273,
+        "recall": 0.6153846153846154,
+        "f1": 0.6666666666666667,
+        "baseRate": 0.14942528735632185
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "early": {
+          "n": 87,
+          "calls": 11,
+          "hits": 8,
+          "hitRate": 0.7272727272727273,
+          "baseRate": 0.14942528735632185
+        }
+      },
+      "medianDay": 1.9270023148148148,
+      "coverage": {
+        "full": 0,
+        "none": 91
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 3,
+      "n": 105,
+      "medALE": 0.1693372593284496,
+      "bias": 0.029764083096902712,
+      "outlier": {
+        "n": 99,
+        "tp": 10,
+        "fp": 1,
+        "fn": 5,
+        "tn": 83,
+        "precision": 0.9090909090909091,
+        "recall": 0.6666666666666666,
+        "f1": 0.7692307692307692,
+        "baseRate": 0.15151515151515152
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 42,
+          "calls": 6,
+          "hits": 6,
+          "hitRate": 1,
+          "baseRate": 0.16666666666666666
+        },
+        "early": {
+          "n": 57,
+          "calls": 5,
+          "hits": 4,
+          "hitRate": 0.8,
+          "baseRate": 0.14035087719298245
+        }
+      },
+      "medianDay": 2.9525,
+      "coverage": {
+        "full": 0,
+        "none": 105
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 5,
+      "n": 168,
+      "medALE": 0.13489004880556663,
+      "bias": 0.017334446886100367,
+      "outlier": {
+        "n": 155,
+        "tp": 18,
+        "fp": 2,
+        "fn": 5,
+        "tn": 130,
+        "precision": 0.9,
+        "recall": 0.782608695652174,
+        "f1": 0.8372093023255814,
+        "baseRate": 0.14838709677419354
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 155,
+          "calls": 20,
+          "hits": 18,
+          "hitRate": 0.9,
+          "baseRate": 0.14838709677419354
+        }
+      },
+      "medianDay": 4.954728009259259,
+      "coverage": {
+        "full": 0,
+        "none": 168
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 7,
+      "n": 191,
+      "medALE": 0.10051227181462018,
+      "bias": 0.002429283456300392,
+      "outlier": {
+        "n": 175,
+        "tp": 22,
+        "fp": 4,
+        "fn": 4,
+        "tn": 145,
+        "precision": 0.8461538461538461,
+        "recall": 0.8461538461538461,
+        "f1": 0.8461538461538461,
+        "baseRate": 0.14857142857142858
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {
+        "likely": {
+          "n": 108,
+          "calls": 17,
+          "hits": 13,
+          "hitRate": 0.7647058823529411,
+          "baseRate": 0.14814814814814814
+        },
+        "confirmed": {
+          "n": 67,
+          "calls": 9,
+          "hits": 9,
+          "hitRate": 1,
+          "baseRate": 0.14925373134328357
+        }
+      },
+      "medianDay": 6.915625,
+      "coverage": {
+        "full": 0,
+        "none": 191
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "no_change",
+      "t": 14,
+      "n": 287,
+      "medALE": 0.04475717444057586,
+      "bias": 0.0024686655544655825,
+      "outlier": {
+        "n": 269,
+        "tp": 41,
+        "fp": 3,
+        "fn": 7,
+        "tn": 218,
+        "precision": 0.9318181818181818,
+        "recall": 0.8541666666666666,
+        "f1": 0.8913043478260869,
+        "baseRate": 0.17843866171003717
+      },
+      "withinChannel": {
+        "channels": 2,
+        "medianRho": 1,
+        "meanRho": 1
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 269,
+          "calls": 44,
+          "hits": 41,
+          "hitRate": 0.9318181818181818,
+          "baseRate": 0.17843866171003717
+        }
+      },
+      "medianDay": 13.874976851851851,
+      "coverage": {
+        "full": 0,
+        "none": 287
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 0.5,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 1,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 2,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 3,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 5,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 7,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "heldout",
+      "stratum": "changed",
+      "t": 14,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 0.5,
+      "n": 68,
+      "medALE": 0.41724846770626123,
+      "bias": 0.16777372620199243,
+      "outlier": {
+        "n": 68,
+        "tp": 7,
+        "fp": 6,
+        "fn": 9,
+        "tn": 46,
+        "precision": 0.5384615384615384,
+        "recall": 0.4375,
+        "f1": 0.4827586206896552,
+        "baseRate": 0.23529411764705882
+      },
+      "withinChannel": {
+        "channels": 1,
+        "medianRho": 1,
+        "meanRho": 1
+      },
+      "confidence": {
+        "early": {
+          "n": 68,
+          "calls": 13,
+          "hits": 7,
+          "hitRate": 0.5384615384615384,
+          "baseRate": 0.23529411764705882
+        }
+      },
+      "medianDay": 0.6200405092592592,
+      "coverage": {
+        "full": 0,
+        "none": 68
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 1,
+      "n": 256,
+      "medALE": 0.335471577406655,
+      "bias": 0.05190107109421125,
+      "outlier": {
+        "n": 250,
+        "tp": 20,
+        "fp": 12,
+        "fn": 21,
+        "tn": 197,
+        "precision": 0.625,
+        "recall": 0.4878048780487805,
+        "f1": 0.547945205479452,
+        "baseRate": 0.164
+      },
+      "withinChannel": {
+        "channels": 3,
+        "medianRho": 0.8791208791208791,
+        "meanRho": 0.7692307692307692
+      },
+      "confidence": {
+        "early": {
+          "n": 250,
+          "calls": 32,
+          "hits": 20,
+          "hitRate": 0.625,
+          "baseRate": 0.164
+        }
+      },
+      "medianDay": 0.8778935185185186,
+      "coverage": {
+        "full": 0,
+        "none": 256
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 2,
+      "n": 283,
+      "medALE": 0.23064842607760339,
+      "bias": 0.030246778406967413,
+      "outlier": {
+        "n": 275,
+        "tp": 28,
+        "fp": 9,
+        "fn": 19,
+        "tn": 219,
+        "precision": 0.7567567567567568,
+        "recall": 0.5957446808510638,
+        "f1": 0.6666666666666666,
+        "baseRate": 0.1709090909090909
+      },
+      "withinChannel": {
+        "channels": 3,
+        "medianRho": 0.9411764705882353,
+        "meanRho": 0.7899159663865546
+      },
+      "confidence": {
+        "early": {
+          "n": 275,
+          "calls": 37,
+          "hits": 28,
+          "hitRate": 0.7567567567567568,
+          "baseRate": 0.1709090909090909
+        }
+      },
+      "medianDay": 1.9187962962962963,
+      "coverage": {
+        "full": 0,
+        "none": 283
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 3,
+      "n": 328,
+      "medALE": 0.1909948130691738,
+      "bias": 0.020791517924387416,
+      "outlier": {
+        "n": 313,
+        "tp": 33,
+        "fp": 7,
+        "fn": 20,
+        "tn": 253,
+        "precision": 0.825,
+        "recall": 0.6226415094339622,
+        "f1": 0.7096774193548386,
+        "baseRate": 0.16932907348242812
+      },
+      "withinChannel": {
+        "channels": 4,
+        "medianRho": 0.9794117647058824,
+        "meanRho": 0.8039915966386555
+      },
+      "confidence": {
+        "likely": {
+          "n": 93,
+          "calls": 14,
+          "hits": 11,
+          "hitRate": 0.7857142857142857,
+          "baseRate": 0.20430107526881722
+        },
+        "early": {
+          "n": 220,
+          "calls": 26,
+          "hits": 22,
+          "hitRate": 0.8461538461538461,
+          "baseRate": 0.15454545454545454
+        }
+      },
+      "medianDay": 2.901203703703704,
+      "coverage": {
+        "full": 0,
+        "none": 328
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 5,
+      "n": 608,
+      "medALE": 0.14209022915964653,
+      "bias": 0.005119557248997611,
+      "outlier": {
+        "n": 423,
+        "tp": 59,
+        "fp": 7,
+        "fn": 20,
+        "tn": 337,
+        "precision": 0.8939393939393939,
+        "recall": 0.7468354430379747,
+        "f1": 0.8137931034482758,
+        "baseRate": 0.1867612293144208
+      },
+      "withinChannel": {
+        "channels": 8,
+        "medianRho": 1,
+        "meanRho": 0.9014825667108949
+      },
+      "confidence": {
+        "likely": {
+          "n": 423,
+          "calls": 66,
+          "hits": 59,
+          "hitRate": 0.8939393939393939,
+          "baseRate": 0.1867612293144208
+        }
+      },
+      "medianDay": 4.958263888888889,
+      "coverage": {
+        "full": 0,
+        "none": 608
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 7,
+      "n": 693,
+      "medALE": 0.10048886073186311,
+      "bias": 0.01291298465583593,
+      "outlier": {
+        "n": 507,
+        "tp": 74,
+        "fp": 9,
+        "fn": 18,
+        "tn": 406,
+        "precision": 0.891566265060241,
+        "recall": 0.8043478260869565,
+        "f1": 0.8457142857142858,
+        "baseRate": 0.1814595660749507
+      },
+      "withinChannel": {
+        "channels": 11,
+        "medianRho": 1,
+        "meanRho": 0.9754493184833742
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 189,
+          "calls": 27,
+          "hits": 24,
+          "hitRate": 0.8888888888888888,
+          "baseRate": 0.15873015873015872
+        },
+        "likely": {
+          "n": 318,
+          "calls": 56,
+          "hits": 50,
+          "hitRate": 0.8928571428571429,
+          "baseRate": 0.1949685534591195
+        }
+      },
+      "medianDay": 6.916331018518519,
+      "coverage": {
+        "full": 0,
+        "none": 693
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "pooled",
+      "t": 14,
+      "n": 1029,
+      "medALE": 0.037264382442697926,
+      "bias": 0.005505187698942262,
+      "outlier": {
+        "n": 848,
+        "tp": 128,
+        "fp": 11,
+        "fn": 14,
+        "tn": 695,
+        "precision": 0.920863309352518,
+        "recall": 0.9014084507042254,
+        "f1": 0.911032028469751,
+        "baseRate": 0.16745283018867924
+      },
+      "withinChannel": {
+        "channels": 22,
+        "medianRho": 1,
+        "meanRho": 0.9635915109845591
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 848,
+          "calls": 139,
+          "hits": 128,
+          "hitRate": 0.920863309352518,
+          "baseRate": 0.16745283018867924
+        }
+      },
+      "medianDay": 13.776655092592593,
+      "coverage": {
+        "full": 0,
+        "none": 1029
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 0.5,
+      "n": 68,
+      "medALE": 0.41724846770626123,
+      "bias": 0.16777372620199243,
+      "outlier": {
+        "n": 68,
+        "tp": 7,
+        "fp": 6,
+        "fn": 9,
+        "tn": 46,
+        "precision": 0.5384615384615384,
+        "recall": 0.4375,
+        "f1": 0.4827586206896552,
+        "baseRate": 0.23529411764705882
+      },
+      "withinChannel": {
+        "channels": 1,
+        "medianRho": 1,
+        "meanRho": 1
+      },
+      "confidence": {
+        "early": {
+          "n": 68,
+          "calls": 13,
+          "hits": 7,
+          "hitRate": 0.5384615384615384,
+          "baseRate": 0.23529411764705882
+        }
+      },
+      "medianDay": 0.6200405092592592,
+      "coverage": {
+        "full": 0,
+        "none": 68
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 1,
+      "n": 256,
+      "medALE": 0.335471577406655,
+      "bias": 0.05190107109421125,
+      "outlier": {
+        "n": 250,
+        "tp": 20,
+        "fp": 12,
+        "fn": 21,
+        "tn": 197,
+        "precision": 0.625,
+        "recall": 0.4878048780487805,
+        "f1": 0.547945205479452,
+        "baseRate": 0.164
+      },
+      "withinChannel": {
+        "channels": 3,
+        "medianRho": 0.8791208791208791,
+        "meanRho": 0.7692307692307692
+      },
+      "confidence": {
+        "early": {
+          "n": 250,
+          "calls": 32,
+          "hits": 20,
+          "hitRate": 0.625,
+          "baseRate": 0.164
+        }
+      },
+      "medianDay": 0.8778935185185186,
+      "coverage": {
+        "full": 0,
+        "none": 256
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 2,
+      "n": 283,
+      "medALE": 0.23064842607760339,
+      "bias": 0.030246778406967413,
+      "outlier": {
+        "n": 275,
+        "tp": 28,
+        "fp": 9,
+        "fn": 19,
+        "tn": 219,
+        "precision": 0.7567567567567568,
+        "recall": 0.5957446808510638,
+        "f1": 0.6666666666666666,
+        "baseRate": 0.1709090909090909
+      },
+      "withinChannel": {
+        "channels": 3,
+        "medianRho": 0.9411764705882353,
+        "meanRho": 0.7899159663865546
+      },
+      "confidence": {
+        "early": {
+          "n": 275,
+          "calls": 37,
+          "hits": 28,
+          "hitRate": 0.7567567567567568,
+          "baseRate": 0.1709090909090909
+        }
+      },
+      "medianDay": 1.9187962962962963,
+      "coverage": {
+        "full": 0,
+        "none": 283
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 3,
+      "n": 328,
+      "medALE": 0.1909948130691738,
+      "bias": 0.020791517924387416,
+      "outlier": {
+        "n": 313,
+        "tp": 33,
+        "fp": 7,
+        "fn": 20,
+        "tn": 253,
+        "precision": 0.825,
+        "recall": 0.6226415094339622,
+        "f1": 0.7096774193548386,
+        "baseRate": 0.16932907348242812
+      },
+      "withinChannel": {
+        "channels": 4,
+        "medianRho": 0.9794117647058824,
+        "meanRho": 0.8039915966386555
+      },
+      "confidence": {
+        "likely": {
+          "n": 93,
+          "calls": 14,
+          "hits": 11,
+          "hitRate": 0.7857142857142857,
+          "baseRate": 0.20430107526881722
+        },
+        "early": {
+          "n": 220,
+          "calls": 26,
+          "hits": 22,
+          "hitRate": 0.8461538461538461,
+          "baseRate": 0.15454545454545454
+        }
+      },
+      "medianDay": 2.901203703703704,
+      "coverage": {
+        "full": 0,
+        "none": 328
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 5,
+      "n": 608,
+      "medALE": 0.14209022915964653,
+      "bias": 0.005119557248997611,
+      "outlier": {
+        "n": 423,
+        "tp": 59,
+        "fp": 7,
+        "fn": 20,
+        "tn": 337,
+        "precision": 0.8939393939393939,
+        "recall": 0.7468354430379747,
+        "f1": 0.8137931034482758,
+        "baseRate": 0.1867612293144208
+      },
+      "withinChannel": {
+        "channels": 8,
+        "medianRho": 1,
+        "meanRho": 0.9014825667108949
+      },
+      "confidence": {
+        "likely": {
+          "n": 423,
+          "calls": 66,
+          "hits": 59,
+          "hitRate": 0.8939393939393939,
+          "baseRate": 0.1867612293144208
+        }
+      },
+      "medianDay": 4.958263888888889,
+      "coverage": {
+        "full": 0,
+        "none": 608
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 7,
+      "n": 693,
+      "medALE": 0.10048886073186311,
+      "bias": 0.01291298465583593,
+      "outlier": {
+        "n": 507,
+        "tp": 74,
+        "fp": 9,
+        "fn": 18,
+        "tn": 406,
+        "precision": 0.891566265060241,
+        "recall": 0.8043478260869565,
+        "f1": 0.8457142857142858,
+        "baseRate": 0.1814595660749507
+      },
+      "withinChannel": {
+        "channels": 11,
+        "medianRho": 1,
+        "meanRho": 0.9754493184833742
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 189,
+          "calls": 27,
+          "hits": 24,
+          "hitRate": 0.8888888888888888,
+          "baseRate": 0.15873015873015872
+        },
+        "likely": {
+          "n": 318,
+          "calls": 56,
+          "hits": 50,
+          "hitRate": 0.8928571428571429,
+          "baseRate": 0.1949685534591195
+        }
+      },
+      "medianDay": 6.916331018518519,
+      "coverage": {
+        "full": 0,
+        "none": 693
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "no_change",
+      "t": 14,
+      "n": 1029,
+      "medALE": 0.037264382442697926,
+      "bias": 0.005505187698942262,
+      "outlier": {
+        "n": 848,
+        "tp": 128,
+        "fp": 11,
+        "fn": 14,
+        "tn": 695,
+        "precision": 0.920863309352518,
+        "recall": 0.9014084507042254,
+        "f1": 0.911032028469751,
+        "baseRate": 0.16745283018867924
+      },
+      "withinChannel": {
+        "channels": 22,
+        "medianRho": 1,
+        "meanRho": 0.9635915109845591
+      },
+      "confidence": {
+        "confirmed": {
+          "n": 848,
+          "calls": 139,
+          "hits": 128,
+          "hitRate": 0.920863309352518,
+          "baseRate": 0.16745283018867924
+        }
+      },
+      "medianDay": 13.776655092592593,
+      "coverage": {
+        "full": 0,
+        "none": 1029
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 0.5,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 1,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 2,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 3,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 5,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 7,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    },
+    {
+      "split": "time",
+      "stratum": "changed",
+      "t": 14,
+      "n": 0,
+      "medALE": null,
+      "bias": null,
+      "outlier": {
+        "n": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "baseRate": null
+      },
+      "withinChannel": {
+        "channels": 0,
+        "medianRho": null,
+        "meanRho": null
+      },
+      "confidence": {},
+      "medianDay": null,
+      "coverage": {
+        "full": 0,
+        "none": 0
+      }
+    }
+  ],
+  "stability": {
+    "heldout": {
+      "0.5->1": {
+        "pairs": 3,
+        "medianChurn": 0.24479592551374496,
+        "sameReading": 20
+      },
+      "1->2": {
+        "pairs": 35,
+        "medianChurn": 0.25948611225602086,
+        "sameReading": 35
+      },
+      "2->3": {
+        "pairs": 56,
+        "medianChurn": 0.1233680921740273,
+        "sameReading": 24
+      },
+      "3->5": {
+        "pairs": 89,
+        "medianChurn": 0.10105027312529158,
+        "sameReading": 6
+      },
+      "5->7": {
+        "pairs": 117,
+        "medianChurn": 0.05331534810869534,
+        "sameReading": 28
+      },
+      "7->14": {
+        "pairs": 162,
+        "medianChurn": 0.06711696580151663,
+        "sameReading": 0
+      }
+    },
+    "time": {
+      "0.5->1": {
+        "pairs": 12,
+        "medianChurn": 0.05872941478252104,
+        "sameReading": 56
+      },
+      "1->2": {
+        "pairs": 229,
+        "medianChurn": 0.2088896784499484,
+        "sameReading": 20
+      },
+      "2->3": {
+        "pairs": 229,
+        "medianChurn": 0.10182673857711116,
+        "sameReading": 44
+      },
+      "3->5": {
+        "pairs": 311,
+        "medianChurn": 0.1068130998071619,
+        "sameReading": 0
+      },
+      "5->7": {
+        "pairs": 400,
+        "medianChurn": 0.06560373163107988,
+        "sameReading": 20
+      },
+      "7->14": {
+        "pairs": 501,
+        "medianChurn": 0.08090928009550473,
+        "sameReading": 0
+      }
+    }
+  },
+  "packagingLift": [],
+  "notes": [
+    "Params refit here from 15274 (video, bucket) train rows via core.fitParams; the long-tail and sub-day (launch ladder) tables were carried over from the stored score_params fit because neither can be refit from train rows alone.",
+    "PACKAGING COVERAGE CAVEAT: thumbnail/title change history only exists for videos published on or after 2026-09-01 — the CDN watcher's first-capture pass ran that day, and before it a swap left no record. For every pre-Sep-1 video `no_change` means \"no change we observed\" and silently includes unseen swaps, so pooled and no_change are effectively the same number on the historical baseline. The first cohort with complete swap coverage AND a day-30 outcome arrives ~2026-10-01; the per-cell `cov full/none` counts show it landing.",
+    "OPEN FINDING — the sub-day forecast, and two code paths that disagree below day 1. The band fit of 2026-09-03 (lib/scoring/bands.ts FITTED_BANDS_2026_09_03) has q50 = +0.2016 at the 0.5-day bucket and +0.0914 at day 1, i.e. log(actual / forecast): the forecast it measures runs ~22% LOW at half a day, ~10% low at day 1, and is unbiased from day 2 on. THIS BENCHMARK measures the opposite sign at half a day — bias (median log(est30/actual30)) = +0.183 heldout / +0.159 time at t=0.5, i.e. ~18% HIGH. Both are correct about different code. scripts/fit-forecast-bands.ts and scripts/check-band-calibration.ts forecast with core.logMultTo30, which interpolates the DAY_BUCKETS only and clamps to the day-1 multiplier (~2.4x) for any age below one day; scoreVideo forecasts with bucketFor + the fitted launch ladder, which applies ~3.18x at half a day. The ladder over-corrects on this population by about as much as clamping under-corrects. Benchmark cells that move when this is settled: bias at t=0.5 (both splits) toward 0, then medALE at t=0.5 (today .567 heldout / .408 time — by far the worst ages in the table) and t=1. Fixing logMultTo30 to consult the launch ladder would also change every projected prior younger than a day, so it must be judged on the t=0.5..3 outlier cells too, not on bias alone. n at t=0.5 is small (23 heldout / 68 time) because sub-day readings today come only from a daily snapshot that happened to land inside the first 24 hours; 5-minute sampling began 2026-09-01 and no sampled video has a day-30 truth yet.",
+    "RECONCILIATION vs the Python harness (harness-v2/baseline_v3.csv). Harness baseline v3 medALE on its time split: .296/.232/.187/.138/.105/.049 at t=1/2/3/5/7/14, F1 .737/.740/.788/.826/.888/.957. This benchmark on its time split: .334/.231/.192/.142/.100/.037, F1 .521/.642/.710/.792/.864/.908. Point error agrees within noise from t=2 on and is worse at t=1; F1 is 10-20 points lower everywhere. Three causes, none of them a bug: (1) DIFFERENT MODEL — harness baseline v3 is an unfitted geometric mean of three round-3 entrants, while production v3.0 is that mechanism rewritten as one function (channel multiplier shrunk by n/(n+k) + a Q-quintile residual). The harness CHAMPION, which is what production is closest to, scored .387 at t=1; production sits between the two. (2) DIFFERENT BASELINE POPULATION — the harness only let a prior into base{t} if its day-30 was actually measured, and required 3 such priors, so 37% of its t=1 rows had no baseline at all and were dropped from P/R/F1. Production accepts a prior's day-30 PROJECTED forward or normalised down the long tail (core.priorV30), which is what lifted baseline coverage from ~50% to ~99% in scripts/backtest-baseline.ts. Measured here: 86% of this run's rows have a baseline, and the median row's baseline is built from 87% derived priors; only 32 time-split rows at t=7 have a majority-measured baseline, and on those F1 is 1.00 against 0.864 pooled. The F1 gap is the price of coverage, not a worse forecast. (3) DIFFERENT DATA AND SPLITS — the harness ran a 2025 Jul-Sep dense window with a 30%-of-channels holdout; this runs an 18-month window restricted to videos with a reading inside their first 14 days, with bands.heldOut's 1/16-of-videos holdout (which does NOT hold out a channel, so a channel's other videos can be in the fit) and a publish-date cut at 2025-08-05. t=14 is better here (.037 vs .049) for the same reason: this population is the densely tracked one.",
+    "Outlier truth uses the SAME walk-forward baseline as the call (actual30 / baseline_t >= 2), so precision/recall measure the forecast, not the baseline. scripts/backtest-baseline.ts is the counterpart that measures the baseline."
+  ]
+}
