@@ -11,8 +11,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const VIDEO_ID = /^[\w-]{6,20}$/;
-// One curve, two sources: daily view_snapshots are the long-run truth, high-resolution
-// view_samples cover the launch window. Both are returned as (day since publish, views).
+// One shared curve from daily, API and RSS evidence. Cap from newest so fresh data survives.
 const CURVE_LIMIT = 2000;
 
 export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id: string }> }) => {
@@ -27,7 +26,7 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
   );
   if (!video) return jsonError(404, 'not_found', 'No such video.');
 
-  const [score, curve, thumbs, titles, events] = await Promise.all([
+  const [score, rawCurve, thumbs, titles, events] = await Promise.all([
     one<any>(
       `select model_version, scored_at, snapshot_day, views, est30, baseline, n_baseline,
               score, same_age_ratio, n_same_age, confidence
@@ -35,14 +34,14 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
       [id]
     ),
     q<any>(
-      `select day, views, source from (
-         select extract(epoch from ((snapshot_date::timestamptz + interval '12 hours') - $2::timestamptz))/86400.0 as day,
-                view_count as views, 'snapshot' as source
-           from view_snapshots where video_id = $1
+      `select at, views, source from (
+         select snapshot_date::timestamptz + interval '12 hours' as at,
+                view_count as views, 'snapshot' as source from view_snapshots where video_id = $1
          union all
-         select extract(epoch from (sampled_at - $2::timestamptz))/86400.0 as day, view_count as views, 'sample' as source
-           from view_samples where video_id = $1
-       ) x where day >= 0 order by day limit ${CURVE_LIMIT}`,
+         select sampled_at, view_count, 'sample' from view_samples where video_id = $1
+         union all
+         select at, views, 'rss' from rss_samples where video_id = $1
+       ) x where at >= $2::timestamptz and at <= now() order by at desc limit ${CURVE_LIMIT}`,
       [id, video.published_at]
     ),
     q<any>(
@@ -56,12 +55,14 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
     ),
   ]);
 
+  const points = (source: string) => rawCurve.filter(p => p.source === source).map(p => ({ at: p.at, views: Number(p.views) }));
+  const curve = mergeActuals(video.published_at, points('snapshot'), points('sample'), points('rss'));
+
   // What each packaging change did to views: views/hour before vs after, with a plain verdict.
   const samplesForExp = curve.filter((c: any) => c.source === 'sample').map((c: any) => ({ at: new Date(new Date(video.published_at).getTime() + c.day * 86_400_000), views: c.views }));
   const markers = packagingMarkers(video.published_at, thumbs, titles);
   const dailyForExp = curve.filter((c: any) => c.source === 'snapshot').map((c: any) => ({ at: new Date(new Date(video.published_at).getTime() + c.day * 86_400_000), views: c.views }));
   const exps = experiments(video.published_at, samplesForExp, markers, Date.now(), dailyForExp);
-  void mergeActuals;
   return NextResponse.json({
     experiments: exps.map((e: any) => ({ kind: e.kind, version: e.version, at: e.at, resolution: e.resolution, before_vph: e.before?.vph ?? null, after_vph: e.after?.vph ?? null, ratio: e.ratio ?? null, verdict: e.verdict })),
     video: {

@@ -21,7 +21,7 @@
 //
 // MEASURED 2026-09-03: this feed sends no ETag and no Last-Modified, so the conditional-request
 // path never fires. "Unchanged" is decided by hashing the body (rss_body_sha), which skips the
-// whole diff for that channel.
+// used to skip the whole diff. Identical bodies now still refresh heartbeat/title evidence.
 //
 // Direct Postgres only (2026-08-31 egress rule).
 // Usage: npx tsx scripts/rss-poll.ts [maxChannels] [--subset] [--dry] [--seed]
@@ -42,10 +42,11 @@ import {
   backoffAfter,
   perRunCap,
   isUpdatedSince,
-  shouldProcessEntries,
+  hasFeedBodyChanged,
   isNewUpload,
   unknownEntryPlan,
   shouldStoreSample,
+  completedChannelRows,
   LAST_SAMPLES_SQL,
   SEED_SUBSET_SQL,
   SEED_ALL_SQL,
@@ -60,7 +61,7 @@ const dry = args.includes('--dry');
 const subset = args.includes('--subset') || process.env.WATCH_SUBSET === '1';
 const forceSeed = args.includes('--seed');
 const maxChannels = parseInt(args.find((a, i) => /^\d+$/.test(a) && args[i - 1] !== '--max-seconds') || '0', 10) || null;
-const job = startManagedJob({ name: 'rss-poll', args });
+const job = dry ? { acquired: true, signal: new AbortController().signal, finish: () => {} } : startManagedJob({ name: 'rss-poll', args });
 if (!job.acquired) process.exit(0);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
@@ -231,12 +232,13 @@ async function replayPending(): Promise<void> {
   } catch (e) {
     // Leave the file in place; the next tick tries again rather than dropping detected changes.
     console.error(`pending replay failed, keeping ${PENDING}: ${(e as Error).message}`);
+    throw e; // fail closed: never collect another buffer over an unreplayed change
   }
 }
 
 // ---------------------------------------------------------------- phase 0
 
-if (subset || forceSeed || now.getMinutes() < 5) {
+if (!dry && (subset || forceSeed || now.getMinutes() < 5)) {
   const seeded = await pool.query(subset ? SEED_SUBSET_SQL : SEED_ALL_SQL);
   log(`seeded/refreshed ${seeded.rowCount} channel states${subset ? ' (subset)' : ''}`);
 }
@@ -277,7 +279,7 @@ type DueChannel = {
 const t0 = Date.now();
 const buf = empty();
 let ok200 = 0, notModified = 0, sameBody = 0, errors = 0;
-interface Fetched { channel_id: string; entries: RssEntry[] }
+interface Fetched { channel_id: string; entries: RssEntry[]; observedAt: Date }
 const fetched: Fetched[] = [];
 
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
@@ -286,7 +288,8 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
     let status = 0;
     try {
       const headers: Record<string, string> = {};
-      if (c.rss_etag) headers['If-None-Match'] = c.rss_etag;
+      // Fetch the body even when unchanged: counts need a heartbeat and titles need evidence.
+      // A 304 cannot prove the age of the counts carried by a prior response.
       const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${c.channel_id}`, {
         headers, signal: AbortSignal.timeout(RSS_POLICY.timeoutMs),
       });
@@ -303,8 +306,8 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
       const bodySha = sha(body);
       buf.channels.push({ channel_id: c.channel_id, status: 200, body_sha: bodySha,
                           etag: res.headers.get('etag'), interval_sec: null, backoff_until: null, clear_woken: true });
-      if (!shouldProcessEntries(c.rss_body_sha, bodySha)) { sameBody++; return; }
-      fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body) });
+      if (!hasFeedBodyChanged(c.rss_body_sha, bodySha)) sameBody++;
+      fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body), observedAt: new Date() });
     } catch (err) {
       errors++;
       const b = backoffAfter(status || 599, c.rss_state, c.rss_interval_sec, now);
@@ -326,13 +329,12 @@ const allIds = [...new Set(fetched.flatMap((f) => f.entries.map((e) => e.video_i
 interface Snap {
   title: string | null; description: string | null; published_at: Date | null;
   title_observed_at: Date | null;
-  /** Last stored rss_samples reading, for the change-based dedupe. */
-  lastSample?: { views: number | null; at: Date };
   descVersion?: number; descSha?: string;
   titleMaxVersion?: number;
   thumbVersion?: number; thumbLastChecked?: Date;
 }
 const snap = new Map<string, Snap>();
+const lastSamples = new Map<string, { views: number | null; at: Date }>();
 // Chunked so no single statement carries a 60K-element array.
 let snapshotComplete = true;
 for (const part of chunk(allIds, CHUNK)) {
@@ -365,21 +367,22 @@ for (const part of chunk(allIds, CHUNK)) {
   }
   for (const r of t.rows) { const s = snap.get(r.video_id); if (s) s.titleMaxVersion = r.v; }
   for (const r of th.rows) { const s = snap.get(r.video_id); if (s) { s.thumbVersion = r.version; s.thumbLastChecked = r.last_checked; } }
-  for (const r of ls.rows) { const s = snap.get(r.video_id); if (s) s.lastSample = { views: r.views == null ? null : Number(r.views), at: r.at }; }
+  for (const r of ls.rows) lastSamples.set(r.video_id, { views: r.views == null ? null : Number(r.views), at: r.at });
 }
 const snapSecs = secs(t1);
-if (!snapshotComplete) { fetched.length = 0; log('snapshot aborted mid-way; skipping the diff so no feed is half-read'); }
+if (!snapshotComplete) log('snapshot aborted mid-way; skipping the diff so no feed is half-read');
 log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} already in the corpus`);
 
 // ---------------------------------------------------------------- phase 3: diff, in memory
 
 const t2 = Date.now();
-const nowIso = now.toISOString();
 let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
 let sampled = 0, skippedSamples = 0;
 const diffedChannels = new Set<string>();
 
-for (const f of fetched) {
+for (const f of snapshotComplete ? fetched : []) {
+  const observedAt = f.observedAt;
+  const nowIso = observedAt.toISOString();
   // startManagedJob's run budget can abort mid-phase. A channel whose feed we fetched but did
   // NOT finish diffing must not be recorded as polled, or its changes would be dropped until
   // the next 15-minute cycle — diffedChannels is what the flush filters on.
@@ -393,7 +396,7 @@ for (const f of fetched) {
       // Keep the reading either way (unknownEntryPlan): rss_samples has no FK to videos, so the
       // launch-minute view count survives the wait for the drainer to import the video. Before
       // 2026-09-04 this branch dropped it and the first stored reading came from import time.
-      const plan = unknownEntryPlan(e, now);
+      const plan = unknownEntryPlan(e, observedAt, lastSamples.get(e.video_id));
       if (plan.queue) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
       else skippedOld++;
       if (plan.sample) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
@@ -403,7 +406,7 @@ for (const f of fetched) {
     // Free stats trace for EVERY entry the feed carries, deduped on change rather than on age
     // (shouldStoreSample). The old 30-day gate threw away the back-catalogue readings the
     // long-tail fit has no data for, and still wrote a repeat row every tick for young videos.
-    if (shouldStoreSample(cur.lastSample ?? null, e.views, now)) {
+    if (shouldStoreSample(lastSamples.get(e.video_id), e.views, observedAt)) {
       buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes });
       sampled++;
     } else {
@@ -464,11 +467,11 @@ for (const f of fetched) {
 
 // Drop the channel-state rows for feeds we fetched but never got to diff (budget abort). They
 // stay due and are re-polled next tick: one wasted fetch, never a missed change. Channels that
-// 304'd, matched on body hash, or errored were never in `fetched` and are kept.
+// 304'd or errored were never in `fetched` and are kept.
 const fetchedIds = new Set(fetched.map((f) => f.channel_id));
 const droppedChannels = buf.channels.filter((c) => fetchedIds.has(c.channel_id) && !diffedChannels.has(c.channel_id)).length;
 if (droppedChannels) {
-  buf.channels = buf.channels.filter((c) => !fetchedIds.has(c.channel_id) || diffedChannels.has(c.channel_id));
+  buf.channels = completedChannelRows(buf.channels, fetchedIds, diffedChannels);
   log(`ABORTED mid-tick: ${droppedChannels} fetched feeds left un-diffed and still due`);
 }
 const diffSecs = secs(t2);
@@ -477,11 +480,17 @@ const diffSecs = secs(t2);
 
 const t3 = Date.now();
 let written: Record<string, number> = {};
+// Journal BEFORE the first write: a hard process exit during flush is replayable too.
+fs.mkdirSync(path.dirname(PENDING), { recursive: true });
+const pendingTmp = `${PENDING}.tmp`;
+const pendingFd = fs.openSync(pendingTmp, 'w');
+try { fs.writeFileSync(pendingFd, JSON.stringify(buf) + '\n'); fs.fsyncSync(pendingFd); }
+finally { fs.closeSync(pendingFd); }
+fs.renameSync(pendingTmp, PENDING);
 try {
   written = await flush(buf);
+  fs.unlinkSync(PENDING);
 } catch (e) {
-  fs.mkdirSync(path.dirname(PENDING), { recursive: true });
-  fs.appendFileSync(PENDING, JSON.stringify(buf) + '\n');
   console.error(`FLUSH FAILED, buffered to ${PENDING} for the next tick: ${(e as Error).message}`);
   process.exitCode = 1;
 }

@@ -153,7 +153,7 @@ export function shouldStoreSample(
   views: number | null | undefined,
   now: Date = new Date()
 ): boolean {
-  if (views == null) return false;
+  if (views == null || !Number.isFinite(Number(views)) || Number(views) < 0) return false;
   if (!prev) return true;
   if (prev.views == null || Number(prev.views) !== Number(views)) return true;
   const age = now.getTime() - new Date(prev.at).getTime();
@@ -176,10 +176,11 @@ export function shouldStoreSample(
 export function unknownEntryPlan(
   entry: { published?: string | null; views?: number | null },
   now: Date = new Date(),
+  previous?: PrevSample | null,
 ): { queue: boolean; sample: boolean } {
   return {
     queue: isNewUpload(entry.published, now),
-    sample: entry.views != null,
+    sample: shouldStoreSample(previous, entry.views, now),
   };
 }
 
@@ -188,21 +189,15 @@ export function unknownEntryPlan(
  * query in the poller's SNAPSHOT phase — never a per-channel query inside the fetch loop
  * (the shape that cost ~0.40 s/channel before the 2026-09-03 rewrite). $1 = video ids.
  */
-export const LAST_SAMPLES_SQL = `select distinct on (video_id) video_id, views, at
-     from rss_samples where video_id = any($1)
-    order by video_id, at desc`;
+export const LAST_SAMPLES_SQL = `select latest.video_id, latest.views, latest.at
+  from unnest($1::text[]) as requested(video_id)
+  cross join lateral (
+    select s.video_id, s.views, s.at from rss_samples s
+    where s.video_id = requested.video_id order by s.at desc limit 1
+  ) latest`;
 
-/**
- * What a 200 response is worth. The feed carries no ETag, so the body hash is our only
- * "nothing changed" signal — and when it says nothing changed, nothing at all is written for
- * the channel's videos: no rss_samples, no title/description diffs, no due-now marks. Only
- * rss_last_polled moves. A sample row for a byte-identical feed would just duplicate the
- * previous row's counts, so it is noise in the dense trace, not data.
- *
- * Any change to the body — including the view/like counts embedded in media:statistics —
- * makes the poll a full one, so real traces never lose a point.
- */
-export function shouldProcessEntries(
+/** Byte-change telemetry only. Even unchanged bodies must reach sample heartbeat/title checks. */
+export function hasFeedBodyChanged(
   storedBodySha: string | null | undefined,
   bodySha: string
 ): boolean {
@@ -342,3 +337,8 @@ export const STATE_COUNTS_SQL = `select c.rss_state,
      from channel_rss_state c
     where (not $1::boolean or exists (select 1 from watch_subset w where w.channel_id = c.channel_id))
     group by 1`;
+
+/** Fetched-but-undiffed feeds remain due, including an entirely aborted snapshot phase. */
+export function completedChannelRows<T extends { channel_id: string }>(rows: T[], fetchedIds: ReadonlySet<string>, diffedIds: ReadonlySet<string>): T[] {
+  return rows.filter(r => !fetchedIds.has(r.channel_id) || diffedIds.has(r.channel_id));
+}

@@ -1,4 +1,4 @@
-// Model v3 scorer. Direct Postgres only.
+// Model v5 scorer with versioned RSS observation contract. Direct Postgres only.
 //   npx tsx scripts/score-videos.ts --fit        refit global params from the last 12 months (nightly)
 //   npx tsx scripts/score-videos.ts [--all]      score videos published <=60d whose latest snapshot/sample
 //                                                is newer than their stored score (hourly); --all rescoress all
@@ -9,7 +9,7 @@
 // Baselines: a prior video's day-30 views come from its day-27..33 snapshot when it has one,
 // otherwise (age >= 45d) from its current lifetime count divided back down the fitted long-tail
 // curve. That is what lets sparsely tracked channels get a baseline at all.
-// Reads: videos, view_snapshots, view_samples, score_params. Writes: video_scores, score_params (--fit).
+// Reads: videos, view_snapshots, view_samples, rss_samples, score_params. Writes: video_scores, score_params (--fit).
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
@@ -31,13 +31,14 @@ import {
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
+import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
 const FINAL = process.argv.includes('--final');
 // Final rows are written once and never revisited; the version marks them so we can skip them.
-const FINAL_VERSION = `${MODEL_VERSION}-final`;
+const FINAL_VERSION = `${OBSERVATION_SCORE_VERSION}-final`;
 const arg = (name: string): string | null => {
   const i = process.argv.indexOf(name);
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : null;
@@ -58,24 +59,24 @@ const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.que
 
 // Snapshot record for a set of videos: daily snapshots + high-res samples, as true-age days.
 async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
+  if (!ids.length) return new Map();
+  // Fitting retains its approved paid-only input contract; RSS rollout does not refit v5.0.
+  if (FIT) {
+    const rows = await q(`select x.video_id, extract(epoch from (x.at - v.published_at))/86400.0 as day, x.views
+      from (select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views from view_snapshots where video_id = any($1)
+        union all select video_id, sampled_at, view_count from view_samples where video_id = any($1)) x
+      join videos v on v.id = x.video_id where x.views > 0 and x.at >= v.published_at order by x.video_id, x.at`, [ids]);
+    const out = new Map<string, Snapshot[]>();
+    for (const r of rows) {
+      if (!out.has(r.video_id)) out.set(r.video_id, []);
+      out.get(r.video_id)!.push({ day: Number(r.day), views: Number(r.views) });
+    }
+    return out;
+  }
   const out = new Map<string, Snapshot[]>();
-  const rows = await q(
-    // Two sources only. rss_samples is deliberately NOT read here: the 2026-09-04 benchmark
-    // (docs/benchmarks/CHANGELOG.md, v3.1-candidate-3) rejected it for doubling day-1->2 churn,
-    // and the correlated 12h dedupe it needed ran >150 s on 5,000 prior ids, killing the hourly
-    // run (57014). Re-propose through the outlier-score skill's protocol, never here directly.
-    `select x.video_id, extract(epoch from (x.at - v.published_at))/86400.0 as day, x.views
-       from (select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views from view_snapshots where video_id = any($1)
-             union all
-             select video_id, sampled_at, view_count from view_samples where video_id = any($1)) x
-       join videos v on v.id = x.video_id
-      where x.views > 0 and x.at >= v.published_at
-      order by x.video_id, x.at`,
-    [ids]
-  );
-  for (const r of rows) {
-    if (!out.has(r.video_id)) out.set(r.video_id, []);
-    out.get(r.video_id)!.push({ day: Number(r.day), views: Number(r.views) });
+  // Bound each key array: very large IN sets can turn these reads into corpus-wide scans.
+  for (const part of chunk(ids, 100)) {
+    for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
   }
   return out;
 }
@@ -331,33 +332,40 @@ const SCORE_COLUMNS = [
 
 type ScoreRow = Record<(typeof SCORE_COLUMNS)[number], any>;
 
-/** Upsert the current answers and append the history rows, in one round trip each. */
-async function writeScores(rows: ScoreRow[]) {
+/** Current answer and history commit together. The read watermark leaves concurrently arriving evidence dirty. */
+async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
   if (!rows.length) return 0;
   const values: any[] = []; const tuples: string[] = [];
   for (const r of rows) {
     const i = values.length;
     for (const c of SCORE_COLUMNS) values.push(r[c] ?? null);
-    tuples.push(`(${SCORE_COLUMNS.map((_, k) => `$${i + k + 1}`).join(',')},now())`);
+    values.push(readStartedAt);
+    tuples.push(`(${SCORE_COLUMNS.map((_, k) => `$${i + k + 1}`).join(',')},$${values.length})`);
   }
   const set = SCORE_COLUMNS.filter((c) => c !== 'video_id')
     .map((c) => `${c}=excluded.${c}`).join(', ');
-  await pool.query(
-    `insert into video_scores (${SCORE_COLUMNS.join(', ')}, scored_at)
-     values ${tuples.join(',')}
-     on conflict (video_id) do update set ${set}, scored_at=excluded.scored_at`,
-    values
-  );
-  const hist = historyInsert(rows.map((r) => ({
-    video_id: r.video_id, channel_id: r.channel_id, model_version: r.model_version,
-    age_days: r.age_days, views: r.views, score: r.score, same_age_ratio: r.same_age_ratio,
-    typical_at_age: r.typical_at_age, n_typical: r.n_typical,
-    typical_measured_share: r.typical_measured_share, projection: r.projection,
-    projection_horizon: r.projection_horizon, est30: r.est30, baseline: r.baseline,
-    n_baseline: r.n_baseline, confidence: r.confidence,
-    extra: { q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime },
-  })));
-  if (hist) await pool.query(hist.text, hist.values);
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    await client.query(
+      `insert into video_scores (${SCORE_COLUMNS.join(', ')}, scored_at)
+       values ${tuples.join(',')}
+       on conflict (video_id) do update set ${set}, scored_at=excluded.scored_at`,
+      values
+    );
+    const hist = historyInsert(rows.map((r) => ({
+      video_id: r.video_id, channel_id: r.channel_id, model_version: r.model_version,
+      age_days: r.age_days, views: r.views, score: r.score, same_age_ratio: r.same_age_ratio,
+      typical_at_age: r.typical_at_age, n_typical: r.n_typical,
+      typical_measured_share: r.typical_measured_share, projection: r.projection,
+      projection_horizon: r.projection_horizon, est30: r.est30, baseline: r.baseline,
+      n_baseline: r.n_baseline, confidence: r.confidence,
+      extra: { params_version: MODEL_VERSION, observation_version: OBSERVATION_SCORE_VERSION, q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime },
+    })));
+    if (hist) await client.query(hist.text, hist.values);
+    await client.query('commit');
+  } catch (error) { await client.query('rollback'); throw error; }
+  finally { client.release(); }
   return rows.length;
 }
 
@@ -450,6 +458,7 @@ async function score() {
           left join video_scores sc on sc.video_id = v.id
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceiling} ${chFilter}
             and (sc.video_id is null
+                 or exists (select 1 from rss_samples r where r.video_id = v.id and r.at > sc.scored_at and r.at <= now() and r.views >= 0)
                  or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
                  or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
           order by v.published_at desc ${cap}`,
@@ -458,9 +467,10 @@ async function score() {
   log(`score: ${targets.length} videos to score${SINCE ? ` (--since ${SINCE}d)` : ALL ? ' (--all: whole corpus)' : ''}`);
   let written = 0, noCurve = 0, tooYoung = 0;
   for (const group of chunk(targets, 500)) {
+    const readStartedAt = new Date();
     const batch = await v5Batch(group, params);
     for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
-    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, MODEL_VERSION, b.views, b.o)));
+    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, OBSERVATION_SCORE_VERSION, b.views, b.o)), readStartedAt);
     if (written % 5000 < 500) log(`score: ${written} written`);
     if (ALL) await sleep(SLEEP_MS);   // --all walks the whole corpus; pace it
   }
@@ -487,9 +497,10 @@ async function final() {
   log(`final: ${targets.length} videos older than 60 days`);
   let written = 0, noCurve = 0;
   for (const group of chunk(targets, 500)) {
+    const readStartedAt = new Date();
     const batch = await v5Batch(group, params);
     for (const b of batch) if (b.o.score == null) noCurve++;
-    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, FINAL_VERSION, b.views, b.o)));
+    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, FINAL_VERSION, b.views, b.o)), readStartedAt);
     if (written % 5000 < 500) log(`final: ${written} written`);
     await sleep(SLEEP_MS);   // paced: this walks the long tail of the corpus
   }
@@ -525,6 +536,7 @@ async function v5() {
           left join video_scores sc on sc.video_id = v.id
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
             and (sc.video_id is null
+                 or exists (select 1 from rss_samples r where r.video_id = v.id and r.at > sc.scored_at and r.at <= now() and r.views >= 0)
                  or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
                  or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
           order by v.published_at desc ${cap}`,
@@ -542,7 +554,7 @@ async function v5() {
       if (o.score == null) noCurve++;
       scored++;
       lines.push([
-        t.id, t.channel_id, MODEL_VERSION, o.ageDays.toFixed(4), views,
+        t.id, t.channel_id, OBSERVATION_SCORE_VERSION, o.ageDays.toFixed(4), views,
         o.score ?? '', o.typicalAtAge?.toFixed(2) ?? '', o.nTypical, o.typicalNeff.toFixed(3),
         o.typicalMeasuredShare.toFixed(4), o.projection.toFixed(2), o.projectionHorizon,
         o.q ?? '', o.confidence,

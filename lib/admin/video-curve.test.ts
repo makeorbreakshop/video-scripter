@@ -157,19 +157,19 @@ describe('mergeActuals', () => {
     expect(out.map((p) => p.source)).toEqual(['sample', 'sample', 'snapshot']);
     expect(out[2].views).toBe(500);
   });
-  test('drops points before publish, non-positive views, and exact duplicate days (snapshot wins)', () => {
+  test('drops pre-publish points; keeps zero and gives timed samples precedence', () => {
     const out = mergeActuals(
       pub,
       [{ at: '2026-08-02T12:00:00Z', views: 300 }],
       [{ at: '2026-07-30T12:00:00Z', views: 10 }, { at: '2026-08-02T12:00:00Z', views: 299 }, { at: '2026-08-03T12:00:00Z', views: 0 }]
     );
-    expect(out).toEqual([{ day: 1, views: 300, source: 'snapshot', at: '2026-08-02T12:00:00.000Z' }]);
+    expect(out).toEqual([{ day: 1, views: 299, source: 'sample', at: '2026-08-02T12:00:00.000Z' }, { day: 2, views: 0, source: 'sample', at: '2026-08-03T12:00:00.000Z' }]);
   });
   test('handles empty input', () => { expect(mergeActuals(pub, [], [])).toEqual([]); });
 });
 
 
-describe('mergeActuals source priority (snapshot > sample > rss)', () => {
+describe('mergeActuals shared RSS observation contract', () => {
   const pub = '2026-08-01T12:00:00Z';
 
   test('an rss reading fills a day with no paid reading at all', () => {
@@ -177,21 +177,21 @@ describe('mergeActuals source priority (snapshot > sample > rss)', () => {
     expect(out).toEqual([{ day: 5, views: 900, source: 'rss', at: '2026-08-06T12:00:00.000Z' }]);
   });
 
-  test('a snapshot within 12h shadows the rss reading', () => {
+  test('real RSS evidence supersedes the synthetic daily anchor', () => {
     const out = mergeActuals(pub,
       [{ at: '2026-08-06T12:00:00Z', views: 1000 }],
       [],
       [{ at: '2026-08-06T20:00:00Z', views: 1010 }]);
-    expect(out.map((p) => p.source)).toEqual(['snapshot']);
-    expect(out[0].views).toBe(1000);
+    expect(out.map((p) => p.source)).toEqual(['rss']);
+    expect(out[0].views).toBe(1010);
   });
 
-  test('a sample within 12h shadows the rss reading', () => {
+  test('a neighboring paid sample does not erase RSS evidence', () => {
     const out = mergeActuals(pub,
       [],
       [{ at: '2026-08-06T12:00:00Z', views: 1000 }],
       [{ at: '2026-08-06T18:00:00Z', views: 1010 }]);
-    expect(out.map((p) => p.source)).toEqual(['sample']);
+    expect(out.map((p) => p.source)).toEqual(['sample', 'rss']);
   });
 
   test('an rss reading more than 12h from any paid reading survives', () => {
@@ -205,7 +205,7 @@ describe('mergeActuals source priority (snapshot > sample > rss)', () => {
   test('on the exact same instant the stronger source wins, in either input order', () => {
     const at = '2026-08-06T12:00:00Z';
     expect(mergeActuals(pub, [{ at, views: 1 }], [{ at, views: 2 }], [{ at, views: 3 }])[0])
-      .toMatchObject({ source: 'snapshot', views: 1 });
+      .toMatchObject({ source: 'sample', views: 2 });
     expect(mergeActuals(pub, [], [{ at, views: 2 }], [{ at, views: 3 }])[0])
       .toMatchObject({ source: 'sample', views: 2 });
   });
@@ -215,13 +215,13 @@ describe('mergeActuals source priority (snapshot > sample > rss)', () => {
     expect(out.map((p) => p.source)).toEqual(['snapshot']);
   });
 
-  test('rss points still collapse a repeated identical count', () => {
+  test('rss retains both endpoints of a flat interval', () => {
     const out = mergeActuals(pub, [], [], [
       { at: '2026-08-06T00:00:00Z', views: 900 },
       { at: '2026-08-06T12:00:00Z', views: 900 },
       { at: '2026-08-10T00:00:00Z', views: 1200 },
     ]);
-    expect(out.map((p) => p.views)).toEqual([900, 1200]);
+    expect(out.map((p) => p.views)).toEqual([900, 900, 1200]);
   });
 });
 

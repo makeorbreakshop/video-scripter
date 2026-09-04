@@ -8,7 +8,7 @@ import {
   parseRssEntries,
   decodeEntities,
   isUpdatedSince,
-  shouldProcessEntries,
+  hasFeedBodyChanged,
   isNewUpload,
   shouldStoreSample,
   SAMPLE_HEARTBEAT_MS,
@@ -160,9 +160,9 @@ describe('shouldStoreSample (the change-based rss_samples rule)', () => {
   });
 
   it('the last-reading lookup is one set-based query keyed on the feed video ids', () => {
-    expect(LAST_SAMPLES_SQL).toContain('distinct on (video_id)');
-    expect(LAST_SAMPLES_SQL).toContain('video_id = any($1)');
-    expect(LAST_SAMPLES_SQL).toContain('order by video_id, at desc');
+    expect(LAST_SAMPLES_SQL).toContain('cross join lateral');
+    expect(LAST_SAMPLES_SQL).toContain('unnest($1::text[])');
+    expect(LAST_SAMPLES_SQL).toContain('order by s.at desc limit 1');
   });
 });
 
@@ -225,20 +225,20 @@ describe('isUpdatedSince', () => {
   });
 });
 
-describe('shouldProcessEntries (the unchanged-body rule)', () => {
+describe('hasFeedBodyChanged (the unchanged-body rule)', () => {
   // A byte-identical feed means identical view/like counts too, so an rss_samples row would
   // duplicate the previous one. Nothing is written for the channel's videos on that poll.
-  it('skips all per-entry work — rss_samples included — when the body hash is unchanged', () => {
-    expect(shouldProcessEntries('abc123', 'abc123')).toBe(false);
+  it('reports identical bodies without deciding whether heartbeat/evidence work is due', () => {
+    expect(hasFeedBodyChanged('abc123', 'abc123')).toBe(false);
   });
 
   it('does the full poll whenever the body differs at all, including view-count-only changes', () => {
-    expect(shouldProcessEntries('abc123', 'def456')).toBe(true);
+    expect(hasFeedBodyChanged('abc123', 'def456')).toBe(true);
   });
 
   it('does the full poll on the first ever sight of a channel', () => {
-    expect(shouldProcessEntries(null, 'abc123')).toBe(true);
-    expect(shouldProcessEntries(undefined, 'abc123')).toBe(true);
+    expect(hasFeedBodyChanged(null, 'abc123')).toBe(true);
+    expect(hasFeedBodyChanged(undefined, 'abc123')).toBe(true);
   });
 });
 
@@ -346,5 +346,19 @@ describe('unknownEntryPlan (a feed entry we have no video row for)', () => {
 
   it('treats a missing published date as not-news', () => {
     expect(unknownEntryPlan({ published: null, views: 5 }, now).queue).toBe(false);
+  });
+});
+
+describe('collector completion and unknown samples', () => {
+  test('unchanged unknown IDs dedupe just like known videos', () => {
+    const { unknownEntryPlan } = require('./poll-policy');
+    const now = new Date('2026-09-04T14:00:00Z');
+    expect(unknownEntryPlan({ published: '2026-09-04T13:00:00Z', views: 10 }, now, { views: 10, at: now }).sample).toBe(false);
+  });
+  test('aborted snapshot never advances fetched channel hashes', () => {
+    const { completedChannelRows } = require('./poll-policy');
+    const rows = [{ channel_id: 'fetched' }, { channel_id: 'error' }];
+    expect(completedChannelRows(rows, new Set(['fetched']), new Set())).toEqual([{ channel_id: 'error' }]);
+    expect(completedChannelRows(rows, new Set(['fetched']), new Set(['fetched']))).toEqual(rows);
   });
 });
