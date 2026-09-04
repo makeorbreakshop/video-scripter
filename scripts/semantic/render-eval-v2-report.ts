@@ -55,7 +55,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
                 count(*) filter (where score is not null)::bigint as numeric_scores,
                 count(*) filter (where score >= 2 and confidence in ('likely','confirmed'))::bigint as trusted_outliers,
                 count(distinct channel_id)::bigint as channels
-           from video_scores
+           from video_scores_by_version
           where model_version = 'v3.1-semantic-backfill-2026-09'`,
       ),
       db().query<{ rows: string; with_abs: string; packaging_only: string }>(

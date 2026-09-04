@@ -18,6 +18,7 @@ import { thumbnailVariants, testState, type Variant, type TestState } from './pa
 import { buildTimeline, timelineTicks, type TimelineClip } from './packaging-timeline';
 import { experiments, type Experiment } from './experiment';
 import { horizonFor } from './chart-horizon';
+import { scoreParamsQuery } from './score-version';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
 import { etDateTime } from '../admin/format';
 
@@ -136,8 +137,7 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
     ),
     one<any>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
     one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null }>(
-      `select params->'mult' as mult, params->'longtail' as longtail
-         from score_params where model_version = 'v3.0' order by fitted_at desc limit 1`
+      ...scoreParamsQuery(`params->'mult' as mult, params->'longtail' as longtail`)
     ),
     q<{ version: number; r2_uploaded_at: string | null }>(
       `select version, r2_uploaded_at from thumbnail_versions where video_id = $1 order by version`,
