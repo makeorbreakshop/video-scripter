@@ -13,6 +13,7 @@ import {
 import { parseInspirationDistance, type InspirationDistance } from '@/lib/semantic/inspiration';
 import { updateInspirationFeedback } from './actions';
 import styles from './inspiration.module.css';
+import { InspirationTarget } from '@/app/app/_components/inspiration-target';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,16 +120,11 @@ export default async function InspirationPage({
       </div>
 
       <form className={styles.controls} method="get">
-        <label className={styles.field}>
+        <div className={styles.field}>
           <span className={styles.label}>Build for</span>
-          <select className={styles.select} name="channel" defaultValue={target.channelId}>
-            {targets.map((item) => (
-              <option key={item.channelId} value={item.channelId}>
-                {item.name}{item.role === 'self' ? ' — your channel' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
+          <InspirationTarget targets={targets} value={target.channelId} distance={distance} />
+          <input type="hidden" name="channel" value={target.channelId} />
+        </div>
         <fieldset className={styles.distance}>
           <legend>How far outside its territory?</legend>
           <div className={styles.modes}>
