@@ -1,5 +1,5 @@
 import {
-  addChannelMode, baselineLabel, sortChannels, matchesChannel, filterChannels, shouldOfferAdd, planLabel, usageView,
+  addChannelMode, baselineLabel, isBackfilling, sortChannels, matchesChannel, filterChannels, shouldOfferAdd, planLabel, usageView,
   markAlreadyTracked, addChannelError, MIN_SEARCH_LEN, avatarAt, pickerMeta,
 } from './channel-view';
 import { PLANS } from './plans';
@@ -33,6 +33,27 @@ describe('baselineLabel', () => {
   });
   it('renders a missing baseline rather than zero', () => {
     expect(baselineLabel(row({ baseline: null }))).toBe('—');
+  });
+  it('says a channel is still importing rather than showing it as empty', () => {
+    expect(baselineLabel(row({ baseline: null, backfill_status: 'queued' }))).toBe('backfilling');
+    expect(baselineLabel(row({ baseline: null, backfill_status: 'running' }))).toBe('backfilling');
+  });
+  it('keeps the dash for a channel that finished importing and still has no baseline', () => {
+    expect(baselineLabel(row({ baseline: null, backfill_status: 'done' }))).toBe('—');
+    expect(baselineLabel(row({ baseline: null, backfill_status: 'failed' }))).toBe('—');
+  });
+  it('shows the number once there is one, whatever the queue says', () => {
+    expect(baselineLabel(row({ baseline: 52000, backfill_status: 'running' }))).toBe('52K');
+  });
+});
+
+describe('isBackfilling', () => {
+  it('is the open half of the queue, not every non-done state', () => {
+    expect(isBackfilling(row({ backfill_status: 'queued' }))).toBe(true);
+    expect(isBackfilling(row({ backfill_status: 'running' }))).toBe(true);
+    expect(isBackfilling(row({ backfill_status: 'done' }))).toBe(false);
+    expect(isBackfilling(row({ backfill_status: 'failed' }))).toBe(false);
+    expect(isBackfilling(row({ backfill_status: null }))).toBe(false);
   });
 });
 

@@ -875,6 +875,8 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 
 /* An empty list still has its card: one quiet line where the rows would be. */
 .cs-cnone { padding: 40px 16px; text-align: center; color: var(--cs-muted); font-size: 14px; }
+/* The paging sentinel: one row's worth of space at the bottom of the rendered slice. */
+.cs-cmore { height: 60px; }
 .cs-crow { height: 60px; position: relative; }
 .cs-crow:hover { background: var(--cs-surface-2); }
 .cs-crow[data-selected="true"] { background: var(--cs-accent-soft); }
@@ -916,6 +918,8 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 .cs-crow-base span { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
 .cs-crow-base span[data-dir="up"] { color: var(--cs-accent); }
 .cs-crow-base span[data-dir="down"] { color: var(--cs-bad); }
+/* Waiting on the back-catalog: a word, at the weight of an absent number. */
+.cs-crow-base b[data-wait] { font-size: 12px; font-weight: 400; color: var(--cs-muted); }
 
 /* Select mode's checkbox lane. */
 .cs-check {

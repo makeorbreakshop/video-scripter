@@ -25,7 +25,7 @@ import { Menu, Sort, type MenuItem } from '@/components/app/menu';
 import { Chips } from '@/components/app/chips';
 import { Coin } from '@/components/app/coin';
 import {
-  baselineLabel, filterChannels, shouldOfferAdd, sortChannels, type ChannelRowLike,
+  baselineLabel, filterChannels, isBackfilling, shouldOfferAdd, sortChannels, type ChannelRowLike,
 } from '@/lib/app/channel-view';
 import {
   filterByGroup, groupCounts, groupColorVar, notifyGate, percentLabel, recencyLabel,
@@ -40,6 +40,14 @@ export interface ChannelRow extends ChannelRowLike {
   last_upload_at: string | null;
   spark: { points: SparkPoint[]; pct: number | null } | null;
 }
+
+/**
+ * How many rows are in the DOM at once. Each row carries an avatar, an inline SVG and two
+ * menus; at 500 of them the page took ~22 s to become interactive. Search and the group chips
+ * still run over the whole list — only the rendered slice is capped, and it grows as you
+ * reach the bottom.
+ */
+const PAGE = 60;
 
 const SORTS = [
   { key: 'baseline', label: 'Baseline' },
@@ -166,10 +174,14 @@ function ChannelRows({
   const [confirming, setConfirming] = useState<string[] | null>(null);
 
   const activeGroup = params?.get('group') || null;
+  const [limit, setLimit] = useState(PAGE);
 
   const sorted = useMemo(() => sortRows(rows, sort), [rows, sort]);
   const searched = useMemo(() => filterChannels(sorted, query), [sorted, query]);
   const shown = useMemo(() => filterByGroup(searched, activeGroup), [searched, activeGroup]);
+  const visible = useMemo(() => shown.slice(0, limit), [shown, limit]);
+  // A new filter is a new list: start it at the top again.
+  useEffect(() => { setLimit(PAGE); }, [query, sort, activeGroup]);
   const counts = useMemo(() => groupCounts(rows, groups), [rows, groups]);
   // Built once for the whole list, not once per row on every keystroke.
   const byId = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
@@ -369,13 +381,14 @@ function ChannelRows({
         </div>
         {shown.length === 0 ? (
           <div className="cs-cnone">{emptyLabel(rows.length, query, activeGroupName)}</div>
-        ) : shown.map((c, i) => (
+        ) : visible.map((c, i) => (
           <Row
             key={c.channel_id}
             row={c}
             eager={i < 16}
             byId={byId}
-            items={groupItems([c])}
+            groups={groups}
+            counts={counts}
             readOnly={readOnly}
             selectMode={selectMode}
             selected={selected.has(c.channel_id)}
@@ -391,6 +404,9 @@ function ChannelRows({
             notifyBlocked={meter.atLimit && !c.notify}
           />
         ))}
+        {visible.length < shown.length && (
+          <MoreRows onReach={() => setLimit((n) => n + PAGE)} />
+        )}
       </div>
 
       {confirming && (
@@ -404,6 +420,26 @@ function ChannelRows({
   );
 }
 
+/**
+ * The bottom of the rendered slice. Reaching it loads the next page — no button, because the
+ * list has no page boundary to name.
+ */
+function MoreRows({ onReach }: { onReach: () => void }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // No IntersectionObserver (older Safari, jsdom) means no lazy paging: load it all.
+    if (typeof IntersectionObserver === 'undefined') { onReach(); return; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) onReach();
+    }, { rootMargin: '600px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onReach]);
+  return <div ref={ref} className="cs-cmore" aria-hidden="true" />;
+}
+
 /** What an empty list says. A name, never a sentence explaining the page. */
 function emptyLabel(total: number, query: string, group: string | null): string {
   if (total === 0) return 'No channels';
@@ -413,14 +449,19 @@ function emptyLabel(total: number, query: string, group: string | null): string 
 }
 
 const Row = memo(function Row({
-  row, byId, items, readOnly, selectMode, selected, onSelect, onToggleGroup, onCreateGroup,
+  row, byId, groups, counts, readOnly, selectMode, selected, onSelect, onToggleGroup, onCreateGroup,
   onError, onNotify, onRemove, notifyBlocked, eager,
 }: {
   row: ChannelRow;
   /** Above the fold: fetch the avatar now rather than lazily. */
   eager?: boolean;
   byId: Map<string, GroupLike>;
-  items: MenuItem[];
+  /**
+   * The group menu's items are built here, from stable props. Built by the parent they were a
+   * fresh array on every keystroke, which made the memo above do nothing at all.
+   */
+  groups: GroupLike[];
+  counts: Record<string, number>;
   readOnly?: boolean;
   selectMode: boolean;
   selected: boolean;
@@ -433,6 +474,18 @@ const Row = memo(function Row({
   notifyBlocked: boolean;
 }) {
   const mine = row.groups.map((id) => byId.get(id)).filter(Boolean) as GroupLike[];
+  const items: MenuItem[] = useMemo(
+    () => groups.map((g) => ({
+      key: g.id,
+      label: g.name,
+      color: groupColorVar(g.color),
+      count: counts[g.id] ?? 0,
+      state: triState([row], g.id),
+    })),
+    [groups, counts, row]
+  );
+  // Nothing to draw and nothing to average yet: the catalog is still coming in.
+  const waiting = isBackfilling(row) && row.baseline == null;
   const pct = row.spark?.pct ?? null;
   const dir = sparkDirection(pct);
   const name = row.name || row.channel_id;
@@ -483,7 +536,7 @@ const Row = memo(function Row({
       </div>
 
       <span className="cs-l-spark">
-        {row.spark?.points?.length ? (
+        {waiting ? null : row.spark?.points?.length ? (
           <svg className="cs-spark" width="120" height="28" viewBox="0 0 120 28" data-dir={dir} aria-hidden="true">
             <polyline points={sparkPath(row.spark.points)} fill="none" stroke="currentColor"
                       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -497,7 +550,7 @@ const Row = memo(function Row({
       </span>
 
       <div className="cs-l-base cs-crow-base">
-        <b>{baselineLabel(row)}</b>
+        <b data-wait={waiting || undefined}>{baselineLabel(row)}</b>
         <span data-dir={dir}>{percentLabel(pct)}</span>
       </div>
 

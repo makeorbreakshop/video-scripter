@@ -38,9 +38,20 @@ export interface ChannelRowLike {
   last_packaging_change: string | null;
 }
 
+/**
+ * A channel whose back-catalog has not been imported yet has no baseline because there is
+ * nothing to compute one from — not because the number is missing. Say which.
+ */
+export function isBackfilling(row: Pick<ChannelRowLike, 'backfill_status'>): boolean {
+  return row.backfill_status === 'queued' || row.backfill_status === 'running';
+}
+
 /** The one number a channel row shows: the day-30 baseline, formatted as the feed formats views. */
-export function baselineLabel(row: Pick<ChannelRowLike, 'baseline'>): string {
-  return row.baseline === null || row.baseline === undefined ? '—' : compactNumber(row.baseline);
+export function baselineLabel(row: Pick<ChannelRowLike, 'baseline' | 'backfill_status'>): string {
+  if (row.baseline === null || row.baseline === undefined) {
+    return isBackfilling(row) ? 'backfilling' : '—';
+  }
+  return compactNumber(row.baseline);
 }
 
 /** The user's own channel first, then the biggest baselines. An unknown baseline sorts last. */
