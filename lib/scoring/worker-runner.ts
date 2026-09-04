@@ -25,11 +25,19 @@ export async function runScoringWorker(options: ScoringWorkerOptions): Promise<'
   }
 }
 
-/** Keep each database unit bounded without disturbing the selection query's priority order. */
+/** Pack shared priors within the bounded lookahead, retaining first-seen channel priority. */
 export function scoringTargetBatches<T extends { channel_id?: string }>(targets: T[]): T[][] {
+  const grouped = new Map<string, T[]>();
+  targets.forEach((target, index) => {
+    const key = target.channel_id || `__ungrouped_${index}`;
+    const group = grouped.get(key);
+    if (group) group.push(target);
+    else grouped.set(key, [target]);
+  });
+  const ordered = [...grouped.values()].flat();
   const batches: T[][] = [];
-  for (let i = 0; i < targets.length; i += SCORING_TARGET_BATCH_SIZE) {
-    batches.push(targets.slice(i, i + SCORING_TARGET_BATCH_SIZE));
+  for (let i = 0; i < ordered.length; i += SCORING_TARGET_BATCH_SIZE) {
+    batches.push(ordered.slice(i, i + SCORING_TARGET_BATCH_SIZE));
   }
   return batches;
 }

@@ -475,7 +475,7 @@ async function score(signal: AbortSignal) {
       const batch = await v5Batch(group, params);
       for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
       written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, OBSERVATION_SCORE_VERSION, b.views, b.o)), readStartedAt);
-      if (written % 5000 < 100) log(`score: ${written} written`);
+      if (written % 1000 < 100) log(`score: ${written} written`);
       if (ALL) await sleep(SLEEP_MS);
     }
   };

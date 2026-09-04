@@ -43,3 +43,28 @@ test('walks dirty targets once by exact database cursor even when processing lea
   expect(new Set(visited).size).toBe(203);
   expect(fetchPage.mock.calls.every(([, limit]) => limit <= 100)).toBe(true);
 });
+
+test('collects no more than 1,000 keyset-fetched targets before handing off scoring work', async () => {
+  const rows = Array.from({ length: 1100 }, (_, i) => ({ id: `v-${1100 - i}`, channel_id: 'c', published_at: `2026-09-03 11:${String(59 - (i % 60)).padStart(2, '0')}:00.${String(999999-i).padStart(6,'0')}+00` }))
+    .sort((a, b) => b.published_at.localeCompare(a.published_at) || b.id.localeCompare(a.id));
+  const windows: string[][] = [];
+  await walkIncrementalScoreTargets({
+    limit: 1100, signal: new AbortController().signal,
+    fetchPage: async (cursor, limit) => rows.filter((r) => !cursor || r.published_at < cursor.publishedAt || (r.published_at === cursor.publishedAt && r.id < cursor.id)).slice(0, limit),
+    onPage: async (page) => { windows.push(page.map((r) => r.id)); },
+  });
+  expect(windows.map((window) => window.length)).toEqual([1000, 100]);
+  expect(windows.flat()).toEqual(rows.map((row) => row.id));
+});
+
+test('flushes a partial lookahead when an unlimited walk ends on an exact page boundary', async () => {
+  const rows = Array.from({ length: 200 }, (_, i) => ({ id: `v-${200-i}`, channel_id: 'c', published_at: `2026-09-03 11:00:${String(59-(i%60)).padStart(2,'0')}.${String(999999-i).padStart(6,'0')}+00` }))
+    .sort((a, b) => b.published_at.localeCompare(a.published_at) || b.id.localeCompare(a.id));
+  const visited: string[] = [];
+  await walkIncrementalScoreTargets({
+    limit: Number.MAX_SAFE_INTEGER, signal: new AbortController().signal,
+    fetchPage: async (cursor, limit) => rows.filter((r) => !cursor || r.published_at < cursor.publishedAt || (r.published_at === cursor.publishedAt && r.id < cursor.id)).slice(0, limit),
+    onPage: async (page) => { visited.push(...page.map((row) => row.id)); },
+  });
+  expect(visited).toEqual(rows.map((row) => row.id));
+});
