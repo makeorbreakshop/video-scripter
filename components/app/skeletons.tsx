@@ -120,38 +120,22 @@ export function FeedSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
-/** The tracked-channel card grid on /app/channels. */
-export function ChannelCardsSkeleton({ cards = 6 }: { cards?: number }) {
+/** The tracked-channel list on /app/channels. */
+export function ChannelCardsSkeleton({ cards = 8 }: { cards?: number }) {
   return (
     <div aria-busy="true" aria-live="polite">
       <SkeletonStyles />
-      <style>{`.skl-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;
-                             border-top: 1px solid var(--cs-line); padding-top: 10px; }`}</style>
-      <div className="cs-grid">
+      <ul className="cs-chan-list">
         {Array.from({ length: cards }, (_, i) => (
-          <div className="cs-card" key={i}>
-            <div className="cs-card-head">
-              <div className="sk" style={{ width: 96, aspectRatio: '16/9', borderRadius: 6, flex: 'none' }} />
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="sk" style={{ width: '70%', height: 14, borderRadius: 4 }} />
-                <div className="sk" style={{ width: 74, height: 16, borderRadius: 999, marginTop: 8 }} />
-              </div>
+          <li className="cs-chan" key={i}>
+            <div className="cs-chan-link" style={{ pointerEvents: 'none' }}>
+              <div className="sk" style={{ width: 28, height: 28, borderRadius: '50%', flex: 'none' }} />
+              <div className="sk" style={{ width: 150 + ((i * 37) % 90), height: 14, borderRadius: 4 }} />
+              <div className="sk" style={{ width: 38, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
             </div>
-            <div className="skl-stats">
-              {[0, 1, 2, 3].map((s) => (
-                <div key={s}>
-                  <div className="sk" style={{ width: 40, height: 14, borderRadius: 4 }} />
-                  <div className="sk" style={{ width: 52, height: 10, borderRadius: 3, marginTop: 3 }} />
-                </div>
-              ))}
-            </div>
-            <div className="cs-card-foot">
-              <div className="sk" style={{ width: 66, height: 31, borderRadius: 8 }} />
-              <div className="sk" style={{ width: 74, height: 31, borderRadius: 8, marginLeft: 'auto' }} />
-            </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
