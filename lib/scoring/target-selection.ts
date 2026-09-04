@@ -37,6 +37,8 @@ interface WalkOptions<T extends ScoreTargetCursorRow> {
 export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow>(options: WalkOptions<T>): Promise<number> {
   let cursor: Cursor | null = null;
   let selected = 0;
+  // IDs only (roughly 2 MB at the cap), not observations. A wide enough window lets
+  // interleaved uploads share channel priors; database pages and score transactions stay 100.
   let lookahead: T[] = [];
   while (!options.signal.aborted && selected < options.limit) {
     const pageSize = Math.min(100, options.limit - selected);
@@ -50,7 +52,7 @@ export async function walkIncrementalScoreTargets<T extends ScoreTargetCursorRow
     cursor = { publishedAt: last.published_at, id: last.id };
     lookahead.push(...page);
     const exhausted = page.length < pageSize || selected === options.limit;
-    if (lookahead.length >= 1_000 || exhausted) {
+    if (lookahead.length >= 10_000 || exhausted) {
       await options.onPage(lookahead);
       lookahead = [];
     }
