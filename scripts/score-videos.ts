@@ -15,7 +15,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import { longformSql } from '../lib/scoring/longform';
-import { refreshChannelStatsSql } from '../lib/app/channel-stats';
+import { refreshScoredChannels } from '../lib/scoring/channel-refresh';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
 
 import { chunk } from '../lib/nightly/tracking-core';
@@ -335,6 +335,7 @@ const SCORE_COLUMNS = [
 ] as const;
 
 type ScoreRow = Record<(typeof SCORE_COLUMNS)[number], any>;
+const scoredChannels = new Set<string>();
 
 /** Current answer and history commit together. The read watermark leaves concurrently arriving evidence dirty. */
 async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
@@ -368,6 +369,7 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
     })));
     if (hist) await client.query(hist.text, hist.values);
     await client.query('commit');
+    for (const row of rows) if (row.channel_id) scoredChannels.add(row.channel_id);
   } catch (error) { await client.query('rollback'); throw error; }
   finally { client.release(); }
   return rows.length;
@@ -579,10 +581,10 @@ try {
       // Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
       // refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
       if (!FIT && !V5 && !signal.aborted) {
-        const statsRefreshed = await pool.query(refreshChannelStatsSql(CHANNELS.length > 0), CHANNELS.length ? [CHANNELS] : [])
-          .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
+        const statsRefreshed = await refreshScoredChannels(pool, scoredChannels)
+          .catch((e: any) => { console.error('channel_stats refresh:', e.message); return [] as string[]; });
         // New scores change what the channel page and every video page on it say.
-        await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
+        await revalidateRemote({ channels: statsRefreshed });
       }
     },
   });
