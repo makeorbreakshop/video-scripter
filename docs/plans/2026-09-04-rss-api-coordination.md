@@ -1,6 +1,6 @@
 ---
 title: Coordinate RSS observations, scoring, and API sampling
-status: active
+status: locally-verified
 artifact_readiness: implementation-ready
 execution: code
 ---
@@ -28,11 +28,11 @@ Fix collector prerequisites: true fetch timestamp for observations, unchanged-fe
 - Scoped tests, all relevant suites, paired data replay, bounded SQL EXPLAIN, dry plans, Sol review, then real worker evidence and regression checks.
 
 ## Work Units
-- [ ] Root: failing shared-observation tests, merge + scorer dirty/read integration/version metadata + API curve parity.
-- [ ] Sol: failing freshness tests, launch scheduler planning/dry mode/integration.
-- [ ] Root: collector timestamp/dedupe/abort/replay regression coverage.
-- [ ] Root/Sol: paired frozen data replay, query plans and regression suite; inspect introduced errors separately from baseline failures.
-- [ ] Integrate verified commits with main without overwriting unrelated work; bounded runtime runs and continued-worker health evidence.
+- [x] Root: failing shared-observation tests, merge + scorer dirty/read integration/version metadata + API curve parity.
+- [x] Sol: failing freshness tests, launch scheduler planning/dry mode/integration.
+- [x] Root: collector timestamp/dedupe/abort/replay regression coverage.
+- [x] Root/Sol: paired frozen data replay, query plans and regression suite; inspect introduced errors separately from baseline failures.
+- [x] Integrate verified commits with main without overwriting unrelated work; bounded runtime runs and continued-worker health evidence.
 
 ## Verification Handoff
 19-suites/237-tests prior audit baseline. New behavioral tests must fail before implementation. Read-only production data to frozen local fixture; same params/cohort for before/after; no paid data collection for evaluator. Run benchmark current champion when feasible, never rewrite BASELINE for a different sample/model. Old projection calibration already fails; do not claim it fixed. Sol independently reviews integrated code and recorded runtime evidence.
@@ -42,3 +42,6 @@ Version source changes, preserve v5.0 params; rollback isolated commit disables 
 
 ## Stop Conditions and Budgets
 At most two fix attempts per repeated gate before diagnosis. One Sol worker plus root. Bounded cohorts and statement timeouts; live verification scoped by limit. Escalate only genuinely missing user decisions after preparing concrete reviewable result.
+
+## Result
+Local implementation and worker verification complete; see docs/benchmarks/2026-09-04-rss-coordination.md for exact evidence, recovered live-verification issues, and remaining broader-audit scope. Hosted app/API deployment approval requested separately.
