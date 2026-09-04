@@ -285,8 +285,9 @@ export function isUpdatedSince(
  * channel/published index (872K rows filtered, 98K blocks read, 56 s measured 2026-09-03).
  * This DB has had IO incidents; never use that shape.
  *
- * SEED_ALL_SQL is the full-corpus form for after the subset test; it is the expensive one and
- * the poller only runs it on the first LaunchAgent slot of the hour.
+ * SEED_ALL_SQL enumerates channel keys with a loose recursive index scan, then probes the latest
+ * publication once per channel. A GROUP BY walked roughly one million index entries and took
+ * 91s under shared IO; this shape retained all 6,422 video channels in 24.3s (2026-09-04).
  */
 const SEED_UPSERT_TAIL = `on conflict (channel_id) do update
       set last_upload_at = excluded.last_upload_at,
@@ -305,11 +306,21 @@ export const SEED_SUBSET_SQL = `insert into channel_rss_state (channel_id, last_
      ) m
    ${SEED_UPSERT_TAIL}`;
 
-export const SEED_ALL_SQL = `insert into channel_rss_state (channel_id, last_upload_at, rss_state)
-   select v.channel_id, max(v.published_at), ${seedState('max(v.published_at)')}
-     from videos v
-    where v.channel_id is not null
-    group by v.channel_id
+export const SEED_ALL_SQL = `with recursive channels(channel_id) as (
+     select min(channel_id) from videos where channel_id is not null
+     union all
+     select (select min(v.channel_id) from videos v where v.channel_id > channels.channel_id)
+       from channels where channel_id is not null
+   )
+   insert into channel_rss_state (channel_id, last_upload_at, rss_state)
+   select c.channel_id, latest.published_at, ${seedState('latest.published_at')}
+     from channels c
+     left join lateral (
+       select v.published_at from videos v
+        where v.channel_id = c.channel_id and v.published_at is not null
+        order by v.published_at desc limit 1
+     ) latest on true
+    where c.channel_id is not null
    ${SEED_UPSERT_TAIL}`;
 
 /**

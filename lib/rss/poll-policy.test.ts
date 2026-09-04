@@ -303,7 +303,10 @@ describe('SQL shape', () => {
     expect(SEED_SUBSET_SQL).toContain('cross join lateral');
     expect(SEED_SUBSET_SQL).not.toContain('group by');
     expect(SEED_SUBSET_SQL).toContain('from watch_subset w');
-    expect(SEED_ALL_SQL).toContain('group by v.channel_id');
+    expect(SEED_ALL_SQL).toContain('with recursive channels');
+    expect(SEED_ALL_SQL).toContain('select min(channel_id)');
+    expect(SEED_ALL_SQL).toContain('left join lateral');
+    expect(SEED_ALL_SQL).not.toContain('group by v.channel_id');
     expect(SEED_ALL_SQL).not.toContain('watch_subset');
   });
   it('the due query carries the cadences and orders by the stagger key', () => {
