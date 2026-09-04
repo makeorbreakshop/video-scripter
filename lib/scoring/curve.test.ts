@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import type { GlobalParams } from './core';
 import { channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
 import { growthLog } from './growth';

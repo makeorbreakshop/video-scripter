@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { DAY_BUCKETS, HOUR_BUCKETS, type GlobalParams } from './core';
 import { growthLog, logToRef, slide, fitPast30, blendScale, PAST30_AGES } from './growth';
 

@@ -24,8 +24,11 @@ import {
   fitLaunchLadder, fittedBuckets, bucketTolerance, HOUR_BUCKETS, type LaunchRow,
 } from '../lib/scoring/core';
 import { fitPast30, PAST30_AGES, type TailPair } from '../lib/scoring/growth';
+import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
+import fs from 'node:fs';
 
 const FIT = process.argv.includes('--fit');
+const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
 const FINAL = process.argv.includes('--final');
 // Final rows are written once and never revisited; the version marks them so we can skip them.
@@ -268,7 +271,25 @@ async function fitPast30Table(): Promise<TailPair[]> {
   return rows.map((r: any) => ({ laterAge: Number(r.later_age), v30: Number(r.v30), later: Number(r.later) }));
 }
 
+/**
+ * v5.0 redefines `score`, and video_scores has ONE row per video with no version dimension --
+ * every app read path joins it without a model_version filter. So a v5 write is not a candidate
+ * row sitting harmlessly beside the champion's, it IS the production answer. The v3.1 leak of
+ * 2026-09-04 (1,005 rows, twice) happened for exactly this reason, so under a v5 MODEL_VERSION
+ * the v4 write paths refuse to run at all. Use --v5, which writes a CSV, until Brandon approves
+ * the rescore.
+ */
+function guardV5Write(mode: string) {
+  if (!MODEL_VERSION.startsWith('v5')) return;
+  console.error(
+    `refusing to run --${mode}: MODEL_VERSION is ${MODEL_VERSION} and this path writes video_scores,\n` +
+    `which is one row per video and is read unfiltered by every app query. Use --v5 (CSV out).`
+  );
+  process.exit(2);
+}
+
 async function score() {
+  guardV5Write('score (hourly)');
   const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
   if (!p.length) { console.error('no score_params; run --fit first'); process.exit(1); }
   const params: GlobalParams = p[0].params;
@@ -351,6 +372,7 @@ async function score() {
 // No projection is involved -- est30 is the day-30 estimate itself (real snapshot, or lifetime
 // normalized down the long-tail curve) -- so a video is scored once and then left alone.
 async function final() {
+  guardV5Write('final');
   const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
   if (!p.length) { console.error('no score_params; run --fit first'); process.exit(1); }
   const params: GlobalParams = p[0].params;
@@ -416,10 +438,104 @@ async function final() {
 }
 
 
-if (FIT) await fit(); else if (FINAL) await final(); else await score();
+
+// ---------------------------------------------------------------- v5 (--v5)
+//
+// score(t) = v(t) / C(t) at TRUE age, plus a projection along G at a chosen horizon.
+//
+// SELECTION. v4 froze a video at 60 days: the hourly pass had a `published_at > now() - 60 days`
+// ceiling and `--final` wrote a one-shot row past it. A same-age score has no reason to freeze --
+// day 30 is not special and neither is day 60 -- so v5 drops the ceiling and keeps the same
+// "something newer than the stored score" predicate for every age. The cadence therefore comes
+// from the SNAPSHOT tiers, not from the scorer: daily under 30d, every 3 days to 180d, weekly
+// after. The hourly selection for <60d is unchanged; older videos simply stop being excluded.
+//
+// OUTPUT. A CSV under docs/benchmarks, never video_scores -- see guardV5Write.
+async function v5() {
+  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
+  if (!p.length) { console.error(`no score_params for ${MODEL_VERSION}; run --fit first`); process.exit(1); }
+  const params: GlobalParams = p[0].params;
+
+  const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
+  const args = CHANNELS.length ? [CHANNELS] : [];
+  const cap = LIMIT ? `limit ${LIMIT}` : '';
+  const AGE_CEIL = arg('--max-age-days');
+  const ceil = AGE_CEIL ? `and v.published_at > now() - interval '${Number(AGE_CEIL)} days'` : '';
+  const targets: { id: string; channel_id: string }[] = await q(
+    ALL
+      ? `select v.id, v.channel_id from videos v
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
+          order by v.published_at desc ${cap}`
+      // No 60-day ceiling: an old video is revisited whenever a new snapshot lands, which on the
+      // tiered cadence is every 3 days to 180d and weekly after that.
+      : `select v.id, v.channel_id from videos v
+          left join video_scores sc on sc.video_id = v.id
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
+            and (sc.video_id is null
+                 or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
+                 or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
+          order by v.published_at desc ${cap}`,
+    args
+  );
+  log(`v5: ${targets.length} videos to score`);
+
+  const out = arg('--out') ?? `docs/benchmarks/v5.0-scores-${new Date().toISOString().slice(0, 10)}.csv`;
+  fs.mkdirSync('docs/benchmarks', { recursive: true });
+  const lines = ['video_id,channel_id,model_version,age_days,views,score,typical_at_age,n_typical,typical_neff,typical_measured_share,projection,projection_horizon,q,confidence'];
+  let scored = 0, noCurve = 0;
+
+  for (const group of chunk(targets, 500)) {
+    const ids = group.map((r) => r.id);
+    const priorsOf = await priorsFor(ids);
+    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
+    const [rec, priorRec, priorMeta, truth] = await Promise.all([
+      records(ids), records(priorIds), meta(priorIds), day30(priorIds),
+    ]);
+
+    for (const t of group) {
+      const snaps = rec.get(t.id);
+      if (!snaps?.length) continue;
+      const latest = snaps[snaps.length - 1];
+      const pool = priorsOf.get(t.id) ?? [];
+      const curvePriors: CurvePrior[] = pool.map((pp) => {
+        const m = priorMeta.get(pp.id);
+        return {
+          id: pp.id, ageDays: pp.ageDays, samples: priorRec.get(pp.id) ?? [],
+          lifetime: m && m.views > 0 ? { views: m.views, ageDays: m.age } : null,
+        };
+      });
+      // the est30-side channel multiplier still feeds G's blend (unchanged from v3)
+      const bucket = bucketFor(latest.day, fittedBuckets(params));
+      const tol = bucketTolerance(bucket);
+      const priorMultLogs: number[] = [];
+      for (const pp of estPool(pool)) {
+        const ps = priorRec.get(pp.id); const v30 = truth.get(pp.id);
+        if (!ps || !v30) continue;
+        const nearB = ps.filter((s) => Math.abs(s.day - bucket) <= tol)
+          .sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
+        if (nearB) priorMultLogs.push(Math.log(v30 / nearB.views));
+      }
+      const o = scoreV5({ vt: latest.views, age: latest.day, snaps, priors: curvePriors, priorMultLogs, params });
+      if (o.score == null) noCurve++;
+      scored++;
+      lines.push([
+        t.id, t.channel_id, MODEL_VERSION, latest.day.toFixed(4), latest.views,
+        o.score ?? '', o.typicalAtAge?.toFixed(2) ?? '', o.nTypical, o.typicalNeff.toFixed(3),
+        o.typicalMeasuredShare.toFixed(4), o.projection.toFixed(2), o.projectionHorizon,
+        o.q ?? '', o.confidence,
+      ].join(','));
+    }
+    if (scored % 5000 < 500) log(`v5: ${scored} scored`);
+    await sleep(SLEEP_MS);
+  }
+  fs.writeFileSync(out, lines.join('\n'));
+  log(`v5: ${scored} scored (${noCurve} with no channel curve) -> ${out}`);
+}
+
+if (FIT) await fit(); else if (V5) await v5(); else if (FINAL) await final(); else await score();
 // Scores and baselines feed the channel-list headline numbers (baseline, outlier count), so
 // refresh the materialized rows for whatever this run touched. Cheap: one set-based upsert.
-if (!FIT) {
+if (!FIT && !V5) {
   const statsRefreshed = await pool.query(refreshChannelStatsSql(CHANNELS.length > 0), CHANNELS.length ? [CHANNELS] : [])
     .catch((e: any) => { console.error('channel_stats refresh:', e.message); return { rows: [] as any[] }; });
   // New scores change what the channel page and every video page on it say.

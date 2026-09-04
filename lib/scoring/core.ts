@@ -12,7 +12,7 @@
 // Validated in the 2026-09-01 backtests (harness v2): same-age ratio ranks at rho .87 by day 3;
 // v3 blend medALE ~.30 day 1, ~.19 day 3, ~.10 day 7 on held-out time.
 
-export const MODEL_VERSION = 'v4.0';
+export const MODEL_VERSION = 'v5.0';
 export const DAY_BUCKETS = [1, 2, 3, 5, 7, 14, 21, 30] as const;
 export type DayBucket = (typeof DAY_BUCKETS)[number];
 // Launch ladder: sub-day buckets (in days) fitted from the 5-minute launch samples, chained
