@@ -35,10 +35,8 @@ export const RSS_POLICY = {
   /** How recent a feed entry must be to count as a new upload worth queueing. */
   newUploadWindowDays: 7,
   /**
-   * Hard ceiling on channels touched in one tick. Sized to cover the whole corpus in one go
-   * (5,853 channels) now that a tick is fetch -> snapshot -> diff -> flush rather than a burst
-   * of per-channel statements. The 15-minute cadence in DUE_CHANNELS_SQL means only the
-   * channels actually due show up, so this ceiling is a safety rail, not the normal limit.
+   * Absolute ceiling on a tick. Normal capacity is one third of the population so a
+   * synchronized cohort spreads over three ticks. This is a guard, not a capacity claim.
    */
   maxPerRun: 6000,
 } as const;
@@ -99,14 +97,15 @@ export function backoffAfter(
   return { intervalSec: next, backoffUntil: new Date(now.getTime() + next * MS) };
 }
 
-/**
- * How many channels one tick may take. There is no stagger any more: with fetching decoupled
- * from writing, a tick can poll every due channel, and the 15-minute per-channel cadence in
- * DUE_CHANNELS_SQL is what spreads the load. A channel polled this tick is simply not due for
- * the next two, so the burst is self-limiting.
+/** Spread the population over the three ticks in each active polling interval.
+ * Oldest-polled-first selection preserves 15m coverage while avoiding a synchronized
+ * 5,000-feed snapshot that consumed nearly the full 285s worker budget under shared IO.
+ * Dormant channels retain their longer interval; including them in the capacity calculation
+ * leaves headroom for due dormant feeds and newly subscribed channels.
  */
 export function perRunCap(totalChannels: number): number {
-  return Math.min(RSS_POLICY.maxPerRun, Math.max(1, totalChannels));
+  const ticks = Math.max(1, Math.floor(RSS_POLICY.activeIntervalSec / RSS_POLICY.runIntervalSec));
+  return Math.min(RSS_POLICY.maxPerRun, Math.max(1, Math.ceil(totalChannels / ticks)));
 }
 
 /**

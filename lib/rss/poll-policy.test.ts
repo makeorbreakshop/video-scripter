@@ -84,16 +84,14 @@ describe('backoffAfter', () => {
 });
 
 describe('perRunCap', () => {
-  // No stagger any more: a tick fetches, snapshots, diffs and flushes in phases, so it can take
-  // every due channel. The 15-minute cadence in DUE_CHANNELS_SQL is what spreads the load.
-  it('takes every due channel up to the safety ceiling', () => {
-    expect(perRunCap(52)).toBe(52);
-    expect(perRunCap(5_853)).toBe(5_853);
+  it('allocates enough capacity for the entire population within three ticks', () => {
+    expect(perRunCap(52)).toBe(18);
+    expect(perRunCap(5_853)).toBe(1_951);
     expect(perRunCap(1)).toBe(1);
     expect(perRunCap(0)).toBe(1);
   });
 
-  it('the ceiling covers the whole corpus, so it is a rail and not the normal limit', () => {
+  it('retains the absolute safety ceiling', () => {
     const CORPUS = 5_853; // channel_rss_state, 2026-09-03
     expect(P.maxPerRun).toBeGreaterThan(CORPUS);
     expect(perRunCap(1_000_000)).toBe(P.maxPerRun);
@@ -368,4 +366,25 @@ test('scheduler jitter does not turn the third five-minute tick into a fourth', 
   expect(isDue({ rss_state: 'active', rss_last_polled: ago(mins(13)) }, NOW)).toBe(false);
   expect(isDue({ rss_state: 'dormant', rss_last_polled: ago(days(1) - 12_000) }, NOW)).toBe(false);
   expect(isDue({ rss_state: 'active', rss_interval_sec: 1800, rss_last_polled: ago(mins(30) - 12_000) }, NOW)).toBe(false);
+});
+
+describe('spreading the active set across its three five-minute ticks', () => {
+  it('keeps a synchronized 6,419-channel start within tick capacity and polls each every 15 minutes', () => {
+    const total = 6419;
+    const channels = Array.from({length:total}, (_,id)=>({id,at:null as Date|null,seen:[] as number[]}));
+    const cap = perRunCap(total);
+    for(let tick=0;tick<9;tick++) {
+      const now = new Date(NOW.getTime()+tick*300_000);
+      const due = channels.filter(c=>isDue({rss_state:'active',rss_last_polled:c.at},now))
+        .sort((a,b)=>(a.at?.getTime()??0)-(b.at?.getTime()??0)||a.id-b.id).slice(0,cap);
+      // One third of the population per tick removes the measured all-channel IO burst.
+      expect(due.length).toBeLessThanOrEqual(Math.ceil(total/3));
+      for(const c of due) {c.at=now;c.seen.push(tick);}
+    }
+    for(const c of channels) {
+      expect(c.seen).toHaveLength(3);
+      expect(c.seen[1]-c.seen[0]).toBe(3);
+      expect(c.seen[2]-c.seen[1]).toBe(3);
+    }
+  });
 });
