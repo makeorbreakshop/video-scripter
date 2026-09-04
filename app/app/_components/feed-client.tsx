@@ -18,15 +18,20 @@ export interface FeedClientProps {
   channelId: string | null;
   /** False when the user tracks no channels — then no amount of paging will help. */
   hasChannels: boolean;
-  /** channel_id -> avatar url. Every event comes from a tracked channel, so one map covers every page. */
+  /**
+   * channel_id -> avatar url, for the channels on the first page only. Every later page
+   * brings its own map back from /api/app/feed and is merged in here, so a 500-channel
+   * account never ships 500 avatar URLs to decorate 60 cards.
+   */
   avatars?: Record<string, string>;
 }
 
 export default function FeedClient({
-  initialEvents, initialCursor, initialTests, segment, channelId, hasChannels, avatars = {},
+  initialEvents, initialCursor, initialTests, segment, channelId, hasChannels, avatars: initialAvatars = {},
 }: FeedClientProps) {
   const [events, setEvents] = useState(initialEvents);
   const [tests, setTests] = useState(initialTests);
+  const [avatars, setAvatars] = useState(initialAvatars);
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
   const [exhausted, setExhausted] = useState(false);
@@ -50,6 +55,7 @@ export default function FeedClient({
       const page: FeedEventLike[] = body.events || [];
       setEvents((prev) => [...prev, ...page]);
       setTests((prev) => ({ ...prev, ...(body.tests || {}) }));
+      setAvatars((prev) => ({ ...prev, ...(body.avatars || {}) }));
       setCursor(body.next_cursor ?? null);
       // Only a page that came back genuinely empty proves there is nothing older; a
       // null cursor alongside rows just means this page was the last one we asked for.
