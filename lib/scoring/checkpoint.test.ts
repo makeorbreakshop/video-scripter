@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { readScoreCheckpoint, writeScoreCheckpoint } from './checkpoint';
+import { readScoreCheckpoint, validateScoreCheckpointScope, writeScoreCheckpoint } from './checkpoint';
 import { walkIncrementalScoreTargets } from './target-selection';
 
 const rows = [
@@ -37,4 +37,12 @@ test('checkpoint files replace atomically and persist completion', () => {
   expect(readScoreCheckpoint(file)).toEqual({ complete: false, cursor: { publishedAt: rows[0].published_at, id: 'z' } });
   writeScoreCheckpoint(file, { complete: true }); expect(readScoreCheckpoint(file)).toEqual({ complete: true });
   fs.rmSync(dir, { recursive: true });
+});
+
+test('rejects dry-run and channel-scoped cursors that could skip the full corpus', () => {
+  const base = { all: true, force: false, since: null, final: false, fit: false, v5: false, channels: [] as string[] };
+  expect(() => validateScoreCheckpointScope(base)).not.toThrow();
+  expect(() => validateScoreCheckpointScope({ ...base, v5: true })).toThrow('unfiltered incremental --all');
+  expect(() => validateScoreCheckpointScope({ ...base, channels: ['c'] })).toThrow('unfiltered incremental --all');
+  expect(() => validateScoreCheckpointScope({ ...base, force: true })).toThrow('unfiltered incremental --all');
 });

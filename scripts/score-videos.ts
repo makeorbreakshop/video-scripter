@@ -36,7 +36,7 @@ import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
-import { readScoreCheckpoint, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
+import { readScoreCheckpoint, validateScoreCheckpointScope, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
@@ -57,8 +57,8 @@ const CHECKPOINT_PATH = arg('--checkpoint');
 // reading, so after a scoring-math fix the young rows would otherwise keep a stale number until
 // their next snapshot. Added 2026-09-04 with the sub-day curve fix.
 const SINCE = Number(arg('--since') ?? 0) || null;
-if (CHECKPOINT_PATH && (!ALL || FORCE || SINCE || FINAL || FIT)) {
-  throw new Error('--checkpoint is only valid with incremental --all');
+if (CHECKPOINT_PATH) {
+  validateScoreCheckpointScope({ all: ALL, force: FORCE, since: SINCE, final: FINAL, fit: FIT, v5: V5, channels: CHANNELS });
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
