@@ -369,10 +369,11 @@ function ChannelRows({
         </div>
         {shown.length === 0 ? (
           <div className="cs-cnone">{emptyLabel(rows.length, query, activeGroupName)}</div>
-        ) : shown.map((c) => (
+        ) : shown.map((c, i) => (
           <Row
             key={c.channel_id}
             row={c}
+            eager={i < 16}
             byId={byId}
             items={groupItems([c])}
             readOnly={readOnly}
@@ -413,9 +414,11 @@ function emptyLabel(total: number, query: string, group: string | null): string 
 
 const Row = memo(function Row({
   row, byId, items, readOnly, selectMode, selected, onSelect, onToggleGroup, onCreateGroup,
-  onError, onNotify, onRemove, notifyBlocked,
+  onError, onNotify, onRemove, notifyBlocked, eager,
 }: {
   row: ChannelRow;
+  /** Above the fold: fetch the avatar now rather than lazily. */
+  eager?: boolean;
   byId: Map<string, GroupLike>;
   items: MenuItem[];
   readOnly?: boolean;
@@ -442,7 +445,7 @@ const Row = memo(function Row({
                aria-label={`Select ${name}`} />
       )}
       <span className="cs-l-avatar">
-        <ChannelAvatar src={row.avatar_url} name={row.name} size={36} channelId={row.channel_id} />
+        <ChannelAvatar src={row.avatar_url} name={row.name} size={36} channelId={row.channel_id} eager={eager} />
       </span>
       <div className="cs-crow-id">
         <div className="cs-crow-name">
