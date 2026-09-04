@@ -5,7 +5,6 @@
 // youtube.readonly scope has not been added to that connection Google answers 403; that
 // becomes { code: 'missing_scope' } so the sheet can offer "Connect YouTube" instead of
 // showing an error nobody can act on.
-import { auth } from '@clerk/nextjs/server';
 import {
   googleAccessToken, fetchSubscriptions, subscriptionsForImport, recordImported,
   MissingScopeError, NoGoogleAccountError,
@@ -41,11 +40,11 @@ function scopeError(e: unknown) {
 export async function GET() {
   const user = await requireAppUser();
   if (!user) return unauthorized();
-  const { userId: clerkId } = await auth();
-  if (!clerkId) return unauthorized();
 
   try {
-    const token = await googleAccessToken(clerkId);
+    // The app_users row carries the clerk_id, so this works on the dev preview path too,
+    // where middleware skips Clerk entirely and auth() would throw.
+    const token = await googleAccessToken(user.clerk_id);
     const subs = await fetchSubscriptions(token);
     const items = await subscriptionsForImport(user.id, subs);
     return Response.json({

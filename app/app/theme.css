@@ -869,6 +869,9 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 .cs-l-spark { width: 120px; flex: none; }
 .cs-l-base { width: 80px; flex: none; text-align: right; justify-content: flex-end; display: flex; }
 .cs-l-notify { width: 44px; flex: none; text-align: center; justify-content: center; display: flex; }
+/* The overflow menu keeps its slot even when it is invisible, so the lanes to its left sit
+   under the same column heads whether a row is hovered or not. */
+.cs-l-more { width: 26px; flex: none; }
 
 /* An empty list still has its card: one quiet line where the rows would be. */
 .cs-cnone { padding: 40px 16px; text-align: center; color: var(--cs-muted); font-size: 14px; }
@@ -878,7 +881,10 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 /* The whole row is the link; the lanes that are controls sit above it. */
 .cs-crow-link { position: absolute; inset: 0; z-index: 0; }
 .cs-crow-link:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -2px; }
-.cs-crow > * { position: relative; z-index: 1; }
+/* Everything except the overlay lifts above it. The overlay must NOT be caught by this —
+   giving it position:relative would put it back in the flow and push every lane 14px right
+   of the column head above. */
+.cs-crow > *:not(.cs-crow-link) { position: relative; z-index: 1; }
 .cs-crow-id { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; pointer-events: none; }
 .cs-crow-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cs-crow-name b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -925,7 +931,7 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 .cs-check:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 2px; }
 
 /* The row's overflow, where Remove lives. */
-.cs-crow-more { opacity: 0; flex: none; }
+.cs-crow-more { opacity: 0; }
 .cs-crow:hover .cs-crow-more, .cs-crow-more:focus-within { opacity: 1; }
 /* A "+" on a row that already has tags is an affordance, not data: it waits for the pointer. */
 .cs-crow-plus { opacity: 0; flex: none; }
@@ -995,13 +1001,20 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   /* The row stacks: identity and the sparkline under it, then the numbers. The groups lane
      rides with the name rather than holding a 200px column nothing can fill. */
   .cs-chead { display: none; }
-  .cs-crow { height: auto; padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
-  .cs-crow-id { flex: 1 1 100%; order: 2; }
+  .cs-crow { height: auto; padding: 10px 12px; gap: 10px; flex-wrap: wrap; row-gap: 8px; }
+  /* Line one is the identity: avatar, name, the two numbers. Line two is the evidence:
+     the sparkline, the baseline it belongs to, and the notify coin. Groups only take a
+     line of their own when the channel is actually in one. */
+  .cs-l-check { order: 0; }
   .cs-l-avatar { order: 1; }
-  .cs-l-groups { width: auto; order: 3; flex: 1 1 100%; }
-  .cs-l-spark { order: 4; width: 100px; }
+  .cs-crow-id { order: 2; flex: 1 1 0; }
+  .cs-l-groups { order: 3; width: 100%; flex: none; }
+  .cs-l-groups:empty { display: none; }
+  .cs-l-spark { order: 4; width: 90px; }
   .cs-l-base { order: 5; width: auto; flex: 1; }
   .cs-l-notify { order: 6; width: 32px; }
+  /* Without an order the overflow menu is 0 and jumps to the front of the wrapped row. */
+  .cs-crow-more { order: 7; }
   .cs-selbar { height: auto; padding: 10px 12px; flex-wrap: wrap; gap: 10px; }
   .cs-selbar-left, .cs-selbar-right { gap: 12px; flex-wrap: wrap; }
   .cs-sheet-row, .cs-sheet-head, .cs-sheet-foot { padding-inline: 16px; }

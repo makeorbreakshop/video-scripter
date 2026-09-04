@@ -579,7 +579,9 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             cs.baseline,
             coalesce(cs.outliers, 0)::int as outliers,
             cs.last_packaging_change,
-            cm.subscriber_count,
+            -- bigint arrives from pg as a string; float8 comes back as a number, which is
+            -- what compactNumber needs and is exact well past any subscriber count.
+            cm.subscriber_count::float8 as subscriber_count,
             coalesce(gm.groups, '{}') as groups,
             lu.last_upload_at
        from user_channels uc

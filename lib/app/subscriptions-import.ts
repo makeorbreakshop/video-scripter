@@ -24,9 +24,20 @@ export interface Subscription {
 
 /** Clerk holds the Google OAuth token for the signed-in user; ask it, do not store one. */
 export async function googleAccessToken(clerkUserId: string): Promise<string> {
-  const client = await clerkClient();
-  const res: any = await client.users.getUserOauthAccessToken(clerkUserId, 'oauth_google');
-  const list: any[] = Array.isArray(res) ? res : (res?.data ?? []);
+  let list: any[] = [];
+  try {
+    const client = await clerkClient();
+    const res: any = await client.users.getUserOauthAccessToken(clerkUserId, 'oauth_google');
+    list = Array.isArray(res) ? res : (res?.data ?? []);
+  } catch (e: any) {
+    // Clerk answers 404 when this instance does not know the user (a live clerk_id read by a
+    // dev instance) and 4xx when the account has no Google connection. Either way the person
+    // needs to connect an account, which is something they can act on — not a 500.
+    if (e?.status >= 400 && e.status < 500) {
+      throw new NoGoogleAccountError('This account is not connected to Google.');
+    }
+    throw e;
+  }
   const token = list[0]?.token;
   if (!token) throw new NoGoogleAccountError('This account is not connected to Google.');
   return token;
