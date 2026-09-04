@@ -441,7 +441,7 @@ machine.
 250 GB Pro allowance, so the script would under-report by 10 %.
 *Expected effect:* the 70 %-of-quota alarm actually fires. *Rollback:* `rm ~/.config/supabase/access-token`.
 
-**P0-3. One predicate costs ~8.5 CPU-hours/day out of 48 available.**
+**P0-3. ~~One predicate costs ~8.5 CPU-hours/day out of 48 available.~~ WITHDRAWN 2026-09-04 12:10 UTC — re-measured at 60 ms per run, not 72.5 s. The original figure was IO contention from two concurrent `CREATE INDEX CONCURRENTLY` builds, misattributed to expression CPU. No fix applied, and the proposed fix would have been both slower and semantically wrong. See §9b.**
 `lib/scoring/longform`'s eligibility clause — `not (shorts_checked_at is null and duration ~ '^PT[0-9HMS]+$'
 and extract(epoch from duration::interval) <= 180)` — is evaluated per row by three 5-minute LaunchAgents.
 Measured: **72.5 s to filter 43,287 rows and reject 65** (launch-track), **21.1 s for the same scan**
@@ -517,7 +517,7 @@ The `latest` CTE materialises all 125,540 `thumbnail_versions` rows every 5 minu
 
 ### P2 — later
 
-**P2-1. → promoted to P1-8, see §8b.** Move `videos.title_observed_at` / `shorts_checked_at` stamping to a narrow side table keyed
+**P2-1. → promoted to P1-8; DONE, see §9a.** Move `videos.title_observed_at` / `shorts_checked_at` stamping to a narrow side table keyed
 by `video_id`. Today each stamp rewrites a 1,819-byte row plus up to 45 index entries; the
 `title_observed_at` statement alone touched 411,474 rows at a 14.1 s mean.
 *Rollback:* keep the columns and dual-write during migration.
@@ -611,19 +611,176 @@ is the truest picture of the recurring pipeline.
 
 Two conclusions the cumulative counters could not give:
 
-1. **The longform eligibility predicate is 361,496 ms = 44 % of all execution in a clean window**
+1. **[SUPERSEDED — see §9b. This attribution is wrong: the time was IO contention from the concurrent
+   index builds, not the predicate, which re-measures at 60 ms per run.]**
+   **The longform eligibility predicate is 361,496 ms = 44 % of all execution in a clean window**
    (launch-track 175,399 + thumbnail-watch 140,813 + feed-materialize 45,284), with score-videos not even
    running in this window because it is hourly. Note the means are *worse* than the isolated EXPLAINs in
    §3 — 87.7 s vs 74.1 s and 70.4 s vs 22.0 s — because these agents contend with each other. This
    confirms P0-3 as the highest-value change in the system.
-2. **`update videos set title_observed_at` is 181,033 ms = 22 % of all execution at a 30.2 s mean over
+2. **[CONFIRMED and FIXED — see §9a.]**
+   **`update videos set title_observed_at` is 181,033 ms = 22 % of all execution at a 30.2 s mean over
    6 calls and 701 MB read.** That is far larger than the cumulative counters suggested and moves it out
    of P2. See P1-8 below.
 
-**P1-8 (promoted from P2-1). `videos.title_observed_at` stamping is 22 % of steady-state CPU.**
+**P1-8 (promoted from P2-1). DONE 2026-09-04, commit `eb5070f` — see §9a. `videos.title_observed_at` stamping is 22 % of steady-state CPU.**
 Six statements in nine minutes, 30.2 s mean, 701 MB read, on a table with a 1,819-byte average row,
 794 MB of TOAST, 45 indexes and only 18.2 % HOT updates — every stamp rewrites the whole row and up to
 45 index entries. *Action:* move the stamp to a narrow side table `video_title_watch (video_id primary key,
 title_observed_at timestamptz)`, or at minimum land the P1-4 fillfactor change first and re-measure.
 *Expected effect:* a ~50-byte row update against one index instead of a 1.8 KB row against 45.
 *Rollback:* keep `videos.title_observed_at` and dual-write during the migration; drop the side table.
+
+---
+
+## 9. Follow-up, 11:28–12:10 UTC — what was done, and where §8 was wrong
+
+### P0/P1 status after this session
+
+| Item | Status | Evidence |
+|---|---|---|
+| **P1-8** (title stamp on `videos`) | **DONE** | `video_title_watch` side table, commit `eb5070f`. Below. |
+| **P0-3** (longform predicate = 44 % of execution) | **WITHDRAWN — the diagnosis was wrong.** | Below. |
+| Hourly scorer dying with 57014 | **FIXED** (by P1-8 + the backfill index builds finishing) | Full run completes, exit 0, empty stderr. |
+| `gone` verdict freezing CDN false positives | **FIXED**, 0 rows to repair | Commit `d196a61`. |
+| **NEW P0: ~20 K videos wrongly flagged as Shorts by a `200` verdict** | **OPEN — needs a decision** | §9f. |
+
+### 9a. P1-8 — the title stamp is off `videos`
+
+`video_title_watch (video_id text primary key, title_observed_at timestamptz not null)`,
+`sql/2026-09-04-video-title-watch.sql`, seeded exactly (79,324 rows = 79,324 in the old column).
+`videos.title_observed_at` is left in place, unread and unwritten, as the rollback;
+`lib/rss/title-watch-guard.test.ts` fails if any code reaches for it again.
+
+Measured against the live database:
+
+| | Before | After |
+|---|---|---|
+| Stamp statement, live sample | **116 s** in IO/DataFileRead (11:27 UTC) | not observable — 5,000 stamps in **196 ms** |
+| Same 5,000 ids immediately again | — | **0 rows, 107 ms** (the 1-hour skip works) |
+| rss-poll flush, full-corpus tick | 26–137 s (median ~47 s) for 16–28 K rss_samples | **26.3 s for 37,424 rss_samples** |
+| flush per 1,000 samples | ~2.4 s | **0.70 s** |
+
+`pg_stat_activity` sampled every 45 s for 10 minutes after the change (14 samples): the **longest
+query seen anywhere was 3 s**. Nothing in IO wait over 20 s on any tick, let alone two consecutive.
+
+### 9b. P0-3 is withdrawn: the longform predicate never cost 8.5 CPU-hours/day
+
+§3 and §8 attributed 44 % of execution to `extract(epoch from duration::interval)` and called it
+"pure expression CPU, not IO". **Re-measured 11:50 UTC on the same queries, same data:**
+
+| Query | §3 measurement | Now |
+|---|---|---|
+| A. launch-track enrol (as `count(*)`) | **74,073 ms** | **316 ms** (hit=43,451 read=181) |
+| B. thumbnail-watch `HOT_TARGETS_SQL` | **21,973 ms** | **428 ms** (hit=170,630 read=0) |
+
+Both are ~200× faster and already 25× inside the 10 s target, so **no fix was applied.**
+
+The marginal cost of the clause itself, isolated over two rounds (identical to 0.3 ms):
+
+| Predicate | Execution |
+|---|---|
+| index predicate only, no third clause | 46.1 / 42.6 ms |
+| **+ the current regex + interval cast** | **105.6 / 105.9 ms** |
+| + `iso8601_duration_seconds()` instead | 486.9 / 487.7 ms |
+
+So the clause costs **~60 ms per run over 43,311 rows — 1.4 µs/row**, not 72.5 s. The audit's
+own plan showed why: its 74 s run had `read=12303 written=637` against today's `read=181`. It was
+**IO wait and contention** — two `CREATE INDEX CONCURRENTLY` builds and a shorts backfill were
+saturating a 2-vCPU instance at the moment of measurement — misread as expression CPU. The
+"8.5 CPU-hours/day, 18 % of the instance" figure is an artefact of that; the real cost is
+60 ms × 288 runs × 3 agents ≈ **52 seconds/day**.
+
+Two further reasons the proposed fix would have been a regression:
+
+1. **`iso8601_duration_seconds()` is 4.6× SLOWER than the regex + cast** it was to replace
+   (487 ms vs 106 ms). It is a `regexp_match` plus array subscripting inside a SQL function.
+2. **It is not semantically equivalent: it disagrees on 4,068 rows**, all of them
+   `duration IS NULL`. The current clause lets NULL propagate, so those rows are excluded;
+   `coalesce(iso8601_duration_seconds(duration) <= 180, false)` admits them as long-form. Swapping
+   the definition would have quietly put 4,068 unknown-duration videos into channel baselines.
+
+**Recommendation:** leave `longformSql()` alone. Do not add a partial index for it — that is a
+~25 MB index on a table that already carries 45 and is only 18.2 % HOT, bought for 60 ms. The
+option-(c) stored `duration_seconds` column is likewise not justified.
+
+**What IS worth doing on query B** (the runbook's own P1-7, still open): its `latest` CTE
+materialises all 125,583 `thumbnail_versions` rows every 5 minutes — **127,029 of the query's
+170,630 buffers, 74 % of its work**, and now its dominant cost by far. `LONG_TAIL_TARGETS_SQL`
+already uses the LATERAL shape that avoids this. That, not the duration predicate, is where
+thumbnail-watch's remaining time goes.
+
+### 9c. The scorer completes
+
+`npx tsx scripts/score-videos.ts`, run manually 11:39:41 → 11:49:37 UTC: **10 m 30 s wall,
+exit 0, empty stderr, no 57014, 7,393 of 7,478 videos scored.** No statement came near the 300 s
+`statement_timeout` — the timeout was never the scorer's own plan, it was losing to contention
+from the title stamp and the concurrent index builds, exactly as suspected.
+
+Backlog: **7,311 → 7,478 (at run start) → 4,041** measured at 12:04 UTC.
+
+The run is still long for an hourly job. It is not timing out, so no group-size change was made;
+if it needs to come down, `chunk(targets, 500)` at `scripts/score-videos.ts:253` is the dial, and
+`priorsFor()` is the statement to profile first.
+
+### 9d. The `gone` verdict
+
+`verdictFromResponse` treated any 3xx whose `Location` was not `/watch?v=` as `gone`, and `gone`
+stamped `shorts_checked_at` while leaving `is_short` alone — freezing the old CDN detector's guess
+as permanently unrecheckable. Now only 404/410 is `gone`, every other 3xx is `unknown`, and `gone`
+writes nothing.
+
+**Rows re-nulled: 0.** Every `progress` and `done` line across every `verify-shorts` log records
+`0 gone`; the bug was latent and never fired. The database cannot distinguish a `gone` stamp from
+a `short`/`long` one, so the logs are the only available evidence — and they are unanimous, which
+is why no speculative superset re-null of the 148,878 rows stamped since 09-03 was performed.
+
+### 9e. Population counts (for the record)
+
+| Population | Count |
+|---|---|
+| `shorts_checked_at is null and iso8601_duration_seconds(duration) <= 180` | **94,547** |
+| …plus CDN-flagged (`videos_shorts_backfill_idx` predicate) | 98,548 |
+| of which `is_short` flagged | 68,077 |
+
+94,547 is far over the 30 K threshold at which simplifying `longformSql` to the bare index
+predicate would have become available, so that option was closed regardless. Note also that
+`verify-shorts` has reported `0 checked` on every 15-minute run since 10:26 UTC: its default
+`--months 18` window is exhausted, and the whole remaining 94,547 are **older than 18 months**.
+Nothing is draining that population today.
+
+### 9f. NEW P0 — ~20,000 videos are wrongly flagged as Shorts, and the flag is now frozen
+
+Found while verifying 9d. **This is not the `gone` bug and it is not fixed.**
+
+`5IsVft2evQ8` ("Real Survival Skills That Work!", `PT1M57S`) is stored `is_short = true`,
+`shorts_checked_at = 2026-09-04 00:55:21Z`. `HEAD /shorts/5IsVft2evQ8` returns
+`303 → /watch?v=5IsVft2evQ8` on 3/3 live tries — YouTube says it is **not** a Short. Both backfills
+running at 00:55 logged `0 gone`, so it was stamped by a **`short` verdict, i.e. an HTTP 200**.
+
+Live re-check of 40 random rows per stratum, drawn from `is_short` rows stamped in the
+00:40–05:30Z backfill window:
+
+| Stratum | Sample | Actually long-form |
+|---|---|---|
+| all durations | 40 | **0** — the backfill was mostly right |
+| **61–180 s** (where CDN false positives live) | 40 | **12 — 30 %** |
+
+Population in that band stamped since 2026-09-03: **67,748 rows** → on the order of **20,000
+videos wrongly excluded from every channel baseline and every scoring surface**, and — because
+`shorts_checked_at` is now set — `lib/scoring/longform.ts` treats each one as verified, so no
+future run will ever re-check them.
+
+Corroborating evidence: the `--only-flagged` runs reported **4.1–4.2 % long-form** (858/20,922 and
+1,252/30,000) on a population `lib/thumbs/shorts.ts` documents as having **~10 % false positives**.
+They found less than half the corrections they exist to make.
+
+**Likely mechanism (hypothesis, not proven):** at the backfill's concurrency YouTube serves a soft
+`200` for `/shorts/<id>`, and `verdictFromResponse` maps any 200 to `short` unconditionally. Every
+re-check performed here at 250 ms spacing returned a clean 303.
+
+*Not actioned.* Re-nulling 67,748 rows is a large write to the hottest table in the database and a
+correctness decision about the corpus that backs scoring — it needs Brandon's call, and the
+200-handling should be settled first or the next sweep will re-freeze them.
+
+**Until then: do not run any further `--only-flagged` sweep.**
