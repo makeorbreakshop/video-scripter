@@ -193,12 +193,30 @@ async function main() {
     return;
   }
 
+  // A run killed mid-job (track-drain caps the child at 20 minutes) leaves its claim behind
+  // and the channel stuck on 'running' forever. Anything claimed over an hour ago is dead.
+  const stale = await pool.query(
+    `update backfill_jobs set status = 'queued', started_at = null
+      where kind = 'catalog' and status = 'running' and started_at < now() - interval '1 hour'
+      returning channel_id`
+  );
+  if (stale.rowCount) {
+    await pool.query(
+      `update channel_tracking set backfill_status = 'queued' where channel_id = any($1) and backfill_status = 'running'`,
+      [stale.rows.map((r) => r.channel_id)]
+    );
+    console.log(`Reclaimed ${stale.rowCount} stale running jobs.`);
+  }
+
+  // A channel somebody is actually watching comes before the corpus catch-up. Without this the
+  // user lane queues behind whatever bulk enqueue happens to share the front of the queue —
+  // 500 subscriptions imported today sat behind 3,284 legacy jobs, five days out.
   const { rows: jobs } = await pool.query(
     `select j.id, j.channel_id, coalesce(ct.backfill_depth, $2) as depth
        from backfill_jobs j
        left join channel_tracking ct on ct.channel_id = j.channel_id
       where j.kind = 'catalog' and j.status = 'queued'
-      order by j.requested_at asc
+      order by (ct.lane = 'user') desc nulls last, j.requested_at asc
       limit $1`,
     [MAX_JOBS, DEPTH]
   );
