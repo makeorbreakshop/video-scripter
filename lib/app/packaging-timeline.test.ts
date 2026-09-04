@@ -12,6 +12,36 @@ describe('buildTimeline', () => {
     expect(buildTimeline({ publishedAt: D(30), thumbs: [], titles: [] })).toEqual([]);
   });
 
+  // Matt Wolfe's GPT-6 video, 18 hours old, one thumbnail and one title: the strip drew a
+  // PUBLISHED card and a NOW card carrying the same image and the same words, side by side,
+  // which reads as a change and asks the reader to spot the difference between two identical
+  // pictures. There is one thing to say and it takes one card.
+  it('says "no changes since publish" once when nothing has changed', () => {
+    const clips = buildTimeline({
+      publishedAt: D(30), thumbs: [th(1, 'a', D(30))], titles: [ti(1, 'GPT-6 Astra Is Finally Here', D(30))],
+      score: 1.4, now: D(30, 18),
+    });
+    expect(clips.map((c) => c.kind)).toEqual(['unchanged']);
+    expect(clips[0].url).toBe('/t/1.jpg');            // the thumbnail stays
+    expect(clips[0].title).toBe('GPT-6 Astra Is Finally Here');
+    expect((clips[0] as any).label).toBe('no changes since publish');
+    expect(clips[0].at).toBe(D(30));
+  });
+
+  it('keeps the published/…/now layout the moment anything did change', () => {
+    const thumbs = [th(1, 'a', D(30)), th(2, 'b', D(31))];
+    const clips = buildTimeline({ publishedAt: D(30), thumbs, titles: [ti(1, 'x', D(30))], now: D(31, 18) });
+    expect(clips.map((c) => c.kind)).toEqual(['published', 'swap', 'now']);
+  });
+
+  it('is a full layout for a title change with one thumbnail', () => {
+    const clips = buildTimeline({
+      publishedAt: D(30), thumbs: [th(1, 'a', D(30))],
+      titles: [ti(1, 'before', D(30)), ti(2, 'after', D(31))], now: D(31, 18),
+    });
+    expect(clips.map((c) => c.kind)).toEqual(['published', 'title', 'now']);
+  });
+
   it('collapses an A/B/A rotation into one TEST clip, not three thumbnail clips', () => {
     // Rex Krueger v2jtQ96A2_Q shape: A, B, A over two days, settled by the time we look.
     const thumbs = [th(1, 'a', D(30)), th(2, 'b', D(30, 14)), th(3, 'a', D(31))];

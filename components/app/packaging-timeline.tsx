@@ -155,7 +155,13 @@ export function PackagingTimeline({ clips, ticks }: { clips: TimelineClip[]; tic
               <Shot src={c.url} />
               <span className="pt-title">{c.title}</span>
               <span className="cs-num pt-label" data-now={c.kind === 'now'} suppressHydrationWarning>
-                {c.kind === 'now' ? nowLabel(c.score) : `${c.label}${local ? ` · ${localDateTime(c.at)}` : ''}`}
+                {c.kind === 'now'
+                  ? nowLabel(c.score)
+                  /* "no changes since publish" is already a sentence about the publish moment;
+                     appending the time to it is the same fact twice, wrapped. */
+                  : c.kind === 'unchanged'
+                    ? c.label
+                    : `${c.label}${local ? ` · ${localDateTime(c.at)}` : ''}`}
               </span>
             </div>
           );

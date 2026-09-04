@@ -52,3 +52,62 @@ export function axisTicks(domain: [number, number], max = 7): number[] {
   for (let k = Math.ceil(d0 / step - 1e-9); k * step <= d1 + 1e-9; k++) out.push(Number((k * step).toFixed(6)));
   return out;
 }
+
+// ------------------------------------------------ the zoom, made visible ----
+//
+// The drag was the only way to change the view and nothing on the plate said so. A reader who
+// never tried it saw one fixed frame; a reader who tried it and overshot had no way back except
+// a double-click nobody had told them about. So: a hint while the view is whole, a rectangle
+// under the cursor while the drag is happening, a reset chip while it is not whole — and, for
+// the spans a creator actually asks for ("the first day", "the first week"), chips that set the
+// viewport without any dragging at all.
+
+/** Said once, in the plot's top-right corner, and gone the moment the reader has zoomed. */
+export const ZOOM_HINT = 'drag to zoom · double-click to reset';
+
+export interface RangeChip {
+  key: string;
+  /** The span from publish the chip asks for. Null is the whole domain. */
+  days: number | null;
+}
+
+/** The spans a creator thinks in. `all` is last because it is where the chart starts. */
+export const RANGE_CHIPS: readonly RangeChip[] = [
+  { key: '6h', days: 6 / 24 },
+  { key: '24h', days: 1 },
+  { key: '7d', days: 7 },
+  { key: '30d', days: 30 },
+  { key: 'all', days: null },
+];
+
+const EPS = 1e-6;
+
+/**
+ * The chips worth offering for a domain. A chip longer than the chart is a chip that does
+ * nothing — "30d" on a six-hour video is "all" wearing a different word — so it is not drawn.
+ * A chip exactly as long as the domain is the same button as `all`, and goes for the same reason.
+ */
+export function rangeChips(full: [number, number]): RangeChip[] {
+  const span = full[1] - full[0];
+  if (!(span > 0)) return [];
+  return RANGE_CHIPS.filter((c) => c.days == null || c.days < span - EPS);
+}
+
+/** The viewport a chip asks for: from publish, that far, never past the end of the chart. */
+export function chipViewport(chip: RangeChip, full: [number, number]): [number, number] {
+  if (chip.days == null) return [full[0], full[1]];
+  return [full[0], Math.min(full[0] + chip.days, full[1])];
+}
+
+/**
+ * Which chip the current viewport IS, or null when it is a viewport the reader dragged. That
+ * null is the point: a drag deselects the chips, because a highlighted "24h" over a window the
+ * reader pulled by hand would be the chart lying about what it is showing.
+ */
+export function activeChip(view: [number, number], full: [number, number]): string | null {
+  for (const c of rangeChips(full)) {
+    const v = chipViewport(c, full);
+    if (Math.abs(v[0] - view[0]) < EPS && Math.abs(v[1] - view[1]) < EPS) return c.key;
+  }
+  return null;
+}

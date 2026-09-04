@@ -53,7 +53,7 @@ export function seriesStroke(kind: SeriesKind, colors: Record<StrokeToken, strin
   return colors[STYLES[kind].strokeToken];
 }
 
-/** Legend text. What the line is, in the words a reader would use. */
+/** The recharts series `name`s. Not the legend: the legend draws itself (see LEGEND_LABELS). */
 export const SERIES_LABELS = {
   measured: 'this video · measured',
   implied: 'this video · estimated before tracking',
@@ -61,20 +61,45 @@ export const SERIES_LABELS = {
   expected: 'typical for this channel',
 } as const;
 
-export type LegendKey = keyof typeof SERIES_LABELS;
+/**
+ * The legend, as a reader would say it: THREE things on this chart.
+ *
+ * It used to have four, and two of them began with the same three words — "this video ·
+ * measured" and "this video · estimated before tracking" — which asked the reader to hold a
+ * distinction the chart was already making with its own ink. The solid stretch, the dotted
+ * stretch and the dashed stretch are one subject: this video. One entry, one swatch, and the
+ * swatch shows all three segments so the line kinds are still explained — by being shown.
+ */
+export const LEGEND_LABELS = {
+  video: 'this video',
+  forecast: 'expected from here',
+  expected: 'typical for this channel',
+} as const;
+
+export type LegendKey = keyof typeof LEGEND_LABELS;
+
+/** How the entry's swatch is drawn: the video's three segments, the ribbon, the grey dash. */
+export type LegendSwatch = 'segments' | 'ribbon' | 'dashed';
 
 /**
  * The order the legend reads in, and it is not the order recharts would give (which is the
- * order the shapes happen to be painted in, so the measured line — the only thing on the chart
- * we actually counted — came last, after the channel's curve). It reads outward from what is
- * known: what we measured, what we reconstructed behind it, what we expect ahead of it, and
- * only then the other subject on the plot, the channel.
+ * order the shapes happen to be painted in, so the video — the only thing on the chart we
+ * actually counted — came last, after the channel's curve). It reads outward from what is
+ * known: this video, what we expect of it next, and only then the other subject on the plot.
  */
-export const LEGEND_ORDER: readonly LegendKey[] = ['measured', 'implied', 'forecast', 'expected'];
+export const LEGEND_ORDER: readonly LegendKey[] = ['video', 'forecast', 'expected'];
+
+const SWATCHES: Record<LegendKey, LegendSwatch> = {
+  video: 'segments', forecast: 'ribbon', expected: 'dashed',
+};
 
 /** The legend entries actually present, in LEGEND_ORDER. `ribbon` marks the one with a band. */
-export function legendEntries(has: Partial<Record<LegendKey, boolean>>): Array<{ key: LegendKey; label: string; ribbon: boolean }> {
-  return LEGEND_ORDER.filter((k) => has[k]).map((key) => ({ key, label: SERIES_LABELS[key], ribbon: key === 'forecast' }));
+export function legendEntries(
+  has: Partial<Record<LegendKey, boolean>>
+): Array<{ key: LegendKey; label: string; swatch: LegendSwatch; ribbon: boolean }> {
+  return LEGEND_ORDER.filter((k) => has[k]).map((key) => ({
+    key, label: LEGEND_LABELS[key], swatch: SWATCHES[key], ribbon: SWATCHES[key] === 'ribbon',
+  }));
 }
 
 /**
@@ -99,13 +124,20 @@ export function trackingBeganLabel(
 }
 
 /**
- * Where the "tracking began" marker goes. It used to be drawn only in the full view, so the
+ * Where the "tracking began" marker goes, and it goes at the TOP.
+ *
+ * At the bottom it sat exactly where the channel's typical curve runs in the first hours of a
+ * video's life — flat, near the floor — so on Matt Wolfe's GPT-6 video the words and the grey
+ * line were the same pixels. Top of the plot area, with a halo behind the text (the plot's own
+ * background token, drawn by the caller), so no line ever crosses it wherever it lands.
+ *
+ * It used to be drawn only in the full view, so the
  * 72h zoom — the one showing the launch the label exists to explain — had a dotted stretch and
  * no word for it. In the zoom the first measurement can also sit outside the visible range, so
  * the line is clamped to the plot and the text is flipped inward when it is near the right
  * edge, rather than being written off the side of the chart. Null when there is nothing to place.
  */
-export type LabelPosition = 'insideBottomLeft' | 'insideBottomRight';
+export type LabelPosition = 'insideTopLeft' | 'insideTopRight';
 export function trackingLabelPlacement(
   firstMeasuredDay: number | null | undefined,
   maxDay: number
@@ -114,7 +146,7 @@ export function trackingLabelPlacement(
   const x = Math.min(Math.max(firstMeasuredDay, 0), maxDay);
   // The text runs to the right of the line, so past three-quarters of the width it would run
   // off the plot; there it is written back to the left instead.
-  return { x, position: x > maxDay * 0.75 ? 'insideBottomRight' : 'insideBottomLeft' };
+  return { x, position: x > maxDay * 0.75 ? 'insideTopRight' : 'insideTopLeft' };
 }
 
 // ------------------------------------------------------------- the ribbons ---
@@ -148,12 +180,6 @@ export const BAND_STYLES: Record<ThemeMode, Record<BandRing, { fillOpacity: numb
 export function bandStyle(ring: BandRing, theme: ThemeMode = 'light') {
   return BAND_STYLES[theme][ring];
 }
-
-/** Odds a reader can hold in their head, not percentile names. */
-export const BAND_LABELS: Record<BandRing, string> = {
-  inner: 'half of videos land here',
-  outer: '4 in 5 land here',
-};
 
 // ------------------------------------------------------------------ rows ----
 
@@ -285,16 +311,14 @@ export function nextScale(mode: ScaleMode): ScaleMode {
   return mode === 'linear' ? 'log' : 'linear';
 }
 
-/**
- * The odds, said once, under the legend — instead of twice inside every tooltip, where
- * "half of videos land here" and "4 in 5 land here" took two of the four lines a reader gets.
- */
-export const BAND_FOOTNOTE =
-  'the shaded band is where half of this channel’s videos land; the range in the tooltip is 4 in 5';
+/** Which part of the line the cursor is on. Only the forecast has a range to talk about. */
+export type TooltipKind = 'measured' | 'implied' | 'forecast';
 
 export interface TooltipPoint {
   /** The moment under the cursor, as an ISO string or Date. */
   at: string | Date;
+  /** Absent behaves as a measured point: a count, and no talk of ranges. */
+  kind?: TooltipKind;
   views?: number | null;
   typical?: number | null;
   inner?: readonly [number, number] | null;
@@ -304,11 +328,18 @@ export interface TooltipPoint {
 }
 
 /**
- * What the tooltip says, at most four lines: when, what it was, the likely range, the tail.
+ * What the tooltip says. Three lines on a point we counted; two more only where there is
+ * genuinely a range.
  *
- * It used to run to five or six — a date, a count, a typical, and both bands each carrying its
- * own sentence of odds — which is a paragraph following the cursor. The odds moved to
- * BAND_FOOTNOTE and each range is now a range.
+ * Two faults it is fixing. A measured point was carrying "likely" and "range" lines because the
+ * ROW carried a band — the boundary day writes into its neighbour's keys so the segments meet —
+ * so hovering a real measurement produced a forecast's paragraph about a number we already knew.
+ * And the ranges were written from the raw quantiles through compactNumber, so a tight band near
+ * the present rendered as "264K–264K": a range with no width, which reads as a bug rather than
+ * as certainty. A range whose two ends print the same is not a range and is not said.
+ *
+ * "likely" is the middle of the fitted band and "range" is the wider one — the odds live in
+ * those two words now, not in a footnote under the legend nor in a sentence in every tooltip.
  *
  * The header line is in the READER's zone and names it once: "Sep 4, 10:31 AM EDT".
  */
@@ -329,7 +360,15 @@ export function tooltipLines(p: TooltipPoint): string[] {
         : `${num(p.views)} views`
     );
   }
-  if (p.inner) lines.push(`likely ${num(p.inner[0])}–${num(p.inner[1])}`);
-  if (p.outer) lines.push(`range ${num(p.outer[0])}–${num(p.outer[1])}`);
+  if (p.kind !== 'forecast') return lines.slice(0, 3);
+  /** A band whose two ends print the same number is a point, and a point is not a range. */
+  const range = (word: string, b: readonly [number, number] | null | undefined) => {
+    if (!b) return;
+    const lo = num(b[0]), hi = num(b[1]);
+    if (lo === hi) return;
+    lines.push(`${word} ${lo}–${hi}`);
+  };
+  range('likely', p.inner);
+  range('range', p.outer);
   return lines.slice(0, 4);
 }

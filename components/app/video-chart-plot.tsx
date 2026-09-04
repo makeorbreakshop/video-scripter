@@ -22,62 +22,135 @@ import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel, trackingLabelPlacement,
   TYPICAL_STYLE, legendEntries, areaProps, DRAWN_RINGS, SCALE_MODES, nextScale, tooltipLines,
-  BAND_FOOTNOTE, visibleYDomain, type ScaleMode,
+  visibleYDomain, type ScaleMode, type TooltipKind,
 } from '@/lib/app/chart-style';
 import { markerLayout, markAt } from '@/lib/app/chart-marks';
-import { zoomDomain, axisTicks, isFullDomain } from '@/lib/app/chart-zoom';
+import {
+  zoomDomain, axisTicks, isFullDomain, rangeChips, chipViewport, activeChip, ZOOM_HINT,
+} from '@/lib/app/chart-zoom';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, dayLabel, HoverCard } from './video-chart';
 
 /**
- * The legend, drawn by hand rather than by recharts.
+ * The legend, drawn by hand rather than by recharts, and three entries long.
  *
- * Two reasons. Order: recharts lists series in the order they are PAINTED, which put the
- * channel's curve first and the one line we actually measured last. And the swatch: the
- * forecast is the only series carrying uncertainty, so its swatch shows the ribbon — the same
- * fill at the same opacity the chart uses — instead of a bare dash that says nothing about the
- * band it stands for. See chart-style.legendEntries for the order itself.
+ * Three reasons it is not recharts'. Order: recharts lists series in the order they are PAINTED,
+ * which put the channel's curve first and the one line we actually measured last. Count: the
+ * video was two entries opening with the same three words, so the legend spent half its width
+ * on a distinction the chart's own ink already makes — one entry now, whose swatch shows the
+ * solid, dotted and dashed segments together. And the ribbon: the forecast is the only series
+ * carrying uncertainty, so its swatch is the band itself, at the fill the chart uses.
  *
- * The scale toggle sits at its right end, and the odds wording — said inside every tooltip
- * before, twice — is one footnote underneath.
+ * The scale toggle sits at its right end. There is no footnote under it any more; the odds are
+ * the words "likely" and "range" in the tooltip and nowhere else.
  */
+function LegendSwatchMark({ swatch, accent, muted, mode }: {
+  swatch: 'segments' | 'ribbon' | 'dashed'; accent: string; muted: string; mode: 'light' | 'dark';
+}) {
+  const S = { measured: seriesStyle('measured'), implied: seriesStyle('implied'), forecast: seriesStyle('forecast') };
+  return (
+    <svg width={26} height={12} aria-hidden style={{ overflow: 'visible', flex: '0 0 auto' }}>
+      {swatch === 'ribbon' && (
+        <>
+          <rect x={0} y={2.5} width={26} height={7} fill={accent} fillOpacity={bandStyle('inner', mode).fillOpacity} />
+          <line x1={0} y1={6} x2={26} y2={6} stroke={accent} strokeWidth={S.forecast.width}
+                strokeDasharray={S.forecast.dash} strokeOpacity={S.forecast.opacity} />
+        </>
+      )}
+      {swatch === 'dashed' && (
+        <line x1={0} y1={6} x2={26} y2={6} stroke={muted} strokeWidth={TYPICAL_STYLE.width} strokeDasharray={TYPICAL_STYLE.dash} />
+      )}
+      {/* One line, three stretches: what we reconstructed, what we counted, what we expect. */}
+      {swatch === 'segments' && (
+        <>
+          <line x1={0} y1={6} x2={8} y2={6} stroke={accent} strokeWidth={S.implied.width}
+                strokeDasharray={S.implied.dash} strokeOpacity={S.implied.opacity} />
+          <line x1={8} y1={6} x2={18} y2={6} stroke={accent} strokeWidth={S.measured.width} />
+          <line x1={18} y1={6} x2={26} y2={6} stroke={accent} strokeWidth={S.forecast.width}
+                strokeDasharray={S.forecast.dash} strokeOpacity={S.forecast.opacity} />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function ChartLegend({ entries, accent, muted, mode, scale, onScale }: {
   entries: ReturnType<typeof legendEntries>;
   accent: string; muted: string; mode: 'light' | 'dark';
   scale: ScaleMode; onScale: () => void;
 }) {
-  const styleFor = (key: string) =>
-    key === 'expected'
-      ? { color: muted, dash: TYPICAL_STYLE.dash, width: TYPICAL_STYLE.width, opacity: 1 }
-      : (() => { const st = seriesStyle(key as any); return { color: accent, dash: st.dash, width: st.width, opacity: st.opacity }; })();
   return (
-    <div style={{ display: 'grid', gap: 4, justifyItems: 'center' }}>
-      <ul style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '4px 16px', margin: 0, padding: 0, listStyle: 'none' }}>
-        {entries.map((e) => {
-          const st = styleFor(e.key);
-          return (
-            <li key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
-              <svg width={24} height={12} aria-hidden style={{ overflow: 'visible', flex: '0 0 auto' }}>
-                {e.ribbon && <rect x={0} y={2.5} width={24} height={7} fill={accent} fillOpacity={bandStyle('inner', mode).fillOpacity} />}
-                <line x1={0} y1={6} x2={24} y2={6} stroke={st.color} strokeWidth={st.width} strokeDasharray={st.dash} strokeOpacity={st.opacity} />
-              </svg>
-              <span>{e.label}</span>
-            </li>
-          );
-        })}
-        <li>
-          <button type="button" onClick={onScale} aria-label={`y axis scale: ${scale}`}
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: muted, fontSize: 11 }}>
-            {SCALE_MODES.map((m, i) => (
-              <span key={m}>
-                {i > 0 && <span style={{ opacity: 0.5 }}> / </span>}
-                <span style={{ color: m === scale ? accent : muted, fontWeight: m === scale ? 600 : 400 }}>{m}</span>
-              </span>
-            ))}
-          </button>
+    <ul style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '4px 16px', margin: 0, padding: 0, listStyle: 'none' }}>
+      {entries.map((e) => (
+        <li key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
+          <LegendSwatchMark swatch={e.swatch} accent={accent} muted={muted} mode={mode} />
+          <span>{e.label}</span>
         </li>
-      </ul>
-      <p style={{ margin: 0, fontSize: 10, color: muted, opacity: 0.85, textAlign: 'center' }}>{BAND_FOOTNOTE}</p>
+      ))}
+      <li>
+        <button type="button" onClick={onScale} aria-label={`y axis scale: ${scale}`}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: muted, fontSize: 11 }}>
+          {SCALE_MODES.map((m, i) => (
+            <span key={m}>
+              {i > 0 && <span style={{ opacity: 0.5 }}> / </span>}
+              <span style={{ color: m === scale ? accent : muted, fontWeight: m === scale ? 600 : 400 }}>{m}</span>
+            </span>
+          ))}
+        </button>
+      </li>
+    </ul>
+  );
+}
+
+/**
+ * "tracking began Sep 3", at the top of the plot with a halo behind it.
+ *
+ * At the bottom — where it was — it landed exactly on the channel's typical curve, which in the
+ * first hours of a video's life is flat and near the floor: on Matt Wolfe's GPT-6 video the
+ * words and the grey line were the same pixels. Top of the plot, and a rect in the surface
+ * token behind the text so nothing that crosses that height ever runs through the letters.
+ * Where it sits (and which side of the rule it is written on) is chart-style's decision.
+ */
+function TrackingLabel({ viewBox, text, muted, surface, flip }: {
+  viewBox?: { x?: number; y?: number }; text: string; muted: string; surface: string; flip: boolean;
+}) {
+  const x = viewBox?.x ?? 0;
+  const y = (viewBox?.y ?? 0) + 13;
+  const w = text.length * 5.1 + 8;          // 10px system text, near enough for a halo
+  const left = flip ? x - 4 - w : x + 4;
+  return (
+    <g aria-hidden>
+      <rect x={left} y={y - 9.5} width={w} height={13} rx={3} fill={surface} fillOpacity={0.92} />
+      <text x={left + 4} y={y} fontSize={10} fill={muted}>{text}</text>
+    </g>
+  );
+}
+
+/** The chips above the plot: a span a creator asks for by name, instead of a drag they guess at. */
+function RangeChips({ chips, active, muted, accent, line, onPick, zoomed, onReset }: {
+  chips: ReturnType<typeof rangeChips>; active: string | null;
+  muted: string; accent: string; line: string;
+  onPick: (key: string) => void; zoomed: boolean; onReset: () => void;
+}) {
+  if (!chips.length) return null;
+  const chip = (on: boolean): React.CSSProperties => ({
+    font: 'inherit', fontSize: 11, lineHeight: '18px', padding: '0 8px', cursor: 'pointer',
+    borderRadius: 999, border: `1px solid ${on ? accent : line}`,
+    background: 'none', color: on ? accent : muted, fontWeight: on ? 600 : 400,
+  });
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+      {chips.map((c) => (
+        <button key={c.key} type="button" style={chip(active === c.key)} aria-pressed={active === c.key}
+                onClick={() => onPick(c.key)}>
+          {c.key}
+        </button>
+      ))}
+      {zoomed && (
+        <button type="button" onClick={onReset} style={{ ...chip(false), marginLeft: 'auto', color: accent }}>
+          reset
+        </button>
+      )}
     </div>
   );
 }
@@ -123,6 +196,19 @@ export default function VideoChartPlot({
     }
     setDrag(null);
   };
+
+  // The zoom, made visible. The chips are the spans a creator asks for by name; which of them
+  // are worth offering, what each one means as a viewport, and which one the current view IS
+  // are all lib/app/chart-zoom's decisions — a drag lands on none of them and lights none.
+  const chips = useMemo(() => rangeChips(full), [full]);
+  const active = useMemo(() => activeChip(domain, full), [domain, full]);
+  const pickChip = (key: string) => {
+    const c = chips.find((x) => x.key === key);
+    if (!c) return;
+    const next = chipViewport(c, full);
+    setView(isFullDomain(next, full) ? null : next);
+  };
+  const zoomed = !isFullDomain(domain, full);
   const ticks = useMemo(() => axisTicks(domain), [domain]);
   const launch = domain[1] - domain[0] <= 3;
   const laid = useMemo(() => markerLayout(marks, domain), [marks, domain]);
@@ -139,6 +225,11 @@ export default function VideoChartPlot({
   };
 
   const hoveredMarker = markers.find((m) => markerKey(m) === hovered) ?? null;
+
+  // Which part of the line the cursor is on. The boundary rows carry their neighbour's keys so
+  // the segments meet, so "the row has a band" is NOT the same question as "this is a forecast"
+  // — asking the row was what put "likely" and "range" under a measurement we actually counted.
+  const kindByDay = useMemo(() => new Map(series.map((p) => [p.day, p.kind] as const)), [series]);
 
   const S = { measured: seriesStyle('measured'), implied: seriesStyle('implied'), forecast: seriesStyle('forecast') };
   const stroke = (t: 'accent' | 'muted') => (t === 'accent' ? C.accent : C.muted);
@@ -172,9 +263,23 @@ export default function VideoChartPlot({
 
   return (
     <div>
+      <RangeChips chips={chips} active={active} muted={C.muted} accent={C.accent} line={C.line}
+                  onPick={pickChip} zoomed={zoomed} onReset={() => setView(null)} />
+
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
           screen is wider than the chart and would stretch the whole page. Clip it here. */}
-      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+      {/* userSelect: without it a drag across the plot selects the axis labels it passes over,
+          so the zoom gesture paints the chart blue on its way. */}
+      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', position: 'relative', userSelect: 'none' }}>
+      {/* The chart could always be dragged and nothing on the plate said so. Said once, in the
+          corner, and gone the moment the reader has done it — an instruction for something you
+          have already done is clutter. */}
+      {!zoomed && (
+        <span aria-hidden style={{
+          position: 'absolute', top: 2, right: 8, zIndex: 1, pointerEvents: 'none',
+          fontSize: 10, color: C.muted, opacity: 0.7,
+        }}>{ZOOM_HINT}</span>
+      )}
       <ResponsiveContainer width="100%" height={340}>
         <ComposedChart
           data={rows} margin={{ top: 22, right: 58, left: 4, bottom: 0 }}
@@ -199,9 +304,10 @@ export default function VideoChartPlot({
               const mine = row.dot ?? row.views ?? row.projected ?? row.implied;
               const t0 = publishedAt ? new Date(publishedAt).getTime() : NaN;
               const at = Number.isFinite(t0) ? new Date(t0 + Number(label) * 86_400_000) : new Date(NaN);
-              // Four lines at most, and the odds words are a footnote under the legend now.
+              // Three lines on a point we counted; the ranges belong to the forecast alone.
               const lines = tooltipLines({
-                at, views: mine ?? null, typical: row.expected ?? null,
+                at, kind: (kindByDay.get(Number(label)) ?? 'measured') as TooltipKind,
+                views: mine ?? null, typical: row.expected ?? null,
                 inner: row.bandInner ?? null, outer: row.bandOuter ?? null,
               });
               return (
@@ -217,7 +323,7 @@ export default function VideoChartPlot({
             wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }}
             content={() => (
               <ChartLegend
-                entries={legendEntries({ measured: hasMeasured, implied: hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
+                entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
                 accent={C.accent} muted={C.muted} mode={C.mode}
                 scale={scale} onScale={() => setScale(nextScale(scale))}
               />
@@ -276,8 +382,8 @@ export default function VideoChartPlot({
           {trackingBegan && trackingAt && (
             <ReferenceLine
               x={trackingAt.x} stroke={C.muted} strokeWidth={1} strokeOpacity={0.35} strokeDasharray="2 3"
-              label={{ value: trackingBegan, fontSize: 10, fill: C.muted, position: trackingAt.position,
-                dx: trackingAt.position === 'insideBottomLeft' ? 4 : -4, dy: -4 }}
+              label={<TrackingLabel text={trackingBegan} muted={C.muted} surface={C.surface}
+                                    flip={trackingAt.position === 'insideTopRight'} />}
             />
           )}
 
@@ -334,24 +440,15 @@ export default function VideoChartPlot({
             );
           })}
 
-          {/* What the reader is dragging over, while they drag. */}
+          {/* What the reader is dragging over, while they drag — in the accent, and edged, so
+              the gesture shows its own result instead of a barely-there grey wash. */}
           {drag && drag.from !== drag.to && (
             <ReferenceArea x1={Math.min(drag.from, drag.to)} x2={Math.max(drag.from, drag.to)}
-                           fill={C.ink} fillOpacity={0.06} stroke="none" />
+                           fill={C.accent} fillOpacity={0.12} stroke={C.accent} strokeOpacity={0.45} />
           )}
         </ComposedChart>
       </ResponsiveContainer>
       </div>
-
-      {!isFullDomain(domain, full) && (
-        <p style={{ fontSize: 11, color: 'var(--cs-muted)', marginTop: 6 }}>
-          <button type="button" onClick={() => setView(null)}
-                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--cs-accent)', cursor: 'pointer', font: 'inherit' }}>
-            reset zoom
-          </button>
-          <span> · or double-click the chart</span>
-        </p>
-      )}
 
       {noBaseline && (
         <p style={{ color: 'var(--cs-muted)', fontSize: 12, marginTop: 8 }}>

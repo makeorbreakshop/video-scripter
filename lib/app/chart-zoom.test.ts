@@ -96,3 +96,83 @@ describe('axisTicks on the sub-day domains the horizon itself can produce', () =
     for (const end of [6 / 24, 12 / 24, 1, 3, 30, 365]) expect(axisTicks([0, end]).length).toBeLessThanOrEqual(8);
   });
 });
+
+// ------------------------------------------------ the zoom, made visible ----
+//
+// Brandon, on Matt Wolfe's GPT-6 video: the chart could be zoomed and nothing said so. The
+// affordances are decisions about a domain like every other one here, so they are asserted here.
+import { ZOOM_HINT, RANGE_CHIPS, rangeChips, chipViewport, activeChip } from './chart-zoom';
+
+const keys = (full: [number, number]) => rangeChips(full).map((c) => c.key);
+
+describe('the range chips offer only spans shorter than the chart', () => {
+  it('offers a six-hour video nothing but the whole of it', () => {
+    expect(keys([0, 6 / 24])).toEqual(['all']);
+  });
+
+  it('offers a three-day video its first six hours and its first day', () => {
+    expect(keys([0, 3])).toEqual(['6h', '24h', 'all']);
+  });
+
+  it('drops the chip that is the same button as "all"', () => {
+    // A 30d chip on a 30-day chart sets the domain it already has.
+    expect(keys([0, 30])).toEqual(['6h', '24h', '7d', 'all']);
+  });
+
+  it('offers the whole ladder on a year', () => {
+    expect(keys([0, 365])).toEqual(['6h', '24h', '7d', '30d', 'all']);
+  });
+
+  it('has nothing to offer for an empty domain', () => {
+    expect(rangeChips([0, 0])).toEqual([]);
+  });
+
+  it('always ends on "all"', () => {
+    expect(RANGE_CHIPS[RANGE_CHIPS.length - 1].days).toBeNull();
+  });
+});
+
+describe('a chip is a viewport from publish, clamped to the chart', () => {
+  it('runs from publish to the span it names', () => {
+    expect(chipViewport({ key: '24h', days: 1 }, [0, 30])).toEqual([0, 1]);
+    expect(chipViewport({ key: '7d', days: 7 }, [0, 30])).toEqual([0, 7]);
+  });
+
+  it('never runs past the end of the chart', () => {
+    expect(chipViewport({ key: '30d', days: 30 }, [0, 3])).toEqual([0, 3]);
+  });
+
+  it('is the whole domain for "all"', () => {
+    expect(chipViewport({ key: 'all', days: null }, [0, 3])).toEqual([0, 3]);
+  });
+});
+
+describe('activeChip: which chip the reader is looking at', () => {
+  const FULL30: [number, number] = [0, 30];
+
+  it('is "all" at rest', () => {
+    expect(activeChip(FULL30, FULL30)).toBe('all');
+  });
+
+  it('is the chip whose viewport this is', () => {
+    expect(activeChip([0, 1], FULL30)).toBe('24h');
+    expect(activeChip([0, 7], FULL30)).toBe('7d');
+    expect(activeChip([0, 6 / 24], FULL30)).toBe('6h');
+  });
+
+  it('is nothing at all after a drag', () => {
+    // A drag deselects: a lit "24h" over a hand-pulled window would be the chart lying.
+    expect(activeChip([2, 9], FULL30)).toBeNull();
+    expect(activeChip([0, 4], FULL30)).toBeNull();
+  });
+
+  it('never names a chip the chart is not offering', () => {
+    expect(activeChip([0, 3], [0, 3])).toBe('all');   // not "30d", clamped though it would be
+  });
+});
+
+describe('the hint says both gestures, once', () => {
+  it('names the drag and the way back', () => {
+    expect(ZOOM_HINT).toBe('drag to zoom · double-click to reset');
+  });
+});

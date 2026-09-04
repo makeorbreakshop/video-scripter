@@ -2,11 +2,13 @@
 // an accent band, so a reader could not tell reconstruction from projection. This is the map
 // from series kind to how it is drawn — the one place the two are made to look different.
 import {
-  seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel,
+  seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel,
   seriesStroke, TYPICAL_STYLE, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
-  LEGEND_ORDER, legendEntries, type ThemeMode,
+  LEGEND_ORDER, LEGEND_LABELS, legendEntries, type ThemeMode,
 } from './chart-style';
 import type { SeriesPoint } from './chart-series';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('a series kind decides how it is drawn, and the kinds do not look alike', () => {
   it('draws the reconstructed past in the video’s own colour, dotted, with no band', () => {
@@ -71,25 +73,25 @@ describe('the "tracking began" label stays inside the plot, in both zooms', () =
   it('places the label at the first measurement in the 72h zoom', () => {
     const p = trackingLabelPlacement(0.26, 3)!;
     expect(p.x).toBeCloseTo(0.26, 9);
-    expect(p.position).toBe('insideBottomLeft');
+    expect(p.position).toBe('insideTopLeft');
   });
 
   it('places it in the full view too', () => {
     const p = trackingLabelPlacement(0.26, 365)!;
     expect(p.x).toBeCloseTo(0.26, 9);
-    expect(p.position).toBe('insideBottomLeft');
+    expect(p.position).toBe('insideTopLeft');
   });
 
   it('clamps a measurement past the right edge back inside the plot', () => {
     const p = trackingLabelPlacement(3.48, 3)!;   // Malecki, in the 72h zoom
     expect(p.x).toBeLessThanOrEqual(3);
     expect(p.x).toBeGreaterThan(0);
-    expect(p.position).toBe('insideBottomRight');  // so the text runs back into the plot
+    expect(p.position).toBe('insideTopRight');  // so the text runs back into the plot
   });
 
   it('flips the text inward once the line is near the right edge', () => {
-    expect(trackingLabelPlacement(2.9, 3)!.position).toBe('insideBottomRight');
-    expect(trackingLabelPlacement(1.0, 3)!.position).toBe('insideBottomLeft');
+    expect(trackingLabelPlacement(2.9, 3)!.position).toBe('insideTopRight');
+    expect(trackingLabelPlacement(1.0, 3)!.position).toBe('insideTopLeft');
   });
 
   it('has nothing to place without a first measurement', () => {
@@ -194,10 +196,16 @@ describe('chartRows: what the plot actually feeds recharts', () => {
   });
 });
 
-describe('the band legend explains both ribbons', () => {
-  it('says what the inner and outer ranges mean, in odds a reader can hold', () => {
-    expect(BAND_LABELS.inner).toBe('half of videos land here');
-    expect(BAND_LABELS.outer).toBe('4 in 5 land here');
+describe('the odds are two words in the tooltip and nothing anywhere else', () => {
+  // They were a sentence in every tooltip, then a footnote under the legend. Both were a
+  // paragraph explaining a picture. The words "likely" and "range" carry it now.
+  it('has no odds wording left in the module at all', () => {
+    const src = readFileSync(join(__dirname, 'chart-style.ts'), 'utf8');
+    expect(src).not.toMatch(/half of videos/i);
+    expect(src).not.toMatch(/4 in 5/i);
+  });
+
+  it('still draws the inner ribbon darker than the outer', () => {
     expect(bandStyle('inner').fillOpacity).toBeGreaterThan(bandStyle('outer').fillOpacity);
   });
 });
@@ -264,25 +272,35 @@ describe('the ribbons are visible on both grounds', () => {
   });
 });
 
-describe('the legend reads outward from what is known', () => {
-  it('orders it measured, reconstructed, forecast, channel', () => {
-    expect(LEGEND_ORDER).toEqual(['measured', 'implied', 'forecast', 'expected']);
-    const all = legendEntries({ measured: true, implied: true, forecast: true, expected: true });
+describe('the legend is three things, and the swatch does the explaining', () => {
+  // It was four, and two of them opened with the same three words — "this video · measured"
+  // and "this video · estimated before tracking". The solid, dotted and dashed stretches are
+  // one subject. One entry, one swatch carrying all three segments.
+  it('reads: this video, what we expect next, the channel', () => {
+    expect(LEGEND_ORDER).toEqual(['video', 'forecast', 'expected']);
+    const all = legendEntries({ video: true, forecast: true, expected: true });
     expect(all.map((e) => e.label)).toEqual([
-      'this video · measured',
-      'this video · estimated before tracking',
+      'this video',
       'expected from here',
       'typical for this channel',
     ]);
   });
 
-  it('gives the swatch with the ribbon to the forecast, and to nothing else', () => {
-    const all = legendEntries({ measured: true, implied: true, forecast: true, expected: true });
+  it('never says "measured" or "estimated" in the legend again', () => {
+    for (const v of Object.values(LEGEND_LABELS)) {
+      expect(v).toBe(v.toLowerCase());
+      expect(v).not.toMatch(/measured|estimated/);
+    }
+  });
+
+  it('gives the video the segmented swatch, the forecast the ribbon, the channel the dash', () => {
+    const all = legendEntries({ video: true, forecast: true, expected: true });
+    expect(all.map((e) => e.swatch)).toEqual(['segments', 'ribbon', 'dashed']);
     expect(all.filter((e) => e.ribbon).map((e) => e.key)).toEqual(['forecast']);
   });
 
   it('lists only what the chart actually drew, still in order', () => {
-    expect(legendEntries({ measured: true, expected: true }).map((e) => e.key)).toEqual(['measured', 'expected']);
+    expect(legendEntries({ video: true, expected: true }).map((e) => e.key)).toEqual(['video', 'expected']);
     expect(legendEntries({})).toEqual([]);
   });
 });
@@ -290,7 +308,7 @@ describe('the legend reads outward from what is known', () => {
 // ------------------------------------------------------------- chart v2 ----
 
 import {
-  BAND_DISPLAY, areaProps, SCALE_MODES, nextScale, tooltipLines, BAND_FOOTNOTE,
+  BAND_DISPLAY, areaProps, SCALE_MODES, nextScale, tooltipLines,
 } from './chart-style';
 
 describe('only the inner ribbon is drawn', () => {
@@ -303,7 +321,7 @@ describe('only the inner ribbon is drawn', () => {
 
   it('still keeps the outer values, because the tooltip says them', () => {
     expect(BAND_STYLES.light.outer).toBeDefined();
-    expect(tooltipLines({ at: '2026-09-23T22:14:00-04:00', views: 179_000, outer: [127_000, 395_000] }))
+    expect(tooltipLines({ at: '2026-09-23T22:14:00-04:00', kind: 'forecast', views: 179_000, outer: [127_000, 395_000] }))
       .toContain('range 127K–395K');
   });
 });
@@ -336,18 +354,34 @@ describe('the legend’s scale toggle', () => {
   });
 });
 
-describe('the odds wording is a footnote, said once', () => {
-  it('reads as one sentence under the legend', () => {
-    expect(BAND_FOOTNOTE).toBe('the shaded band is where half of this channel’s videos land; the range in the tooltip is 4 in 5');
-  });
-});
-
-describe('tooltipLines: four lines at the most', () => {
+describe('tooltipLines: three lines on a point we counted', () => {
   const AT = '2026-09-23T22:14:00-04:00'; // 10:14 PM ET
 
-  it('reads date, count, likely, range — and nothing else', () => {
+  // Matt Wolfe's GPT-6 video, 2026-09-04: hovering a real measurement produced a forecast's
+  // paragraph — "likely", "range" — because the boundary ROW carries a band so the segments
+  // meet. The bands belong to the forecast; the counted points get when, and what it was.
+  it('says when and what it was on a measured point, and nothing else', () => {
     const lines = tooltipLines({
-      at: AT, views: 179_000, typical: 88_000, inner: [148_000, 258_000], outer: [127_000, 395_000],
+      at: AT, kind: 'measured', views: 179_000, typical: 88_000,
+      inner: [148_000, 258_000], outer: [127_000, 395_000],
+    });
+    expect(lines).toEqual(['Sep 23, 10:14 PM EDT', '179K views · typical 88K']);
+    expect(lines.length).toBeLessThanOrEqual(3);
+  });
+
+  it('treats the reconstructed past the same way', () => {
+    const lines = tooltipLines({ at: AT, kind: 'implied', views: 12_000, typical: 9_000, inner: [1, 2] });
+    expect(lines).toEqual(['Sep 23, 10:14 PM EDT', '12K views · typical 9.0K']);
+  });
+
+  it('defaults to a counted point when no kind is given', () => {
+    expect(tooltipLines({ at: AT, views: 10, inner: [8, 12] })).toEqual(['Sep 23, 10:14 PM EDT', '10 views']);
+  });
+
+  it('adds the two ranges on a forecast point, likely before range', () => {
+    const lines = tooltipLines({
+      at: AT, kind: 'forecast', views: 179_000, typical: 88_000,
+      inner: [148_000, 258_000], outer: [127_000, 395_000],
     });
     expect(lines).toEqual([
       'Sep 23, 10:14 PM EDT',
@@ -357,21 +391,27 @@ describe('tooltipLines: four lines at the most', () => {
     ]);
   });
 
-  it('never says more than four things', () => {
+  // "264K–264K" is what a tight band near the present looks like once both ends round to the
+  // same compact number. It reads as a bug. A range with no width is not a range.
+  it('never writes a range whose two ends print the same', () => {
     const lines = tooltipLines({
-      at: AT, views: 1, typical: 2, inner: [1, 2], outer: [1, 2],
+      at: AT, kind: 'forecast', views: 264_100, inner: [264_000, 264_400], outer: [261_000, 268_000],
     });
-    expect(lines.length).toBeLessThanOrEqual(4);
+    expect(lines.some((l) => /^likely/.test(l))).toBe(false);
+    expect(lines).toContain('range 261K–268K');
+    expect(lines.join(' ')).not.toMatch(/264K–264K/);
   });
 
-  it('drops the lines it has nothing to say on', () => {
-    expect(tooltipLines({ at: AT, views: 179_000 })).toEqual(['Sep 23, 10:14 PM EDT', '179K views']);
+  it('says nothing about ranges it does not have', () => {
+    expect(tooltipLines({ at: AT, kind: 'forecast', views: 179_000 })).toEqual(['Sep 23, 10:14 PM EDT', '179K views']);
     expect(tooltipLines({ at: AT })).toEqual(['Sep 23, 10:14 PM EDT']);
   });
 
-  it('puts the inner range before the outer one', () => {
-    const lines = tooltipLines({ at: AT, views: 10, inner: [8, 12], outer: [5, 20] });
-    expect(lines.findIndex((l) => l.startsWith('likely'))).toBeLessThan(lines.findIndex((l) => l.startsWith('range')));
+  it('never says more than four things', () => {
+    const lines = tooltipLines({
+      at: AT, kind: 'forecast', views: 1, typical: 2, inner: [1, 3], outer: [1, 4],
+    });
+    expect(lines.length).toBeLessThanOrEqual(4);
   });
 
   // The app's clock is the READER's clock, not Brandon's (lib/app/local-time.ts). The zone is

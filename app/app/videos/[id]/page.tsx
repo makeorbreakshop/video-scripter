@@ -41,7 +41,9 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
         />
       </section>
 
-      {v.timeline.length > 1 && (
+      {/* One card is a history too: "no changes since publish". The gate was >1 because the
+          no-change case used to build a PUBLISHED and an identical NOW. */}
+      {v.timeline.length > 0 && (
         <section className="cs-section">
           {/* The heading stands alone: no subtitle, no explainer. */}
           <h2>Packaging history</h2>

@@ -36,7 +36,14 @@ export type TimelineClip =
     }
   | { kind: 'title'; key: string; at: string; url: string; title: string; label: string; markerKeys: string[] }
   | { kind: 'swap'; key: string; at: string; url: string; title: string; label: string; markerKeys: string[] }
-  | { kind: 'now'; key: string; at: string; url: string; title: string; score: number | null };
+  | { kind: 'now'; key: string; at: string; url: string; title: string; score: number | null }
+  /**
+   * The whole history, when there is none. One thumbnail version and no title past v1 means the
+   * video is wearing exactly what it was published in — and the strip was drawing that as TWO
+   * cards, a PUBLISHED and a NOW showing the same image and the same title, which reads as a
+   * change that happened and asks the reader to compare two identical pictures. It is one card.
+   */
+  | { kind: 'unchanged'; key: string; at: string; url: string; title: string; label: string };
 
 export type TimelineInput = {
   publishedAt: string;
@@ -67,8 +74,18 @@ export function buildTimeline(input: TimelineInput): TimelineClip[] {
   const titles = [...(input.titles || [])].sort((a, b) => a.version - b.version);
   if (!thumbs.length) return [];
 
-  const clips: TimelineClip[] = [];
   const first = thumbs[0];
+
+  // Nothing ever changed: one card, not a before and an identical after.
+  if (thumbs.length === 1 && titles.length <= 1) {
+    return [{
+      kind: 'unchanged', key: 'unchanged', at: input.publishedAt,
+      url: first.url, title: titles[0]?.title ?? '',
+      label: 'no changes since publish',
+    }];
+  }
+
+  const clips: TimelineClip[] = [];
   clips.push({
     kind: 'published', key: 'published', at: input.publishedAt,
     url: first.url, title: titles[0]?.title ?? '',
