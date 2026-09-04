@@ -13,9 +13,10 @@
 // measurement instead of floating beside it.
 import { expectedAt, forecastAt, type Mult, type Longtail, type CurvePoint } from '../admin/video-curve';
 import {
-  forecastBand, trajectoryFactor, FITTED_BANDS_2026_09_03,
+  forecastBand, fitTrajectory, trajectoryFactor, FITTED_BANDS_2026_09_03,
   type BandTable, type ForecastBand, type TrajectoryPoint,
 } from '../scoring/bands';
+import { markObservations } from './observations';
 
 export type SeriesKind = 'measured' | 'implied' | 'forecast';
 /**
@@ -63,6 +64,17 @@ const IMPLIED_SIGMA_PER_LOGDAY = 0.55;
 export const MEASURED_GAP_DAYS = 2;
 /** Interpolating a gap between two real points is a much smaller claim than the launch is. */
 const GAP_SIGMA = 0.12;
+/**
+ * The join rule. The reconstructed past is the channel shape at the scale fitted through ALL
+ * the video's non-stale measurements (fitTrajectory), which in general does NOT pass through
+ * the first of them — that is the point: one reading should not set the whole launch. But a
+ * line that ends a hand's breadth from the line it is supposed to run into reads as a bug, so
+ * over the LAST 10% of the implied span in log(day+1) the fitted value is blended, in log
+ * space, toward the value anchored exactly on that first measurement: weight 0 at 90% of the
+ * span, weight 1 at the measurement itself. The seam is closed by moving the reconstruction,
+ * never by moving a measurement. The same rule closes both ends of a between-measurement gap.
+ */
+export const JOIN_BLEND = 0.1;
 
 const lg = (d: number) => Math.log(Math.max(d, 0) + 1);
 
@@ -107,7 +119,11 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   const { mult, horizonDay } = input;
   const lt = input.longtail ?? null;
   const bands = input.bands === undefined ? FITTED_BANDS_2026_09_03 : input.bands;
-  const acts = dedupeActuals(input.actuals || []);
+  // A reading YouTube had already cached when we took it is not a measurement (see
+  // ./observations): it is excluded from the line, the anchors and the fit alike.
+  const marked = markObservations(dedupeActuals(input.actuals || []));
+  const acts = marked.filter((m) => !m.stale).map(({ day, views }) => ({ day, views }));
+  const fittable = marked.filter((m) => !m.stale && !m.duplicate).map(({ day, views }) => ({ day, views }));
   const shape = shapeFn(input.baseline, mult, lt);
   const days = seriesDays(horizonDay, acts.map((a) => a.day));
   const byDay = new Map(acts.map((a) => [a.day, a.views] as const));
@@ -117,10 +133,15 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   // What this video's OWN record says about how predictable it is. The fitted band answers
   // "how wrong is a forecast made at day 4?" across the whole corpus; a video we have watched
   // sit on its channel's curve for ten days is a different case, and the corpus covers both.
-  const traj: TrajectoryPoint[] = acts
+  const traj: TrajectoryPoint[] = fittable
     .map((a) => ({ day: a.day, views: a.views, expected: shape(a.day) }))
     .filter((p) => p.expected > 0 && Number.isFinite(p.expected));
   const factor = trajectoryFactor(traj);
+  // ONE free parameter — the log scale — fitted through every non-stale measurement, weighted
+  // by the log-time span each stands for, so twenty samples inside one launch hour do not
+  // outvote a daily record. This, not the first reading, is what the implied past is drawn at.
+  const fitScale = traj.length ? Math.exp(fitTrajectory(traj).logScale) : 1;
+  const fitted = (d: number) => Math.max(0, shape(d) * fitScale);
   // Nothing measured: the whole past is implied off the channel shape, the future forecast.
   const boundary = last ? last.day : Math.max(input.ageDays ?? 0, 0);
 
@@ -164,7 +185,13 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
 
     if (day < first!.day) {
       // ---- implied past: the launch we never saw ----
-      const views = anchored(day, first!);
+      // The fitted shape, blended into the first measurement over the last JOIN_BLEND of the
+      // span so the dotted line meets the solid one instead of stopping beside it.
+      const L = lg(first!.day);
+      const t = L > 0 ? Math.min(Math.max((lg(day) - (1 - JOIN_BLEND) * L) / (JOIN_BLEND * L), 0), 1) : 1;
+      const f = fitted(day), a = anchored(day, first!);
+      const views = t <= 0 ? f : t >= 1 ? a
+        : f > 0 && a > 0 ? Math.exp((1 - t) * Math.log(f) + t * Math.log(a)) : (1 - t) * f + t * a;
       // We know less about the launch the further it is from the first thing we measured.
       const sigma = IMPLIED_SIGMA0 + IMPLIED_SIGMA_PER_LOGDAY * (lg(first!.day) - lg(day));
       out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
@@ -186,9 +213,16 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
     const span = lg(hi.day) - lg(lo.day);
     const w = span > 0 ? (lg(day) - lg(lo.day)) / span : 0;
     const a = anchored(day, lo), b = anchored(day, hi);
-    // Blend the two anchorings in log space, so the path leaves `lo` exactly and arrives at
-    // `hi` exactly, following the channel shape in between.
-    const views = a > 0 && b > 0 ? Math.exp((1 - w) * Math.log(a) + w * Math.log(b)) : (1 - w) * a + w * b;
+    // The middle of the gap follows the SAME fitted scale as the implied past; only the last
+    // JOIN_BLEND at each end is blended toward that end's own measurement, so the path leaves
+    // `lo` exactly and arrives at `hi` exactly (see JOIN_BLEND).
+    const wa = Math.min(Math.max(1 - w / JOIN_BLEND, 0), 1);
+    const wb = Math.min(Math.max(1 - (1 - w) / JOIN_BLEND, 0), 1);
+    const f = fitted(day);
+    const parts: Array<[number, number]> = [[f, Math.max(1 - wa - wb, 0)], [a, wa], [b, wb]];
+    const views = parts.every(([v]) => v > 0)
+      ? Math.exp(parts.reduce((acc, [v, k]) => acc + k * Math.log(v), 0))
+      : parts.reduce((acc, [v, k]) => acc + k * v, 0);
     const sigma = GAP_SIGMA * 2 * Math.min(w, 1 - w); // zero at both ends, widest mid-gap
     out.push({ day, views, kind: 'implied', band: sym(views, sigma) });
   }

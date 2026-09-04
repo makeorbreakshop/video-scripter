@@ -258,3 +258,94 @@ describe('the band uses the video’s own trajectory', () => {
     for (const p of s.filter((x) => x.kind === 'forecast')) expect(p.band).toBeUndefined();
   });
 });
+
+// ------------------------------------------------------- fixes of 2026-09-04 ----
+//
+// Two faults the BPS.space launch showed: the reconstructed past was anchored on the SINGLE
+// first reading, and that reading was a stale ingest-time count. Together they scaled the whole
+// implied launch to a number YouTube had cached hours earlier, and the solid measured line then
+// climbed 42% in four minutes.
+describe('the reconstructed past is fitted through every non-stale measurement', () => {
+  const BASE = 543492.47;
+  const shape = (d: number) => expectedAt(BASE, MULT, d, LONGTAIL).expected;
+
+  /** Twenty points sitting exactly 2x the channel curve, days 3..12. */
+  const onCurve = Array.from({ length: 20 }, (_, i) => {
+    const day = 3 + (i * 9) / 19;
+    return { day, views: 2 * shape(day) };
+  });
+
+  it('draws the implied past as the channel shape times the fitted scale', () => {
+    const s = buildSeries({ actuals: onCurve, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 12 });
+    for (const d of [0.5, 1, 2]) {
+      const p = s.find((x) => x.day === d)!;
+      expect(p.kind).toBe('implied');
+      expect(p.views / shape(d)).toBeCloseTo(2, 6);
+    }
+  });
+
+  it('ignores a stale first reading instead of anchoring the whole launch on it', () => {
+    // 77,993 at 20:27:58 ET, then 110,729 four minutes later: the first is a cached count.
+    const stale = { day: 0.2597, views: 77_993 };
+    const real = [
+      { day: 0.26260, views: 110_729 },
+      { day: 0.27292, views: 110_729 },
+      { day: 0.28333, views: 144_192 },
+      { day: 0.29375, views: 160_000 },
+      { day: 0.32500, views: 202_000 },
+      { day: 0.39583, views: 243_000 },
+      { day: 1.26, views: 400_000 },
+    ];
+    const withStale = buildSeries({ actuals: [stale, ...real], baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 1.3 });
+    const without = buildSeries({ actuals: real, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 1.3 });
+
+    // the stale reading is not part of the measured line
+    expect(withStale.find((p) => p.day === stale.day)?.kind).not.toBe('measured');
+    expect(withStale.find((p) => p.kind === 'measured')!.day).toBeCloseTo(0.26260, 6);
+    // and the reconstruction is the same as if it had never been recorded
+    for (const d of [1 / 24, 2 / 24, 4 / 24]) {
+      const a = withStale.find((p) => p.day === d)!, b = without.find((p) => p.day === d)!;
+      expect(a.views).toBeCloseTo(b.views, 6);
+    }
+    // the old behaviour: anchored on 77,993 the day-4h value would have been well below this
+    const anchoredOnStale = (shape(4 / 24) / shape(stale.day)) * 77_993;
+    expect(withStale.find((p) => p.day === 4 / 24)!.views).toBeGreaterThan(anchoredOnStale * 1.1);
+  });
+
+  it('joins the measured line exactly: the implied value at the first measurement is that measurement', () => {
+    // A video found late (first measurement on day 100), whose record sits well ABOVE the
+    // fitted scale at that first point — so the fit and the anchor genuinely disagree and the
+    // blend has work to do. The last tenth of the span in log(day+1) is days ~63..100.
+    const acts = [
+      { day: 100, views: 3 * shape(100) },
+      { day: 140, views: 1.5 * shape(140) },
+      { day: 200, views: 1.2 * shape(200) },
+    ];
+    const s = buildSeries({ actuals: acts, baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 365, ageDays: 200 });
+    const anchoredAt = (d: number) => (shape(d) / shape(100)) * 3 * shape(100);
+    // continuity: by the last drawn day before the join the implied path IS the anchored path
+    const join = s.find((p) => p.day === 99)!;
+    expect(join.kind).toBe('implied');
+    expect(join.views / anchoredAt(99)).toBeCloseTo(1, 1); // within ~1.3%
+    // and the series value AT the first measurement is that measurement, exactly
+    expect(s.find((p) => p.day === 100)!.views).toBeCloseTo(3 * shape(100), 6);
+    // the blend only moves one way: it closes monotonically as the join approaches
+    const gaps = [70, 80, 90, 99].map((d) => Math.abs(Math.log(s.find((p) => p.day === d)!.views / anchoredAt(d))));
+    for (let i = 1; i < gaps.length; i++) expect(gaps[i]).toBeLessThan(gaps[i - 1]);
+    // the far past follows the fitted scale, not the first point's anchor
+    expect(s.find((p) => p.day === 0)!.views).toBeLessThan(anchoredAt(0));
+    expect(s.find((p) => p.day === 10)!.views / shape(10)).toBeCloseTo(
+      s.find((p) => p.day === 20)!.views / shape(20), 6);
+  });
+
+  it('lets a launch burst not outvote a daily record in the fit (span weighting)', () => {
+    // one daily point at 2x, twenty samples inside ten minutes of day 5 at 2x as well:
+    // the fit is 2x either way, but with per-point weights the burst would dominate.
+    const burst = Array.from({ length: 20 }, (_, i) => {
+      const day = 5 + i / (24 * 6 * 20);
+      return { day, views: 2 * shape(day) };
+    });
+    const s = buildSeries({ actuals: [{ day: 1, views: 2 * shape(1) }, ...burst], baseline: BASE, est30: null, mult: MULT, longtail: LONGTAIL, horizonDay: 30, ageDays: 5.1 });
+    expect(s.find((p) => p.day === 0.5)!.views / shape(0.5)).toBeCloseTo(2, 6);
+  });
+});

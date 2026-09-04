@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
-import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel } from '@/lib/app/chart-style';
+import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel, trackingLabelPlacement, TYPICAL_STYLE } from '@/lib/app/chart-style';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, tooltipDate, dayLabel, type Zoom } from './video-chart';
 
@@ -78,6 +78,9 @@ export default function VideoChartPlot({
   const stroke = (t: 'accent' | 'muted') => (t === 'accent' ? C.accent : C.muted);
   const firstMeasuredDay = series.find((p) => p.kind === 'measured')?.day ?? null;
   const trackingBegan = trackingBeganLabel(publishedAt ?? null, firstMeasuredDay);
+  // Drawn in BOTH zooms — the 72h view is the one that shows the launch this label explains —
+  // and clamped inside the plot so a first measurement past the right edge still says so.
+  const trackingAt = trackingLabelPlacement(firstMeasuredDay, maxDay);
   const hasImplied = series.some((p) => p.kind === 'implied');
   const hasMeasured = series.some((p) => p.kind === 'measured');
   const hasForecast = series.some((p) => p.kind === 'forecast');
@@ -152,7 +155,11 @@ export default function VideoChartPlot({
             <Area dataKey="bandInner" name={BAND_LABELS.inner} connectNulls stroke="none" fill={C.accent} fillOpacity={bandStyle('inner').fillOpacity} isAnimationActive={false} legendType="none" />
           )}
           {curve.length > 0 && (
-            <Line dataKey="expected" name={SERIES_LABELS.expected} connectNulls dot={false} stroke={C.muted} strokeWidth={1.5} strokeDasharray="4 3" isAnimationActive={false} />
+            <Line
+              dataKey="expected" name={SERIES_LABELS.expected} connectNulls dot={false}
+              stroke={C[TYPICAL_STYLE.strokeToken]} strokeWidth={TYPICAL_STYLE.width}
+              strokeDasharray={TYPICAL_STYLE.dash} isAnimationActive={false}
+            />
           )}
           {/* Days before we were watching, and any gap longer than MEASURED_GAP_DAYS. Muted and
               dotted, with no band: it is a reconstruction of something that already happened,
@@ -192,10 +199,11 @@ export default function VideoChartPlot({
 
           {/* Without this the dotted stretch on the left reads as missing data rather than as
               "we were not watching yet". */}
-          {trackingBegan && firstMeasuredDay != null && !launch && (
+          {trackingBegan && trackingAt && (
             <ReferenceLine
-              x={firstMeasuredDay} stroke={C.muted} strokeWidth={1} strokeOpacity={0.35} strokeDasharray="2 3"
-              label={{ value: trackingBegan, fontSize: 10, fill: C.muted, position: 'insideBottomLeft', dx: 4, dy: -4 }}
+              x={trackingAt.x} stroke={C.muted} strokeWidth={1} strokeOpacity={0.35} strokeDasharray="2 3"
+              label={{ value: trackingBegan, fontSize: 10, fill: C.muted, position: trackingAt.position,
+                dx: trackingAt.position === 'insideBottomLeft' ? 4 : -4, dy: -4 }}
             />
           )}
 

@@ -22,7 +22,11 @@ export interface SeriesStyle {
 
 const STYLES: Record<SeriesKind, SeriesStyle> = {
   measured: { strokeToken: 'accent', width: 1.75, opacity: 1, band: false },
-  implied: { strokeToken: 'muted', dash: '2 3', width: 1.25, opacity: 0.75, band: false },
+  // Correction of 2026-09-04: the reconstruction was drawn in the MUTED token — the channel
+  // curve's own colour — so the reader had two grey lines and had to work out which was the
+  // video. It is this video, before we were watching: same accent, dotted, and set back in
+  // opacity so it never competes with the counts we actually took.
+  implied: { strokeToken: 'accent', dash: '2 3', width: 1.25, opacity: 0.55, band: false },
   forecast: { strokeToken: 'accent', dash: '5 4', width: 1.25, opacity: 0.6, band: true },
 };
 
@@ -30,10 +34,22 @@ export function seriesStyle(kind: SeriesKind): SeriesStyle {
   return STYLES[kind];
 }
 
+/**
+ * The channel's typical curve. Not a SeriesKind — it is a different subject, not a different
+ * part of this video — and it keeps the grey dashed line with the grey band it always had.
+ * Declared here so a test can assert the video's lines never look like it.
+ */
+export const TYPICAL_STYLE = { strokeToken: 'muted' as StrokeToken, dash: '4 3', width: 1.5 };
+
+/** The colour a kind is actually stroked with, given the theme's two tokens. */
+export function seriesStroke(kind: SeriesKind, colors: Record<StrokeToken, string>): string {
+  return colors[STYLES[kind].strokeToken];
+}
+
 /** Legend text. What the line is, in the words a reader would use. */
 export const SERIES_LABELS = {
-  measured: 'this video',
-  implied: 'before we started tracking (estimated)',
+  measured: 'this video · measured',
+  implied: 'this video · estimated before tracking',
   forecast: 'expected from here',
   expected: 'typical for this channel',
 } as const;
@@ -57,6 +73,25 @@ export function trackingBeganLabel(
   if (!Number.isFinite(t0)) return null;
   const at = new Date(t0 + firstMeasuredDay * 86_400_000);
   return `tracking began ${at.toLocaleDateString('en-US', { timeZone: ET, month: 'short', day: 'numeric' })}`;
+}
+
+/**
+ * Where the "tracking began" marker goes. It used to be drawn only in the full view, so the
+ * 72h zoom — the one showing the launch the label exists to explain — had a dotted stretch and
+ * no word for it. In the zoom the first measurement can also sit outside the visible range, so
+ * the line is clamped to the plot and the text is flipped inward when it is near the right
+ * edge, rather than being written off the side of the chart. Null when there is nothing to place.
+ */
+export type LabelPosition = 'insideBottomLeft' | 'insideBottomRight';
+export function trackingLabelPlacement(
+  firstMeasuredDay: number | null | undefined,
+  maxDay: number
+): { x: number; position: LabelPosition } | null {
+  if (firstMeasuredDay == null || !Number.isFinite(firstMeasuredDay) || !(maxDay > 0)) return null;
+  const x = Math.min(Math.max(firstMeasuredDay, 0), maxDay);
+  // The text runs to the right of the line, so past three-quarters of the width it would run
+  // off the plot; there it is written back to the left instead.
+  return { x, position: x > maxDay * 0.75 ? 'insideBottomRight' : 'insideBottomLeft' };
 }
 
 // ------------------------------------------------------------- the ribbons ---

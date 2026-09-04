@@ -1,13 +1,19 @@
 // Correction: the implied PAST and the FORECAST future were both accent-green dashed lines with
 // an accent band, so a reader could not tell reconstruction from projection. This is the map
 // from series kind to how it is drawn — the one place the two are made to look different.
-import { seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel } from './chart-style';
+import {
+  seriesStyle, chartRows, bandStyle, SERIES_LABELS, BAND_LABELS, trackingBeganLabel,
+  seriesStroke, TYPICAL_STYLE, trackingLabelPlacement,
+} from './chart-style';
 import type { SeriesPoint } from './chart-series';
 
 describe('a series kind decides how it is drawn, and the kinds do not look alike', () => {
-  it('draws the reconstructed past muted and dotted, with no band', () => {
+  it('draws the reconstructed past in the video’s own colour, dotted, with no band', () => {
+    // It is this video, not the channel: the reconstruction is the same line as the measured
+    // one, drawn where we are inferring it. Muted grey was the CHANNEL's colour, so the past
+    // read as "typical for this channel" rather than as this video before we were watching.
     const s = seriesStyle('implied');
-    expect(s.strokeToken).toBe('muted');
+    expect(s.strokeToken).toBe('accent');
     expect(s.dash).toBe('2 3');       // dotted
     expect(s.band).toBe(false);
     expect(s.opacity).toBeLessThan(1);
@@ -28,19 +34,66 @@ describe('a series kind decides how it is drawn, and the kinds do not look alike
     expect(s.width).toBeGreaterThan(seriesStyle('implied').width);
   });
 
-  it('gives the past and the future different strokes on every axis a reader could use', () => {
+  it('gives the past and the future different strokes a reader could use', () => {
     const past = seriesStyle('implied'), future = seriesStyle('forecast');
-    expect(past.strokeToken).not.toBe(future.strokeToken);
-    expect(past.dash).not.toBe(future.dash);
-    expect(past.band).not.toBe(future.band);
+    expect(past.dash).not.toBe(future.dash);   // dotted vs dashed
+    expect(past.band).not.toBe(future.band);   // no ribbon vs two ribbons
+  });
+
+  it('never draws the reconstruction in the channel curve’s colour or dash', () => {
+    // What the plot actually hands recharts: the reconstruction must not be confusable with
+    // "typical for this channel", which is the grey dashed line with the grey band.
+    const C = { accent: '#0E7A3C', muted: '#5A6373' };
+    expect(seriesStroke('implied', C)).toBe(C.accent);
+    expect(seriesStroke('measured', C)).toBe(C.accent);
+    expect(seriesStroke('forecast', C)).toBe(C.accent);
+    expect(TYPICAL_STYLE.strokeToken).toBe('muted');
+    expect(seriesStroke('implied', C)).not.toBe(C[TYPICAL_STYLE.strokeToken]);
+    expect(seriesStyle('implied').dash).not.toBe(TYPICAL_STYLE.dash);
+    // and it is drawn back from the measured line, not level with it
+    expect(seriesStyle('implied').opacity).toBeLessThan(seriesStyle('measured').opacity);
   });
 
   it('names the series in plain language, not model words', () => {
-    expect(SERIES_LABELS.implied).toBe('before we started tracking (estimated)');
+    // The two "this video" lines say so, and say which is which.
+    expect(SERIES_LABELS.implied).toBe('this video · estimated before tracking');
     expect(SERIES_LABELS.forecast).toBe('expected from here');
-    expect(SERIES_LABELS.measured).toBe('this video');
+    expect(SERIES_LABELS.measured).toBe('this video · measured');
     expect(SERIES_LABELS.expected).toBe('typical for this channel');
     for (const v of Object.values(SERIES_LABELS)) expect(v).toBe(v.toLowerCase());
+  });
+});
+
+describe('the "tracking began" label stays inside the plot, in both zooms', () => {
+  // It was drawn only in the full view, so the 72h zoom — the one that shows the launch the
+  // label is explaining — had a dotted stretch with nothing to say what it was.
+  it('places the label at the first measurement in the 72h zoom', () => {
+    const p = trackingLabelPlacement(0.26, 3)!;
+    expect(p.x).toBeCloseTo(0.26, 9);
+    expect(p.position).toBe('insideBottomLeft');
+  });
+
+  it('places it in the full view too', () => {
+    const p = trackingLabelPlacement(0.26, 365)!;
+    expect(p.x).toBeCloseTo(0.26, 9);
+    expect(p.position).toBe('insideBottomLeft');
+  });
+
+  it('clamps a measurement past the right edge back inside the plot', () => {
+    const p = trackingLabelPlacement(3.48, 3)!;   // Malecki, in the 72h zoom
+    expect(p.x).toBeLessThanOrEqual(3);
+    expect(p.x).toBeGreaterThan(0);
+    expect(p.position).toBe('insideBottomRight');  // so the text runs back into the plot
+  });
+
+  it('flips the text inward once the line is near the right edge', () => {
+    expect(trackingLabelPlacement(2.9, 3)!.position).toBe('insideBottomRight');
+    expect(trackingLabelPlacement(1.0, 3)!.position).toBe('insideBottomLeft');
+  });
+
+  it('has nothing to place without a first measurement', () => {
+    expect(trackingLabelPlacement(null, 3)).toBeNull();
+    expect(trackingLabelPlacement(0.26, 0)).toBeNull();
   });
 });
 
