@@ -5,16 +5,20 @@
 // context the packaging strip shares, the theme colours, the date formatting — stays in
 // video-chart.tsx, which this imports.
 //
-// v2, 2026-09-04: ONE continuous view. The "First 72h / Since publish" chips are gone; the
-// reader drags across the part they care about and double-clicks to come back, over the same
-// series either way. Every decision this file makes about what that means — the horizon, the
-// ticks, which packaging groups collapse, what the tooltip says, whether the ribbon draws dots
-// — lives in a pure module under lib/app and is asserted there. What is left here is wiring.
+// v5, 2026-09-04: the viewport has a HANDLE. Dragging across the plot to zoom is gone — it had
+// no affordance, nothing to adjust afterwards, and a text selection as its side effect. Under
+// the x-axis there is now a brush track: a mini-map of this video's line with a window on it
+// you can widen, narrow or slide, and a double-click to come back. The chips are that window
+// preset. Nothing else on the plate is words.
+//
+// Every decision this file makes — the horizon, the ticks, which packaging groups collapse,
+// what the tooltip says, where a dragged handle is allowed to stop — lives in a pure module
+// under lib/app and is asserted there. What is left here is wiring and pointer capture.
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Area, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot,
-  ReferenceArea, Legend,
+  Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
+  ReferenceDot, ReferenceArea,
 } from 'recharts';
 import { type Actual, type CurvePoint, type Marker } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
@@ -22,12 +26,14 @@ import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel, trackingLabelPlacement,
   TYPICAL_STYLE, legendEntries, areaProps, DRAWN_RINGS, SCALE_MODES, nextScale, tooltipLines,
-  visibleYDomain, type ScaleMode, type TooltipKind,
+  visibleYDomain, niceTicks, CHART_TYPE, type ScaleMode, type TooltipKind,
 } from '@/lib/app/chart-style';
 import { markerLayout, markAt } from '@/lib/app/chart-marks';
+import { axisTicks, isFullDomain, rangeChips, chipViewport, activeChip } from '@/lib/app/chart-zoom';
 import {
-  zoomDomain, axisTicks, isFullDomain, rangeChips, chipViewport, activeChip, ZOOM_HINT,
-} from '@/lib/app/chart-zoom';
+  BRUSH_HEIGHT, HANDLE_HIT, HANDLE_WIDTH, PLOT_INSET, brushPaths, clampWindow, dragEdge,
+  nudgeEdge, panWindow, partAt, windowRect, type Edge,
+} from '@/lib/app/chart-brush';
 import { Thumb } from './thumb';
 import { markerKey, useMarkerHover, useThemeColors, fmtViews, axisDate, dayLabel, HoverCard } from './video-chart';
 
@@ -116,27 +122,30 @@ function TrackingLabel({ viewBox, text, muted, surface, flip }: {
 }) {
   const x = viewBox?.x ?? 0;
   const y = (viewBox?.y ?? 0) + 13;
-  const w = text.length * 5.1 + 8;          // 10px system text, near enough for a halo
+  const w = text.length * 5.6 + 8;          // 11px system text, near enough for a halo
   const left = flip ? x - 4 - w : x + 4;
   return (
     <g aria-hidden>
       <rect x={left} y={y - 9.5} width={w} height={13} rx={3} fill={surface} fillOpacity={0.92} />
-      <text x={left + 4} y={y} fontSize={10} fill={muted}>{text}</text>
+      <text x={left + 4} y={y} fontSize={CHART_TYPE.label} fill={muted}>{text}</text>
     </g>
   );
 }
 
-/** The chips above the plot: a span a creator asks for by name, instead of a drag they guess at. */
-function RangeChips({ chips, active, muted, accent, line, onPick, zoomed, onReset }: {
+/**
+ * The chips above the plot: the brush window, preset. Values only — "6h", "24h", "7d" — because
+ * a chip that says "last 24 hours" is three words where one is enough. The lit one is filled.
+ */
+function RangeChips({ chips, active, muted, accent, line, surface, onPick }: {
   chips: ReturnType<typeof rangeChips>; active: string | null;
-  muted: string; accent: string; line: string;
-  onPick: (key: string) => void; zoomed: boolean; onReset: () => void;
+  muted: string; accent: string; line: string; surface: string;
+  onPick: (key: string) => void;
 }) {
   if (!chips.length) return null;
   const chip = (on: boolean): React.CSSProperties => ({
-    font: 'inherit', fontSize: 11, lineHeight: '18px', padding: '0 8px', cursor: 'pointer',
+    font: 'inherit', fontSize: CHART_TYPE.label, lineHeight: '20px', padding: '0 9px', cursor: 'pointer',
     borderRadius: 999, border: `1px solid ${on ? accent : line}`,
-    background: 'none', color: on ? accent : muted, fontWeight: on ? 600 : 400,
+    background: on ? accent : 'none', color: on ? surface : muted, fontWeight: on ? 600 : 400,
   });
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
@@ -146,11 +155,154 @@ function RangeChips({ chips, active, muted, accent, line, onPick, zoomed, onRese
           {c.key}
         </button>
       ))}
-      {zoomed && (
-        <button type="button" onClick={onReset} style={{ ...chip(false), marginLeft: 'auto', color: accent }}>
-          reset
-        </button>
-      )}
+    </div>
+  );
+}
+
+/**
+ * The timeline handle — the control Brandon asked for, and the only way to change the viewport
+ * apart from the chips.
+ *
+ * A slim mini-map of this video's own line across the WHOLE domain (solid where we counted,
+ * dashed where we are forecasting), everything outside the window washed back into the plate,
+ * and on top of it three targets: two edge handles that resize and the window between them
+ * that pans. Double-click the track for the whole domain back.
+ *
+ * The three things this component owns that a pure function cannot:
+ *
+ *   - Pointer CAPTURE. Without it a drag that leaves the track keeps painting the page blue and
+ *     the window stops following the finger. With it the gesture belongs to the handle from
+ *     pointerdown to pointerup, which is what makes it feel like a control rather than a guess.
+ *   - The track's pixel width, which only the DOM knows (ResizeObserver).
+ *   - Focus. The handles are real <button>s over the paint layer, so they tab, they show the
+ *     app's own focus ring, and the arrow keys reach every window the pointer can.
+ *
+ * Where a dragged handle is ALLOWED to stop is not here — that is lib/app/chart-brush.ts.
+ */
+function BrushTrack({ full, view, onView, points, C }: {
+  full: [number, number];
+  view: [number, number];
+  onView: (v: [number, number] | null) => void;
+  points: SeriesPoint[];
+  C: { ink: string; muted: string; line: string; accent: string; surface: string };
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [grabbed, setGrabbed] = useState<Edge | 'window' | null>(null);
+  const gesture = useRef<{ part: Edge | 'window'; originPx: number; from: [number, number] } | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const read = () => setWidth(el.getBoundingClientRect().width);
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const localX = (e: React.PointerEvent) => e.clientX - (ref.current?.getBoundingClientRect().left ?? 0);
+
+  const begin = (part: Edge | 'window') => (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    gesture.current = { part, originPx: localX(e), from: view };
+    setGrabbed(part);
+  };
+  const move = (e: React.PointerEvent) => {
+    const g = gesture.current;
+    if (!g || !width) return;
+    const px = localX(e);
+    onView(g.part === 'window'
+      ? panWindow(px - g.originPx, g.from, full, width)
+      : dragEdge(g.part, px, g.from, full, width));
+  };
+  const end = (e: React.PointerEvent) => {
+    if (gesture.current) {
+      try { (e.currentTarget as Element).releasePointerCapture(e.pointerId); } catch {}
+    }
+    gesture.current = null;
+    setGrabbed(null);
+  };
+
+  const key = (edge: Edge) => (e: React.KeyboardEvent) => {
+    const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!dir || !width) return;
+    e.preventDefault();
+    onView(nudgeEdge(edge, dir as -1 | 1, view, full, width));
+  };
+
+  const rect = windowRect(view, full, width);
+  const paths = useMemo(
+    () => brushPaths(points as any, full, width, BRUSH_HEIGHT),
+    [points, full, width]
+  );
+  const F = seriesStyle('forecast');
+  const whole = isFullDomain(view, full);
+
+  const handle = (edge: Edge, x: number) => (
+    <button
+      key={edge} type="button"
+      aria-label={edge} aria-valuemin={full[0]} aria-valuemax={full[1]}
+      aria-valuenow={edge === 'start' ? view[0] : view[1]} role="slider"
+      onPointerDown={begin(edge)} onPointerMove={move} onPointerUp={end} onPointerCancel={end}
+      onKeyDown={key(edge)} onDoubleClick={(e) => { e.stopPropagation(); onView(null); }}
+      style={{
+        position: 'absolute', top: -2, height: BRUSH_HEIGHT + 4,
+        left: x - HANDLE_HIT / 2, width: HANDLE_HIT,
+        padding: 0, border: 'none', background: 'none', cursor: 'col-resize',
+        touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      {/* The grip: the ink of the handle, narrower than the target that catches the pointer. */}
+      <span aria-hidden style={{
+        display: 'block', width: HANDLE_WIDTH, height: BRUSH_HEIGHT,
+        borderRadius: 3, background: C.accent,
+        boxShadow: `inset 0 0 0 1px ${C.surface}, inset 2px 0 0 -1px ${C.surface}, inset -2px 0 0 -1px ${C.surface}`,
+      }} />
+    </button>
+  );
+
+  return (
+    <div style={{ paddingLeft: PLOT_INSET.left, paddingRight: PLOT_INSET.right, marginTop: 2 }}>
+      <div
+        ref={ref}
+        onDoubleClick={() => onView(null)}
+        style={{ position: 'relative', height: BRUSH_HEIGHT, touchAction: 'none', userSelect: 'none' }}
+      >
+        <svg width="100%" height={BRUSH_HEIGHT} style={{ display: 'block', pointerEvents: 'none' }} aria-hidden>
+          <rect x={0} y={0} width="100%" height={BRUSH_HEIGHT} rx={4} fill={C.line} fillOpacity={0.25} />
+          {paths.dashed && (
+            <path d={paths.dashed} fill="none" stroke={C.accent} strokeWidth={1}
+                  strokeDasharray={F.dash} strokeOpacity={0.7} />
+          )}
+          {paths.solid && <path d={paths.solid} fill="none" stroke={C.accent} strokeWidth={1.25} />}
+          {/* Outside the window, washed back — far enough that the window reads as the subject,
+              not so far that the shape disappears: a mini-map you cannot see is not a map. */}
+          {!whole && (
+            <>
+              <rect x={0} y={0} width={Math.max(rect.x, 0)} height={BRUSH_HEIGHT} rx={4}
+                    fill={C.surface} fillOpacity={0.6} />
+              <rect x={rect.x + rect.w} y={0} width={Math.max(width - rect.x - rect.w, 0)} height={BRUSH_HEIGHT}
+                    rx={4} fill={C.surface} fillOpacity={0.6} />
+            </>
+          )}
+          <rect x={rect.x} y={0.5} width={rect.w} height={BRUSH_HEIGHT - 1} rx={3}
+                fill={C.accent} fillOpacity={0.06} stroke={C.accent} strokeOpacity={0.45} strokeWidth={1} />
+        </svg>
+
+        <div
+          onPointerDown={begin('window')} onPointerMove={move} onPointerUp={end} onPointerCancel={end}
+          style={{
+            position: 'absolute', top: 0, height: BRUSH_HEIGHT,
+            left: rect.x + HANDLE_HIT / 2, width: Math.max(rect.w - HANDLE_HIT, 0),
+            cursor: grabbed === 'window' ? 'grabbing' : 'grab', touchAction: 'none',
+          }}
+        />
+        {width > 0 && handle('start', rect.x)}
+        {width > 0 && handle('end', rect.x + rect.w)}
+      </div>
     </div>
   );
 }
@@ -185,30 +337,24 @@ export default function VideoChartPlot({
   // when the reader drags, so what they zoom into is the line they were already looking at.
   const [view, setView] = useState<[number, number] | null>(null);
   const domain = view ?? full;
-  const [drag, setDrag] = useState<{ from: number; to: number } | null>(null);
 
-  const onDown = (e: any) => { if (e?.activeLabel != null) setDrag({ from: Number(e.activeLabel), to: Number(e.activeLabel) }); };
-  const onMove = (e: any) => { if (drag && e?.activeLabel != null) setDrag({ ...drag, to: Number(e.activeLabel) }); };
-  const onUp = () => {
-    if (drag) {
-      const next = zoomDomain(drag.from, drag.to, full);
-      if (next) setView(next);
-    }
-    setDrag(null);
-  };
+  /** Every window the brush produces goes through chart-brush's invariants on its way in. */
+  const setWindow = useCallback((next: [number, number] | null) => {
+    if (!next) return setView(null);
+    const w = clampWindow(next, full);
+    setView(isFullDomain(w, full) ? null : w);
+  }, [full]);
 
-  // The zoom, made visible. The chips are the spans a creator asks for by name; which of them
-  // are worth offering, what each one means as a viewport, and which one the current view IS
-  // are all lib/app/chart-zoom's decisions — a drag lands on none of them and lights none.
+  // The chips are the brush's window preset. Which of them are worth offering, what each one
+  // means as a window, and which one the current window IS are all chart-zoom's decisions — a
+  // window the reader brushed by hand lands on none of them and lights none.
   const chips = useMemo(() => rangeChips(full), [full]);
   const active = useMemo(() => activeChip(domain, full), [domain, full]);
   const pickChip = (key: string) => {
     const c = chips.find((x) => x.key === key);
     if (!c) return;
-    const next = chipViewport(c, full);
-    setView(isFullDomain(next, full) ? null : next);
+    setWindow(chipViewport(c, full));
   };
-  const zoomed = !isFullDomain(domain, full);
   const ticks = useMemo(() => axisTicks(domain), [domain]);
   const launch = domain[1] - domain[0] <= 3;
   const laid = useMemo(() => markerLayout(marks, domain), [marks, domain]);
@@ -245,6 +391,23 @@ export default function VideoChartPlot({
   const endBaseline = curve.length && inView(curve[curve.length - 1].day) ? curve[curve.length - 1] : null;
   const lastSeries = series.length ? series[series.length - 1] : null;
   const endProjected = lastSeries && inView(lastSeries.day) ? { day: lastSeries.day, projected: lastSeries.views } : null;
+  /**
+   * Where the video IS. The chart drew the horizon's projection with a value on it and left the
+   * last thing we actually counted as an unmarked bend in the line — the one number on this
+   * plate the reader can act on, unlabelled. It is a filled dot with its value, and it is the
+   * only dot on the measured line at rest.
+   */
+  const lastMeasured = useMemo(() => {
+    for (let i = series.length - 1; i >= 0; i--) if (series[i].kind === 'measured') return series[i];
+    return null;
+  }, [series]);
+  const nowPoint = lastMeasured && inView(lastMeasured.day) ? lastMeasured : null;
+  /** Day 30 is the number the score is written against, so it is named where it happens. */
+  const day30 = useMemo(
+    () => series.find((p) => Math.abs(p.day - 30) < 1e-9 && p.kind === 'forecast') ?? null,
+    [series]
+  );
+  const day30Point = day30 && inView(30) && (!endProjected || Math.abs(endProjected.day - 30) > 1e-9) ? day30 : null;
 
   // The y axis fits WHAT IS ON SCREEN, not the whole data set.
   //
@@ -255,49 +418,44 @@ export default function VideoChartPlot({
   // the current domain and nothing else. ('auto' remains the fallback for an empty view.)
   const fitted = useMemo(() => visibleYDomain(rows, domain, scale), [rows, domain, scale]);
   const yDomain: [any, any] = fitted ?? (scale === 'log' ? [1, 'auto'] : [0, 'auto']);
+  // Round numbers, and no tick stranded in the 8% of headroom visibleYDomain leaves for the end
+  // label. On a log axis recharts' own ticks are the powers, which is what a log axis is for.
+  const yTicks = fitted && scale === 'linear' ? niceTicks(fitted) : null;
 
-  if (!series.length && !actuals.length && !curve.length) {
-    return <p style={{ color: 'var(--cs-muted)', fontSize: 13 }}>No view data yet — the first snapshot lands within a day of publish.</p>;
-  }
-  const noBaseline = !curve.length;
+  // Nothing measured, nothing modelled, nothing to compare to: an empty plate says that. A
+  // sentence about when snapshots begin is the page apologising to itself.
+  if (!series.length && !actuals.length && !curve.length) return null;
 
   return (
     <div>
       <RangeChips chips={chips} active={active} muted={C.muted} accent={C.accent} line={C.line}
-                  onPick={pickChip} zoomed={zoomed} onReset={() => setView(null)} />
+                  surface={C.surface} onPick={pickChip} />
 
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
-          screen is wider than the chart and would stretch the whole page. Clip it here. */}
-      {/* userSelect: without it a drag across the plot selects the axis labels it passes over,
-          so the zoom gesture paints the chart blue on its way. */}
-      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', position: 'relative', userSelect: 'none' }}>
-      {/* The chart could always be dragged and nothing on the plate said so. Said once, in the
-          corner, and gone the moment the reader has done it — an instruction for something you
-          have already done is clutter. */}
-      {!zoomed && (
-        <span aria-hidden style={{
-          position: 'absolute', top: 2, right: 8, zIndex: 1, pointerEvents: 'none',
-          fontSize: 10, color: C.muted, opacity: 0.7,
-        }}>{ZOOM_HINT}</span>
-      )}
-      <ResponsiveContainer width="100%" height={340}>
+          screen is wider than the chart and would stretch the whole page. Clipping it here is
+          what keeps the chart from giving the WHOLE PAGE a horizontal scrollbar at 375px. */}
+      <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', position: 'relative' }}>
+      <ResponsiveContainer width="100%" height={300}>
         <ComposedChart
-          data={rows} margin={{ top: 22, right: 58, left: 4, bottom: 0 }}
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => setDrag(null)}
+          data={rows} margin={{ top: 22, right: PLOT_INSET.right, left: 4, bottom: 0 }}
           onClick={onClick}
-          onDoubleClick={() => setView(null)}
         >
+          {/* Horizontal only, and faint: the y ticks are round numbers now, so the grid is
+              there to carry the eye across to them, not to be a second subject on the plate. */}
+          <CartesianGrid vertical={false} stroke={C.line} strokeOpacity={0.6} strokeDasharray="0" />
           <XAxis
             dataKey="day" type="number" domain={domain} ticks={ticks} allowDataOverflow
-            tick={{ fontSize: 11, fill: C.muted }} stroke={C.line}
+            tick={{ fontSize: CHART_TYPE.tick, fill: C.muted }} stroke={C.line}
             tickFormatter={(d: number) => axisDate(publishedAt, Number(d), launch)}
             minTickGap={12}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: C.muted }} stroke={C.line} width={52} tickFormatter={fmtViews}
+            tick={{ fontSize: CHART_TYPE.tick, fill: C.muted }} stroke={C.line} width={52} tickFormatter={fmtViews}
             scale={scale} domain={yDomain} allowDataOverflow
+            {...(yTicks ? { ticks: yTicks } : {})}
           />
           <Tooltip
+            cursor={{ stroke: C.muted, strokeWidth: 1, strokeOpacity: 0.5, strokeDasharray: '3 3' }}
             content={({ active, payload, label }: any) => {
               if (!active || !payload?.length) return null;
               const row = payload[0]?.payload || {};
@@ -319,17 +477,6 @@ export default function VideoChartPlot({
               );
             }}
           />
-          <Legend
-            wrapperStyle={{ fontSize: 11, color: C.muted, width: '100%', maxWidth: '100%' }}
-            content={() => (
-              <ChartLegend
-                entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
-                accent={C.accent} muted={C.muted} mode={C.mode}
-                scale={scale} onScale={() => setScale(nextScale(scale))}
-              />
-            )}
-          />
-
           {/* One ribbon, the middle half. The 10–90 tail is still fitted and still said in the
               tooltip's last line; drawing both put two uncertainties on one plate. And the
               Area's activeDot is off — recharts lit dots on the band EDGES, quantiles drawn
@@ -390,20 +537,36 @@ export default function VideoChartPlot({
           {endBaseline && (
             <ReferenceDot
               x={endBaseline.day} y={endBaseline.expected} r={3} fill={C.muted} stroke="none" isFront
-              label={{ value: fmtViews(endBaseline.expected), fontSize: 11, fill: C.muted, position: 'left', offset: 10, dy: 12 }}
+              label={{ value: fmtViews(endBaseline.expected), fontSize: CHART_TYPE.label, fill: C.muted, position: 'left', offset: 10, dy: 12 }}
             />
           )}
           {endProjected && (
             <ReferenceDot
               x={endProjected.day} y={endProjected.projected} r={3} fill={C.accent} stroke="none" isFront
-              label={{ value: fmtViews(endProjected.projected), fontSize: 11, fill: C.accent, position: 'left', offset: 10, dy: -12 }}
+              label={{ value: fmtViews(endProjected.projected), fontSize: CHART_TYPE.label, fill: C.accent, position: 'left', offset: 10, dy: -12 }}
             />
           )}
           {endBaseline && endProjected && score != null && (
             <ReferenceLine
               segment={[{ x: endBaseline.day, y: endBaseline.expected }, { x: endProjected.day, y: endProjected.projected }]}
               stroke={C.ink} strokeWidth={1}
-              label={{ value: `${score.toFixed(1)}×`, fontSize: 12, fontWeight: 700, fill: C.ink, position: 'right' }}
+              label={{ value: `${score.toFixed(1)}×`, fontSize: CHART_TYPE.emphasis, fontWeight: 700, fill: C.ink, position: 'right' }}
+            />
+          )}
+
+          {/* Where the video is now: the last count we took, with its number. */}
+          {nowPoint && (
+            <ReferenceDot
+              x={nowPoint.day} y={nowPoint.views} r={4} fill={C.accent} stroke={C.surface} strokeWidth={1.5} isFront
+              label={{ value: fmtViews(nowPoint.views), fontSize: CHART_TYPE.emphasis, fontWeight: 600,
+                       fill: C.accent, position: 'top', offset: 8 }}
+            />
+          )}
+          {day30Point && (
+            <ReferenceDot
+              x={30} y={day30Point.views} r={2.5} fill={C.accent} fillOpacity={0.6} stroke="none" isFront
+              label={{ value: fmtViews(day30Point.views), fontSize: CHART_TYPE.label, fill: C.muted,
+                       position: 'top', offset: 8 }}
             />
           )}
 
@@ -422,7 +585,7 @@ export default function VideoChartPlot({
               style: { cursor: 'pointer' },
             } as any;
             const label = {
-              value: m.chip, fontSize: 10, fill: color, fontWeight: on ? 700 : 500,
+              value: m.chip, fontSize: CHART_TYPE.label, fill: color, fontWeight: on ? 700 : 500,
               position: m.chipAnchor === 'end' ? 'insideTopRight' : 'insideTopLeft',
               dx: m.chipAnchor === 'end' ? -4 : 4, dy: 4, ...handlers,
             } as any;
@@ -440,21 +603,23 @@ export default function VideoChartPlot({
             );
           })}
 
-          {/* What the reader is dragging over, while they drag — in the accent, and edged, so
-              the gesture shows its own result instead of a barely-there grey wash. */}
-          {drag && drag.from !== drag.to && (
-            <ReferenceArea x1={Math.min(drag.from, drag.to)} x2={Math.max(drag.from, drag.to)}
-                           fill={C.accent} fillOpacity={0.12} stroke={C.accent} strokeOpacity={0.45} />
-          )}
         </ComposedChart>
       </ResponsiveContainer>
-      </div>
 
-      {noBaseline && (
-        <p style={{ color: 'var(--cs-muted)', fontSize: 12, marginTop: 8 }}>
-          Baseline not available yet — showing this video&rsquo;s own views.
-        </p>
-      )}
+      {/* The handle on the timeline. It is inside the clipped container so it can never be the
+          thing that gives the page a horizontal scrollbar. */}
+      <BrushTrack full={full} view={domain} onView={setWindow} points={series} C={C} />
+
+      {/* The legend reads LAST, under the control — recharts drew it between the axis and the
+          brush, which put three names in the gap where the timeline handle belongs. */}
+      <div style={{ marginTop: 8 }}>
+        <ChartLegend
+          entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
+          accent={C.accent} muted={C.muted} mode={C.mode}
+          scale={scale} onScale={() => setScale(nextScale(scale))}
+        />
+      </div>
+      </div>
 
       {hoveredMarker && (
         <div className="cs-note" style={{ marginTop: 10 }}>

@@ -1,38 +1,7 @@
-// One continuous view: no range buttons. The reader drags across the part they care about and
-// double-clicks to come back. Both are decisions about a domain, so both are testable here.
-import { zoomDomain, MIN_ZOOM_SPAN } from './chart-zoom';
-
-const FULL: [number, number] = [0, 30];
-
-describe('zoomDomain: a drag becomes a viewport', () => {
-  it('turns a left-to-right drag into that range', () => {
-    expect(zoomDomain(4, 9, FULL)).toEqual([4, 9]);
-  });
-
-  it('reads a right-to-left drag the same way', () => {
-    expect(zoomDomain(9, 4, FULL)).toEqual([4, 9]);
-  });
-
-  it('clamps a drag that ran off the plot back to the data', () => {
-    expect(zoomDomain(-3, 900, FULL)).toEqual([0, 30]);
-  });
-
-  it('ignores a click — a drag of nothing is not a zoom', () => {
-    expect(zoomDomain(5, 5, FULL)).toBeNull();
-    expect(zoomDomain(5, 5 + MIN_ZOOM_SPAN / 2, FULL)).toBeNull();
-  });
-
-  it('ignores a drag that never started, or ran off into nonsense', () => {
-    expect(zoomDomain(null, 9, FULL)).toBeNull();
-    expect(zoomDomain(4, null, FULL)).toBeNull();
-    expect(zoomDomain(NaN, 9, FULL)).toBeNull();
-  });
-
-  it('keeps the launch readable: a half-hour drag is still a zoom', () => {
-    const z = zoomDomain(0, MIN_ZOOM_SPAN * 1.5, [0, 3])!;
-    expect(z[1] - z[0]).toBeGreaterThan(0);
-  });
-});
+// The viewport is set by the brush track under the x-axis (lib/app/chart-brush.ts) and by the
+// chips, which are that track's window preset. What a viewport MEANS — its ticks, which chips
+// a domain is worth offering, which chip the current window IS — is decided here and asserted
+// here. (The drag-across-the-plot gesture this file used to test is gone: v5, 2026-09-04.)
 
 import { axisTicks } from './chart-zoom';
 
@@ -97,11 +66,8 @@ describe('axisTicks on the sub-day domains the horizon itself can produce', () =
   });
 });
 
-// ------------------------------------------------ the zoom, made visible ----
-//
-// Brandon, on Matt Wolfe's GPT-6 video: the chart could be zoomed and nothing said so. The
-// affordances are decisions about a domain like every other one here, so they are asserted here.
-import { ZOOM_HINT, RANGE_CHIPS, rangeChips, chipViewport, activeChip } from './chart-zoom';
+// ------------------------------------------------------------------ chips ----
+import { RANGE_CHIPS, rangeChips, chipViewport, activeChip } from './chart-zoom';
 
 const keys = (full: [number, number]) => rangeChips(full).map((c) => c.key);
 
@@ -160,19 +126,13 @@ describe('activeChip: which chip the reader is looking at', () => {
     expect(activeChip([0, 6 / 24], FULL30)).toBe('6h');
   });
 
-  it('is nothing at all after a drag', () => {
-    // A drag deselects: a lit "24h" over a hand-pulled window would be the chart lying.
+  it('is nothing at all after a hand-brushed window', () => {
+    // A hand-brushed window deselects: a lit "24h" over it would be the chart lying.
     expect(activeChip([2, 9], FULL30)).toBeNull();
     expect(activeChip([0, 4], FULL30)).toBeNull();
   });
 
   it('never names a chip the chart is not offering', () => {
     expect(activeChip([0, 3], [0, 3])).toBe('all');   // not "30d", clamped though it would be
-  });
-});
-
-describe('the hint says both gestures, once', () => {
-  it('names the drag and the way back', () => {
-    expect(ZOOM_HINT).toBe('drag to zoom · double-click to reset');
   });
 });

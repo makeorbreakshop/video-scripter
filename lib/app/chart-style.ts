@@ -372,3 +372,39 @@ export function tooltipLines(p: TooltipPoint): string[] {
   range('range', p.outer);
   return lines.slice(0, 4);
 }
+
+// ------------------------------------------- chart v5: one type scale, nice numbers ----
+
+/**
+ * The chart's whole type scale, and it is three sizes.
+ *
+ * v4 had axis ticks at 11, the tracking label at 10, the packaging chips at 10, the end labels
+ * at 11 and the score at 12 — five sizes on one plate, none of which meant anything different
+ * from the one next to it. Ticks and labels are ONE size now; `emphasis` is reserved for the
+ * two numbers the reader came for (the score, the current value).
+ */
+export const CHART_TYPE = { tick: 11, label: 11, emphasis: 12 } as const;
+
+/**
+ * The y axis' ticks: round numbers, at most `count` of them, inside the domain.
+ *
+ * recharts' own ticks are chosen from the domain's ends, so a fitted domain (visibleYDomain
+ * pads the top by 8% so the end label is not clipped) produced ticks like "541K" — a number
+ * nobody asked about, sitting alone at the top of the frame. The step here comes from the 1/2/5
+ * ladder — 1, 2, 5 and nothing else, because 2.5 is not a number a reader rounds to — and a tick crammed against the top of the frame with nothing under it is dropped:
+ * the frame's top edge is not a value.
+ */
+export function niceTicks(domain: [number, number], count = 6): number[] {
+  const [lo, hi] = domain;
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || !(hi > lo) || !(count >= 2)) return [];
+  const raw = (hi - lo) / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => (hi - lo) / s <= count) ?? mag * 10;
+  const out: number[] = [];
+  for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + 1e-9; k++) out.push(Number((k * step).toPrecision(12)));
+  // An orphan at the top: a tick inside the padding, with no data between it and the frame.
+  const gap = out.length > 1 ? (hi - out[out.length - 1]) / (hi - lo) : 1;
+  // A tick ON the top edge labels the frame, which is fine; a tick just under it is the orphan.
+  if (gap > 1e-9 && gap < 0.04) out.pop();
+  return out;
+}

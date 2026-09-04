@@ -479,3 +479,48 @@ describe('visibleYDomain: the y axis is set by what is in the domain, not by the
     expect(visibleYDomain([], [0, 3])).toBeNull();
   });
 });
+
+// ------------------------------------------- chart v5: one type scale, nice numbers ----
+
+import { CHART_TYPE, niceTicks } from './chart-style';
+
+describe('one type scale', () => {
+  it('is three sizes, and ticks and labels are the same one', () => {
+    expect(CHART_TYPE.tick).toBe(CHART_TYPE.label);
+    expect(new Set(Object.values(CHART_TYPE)).size).toBeLessThanOrEqual(2);
+    expect(CHART_TYPE.emphasis).toBeGreaterThan(CHART_TYPE.label);
+  });
+});
+
+describe('niceTicks: round numbers, and no orphan at the top', () => {
+  it('reads in round numbers', () => {
+    expect(niceTicks([0, 1000])).toEqual([0, 200, 400, 600, 800, 1000]);
+    expect(niceTicks([0, 100])).toEqual([0, 20, 40, 60, 80, 100]);
+  });
+
+  it('never steps outside the domain', () => {
+    for (const d of [[0, 1446], [1200, 98000], [0, 3], [500, 520]] as [number, number][]) {
+      const t = niceTicks(d);
+      expect(t[0]).toBeGreaterThanOrEqual(d[0] - 1e-9);
+      expect(t[t.length - 1]).toBeLessThanOrEqual(d[1] + 1e-9);
+    }
+  });
+
+  it('drops the tick crammed against the top of the frame', () => {
+    // visibleYDomain pads the top by 8%; a tick landing inside that padding is an orphan.
+    const t = niceTicks([0, 1080]);   // data topped out at 1000
+    expect(t[t.length - 1]).toBeLessThan(1080);
+    expect(t).toEqual([0, 200, 400, 600, 800, 1000]);
+  });
+
+  it('never crowds the axis', () => {
+    for (const d of [[0, 7], [0, 1_000_000], [3, 4]] as [number, number][]) {
+      expect(niceTicks(d).length).toBeLessThanOrEqual(7);
+    }
+  });
+
+  it('has nothing to draw for a domain with no height', () => {
+    expect(niceTicks([5, 5])).toEqual([]);
+    expect(niceTicks([NaN, 5])).toEqual([]);
+  });
+});
