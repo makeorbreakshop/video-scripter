@@ -20,7 +20,7 @@ import {
   baselineWeight, bucketFor, effectiveN, fittedBuckets, growthExponent, weightedMedian,
   type GlobalParams, type Snapshot,
 } from './core';
-import { growthLog, type GrowthContext } from './growth';
+import { growthLog, allowedHorizon, belowAgeFloor, type GrowthContext } from './growth';
 
 /** How close a prior's reading has to be to age `t` to count as MEASURED at t. */
 export function sameAgeTolerance(age: number): number {
@@ -166,6 +166,8 @@ export interface V5Output {
   projectionHorizon: number;
   q: number | null;
   confidence: 'insufficient' | 'early' | 'likely' | 'confirmed';
+  /** True when age < growth.AGE_FLOOR_HOURS: raw views only, no score. */
+  belowAgeFloor: boolean;
 }
 
 /** v̂(T) = v(t) · exp(growthLog(t → T)), the projection product -- separate from the score. */
@@ -180,7 +182,7 @@ export function project(
 }
 
 export function scoreV5(inp: V5Input): V5Output {
-  const horizon = inp.projectionHorizon ?? 30;
+  const horizon = allowedHorizon(inp.projectionHorizon ?? 30);
   const c = channelCurve(inp.priors, inp.age, inp.params);
   const q = growthExponent([...inp.snaps]);
   const ctx: GrowthContext = {
@@ -188,11 +190,19 @@ export function scoreV5(inp: V5Input): V5Output {
     bucket: bucketFor(inp.age, fittedBuckets(inp.params)),
   };
   const projection = project(inp.params, inp.vt, inp.age, horizon, ctx);
-  const score = c.typical && c.typical > 0 ? inp.vt / c.typical : null;
-  const confidence =
-    c.typical == null ? 'insufficient' : inp.age < 3 ? 'early' : inp.age < 7 ? 'likely' : 'confirmed';
+  // Under AGE_FLOOR_HOURS, G's own reconstruction error exceeds the signal (leave-one-out
+  // medALE 1.60 under an hour), so there is no honest denominator yet. Views are still carried;
+  // only the ratio is withheld. See growth.AGE_FLOOR_HOURS.
+  const tooYoung = belowAgeFloor(inp.age);
+  const score = !tooYoung && c.typical && c.typical > 0 ? inp.vt / c.typical : null;
+  const confidence: V5Output['confidence'] =
+    tooYoung ? 'early'
+    : c.typical == null ? 'insufficient'
+    : inp.age < 3 ? 'early' : inp.age < 7 ? 'likely' : 'confirmed';
   return {
-    score, ageDays: inp.age, typicalAtAge: c.typical, nTypical: c.n, typicalNeff: c.neff,
+    score, ageDays: inp.age, typicalAtAge: tooYoung ? null : c.typical,
+    nTypical: c.n, typicalNeff: c.neff,
     typicalMeasuredShare: c.measuredShare, projection, projectionHorizon: horizon, q, confidence,
+    belowAgeFloor: tooYoung,
   };
 }

@@ -23,8 +23,12 @@ import {
   priorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, channelBaseline, type PriorEstimate,
   fitLaunchLadder, fittedBuckets, bucketTolerance, HOUR_BUCKETS, type LaunchRow,
 } from '../lib/scoring/core';
-import { fitPast30, PAST30_AGES, type TailPair } from '../lib/scoring/growth';
+import {
+  fitPast30, PAST30_AGES, fitLaunchLadderV5, LAUNCH_MIN_ROWS, LAUNCH_FIT_SINCE, AGE_FLOOR_HOURS,
+  type TailPair, type LaunchRow5,
+} from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
+import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
 
 const FIT = process.argv.includes('--fit');
@@ -190,38 +194,54 @@ async function fit() {
   for (let i = 1; i < merged.mult.length; i++) merged.mult[i] = Math.max(merged.mult[i], merged.mult[i - 1], 1);
   params.longtail = merged;
   log(`fit: past-30 pairs (window ${pastMonths}mo) ${past.ages.map((a, i) => `${a}d x${past.mult[i].toFixed(3)} (n=${past.n[i]})`).join('  ')}`);
-  // Launch ladder: hour buckets chained through day 1 from the 5-minute samples (see core).
-  const launch = fitLaunchLadder(await launchRows(), params.mult[1] ?? 0);
+  // Launch ladder: hour buckets chained through day 1, fitted with growth.fitLaunchLadderV5 --
+  // minRows 200, winsorised, and a starved bucket carries the younger one forward rather than
+  // leaving a hole for logToRef to interpolate across.
+  const launch = fitLaunchLadderV5(await launchRows(), params.mult[1] ?? 0);
   Object.assign(params.mult, launch.mult);
-  (params as any).launch = { n: launch.n, fittedAt: new Date().toISOString() };
-  log(`fit: launch ladder ${HOUR_BUCKETS.map((b) => `${Math.round(b * 24)}h x${launch.mult[b] != null ? Math.exp(launch.mult[b]).toFixed(2) : '-'} (n=${launch.n[b]})`).join('  ')}`);
+  (params as any).launch = {
+    n: launch.n, fitted: launch.fitted, carried: launch.carried,
+    minRows: LAUNCH_MIN_ROWS, since: LAUNCH_FIT_SINCE, fittedAt: new Date().toISOString(),
+  };
+  log(`fit: launch ladder ${HOUR_BUCKETS.map((b) => `${Math.round(b * 24)}h x${launch.mult[b] != null ? Math.exp(launch.mult[b]).toFixed(2) : '-'} (n=${launch.n[b]}${launch.carried.includes(b) ? ',carried' : ''})`).join('  ')}`);
   await pool.query(`insert into score_params (model_version, n_videos, params) values ($1, $2, $3)`, [MODEL_VERSION, ids.length, JSON.stringify(params)]);
   log(`fit: stored params from ${fitRows.length} (video, bucket) rows; mult=${JSON.stringify(Object.fromEntries(Object.entries(params.mult).map(([k, v]) => [k, Number(Math.exp(v).toFixed(2))])))}`);
   const lt = params.longtail;
   log(`fit: longtail ${lt.ages.map((a, i) => `${a}d x${lt.mult[i].toFixed(2)} (n=${lt.n[i]})`).join('  ')}`);
 }
 
-// Launch rows: for every long-form video published in the last 30 days that has a 5-minute
-// sample inside its first day AND a count near 24h, one row per early sample: (hours, v_h, v_1).
-async function launchRows(): Promise<LaunchRow[]> {
+// Launch rows: (sample at hour h, reading at day 1) pairs on the same video.
+//
+// v3 drew these from videos published in the last 30 DAYS, which starved the early buckets --
+// under 200 pairs in most of them, so `fitLaunchLadder`'s minRows=50 either fitted noise or
+// skipped the bucket and let logToRef interpolate across the hole. That is the sub-day error.
+//
+// v5 draws from the whole LAUNCH-TRACKER ERA instead (LAUNCH_FIT_SINCE = 2026-08-01, when the
+// 5/15/30-minute ladder started running). The hour-h side is view_samples only -- a snapshot is
+// a date, not a time, and rounding one to noon inside the first day is the same fiction the old
+// query used. The day-1 side accepts either source, because at 24h a snapshot's midday stamp is
+// within the tolerance that matters.
+async function launchRows(): Promise<LaunchRow5[]> {
   const rows = await q(
     `with lf as (
        select v.id, v.published_at from videos v
-        where v.published_at > now() - interval '30 days' and ${longformSql('v')}),
-     obs as (
+        where v.published_at >= $1::date and ${longformSql('v')}),
+     samp as (
        select s.video_id, extract(epoch from (s.sampled_at - lf.published_at))/3600.0 as hours, s.view_count
-         from view_samples s join lf on lf.id = s.video_id where s.view_count > 0
-       union all
-       select s.video_id, extract(epoch from (s.snapshot_date::timestamptz + interval '12 hours' - lf.published_at))/3600.0, s.view_count
-         from view_snapshots s join lf on lf.id = s.video_id where s.view_count > 0),
+         from view_samples s join lf on lf.id = s.video_id where s.view_count > 0),
      d1 as (
-       select distinct on (video_id) video_id, view_count as v1
-         from obs where hours between 21 and 27 order by video_id, abs(hours - 24))
+       select distinct on (video_id) video_id, view_count as v1 from (
+         select video_id, hours, view_count from samp
+         union all
+         select s.video_id, extract(epoch from (s.snapshot_date::timestamptz + interval '12 hours' - lf.published_at))/3600.0, s.view_count
+           from view_snapshots s join lf on lf.id = s.video_id where s.view_count > 0
+       ) o where hours between 21 and 27 order by video_id, abs(hours - 24))
      select o.hours, o.view_count as vh, d1.v1
-       from obs o join d1 on d1.video_id = o.video_id
-      where o.hours > 0 and o.hours < 20`
+       from samp o join d1 on d1.video_id = o.video_id
+      where o.hours > 0 and o.hours < 20`,
+    [LAUNCH_FIT_SINCE]
   );
-  log(`fit: launch ladder fed by ${rows.length} (sample, day-1) pairs`);
+  log(`fit: launch ladder fed by ${rows.length} (view_samples, day-1) pairs since ${LAUNCH_FIT_SINCE}`);
   return rows.map((r: any) => ({ hours: Number(r.hours), vh: Number(r.vh), v1: Number(r.v1) }));
 }
 
@@ -280,173 +300,189 @@ async function fitPast30Table(months: number): Promise<TailPair[]> {
   return rows.map((r: any) => ({ laterAge: Number(r.later_age), v30: Number(r.v30), later: Number(r.later) }));
 }
 
-/**
- * v5.0 redefines `score`, and video_scores has ONE row per video with no version dimension --
- * every app read path joins it without a model_version filter. So a v5 write is not a candidate
- * row sitting harmlessly beside the champion's, it IS the production answer. The v3.1 leak of
- * 2026-09-04 (1,005 rows, twice) happened for exactly this reason, so under a v5 MODEL_VERSION
- * the v4 write paths refuse to run at all. Use --v5, which writes a CSV, until Brandon approves
- * the rescore.
- */
-function guardV5Write(mode: string) {
-  if (!MODEL_VERSION.startsWith('v5')) return;
-  console.error(
-    `refusing to run --${mode}: MODEL_VERSION is ${MODEL_VERSION} and this path writes video_scores,\n` +
-    `which is one row per video and is read unfiltered by every app query. Use --v5 (CSV out).`
+// ---------------------------------------------------------------- writing a score
+//
+// v5 keeps `video_scores` as ONE ROW PER VIDEO -- the current answer, which every app read path
+// joins without a model_version filter -- and adds `video_score_history`, which is append-only.
+// The pair is written in the same batch, so "what the app says" and "how it got there" can never
+// drift. See sql/score-history.sql.
+//
+// The v3/v4 column names are kept and remapped rather than left null, because the app, the API
+// and the extension all read them:
+//   score      -> the same-age ratio v(t)/C(t)   (this IS the score now)
+//   baseline   -> C(t), the denominator          (was: median day-30 views of the priors)
+//   n_baseline -> priors that contributed to C(t)
+//   est30      -> the projection at horizon 30   (was: the score's numerator)
+// and the v5-only facts land in their own columns (sql/scoring-v5.sql).
+
+const SCORE_COLUMNS = [
+  'video_id', 'channel_id', 'model_version', 'snapshot_day', 'views', 'q', 'est30', 'baseline',
+  'n_baseline', 'score', 'same_age_ratio', 'n_same_age', 'confidence', 'priors_from_lifetime',
+  'age_days', 'typical_at_age', 'n_typical', 'typical_neff', 'typical_measured_share',
+  'projection', 'projection_horizon',
+] as const;
+
+type ScoreRow = Record<(typeof SCORE_COLUMNS)[number], any>;
+
+/** Upsert the current answers and append the history rows, in one round trip each. */
+async function writeScores(rows: ScoreRow[]) {
+  if (!rows.length) return 0;
+  const values: any[] = []; const tuples: string[] = [];
+  for (const r of rows) {
+    const i = values.length;
+    for (const c of SCORE_COLUMNS) values.push(r[c] ?? null);
+    tuples.push(`(${SCORE_COLUMNS.map((_, k) => `$${i + k + 1}`).join(',')},now())`);
+  }
+  const set = SCORE_COLUMNS.filter((c) => c !== 'video_id')
+    .map((c) => `${c}=excluded.${c}`).join(', ');
+  await pool.query(
+    `insert into video_scores (${SCORE_COLUMNS.join(', ')}, scored_at)
+     values ${tuples.join(',')}
+     on conflict (video_id) do update set ${set}, scored_at=excluded.scored_at`,
+    values
   );
-  process.exit(2);
+  const hist = historyInsert(rows.map((r) => ({
+    video_id: r.video_id, channel_id: r.channel_id, model_version: r.model_version,
+    age_days: r.age_days, views: r.views, score: r.score, same_age_ratio: r.same_age_ratio,
+    typical_at_age: r.typical_at_age, n_typical: r.n_typical,
+    typical_measured_share: r.typical_measured_share, projection: r.projection,
+    projection_horizon: r.projection_horizon, est30: r.est30, baseline: r.baseline,
+    n_baseline: r.n_baseline, confidence: r.confidence,
+    extra: { q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime },
+  })));
+  if (hist) await pool.query(hist.text, hist.values);
+  return rows.length;
 }
 
-async function score() {
-  guardV5Write('score (hourly)');
-  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
-  if (!p.length) { console.error('no score_params; run --fit first'); process.exit(1); }
-  const params: GlobalParams = p[0].params;
+/** scoreV5 output -> a video_scores row, with the legacy columns remapped (see above). */
+function rowFromV5(
+  id: string, channelId: string, version: string, views: number, o: ReturnType<typeof scoreV5>
+): ScoreRow {
+  const nReal = Math.round(o.nTypical * o.typicalMeasuredShare);
+  return {
+    video_id: id, channel_id: channelId, model_version: version,
+    snapshot_day: o.ageDays, views, q: o.q,
+    est30: o.projection, baseline: o.typicalAtAge, n_baseline: o.nTypical,
+    score: o.score, same_age_ratio: o.score, n_same_age: nReal, confidence: o.confidence,
+    priors_from_lifetime: o.nTypical - nReal,
+    age_days: o.ageDays, typical_at_age: o.typicalAtAge, n_typical: o.nTypical,
+    typical_neff: o.typicalNeff, typical_measured_share: o.typicalMeasuredShare,
+    projection: o.projection, projection_horizon: o.projectionHorizon,
+  };
+}
 
+/**
+ * Everything scoreV5 needs for one batch of targets, in four reads. Shared by --v5 (CSV) and the
+ * write paths, so the dry run and production cannot answer differently.
+ */
+async function v5Batch(group: { id: string; channel_id: string }[], params: GlobalParams) {
+  const ids = group.map((r) => r.id);
+  const priorsOf = await priorsFor(ids);
+  const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
+  const [rec, priorRec, priorMeta, truth] = await Promise.all([
+    records(ids), records(priorIds), meta(priorIds), day30(priorIds),
+  ]);
+  const out: { t: { id: string; channel_id: string }; views: number; o: ReturnType<typeof scoreV5> }[] = [];
+  for (const t of group) {
+    const snaps = rec.get(t.id);
+    if (!snaps?.length) continue;
+    const latest = snaps[snaps.length - 1];
+    const pool2 = priorsOf.get(t.id) ?? [];
+    const curvePriors: CurvePrior[] = pool2.map((pp) => {
+      const m = priorMeta.get(pp.id);
+      return {
+        id: pp.id, ageDays: pp.ageDays, samples: priorRec.get(pp.id) ?? [],
+        lifetime: m && m.views > 0 ? { views: m.views, ageDays: m.age } : null,
+      };
+    });
+    // the est30-side channel multiplier still feeds G's blend (unchanged from v3)
+    const bucket = bucketFor(latest.day, fittedBuckets(params));
+    const tol = bucketTolerance(bucket);
+    const priorMultLogs: number[] = [];
+    for (const pp of estPool(pool2)) {
+      const ps = priorRec.get(pp.id); const v30 = truth.get(pp.id);
+      if (!ps || !v30) continue;
+      const nearB = ps.filter((sn) => Math.abs(sn.day - bucket) <= tol)
+        .sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
+      if (nearB) priorMultLogs.push(Math.log(v30 / nearB.views));
+    }
+    out.push({
+      t, views: latest.views,
+      o: scoreV5({ vt: latest.views, age: latest.day, snaps, priors: curvePriors, priorMultLogs, params }),
+    });
+  }
+  return out;
+}
+
+async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
+  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [version]);
+  if (!p.length) { console.error(`no score_params for ${version}; run --fit first`); process.exit(1); }
+  return p[0].params as GlobalParams;
+}
+
+// The hourly pass. Under 60 days, whichever videos got a reading newer than their stored score.
+async function score() {
+  const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const args = CHANNELS.length ? [CHANNELS] : [];
   const cap = LIMIT ? `limit ${LIMIT}` : '';
-  const targets: { id: string; channel_id: string; published_at: string }[] = await q(
+  // --all drops the 60-day ceiling: a same-age score has no reason to freeze, so the cadence
+  // comes from the SNAPSHOT tiers (daily <30d, every 3d to 180d, weekly after), not the scorer.
+  const ceiling = ALL ? '' : `and v.published_at > now() - interval '60 days'`;
+  const targets: { id: string; channel_id: string }[] = await q(
     ALL
-      ? `select v.id, v.channel_id, v.published_at from videos v
-          where v.published_at > now() - interval '60 days' and ${longformSql('v')}
-            ${chFilter} ${cap}`
-      : `select v.id, v.channel_id, v.published_at from videos v
+      ? `select v.id, v.channel_id from videos v
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
+          order by v.published_at desc ${cap}`
+      : `select v.id, v.channel_id from videos v
           left join video_scores sc on sc.video_id = v.id
-          where v.published_at > now() - interval '60 days' and ${longformSql('v')}
-            ${chFilter}
+          where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceiling} ${chFilter}
             and (sc.video_id is null
                  or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
                  or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
-            ${cap}`,
+          order by v.published_at desc ${cap}`,
     args
   );
-  log(`score: ${targets.length} videos to score`);
-  let written = 0;
+  log(`score: ${targets.length} videos to score${ALL ? ' (--all: whole corpus)' : ''}`);
+  let written = 0, noCurve = 0, tooYoung = 0;
   for (const group of chunk(targets, 500)) {
-    const ids = group.map((r) => r.id);
-    // priors: last <=10 prior non-Short, non-live videos per channel, with their day-30 estimate and records
-    const priorsOf = await priorsFor(ids);
-    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((p) => p.id))];
-    const [rec, priorRec, truth] = await Promise.all([records(ids), records(priorIds), day30(priorIds)]);
-
-    const values: any[] = []; const tuples: string[] = [];
-    for (const t of group) {
-      const snaps = rec.get(t.id);
-      if (!snaps?.length) continue;
-      const latest = snaps[snaps.length - 1];
-      const bucket = bucketFor(latest.day, fittedBuckets(params));
-      const tol = bucketTolerance(bucket);
-      const pool = priorsOf.get(t.id) ?? [];
-      const priorMultLogs: number[] = []; const priorV30s: number[] = []; const priorAgeDays: number[] = []; const priorSameAge: number[] = [];
-      let fromLifetime = 0, projected = 0;
-      // baseline (v4.0): the whole fresh pool, weighted by age -- real day-30 snapshot,
-      // else the prior's latest record translated to day 30.
-      for (const p of pool) {
-        const est = priorEstimate(p.id, truth, priorRec, params);
-        if (est) { priorV30s.push(est.v30); priorAgeDays.push(p.ageDays); if (est.kind === 'lifetime') fromLifetime++; if (est.kind === 'projected') projected++; }
-      }
-      // est30 side: unchanged from v3.
-      for (const p of estPool(pool)) {
-        const ps = priorRec.get(p.id); const v30 = truth.get(p.id);
-        if (!ps) continue;
-        const near = ps.filter((s) => Math.abs(s.day - latest.day) <= Math.max(1, latest.day / 4)).sort((a, b) => Math.abs(a.day - latest.day) - Math.abs(b.day - latest.day))[0];
-        if (near) priorSameAge.push(near.views);
-        const nearB = ps.filter((s) => Math.abs(s.day - bucket) <= tol).sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
-        if (nearB && v30) priorMultLogs.push(Math.log(v30 / nearB.views));
-      }
-      const out = scoreVideo({ vt: latest.views, day: latest.day, snaps, priorMultLogs, priorV30: priorV30s, priorAgeDays, priorSameAge, priorsFromLifetime: fromLifetime, priorsProjected: projected, params });
-      const i = values.length;
-      // priors_from_lifetime counts every prior whose day-30 is derived rather than measured (lifetime + projected).
-      values.push(t.id, t.channel_id, MODEL_VERSION, latest.day, latest.views, out.q, out.est30, out.baseline, out.nBaseline, out.score, out.sameAgeRatio, out.nSameAge, out.confidence, out.priorsFromLifetime + out.priorsProjected);
-      tuples.push(`($${i + 1},$${i + 2},$${i + 3},now(),$${i + 4},$${i + 5},$${i + 6},$${i + 7},$${i + 8},$${i + 9},$${i + 10},$${i + 11},$${i + 12},$${i + 13},$${i + 14})`);
-    }
-    if (!tuples.length) continue;
-    await pool.query(
-      `insert into video_scores (video_id, channel_id, model_version, scored_at, snapshot_day, views, q, est30, baseline, n_baseline, score, same_age_ratio, n_same_age, confidence, priors_from_lifetime)
-       values ${tuples.join(',')}
-       on conflict (video_id) do update set channel_id=excluded.channel_id, model_version=excluded.model_version, scored_at=excluded.scored_at,
-         snapshot_day=excluded.snapshot_day, views=excluded.views, q=excluded.q, est30=excluded.est30, baseline=excluded.baseline,
-         n_baseline=excluded.n_baseline, score=excluded.score, same_age_ratio=excluded.same_age_ratio, n_same_age=excluded.n_same_age,
-         confidence=excluded.confidence, priors_from_lifetime=excluded.priors_from_lifetime`,
-      values
-    );
-    written += tuples.length;
+    const batch = await v5Batch(group, params);
+    for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
+    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, MODEL_VERSION, b.views, b.o)));
     if (written % 5000 < 500) log(`score: ${written} written`);
+    if (ALL) await sleep(SLEEP_MS);   // --all walks the whole corpus; pace it
   }
-  log(`score: done, ${written} videos scored`);
+  log(`score: done, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
 }
 
-// --final: one-shot final score for videos past 60 days, which the hourly pass never reaches.
-// No projection is involved -- est30 is the day-30 estimate itself (real snapshot, or lifetime
-// normalized down the long-tail curve) -- so a video is scored once and then left alone.
+// --final: videos past 60 days that the hourly pass does not select. Under v5 this is the same
+// score at a later age -- there is no day-30 anchor to freeze against any more -- so it runs the
+// identical math and only the version label and the pacing differ.
 async function final() {
-  guardV5Write('final');
-  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
-  if (!p.length) { console.error('no score_params; run --fit first'); process.exit(1); }
-  const params: GlobalParams = p[0].params;
-  if (!params.longtail) { console.error('score_params has no longtail table; run --fit first'); process.exit(1); }
-
+  const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const targets: { id: string; channel_id: string }[] = await q(
     `select v.id, v.channel_id from videos v
        left join video_scores sc on sc.video_id = v.id
       where v.published_at < now() - interval '60 days'
-        and ${longformSql('v')} and coalesce(v.view_count,0) > 0
-        ${chFilter}
-        and (sc.video_id is null or (sc.snapshot_day < 27 and sc.model_version <> '${FINAL_VERSION}'))
+        and ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
+        and coalesce(v.view_count,0) > 0 ${chFilter}
+        and (sc.video_id is null or sc.model_version <> '${FINAL_VERSION}')
       order by v.published_at desc
       ${LIMIT ? `limit ${LIMIT}` : ''}`,
     CHANNELS.length ? [CHANNELS] : []
   );
-  log(`final: ${targets.length} videos older than 60 days to score once`);
-
-  let written = 0, skipped = 0;
+  log(`final: ${targets.length} videos older than 60 days`);
+  let written = 0, noCurve = 0;
   for (const group of chunk(targets, 500)) {
-    const ids = group.map((r) => r.id);
-    const priorsOf = await priorsFor(ids);
-    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((p) => p.id))];
-    const allIds = [...new Set([...ids, ...priorIds])];
-    const [truth, metas, priorRec] = await Promise.all([day30(allIds), meta(allIds), records(priorIds)]);
-
-    const values: any[] = []; const tuples: string[] = [];
-    for (const t of group) {
-      const self = v30Of(t.id, truth, metas, params.longtail);
-      if (!self) { skipped++; continue; }
-      const priorV30: number[] = []; const priorAgeDays: number[] = []; let fromLifetime = 0;
-      for (const p of priorsOf.get(t.id) ?? []) {
-        const est = priorEstimate(p.id, truth, priorRec, params);
-        if (est) { priorV30.push(est.v30); priorAgeDays.push(p.ageDays); if (est.kind !== 'real') fromLifetime++; }
-      }
-      const baseline = channelBaseline(priorV30, priorAgeDays).baseline;
-      const score = baseline && baseline > 0 ? self.v30 / baseline : null;
-      const age = metas.get(t.id)!.age;
-      const i = values.length;
-      values.push(
-        t.id, t.channel_id, FINAL_VERSION, Math.min(age, 30), metas.get(t.id)!.views,
-        self.v30, baseline, priorV30.length, score, baseline == null ? 'insufficient' : 'confirmed', fromLifetime
-      );
-      tuples.push(`($${i + 1},$${i + 2},$${i + 3},now(),$${i + 4},$${i + 5},null,$${i + 6},$${i + 7},$${i + 8},$${i + 9},null,0,$${i + 10},$${i + 11})`);
-    }
-    if (tuples.length) {
-      await pool.query(
-        `insert into video_scores (video_id, channel_id, model_version, scored_at, snapshot_day, views, q, est30, baseline, n_baseline, score, same_age_ratio, n_same_age, confidence, priors_from_lifetime)
-         values ${tuples.join(',')}
-         on conflict (video_id) do update set channel_id=excluded.channel_id, model_version=excluded.model_version, scored_at=excluded.scored_at,
-           snapshot_day=excluded.snapshot_day, views=excluded.views, q=excluded.q, est30=excluded.est30, baseline=excluded.baseline,
-           n_baseline=excluded.n_baseline, score=excluded.score, same_age_ratio=excluded.same_age_ratio, n_same_age=excluded.n_same_age,
-           confidence=excluded.confidence, priors_from_lifetime=excluded.priors_from_lifetime`,
-        values
-      );
-      written += tuples.length;
-    }
-    if (written % 5000 < 500) log(`final: ${written} written, ${skipped} skipped`);
+    const batch = await v5Batch(group, params);
+    for (const b of batch) if (b.o.score == null) noCurve++;
+    written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, FINAL_VERSION, b.views, b.o)));
+    if (written % 5000 < 500) log(`final: ${written} written`);
     await sleep(SLEEP_MS);   // paced: this walks the long tail of the corpus
   }
-  log(`final: done, ${written} scored, ${skipped} skipped (no day-30 estimate)`);
+  log(`final: done, ${written} scored (${noCurve} with no channel curve)`);
 }
-
-
 
 // ---------------------------------------------------------------- v5 (--v5)
 //
@@ -459,12 +495,10 @@ async function final() {
 // from the SNAPSHOT tiers, not from the scorer: daily under 30d, every 3 days to 180d, weekly
 // after. The hourly selection for <60d is unchanged; older videos simply stop being excluded.
 //
-// OUTPUT. A CSV under docs/benchmarks, never video_scores -- see guardV5Write.
+// OUTPUT. A CSV under docs/benchmarks -- the dry run. It shares v5Batch with the write paths,
+// so it cannot answer differently from what the hourly pass would store.
 async function v5() {
-  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
-  if (!p.length) { console.error(`no score_params for ${MODEL_VERSION}; run --fit first`); process.exit(1); }
-  const params: GlobalParams = p[0].params;
-
+  const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
   const args = CHANNELS.length ? [CHANNELS] : [];
   const cap = LIMIT ? `limit ${LIMIT}` : '';
@@ -475,8 +509,6 @@ async function v5() {
       ? `select v.id, v.channel_id from videos v
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
           order by v.published_at desc ${cap}`
-      // No 60-day ceiling: an old video is revisited whenever a new snapshot lands, which on the
-      // tiered cadence is every 3 days to 180d and weekly after that.
       : `select v.id, v.channel_id from videos v
           left join video_scores sc on sc.video_id = v.id
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
@@ -486,7 +518,7 @@ async function v5() {
           order by v.published_at desc ${cap}`,
     args
   );
-  log(`v5: ${targets.length} videos to score`);
+  log(`v5: ${targets.length} videos to score (dry run, CSV out)`);
 
   const out = arg('--out') ?? `docs/benchmarks/v5.0-scores-${new Date().toISOString().slice(0, 10)}.csv`;
   fs.mkdirSync('docs/benchmarks', { recursive: true });
@@ -494,41 +526,11 @@ async function v5() {
   let scored = 0, noCurve = 0;
 
   for (const group of chunk(targets, 500)) {
-    const ids = group.map((r) => r.id);
-    const priorsOf = await priorsFor(ids);
-    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
-    const [rec, priorRec, priorMeta, truth] = await Promise.all([
-      records(ids), records(priorIds), meta(priorIds), day30(priorIds),
-    ]);
-
-    for (const t of group) {
-      const snaps = rec.get(t.id);
-      if (!snaps?.length) continue;
-      const latest = snaps[snaps.length - 1];
-      const pool = priorsOf.get(t.id) ?? [];
-      const curvePriors: CurvePrior[] = pool.map((pp) => {
-        const m = priorMeta.get(pp.id);
-        return {
-          id: pp.id, ageDays: pp.ageDays, samples: priorRec.get(pp.id) ?? [],
-          lifetime: m && m.views > 0 ? { views: m.views, ageDays: m.age } : null,
-        };
-      });
-      // the est30-side channel multiplier still feeds G's blend (unchanged from v3)
-      const bucket = bucketFor(latest.day, fittedBuckets(params));
-      const tol = bucketTolerance(bucket);
-      const priorMultLogs: number[] = [];
-      for (const pp of estPool(pool)) {
-        const ps = priorRec.get(pp.id); const v30 = truth.get(pp.id);
-        if (!ps || !v30) continue;
-        const nearB = ps.filter((s) => Math.abs(s.day - bucket) <= tol)
-          .sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
-        if (nearB) priorMultLogs.push(Math.log(v30 / nearB.views));
-      }
-      const o = scoreV5({ vt: latest.views, age: latest.day, snaps, priors: curvePriors, priorMultLogs, params });
+    for (const { t, views, o } of await v5Batch(group, params)) {
       if (o.score == null) noCurve++;
       scored++;
       lines.push([
-        t.id, t.channel_id, MODEL_VERSION, latest.day.toFixed(4), latest.views,
+        t.id, t.channel_id, MODEL_VERSION, o.ageDays.toFixed(4), views,
         o.score ?? '', o.typicalAtAge?.toFixed(2) ?? '', o.nTypical, o.typicalNeff.toFixed(3),
         o.typicalMeasuredShare.toFixed(4), o.projection.toFixed(2), o.projectionHorizon,
         o.q ?? '', o.confidence,

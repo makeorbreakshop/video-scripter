@@ -20,6 +20,7 @@ dotenv.config({ path: '.env.local' });
 import fs from 'fs';
 import path from 'path';
 import pg from 'pg';
+import { historyInsert, type HistoryRow } from '../../lib/scoring/history';
 import { chunk } from '../../lib/nightly/tracking-core';
 import {
   bucketFor,
@@ -235,6 +236,7 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
 
   const values: unknown[] = [];
   const tuples: string[] = [];
+  const hist: HistoryRow[] = [];
   let skipped = 0;
 
   for (const target of targets) {
@@ -317,6 +319,13 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
           params: globalParams,
         });
 
+    hist.push({
+      video_id: target.id, channel_id: target.channel_id, model_version: opts.modelVersion,
+      age_days: latest.day, views: latest.views, score: out.score,
+      same_age_ratio: out.sameAgeRatio, est30: out.est30, baseline: out.baseline,
+      n_baseline: out.nBaseline, confidence: out.confidence,
+      extra: { q: out.q, n_same_age: out.nSameAge, priors_from_lifetime: out.priorsFromLifetime, params_version: opts.paramsVersion },
+    });
     const offset = values.length;
     values.push(
       target.id,
@@ -347,6 +356,10 @@ async function writeScores(targets: Target[], globalParams: GlobalParams): Promi
        confidence=excluded.confidence, priors_from_lifetime=excluded.priors_from_lifetime`,
     values
   );
+  // Every write path appends to the append-only history too, so a later rescore of
+  // video_scores cannot erase this labelled corpus. See sql/score-history.sql.
+  const h = historyInsert(hist);
+  if (h) await pool.query(h.text, h.values);
 
   return { written: tuples.length, skipped };
 }

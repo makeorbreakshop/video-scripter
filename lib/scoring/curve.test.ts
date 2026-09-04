@@ -130,15 +130,22 @@ describe('scoreV5', () => {
     expect(out.score).toBeNull();
     expect(out.confidence).toBe('insufficient');
   });
-  it('projection is a separate product and answers any horizon', () => {
+  it('projection is a separate product, and the shipped horizon is capped at 30', () => {
     const base = { vt: 2500, age: 3, snaps: [{ day: 1, views: 900 }, { day: 3, views: 2500 }], priors, params: P };
     const p30 = scoreV5(base).projection;
-    const p365 = scoreV5({ ...base, projectionHorizon: 365 }).projection;
     expect(p30).toBeGreaterThan(2500);
-    expect(p365).toBeGreaterThan(p30);
+    expect(scoreV5({ ...base, projectionHorizon: 7 }).projection).toBeLessThan(p30);
     expect(scoreV5({ ...base, projectionHorizon: 3 }).projection).toBeCloseTo(2500, 6);
+    // 90/365 are measured (verification part 4) but not shipped: growth.LONG_HORIZONS_ENABLED
+    // is off, so a 365 request comes back as the 30-day answer, labelled 30.
+    const long = scoreV5({ ...base, projectionHorizon: 365 });
+    expect(long.projectionHorizon).toBe(30);
+    expect(long.projection).toBeCloseTo(p30, 9);
     // and the score does not move when the horizon does
-    expect(scoreV5({ ...base, projectionHorizon: 365 }).score).toBe(scoreV5(base).score);
+    expect(long.score).toBe(scoreV5(base).score);
+  });
+  it('project() still answers any horizon -- the cap is on the product, not the math', () => {
+    expect(project(P, 2500, 3, 365)).toBeGreaterThan(project(P, 2500, 3, 30));
   });
   it('project() is the same curve, so it round-trips', () => {
     expect(project(P, project(P, 1000, 3, 90), 90, 3)).toBeCloseTo(1000, 6);

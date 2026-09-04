@@ -1,5 +1,9 @@
 import { DAY_BUCKETS, HOUR_BUCKETS, type GlobalParams } from './core';
-import { growthLog, logToRef, slide, fitPast30, blendScale, PAST30_AGES } from './growth';
+import {
+  growthLog, logToRef, slide, fitPast30, blendScale, PAST30_AGES,
+  fitLaunchLadderV5, winsorise, belowAgeFloor, allowedHorizon,
+  AGE_FLOOR_HOURS, PROJECTION_MAX_DAYS, LONG_HORIZONS_ENABLED, type LaunchRow5,
+} from './growth';
 
 // A params table shaped like a real fit: multipliers decreasing to 0 at day 30, a launch ladder
 // above the day-1 value, a long tail above 1.
@@ -120,5 +124,68 @@ describe('fitPast30', () => {
     for (let i = 1; i < t.mult.length; i++) expect(t.mult[i]).toBeGreaterThanOrEqual(t.mult[i - 1]);
     expect(Math.min(...t.mult)).toBeGreaterThanOrEqual(1);
     expect(t.mult[3]).toBe(t.mult[2]); // the 5-pair 365 bucket is under minRows, carried forward
+  });
+});
+
+describe('v5 launch ladder fit', () => {
+  const pairs = (hours: number, n: number, ratio: number): LaunchRow5[] =>
+    Array.from({ length: n }, (_, i) => ({ hours, vh: 100, v1: 100 * ratio * (1 + (i % 5) * 0.01) }));
+
+  it('carries the previous younger bucket forward instead of leaving a hole', () => {
+    // 1h and 2h well fed; 4h starved. v3 skipped 4h and let logToRef interpolate 2h -> 8h.
+    const rows = [...pairs(1, 300, 4), ...pairs(2, 300, 3), ...pairs(4, 10, 2), ...pairs(8, 300, 1.6)];
+    const f = fitLaunchLadderV5(rows, 0.875);
+    expect(f.fitted).toContain(2 / 24);
+    expect(f.carried).toContain(4 / 24);
+    expect(f.mult[4 / 24]).toBe(f.mult[2 / 24]);
+    expect(f.n[4 / 24]).toBe(10);      // the real count is still reported
+  });
+
+  it('respects minRows: a bucket under 200 rows is never fitted from its own data', () => {
+    const rows = [...pairs(1, 300, 4), ...pairs(2, 199, 99)];
+    const f = fitLaunchLadderV5(rows, 0.875);
+    expect(f.carried).toContain(2 / 24);
+    expect(f.mult[2 / 24]).toBe(f.mult[1 / 24]);   // the absurd ratio never lands
+  });
+
+  it('is monotone non-increasing in age and never below the day-1 multiplier', () => {
+    const rows = [...pairs(1, 300, 4), ...pairs(2, 300, 3), ...pairs(4, 300, 2.4),
+                  ...pairs(8, 300, 1.6), ...pairs(12, 300, 1.3), ...pairs(18, 300, 1.1)];
+    const f = fitLaunchLadderV5(rows, 0.875);
+    const asc = [...HOUR_BUCKETS].sort((a, b) => a - b).filter((b) => f.mult[b] != null);
+    for (let i = 1; i < asc.length; i++) {
+      expect(f.mult[asc[i]]).toBeLessThanOrEqual(f.mult[asc[i - 1]] + 1e-12);
+      expect(f.mult[asc[i]]).toBeGreaterThanOrEqual(0.875 - 1e-12);
+    }
+  });
+
+  it('leaves the earliest buckets out entirely when nothing younger was ever fitted', () => {
+    const f = fitLaunchLadderV5([...pairs(1, 10, 4), ...pairs(8, 300, 1.6)], 0.875);
+    expect(f.mult[1 / 24]).toBeUndefined();
+    expect(f.mult[8 / 24]).toBeDefined();
+  });
+
+  it('winsorising clamps the tails without moving the median off a clean sample', () => {
+    const xs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1000];
+    const w = winsorise(xs);
+    expect(Math.max(...w)).toBeLessThan(1000);
+    expect(Math.min(...w)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('the early floor and the horizon cap', () => {
+  it('holds at four hours', () => {
+    expect(AGE_FLOOR_HOURS).toBe(4);
+    expect(belowAgeFloor(3.9 / 24)).toBe(true);
+    expect(belowAgeFloor(4 / 24)).toBe(false);
+    expect(belowAgeFloor(NaN)).toBe(true);
+  });
+
+  it('caps the shipped projection horizon at 30 days while the long horizons are off', () => {
+    expect(LONG_HORIZONS_ENABLED).toBe(false);
+    expect(allowedHorizon(7)).toBe(7);
+    expect(allowedHorizon(30)).toBe(30);
+    expect(allowedHorizon(365)).toBe(PROJECTION_MAX_DAYS);
+    expect(allowedHorizon(0)).toBe(PROJECTION_MAX_DAYS);
   });
 });

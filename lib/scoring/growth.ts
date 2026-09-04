@@ -181,3 +181,115 @@ export function fitPast30(
   }
   return { ages: [...ages], mult, n };
 }
+
+// ---- fitting the sub-day half of G ------------------------------------------------------
+//
+// v3's `core.fitLaunchLadder` fitted the hour buckets from whatever (sample, day-1) pairs the
+// last 30 days happened to hold, with minRows = 50 and no outlier handling, and it SKIPPED an
+// unfitted bucket -- so `logToRef` then interpolated straight across the hole, between two
+// buckets that could be six hours apart. That is most of why the leave-one-out G check reads
+// medALE 1.60 below one hour and 1.06 from 1-4h while every bucket past 12h is under 0.13.
+//
+// v5 refits the same ladder from the launch-tracker era only (view_samples since 2026-08-01,
+// when the 5/15/30-minute ladder was actually running), with:
+//   - a robust median of log(v1 / v_h), as before;
+//   - two-sided winsorising at the 5th/95th percentile per bucket, so a video whose day-1
+//     reading landed after a spike cannot drag the bucket. (A median barely moves under this;
+//     it is a guard, not an estimator change, and the fit logs both so the difference is visible.)
+//   - minRows = 200 per bucket, and a bucket that misses it CARRIES THE PREVIOUS (younger)
+//     bucket's value forward instead of being skipped -- no silent interpolation across a hole;
+//   - monotone non-increasing in age, enforced after the fact.
+
+export const LAUNCH_MIN_ROWS = 200;
+/** Launch-tracker era: view_samples before this date are not a 5-minute ladder. */
+export const LAUNCH_FIT_SINCE = '2026-08-01';
+
+export interface LadderFit {
+  mult: Record<number, number>;
+  n: Record<number, number>;
+  /** Buckets that met minRows and were fitted from their own rows. */
+  fitted: number[];
+  /** Buckets that missed minRows and carried the previous bucket's value forward. */
+  carried: number[];
+}
+
+/** Two-sided winsorise at [p, 1-p] of the sorted sample. Returns a new array. */
+export function winsorise(xs: readonly number[], p = 0.05): number[] {
+  if (xs.length < 3) return [...xs];
+  const s = [...xs].sort((a, b) => a - b);
+  const lo = s[Math.floor(p * (s.length - 1))];
+  const hi = s[Math.floor((1 - p) * (s.length - 1))];
+  return xs.map((x) => Math.min(Math.max(x, lo), hi));
+}
+
+export function fitLaunchLadderV5(
+  rows: readonly LaunchRow5[],
+  day1Mult: number,
+  minRows = LAUNCH_MIN_ROWS
+): LadderFit {
+  const mult: Record<number, number> = {}; const n: Record<number, number> = {};
+  const fitted: number[] = []; const carried: number[] = [];
+  // Ascending in age, so "the previous bucket" is the next-younger one -- the direction the
+  // curve is monotone in, and the only fallback that cannot invent growth that was never seen.
+  const asc = [...HOUR_BUCKETS].sort((a, b) => a - b);
+  let last: number | null = null;
+  for (const b of asc) {
+    const hb = b * 24; const tol = Math.max(hb * 0.15, 0.25);
+    const rs = rows.filter((r) => r.vh > 0 && r.v1 > 0 && Math.abs(r.hours - hb) <= tol);
+    n[b] = rs.length;
+    if (rs.length >= minRows) {
+      const logs = winsorise(rs.map((r) => Math.log(r.v1 / r.vh)));
+      const m = median(logs)! + day1Mult;
+      mult[b] = Math.max(m, day1Mult);   // never less growth left than at day 1
+      last = mult[b];
+      fitted.push(b);
+    } else if (last != null) {
+      mult[b] = last;                     // carry forward, do not leave a hole to interpolate over
+      carried.push(b);
+    }
+    // no `last` yet and not enough rows: leave the bucket out entirely, as v3 did. logToRef then
+    // clamps at the earliest bucket it does have, which is the honest answer for "never measured".
+  }
+  // monotone non-increasing in age: walk from the oldest hour back to the youngest.
+  const present = asc.filter((b) => mult[b] != null);
+  for (let i = present.length - 2; i >= 0; i--) {
+    mult[present[i]] = Math.max(mult[present[i]], mult[present[i + 1]]);
+  }
+  return { mult, n, fitted, carried };
+}
+
+/** (sample at `hours`, day-1 reading) pair. Same shape as core.LaunchRow, restated with G. */
+export interface LaunchRow5 { hours: number; vh: number; v1: number }
+
+// ---- the early floor --------------------------------------------------------------------
+//
+// Below four hours the leave-one-out check says G's own reconstruction error is larger than the
+// signal: medALE 1.60 under an hour and 1.06 from 1-4h, against 0.13 by 12h. A ratio built on a
+// denominator with 100%+ error is not a score, it is a number. So under the floor the score is
+// null and the confidence is 'early' -- the raw views are still stored, and the next reading
+// past the floor produces a real score.
+export const AGE_FLOOR_HOURS = 4;
+export const AGE_FLOOR_DAYS = AGE_FLOOR_HOURS / 24;
+
+/** True when the video is too young for G to carry a denominator honestly. */
+export function belowAgeFloor(ageDays: number): boolean {
+  return !(ageDays >= AGE_FLOOR_DAYS);
+}
+
+// ---- projection horizons ----------------------------------------------------------------
+//
+// Verification part 4: from a day-1 reading, medALE to T=30 is 0.231 and to T=365 is 0.672 with
+// bias +0.232. The 90/365 horizons exist in the code and are honestly measured, but they are not
+// a product yet, so the shipped horizon is capped at 30 -- where the v4 bands were fitted and
+// where the benchmark can still compare v5 to v4.
+export const PROJECTION_MAX_DAYS = 30;
+/** Off. Flip only with band calibration for the longer horizons in hand. */
+export const LONG_HORIZONS_ENABLED = false;
+export const LONG_HORIZONS = [90, 365] as const;
+
+/** Clamp a requested horizon to what is shipped. */
+export function allowedHorizon(requested: number): number {
+  if (!Number.isFinite(requested) || requested <= 0) return PROJECTION_MAX_DAYS;
+  if (LONG_HORIZONS_ENABLED) return requested;
+  return Math.min(requested, PROJECTION_MAX_DAYS);
+}
