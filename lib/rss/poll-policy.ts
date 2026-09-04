@@ -293,7 +293,10 @@ const SEED_UPSERT_TAIL = `on conflict (channel_id) do update
       set last_upload_at = excluded.last_upload_at,
           -- never demote a channel a WebSub push just woke; the poll itself clears 'woken'
           rss_state = case when channel_rss_state.rss_state = 'woken' then 'woken' else excluded.rss_state end,
-          updated_at = now()`;
+          updated_at = now()
+    where channel_rss_state.last_upload_at is distinct from excluded.last_upload_at
+       or (channel_rss_state.rss_state is distinct from 'woken'
+           and channel_rss_state.rss_state is distinct from excluded.rss_state)`;
 
 const seedState = (col: string) =>
   `case when ${col} > now() - interval '${RSS_POLICY.dormantAfterDays} days' then 'active' else 'dormant' end`;

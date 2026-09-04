@@ -22,7 +22,7 @@ try {
   await client.query(SEED_ALL_SQL);
   const actual = (await client.query('select channel_id,last_upload_at,rss_state from channel_rss_state order by channel_id')).rows;
   assert.deepEqual(actual,expected);
-  await client.query(SEED_ALL_SQL);
+  assert.equal((await client.query(SEED_ALL_SQL)).rowCount,0,'unchanged channel state must not be rewritten');
   assert.equal((await client.query('select count(*)::int n from channel_rss_state')).rows[0].n,4);
   console.log('RSS seed parity: PASS (all channels, Shorts, null dates, wake state, idempotence)');
 } finally { await client.query('rollback'); await client.end(); }
