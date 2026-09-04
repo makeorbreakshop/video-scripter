@@ -6,6 +6,8 @@
 // beyond the two image requests.
 import { useEffect, useState } from 'react';
 import { avatarCacheUrl } from '@/lib/thumbs/storage';
+import { sizedAvatarUrl } from '@/lib/app/avatar-url';
+
 
 export function ChannelAvatar({
   src, name, size = 28, className, eager, channelId,
@@ -20,8 +22,9 @@ export function ChannelAvatar({
   channelId?: string | null;
 }) {
   const fallback = channelId ? avatarCacheUrl(channelId) : null;
-  const [cur, setCur] = useState<string | null>(src ?? fallback);
-  useEffect(() => { setCur(src ?? fallback); }, [src, fallback]);
+  const sized = src ? sizedAvatarUrl(src, size) : null;
+  const [cur, setCur] = useState<string | null>(sized ?? fallback);
+  useEffect(() => { setCur(sized ?? fallback); }, [sized, fallback]);
 
   function onError() {
     setCur((c) => (fallback && c !== fallback ? fallback : null));
