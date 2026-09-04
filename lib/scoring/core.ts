@@ -6,12 +6,13 @@
 //                   the channel's own growth multiplier with the global one by n/(n+k),
 //                   plus a per-video correction from the video's growth exponent Q
 //                   (log growth between its first and latest snapshot, read at TRUE age)
-//   score         = est30 / channelBaseline (median day-30 views of the last <=10 priors)
+//   score         = est30 / channelBaseline (time-weighted median in LOG space of the day-30
+//                   estimates of the last <=15 fresh priors; weight 2^(-ageDays/30) -- v4.0)
 //   confidence    = early (<3d) | likely (3-6d) | confirmed (>=7d), 'insufficient' when priors < 3
 // Validated in the 2026-09-01 backtests (harness v2): same-age ratio ranks at rho .87 by day 3;
 // v3 blend medALE ~.30 day 1, ~.19 day 3, ~.10 day 7 on held-out time.
 
-export const MODEL_VERSION = 'v3.0';
+export const MODEL_VERSION = 'v4.0';
 export const DAY_BUCKETS = [1, 2, 3, 5, 7, 14, 21, 30] as const;
 export type DayBucket = (typeof DAY_BUCKETS)[number];
 // Launch ladder: sub-day buckets (in days) fitted from the 5-minute launch samples, chained
@@ -94,7 +95,9 @@ export interface ScoreInput {
   day: number;                // TRUE age at that snapshot (days since publish)
   snaps: Snapshot[];          // the video's own record up to now
   priorMultLogs: number[];    // channel priors: log(v30 / v_t) at ~this bucket (<=10)
-  priorV30: number[];         // channel priors: day-30 views (<=10)
+  priorV30: number[];         // channel priors: day-30 estimates, newest first (<=PRIOR_WINDOW)
+  /** Age in days of each `priorV30` entry: target publish time minus that prior's publish time. */
+  priorAgeDays: number[];
   priorSameAge: number[];     // channel priors: views at the same age (<=10)
   priorsFromLifetime?: number; // how many of priorV30 came from lifetime/long-tail normalization
   priorsProjected?: number;    // how many of priorV30 were projected forward from before day 30
@@ -107,6 +110,8 @@ export interface ScoreOutput {
   est30: number;
   baseline: number | null;
   nBaseline: number;
+  /** Effective prior count behind the baseline: (sum w)^2 / sum w^2. */
+  baselineNeff: number;
   score: number | null;
   sameAgeRatio: number | null;
   nSameAge: number;
@@ -125,15 +130,17 @@ export function scoreVideo(inp: ScoreInput): ScoreOutput {
   const remaining = w * chm + (1 - w) * g + qResidual(inp.params, bucket, q);
   // day-30+ videos: no growth left to project relative to the day-30 definition
   const est30 = inp.day >= 30 ? inp.vt : inp.vt * Math.exp(remaining);
-  const baseline = inp.priorV30.length >= 3 ? median(inp.priorV30) : null;
+  const b = channelBaseline(inp.priorV30, inp.priorAgeDays);
+  const baseline = b.baseline;
   const sameMed = inp.priorSameAge.length >= 3 ? median(inp.priorSameAge) : null;
   const score = baseline && baseline > 0 ? est30 / baseline : null;
   const sameAgeRatio = sameMed && sameMed > 0 ? inp.vt / sameMed : null;
-  // A baseline needs >=3 priors; below that we do not claim to know how the channel performs.
+  // No baseline (too few priors, or too little effective weight behind them) means we do not
+  // claim to know how the channel performs.
   const confidence =
-    inp.priorV30.length < 3 ? 'insufficient' : inp.day < 3 ? 'early' : inp.day < 7 ? 'likely' : 'confirmed';
+    baseline == null ? 'insufficient' : inp.day < 3 ? 'early' : inp.day < 7 ? 'likely' : 'confirmed';
   return {
-    bucket, q, est30, baseline, nBaseline: inp.priorV30.length, score, sameAgeRatio,
+    bucket, q, est30, baseline, nBaseline: inp.priorV30.length, baselineNeff: b.neff, score, sameAgeRatio,
     nSameAge: inp.priorSameAge.length, priorsFromLifetime: inp.priorsFromLifetime ?? 0,
     priorsProjected: inp.priorsProjected ?? 0, confidence,
   };
@@ -346,12 +353,115 @@ export function publishGapDays(publishedAtMs: number[]): number | null {
 }
 
 /**
- * How many recent priors to use. Sparse channels keep the narrower window: they already had
- * full baseline coverage from the long-tail path, and reaching further back only added stale
- * history (the one F1 regression in the backtest).
+ * How many recent priors feed the est30 side (`priorMultLogs`, `priorSameAge`). Sparse channels
+ * keep the narrower window: reaching further back only added stale history (the one F1
+ * regression in the 2026-09-03 backtest). Since v4.0 the BASELINE no longer uses this -- it
+ * takes up to PRIOR_WINDOW fresh priors and lets the age kernel handle staleness.
  */
 export function priorWindow(gapDays: number | null): number {
   return gapDays != null && gapDays > SPARSE_GAP_DAYS ? PRIOR_WINDOW_SPARSE : PRIOR_WINDOW;
+}
+
+// ---- the channel baseline (model v4.0, 2026-09-04) ----
+//
+// v3 took the plain median of the priors' day-30 estimates over `priorWindow(cadence)` of them.
+// That treats a video from last week and one from a year ago as equally informative, so a
+// channel whose level has moved carries stale history into today's denominator. v4 replaces the
+// combination (only the combination -- `priorV30` and the est30 side are untouched) with an
+// exponentially time-weighted median in LOG space over up to PRIOR_WINDOW fresh priors:
+//
+//   w_i      = 2^(-ageDays_i / BASELINE_HALF_LIFE_DAYS)     ageDays = target pub - prior pub
+//   baseline = exp( weightedMedian( log v30_i, w_i ) )
+//
+// Log space because view counts are log-normal and the kernel's tie-break should be a geometric
+// mean, not an arithmetic one. A median rather than a weighted mean so one freak prior cannot
+// move the denominator. The kernel also makes PRIOR_WINDOW_SPARSE redundant for the baseline: a
+// sparse channel's older priors are down-weighted by age instead of truncated by count, which is
+// where most of the gain landed (baseline medALE .290 -> .171 on sparse channels at t=1).
+//
+// Validated by scripts/backtest-baseline-trend.ts (2026-09-04, 4,000 holdout videos Jul-Aug 2025,
+// centered oracle): at t=7 baseline medALE .171 -> .131 all-slice, outlier F1 .72 -> .76, and
+// all-slice bias .043 -> ~0. See docs/benchmarks/baseline-trend-run3-controls.txt.
+
+/** A prior published this many days before the target counts half as much. */
+export const BASELINE_HALF_LIFE_DAYS = 30;
+/** A baseline needs at least this many usable priors ... */
+export const MIN_BASELINE_PRIORS = 3;
+/** ... and this much effective sample size once they are weighted. */
+export const MIN_BASELINE_NEFF = 2;
+
+/** Kernel weight for a prior published `ageDays` before the target. */
+export function baselineWeight(ageDays: number, halfLife = BASELINE_HALF_LIFE_DAYS): number {
+  const a = Number.isFinite(ageDays) ? Math.max(ageDays, 0) : 0;
+  return Math.pow(2, -a / halfLife);
+}
+
+/** Effective sample size of a weight vector: (sum w)^2 / sum w^2. n for equal weights. */
+export function effectiveN(ws: number[]): number {
+  let s = 0, s2 = 0;
+  for (const w of ws) { if (w > 0 && Number.isFinite(w)) { s += w; s2 += w * w; } }
+  return s2 > 0 ? (s * s) / s2 : 0;
+}
+
+/**
+ * Weighted median: the value at which the cumulative weight crosses half the total. Landing
+ * exactly on the halfway mark averages across the tie, so equal weights reduce to `median`
+ * (including the two-middle-values case on an even count). Null when nothing is usable.
+ */
+export function weightedMedian(xs: number[], ws: number[]): number | null {
+  const idx = xs.map((_, i) => i)
+    .filter((i) => Number.isFinite(xs[i]) && ws[i] > 0 && Number.isFinite(ws[i]))
+    .sort((a, b) => xs[a] - xs[b]);
+  if (!idx.length) return null;
+  const tot = idx.reduce((sum, i) => sum + ws[i], 0);
+  const half = tot / 2;
+  const eps = tot * 1e-12;
+  let acc = 0;
+  for (let k = 0; k < idx.length; k++) {
+    acc += ws[idx[k]];
+    if (acc >= half - eps) {
+      if (Math.abs(acc - half) <= eps && k + 1 < idx.length) return (xs[idx[k]] + xs[idx[k + 1]]) / 2;
+      return xs[idx[k]];
+    }
+  }
+  return xs[idx[idx.length - 1]];
+}
+
+export interface BaselineResult {
+  /** Time-weighted geometric baseline, or null when the floors are not met. */
+  baseline: number | null;
+  /** Priors that produced a usable day-30 estimate. */
+  nPriors: number;
+  /** Effective prior count after weighting. */
+  neff: number;
+}
+
+/**
+ * The channel baseline. `priorV30[i]` is a prior's day-30 estimate and `priorAgeDays[i]` is how
+ * many days before the TARGET's publish time that prior was published. A missing or non-finite
+ * age counts as age 0 (full weight). Returns null unless there are >= MIN_BASELINE_PRIORS priors
+ * AND effective n >= MIN_BASELINE_NEFF -- one recent prior plus a tail of near-zero weights is
+ * not a channel history.
+ */
+export function channelBaseline(
+  priorV30: readonly number[],
+  priorAgeDays: readonly number[],
+  halfLife = BASELINE_HALF_LIFE_DAYS
+): BaselineResult {
+  const logs: number[] = [];
+  const ws: number[] = [];
+  for (let i = 0; i < priorV30.length; i++) {
+    const v = priorV30[i];
+    if (!(v > 0) || !Number.isFinite(v)) continue;
+    logs.push(Math.log(v));
+    ws.push(baselineWeight(priorAgeDays[i], halfLife));
+  }
+  const neff = effectiveN(ws);
+  if (logs.length < MIN_BASELINE_PRIORS || neff < MIN_BASELINE_NEFF) {
+    return { baseline: null, nPriors: logs.length, neff };
+  }
+  const m = weightedMedian(logs, ws);
+  return { baseline: m == null ? null : Math.exp(m), nPriors: logs.length, neff };
 }
 
 export interface V30Estimate { v30: number; fromLifetime: boolean }

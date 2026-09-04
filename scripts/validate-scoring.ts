@@ -32,11 +32,12 @@ const truthRows = await q(`select distinct on (video_id) video_id, view_count fr
 const truth = new Map<string, number>(truthRows.map((r: any) => [r.video_id, Number(r.view_count)]));
 
 // priors (walk-forward by publish date only; day-30 truth of priors may postdate the test video's day t — mild optimism, same as harness S*)
-const priorRows: { video_id: string; prior_id: string }[] = await q(
-  `select r.id as video_id, p.id as prior_id from unnest($1::text[]) as r(id) join videos v on v.id=r.id
-   join lateral (select p.id from videos p where p.channel_id=v.channel_id and p.published_at < v.published_at and ${longformSql('p')} order by p.published_at desc limit 10) p on true`, [ids]);
-const priorsOf = new Map<string, string[]>();
-for (const r of priorRows) { if (!priorsOf.has(r.video_id)) priorsOf.set(r.video_id, []); priorsOf.get(r.video_id)!.push(r.prior_id); }
+const priorRows: { video_id: string; prior_id: string; gap_days: number }[] = await q(
+  `select r.id as video_id, p.id as prior_id, extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days
+     from unnest($1::text[]) as r(id) join videos v on v.id=r.id
+   join lateral (select p.id, p.published_at from videos p where p.channel_id=v.channel_id and p.published_at < v.published_at and ${longformSql('p')} order by p.published_at desc limit 10) p on true`, [ids]);
+const priorsOf = new Map<string, { id: string; ageDays: number }[]>();
+for (const r of priorRows) { if (!priorsOf.has(r.video_id)) priorsOf.set(r.video_id, []); priorsOf.get(r.video_id)!.push({ id: r.prior_id, ageDays: Number(r.gap_days) }); }
 const priorIds = [...new Set(priorRows.map((r) => r.prior_id))];
 const pSnapRows = await q(`select video_id, days_since_published as day, view_count as views from view_snapshots where video_id = any($1) and view_count > 0 order by video_id, snapshot_date`, [priorIds]);
 const pRecs = new Map<string, Snapshot[]>();
@@ -54,10 +55,10 @@ for (const t of [1, 3, 7, 14]) {
     if (!near) continue;
     const upto = snaps.filter((s) => s.day <= near.day);
     const bucket = bucketFor(near.day); const btol = bucket <= 3 ? 1 : bucket <= 7 ? 2 : 3;
-    const priorMultLogs: number[] = []; const priorV30: number[] = []; const priorSameAge: number[] = [];
-    for (const pid of priorsOf.get(v.id) ?? []) {
+    const priorMultLogs: number[] = []; const priorV30: number[] = []; const priorAgeDays: number[] = []; const priorSameAge: number[] = [];
+    for (const { id: pid, ageDays } of priorsOf.get(v.id) ?? []) {
       const ps = pRecs.get(pid); const p30 = pTruth.get(pid);
-      if (p30) priorV30.push(p30);
+      if (p30) { priorV30.push(p30); priorAgeDays.push(ageDays); }
       if (ps) {
         const sa = ps.filter((s) => Math.abs(s.day - near.day) <= Math.max(1, near.day / 4)).sort((a, b) => Math.abs(a.day - near.day) - Math.abs(b.day - near.day))[0];
         if (sa) priorSameAge.push(sa.views);
@@ -65,7 +66,7 @@ for (const t of [1, 3, 7, 14]) {
         if (nb && p30) priorMultLogs.push(Math.log(p30 / nb.views));
       }
     }
-    const out = scoreVideo({ vt: near.views, day: near.day, snaps: upto, priorMultLogs, priorV30, priorSameAge, params });
+    const out = scoreVideo({ vt: near.views, day: near.day, snaps: upto, priorMultLogs, priorV30, priorAgeDays, priorSameAge, params });
     errs.push(Math.abs(Math.log(out.est30 / v30)));
     persist.push(Math.abs(Math.log(near.views / v30)));
     if (out.baseline) {

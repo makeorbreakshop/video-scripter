@@ -20,7 +20,7 @@ import { chunk } from '../lib/nightly/tracking-core';
 import {
   scoreVideo, fitParams, fitLongTail, estimateV30, longtailAt, bucketFor, growthExponent,
   median, GlobalParams, LongtailRow, MODEL_VERSION, Snapshot, FitRow, DAY_BUCKETS, MIN_LIFETIME_AGE,
-  priorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, type PriorEstimate,
+  priorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, channelBaseline, type PriorEstimate,
   fitLaunchLadder, fittedBuckets, bucketTolerance, HOUR_BUCKETS, type LaunchRow,
 } from '../lib/scoring/core';
 
@@ -95,9 +95,12 @@ function v30Of(id: string, truth: Map<string, number>, metas: Map<string, Meta>,
 }
 
 // Recent prior non-Short, non-live public videos of each target's channel, newest first.
-// Fetches PRIOR_WINDOW, drops priors older than PRIOR_STALE_DAYS at the target's publish, then
-// keeps priorWindow(cadence) of them: 15 normally, 10 on sparse channels (see lib/scoring/core).
-async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
+// Fetches PRIOR_WINDOW and drops priors older than PRIOR_STALE_DAYS at the target's publish.
+// This full pool is the v4.0 BASELINE pool (the age kernel handles staleness); the est30 side
+// still narrows it to priorWindow(cadence) -- 15 normally, 10 on sparse channels. `ageDays` is
+// the target's publish time minus the prior's, which is what the kernel weights by.
+export interface Prior { id: string; pub: number; ageDays: number }
+async function priorsFor(ids: string[]): Promise<Map<string, Prior[]>> {
   const rows: { video_id: string; prior_id: string; gap_days: number; pub: string }[] = await q(
     `select r.id as video_id, p.id as prior_id,
             extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days,
@@ -111,18 +114,19 @@ async function priorsFor(ids: string[]): Promise<Map<string, string[]>> {
       order by r.id, p.published_at desc`,
     [ids]
   );
-  const grouped = new Map<string, { id: string; pub: number }[]>();
+  const out = new Map<string, Prior[]>();
   for (const r of rows) {
-    if (Number(r.gap_days) > PRIOR_STALE_DAYS) continue;
-    if (!grouped.has(r.video_id)) grouped.set(r.video_id, []);
-    grouped.get(r.video_id)!.push({ id: r.prior_id, pub: new Date(r.pub).getTime() });
-  }
-  const out = new Map<string, string[]>();
-  for (const [vid, ps] of grouped) {
-    const n = priorWindow(publishGapDays(ps.map((p) => p.pub)));
-    out.set(vid, ps.slice(0, n).map((p) => p.id));
+    const ageDays = Number(r.gap_days);
+    if (ageDays > PRIOR_STALE_DAYS) continue;
+    if (!out.has(r.video_id)) out.set(r.video_id, []);
+    out.get(r.video_id)!.push({ id: r.prior_id, pub: new Date(r.pub).getTime(), ageDays });
   }
   return out;
+}
+
+/** The est30 side keeps the v3 window: priorMultLogs / priorSameAge are unchanged by v4.0. */
+function estPool(ps: Prior[]): Prior[] {
+  return ps.slice(0, priorWindow(publishGapDays(ps.map((p) => p.pub))));
 }
 
 // Day-30 estimate for a prior: real snapshot, else its latest record translated along the
@@ -254,7 +258,7 @@ async function score() {
     const ids = group.map((r) => r.id);
     // priors: last <=10 prior non-Short, non-live videos per channel, with their day-30 estimate and records
     const priorsOf = await priorsFor(ids);
-    const priorIds: string[] = [...new Set([...priorsOf.values()].flat())];
+    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((p) => p.id))];
     const [rec, priorRec, truth] = await Promise.all([records(ids), records(priorIds), day30(priorIds)]);
 
     const values: any[] = []; const tuples: string[] = [];
@@ -264,21 +268,25 @@ async function score() {
       const latest = snaps[snaps.length - 1];
       const bucket = bucketFor(latest.day, fittedBuckets(params));
       const tol = bucketTolerance(bucket);
-      const priorMultLogs: number[] = []; const priorV30s: number[] = []; const priorSameAge: number[] = [];
+      const pool = priorsOf.get(t.id) ?? [];
+      const priorMultLogs: number[] = []; const priorV30s: number[] = []; const priorAgeDays: number[] = []; const priorSameAge: number[] = [];
       let fromLifetime = 0, projected = 0;
-      for (const pid of priorsOf.get(t.id) ?? []) {
-        const ps = priorRec.get(pid); const v30 = truth.get(pid);
-        // baseline: real day-30 snapshot, else the prior's latest record translated to day 30
-        const est = priorEstimate(pid, truth, priorRec, params);
-        if (est) { priorV30s.push(est.v30); if (est.kind === 'lifetime') fromLifetime++; if (est.kind === 'projected') projected++; }
-        if (ps) {
-          const near = ps.filter((s) => Math.abs(s.day - latest.day) <= Math.max(1, latest.day / 4)).sort((a, b) => Math.abs(a.day - latest.day) - Math.abs(b.day - latest.day))[0];
-          if (near) priorSameAge.push(near.views);
-          const nearB = ps.filter((s) => Math.abs(s.day - bucket) <= tol).sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
-          if (nearB && v30) priorMultLogs.push(Math.log(v30 / nearB.views));
-        }
+      // baseline (v4.0): the whole fresh pool, weighted by age -- real day-30 snapshot,
+      // else the prior's latest record translated to day 30.
+      for (const p of pool) {
+        const est = priorEstimate(p.id, truth, priorRec, params);
+        if (est) { priorV30s.push(est.v30); priorAgeDays.push(p.ageDays); if (est.kind === 'lifetime') fromLifetime++; if (est.kind === 'projected') projected++; }
       }
-      const out = scoreVideo({ vt: latest.views, day: latest.day, snaps, priorMultLogs, priorV30: priorV30s, priorSameAge, priorsFromLifetime: fromLifetime, priorsProjected: projected, params });
+      // est30 side: unchanged from v3.
+      for (const p of estPool(pool)) {
+        const ps = priorRec.get(p.id); const v30 = truth.get(p.id);
+        if (!ps) continue;
+        const near = ps.filter((s) => Math.abs(s.day - latest.day) <= Math.max(1, latest.day / 4)).sort((a, b) => Math.abs(a.day - latest.day) - Math.abs(b.day - latest.day))[0];
+        if (near) priorSameAge.push(near.views);
+        const nearB = ps.filter((s) => Math.abs(s.day - bucket) <= tol).sort((a, b) => Math.abs(a.day - bucket) - Math.abs(b.day - bucket))[0];
+        if (nearB && v30) priorMultLogs.push(Math.log(v30 / nearB.views));
+      }
+      const out = scoreVideo({ vt: latest.views, day: latest.day, snaps, priorMultLogs, priorV30: priorV30s, priorAgeDays, priorSameAge, priorsFromLifetime: fromLifetime, priorsProjected: projected, params });
       const i = values.length;
       // priors_from_lifetime counts every prior whose day-30 is derived rather than measured (lifetime + projected).
       values.push(t.id, t.channel_id, MODEL_VERSION, latest.day, latest.views, out.q, out.est30, out.baseline, out.nBaseline, out.score, out.sameAgeRatio, out.nSameAge, out.confidence, out.priorsFromLifetime + out.priorsProjected);
@@ -327,7 +335,7 @@ async function final() {
   for (const group of chunk(targets, 500)) {
     const ids = group.map((r) => r.id);
     const priorsOf = await priorsFor(ids);
-    const priorIds: string[] = [...new Set([...priorsOf.values()].flat())];
+    const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((p) => p.id))];
     const allIds = [...new Set([...ids, ...priorIds])];
     const [truth, metas, priorRec] = await Promise.all([day30(allIds), meta(allIds), records(priorIds)]);
 
@@ -335,18 +343,18 @@ async function final() {
     for (const t of group) {
       const self = v30Of(t.id, truth, metas, params.longtail);
       if (!self) { skipped++; continue; }
-      const priorV30: number[] = []; let fromLifetime = 0;
-      for (const pid of priorsOf.get(t.id) ?? []) {
-        const est = priorEstimate(pid, truth, priorRec, params);
-        if (est) { priorV30.push(est.v30); if (est.kind !== 'real') fromLifetime++; }
+      const priorV30: number[] = []; const priorAgeDays: number[] = []; let fromLifetime = 0;
+      for (const p of priorsOf.get(t.id) ?? []) {
+        const est = priorEstimate(p.id, truth, priorRec, params);
+        if (est) { priorV30.push(est.v30); priorAgeDays.push(p.ageDays); if (est.kind !== 'real') fromLifetime++; }
       }
-      const baseline = priorV30.length >= 3 ? median(priorV30) : null;
+      const baseline = channelBaseline(priorV30, priorAgeDays).baseline;
       const score = baseline && baseline > 0 ? self.v30 / baseline : null;
       const age = metas.get(t.id)!.age;
       const i = values.length;
       values.push(
         t.id, t.channel_id, FINAL_VERSION, Math.min(age, 30), metas.get(t.id)!.views,
-        self.v30, baseline, priorV30.length, score, priorV30.length < 3 ? 'insufficient' : 'confirmed', fromLifetime
+        self.v30, baseline, priorV30.length, score, baseline == null ? 'insufficient' : 'confirmed', fromLifetime
       );
       tuples.push(`($${i + 1},$${i + 2},$${i + 3},now(),$${i + 4},$${i + 5},null,$${i + 6},$${i + 7},$${i + 8},$${i + 9},null,0,$${i + 10},$${i + 11})`);
     }
