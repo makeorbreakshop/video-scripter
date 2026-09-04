@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type React from 'react';
 import { UserButton } from '@clerk/nextjs';
 
-export const metadata = { title: 'ChannelSmith Admin' };
+export const metadata = { title: { absolute: 'ChannelSmith Admin' } };
 
 const NAV = [
   { href: '/admin', label: 'Overview' },

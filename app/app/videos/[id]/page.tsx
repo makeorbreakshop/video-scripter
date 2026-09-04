@@ -13,6 +13,7 @@ import { cachedVideoPage } from '@/lib/app/cached';
 import { VideoBodySkeleton } from '@/components/app/skeletons';
 import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
 import { PackagingTimeline } from '@/components/app/packaging-timeline';
+import { isUnchangedOnly } from '@/lib/app/packaging-timeline';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
 import { LocalTime } from '@/components/app/local-time';
 
@@ -29,6 +30,9 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
   return (
     <>
       <section className="cs-section" style={{ marginTop: 18 }}>
+        {/* The page's biggest region was the only one without a heading, so it read as an
+            unlabelled remainder above "Packaging history". */}
+        <h2>Views since publish</h2>
         <VideoChart
           actuals={v.actuals}
           publishedAt={v.publishedAt}
@@ -45,7 +49,11 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
         <section className="cs-section">
           {/* The heading stands alone: no subtitle, no explainer. */}
           <h2>Packaging history</h2>
-          <PackagingTimeline clips={v.timeline} ticks={v.timelineTicks} />
+          {isUnchangedOnly(v.timeline)
+            /* Nothing moved, so there is no history to draw. A card frame around an empty
+               thumbnail slot read as a broken image; the sentence is the whole answer. */
+            ? <p className="cs-sub">No changes since publish.</p>
+            : <PackagingTimeline clips={v.timeline} ticks={v.timelineTicks} />}
         </section>
       )}
 
@@ -129,9 +137,6 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
         <VideoBody id={v.id} channelId={v.channelId} />
       </Suspense>
 
-      <p style={{ fontSize: 12 }}>
-        <Link href={`/app/channels/${v.channelId}`} style={{ color: 'var(--cs-muted)' }}>← {v.channelName}</Link>
-      </p>
     </MarkerHoverProvider>
   );
 }

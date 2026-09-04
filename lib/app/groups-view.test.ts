@@ -149,8 +149,14 @@ describe('notify limit', () => {
     expect(g.unlimited).toBe(true);
     expect(g.label).toBe('NOTIFYING 3');
     expect(g.atLimit).toBe(false);
-    // The meter still has to draw something at zero.
-    expect(notifyGate(0, Number.POSITIVE_INFINITY).segments).toBe(1);
+  });
+
+  it('draws no meter when there is no cap to measure against', () => {
+    // An unlimited plan at zero drew one empty 9x10 segment, which reads as a broken widget
+    // rather than as a statistic. A bar that can only ever be empty is not measuring anything.
+    expect(notifyGate(0, Number.POSITIVE_INFINITY).bar).toBe(false);
+    expect(notifyGate(3, Number.POSITIVE_INFINITY).bar).toBe(false);
+    expect(notifyGate(0, 25).bar).toBe(true);
   });
 
   it('caps the meter so an enormous limit does not draw a thousand segments', () => {

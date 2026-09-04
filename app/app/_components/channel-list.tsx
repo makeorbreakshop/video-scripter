@@ -93,6 +93,7 @@ export default function ChannelsClient({
   return (
     <div className="cs-chan-body">
       <div className="cs-page-head cs-chan-head">
+        <h1 className="cs-h1">Channels</h1>
         {!readOnly && (
           <button type="button" className="cs-btn" onClick={() => setImportOpen(true)}>
             <DownloadIcon />
@@ -101,16 +102,18 @@ export default function ChannelsClient({
         )}
         <div className="cs-nmeter">
           <div className="cs-nmeter-label">{meter.label}</div>
-          <div className="cs-nmeter-bar" aria-hidden="true">
-            {Array.from({ length: meter.segments }, (_, i) => (
-              <i key={i} data-on={i < meter.count} />
-            ))}
-          </div>
+          {meter.bar && (
+            <div className="cs-nmeter-bar" aria-hidden="true">
+              {Array.from({ length: meter.segments }, (_, i) => (
+                <i key={i} data-on={i < meter.count} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {!readOnly && (
-        <div className="cs-searchbox">
+        <div className="cs-searchbox cs-searchbox-page">
           <SearchIcon />
           <input
             value={query}

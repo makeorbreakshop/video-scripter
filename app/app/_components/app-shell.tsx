@@ -3,6 +3,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeProvider, ThemeToggle, THEME_BOOT_SCRIPT } from './theme';
+import { MARK_CELLS, MARK_GRID } from '@/lib/app/brand';
+
+/** The anvil, inline so it takes the plate's colour and needs no request. */
+function Mark() {
+  return (
+    <svg className="cs-mark" viewBox={`0 0 ${MARK_GRID} ${MARK_GRID}`} aria-hidden focusable="false">
+      {MARK_CELLS.map(([x, y, w, h]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} fill="currentColor" />
+      ))}
+    </svg>
+  );
+}
 
 const NAV = [
   { href: '/app/feed', label: 'Feed' },
@@ -32,10 +44,11 @@ export default function AppShell({ children, showInspiration = false }: { childr
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       <header className="cs-header">
         <div className="cs-wrap cs-header-in">
-          {/* Wordmark plate: the one place the pixel face carries the product name. */}
+          {/* Wordmark plate: the mark and the name, the same lockup as the favicon and the
+              OG card, and the one place the pixel face carries the product name. */}
           <Link href="/app/feed" className="cs-marquee" aria-label="ChannelSmith — go to feed">
+            <Mark />
             CHANNELSMITH
-            <span className="cs-marquee-cursor" aria-hidden />
           </Link>
           <Nav className="cs-nav" showInspiration={showInspiration} />
           <div className="cs-header-right">
@@ -48,10 +61,12 @@ export default function AppShell({ children, showInspiration = false }: { childr
         </div>
       </header>
       <main className="cs-wrap cs-main">{children}</main>
-      <footer className="cs-wrap" style={{ padding: '28px 0 40px', fontSize: 11, color: 'var(--cs-muted)', display: 'flex', gap: 14 }}>
+      <footer className="cs-wrap cs-footer">
         <span>ChannelSmith</span>
         <span className="cs-num" title={process.env.NEXT_PUBLIC_BUILD_TIME}>build {process.env.NEXT_PUBLIC_BUILD_SHA}</span>
-        <a href="/docs/api" style={{ color: 'inherit' }}>API</a><a href="/privacy" style={{ color: 'inherit' }}>Privacy</a><a href="/terms" style={{ color: 'inherit' }}>Terms</a>
+        <a href="/docs/api">API</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
       </footer>
     </ThemeProvider>
   );

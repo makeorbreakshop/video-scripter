@@ -69,6 +69,15 @@ function thumbAt(thumbs: ThumbRowWithUrl[], at: string): string {
   return out;
 }
 
+/**
+ * True when the whole "history" is "nothing happened". The timeline then draws a 200px card
+ * frame around an empty thumbnail slot with a lowercase caption under it, which reads as a
+ * failed image load rather than as an answer — so the page says the sentence instead.
+ */
+export function isUnchangedOnly(clips: TimelineClip[]): boolean {
+  return clips.length === 1 && clips[0].kind === 'unchanged';
+}
+
 export function buildTimeline(input: TimelineInput): TimelineClip[] {
   const thumbs = [...(input.thumbs || [])].sort((a, b) => a.version - b.version);
   const titles = [...(input.titles || [])].sort((a, b) => a.version - b.version);

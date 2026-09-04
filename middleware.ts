@@ -1,7 +1,9 @@
-// Clerk auth gate. Protected: the admin, the legacy dashboard, and their API routes.
+// Clerk auth gate. Protected: the app, the admin, the legacy dashboard, the scratch routes and
+// their API routes — the list is lib/app/route-policy.ts.
 // Public: everything else (Thumbnail Battle, marketing pages, extension + websub ingestion routes).
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server';
+import { PROTECTED_ROUTES } from '@/lib/app/route-policy';
 
 // The public API authenticates itself with bearer API keys (lib/api/v1.ts), so Clerk must not
 // touch it: a session cookie is not how an agent or a curl call talks to /api/v1, and letting
@@ -10,18 +12,7 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server
 // REVALIDATE_SECRET header, and they have no Clerk session to offer.
 const isPublicApi = createRouteMatcher(['/api/v1(.*)', '/api/app/revalidate']);
 
-const isProtected = createRouteMatcher([
-  '/admin(.*)',
-  '/app(.*)',
-  '/dashboard(.*)',
-  '/quota-dashboard(.*)',
-  '/api/admin(.*)',
-  '/api/app(.*)',
-  '/api/pipeline(.*)',
-  '/api/view-tracking(.*)',
-  '/api/worker(.*)',
-  '/api/workers(.*)',
-]);
+const isProtected = createRouteMatcher(PROTECTED_ROUTES);
 
 // Dev-only preview: with the cs_preview cookie equal to CS_PREVIEW_TOKEN, protected pages open
 // without Clerk so they can be screenshotted on localhost. Clerk's middleware starts a

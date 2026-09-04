@@ -20,12 +20,27 @@ export function VideoGridStyles() {
       @media (min-width: 1100px) { .vg-grid { grid-template-columns: repeat(3, 1fr); } }
       .vg-tile { min-width: 0; }
       .vg-tile img { border-radius: var(--cs-radius); }
+      /* Two lines whether the title needs them or not, so every tile's foot — date, views and
+         score — lands on one line across a row instead of stepping up and down with the
+         title's length. */
       .vg-title { font-size: 14px; font-weight: 550; line-height: 1.35; margin: 10px 0 0;
+                  min-height: 2.7em;
                   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       .vg-tile:hover .vg-title { color: var(--cs-accent); }
       .vg-meta { font-size: 11px; color: var(--cs-muted); }
       .vg-clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
       .vg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+      /* Score tones. Only the outlier is coloured and bold — it is the one case the product
+         exists to surface. Everything else is ordinary ink, and a clearly-below-baseline video
+         recedes rather than warning: --cs-warn on two thirds of a grid shouted at the videos
+         nobody needs to look at. See lib/app/score-display.ts. */
+      .vg-score { font-weight: 600; }
+      .vg-score[data-size="sm"] { font-size: 12px; }
+      .vg-score[data-size="lg"] { font-size: 16px; }
+      .vg-score[data-tone="outlier"] { color: var(--cs-accent); font-weight: 700; }
+      .vg-score[data-tone="normal"] { color: var(--cs-ink); }
+      .vg-score[data-tone="under"] { color: var(--cs-muted); }
+      .vg-score[data-tone="none"] { color: var(--cs-muted); }
     `}</style>
     </>
   );

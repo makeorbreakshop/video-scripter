@@ -390,16 +390,32 @@ export function cardKind(card: FeedCard): CardKind {
   return 'upload';
 }
 
-/** The muted verb phrase in the byline: "<Channel> posted a new video". */
-export function cardVerb(card: FeedCard): string {
+export interface CardEvent {
+  /** The mono pill: what happened, in one word. */
+  pill: string;
+  /** Drives .tr-pill's tone — "testing" is the one with real evidence, so it takes the accent. */
+  status: 'upload' | 'swap' | 'testing';
+  /** The noun phrase beside it — null when the pill already says everything. */
+  headline: string | null;
+}
+
+/**
+ * What the byline says, in the one grammar the whole feed uses: a pill and a noun phrase.
+ *
+ * It replaced cardVerb, which returned a sentence — and three of its five sentences were
+ * unreachable, because a change card branched to a SWAP pill before the verb was called. The
+ * column therefore mixed a present-tense state clause, a past-tense action clause and a
+ * badge-plus-noun, for one slot.
+ */
+export function cardEvent(card: FeedCard): CardEvent {
   switch (cardKind(card)) {
-    case 'upload': return 'posted a new video';
-    case 'combo': return 'changed the title and thumbnail';
-    case 'title': return 'changed the title';
+    case 'upload': return { pill: 'UPLOAD', status: 'upload', headline: null };
+    case 'combo': return { pill: 'SWAP', status: 'swap', headline: 'New title + thumbnail' };
+    case 'title': return { pill: 'SWAP', status: 'swap', headline: 'New title' };
     case 'thumb': return card.thumbSwaps.length > 1
-      ? `rotated ${card.thumbSwaps.length} thumbnails`
-      : 'swapped the thumbnail';
-    case 'outlier': return 'is beating its baseline';
+      ? { pill: 'TESTING', status: 'testing', headline: `${card.thumbSwaps.length} thumbnails` }
+      : { pill: 'SWAP', status: 'swap', headline: 'New thumbnail' };
+    case 'outlier': return { pill: 'OUTLIER', status: 'testing', headline: null };
   }
 }
 

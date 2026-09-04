@@ -69,14 +69,17 @@ export default async function AdminOverview() {
         {changes.length === 0 ? (
           <p className="text-sm text-muted-foreground">No changes detected yet.</p>
         ) : (
-          <table className="w-full">
+          // The table is wider than a narrow window; it scrolls in its own box rather than
+          // giving the page a horizontal scrollbar.
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr>
-                <Th>Last change</Th>
-                <Th>Video</Th>
-                <Th>Channel</Th>
+                <Th className="w-40">Last change</Th>
+                <Th className="w-[40%]">Video</Th>
+                <Th className="w-48">Channel</Th>
                 <Th>History</Th>
-                <Th className="text-right">Views</Th>
+                <Th className="w-20 text-right">Views</Th>
               </tr>
             </thead>
             <tbody>
@@ -96,6 +99,7 @@ export default async function AdminOverview() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Section>
     </div>

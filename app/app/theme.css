@@ -121,8 +121,13 @@
   -webkit-font-smoothing: antialiased;
 }
 .cs-app *, .cs-app *::before, .cs-app *::after { box-sizing: border-box; }
-.cs-app a { color: inherit; text-decoration: none; }
-.cs-app button { font: inherit; color: inherit; }
+/* :where() so these score (0,1,0) and lose to any component class. Written as `.cs-app a`
+   they were (0,1,1) and silently beat every single-class rule in this file — the wordmark
+   took --cs-ink instead of --cs-accent-on (3.4:1), .cs-btn rendered 14px/400 instead of
+   13px/550, and .cs-chip came out at two sizes depending on its tag. Enforced by
+   lib/app/theme-cascade.test.ts. */
+.cs-app :where(a) { color: inherit; text-decoration: none; }
+.cs-app :where(button) { font: inherit; color: inherit; }
 .cs-num { font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
 
 .cs-wrap { max-width: var(--cs-max); margin: 0 auto; padding: 0 20px; }
@@ -140,20 +145,26 @@
 
 /* Marquee strip: the product name in the pixel face on an accent plate, the way
    a cabinet header would carry it. Static — no animation, no glow. */
-.cs-marquee { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; background: var(--cs-accent); color: var(--cs-accent-on); font-family: var(--font-pixel), monospace; font-size: 12px; letter-spacing: 0.08em; border-radius: 4px; text-decoration: none; }
+.cs-marquee { display: inline-flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px; background: var(--cs-accent); color: var(--cs-accent-on); font-family: var(--font-pixel), monospace; font-size: 12px; letter-spacing: 0.08em; border-radius: 4px; text-decoration: none; }
+/* The anvil sits on the same pixel grid as the face beside it, so both step in whole pixels. */
+.cs-mark { width: 16px; height: 16px; flex: none; }
 
 .cs-nav { display: flex; gap: 4px; margin: 0 auto; }
-.cs-nav a {
+.cs-nav :where(a) {
   padding: 6px 11px; border-radius: 999px; color: var(--cs-muted);
   font-weight: 500; font-size: 13px;
 }
-.cs-nav a:hover { background: var(--cs-surface-2); color: var(--cs-ink); }
-.cs-nav a[data-active="true"] { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-nav :where(a):hover { background: var(--cs-surface-2); color: var(--cs-ink); }
+.cs-nav :where(a)[data-active="true"] { background: var(--cs-surface-2); color: var(--cs-ink); }
 .cs-header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+/* --------------------------------------------------------------- footer --- */
+.cs-footer { display: flex; gap: 14px; padding: 28px 0 40px; font-size: 11px; color: var(--cs-muted); }
+.cs-footer :where(a):hover { color: var(--cs-ink); }
 
 .cs-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 8px;
+  width: 30px; height: 30px; border-radius: 8px;
   border: 1px solid var(--cs-line); background: var(--cs-surface);
   cursor: pointer;
 }
@@ -164,6 +175,7 @@
 .cs-page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 /* The channels page's own head: Import and the meter are one statement, hard left. */
 .cs-chan-head { align-items: center; gap: 14px; margin-bottom: 20px; }
+.cs-chan-head .cs-h1 { margin-right: auto; }
 .cs-chan-head .cs-btn { height: 36px; }
 .cs-chan-body { display: flex; flex-direction: column; gap: 20px; }
 .cs-h1 { font-size: 20px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
@@ -221,6 +233,7 @@
 .cs-chip:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: -1px; }
 .cs-chip[data-on="true"] { background: var(--cs-ink); border-color: var(--cs-ink); color: var(--cs-ground); }
 .cs-chip[data-on="true"] .cs-chip-count { color: var(--cs-ground); opacity: 0.75; }
+.cs-chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .cs-chip-count { font-size: 11px; font-weight: 500; color: var(--cs-muted); }
 .cs-chip-new { border-style: dashed; }
 .cs-chip-new:hover, .cs-chip-new[data-editing="true"] { border-color: var(--cs-accent); color: var(--cs-accent); }
@@ -290,7 +303,7 @@
   display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 8px 10px;
   border-top: 1px solid var(--cs-line); color: var(--cs-muted); font-size: 13px;
 }
-.cs-menu-foot input {
+.cs-menu-foot :where(input) {
   flex: 1; min-width: 0; border: 0; background: none; color: var(--cs-ink); font: inherit; outline: none;
 }
 
@@ -323,7 +336,7 @@
 .cs-thumbs { display: flex; align-items: center; gap: 8px; flex: none; }
 .cs-thumb { position: relative; width: 200px; aspect-ratio: 16 / 9; flex: none;
   background: var(--cs-surface-2); border-radius: 8px; overflow: hidden; }
-.cs-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-thumb :where(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cs-thumbs[data-size="large"] .cs-thumb { width: 360px; border-radius: 10px; }
 .cs-thumb-cap {
   position: absolute; left: 6px; bottom: 6px; padding: 2px 6px; border-radius: 4px;
@@ -382,7 +395,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 }
 .cs-coin { font-family: var(--font-pixel), monospace; font-size: 16px; line-height: 1.8; color: var(--cs-accent); }
 .cs-coin-sub { font-family: var(--font-pixel), monospace; font-size: 9px; line-height: 2; color: var(--cs-muted); margin-top: 10px; }
-.cs-empty p { color: var(--cs-muted); margin: 16px auto 0; max-width: 380px; font-size: 13px; }
+.cs-empty :where(p) { color: var(--cs-muted); margin: 16px auto 0; max-width: 380px; font-size: 13px; }
 
 /* --------------------------------------------------------------- cards ---- */
 
@@ -394,7 +407,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-card-head { display: flex; gap: 12px; align-items: flex-start; }
 .cs-card-thumb { width: 96px; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden;
   background: var(--cs-surface-2); border: 1px solid var(--cs-line); flex: none; }
-.cs-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-card-thumb :where(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cs-card-name { font-weight: 600; font-size: 14px; margin: 0; }
 .cs-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;
   border-top: 1px solid var(--cs-line); padding-top: 10px; }
@@ -457,13 +470,16 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
   display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px;
   border: 1px solid var(--cs-line); border-radius: 10px; background: var(--cs-surface);
 }
+/* Wide enough for a channel name, not for the whole page: at 1120px this filled the full
+   width for what is a name lookup. */
+.cs-searchbox-page { max-width: 420px; }
 .cs-searchbox:focus-within { border-color: var(--cs-accent); outline: 2px solid var(--cs-accent); outline-offset: -2px; }
-.cs-searchbox svg { flex: none; color: var(--cs-muted); }
-.cs-searchbox input {
+.cs-searchbox :where(svg) { flex: none; color: var(--cs-muted); }
+.cs-searchbox :where(input) {
   flex: 1; min-width: 0; border: 0; background: none; outline: none;
   color: var(--cs-ink); font: inherit; font-size: 15px;
 }
-.cs-searchbox input::placeholder { color: var(--cs-muted); }
+.cs-searchbox :where(input)::placeholder { color: var(--cs-muted); }
 .cs-input::placeholder { color: var(--cs-muted); }
 .cs-input:focus { outline: 2px solid var(--cs-accent); outline-offset: -1px; border-color: var(--cs-accent); }
 
@@ -500,7 +516,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 /* ---------------------------------------------------------------- misc ---- */
 
 .cs-section { margin-bottom: 26px; }
-.cs-section h2 { font-size: 14px; font-weight: 650; margin: 0 0 10px; }
+.cs-section :where(h2) { font-size: 14px; font-weight: 650; margin: 0 0 10px; }
 .cs-kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--cs-line); font-size: 13px; }
 .cs-kv:last-child { border-bottom: 0; }
 .cs-kv-l { color: var(--cs-muted); }
@@ -512,6 +528,17 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-skel { height: 88px; border-bottom: 1px solid var(--cs-line); background: linear-gradient(90deg, var(--cs-surface) 25%, var(--cs-surface-2) 50%, var(--cs-surface) 75%); background-size: 400% 100%; animation: cs-shimmer 1.3s infinite; }
 @keyframes cs-shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
 .cs-center { display: flex; justify-content: center; padding: 18px 0; }
+
+/* Onboarding: the first screen a new account sees. It used to be a 520px column top-aligned
+   in the upper fifth of a 1440 viewport with nothing under it — a small blob in a large empty
+   field. A plate gives it an edge, and centring gives it a place to be. */
+.cs-onboard { display: grid; place-items: center; min-height: min(72vh, 620px); }
+.cs-onboard-plate {
+  width: 100%; max-width: 480px; padding: 28px;
+  background: var(--cs-surface); border: 1px solid var(--cs-line);
+  border-radius: var(--cs-radius); box-shadow: var(--cs-shadow);
+}
+.cs-onboard-foot { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
 .cs-code { font-family: var(--font-mono), monospace; font-size: 12px; background: var(--cs-surface-2);
   border: 1px solid var(--cs-line); border-radius: 6px; padding: 10px 12px; word-break: break-all; }
 
@@ -534,7 +561,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 /* The feed page runs a narrower column than the app. A feed item knows a title, a channel and
    two numbers; at 1120px that content filled a fifth of each card and the rest read as empty.
    X, Threads and Facebook all sit near 600px for the same reason. */
-.cs-feed-page { max-width: 900px; margin: 0 auto; }
+.cs-feed-page { max-width: 640px; margin: 0 auto; }
 
 /* ------------------------------------------------------------ feed cards --- */
 /* Social-post shape: a byline that names the action in words, then the evidence for it.
@@ -544,17 +571,18 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-fcard:hover { border-color: var(--cs-line-strong); }
 .cs-fcard-head { flex-wrap: nowrap; margin-bottom: 10px; }
 /* The media and the title carry the link; the card itself is not one. */
-.cs-fcard-verb { color: var(--cs-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cs-fcard-time { margin-left: auto; flex: none; color: var(--cs-muted); font-size: 12px; }
 
-/* The unit: a small YouTube card, thumbnail with the title under it, at one width. Two of
-   them fit a card side by side with an arrow between; one of them leaves room for numbers. */
+/* The unit: a small YouTube card, thumbnail with the title under it. One width — it fills its
+   column, so an upload gets the whole card and a before/after pair splits it. The unit used to
+   be 400px, overridden to 560px for an upload, which put the same video at two sizes in one
+   scrolling column. */
 .cs-fcard-row { display: flex; align-items: flex-start; gap: 16px; }
-.cs-vid { display: flex; flex-direction: column; gap: 8px; width: 400px; flex: none; min-width: 0;
+.cs-vid { display: flex; flex-direction: column; gap: 8px; width: 100%; flex: 1 1 0; min-width: 0;
   text-decoration: none; color: inherit; transition: transform 220ms cubic-bezier(0.2, 0, 0, 1), opacity 220ms; }
 .cs-vid-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden;
   background: var(--cs-surface-2); }
-.cs-vid-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-vid-thumb :where(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cs-vid-title { font-size: 15px; font-weight: 600; line-height: 20px; color: var(--cs-ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .cs-vid-title[data-old] { text-decoration: line-through; }
@@ -569,27 +597,31 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-fcard-row[data-change]:hover .cs-vid[data-dim] { opacity: 1; }
 .cs-fcard-row[data-change]:hover .cs-vid-title[data-old] { text-decoration-color: transparent; color: var(--cs-ink); }
 
-/* An upload is the biggest thing a channel does, so its thumbnail is the biggest in the feed.
-   Beside it, the score as the headline and the two numbers it is made of. Nothing else — the
-   thumbnail is the object and the space around it reads as space. */
-.cs-fcard-row[data-upload] .cs-vid { width: 560px; }
-.cs-fcard-stats { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
-.cs-fcard-stats .cs-fcard-sub { margin: 0; line-height: 19px; }
-.cs-fcard-score { font-size: 26px; line-height: 30px; font-weight: 700; color: var(--cs-ink); margin-bottom: 6px; }
+/* An upload stacks: thumbnail, its title, then the numbers under both — the order the 375px
+   layout always used. Beside-the-thumbnail was an 86px-tall block next to a 315px image, so
+   every upload card carried a 294x229 hole and put its title last. */
+.cs-fcard-row[data-upload] { flex-direction: column; gap: 10px; }
+/* The card's secondary tier: view counts, the typical-at-age line, the reason a card has no
+   score. It had no rule of its own for a long time, so it inherited --cs-ink at 14px and read
+   as loud as the title. */
+.cs-fcard-sub { color: var(--cs-muted); font-size: 13px; line-height: 19px; margin: 0; }
+/* One metadata line under the title, the way a rating sits under a film's name: the score
+   first, then what it is made of. It wraps to a second line rather than becoming a column. */
+.cs-fcard-stats { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+.cs-fcard-score { font-size: 20px; line-height: 24px; font-weight: 700; color: var(--cs-ink); }
 .cs-fcard-score[data-hot] { color: var(--cs-accent); }
 
 /* Older thumbnail versions, when a day held more than the two shown large. */
 .cs-versions { display: inline-flex; gap: 4px; }
-.cs-versions img { width: 56px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; border: 1px solid var(--cs-line); }
+.cs-versions :where(img) { width: 56px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; border: 1px solid var(--cs-line); }
 
 /* Kept for the compact row list, which still stacks short activity lines. */
 .cs-activity { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; color: var(--cs-muted); font-size: 13px; }
-.cs-activity li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.cs-activity em { font-style: normal; color: var(--cs-ink); }
+.cs-activity :where(li) { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cs-activity :where(em) { font-style: normal; color: var(--cs-ink); }
 
 @media (max-width: 720px) {
   .cs-fcard-row { flex-direction: column; }
-  .cs-vid, .cs-fcard-row[data-upload] .cs-vid { width: 100%; }
   .cs-fcard-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 20px; }
   .cs-fcard-head { flex-wrap: wrap; }
   .cs-fcard-time { margin-left: 0; width: 100%; }
@@ -613,12 +645,12 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 }
 .cs-dialog::backdrop { background: rgba(16, 19, 26, 0.45); }
 .cs-dialog-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 0; }
-.cs-dialog-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
+.cs-dialog-head :where(h3) { margin: 0; font-size: 14px; font-weight: 650; }
 .cs-dialog-body { padding: 12px 16px 16px; }
 .cs-deflist { margin: 0; font-size: 13px; }
-.cs-deflist dt { color: var(--cs-muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 12px; }
-.cs-deflist dt:first-child { margin-top: 0; }
-.cs-deflist dd { margin: 3px 0 0; }
+.cs-deflist :where(dt) { color: var(--cs-muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 12px; }
+.cs-deflist :where(dt):first-child { margin-top: 0; }
+.cs-deflist :where(dd) { margin: 3px 0 0; }
 .cs-linkbtn {
   border: 0; background: none; padding: 0; font: inherit; font-size: 12px;
   color: var(--cs-muted); text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
@@ -683,7 +715,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .tr-meta { color: var(--cs-muted); font-size: 13px; line-height: 17px; }
 
 .tr-shot { position: relative; display: block; border-radius: 10px; overflow: hidden; background: var(--cs-surface-2); }
-.tr-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tr-shot :where(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
 .tr-shot-full { width: 100%; aspect-ratio: 16 / 9; }
 .tr-arrow { color: var(--cs-muted); flex: none; align-self: center; }
 /* "KEPT", not "WINNER": we saw which image it settled on, not which one performed. */
@@ -696,6 +728,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 /* A rotation is the one state we have real evidence for — an earlier image came back — so it
    is the one that gets the accent. A single change we saw once stays quiet. */
 .tr-pill[data-status="testing"] { background: var(--cs-accent-soft); color: var(--cs-accent); }
+.tr-pill[data-status="upload"] { background: var(--cs-surface-2); color: var(--cs-ink); }
 .tr-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 
 /* Open: the deck is laid out in a row at the width of the feed, because comparing is the whole
@@ -739,6 +772,9 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
    five controls above — there is no segmented switch and no native select. */
 
 .cs-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+/* The same row when it leads a page instead of trailing a header — Inspiration, where the
+   controls are the first thing under the title rather than the last thing on its line. */
+.cs-controls-lead { margin-left: 0; margin-bottom: 18px; }
 /* A chips row inside the control line is one item on it, not a block above it. */
 .cs-controls .cs-chips { margin-bottom: 0; max-width: 100%; }
 .cs-showing { font-size: 12px; color: var(--cs-muted); white-space: nowrap; }
@@ -775,7 +811,7 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .pt-clip:last-child { border-right: 0; }
 .pt-shot { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 5px; overflow: hidden;
   background: var(--cs-surface-2); position: relative; }
-.pt-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pt-shot :where(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pt-title { font-size: 12px; font-weight: 600; line-height: 16px; color: var(--cs-ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pt-label { font-family: var(--font-mono), monospace; font-size: 10px; line-height: 12px; color: var(--cs-muted); }
@@ -839,13 +875,13 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 
 .cs-nmeter { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
 .cs-nmeter-label {
-  font-family: var(--font-pixel), monospace; font-size: 8px; line-height: 10px;
+  font-family: var(--font-mono), monospace; font-size: 10px; line-height: 12px;
   letter-spacing: 0.06em; color: var(--cs-muted);
 }
 .cs-nmeter-bar { display: flex; gap: 2px; }
-.cs-nmeter-bar i { display: block; width: 9px; height: 10px; background: var(--cs-line); transition: background 120ms; }
-.cs-nmeter-bar i[data-on="true"] { background: var(--cs-accent); }
-@media (prefers-reduced-motion: reduce) { .cs-nmeter-bar i { transition: none; } }
+.cs-nmeter-bar :where(i) { display: block; width: 9px; height: 10px; background: var(--cs-line); transition: background 120ms; }
+.cs-nmeter-bar :where(i)[data-on="true"] { background: var(--cs-accent); }
+@media (prefers-reduced-motion: reduce) { .cs-nmeter-bar :where(i) { transition: none; } }
 
 /* ------------------------------------------------------- channel rows v2 --- */
 /* Lanes, left to right: check (select mode only), avatar, name + mono subline, groups,
@@ -858,15 +894,15 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   border-bottom: 1px solid var(--cs-line-soft); }
 .cs-clist > *:last-child { border-bottom: 0; }
 .cs-chead { height: 32px; }
-.cs-chead span {
+.cs-chead :where(span) {
   font-family: var(--font-mono), monospace; font-size: 10px; line-height: 12px;
   letter-spacing: 0.08em; color: var(--cs-muted); flex: none;
 }
-.cs-chead .cs-l-name { flex: 1; min-width: 0; }
+.cs-chead .cs-l-name { flex: 0 1 300px; min-width: 0; }
 .cs-l-check { width: 18px; flex: none; }
 .cs-l-avatar { width: 36px; flex: none; }
 .cs-l-groups { width: 200px; flex: none; }
-.cs-l-spark { width: 120px; flex: none; }
+.cs-l-spark { flex: 1 1 120px; min-width: 120px; }
 .cs-l-base { width: 80px; flex: none; text-align: right; justify-content: flex-end; display: flex; }
 .cs-l-notify { width: 44px; flex: none; text-align: center; justify-content: center; display: flex; }
 /* The overflow menu keeps its slot even when it is invisible, so the lanes to its left sit
@@ -887,13 +923,14 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
    giving it position:relative would put it back in the flow and push every lane 14px right
    of the column head above. */
 .cs-crow > *:not(.cs-crow-link) { position: relative; z-index: 1; }
-.cs-crow-id { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; pointer-events: none; }
+.cs-crow-id { display: flex; flex-direction: column; gap: 2px; flex: 0 1 300px; min-width: 0; pointer-events: none; }
 .cs-crow-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.cs-crow-name b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-crow-name :where(b) { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cs-crow:hover .cs-crow-name b { color: var(--cs-accent); }
 .cs-crow-you {
-  flex: none; padding: 3px 5px; border-radius: 3px; background: var(--cs-accent-soft);
-  color: var(--cs-accent); font-family: var(--font-pixel), monospace; font-size: 7px; line-height: 10px;
+  flex: none; padding: 2px 6px; border-radius: 4px; background: var(--cs-accent-soft);
+  color: var(--cs-accent); font-family: var(--font-mono), monospace; font-size: 10px;
+  line-height: 14px; font-weight: 500; letter-spacing: 0.04em;
 }
 .cs-crow-sub { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
 
@@ -904,8 +941,8 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   border: 1px solid var(--cs-line-soft); background: var(--cs-ground);
   font-size: 12px; line-height: 16px; color: var(--cs-ink); max-width: 96px;
 }
-.cs-gtag span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cs-gtag i { width: 7px; height: 7px; border-radius: 4px; flex: none; background: var(--cs-dot, var(--cs-accent)); }
+.cs-gtag :where(span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-gtag :where(i) { width: 7px; height: 7px; border-radius: 4px; flex: none; background: var(--cs-dot, var(--cs-accent)); }
 
 /* Direction, three ways: rising in the accent, falling in the second muted, flat in muted.
    The line's own shape carries it redundantly, so colour is never the only signal. */
@@ -914,12 +951,12 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 .cs-spark[data-dir="down"] { color: var(--cs-muted-2); }
 .cs-spark-flat { display: block; color: var(--cs-line-strong); }
 .cs-crow-base { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.cs-crow-base b { font-family: var(--font-mono), monospace; font-size: 15px; font-weight: 700; line-height: 18px; }
-.cs-crow-base span { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
-.cs-crow-base span[data-dir="up"] { color: var(--cs-accent); }
-.cs-crow-base span[data-dir="down"] { color: var(--cs-bad); }
+.cs-crow-base :where(b) { font-family: var(--font-mono), monospace; font-size: 15px; font-weight: 700; line-height: 18px; }
+.cs-crow-base :where(span) { font-family: var(--font-mono), monospace; font-size: 11px; line-height: 14px; color: var(--cs-muted); }
+.cs-crow-base :where(span)[data-dir="up"] { color: var(--cs-accent); }
+.cs-crow-base :where(span)[data-dir="down"] { color: var(--cs-bad); }
 /* Waiting on the back-catalog: a word, at the weight of an absent number. */
-.cs-crow-base b[data-wait] { font-size: 12px; font-weight: 400; color: var(--cs-muted); }
+.cs-crow-base :where(b)[data-wait] { font-size: 12px; font-weight: 400; color: var(--cs-muted); }
 
 /* Select mode's checkbox lane. */
 .cs-check {
@@ -953,28 +990,28 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
 }
 .cs-selbar-left, .cs-selbar-right { display: flex; align-items: center; gap: 18px; min-width: 0; }
 .cs-selbar-n { font-family: var(--font-mono), monospace; font-size: 13px; white-space: nowrap; }
-.cs-selbar button.cs-linkish { color: inherit; }
-.cs-selbar button.cs-linkish:hover:not(:disabled) { opacity: 1; }
-.cs-selbar button.cs-linkish:disabled { opacity: 0.35; cursor: not-allowed; }
+.cs-selbar :where(button).cs-linkish { color: inherit; }
+.cs-selbar :where(button).cs-linkish:hover:not(:disabled) { opacity: 1; }
+.cs-selbar :where(button).cs-linkish:disabled { opacity: 0.35; cursor: not-allowed; }
 /* --cs-bad on the ink bar is 2.4:1. Tinted toward the bar's own foreground it clears 4.5:1
    and still reads as the destructive one, because it is the only coloured word on the bar. */
-.cs-selbar button.cs-linkish[data-tone="bad"] {
+.cs-selbar :where(button).cs-linkish[data-tone="bad"] {
   color: color-mix(in srgb, var(--cs-bad) 45%, var(--cs-ground)); opacity: 1; font-weight: 600;
 }
-.cs-selbar button.cs-linkish[data-tone="bad"]:hover:not(:disabled) {
+.cs-selbar :where(button).cs-linkish[data-tone="bad"]:hover:not(:disabled) {
   color: color-mix(in srgb, var(--cs-bad) 30%, var(--cs-ground));
 }
 .cs-selbar-n { opacity: 0.9; }
-.cs-selbar button.cs-linkish { opacity: 0.92; }
+.cs-selbar :where(button).cs-linkish { opacity: 0.92; }
 
 /* ------------------------------------------------------- import sheet ------ */
 
 .cs-sheet { position: relative; max-width: 640px; width: calc(100vw - 32px); border-radius: 14px; }
 .cs-sheet-head { padding: 28px 28px 20px; display: flex; flex-direction: column; gap: 6px; }
-.cs-sheet-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 28px; }
+.cs-sheet-head :where(h2) { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 28px; }
 .cs-sheet-acct { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   font-family: var(--font-mono), monospace; font-size: 12px; line-height: 16px; color: var(--cs-muted); }
-.cs-sheet-acct b { color: var(--cs-ink); font-weight: 500; }
+.cs-sheet-acct :where(b) { color: var(--cs-ink); font-weight: 500; }
 .cs-sheet-list { border-top: 1px solid var(--cs-line); border-bottom: 1px solid var(--cs-line);
   max-height: 46vh; overflow-y: auto; }
 .cs-sheet-row { display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 28px;
@@ -992,7 +1029,7 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
    names what did not make it. No red box — a handful of dead channels is not an error. */
 .cs-sheet-prog { position: absolute; inset: 0 auto auto 0; width: 100%; height: 3px; background: var(--cs-accent-soft);
                  border-radius: 14px 14px 0 0; overflow: hidden; }
-.cs-sheet-prog i { display: block; height: 100%; background: var(--cs-accent); transition: width 180ms linear; }
+.cs-sheet-prog :where(i) { display: block; height: 100%; background: var(--cs-accent); transition: width 180ms linear; }
 .cs-sheet-miss { padding: 0 28px 8px; font-size: 12px; color: var(--cs-muted); cursor: default; }
 .cs-sheet-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 28px; }
 .cs-sheet-foot-right { display: flex; align-items: center; gap: 10px; }
@@ -1020,7 +1057,7 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   .cs-crow-id { order: 2; flex: 1 1 0; }
   .cs-l-groups { order: 3; width: 100%; flex: none; }
   .cs-l-groups:empty { display: none; }
-  .cs-l-spark { order: 4; width: 90px; }
+  .cs-l-spark { order: 4; flex: 0 1 90px; min-width: 90px; }
   .cs-l-base { order: 5; width: auto; flex: 1; }
   .cs-l-notify { order: 6; width: 32px; }
   /* Without an order the overflow menu is 0 and jumps to the front of the wrapped row. */

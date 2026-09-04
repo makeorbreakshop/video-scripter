@@ -14,15 +14,9 @@ import {
 import { parseInspirationDistance, type InspirationDistance } from '@/lib/semantic/inspiration';
 import { updateInspirationFeedback } from './actions';
 import styles from './inspiration.module.css';
-import { InspirationTarget } from '@/app/app/_components/inspiration-target';
+import { InspirationControls } from '@/app/app/_components/inspiration-controls';
 
 export const dynamic = 'force-dynamic';
-
-const DISTANCES: Array<{ value: InspirationDistance; label: string }> = [
-  { value: 'near', label: 'Near' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'far', label: 'Far' },
-];
 
 // Dates in the app are the READER's, not Brandon's, so nothing is formatted on the server here:
 // the instant crosses and <LocalTime> writes it. (lib/app/local-time.ts)
@@ -30,12 +24,6 @@ const DISTANCES: Array<{ value: InspirationDistance; label: string }> = [
 function words(signals: string[]): string {
   if (!signals.length) return 'Loose title-pattern match';
   return signals.slice(0, 3).map((signal) => signal.replaceAll('_', ' ')).join(' · ');
-}
-
-function territory(proximity: number): string {
-  if (proximity >= 0.67) return 'Closer within this candidate pool';
-  if (proximity <= 0.33) return 'Furthest within this candidate pool';
-  return 'Mid-range within this candidate pool';
 }
 
 function packagingFit(value: number): string {
@@ -68,7 +56,8 @@ function FeedbackButton({
       <input type="hidden" name="decision" value={selected ? 'clear' : choice} />
       <button
         type="submit"
-        className={`cs-btn ${choice === 'dismissed' ? styles.dismiss : styles.feedback}`}
+        className="cs-btn"
+        data-variant={selected && choice === 'saved' ? 'primary' : undefined}
         data-selected={selected}
         aria-pressed={selected}
         title={selected ? `Undo ${choice}` : undefined}
@@ -116,30 +105,11 @@ export default async function InspirationPage({
       <div className="cs-page-head">
         <div>
           <h1 className="cs-h1">Inspiration</h1>
-          <p className="cs-sub">Find scored outlier ideas at the distance you want.</p>
         </div>
         <span className="cs-badge" data-case="sentence">Experimental</span>
       </div>
 
-      <form className={styles.controls} method="get">
-        <div className={styles.field}>
-          <span className={styles.label}>Build for</span>
-          <InspirationTarget targets={targets} value={target.channelId} distance={distance} />
-          <input type="hidden" name="channel" value={target.channelId} />
-        </div>
-        <fieldset className={styles.distance}>
-          <legend>How far outside its territory?</legend>
-          <div className={styles.modes}>
-            {DISTANCES.map((item) => (
-              <label className={styles.mode} key={item.value}>
-                <input type="radio" name="distance" value={item.value} defaultChecked={distance === item.value} />
-                <span>{item.label}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <button className="cs-btn" data-variant="primary" type="submit">Explore</button>
-      </form>
+      <InspirationControls targets={targets} channelId={target.channelId} distance={distance} />
 
       {search.status === 'unavailable' && (
         <div className="cs-note" data-tone="bad">
@@ -178,25 +148,15 @@ export default async function InspirationPage({
                     <div className={styles.byline}>
                       <span className={styles.channel}>{result.channelName}</span>
                       {result.publishedAt && <time dateTime={result.publishedAt}><LocalTime ms={Date.parse(result.publishedAt)} format="dayYear" /></time>}
-                      <span className={styles.outlier} title={`${result.outlierScore.toFixed(2)} times this channel's baseline`}>
+                      <span className={styles.outlier}
+                            title={`${result.outlierScore.toFixed(2)}× this channel's baseline, over ${result.baselineVideos} baseline videos`}>
                         {result.outlierScore.toFixed(1)}× typical
                       </span>
                     </div>
                     <h2 className={styles.title}><Link href={`/app/videos/${result.videoId}`}>{result.title}</Link></h2>
-                    <dl className={styles.evidence}>
-                      <div>
-                        <dt>Title pattern</dt>
-                        <dd>{packagingFit(result.components.packaging_form)} · {words(result.packagingSignals)}</dd>
-                      </div>
-                      <div>
-                        <dt>Content distance</dt>
-                        <dd>{territory(result.components.content_proximity)} for {search.targetName}</dd>
-                      </div>
-                      <div>
-                        <dt>Performance proof</dt>
-                        <dd>{result.outlierScore.toFixed(1)}× the channel baseline · {result.baselineVideos} baseline videos</dd>
-                      </div>
-                    </dl>
+                    <p className={styles.pattern}>
+                      {packagingFit(result.components.packaging_form)} · {words(result.packagingSignals)}
+                    </p>
                     <div className={styles.actions}>
                       <FeedbackButton result={result} targetChannelId={target.channelId} distance={distance} current={current} choice="saved" />
                       <FeedbackButton result={result} targetChannelId={target.channelId} distance={distance} current={current} choice="dismissed" />

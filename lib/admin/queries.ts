@@ -5,6 +5,7 @@ import { q, one } from './db';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
 import { scoreParamsQuery } from '../app/score-version';
+import { patternSummary } from './history-pattern';
 
 export type DayCount = { day: string; n: number };
 
@@ -126,7 +127,7 @@ export function describeHistory(versions: ThumbVersion[], isLive = false) {
   const kind = isLive
     ? 'live stream frames'
     : repeats > 0 ? 'test rotation' : distinct > 2 ? 'multiple swaps' : maxDist <= 24 ? 'minor re-export' : 'single swap';
-  return { labeled, distinct, kind, pattern: labeled.map((l) => l.label).join(' → ') };
+  return { labeled, distinct, kind, pattern: patternSummary(labeled.map((l) => l.label)) };
 }
 
 export type ChannelRow = {

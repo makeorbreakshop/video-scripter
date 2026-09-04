@@ -6,13 +6,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "sonner"
 import { ClerkProvider } from "@clerk/nextjs"
+import { BRAND } from "@/lib/app/brand"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "YouTube Script Editor",
-  description: "A streamlined editor for creating high-quality YouTube scripts",
-    generator: 'v0.dev'
+  // The default for every route that does not set its own. /app and /admin override it.
+  title: { default: BRAND.name, template: `%s — ${BRAND.name}` },
+  description: BRAND.tagline,
 }
 
 export default function RootLayout({

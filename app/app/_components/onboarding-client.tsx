@@ -22,7 +22,8 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '32px auto' }}>
+    <div className="cs-onboard">
+      <div className="cs-onboard-plate">
       <div className="cs-steps">
         <span className="cs-step" data-on={step === 1}>1 YOUR CHANNEL</span>
         <span className="cs-step" data-on={step === 2}>2 ONE COMPETITOR</span>
@@ -44,9 +45,9 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
         placeholder={step === 1 ? 'Your channel name, @handle or URL' : 'Their channel name, @handle or URL'}
       />
 
-      <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div className="cs-onboard-foot">
         {step === 1 ? (
-          <button type="button" className="cs-link" style={{ background: 'none', border: 0, color: 'var(--cs-muted)', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }} onClick={() => setSkippedSelf(true)}>
+          <button type="button" className="cs-linkbtn" onClick={() => setSkippedSelf(true)}>
             I don’t have a channel, skip
           </button>
         ) : (
@@ -54,7 +55,7 @@ export default function OnboardingClient({ initialTracked }: { initialTracked: {
             {hasAny ? 'Skip for now' : 'Skip'}
           </Link>
         )}
-        <span className="cs-hiscore">step {step} of 2</span>
+      </div>
       </div>
     </div>
   );

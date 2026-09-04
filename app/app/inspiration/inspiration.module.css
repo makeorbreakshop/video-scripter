@@ -1,89 +1,4 @@
-.controls {
-  display: flex;
-  align-items: end;
-  gap: 16px;
-  padding: 14px;
-  margin-bottom: 18px;
-  border: 1px solid var(--cs-line);
-  border-radius: var(--cs-radius);
-  background: var(--cs-surface);
-}
 
-.field {
-  display: grid;
-  gap: 6px;
-  min-width: min(100%, 280px);
-}
-
-.label,
-.distance legend {
-  color: var(--cs-muted);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.select {
-  min-height: 38px;
-  padding: 7px 34px 7px 10px;
-  border: 1px solid var(--cs-line);
-  border-radius: 8px;
-  background: var(--cs-ground);
-  color: var(--cs-ink);
-  font: inherit;
-}
-
-.select:focus-visible,
-.mode:focus-within {
-  outline: 2px solid var(--cs-accent);
-  outline-offset: 2px;
-}
-
-.distance {
-  min-width: 0;
-  padding: 0;
-  margin: 0;
-  border: 0;
-}
-
-.distance legend {
-  margin-bottom: 6px;
-}
-
-.modes {
-  display: flex;
-  gap: 6px;
-}
-
-.mode {
-  position: relative;
-  display: grid;
-  min-width: 92px;
-  min-height: 38px;
-  place-items: center;
-  padding: 6px 10px;
-  border: 1px solid var(--cs-line);
-  border-radius: 8px;
-  background: var(--cs-ground);
-  color: var(--cs-muted);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.mode input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.mode:has(input:checked) {
-  border-color: var(--cs-accent);
-  background: var(--cs-accent-soft);
-  color: var(--cs-accent);
-}
 
 .stream {
   display: grid;
@@ -92,7 +7,7 @@
 
 .result {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 18px;
   padding: 14px;
   border: 1px solid var(--cs-line);
@@ -115,6 +30,8 @@
 
 .body {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .byline {
@@ -151,55 +68,25 @@
   color: var(--cs-accent);
 }
 
-.evidence {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 14px 0 0;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--cs-line);
-}
-
-.evidence div {
-  min-width: 0;
-}
-
-.evidence dt {
-  margin: 0 0 3px;
+.pattern {
+  margin: 8px 0 0;
   color: var(--cs-muted);
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.evidence dd {
-  margin: 0;
   font-size: 12px;
   line-height: 1.4;
 }
 
+/* Pinned to the bottom of the body so the actions line up with the thumbnail's lower edge
+   rather than leaving a gap under a short title. */
 .actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 13px;
+  margin-top: auto;
+  padding-top: 13px;
 }
 
 .actions form:last-of-type {
   margin-right: auto;
-}
-
-.feedback[data-selected='true'] {
-  border-color: var(--cs-accent);
-  background: var(--cs-accent-soft);
-  color: var(--cs-accent);
-}
-
-.dismiss[data-selected='true'] {
-  border-color: var(--cs-line-strong);
-  background: var(--cs-surface-2);
-  color: var(--cs-ink);
 }
 
 .receipt {
@@ -209,37 +96,10 @@
 }
 
 @media (max-width: 760px) {
-  .controls {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .field {
-    min-width: 0;
-  }
-
-  .modes {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .mode {
-    min-width: 0;
-  }
-
-  .controls > button {
-    align-self: start;
-  }
 
   .result {
     grid-template-columns: 1fr;
   }
-
-  .evidence {
-    grid-template-columns: 1fr;
-    gap: 9px;
-  }
-
   .title {
     font-size: 16px;
   }

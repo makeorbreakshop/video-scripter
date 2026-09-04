@@ -6,20 +6,25 @@
 import Link from 'next/link';
 import type { GridVideo, SortKey } from '@/lib/app/channel-page';
 import { compact, etDate, ago } from '@/lib/admin/format';
+import { scoreTone } from '@/lib/app/score-display';
 import { Thumb } from './thumb';
 
 export type { GridVideo, SortKey };
 
-/** Score as plain text: accent and bold at 2x and up, muted otherwise, a dash when unscored. */
+/**
+ * Score as plain text. The tone comes from scoreTone() so the grid, the feed and the video
+ * page cannot disagree; the colour and weight for each tone live in .vg-score in theme.css.
+ */
 export function ScoreChip({ score, size = 'sm' }: { score: number | null; size?: 'sm' | 'lg' }) {
-  const fontSize = size === 'lg' ? 16 : 12;
-  if (score == null) return <span className="cs-num" title="not enough data to score this video yet" style={{ fontSize, color: 'var(--cs-muted)' }}>–</span>;
-  const outlier = score >= 2;
-  const color = outlier ? 'var(--cs-accent)' : score < 1 ? 'var(--cs-warn)' : 'var(--cs-ink)';
+  const tone = scoreTone(score);
+  if (tone === 'none') {
+    return <span className="cs-num vg-score" data-tone="none" data-size={size} title="not enough data to score this video yet">–</span>;
+  }
+  const s = score as number;
   return (
-    <span className="cs-num" title={`${score.toFixed(2)}× the channel's baseline${score < 1 ? ' (below its usual)' : ''}`}
-      style={{ fontSize, fontWeight: outlier ? 700 : 600, color }}>
-      {score.toFixed(1)}×
+    <span className="cs-num vg-score" data-tone={tone} data-size={size}
+      title={`${s.toFixed(2)}× the channel's baseline${tone === 'under' ? ' (below its usual)' : ''}`}>
+      {s.toFixed(1)}×
     </span>
   );
 }

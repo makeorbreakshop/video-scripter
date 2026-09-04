@@ -79,10 +79,9 @@ function LegendSwatchMark({ swatch, accent, muted, mode }: {
   );
 }
 
-function ChartLegend({ entries, accent, muted, mode, scale, onScale }: {
+function ChartLegend({ entries, accent, muted, mode }: {
   entries: ReturnType<typeof legendEntries>;
   accent: string; muted: string; mode: 'light' | 'dark';
-  scale: ScaleMode; onScale: () => void;
 }) {
   return (
     <ul style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '4px 16px', margin: 0, padding: 0, listStyle: 'none' }}>
@@ -92,17 +91,6 @@ function ChartLegend({ entries, accent, muted, mode, scale, onScale }: {
           <span>{e.label}</span>
         </li>
       ))}
-      <li>
-        <button type="button" onClick={onScale} aria-label={`y axis scale: ${scale}`}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: muted, fontSize: 11 }}>
-          {SCALE_MODES.map((m, i) => (
-            <span key={m}>
-              {i > 0 && <span style={{ opacity: 0.5 }}> / </span>}
-              <span style={{ color: m === scale ? accent : muted, fontWeight: m === scale ? 600 : 400 }}>{m}</span>
-            </span>
-          ))}
-        </button>
-      </li>
     </ul>
   );
 }
@@ -135,16 +123,19 @@ function TrackingLabel({ viewBox, text, muted, surface, flip }: {
  * The chips above the plot: the brush window, preset. Values only — "6h", "24h", "7d" — because
  * a chip that says "last 24 hours" is three words where one is enough. The lit one is filled.
  */
-function RangeChips({ chips, active, muted, accent, line, surface, onPick }: {
+function RangeChips({ chips, active, muted, accent, line, surface, ink, scale, onScale, onPick }: {
   chips: ReturnType<typeof rangeChips>; active: string | null;
-  muted: string; accent: string; line: string; surface: string;
+  muted: string; accent: string; line: string; surface: string; ink: string;
+  scale: ScaleMode; onScale: () => void;
   onPick: (key: string) => void;
 }) {
   if (!chips.length) return null;
+  // Same "on" as .cs-chip everywhere else in the app: ink fill, ground text. The accent is
+  // reserved for the coin, so two controls could not both claim it.
   const chip = (on: boolean): React.CSSProperties => ({
     font: 'inherit', fontSize: CHART_TYPE.label, lineHeight: '20px', padding: '0 9px', cursor: 'pointer',
-    borderRadius: 999, border: `1px solid ${on ? accent : line}`,
-    background: on ? accent : 'none', color: on ? surface : muted, fontWeight: on ? 600 : 400,
+    borderRadius: 999, border: `1px solid ${on ? ink : line}`,
+    background: on ? ink : 'none', color: on ? surface : muted, fontWeight: on ? 600 : 400,
   });
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 6 }}>
@@ -154,7 +145,26 @@ function RangeChips({ chips, active, muted, accent, line, surface, onPick }: {
           {c.key}
         </button>
       ))}
+      <ScaleSwitch scale={scale} onScale={onScale} muted={muted} accent={accent} />
     </div>
+  );
+}
+
+/** linear / log. It used to sit inside the legend, reading as a fourth thing being named. */
+function ScaleSwitch({ scale, onScale, muted, accent }: {
+  scale: ScaleMode; onScale: () => void; muted: string; accent: string;
+}) {
+  return (
+    <button type="button" onClick={onScale} aria-label={`y axis scale: ${scale}`}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', padding: '0 2px',
+                     cursor: 'pointer', color: muted, fontSize: CHART_TYPE.label, lineHeight: '20px' }}>
+      {SCALE_MODES.map((m, i) => (
+        <span key={m}>
+          {i > 0 && <span style={{ opacity: 0.5 }}> / </span>}
+          <span style={{ color: m === scale ? accent : muted, fontWeight: m === scale ? 600 : 400 }}>{m}</span>
+        </span>
+      ))}
+    </button>
   );
 }
 
@@ -424,7 +434,8 @@ export default function VideoChartPlot({
   return (
     <div>
       <RangeChips chips={chips} active={active} muted={C.muted} accent={C.accent} line={C.line}
-                  surface={C.surface} onPick={pickChip} />
+                  surface={C.surface} ink={C.ink} scale={scale} onScale={() => setScale(nextScale(scale))}
+                  onPick={pickChip} />
 
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
           screen is wider than the chart and would stretch the whole page. Clipping it here is
@@ -611,7 +622,6 @@ export default function VideoChartPlot({
         <ChartLegend
           entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 })}
           accent={C.accent} muted={C.muted} mode={C.mode}
-          scale={scale} onScale={() => setScale(nextScale(scale))}
         />
       </div>
       </div>

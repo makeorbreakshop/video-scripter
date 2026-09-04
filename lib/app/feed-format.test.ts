@@ -225,8 +225,14 @@ describe('groupCards', () => {
   });
 });
 
-describe('card kind, verb and meta', () => {
-  const { cardKind, cardVerb, ordinal, cardMeta } = require('./feed-format');
+/**
+ * One byline grammar. The feed used to mix three in one column — "is beating its baseline"
+ * (present-tense state), "posted a new video" (past-tense action) and a SWAP pill plus a noun
+ * phrase — and three of cardVerb's five strings were unreachable, because a change card
+ * branched to the pill before the verb was called.
+ */
+describe('card kind, event and meta', () => {
+  const { cardKind, cardEvent, ordinal, cardMeta } = require('./feed-format');
   const ev = (o: Partial<FeedEventLike>): FeedEventLike => ({ id: Math.random().toString(36).slice(2), type: 'upload', at: '2026-09-01T16:00:00.000Z', channel_id: 'c', channel_name: 'C', video_id: 'v', video_title: 'T', thumbnail_url: 'u', published_at: null, payload: {}, ...o });
   const card = (events: FeedEventLike[]) => groupCards(events)[0].cards[0];
 
@@ -236,20 +242,20 @@ describe('card kind, verb and meta', () => {
       ev({ type: 'upload' }),
     ]);
     expect(cardKind(c)).toBe('upload');
-    expect(cardVerb(c)).toBe('posted a new video');
+    expect(cardEvent(c)).toEqual({ pill: 'UPLOAD', status: 'upload', headline: null });
   });
 
   it('names a title-only day', () => {
     const c = card([ev({ type: 'title_change', payload: { old_title: 'A', new_title: 'B', version: 2, hours_since_publish: 72 } })]);
     expect(cardKind(c)).toBe('title');
-    expect(cardVerb(c)).toBe('changed the title');
+    expect(cardEvent(c)).toEqual({ pill: 'SWAP', status: 'swap', headline: 'New title' });
     expect(cardMeta(c)).toBe('2nd title · 3d after publish');
   });
 
   it('counts thumbnails, and calls a rotation an A/B test', () => {
     const one = card([ev({ type: 'thumbnail_change', payload: { after_url: 'x', version: 3, hours_since_publish: 24 } })]);
     expect(cardKind(one)).toBe('thumb');
-    expect(cardVerb(one)).toBe('swapped the thumbnail');
+    expect(cardEvent(one)).toEqual({ pill: 'SWAP', status: 'swap', headline: 'New thumbnail' });
     expect(cardMeta(one)).toBe('3rd thumbnail · 24h after publish');
 
     const many = card([
@@ -257,7 +263,8 @@ describe('card kind, verb and meta', () => {
       ev({ type: 'ab_rotation', at: '2026-09-01T18:00:00.000Z', payload: { after_url: 'y', version: 3, hours_since_publish: 48 } }),
       ev({ type: 'ab_rotation', at: '2026-09-01T19:00:00.000Z', payload: { after_url: 'z', version: 4, hours_since_publish: 48 } }),
     ]);
-    expect(cardVerb(many)).toBe('rotated 3 thumbnails');
+    // A rotation is the one packaging event with evidence behind it, so it keeps its own pill.
+    expect(cardEvent(many)).toEqual({ pill: 'TESTING', status: 'testing', headline: '3 thumbnails' });
     // No 'A/B test' and no rotation count: the watcher saw images change, not an experiment.
     expect(cardMeta(many)).toBe('4th thumbnail · 2d after publish');
   });
@@ -268,14 +275,15 @@ describe('card kind, verb and meta', () => {
       ev({ type: 'title_change', at: '2026-09-01T17:05:00.000Z', payload: { old_title: 'A', new_title: 'B', version: 2, hours_since_publish: 144 } }),
     ]);
     expect(cardKind(c)).toBe('combo');
-    expect(cardVerb(c)).toBe('changed the title and thumbnail');
+    expect(cardEvent(c)).toEqual({ pill: 'SWAP', status: 'swap', headline: 'New title + thumbnail' });
     expect(cardMeta(c)).toBe('3rd package · 6d after publish');
   });
 
   it('a score on its own is an outlier card with no meta line', () => {
     const c = card([ev({ type: 'outlier', payload: { score: 4.2 } })]);
     expect(cardKind(c)).toBe('outlier');
-    expect(cardVerb(c)).toBe('is beating its baseline');
+    // The pill says it; a noun phrase beside it would only restate the pill.
+    expect(cardEvent(c)).toEqual({ pill: 'OUTLIER', status: 'testing', headline: null });
     expect(cardMeta(c)).toBeNull();
   });
 

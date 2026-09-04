@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Channel Ingest (personal)",
+  "name": "ChannelSmith Channel Ingest",
   "version": "1.8.0",
-  "description": "Click to ingest YouTube channels/videos into the video-scripter tracker; optional passive logging of what you watch.",
+  "description": "Send YouTube channels and videos to ChannelSmith; optional passive logging of what you watch.",
   "permissions": [
     "storage",
     "tabs",
@@ -18,7 +18,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Channel Ingest"
+    "default_title": "ChannelSmith"
   },
   "content_scripts": [
     {

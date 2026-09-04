@@ -162,8 +162,10 @@ export interface NotifyGate {
   atLimit: boolean;
   /** "NOTIFYING 8/25" — the pixel-font label over the meter. */
   label: string;
-  /** How many segments the meter draws. Unlimited plans get the count itself, min 1. */
+  /** How many segments the meter draws. Only meaningful when `bar` is true. */
   segments: number;
+  /** Whether to draw the meter at all — only a capped plan has something to measure. */
+  bar: boolean;
 }
 
 /**
@@ -183,6 +185,7 @@ export function notifyGate(count: number, limit: number): NotifyGate {
     atLimit: !unlimited && n >= cap,
     label: unlimited ? `NOTIFYING ${n}` : `NOTIFYING ${n}/${cap}`,
     segments: Math.max(1, Math.min(NOTIFY_METER_MAX, unlimited ? Math.max(n, 1) : cap)),
+    bar: !unlimited,
   };
 }
 

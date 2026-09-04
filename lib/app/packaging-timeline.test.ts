@@ -121,3 +121,22 @@ describe('nowLabel', () => {
     expect(nowLabel(null)).toBe('NOW');
   });
 });
+
+describe('isUnchangedOnly', () => {
+  const { buildTimeline, isUnchangedOnly } = require('./packaging-timeline');
+  const thumb = (version: number) => ({ version, url: `u${version}`, first_seen: '2026-09-01T00:00:00Z' });
+
+  it('is true for a video whose packaging never moved', () => {
+    const clips = buildTimeline({ publishedAt: '2026-09-01T00:00:00Z', thumbs: [thumb(1)], titles: [] });
+    expect(isUnchangedOnly(clips)).toBe(true);
+  });
+
+  it('is false as soon as there is a real history to draw', () => {
+    const clips = buildTimeline({ publishedAt: '2026-09-01T00:00:00Z', thumbs: [thumb(1), thumb(2)], titles: [] });
+    expect(isUnchangedOnly(clips)).toBe(false);
+  });
+
+  it('is false for an empty timeline — there is nothing to say either way', () => {
+    expect(isUnchangedOnly([])).toBe(false);
+  });
+});

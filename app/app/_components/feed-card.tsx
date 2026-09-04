@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { FeedCard as Card } from '@/lib/app/feed-format';
-import { cardKind, cardMeta, cardScoreNote, cardVerb, compactNumber, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
+import { cardEvent, cardKind, cardMeta, cardScoreNote, compactNumber, etTimestamp, formatScore, relativeTime, scoreTooltip } from '@/lib/app/feed-format';
 import { rowMeta } from '@/lib/app/test-row';
 import { sameAge } from '@/lib/app/age-words';
 import { ChannelAvatar } from '@/components/app/avatar';
@@ -57,6 +57,7 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
   const meta = cardMeta(card);
   // A blank where the badge goes reads as a broken product. Say why there is no number.
   const scoreNote = cardScoreNote(card);
+  const event = cardEvent(card);
   // The numbers. A change card keeps the one line a rotation row shows — "Sep 2 · 103K views ·
   // 2.5×" plus what the change added. An upload, the biggest thing a channel does, gets the
   // score as the headline and the two numbers it is made of under it: what this video is on
@@ -84,9 +85,10 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
       : null;
   const stats = (
     <div className="cs-fcard-stats">
-      {card.score !== null
-        ? <span className="cs-num cs-fcard-score" data-hot={(card.score ?? 0) >= 2 || undefined} title={scoreTooltip(card.score)}>{formatScore(card.score)}</span>
-        : scoreNote && <span className="cs-fcard-sub">{scoreNote}</span>}
+      <span className="cs-num cs-fcard-score" data-hot={(card.score ?? 0) >= 2 || undefined}
+            title={card.score !== null ? scoreTooltip(card.score) : (scoreNote || 'No score yet')}>
+        {formatScore(card.score)}
+      </span>
       <span className="cs-fcard-sub">{[facts?.view_count != null ? `${compactNumber(facts.view_count)} views` : null,
         published ? relativeTime(published, now) : null].filter(Boolean).join(' · ')}</span>
       {scoreLine && <span className="cs-fcard-sub">{scoreLine}</span>}
@@ -137,18 +139,8 @@ export default function FeedCard({ card, avatarUrl, now, priority = false }: {
           <ChannelAvatar src={avatarUrl} name={card.channel_name} size={36} channelId={card.channel_id} />
           {card.channel_name && <span className="cs-byline-name">{card.channel_name}</span>}
         </Go>
-        {changed ? (
-          // The feed has two packaging events: a rotation, and a swap — of the title, the
-          // thumbnail, or both. Same pill and words as the rotation row's swap.
-          <>
-            <span className="tr-pill" data-status="swap">SWAP</span>
-            <span className="tr-headline">
-              {kind === 'combo' ? 'New title + thumbnail' : kind === 'title' ? 'New title' : 'New thumbnail'}
-            </span>
-          </>
-        ) : (
-          <span className="cs-fcard-verb">{cardVerb(card)}</span>
-        )}
+        <span className="tr-pill" data-status={event.status}>{event.pill}</span>
+        {event.headline && <span className="tr-headline">{event.headline}</span>}
         <time className="cs-num cs-fcard-time" dateTime={kind === 'upload' ? (published ?? card.at) : card.at}
               title={`${relativeTime(kind === 'upload' ? (published ?? card.at) : card.at, now)} ago`}>
           {etTimestamp(kind === 'upload' ? (published ?? card.at) : card.at)}

@@ -23,7 +23,7 @@ export default function Home() {
         </p>
         <Link
           href="/app"
-          className="inline-block bg-[#00ff00] text-black rounded-lg py-2 px-6 text-sm font-semibold hover:bg-[#00ff00]/90 transition-colors"
+          className="inline-block bg-[#0E7A3C] text-white rounded-lg py-2 px-6 text-sm font-semibold hover:bg-[#0E7A3C]/90 transition-colors"
         >
           Start tracking
         </Link>

@@ -16,7 +16,7 @@ const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', displ
 const pixel = Press_Start_2P({ subsets: ['latin'], weight: '400', variable: '--font-pixel', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'ChannelSmith',
+  title: { absolute: 'ChannelSmith' },
   description: 'Track what the channels you watch are changing, and what it did for them.',
 };
 

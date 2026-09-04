@@ -177,7 +177,7 @@ export function TestRow({ row, avatarUrl, priority = false }: { row: TestRowMode
   } else {
     collapsed = (
       <div className="cs-fcard-row tr-live">
-        <div className="cs-vid tr-deckvid">
+        <div className="cs-vid">
           <button ref={deckBtn} type="button" className="tr-media" aria-expanded={open}
                   aria-label={`${row.headline} — open the thumbnails`} onClick={() => setOpen(true)}>
             <span className="tr-deck" style={{ ['--tr-n' as string]: shown.length } as React.CSSProperties}>

@@ -66,7 +66,6 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
       <div className="cs-page-head">
         <div>
           <h1 className="cs-h1">Settings</h1>
-          <p className="cs-sub">Your profile, plan and API access.</p>
         </div>
       </div>
 
@@ -91,7 +90,7 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
         <div className="cs-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="cs-badge" data-tone="accent">{planLabel(plan)}</span>
-            <span className="cs-hiscore">current plan</span>
+            <span className="cs-pick-meta">current plan</span>
           </div>
           <div className="cs-kv" style={{ marginTop: 10 }}>
             <span className="cs-kv-l">Tracked channels</span><span className="cs-num">{view.tracked}</span>
@@ -115,8 +114,9 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
             What we collect
           </button>
         </div>
-        <p className="cs-sub" style={{ marginBottom: 4 }}>Private analytics from channels you own.</p>
+        <p className="cs-sub" style={{ marginBottom: 10 }}>Private analytics from channels you own.</p>
 
+        <div className="cs-card">
         {youtubeStatus === 'connected' && <div className="cs-note" data-tone="good" style={{ marginTop: 10 }}>Connected. Importing your history now.</div>}
         {youtubeStatus && youtubeStatus !== 'connected' && (
           <div className="cs-note" data-tone="bad" style={{ marginTop: 10 }}>
@@ -153,11 +153,13 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
         ))}
 
         {!readOnly && (
-          <a className="cs-btn" data-variant={youtube.length ? undefined : 'primary'} href="/api/app/youtube/connect"
-             style={{ marginTop: 12, display: 'inline-block' }}>
-            {youtube.length ? 'Connect another channel' : 'Connect a channel'}
-          </a>
+          <div className="cs-card-foot">
+            <a className="cs-btn" data-variant={youtube.length ? undefined : 'primary'} href="/api/app/youtube/connect">
+              {youtube.length ? 'Connect another channel' : 'Connect a channel'}
+            </a>
+          </div>
         )}
+        </div>
 
         <dialog ref={ytInfo} className="cs-dialog" onClick={(e) => { if (e.target === ytInfo.current) ytInfo.current?.close(); }}>
           <div className="cs-dialog-head">
@@ -236,10 +238,11 @@ export default function SettingsClient({ profile, plan, limits, usage, keys, rea
         <h2>Danger zone</h2>
         <div className="cs-card">
           <div className="cs-card-foot">
-            <button type="button" className="cs-btn" data-variant="danger" disabled title="Not wired up yet">
-              Delete account
-            </button>
-            <span className="cs-pick-meta">Account deletion is not wired up yet — email us and we will do it by hand.</span>
+            <a className="cs-btn" data-variant="danger"
+               href={`mailto:brandon@makeorbreakshop.com?subject=${encodeURIComponent('Delete my ChannelSmith account')}`}>
+              Request account deletion
+            </a>
+            <span className="cs-pick-meta">We delete accounts by hand, usually within a day.</span>
           </div>
         </div>
       </section>
