@@ -1,7 +1,8 @@
 // Model v5 scorer with versioned RSS observation contract. Direct Postgres only.
 //   npx tsx scripts/score-videos.ts --fit        refit global params from the last 12 months (nightly)
 //   npx tsx scripts/score-videos.ts [--all]      score videos published <=60d whose latest snapshot/sample
-//                                                is newer than their stored score (hourly); --all rescoress all
+//                                                is newer than their stored score (hourly); --all covers all ages
+//   --all --force                             explicitly rewrite every selected row; not for resumable loops
 //   npx tsx scripts/score-videos.ts --final      one-shot final score for videos older than 60 days
 //   npx tsx scripts/score-videos.ts --since 3    rescore every video published in the last 3 days
 // Common flags: --channels <id,id>  restrict to those channels; --limit <n>  cap the target list.
@@ -31,11 +32,13 @@ import {
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
+import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
+const FORCE = process.argv.includes('--force');
 const FINAL = process.argv.includes('--final');
 // Final rows are written once and never revisited; the version marks them so we can skip them.
 const FINAL_VERSION = `${OBSERVATION_SCORE_VERSION}-final`;
@@ -450,17 +453,14 @@ async function score() {
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
             and v.published_at > now() - interval '${SINCE} days'
           order by v.published_at desc ${cap}`
-    : ALL
+    : ALL && FORCE
       ? `select v.id, v.channel_id from videos v
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${chFilter}
           order by v.published_at desc ${cap}`
       : `select v.id, v.channel_id from videos v
           left join video_scores sc on sc.video_id = v.id
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceiling} ${chFilter}
-            and (sc.video_id is null
-                 or exists (select 1 from rss_samples r where r.video_id = v.id and r.at > sc.scored_at and r.at <= now() and r.views >= 0)
-                 or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
-                 or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
+            and ${scoreRefreshSql(OBSERVATION_SCORE_VERSION)}
           order by v.published_at desc ${cap}`,
     args
   );
