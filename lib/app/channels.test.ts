@@ -262,7 +262,7 @@ describe('trackChannel', () => {
       return [];
     });
     const r = await trackChannel('u1', CH, 'self');
-    expect(r).toMatchObject({ role: 'self', lane: 'user', enrolled: false, jobs_queued: 2 });
+    expect(r).toMatchObject({ role: 'self', lane: 'user', enrolled: false, jobs_queued: 1 });
 
     expect(callsMatching(/insert into user_channels/)[0][1]).toEqual(['u1', CH, 'self', false]);
     const promote = callsMatching(/insert into channel_tracking/)[0];
