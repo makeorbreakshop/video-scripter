@@ -15,6 +15,9 @@ d('due-select against the real database', () => {
   beforeAll(async () => {
     const pg = require('pg');
     pool = new pg.Pool({ connectionString: url, max: 1 });
+    // Warm the connection: the first query on a fresh pooler connection carries ~1.2s of
+    // connect + TLS, which would otherwise be timed as if it were query cost.
+    await pool.query('select 1');
   });
   afterAll(async () => { await pool?.end(); });
 
@@ -23,6 +26,7 @@ d('due-select against the real database', () => {
     const res = await pool.query(DUE_SELECT_SQL, [3100]); // one tick at the 6000/day budget
     const ms = Date.now() - t;
     expect(res.rows.length).toBeGreaterThan(0);
+    // Measured 2026-09-05 on the live table (873K overdue): 28ms execution, 68-140ms warm wall.
     expect(ms).toBeLessThan(500);
   }, 30_000);
 

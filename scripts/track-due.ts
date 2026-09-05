@@ -5,13 +5,13 @@
 // when they were released, and we batch so it's efficient."
 //
 // Each tick:
-//   0. RSS ROLL-IN  — any due video the free channel-feed poller has read in the last 20h gets
-//      that reading as its snapshot. Zero quota, and it advances next_track_at, so pass 1 below
-//      never sees those videos. Measured ~53-93K videos/day.
-//   1. DUE READ     — everything with next_track_at <= now(), OLDEST-DUE FIRST so nothing
-//      starves, capped at this tick's slice of the day's quota (see tickBudget), in 50-id
-//      calls. Whatever does not fit stays due for the next tick.
-//   2. ARCHIVE      — no separate pass any more. Tier 4 (fortnightly) is scheduled by the same
+//   0. DUE SLICE   — everything with next_track_at <= now(), OLDEST-DUE FIRST so nothing
+//      starves, over-fetched a few times past what the budget can pay for.
+//   1. RSS ROLL-IN — any video in that slice the free channel-feed poller has read in the last
+//      20h gets that reading as its snapshot. Zero quota, and it never reaches the API.
+//   2. DUE READ    — the rest, in 50-id calls, up to this tick's slice of the day's quota
+//      (see tickBudget). Whatever does not fit stays due for the next tick.
+//   3. ARCHIVE     — no separate pass any more. Tier 4 (fortnightly) is scheduled by the same
 //      next_track_at as everything else and reaches the head of the oldest-due ordering on its
 //      own, which is what the old --catalog slice was hand-rolling.
 //
@@ -23,10 +23,10 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import {
-  DUE_SELECT_SQL, RSS_ROLL_DUE_SQL, buildDueRows, rssRollDueRows,
+  DUE_SELECT_SQL, RSS_FOR_DUE_SQL, buildDueRows, rssRollDueRows, partitionDue, dueFetchCap,
   tickBudget, ticksLeftInDay, idCapForBudget,
   TRACK_DUE_DAILY_BUDGET, TICK_INTERVAL_MIN, TICK_SOFT_DEADLINE_MS, IDS_PER_CALL,
-  type DueRow, type DueSnapshotRow, type RssDueRow,
+  type DueRow, type DueSnapshotRow, type RssReading,
 } from '../lib/nightly/due-core';
 import { chunk } from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
@@ -108,24 +108,21 @@ async function writeRows(rows: DueSnapshotRow[], upsertSnapshot: boolean): Promi
   return written;
 }
 
-// ---------------------------------------------------------------- pass 0: RSS roll-in
-let rssCovered = 0;
-{
-  const t0 = Date.now();
-  const res = await pool.query<RssDueRow>(RSS_ROLL_DUE_SQL, [50_000]);
-  const rows = rssRollDueRows(res.rows, now);
-  if (!DRY_RUN) rssCovered = await writeRows(rows, false);
-  else rssCovered = rows.length;
-  console.log(`rss: ${rssCovered} due videos covered by the feed (0 units) in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-}
-
-// ---------------------------------------------------------------- pass 1: due API read
-const dueRes = await pool.query<DueRow>(DUE_SELECT_SQL, [idCap]);
+// ---------------------------------------------------------------- pass 0: the due slice
 const dueTotal = (await pool.query<{ n: number }>(
   `select count(*)::int as n from view_tracking_priority where next_track_at <= now()`
 )).rows[0].n;
-console.log(`due: ${dueTotal} videos overdue, taking ${dueRes.rows.length} this tick (oldest-due first)`);
+const dueRes = await pool.query<DueRow>(DUE_SELECT_SQL, [dueFetchCap(idCap)]);
+console.log(`due: ${dueTotal} videos overdue, pulled ${dueRes.rows.length} oldest-due for this tick`);
 
+// ---------------------------------------------------------------- pass 1: RSS roll-in
+const rssRes = await pool.query<RssReading>(RSS_FOR_DUE_SQL, [dueRes.rows.map((r) => r.video_id)]);
+const rssMap = new Map(rssRes.rows.map((r) => [r.video_id, r]));
+const { rssRows, apiRows } = partitionDue(dueRes.rows, rssMap, idCap);
+const rssCovered = DRY_RUN ? rssRows.length : await writeRows(rssRollDueRows(rssRows, now), false);
+console.log(`rss: ${rssCovered} of them covered by the feed (0 units); ${apiRows.length} go to the API`);
+
+// ---------------------------------------------------------------- pass 2: due API read
 let apiCalls = 0, mainBucketCalls = 0, written = 0;
 
 async function processBatch(batch: DueRow[]): Promise<boolean> {
@@ -158,7 +155,7 @@ async function processBatch(batch: DueRow[]): Promise<boolean> {
   return true;
 }
 
-for (const batch of chunk(dueRes.rows, IDS_PER_CALL)) {
+for (const batch of chunk(apiRows, IDS_PER_CALL)) {
   if (DRY_RUN) { apiCalls++; continue; }
   if (outOfTime()) { console.log(`soft deadline reached after ${apiCalls} calls; the rest stays due.`); break; }
   if (!(await processBatch(batch))) break;

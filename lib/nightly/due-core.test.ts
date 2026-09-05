@@ -1,7 +1,8 @@
 import {
   DUE_TIER_BOUNDARIES, tierForAge, dueTierIntervalDays, nextTrackAt, ageDaysAt,
   tickBudget, ticksLeftInDay, idCapForBudget, rssRollDueRows, DUE_SELECT_SQL,
-  RSS_ROLL_DUE_SQL, TRACK_DUE_DAILY_BUDGET, TICK_INTERVAL_MIN, LAUNCH_HANDOFF_HOURS,
+  RSS_FOR_DUE_SQL, TRACK_DUE_DAILY_BUDGET, TICK_INTERVAL_MIN, LAUNCH_HANDOFF_HOURS,
+  partitionDue, dueFetchCap, DUE_OVERFETCH,
 } from './due-core';
 import { chunk } from './tracking-core';
 
@@ -111,9 +112,12 @@ describe('batch shaping', () => {
 
 describe('RSS roll-in takes precedence over an API read', () => {
   const now = D('2026-09-05T10:00:00Z');
+  const due = (id: string, published: string, tier = 1) =>
+    ({ video_id: id, priority_tier: tier, published_at: D(published) });
+
   it('turns a feed reading into today\'s snapshot at zero quota and reschedules on the age tier', () => {
     const [row] = rssRollDueRows(
-      [{ video_id: 'v1', views: 1234, likes: 56, priority_tier: 1, published_at: D('2026-01-01T00:00:00Z') }],
+      [{ ...due('v1', '2026-01-01T00:00:00Z'), views: 1234, likes: 56 }],
       now
     );
     expect(row.view_count).toBe(1234);
@@ -124,18 +128,47 @@ describe('RSS roll-in takes precedence over an API read', () => {
     expect(row.tier).toBe(3);
     expect(row.next_track_at.toISOString()).toBe('2026-09-12T10:00:00.000Z');
   });
+
   it('carries a null like count through', () => {
     const [row] = rssRollDueRows(
-      [{ video_id: 'v1', views: 10, likes: null, priority_tier: 1, published_at: D('2026-09-01T00:00:00Z') }],
+      [{ ...due('v1', '2026-09-01T00:00:00Z'), views: 10, likes: null }],
       now
     );
     expect(row.like_count).toBeNull();
     expect(row.tier).toBe(1);
   });
-  it('selects only videos due AND fed inside the roll-in window, so the API pass never sees them', () => {
-    expect(RSS_ROLL_DUE_SQL).toMatch(/next_track_at\s*<=\s*now\(\)/);
-    expect(RSS_ROLL_DUE_SQL).toMatch(/interval '20 hours'/);
-    // the API due-select must therefore run AFTER the roll-in, on next_track_at
+
+  it('spends the API budget only on the due videos the feed did NOT cover', () => {
+    const rows = [due('a', '2026-01-01T00:00:00Z'), due('b', '2026-01-01T00:00:00Z'),
+                  due('c', '2026-01-01T00:00:00Z'), due('d', '2026-01-01T00:00:00Z')];
+    const rss = new Map([['b', { video_id: 'b', views: 5, likes: 1 }]]);
+    const { rssRows, apiRows } = partitionDue(rows, rss, 10);
+    expect(rssRows.map((r) => r.video_id)).toEqual(['b']);
+    expect(apiRows.map((r) => r.video_id)).toEqual(['a', 'c', 'd']);
+  });
+
+  it('caps only the API side, and keeps it oldest-due first', () => {
+    const rows = ['a', 'b', 'c', 'd', 'e'].map((id) => due(id, '2026-01-01T00:00:00Z'));
+    const rss = new Map([['a', { video_id: 'a', views: 5, likes: null }]]);
+    const { rssRows, apiRows } = partitionDue(rows, rss, 2);
+    expect(rssRows).toHaveLength(1);
+    expect(apiRows.map((r) => r.video_id)).toEqual(['b', 'c']);
+  });
+
+  it('over-fetches the due slice so free readings cannot crowd out paid ones', () => {
+    expect(DUE_OVERFETCH).toBe(4);
+    expect(dueFetchCap(3100)).toBe(12400);
+    expect(dueFetchCap(20000)).toBe(50000); // bounded, whatever the budget
+  });
+
+  it('probes the feed by the tick\'s own due ids, never scanning the whole 20h window', () => {
+    // one rss_samples_pkey probe per due id, not a scan of the whole feed window
+    expect(RSS_FOR_DUE_SQL).toMatch(/unnest\(\$1::text\[\]\)/);
+    expect(RSS_FOR_DUE_SQL).toMatch(/cross join lateral/);
+    expect(RSS_FOR_DUE_SQL).toMatch(/r\.video_id = x\.video_id/);
+    expect(RSS_FOR_DUE_SQL).toMatch(/interval '20 hours'/);
+    expect(RSS_FOR_DUE_SQL).not.toMatch(/view_tracking_priority/);
+    // the due-select is what bounds the tick
     expect(DUE_SELECT_SQL).toMatch(/next_track_at\s*<=\s*now\(\)/);
     expect(DUE_SELECT_SQL).toMatch(/order by p\.next_track_at asc/);
   });
@@ -144,9 +177,7 @@ describe('RSS roll-in takes precedence over an API read', () => {
 describe('handoff from the launch tracker', () => {
   it('leaves the first 72 hours to scripts/launch-track.ts in both passes', () => {
     expect(LAUNCH_HANDOFF_HOURS).toBe(72);
-    for (const sql of [DUE_SELECT_SQL, RSS_ROLL_DUE_SQL]) {
-      expect(sql).toMatch(/published_at < now\(\) - interval '72 hours'/);
-    }
+    expect(DUE_SELECT_SQL).toMatch(/published_at < now\(\) - interval '72 hours'/);
   });
 });
 

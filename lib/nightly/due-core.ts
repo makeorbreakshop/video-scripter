@@ -111,44 +111,80 @@ export function idCapForBudget(calls: number): number {
   return Math.max(0, Math.floor(calls)) * IDS_PER_CALL;
 }
 
+/**
+ * How many due ids to pull for a tick that can spend `apiIdCap` of them on the API. The excess
+ * is headroom for the RSS roll-in: those videos cost no quota, so a tick that fetched only
+ * `apiIdCap` ids would let free readings crowd out paid ones and drain slower than it could.
+ */
+export const DUE_OVERFETCH = 4;
+export function dueFetchCap(apiIdCap: number): number {
+  return Math.min(apiIdCap * DUE_OVERFETCH, 50_000);
+}
+
+export interface DueRow { video_id: string; priority_tier: number; published_at: Date | string }
+
 // ---------------------------------------------------------------- RSS roll-in
 /**
  * Pass 0 of every tick. YouTube's channel feed carries a view count for the newest 15 videos of
- * each channel and the RSS poller samples every feed on every tick at zero quota, so any due
+ * each channel and the RSS poller samples every feed on every tick at zero quota, so a due
  * video with a recent feed reading needs no API call at all: the reading becomes its snapshot
  * and it is rescheduled exactly as an API read would have rescheduled it.
  *
- * Running this BEFORE the API select is what gives RSS precedence — the roll-in advances
- * next_track_at, so those videos are no longer due when the API select runs.
- * $1 = roll-in window hours.
+ * DRIVEN FROM THE DUE BATCH, not from the feed table. The nightly asked rss_samples for its
+ * whole 20-hour window and joined that to the due list; MEASURED 2026-09-05 that is a 31-second
+ * plan — a 1.3M-row parallel scan of rss_samples plus a 13MB external-merge sort. Once a night
+ * that was tolerable; ninety-six times a day it is exactly the IO this database has had
+ * incidents over. Probing (video_id, at) for the tick's own bounded slice of due ids instead
+ * makes the cost proportional to the tick, and it covers precisely the videos whose quota the
+ * roll-in is there to save.
+ *
+ * LATERAL, not `where video_id = any($1)`: with an id list the planner still preferred
+ * idx_rss_samples_at and applied the ids as a filter over the whole window (6.8s, 1.2M buffers,
+ * MEASURED 2026-09-05). unnest + lateral forces one rss_samples_pkey (video_id, at) probe per
+ * due id, which is what makes this proportional to the tick rather than to the feed.
+ * $1 = the tick's due video ids.
  */
-export const RSS_ROLL_DUE_SQL = `
-  select distinct on (r.video_id) r.video_id, r.views, r.likes, p.priority_tier, v.published_at
-    from rss_samples r
-    join view_tracking_priority p on p.video_id = r.video_id
-    join videos v on v.id = r.video_id
-   where r.at > now() - interval '20 hours'
-     and r.views > 0
-     and p.next_track_at <= now()
-     and v.published_at < now() - interval '72 hours'
-   order by r.video_id, r.at desc
-   limit $1`;
+export const RSS_FOR_DUE_SQL = `
+  select x.video_id, s.views, s.likes
+    from unnest($1::text[]) as x(video_id)
+   cross join lateral (
+     select r.views, r.likes
+       from rss_samples r
+      where r.video_id = x.video_id
+        and r.at > now() - interval '20 hours'
+        and r.views > 0
+      order by r.at desc
+      limit 1
+   ) s`;
 
-export interface RssDueRow {
-  video_id: string;
-  views: number;
-  likes: number | null;
-  priority_tier: number;
-  published_at: Date | string;
+export interface RssReading { video_id: string; views: number; likes: number | null }
+
+/**
+ * Split the tick's due slice: everything the feed already covers is free, and the API budget is
+ * spent on the rest, still oldest-due first. Pure.
+ */
+export function partitionDue(
+  due: DueRow[],
+  rss: Map<string, RssReading>,
+  apiIdCap: number
+): { rssRows: Array<DueRow & RssReading>; apiRows: DueRow[] } {
+  const rssRows: Array<DueRow & RssReading> = [];
+  const apiRows: DueRow[] = [];
+  for (const row of due) {
+    const reading = rss.get(row.video_id);
+    if (reading) rssRows.push({ ...row, ...reading });
+    else if (apiRows.length < apiIdCap) apiRows.push(row);
+  }
+  return { rssRows, apiRows };
 }
 
 export type DueSnapshotRow = Omit<SnapshotRow, 'next_track_date'> & DueSchedule;
 
-export function rssRollDueRows(rows: RssDueRow[], now: Date): DueSnapshotRow[] {
+/** The snapshot + schedule rows a set of feed readings turns into. Zero quota. Pure. */
+export function rssRollDueRows(rows: Array<DueRow & RssReading>, now: Date): DueSnapshotRow[] {
   const today = now.toISOString().split('T')[0];
   return rows.map((r) => {
     const published = new Date(r.published_at);
-    const sched = nextTrackAt(published, now, r.priority_tier);
     return {
       video_id: r.video_id,
       snapshot_date: today,
@@ -157,7 +193,7 @@ export function rssRollDueRows(rows: RssDueRow[], now: Date): DueSnapshotRow[] {
       comment_count: null,
       days_since_published: ageDaysAt(published, now),
       daily_views_rate: null,
-      ...sched,
+      ...nextTrackAt(published, now, r.priority_tier),
     };
   });
 }
@@ -177,8 +213,6 @@ export const DUE_SELECT_SQL = `
      and v.published_at < now() - interval '72 hours'
    order by p.next_track_at asc
    limit $1`;
-
-export interface DueRow { video_id: string; priority_tier: number; published_at: Date | string }
 
 /** Build the snapshot + schedule rows for one API batch. Pure. */
 export function buildDueRows(
