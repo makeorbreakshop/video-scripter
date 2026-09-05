@@ -177,6 +177,8 @@ describe('egress guard: nightly path must not use the metered Supabase REST API'
     'scripts/rss-poll.ts',
     'scripts/rss-retention.ts',
     'lib/rss/poll-policy.ts',
+    'lib/nightly/due-core.ts',
+    'scripts/track-due.ts',
     'lib/rss/retention.ts',
     'scripts/score-videos.ts',
   ];

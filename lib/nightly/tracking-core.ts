@@ -1,4 +1,11 @@
-// Pure logic for the nightly direct-Postgres pipeline.
+// Pure logic for the direct-Postgres tracking pipeline.
+//
+// SCHEDULING MOVED (2026-09-05): the 3 AM nightly is retired. Videos are read on their own
+// clock — view_tracking_priority.next_track_at — drained every 15 minutes by
+// scripts/track-due.ts; see lib/nightly/due-core.ts. TIER_INTERVAL_DAYS below is still the
+// single source of the tier cadences and due-core reads it from here. The date-grained
+// helpers left in this file (nextTrackDate, RSS_ROLL_SQL, the catalogue-slice block) belong to
+// the retired nightly and to lib/view-tracking-service.ts; nothing in the drain path uses them.
 // HARD RULE (enforced by tracking-core.test.ts): nothing in the nightly path
 // may touch the Supabase REST API — its egress is metered and once took down
 // production (2026-08-31 exceed_egress_quota incident). Direct Postgres only.
