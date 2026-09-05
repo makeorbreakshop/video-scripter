@@ -10,7 +10,7 @@ const run = (args: string[]) => { console.log('>', args.join(' ')); try { consol
 // 1. the due view-tracking queue: everything whose next_track_at has come round, inside this
 //    tick's slice of the day's quota. Replaced the 3 AM nightly on 2026-09-05 — a video is now
 //    read on its own clock (last read + its age tier's interval), not on a batch boundary.
-run(['scripts/track-due.ts']); // self-budgeting; bounded to ~5 min so it cannot overrun the tick
+run(['scripts/track-due.ts', '--budget', '5000']); // self-budgeting; bounded to ~5 min so it cannot overrun the tick
 // 2. catalogs for queued jobs (budgeted inside the script)
 run(['scripts/backfill-catalog.ts', '--budget', '9000', '--jobs', '60']); // its own 10K bucket (YOUTUBE_API_KEY_BACKUP) // gap-year catch-up for legacy channels rides this queue
 // 3. channel identity for any tracked channel missing it
