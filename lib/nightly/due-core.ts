@@ -27,8 +27,22 @@ const MS_DAY = 86_400_000;
 /** Age in days at which a video drops to the next sparser tier. */
 export const DUE_TIER_BOUNDARIES = [30, 180, 730] as const;
 
-/** The main-key allowance reserved for tracking; the rest of the 10K stays for app/scoring. */
-export const TRACK_DUE_DAILY_BUDGET = 6000;
+/**
+ * The day's call allowance for the drain. 6,000 was the intent — "leave the rest for the app
+ * and scoring" — but neither bucket actually has 6,000 free, MEASURED 2026-09-05:
+ *
+ *   videos:batchGetStats (10,000/day, where these reads go)
+ *     launch-track already spends 3,000-4,400/day of it   -> ~5,600 free
+ *   main key (10,000/day)
+ *     ingest, discovery and scoring spend ~6,700/day       -> ~3,300 free
+ *
+ * So 4,000 on the batchGetStats bucket: 4,000 + launch-track's 4,400 worst case = 8,400, with
+ * 1,600 of headroom. That is still 200,000 video reads a day, comfortably above the ~166K/day
+ * the tier ladder actually demands once the RSS roll-in has taken its share, and it drains the
+ * 855K backlog in under a week. Raise it with --budget once launch-track's share is known to
+ * have settled.
+ */
+export const TRACK_DUE_DAILY_BUDGET = 4000;
 /** com.mfm.video-scripter-track-drain fires every 15 minutes. */
 export const TICK_INTERVAL_MIN = 15;
 /** One videos.list / batchGetStats call carries 50 ids for 1 unit. */

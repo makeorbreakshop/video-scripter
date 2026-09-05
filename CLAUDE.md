@@ -178,7 +178,8 @@ There is no 3 AM run any more — `com.mfm.video-scripter-view-tracking` is disa
   that reading as its snapshot at zero quota, and never reaches the API pass.
 - **Batch API Calls**: 50 videos per call, on the `videos:batchGetStats` bucket (`videos.list`
   on the main key as fallback)
-- **Flat spend**: `tickBudget()` spreads the day's 6,000-unit tracking allowance over the ticks
+- **Flat spend**: `tickBudget()` spreads the day's tracking allowance (4,000 calls = 200K video
+  reads, sharing the 10K `batchGetStats` bucket with `launch-track`'s 3-4.4K) over the ticks
   remaining in the day instead of burning it in one 3 AM spike. A tick is bounded to ~5 minutes;
   anything left over simply stays due for the next tick.
 - **Oldest-due first**: nothing starves, whatever the size of the backlog.

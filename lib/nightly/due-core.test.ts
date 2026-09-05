@@ -87,8 +87,10 @@ describe('tickBudget — spread the day\'s allowance across the day', () => {
     expect(tickBudget(5900, 6000, 1)).toBe(100);
     expect(tickBudget(5900, 6000, 0)).toBe(100);
   });
-  it('defaults the tracking allowance to 6000 units on a 15-minute tick', () => {
-    expect(TRACK_DUE_DAILY_BUDGET).toBe(6000);
+  it('defaults to an allowance that actually fits the shared batchGetStats bucket', () => {
+    // launch-track spends 3,000-4,400/day of the same 10,000; 4,000 leaves headroom.
+    expect(TRACK_DUE_DAILY_BUDGET).toBe(4000);
+    expect(TRACK_DUE_DAILY_BUDGET + 4400).toBeLessThan(10_000);
     expect(TICK_INTERVAL_MIN).toBe(15);
   });
   it('counts the 15-minute ticks left in the UTC day', () => {
