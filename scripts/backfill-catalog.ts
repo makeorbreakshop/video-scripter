@@ -20,7 +20,7 @@ import { CHANNEL_ID_RE, uploadsPlaylistId } from '../lib/app/channels-core';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
-const CATEGORY = 'backfill';
+const CATEGORY = process.env.YOUTUBE_API_KEY_BACKUP ? 'backfill-backup' : 'backfill'; // ledger is per bucket
 const SYSTEM_USER = '00000000-0000-0000-0000-000000000000';
 const PAGE_SLEEP_MS = 1200;
 
@@ -37,7 +37,12 @@ const MAX_AGE_MS = 365 * 86_400_000; // never walk past a year of uploads
 const BUDGET = parseInt(arg('budget') || '1500', 10);
 const MAX_JOBS = parseInt(arg('jobs') || '5', 10);
 
-const API_KEY = process.env.YOUTUBE_API_KEY!;
+// Backfill runs on the SECOND Data API project when one is configured, so the library walk
+// has its own 10,000-unit day and never competes with tracking, scoring or the app. The
+// per-bucket budget below is read from quota_ledger (category 'backfill'), not from
+// youtube_quota_usage, which is the main key's bucket.
+const ON_BACKUP_KEY = !!process.env.YOUTUBE_API_KEY_BACKUP;
+const API_KEY = (process.env.YOUTUBE_API_KEY_BACKUP || process.env.YOUTUBE_API_KEY)!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -171,17 +176,20 @@ async function backfillChannel(channelId: string, depth: number): Promise<Outcom
 async function logQuota(units: number) {
   if (units <= 0) return;
   await pool.query(`insert into quota_ledger (category, units) values ($1, $2)`, [CATEGORY, units]).catch(() => {});
-  await pool.query(
-    `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
-     on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`,
-    [units]
-  ).catch(() => {});
+  // youtube_quota_usage is the MAIN key's bucket; only charge it when that is the key in use.
+  if (!ON_BACKUP_KEY) {
+    await pool.query(
+      `insert into youtube_quota_usage (date, quota_used) values (current_date, $1)
+       on conflict (date) do update set quota_used = youtube_quota_usage.quota_used + $1`,
+      [units]
+    ).catch(() => {});
+  }
 }
 
 async function main() {
   const spent = await spentToday();
   budgetRemaining = Math.max(0, BUDGET - spent);
-  console.log(`Backfill budget: ${BUDGET} units/day, ${spent} already spent, ${budgetRemaining} available.`);
+  console.log(`Backfill budget: ${BUDGET} units/day on the ${ON_BACKUP_KEY ? 'backup' : 'main'} key, ${spent} already spent, ${budgetRemaining} available.`);
 
   // Single-channel proof run: no queue involved.
   if (ONLY_CHANNEL) {
