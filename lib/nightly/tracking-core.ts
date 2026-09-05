@@ -5,14 +5,53 @@
 
 // DENSE MODE (modeling window, Sept 2026): tiers 0-3 sampled daily to rebuild
 // the envelope/velocity/prediction models on unbiased dense data; archive weekly.
-// Revert to the envelope-derived schedule once models ship.
+// The age-derived schedule (restored 2026-09-05, Brandon: "go"). It had been flattened to daily
+// for every tier under two years while the models were being fit; with v5 shipped and the RSS
+// poller covering each channel's newest 15 videos for free (see RSS_ROLL_SQL), the nightly
+// API read can roll off with age again. Tier 0-1: launch + first month, daily. Tier 2 (~1-6
+// months): every 3 days. Tier 3 (~6 months-2 years): weekly. Tier 4: fortnightly, and the
+// catalogue slice keeps the archive rotating regardless.
 export const TIER_INTERVAL_DAYS: Record<number, number> = {
   0: 1,
   1: 1,
-  2: 1,
-  3: 1,
-  4: 7,
+  2: 3,
+  3: 7,
+  4: 14,
 };
+
+/**
+ * Videos due tonight that the RSS poller already read today. YouTube's channel feed carries a
+ * view count for each of the channel's newest 15 videos, and the poller samples every feed
+ * on every tick (zero quota). For those videos the nightly API read is redundant: the latest
+ * RSS reading of the day becomes tonight's view_snapshots row and the video is parked on its
+ * tier cadence like any other read. Measured 2026-09-05: ~53K of ~145K due videos.
+ */
+export const RSS_ROLL_SQL = `
+  select distinct on (r.video_id) r.video_id, r.views, r.likes, p.priority_tier,
+         (current_date - v.published_at::date) as days_since_published
+    from rss_samples r
+    join view_tracking_priority p on p.video_id = r.video_id
+    join videos v on v.id = r.video_id
+   where r.at > now() - interval '20 hours'
+     and r.views > 0
+     and (p.next_track_date is null or p.next_track_date <= $1)
+   order by r.video_id, r.at desc`;
+
+export interface RssRollRow { video_id: string; views: number; likes: number | null; priority_tier: number; days_since_published: number | null }
+
+/** The snapshot + schedule rows an RSS reading turns into. Pure. */
+export function rssRollRows(rows: RssRollRow[], today: string): SnapshotRow[] {
+  return rows.map((r) => ({
+    video_id: r.video_id,
+    snapshot_date: today,
+    view_count: Number(r.views),
+    like_count: r.likes == null ? null : Number(r.likes),
+    comment_count: null,
+    days_since_published: r.days_since_published == null ? null : Number(r.days_since_published),
+    daily_views_rate: null,
+    next_track_date: nextTrackDate(Number(r.priority_tier), today),
+  }));
+}
 
 export function nextTrackDate(tier: number, today: string): string {
   const days = TIER_INTERVAL_DAYS[tier] ?? 7;
@@ -35,8 +74,8 @@ export interface SnapshotRow {
   video_id: string;
   snapshot_date: string;
   view_count: number;
-  like_count: number;
-  comment_count: number;
+  like_count: number | null;
+  comment_count: number | null;
   days_since_published: number | null;
   daily_views_rate: number | null;
   next_track_date: string;

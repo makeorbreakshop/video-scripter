@@ -15,6 +15,7 @@ import {
   buildSnapshotRows, chunk, TrackedVideo, PrevSnapshot,
   selectCatalogSlice, catalogCycleDays, catalogNextTrackDate,
   CATALOG_MIN_TIER, CATALOG_CANDIDATES_SQL, CATALOG_POOL_SQL,
+  RSS_ROLL_SQL, rssRollRows, type RssRollRow,
 } from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 
@@ -31,6 +32,38 @@ const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 
 const today = new Date().toISOString().split('T')[0];
+
+// Pass 0: videos the RSS poller already read today need no API call. Their latest feed
+// reading becomes tonight's snapshot (never overwriting an API reading for the same day) and
+// they are parked on their tier cadence, so the due list below no longer contains them.
+{
+  const t0 = Date.now();
+  const rss = await pool.query<RssRollRow>(RSS_ROLL_SQL, [today]);
+  const rows = rssRollRows(rss.rows, today);
+  for (const group of chunk(rows, 2000)) {
+    await withDeadlockRetry(async () => {
+      const client = await pool.connect();
+      try {
+        await client.query('begin');
+        const values: any[] = []; const tuples: string[] = [];
+        group.forEach((r, i) => {
+          values.push(r.video_id, r.snapshot_date, r.view_count, r.like_count, r.comment_count, r.days_since_published, r.daily_views_rate);
+          const b = i * 7; tuples.push(`($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7})`);
+        });
+        await client.query(
+          `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published, daily_views_rate)
+           values ${tuples.join(',')} on conflict (video_id, snapshot_date) do nothing`, values);
+        await client.query(
+          `update view_tracking_priority p set last_tracked = $1, next_track_date = x.next_track_date, updated_at = now()
+             from (select unnest($2::text[]) as video_id, unnest($3::date[]) as next_track_date) x
+            where p.video_id = x.video_id`,
+          [today, group.map((r) => r.video_id), group.map((r) => r.next_track_date)]);
+        await client.query('commit');
+      } catch (e) { await client.query('rollback').catch(() => {}); throw e; } finally { client.release(); }
+    });
+  }
+  console.log(`rss: ${rows.length} due videos covered by today's feed readings (0 units) in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+}
 
 const due = await pool.query(
   `select p.video_id, p.priority_tier,
