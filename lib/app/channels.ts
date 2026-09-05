@@ -427,9 +427,12 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
         [v.id, views, likes, comments, sn.publishedAt]
       );
       await q(
-        `insert into view_tracking_priority (video_id, priority_tier, next_track_date)
-         values ($1, 1, current_date + 1) on conflict (video_id) do nothing`,
-        [v.id]
+        // next_track_at is the clock scripts/track-due.ts drains: a brand-new video is tier 1
+        // (daily), so its first read is due one day after it was published.
+        `insert into view_tracking_priority (video_id, priority_tier, next_track_date, next_track_at)
+         values ($1, 1, current_date + 1, $2::timestamptz + interval '1 day')
+         on conflict (video_id) do nothing`,
+        [v.id, sn.publishedAt]
       ).catch(() => {});
       n++;
     } catch (e: any) {

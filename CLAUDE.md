@@ -145,33 +145,55 @@ PINECONE_SUMMARY_INDEX_NAME=
 ### View Tracking System
 
 #### Overview
-The view tracking system monitors video performance over time to enable age-adjusted performance metrics and detect viral content early. It tracks ~100,000 videos daily within YouTube API quota limits.
+The view tracking system monitors video performance over time to enable age-adjusted performance metrics and detect viral content early. Videos are read on a due queue drained every 15 minutes, each on its own clock, within YouTube API quota limits.
 
 #### Database Schema
 - **view_snapshots**: Time-series data for video views, likes, comments
 - **view_tracking_priority**: Priority assignments for tracking frequency
 - **video_performance_trends**: Materialized view with calculated metrics
 
-#### Priority Tiers
-- **Tier 1 (Daily)**: New videos (<30 days) and high performers
-- **Tier 2 (Every 3 days)**: Medium-age videos (30-180 days)
-- **Tier 3 (Weekly)**: Older videos for baseline data
+#### Scheduling — due-based, not nightly (2026-09-05)
+Every video carries its own clock in `view_tracking_priority.next_track_at`:
+
+    next read  = last read + the interval of the tier the video is in AT THAT READ
+    first read = published_at + that same interval   (so an old import is due immediately)
+
+The tier is recomputed from age on every read, so videos roll off to a sparser cadence by
+themselves:
+
+- **Tier 0-1 — daily**: under 30 days old (tier 0 is the launch marker)
+- **Tier 2 — every 3 days**: 30-180 days
+- **Tier 3 — weekly**: 180 days to 2 years
+- **Tier 4 — fortnightly**: over 2 years (this is the old `--catalog` archive rotation; it now
+  reaches the head of the oldest-due ordering on its own, with no separate pass)
+
+`scripts/track-due.ts` drains whatever is due every 15 minutes from `scripts/track-drain.ts`.
+There is no 3 AM run any more — `com.mfm.video-scripter-view-tracking` is disabled and
+`scripts/nightly-view-tracking.ts` is gone. Boundaries and intervals live in
+`lib/nightly/due-core.ts` (`DUE_TIER_BOUNDARIES`, `TIER_INTERVAL_DAYS`); the SQL backfill in
+`sql/add_next_track_at.sql` mirrors them.
 
 #### Key Features
-- **Batch API Calls**: 50 videos per call (2,000 calls = 100,000 videos)
-- **Self-Managing**: Automatic priority adjustments via database triggers
+- **RSS roll-in first**: a due video the free channel-feed poller has read in the last 20h gets
+  that reading as its snapshot at zero quota, and never reaches the API pass.
+- **Batch API Calls**: 50 videos per call, on the `videos:batchGetStats` bucket (`videos.list`
+  on the main key as fallback)
+- **Flat spend**: `tickBudget()` spreads the day's 6,000-unit tracking allowance over the ticks
+  remaining in the day instead of burning it in one 3 AM spike. A tick is bounded to ~5 minutes;
+  anything left over simply stays due for the next tick.
+- **Oldest-due first**: nothing starves, whatever the size of the backlog.
 - **Historical Preservation**: Initial snapshots use import_date, not current date
-- **Manual Triggering**: Dashboard button for daily runs (no automated cron yet)
 
 #### Usage
-1. **Manual Trigger**: Click "Run Daily Tracking" in worker dashboard
-2. **Monitor Progress**: Check `/api/view-tracking/stats` for real-time updates
-3. **View Data**: Query `view_snapshots` table or `video_performance_trends` view
+1. **Automatic**: `com.mfm.video-scripter-track-drain` runs `scripts/track-due.ts` every 15 min
+2. **Manual tick**: `npx tsx scripts/track-due.ts [--budget N] [--dry-run]`
+3. **Monitor Progress**: Check `/api/view-tracking/stats` for real-time updates
+4. **View Data**: Query `view_snapshots` table or `video_performance_trends` view
 
 #### Maintenance
 - **Materialized View Refresh**: pg_cron job runs daily at 2 AM PT
 - **Snapshot Cleanup**: Monthly removal of snapshots >1 year old
-- **Priority Updates**: Automatic via `update_view_tracking_priority_on_video_update` trigger
+- **Priority Updates**: `scripts/track-due.ts` rewrites `priority_tier`/`next_track_at` on every read
 
 ### Key Features
 
