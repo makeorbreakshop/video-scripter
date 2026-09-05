@@ -255,7 +255,7 @@ describe('trackChannel', () => {
       .rejects.toBeInstanceOf(PlanLimitError);
   });
 
-  it('upserts the membership, promotes the lane and queues both jobs', async () => {
+  it('upserts the membership, promotes the lane and queues the catalog job', async () => {
     stubOne({ known: true });
     mq.mockImplementation(async (sql: string) => {
       if (/insert into backfill_jobs/.test(String(sql))) return [{ id: '1' }];
@@ -270,7 +270,8 @@ describe('trackChannel', () => {
     expect(sqlOf(promote)).toContain("lane = 'user'");
     expect(sqlOf(promote)).toContain("when channel_tracking.lane <> 'user' then now()");
     const kinds = callsMatching(/insert into backfill_jobs/).map((c) => c[1][1]);
-    expect(kinds).toEqual(['catalog', 'snapshots']);
+    // Only the catalog kind: nothing drains a 'snapshots' job (retired 2026-09-04).
+    expect(kinds).toEqual(['catalog']);
   });
 
   it('enrolls and fast-syncs a channel we have never seen', async () => {

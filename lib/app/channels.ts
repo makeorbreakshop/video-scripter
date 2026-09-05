@@ -531,13 +531,16 @@ export async function trackChannel(
     }
   }
 
+  // One job kind: the catalog pull (scripts/backfill-catalog.ts), which also writes each video's
+  // first same-day snapshot. A second 'snapshots' kind used to be queued here too; nothing ever
+  // drained it (YouTube has no historical view counts to back-fill), so it was retired 2026-09-04.
   let jobs = 0;
-  for (const kind of ['catalog', 'snapshots'] as const) {
+  {
     const r = await q<{ id: string }>(
       `insert into backfill_jobs (channel_id, kind) values ($1, $2)
        on conflict (channel_id, kind) where status in ('queued','running')
        do nothing returning id`,
-      [channelId, kind]
+      [channelId, 'catalog']
     );
     jobs += r.length;
   }
