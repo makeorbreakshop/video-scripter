@@ -10,7 +10,14 @@ const run = (args: string[]) => { console.log('>', args.join(' ')); try { consol
 // 1. the due view-tracking queue: everything whose next_track_at has come round, inside this
 //    tick's slice of the day's quota. Replaced the 3 AM nightly on 2026-09-05 — a video is now
 //    read on its own clock (last read + its age tier's interval), not on a batch boundary.
-run(['scripts/track-due.ts', '--budget', '5000']); // self-budgeting; bounded to ~5 min so it cannot overrun the tick
+// Three passes over the same due queue, one per quota pool, each bounded to 4 min so the
+// three fit inside the 15-min tick. Budgets: batch = the stats endpoint's own allowance minus
+// launch-track's ~4,300; main = the main key's spare (discovery paused 2026-09-05/06); backup =
+// the second key once the catalog backfill has drained (its budget is per-day, so a tick
+// simply finds nothing left while backfill is still running).
+run(['scripts/track-due.ts', '--pool', 'batch', '--budget', '5000', '--deadline-ms', '240000']);
+run(['scripts/track-due.ts', '--pool', 'main', '--budget', '7000', '--deadline-ms', '240000']);
+run(['scripts/track-due.ts', '--pool', 'backup', '--budget', '8000', '--deadline-ms', '240000']); // self-budgeting; bounded to ~5 min so it cannot overrun the tick
 // 2. catalogs for queued jobs (budgeted inside the script)
 run(['scripts/backfill-catalog.ts', '--budget', '9800', '--jobs', '120']); // its own 10K bucket (YOUTUBE_API_KEY_BACKUP) // gap-year catch-up for legacy channels rides this queue
 // 3. channel identity for any tracked channel missing it

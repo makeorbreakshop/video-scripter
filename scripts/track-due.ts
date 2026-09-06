@@ -35,21 +35,37 @@ const argv = process.argv.slice(2);
 const budgetArg = argv.includes('--budget') ? parseInt(argv[argv.indexOf('--budget') + 1] ?? '', 10) : NaN;
 const DAILY_BUDGET = Number.isFinite(budgetArg) ? budgetArg : TRACK_DUE_DAILY_BUDGET;
 const DRY_RUN = argv.includes('--dry-run');
+// Which quota pool this pass spends. 'batch' = videos:batchGetStats on the main key (its own
+// 10K/day allowance); 'main' = videos.list on the main key; 'backup' = videos.list on the
+// second project's key. track-drain.ts runs one pass per pool in sequence, each with its own
+// budget and ledger line, so spare capacity anywhere drains the same due queue.
+const POOL = (argv.includes('--pool') ? argv[argv.indexOf('--pool') + 1] : 'batch') as 'batch' | 'main' | 'backup';
+if (!['batch', 'main', 'backup'].includes(POOL)) { console.error(`unknown --pool ${POOL}`); process.exit(2); }
+const deadlineArg = argv.includes('--deadline-ms') ? parseInt(argv[argv.indexOf('--deadline-ms') + 1] ?? '', 10) : NaN;
+const DEADLINE_MS = Number.isFinite(deadlineArg) ? deadlineArg : TICK_SOFT_DEADLINE_MS;
 
-const API_KEY = process.env.YOUTUBE_API_KEY!;
+const API_KEY = (POOL === 'backup' ? process.env.YOUTUBE_API_KEY_BACKUP : process.env.YOUTUBE_API_KEY)!;
+if (!API_KEY) { console.log(`pool ${POOL}: no key configured, nothing to do.`); process.exit(0); }
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 const started = Date.now();
 const now = new Date();
 const elapsed = () => Date.now() - started;
-const outOfTime = () => elapsed() > TICK_SOFT_DEADLINE_MS;
+const outOfTime = () => elapsed() > DEADLINE_MS;
 
 // ---------------------------------------------------------------- budget for this tick
 // What tracking has already spent today, from the same ledger the nightly wrote to, so a
 // restart or a manual run cannot double-spend the day.
-const spent = (await pool.query<{ n: number }>(
-  `select coalesce(sum(cost), 0)::int as n from youtube_quota_calls
-    where date = current_date and description like 'track-due%'`
-)).rows[0].n;
+// The backup key is shared with the catalog backfill, which has priority: count its spend
+// against this pool's budget so the two together never exceed the key's day.
+const spent = POOL === 'backup'
+  ? (await pool.query<{ n: number }>(
+      `select coalesce(sum(units), 0)::int as n from quota_ledger
+        where date = current_date and category in ('backfill-backup', 'snapshots-backup')`
+    )).rows[0].n
+  : (await pool.query<{ n: number }>(
+      `select coalesce(sum(cost), 0)::int as n from youtube_quota_calls
+        where date = current_date and description = $1`, [`track-due:${POOL}`]
+    )).rows[0].n;
 const ticksLeft = ticksLeftInDay(now, TICK_INTERVAL_MIN);
 const budget = tickBudget(spent, DAILY_BUDGET, ticksLeft);
 const idCap = idCapForBudget(budget);
@@ -129,12 +145,18 @@ async function processBatch(batch: DueRow[]): Promise<boolean> {
   const ids = batch.map((r) => r.video_id);
   // videos:batchGetStats has its own 10K/day bucket, leaving the main pool for ingest,
   // discovery and scoring; videos.list (main bucket) is the fallback if it ever misbehaves.
-  let res = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos:batchGetStats?part=statistics&id=${ids.join(',')}&key=${API_KEY}`
-  );
-  if (!res.ok && res.status !== 403) {
+  let res: Response;
+  if (POOL === 'batch') {
+    res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos:batchGetStats?part=statistics&id=${ids.join(',')}&key=${API_KEY}`
+    );
+    if (!res.ok && res.status !== 403) {
+      res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`);
+      mainBucketCalls++;
+    }
+  } else {
     res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`);
-    mainBucketCalls++;
+    if (POOL === 'main') mainBucketCalls++;
   }
   apiCalls++;
   if (!res.ok) { console.error(`YouTube API error ${res.status}; stopping this tick.`); return false; }
@@ -167,8 +189,8 @@ if (!DRY_RUN && apiCalls > 0) {
   // share added to youtube_quota_usage, and both buckets split into quota_ledger.
   await pool.query(
     `insert into youtube_quota_calls (date, method, cost, description)
-     select current_date, 'videos.list', 1, 'track-due tick' from generate_series(1, $1)`,
-    [apiCalls]
+     select current_date, 'videos.list', 1, $2 from generate_series(1, $1)`,
+    [apiCalls, `track-due:${POOL}`]
   ).catch((e) => console.warn('quota_calls log skipped:', e.message));
   if (mainBucketCalls > 0) {
     await pool.query(
@@ -177,15 +199,16 @@ if (!DRY_RUN && apiCalls > 0) {
       [mainBucketCalls]
     ).catch((e) => console.warn('quota_usage log skipped:', e.message));
   }
-  await pool.query(`insert into quota_ledger (category, units) values ('snapshots-batch', $1)`,
-    [apiCalls - mainBucketCalls]).catch(() => {});
-  if (mainBucketCalls > 0) {
+  const category = POOL === 'batch' ? 'snapshots-batch' : POOL === 'main' ? 'snapshots' : 'snapshots-backup';
+  await pool.query(`insert into quota_ledger (category, units) values ($1, $2)`,
+    [category, POOL === 'batch' ? apiCalls - mainBucketCalls : apiCalls]).catch(() => {});
+  if (POOL === 'batch' && mainBucketCalls > 0) {
     await pool.query(`insert into quota_ledger (category, units) values ('snapshots', $1)`, [mainBucketCalls]).catch(() => {});
   }
 }
 
 console.log(
-  `tick done in ${(elapsed() / 1000).toFixed(1)}s: due ${dueTotal}, rss-covered ${rssCovered}, ` +
+  `tick [${POOL}] done in ${(elapsed() / 1000).toFixed(1)}s: due ${dueTotal}, rss-covered ${rssCovered}, ` +
   `api ${written} snapshots in ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`
 );
 await pool.end();
