@@ -20,7 +20,7 @@ import { CHANNEL_ID_RE, uploadsPlaylistId } from '../lib/app/channels-core';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 
 const YT = 'https://www.googleapis.com/youtube/v3';
-const CATEGORY = process.env.YOUTUBE_API_KEY_BACKUP ? 'backfill-backup' : 'backfill'; // ledger is per bucket
+const CATEGORY = 'backfill';
 const SYSTEM_USER = '00000000-0000-0000-0000-000000000000';
 const PAGE_SLEEP_MS = 1200;
 
@@ -37,12 +37,11 @@ const MAX_AGE_MS = 365 * 86_400_000; // never walk past a year of uploads
 const BUDGET = parseInt(arg('budget') || '1500', 10);
 const MAX_JOBS = parseInt(arg('jobs') || '5', 10);
 
-// Backfill runs on the SECOND Data API project when one is configured, so the library walk
-// has its own 10,000-unit day and never competes with tracking, scoring or the app. The
-// per-bucket budget below is read from quota_ledger (category 'backfill'), not from
-// youtube_quota_usage, which is the main key's bucket.
-const ON_BACKUP_KEY = !!process.env.YOUTUBE_API_KEY_BACKUP;
-const API_KEY = (process.env.YOUTUBE_API_KEY_BACKUP || process.env.YOUTUBE_API_KEY)!;
+// Backfill runs on the MAIN project. The second project's key (YOUTUBE_API_KEY_BACKUP) is a
+// failover only: YouTube's API Services policies forbid using multiple projects to extend
+// quota, so it is never used to add throughput (reverted 2026-09-06 after one day on it).
+const ON_BACKUP_KEY = false;
+const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

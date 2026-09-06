@@ -44,8 +44,11 @@ if (!['batch', 'main', 'backup'].includes(POOL)) { console.error(`unknown --pool
 const deadlineArg = argv.includes('--deadline-ms') ? parseInt(argv[argv.indexOf('--deadline-ms') + 1] ?? '', 10) : NaN;
 const DEADLINE_MS = Number.isFinite(deadlineArg) ? deadlineArg : TICK_SOFT_DEADLINE_MS;
 
+// 'backup' is retained for a deliberate failover run only; never scheduled (YouTube API Services
+// policies forbid extending quota across projects). The MAIN key is the only scheduled key.
 const API_KEY = (POOL === 'backup' ? process.env.YOUTUBE_API_KEY_BACKUP : process.env.YOUTUBE_API_KEY)!;
 if (!API_KEY) { console.log(`pool ${POOL}: no key configured, nothing to do.`); process.exit(0); }
+if (POOL === 'backup' && !argv.includes('--failover')) { console.log('pool backup is failover-only; pass --failover to use it deliberately.'); process.exit(0); }
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
 const started = Date.now();
 const now = new Date();
