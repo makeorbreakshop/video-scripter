@@ -22,6 +22,8 @@ export const RSS_POLICY = {
   /** LaunchAgent starts jitter by seconds. Avoid missing the third tick and waiting 20m. */
   activeDueSlackSec: 60,
   dormantIntervalSec: 24 * 3600,
+  /** Cadence for a channel whose WebSub lease is verified and unexpired: the push is the detector. */
+  leasedIntervalSec: 24 * 3600,
   /** Back-off on 429/5xx: double, capped. Reset on 200/304. */
   backoffCapSec: 6 * 3600,
   /** Network shape. Raised from 10 to 20 for the 2026-09-03 full-corpus rollout: a full sweep
@@ -53,9 +55,29 @@ export function stateForLastUpload(
   return ageMs < RSS_POLICY.dormantAfterDays * 86_400_000 ? 'active' : 'dormant';
 }
 
-/** Base cadence for a state, in seconds. 'woken' polls as fast as 'active'. */
-export function intervalSecFor(state: RssState): number {
-  return state === 'dormant' ? RSS_POLICY.dormantIntervalSec : RSS_POLICY.activeIntervalSec;
+/**
+ * Base cadence for a state, in seconds.
+ *
+ * DEMOTED 2026-09-06: WebSub push is the primary upload detector (lib/websub/*), so a channel
+ * whose lease is verified and unexpired only needs the daily safety poll — the poll is now a
+ * title/description sweep and a coverage net, not the detector. A channel with no lease, or one
+ * the hub never verified, keeps the old 15-minute cadence so coverage never drops.
+ * 'woken' (a push just arrived) polls at the same cadence as 'active'; the push itself already
+ * cleared rss_last_polled, so the next tick picks it up regardless.
+ */
+export function intervalSecFor(state: RssState, leaseVerified = false): number {
+  if (state === 'dormant') return RSS_POLICY.dormantIntervalSec;
+  return leaseVerified ? RSS_POLICY.leasedIntervalSec : RSS_POLICY.activeIntervalSec;
+}
+
+/**
+ * Feed view counts are no longer stored as data. rss_samples was a second, unsanctioned
+ * readings source next to the Data API's view_samples; since 2026-09-06 the API is the only
+ * source of view readings and this write is off unless RSS_SAMPLES=1 turns it back on for a
+ * one-off investigation.
+ */
+export function rssSamplesEnabled(): boolean {
+  return process.env.RSS_SAMPLES === '1';
 }
 
 export interface ChannelPollState {
@@ -64,14 +86,17 @@ export interface ChannelPollState {
   rss_backoff_until?: Date | string | null;
   /** Back-off override written after a 429/5xx; null once the channel recovers. */
   rss_interval_sec?: number | null;
+  /** A verified, unexpired WebSub lease demotes this channel to the daily cadence. */
+  lease_verified?: boolean;
 }
 
 /** Is this channel allowed to be polled right now? */
 export function isDue(c: ChannelPollState, now: Date = new Date()): boolean {
   if (c.rss_backoff_until && new Date(c.rss_backoff_until).getTime() > now.getTime()) return false;
   if (!c.rss_last_polled) return true; // never polled
-  const interval = c.rss_interval_sec ?? intervalSecFor(c.rss_state);
-  const slack = c.rss_state !== 'dormant' && c.rss_interval_sec == null ? RSS_POLICY.activeDueSlackSec : 0;
+  const interval = c.rss_interval_sec ?? intervalSecFor(c.rss_state, c.lease_verified);
+  const slack = c.rss_state !== 'dormant' && c.rss_interval_sec == null && !c.lease_verified
+    ? RSS_POLICY.activeDueSlackSec : 0;
   return now.getTime() - new Date(c.rss_last_polled).getTime() >= (interval - slack) * MS;
 }
 
@@ -332,13 +357,16 @@ export const SEED_ALL_SQL = `with recursive channels(channel_id) as (
  */
 export const DUE_CHANNELS_SQL = `select c.channel_id, c.rss_state, c.rss_etag, c.rss_body_sha, c.rss_interval_sec
      from channel_rss_state c
+     left join websub_leases l
+       on l.channel_id = c.channel_id and l.last_verified_at is not null and l.lease_expires_at > now()
     where (not $1::boolean or exists (select 1 from watch_subset w where w.channel_id = c.channel_id))
       and (c.rss_backoff_until is null or c.rss_backoff_until <= now())
       and (c.rss_last_polled is null
            or c.rss_last_polled < now() - (coalesce(c.rss_interval_sec,
                 case when c.rss_state = 'dormant' then ${RSS_POLICY.dormantIntervalSec}
+                     when l.channel_id is not null then ${RSS_POLICY.leasedIntervalSec}
                      else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')
-             + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null
+             + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null and l.channel_id is null
                     then interval '${RSS_POLICY.activeDueSlackSec} seconds' else interval '0 seconds' end)
     order by c.rss_last_polled nulls first
     limit $2`;
@@ -346,15 +374,19 @@ export const DUE_CHANNELS_SQL = `select c.channel_id, c.rss_state, c.rss_etag, c
 /** --dry counts, one grouped pass. $1 = subset only. */
 export const STATE_COUNTS_SQL = `select c.rss_state,
           count(*)::int as total,
+          count(l.channel_id)::int as leased,
           count(*) filter (where
             (c.rss_backoff_until is null or c.rss_backoff_until <= now())
             and (c.rss_last_polled is null
                  or c.rss_last_polled < now() - (coalesce(c.rss_interval_sec,
                       case when c.rss_state = 'dormant' then ${RSS_POLICY.dormantIntervalSec}
+                           when l.channel_id is not null then ${RSS_POLICY.leasedIntervalSec}
                            else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')
-                   + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null
+                   + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null and l.channel_id is null
                           then interval '${RSS_POLICY.activeDueSlackSec} seconds' else interval '0 seconds' end))::int as due
      from channel_rss_state c
+     left join websub_leases l
+       on l.channel_id = c.channel_id and l.last_verified_at is not null and l.lease_expires_at > now()
     where (not $1::boolean or exists (select 1 from watch_subset w where w.channel_id = c.channel_id))
     group by 1`;
 

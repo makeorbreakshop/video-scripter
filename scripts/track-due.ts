@@ -7,11 +7,9 @@
 // Each tick:
 //   0. DUE SLICE   — everything with next_track_at <= now(), OLDEST-DUE FIRST so nothing
 //      starves, over-fetched a few times past what the budget can pay for.
-//   1. RSS ROLL-IN — any video in that slice the free channel-feed poller has read in the last
-//      20h gets that reading as its snapshot. Zero quota, and it never reaches the API.
-//   2. DUE READ    — the rest, in 50-id calls, up to this tick's slice of the day's quota
+//   1. DUE READ    — the slice, in 50-id calls, up to this tick's slice of the day's quota
 //      (see tickBudget). Whatever does not fit stays due for the next tick.
-//   3. ARCHIVE     — no separate pass any more. Tier 4 (fortnightly) is scheduled by the same
+//   2. ARCHIVE     — no separate pass any more. Tier 4 (fortnightly) is scheduled by the same
 //      next_track_at as everything else and reaches the head of the oldest-due ordering on its
 //      own, which is what the old --catalog slice was hand-rolling.
 //
@@ -23,10 +21,10 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import {
-  DUE_SELECT_SQL, RSS_FOR_DUE_SQL, buildDueRows, rssRollDueRows, partitionDue, dueFetchCap,
+  DUE_SELECT_SQL, buildDueRows, dueFetchCap,
   tickBudget, ticksLeftInDay, idCapForBudget,
   TRACK_DUE_DAILY_BUDGET, TICK_INTERVAL_MIN, TICK_SOFT_DEADLINE_MS, IDS_PER_CALL,
-  type DueRow, type DueSnapshotRow, type RssReading,
+  type DueRow, type DueSnapshotRow,
 } from '../lib/nightly/due-core';
 import { chunk } from '../lib/nightly/tracking-core';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
@@ -134,14 +132,12 @@ const dueTotal = (await pool.query<{ n: number }>(
 const dueRes = await pool.query<DueRow>(DUE_SELECT_SQL, [dueFetchCap(idCap)]);
 console.log(`due: ${dueTotal} videos overdue, pulled ${dueRes.rows.length} oldest-due for this tick`);
 
-// ---------------------------------------------------------------- pass 1: RSS roll-in
-const rssRes = await pool.query<RssReading>(RSS_FOR_DUE_SQL, [dueRes.rows.map((r) => r.video_id)]);
-const rssMap = new Map(rssRes.rows.map((r) => [r.video_id, r]));
-const { rssRows, apiRows } = partitionDue(dueRes.rows, rssMap, idCap);
-const rssCovered = DRY_RUN ? rssRows.length : await writeRows(rssRollDueRows(rssRows, now), false);
-console.log(`rss: ${rssCovered} of them covered by the feed (0 units); ${apiRows.length} go to the API`);
+// The RSS roll-in pass lived here until 2026-09-06. View readings now come from the Data API
+// only; the channel feed is not read for counts at all. See lib/nightly/due-core.ts.
+const apiRows = dueRes.rows.slice(0, idCap);
+console.log(`api: ${apiRows.length} of them fit this tick's budget`);
 
-// ---------------------------------------------------------------- pass 2: due API read
+// ---------------------------------------------------------------- pass 1: due API read
 let apiCalls = 0, mainBucketCalls = 0, written = 0;
 
 async function processBatch(batch: DueRow[]): Promise<boolean> {
@@ -211,7 +207,7 @@ if (!DRY_RUN && apiCalls > 0) {
 }
 
 console.log(
-  `tick [${POOL}] done in ${(elapsed() / 1000).toFixed(1)}s: due ${dueTotal}, rss-covered ${rssCovered}, ` +
+  `tick [${POOL}] done in ${(elapsed() / 1000).toFixed(1)}s: due ${dueTotal}, ` +
   `api ${written} snapshots in ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`
 );
 await pool.end();
