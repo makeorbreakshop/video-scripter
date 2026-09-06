@@ -146,6 +146,6 @@ describe('SQL reuses the poller write paths', () => {
   });
 
   it('keeps the default lease in sync with the policy', () => {
-    expect(WEBSUB.leaseSeconds).toBe(828_000);
+    expect(WEBSUB.leaseSeconds).toBe(432_000);
   });
 });

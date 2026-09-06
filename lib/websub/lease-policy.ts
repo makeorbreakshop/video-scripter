@@ -25,11 +25,11 @@
 export const WEBSUB = {
   hubUrl: 'https://pubsubhubbub.appspot.com/subscribe',
   /** ~9.5 days. The hub caps YouTube feed leases around 10 days. */
-  leaseSeconds: 828_000,
+  leaseSeconds: 432_000, // the hub grants 5 days to most requests whatever is asked (2026-09-06 research)
   /** Re-subscribe anything expiring inside two days. */
-  renewWithinSec: 2 * 86_400,
+  renewWithinSec: 1 * 86_400, // 80% of a 5-day grant
   /** A failure costs a 20 s stall, so width is what makes a pass finish. Measured harmless. */
-  concurrency: 25,
+  concurrency: 6, // width does not raise acceptance; 25 drew 429s, the hub's real rate signal
   batchPauseMs: 250,
   /** In-request retries buy nothing against a coin flip; the pass loop is the retry. */
   maxAttempts: 1,
@@ -37,7 +37,7 @@ export const WEBSUB = {
   retryCapMs: 180_000,
   requestTimeoutMs: 25_000,
   /** Passes per run over whatever is still unaccepted. 8% per pass => ~30% of a cold corpus. */
-  passes: 4,
+  passes: 1, // one drip per run; the 30-minute schedule supplies the repetition
 } as const;
 
 export function topicUrl(channelId: string): string {
@@ -115,7 +115,9 @@ export const DUE_LEASES_SQL = `select c.channel_id, l.lease_expires_at, l.last_v
        or l.lease_expires_at <= now() + interval '${WEBSUB.renewWithinSec} seconds'
     -- A 202 is only an acknowledgement; the hub's verification GET follows within minutes.
     -- Don't re-ask inside that window or a multi-pass run just repeats itself.
-    and (l.last_hub_status is distinct from 202 or l.last_subscribed_at < now() - interval '1 hour')
+    -- A 503 is usually a false negative: 8 of the first 9 verified leases came from 503s that
+    -- verified 25-63 min later. So the hold-off is status-independent.
+    and (l.last_subscribed_at is null or l.last_subscribed_at < now() - interval '2 hours')
     order by coalesce(l.lease_expires_at, 'epoch'::timestamptz), c.channel_id
     limit $1`;
 

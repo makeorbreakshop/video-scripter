@@ -105,7 +105,7 @@ describe('batch shaping', () => {
   // an in-request retry (20 s a go) is not how this converges.
   it('retries by repeating the pass, not inside the request', () => {
     expect(WEBSUB.maxAttempts).toBe(1);
-    expect(WEBSUB.passes).toBeGreaterThan(1);
+    expect(WEBSUB.passes).toBe(1); // repetition comes from the 30-minute schedule, not from passes
     expect(WEBSUB.requestTimeoutMs).toBeGreaterThan(20_000);
   });
 });
