@@ -100,8 +100,12 @@ describe('batch shaping', () => {
     expect(gs.flat()).toEqual(ids);
   });
 
-  it('paces below the rate that got the source IP throttled', () => {
-    // The 2026-09-01 run was 10-wide with a 300 ms gap: ~33 subscribes/s. It died at 57.
-    expect(WEBSUB.concurrency / (WEBSUB.batchPauseMs / 1000)).toBeLessThanOrEqual(5);
+  // MEASURED 2026-09-06: the hub accepts ~8% of subscribe POSTs and stalls 20 s on the rest,
+  // at every concurrency tried. So a run is several passes over what is still unaccepted, and
+  // an in-request retry (20 s a go) is not how this converges.
+  it('retries by repeating the pass, not inside the request', () => {
+    expect(WEBSUB.maxAttempts).toBe(1);
+    expect(WEBSUB.passes).toBeGreaterThan(1);
+    expect(WEBSUB.requestTimeoutMs).toBeGreaterThan(20_000);
   });
 });
