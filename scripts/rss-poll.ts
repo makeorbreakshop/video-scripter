@@ -378,9 +378,9 @@ log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} al
 
 const t2 = Date.now();
 // Feed view counts are no longer stored as data (2026-09-06): view readings come from the Data
-// API only. RSS_SAMPLES=1 turns the free trace back on for a one-off investigation.
+// Feed view samples are ON by default (they are the 15-minute readings past the launch window); RSS_SAMPLES=0 turns them off.
 const storeSamples = rssSamplesEnabled();
-if (!storeSamples) log('rss_samples writes disabled (set RSS_SAMPLES=1 to re-enable)');
+if (!storeSamples) log('rss_samples writes disabled (RSS_SAMPLES=0)');
 let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
 let sampled = 0, skippedSamples = 0;
 const diffedChannels = new Set<string>();
