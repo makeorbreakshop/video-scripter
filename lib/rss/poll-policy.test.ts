@@ -396,9 +396,9 @@ describe('spreading the active set across its three five-minute ticks', () => {
 import { intervalSecFor as intervalSecFor2, RSS_POLICY as POLICY2, DUE_CHANNELS_SQL as DUE, rssSamplesEnabled } from './poll-policy';
 
 describe('poll cadence is set by the WebSub lease, not by the channel alone', () => {
-  it('polls a channel with a verified lease once a day', () => {
-    expect(intervalSecFor2('active', true)).toBe(24 * 3600);
-    expect(intervalSecFor2('woken', true)).toBe(24 * 3600);
+  it('keeps the 15-minute cadence even with a verified lease (2026-09-06: feed readings are the fast analytics source)', () => {
+    expect(intervalSecFor2('active', true)).toBe(15 * 60);
+    expect(intervalSecFor2('woken', true)).toBe(15 * 60);
   });
 
   it('keeps the 15-minute cadence when the lease is missing or unverified, so coverage never drops', () => {
@@ -415,24 +415,23 @@ describe('poll cadence is set by the WebSub lease, not by the channel alone', ()
     expect(intervalSecFor2('active')).toBe(POLICY2.activeIntervalSec);
   });
 
-  it('the due-channel SQL applies the lease cadence in the database too', () => {
-    expect(DUE).toMatch(/websub_leases/);
-    expect(DUE).toMatch(/last_verified_at is not null/);
-    expect(DUE).toMatch(/lease_expires_at > now\(\)/);
+  it('the due-channel SQL does not slow a channel down for having a lease', () => {
+    expect(DUE).not.toMatch(/leasedIntervalSec|86400\b.*l\.channel_id/);
+    expect(DUE).toMatch(new RegExp(`else ${POLICY2.activeIntervalSec} end`));
   });
 });
 
-describe('rss_samples writes are off unless explicitly re-enabled', () => {
+describe('rss_samples writes are on unless explicitly disabled', () => {
   const prev = process.env.RSS_SAMPLES;
   afterEach(() => { if (prev === undefined) delete process.env.RSS_SAMPLES; else process.env.RSS_SAMPLES = prev; });
 
-  it('is off by default', () => {
+  it('is on by default', () => {
     delete process.env.RSS_SAMPLES;
-    expect(rssSamplesEnabled()).toBe(false);
+    expect(rssSamplesEnabled()).toBe(true);
   });
 
-  it('turns on with RSS_SAMPLES=1', () => {
-    process.env.RSS_SAMPLES = '1';
-    expect(rssSamplesEnabled()).toBe(true);
+  it('turns off with RSS_SAMPLES=0', () => {
+    process.env.RSS_SAMPLES = '0';
+    expect(rssSamplesEnabled()).toBe(false);
   });
 });

@@ -58,26 +58,23 @@ export function stateForLastUpload(
 /**
  * Base cadence for a state, in seconds.
  *
- * DEMOTED 2026-09-06: WebSub push is the primary upload detector (lib/websub/*), so a channel
- * whose lease is verified and unexpired only needs the daily safety poll — the poll is now a
- * title/description sweep and a coverage net, not the detector. A channel with no lease, or one
- * the hub never verified, keeps the old 15-minute cadence so coverage never drops.
- * 'woken' (a push just arrived) polls at the same cadence as 'active'; the push itself already
- * cleared rss_last_polled, so the next tick picks it up regardless.
+ * 2026-09-06: the 15-minute cadence stays for every active channel regardless of its WebSub
+ * lease (Brandon: the feed readings are how analytics stay fast beyond the launch window).
+ * WebSub runs alongside as a second detector; a verified lease no longer demotes the poll.
+ * `leaseVerified` is accepted and ignored so callers need not change.
  */
-export function intervalSecFor(state: RssState, leaseVerified = false): number {
+export function intervalSecFor(state: RssState, _leaseVerified = false): number {
   if (state === 'dormant') return RSS_POLICY.dormantIntervalSec;
-  return leaseVerified ? RSS_POLICY.leasedIntervalSec : RSS_POLICY.activeIntervalSec;
+  return RSS_POLICY.activeIntervalSec;
 }
 
 /**
- * Feed view counts are no longer stored as data. rss_samples was a second, unsanctioned
- * readings source next to the Data API's view_samples; since 2026-09-06 the API is the only
- * source of view readings and this write is off unless RSS_SAMPLES=1 turns it back on for a
- * one-off investigation.
+ * Feed view counts ARE stored as data (rss_samples): they are the free 15-minute readings on
+ * each channel's newest 15 videos, which is what keeps analytics fast past the 72-hour launch
+ * window. On by default; RSS_SAMPLES=0 turns the write off.
  */
 export function rssSamplesEnabled(): boolean {
-  return process.env.RSS_SAMPLES === '1';
+  return process.env.RSS_SAMPLES !== '0';
 }
 
 export interface ChannelPollState {
@@ -364,9 +361,8 @@ export const DUE_CHANNELS_SQL = `select c.channel_id, c.rss_state, c.rss_etag, c
       and (c.rss_last_polled is null
            or c.rss_last_polled < now() - (coalesce(c.rss_interval_sec,
                 case when c.rss_state = 'dormant' then ${RSS_POLICY.dormantIntervalSec}
-                     when l.channel_id is not null then ${RSS_POLICY.leasedIntervalSec}
                      else ${RSS_POLICY.activeIntervalSec} end) * interval '1 second')
-             + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null and l.channel_id is null
+             + case when c.rss_state <> 'dormant' and c.rss_interval_sec is null
                     then interval '${RSS_POLICY.activeDueSlackSec} seconds' else interval '0 seconds' end)
     order by c.rss_last_polled nulls first
     limit $2`;
