@@ -6,13 +6,14 @@
 //   default  renew mode: only channels with no lease, no verification, or expiring within 2 days
 //   --all    every channel in channel_rss_state regardless of lease state
 //
-// ROOT CAUSE OF THE 2026-09-01 RUN (57 accepted / 968 failed): pubsubhubbub.appspot.com
-// throttles the source IP and then answers EVERY POST with "503 Transient error; please try
-// again later" + Retry-After: 120 (reproduced 2026-09-06 with three different callbacks and
-// both verify modes). The old script sent 10-wide bursts 300 ms apart (~33 req/s), had no
-// retry for 503, and wrote its per-channel reasons to stderr — which the LaunchAgent did not
-// capture. Now: 2.5 req/s, Retry-After-aware retries, and every hub status + body persisted
-// to websub_leases.
+// ROOT CAUSE OF THE 2026-09-01 RUN (57 accepted / 968 failed), measured 2026-09-06: the hub
+// itself accepts only ~8% of subscribe POSTs. The rest stall for exactly 20.2 s and come back
+// "503 Transient error; please try again later". Varying concurrency, callback, topic form,
+// hub.verify, HTTP version and User-Agent changes nothing (see lib/websub/lease-policy.ts), and
+// 57/1,025 is the same 5.6% rate. The old script simply had no way to see or survive that: no
+// retry, no lease table, and its per-channel reasons went to stderr, which the LaunchAgent did
+// not capture. Now: several passes over whatever is still unaccepted, every hub status and body
+// persisted, and the daily LaunchAgent keeps converging.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
@@ -26,6 +27,8 @@ const all = args.includes('--all');
 const dry = args.includes('--dry');
 const limitArg = args.indexOf('--limit');
 const limit = limitArg >= 0 ? parseInt(args[limitArg + 1], 10) : 100_000;
+const passArg = args.indexOf('--passes');
+const passes = passArg >= 0 ? parseInt(args[passArg + 1], 10) : WEBSUB.passes;
 
 const CALLBACK = process.env.WEBSUB_CALLBACK;
 const SECRET = process.env.WEBSUB_SECRET || '';
@@ -35,11 +38,21 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 })
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const ALL_SQL = `select channel_id from channel_rss_state order by channel_id limit $1`;
-const { rows } = await pool.query(all ? ALL_SQL : DUE_LEASES_SQL, [limit]);
-const channels: string[] = rows.map((r: any) => r.channel_id);
-log(`${all ? 'subscribing' : 'renewing'} ${channels.length} channels via ${CALLBACK}${SECRET ? ' (signed)' : ''}`);
-if (dry || !channels.length) { await pool.end(); process.exit(0); }
+// --all still means "every channel that is not already on a live lease": a verified, unexpired
+// lease is exactly what we would be asking the hub to give us again.
+const ALL_SQL = `select c.channel_id from channel_rss_state c
+     left join websub_leases l on l.channel_id = c.channel_id
+    where c.channel_id like 'UC%'
+      and (l.channel_id is null or l.last_verified_at is null or l.lease_expires_at <= now())
+      -- A 202 is only an acknowledgement; the hub's verification GET follows within minutes.
+      -- Don't re-ask inside that window or a multi-pass run just repeats itself.
+      and (l.last_hub_status is distinct from 202 or l.last_subscribed_at < now() - interval '1 hour')
+    order by c.channel_id limit $1`;
+
+async function select(): Promise<string[]> {
+  const { rows } = await pool.query(all ? ALL_SQL : DUE_LEASES_SQL, [limit]);
+  return rows.map((r: any) => r.channel_id).filter((c: string) => /^UC[A-Za-z0-9_-]{22}$/.test(c));
+}
 
 interface Attempt { channel_id: string; status: number | null; body: string }
 
@@ -80,19 +93,30 @@ async function record(attempts: Attempt[]): Promise<void> {
   ]);
 }
 
-let ok = 0, fail = 0;
-const groups = batches(channels, WEBSUB.concurrency);
-for (let i = 0; i < groups.length; i++) {
-  if (i > 0) await sleep(WEBSUB.batchPauseMs);
-  const attempts = await Promise.all(groups[i].map(subscribe));
-  for (const a of attempts) {
-    if (isHubAccepted(a.status ?? 0)) ok++;
-    else { fail++; console.error(`REJECTED ${a.channel_id}: HTTP ${a.status ?? 'network'} ${a.body}`); }
+let totalOk = 0;
+for (let pass = 1; pass <= passes; pass++) {
+  const channels = await select();
+  log(`pass ${pass}/${passes}: ${channels.length} channels still without a live lease, via ${CALLBACK}${SECRET ? ' (signed)' : ''}`);
+  if (dry || !channels.length) break;
+  let ok = 0, fail = 0;
+  const groups = batches(channels, WEBSUB.concurrency);
+  for (let i = 0; i < groups.length; i++) {
+    if (i > 0) await sleep(WEBSUB.batchPauseMs);
+    const attempts = await Promise.all(groups[i].map(subscribe));
+    for (const a of attempts) {
+      if (isHubAccepted(a.status ?? 0)) ok++;
+      else { fail++; console.error(`REJECTED ${a.channel_id}: HTTP ${a.status ?? 'network'} ${a.body}`); }
+    }
+    await record(attempts);
+    if (i % 20 === 0 || i === groups.length - 1) {
+      log(`  pass ${pass}: ${Math.min((i + 1) * WEBSUB.concurrency, channels.length)}/${channels.length} — ${ok} accepted, ${fail} rejected`);
+    }
   }
-  await record(attempts);
-  if (i % 20 === 0 || i === groups.length - 1) {
-    log(`  ${(i + 1) * WEBSUB.concurrency > channels.length ? channels.length : (i + 1) * WEBSUB.concurrency}/${channels.length} — ${ok} accepted, ${fail} rejected`);
-  }
+  totalOk += ok;
+  log(`pass ${pass} done: ${ok} accepted, ${fail} rejected (hub acceptance has measured ~8%; that is why there are passes)`);
 }
-log(`Done. ${ok} accepted, ${fail} failed. (acceptance is not verification: the hub GETs the callback afterwards; watch websub_leases.last_verified_at)`);
+const { rows: live } = await pool.query(
+  `select count(*)::int as n from websub_leases where last_verified_at is not null and lease_expires_at > now()`);
+log(`Done. ${totalOk} accepted across ${passes} passes; ${live[0].n} channels now hold a verified, unexpired lease.`);
+log('(acceptance is not verification: the hub GETs the callback afterwards and the receiver stamps last_verified_at)');
 await pool.end();

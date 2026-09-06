@@ -7,13 +7,20 @@
 // channels have a live push subscription and may therefore be polled once a day instead of
 // every 15 minutes.
 //
-// MEASURED 2026-09-06: pubsubhubbub.appspot.com answers POST /subscribe with
-// "503 Transient error; please try again later" + Retry-After: 120 once the source IP has been
-// throttled, and it answers EVERY subsequent POST that way regardless of callback or verify
-// mode. The 2026-09-01 run (10-wide, 300 ms between batches ≈ 33 req/s) got 57 accepted and
-// 968 x 503 with no retry and no stderr capture in the LaunchAgent — that is the whole of the
-// "968 failures". Hence: slow pacing, Retry-After-aware retries, and the status + body of every
-// attempt written to websub_leases.
+// MEASURED 2026-09-06, and this is the root cause of the "968 failures":
+// pubsubhubbub.appspot.com answers most POST /subscribe requests by stalling for exactly 20.2 s
+// and then returning "503 Transient error; please try again later". An accepted subscribe comes
+// back 202 in ~0.3 s. Sampling 12 random corpus channels one at a time gave 1 x 202 and
+// 11 x 503 — an 8% acceptance rate, statistically the same as the 57/1,025 (5.6%) the 2026-09-01
+// 10-wide run got. The rate does not move with concurrency, callback, topic form, hub.verify
+// mode, HTTP version or User-Agent (all varied and measured), so it is neither our request shape
+// nor our pacing: the hub's own synchronous topic fetch is timing out. GET on the same host is a
+// fast 200 throughout.
+//
+// What follows from that: acceptance is a coin flip, so the only thing that converges is
+// REPEATED PASSES. Concurrency is safe to raise (the failure is a hub-side stall, not a rate
+// limit — a limiter would say 429), in-request retries are not worth their 20 s each, and every
+// attempt's status and body is written to websub_leases so the next pass can see what happened.
 
 export const WEBSUB = {
   hubUrl: 'https://pubsubhubbub.appspot.com/subscribe',
@@ -21,13 +28,16 @@ export const WEBSUB = {
   leaseSeconds: 828_000,
   /** Re-subscribe anything expiring inside two days. */
   renewWithinSec: 2 * 86_400,
-  /** Pacing: 5 in flight, 2 s between groups => 2.5 req/s sustained. */
-  concurrency: 5,
-  batchPauseMs: 2_000,
-  maxAttempts: 4,
+  /** A failure costs a 20 s stall, so width is what makes a pass finish. Measured harmless. */
+  concurrency: 25,
+  batchPauseMs: 250,
+  /** In-request retries buy nothing against a coin flip; the pass loop is the retry. */
+  maxAttempts: 1,
   retryBaseMs: 5_000,
   retryCapMs: 180_000,
-  requestTimeoutMs: 20_000,
+  requestTimeoutMs: 25_000,
+  /** Passes per run over whatever is still unaccepted. 8% per pass => ~30% of a cold corpus. */
+  passes: 4,
 } as const;
 
 export function topicUrl(channelId: string): string {
@@ -103,6 +113,9 @@ export const DUE_LEASES_SQL = `select c.channel_id, l.lease_expires_at, l.last_v
        or l.last_verified_at is null
        or l.lease_expires_at is null
        or l.lease_expires_at <= now() + interval '${WEBSUB.renewWithinSec} seconds'
+    -- A 202 is only an acknowledgement; the hub's verification GET follows within minutes.
+    -- Don't re-ask inside that window or a multi-pass run just repeats itself.
+    and (l.last_hub_status is distinct from 202 or l.last_subscribed_at < now() - interval '1 hour')
     order by coalesce(l.lease_expires_at, 'epoch'::timestamptz), c.channel_id
     limit $1`;
 
