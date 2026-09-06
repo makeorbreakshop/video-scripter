@@ -391,3 +391,48 @@ describe('spreading the active set across its three five-minute ticks', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------- WebSub demotion (2026-09-06)
+import { intervalSecFor as intervalSecFor2, RSS_POLICY as POLICY2, DUE_CHANNELS_SQL as DUE, rssSamplesEnabled } from './poll-policy';
+
+describe('poll cadence is set by the WebSub lease, not by the channel alone', () => {
+  it('polls a channel with a verified lease once a day', () => {
+    expect(intervalSecFor2('active', true)).toBe(24 * 3600);
+    expect(intervalSecFor2('woken', true)).toBe(24 * 3600);
+  });
+
+  it('keeps the 15-minute cadence when the lease is missing or unverified, so coverage never drops', () => {
+    expect(intervalSecFor2('active', false)).toBe(15 * 60);
+    expect(intervalSecFor2('woken', false)).toBe(15 * 60);
+  });
+
+  it('leaves dormant channels on their daily safety poll either way', () => {
+    expect(intervalSecFor2('dormant', true)).toBe(24 * 3600);
+    expect(intervalSecFor2('dormant', false)).toBe(24 * 3600);
+  });
+
+  it('defaults to the unleased cadence when nothing is known', () => {
+    expect(intervalSecFor2('active')).toBe(POLICY2.activeIntervalSec);
+  });
+
+  it('the due-channel SQL applies the lease cadence in the database too', () => {
+    expect(DUE).toMatch(/websub_leases/);
+    expect(DUE).toMatch(/last_verified_at is not null/);
+    expect(DUE).toMatch(/lease_expires_at > now\(\)/);
+  });
+});
+
+describe('rss_samples writes are off unless explicitly re-enabled', () => {
+  const prev = process.env.RSS_SAMPLES;
+  afterEach(() => { if (prev === undefined) delete process.env.RSS_SAMPLES; else process.env.RSS_SAMPLES = prev; });
+
+  it('is off by default', () => {
+    delete process.env.RSS_SAMPLES;
+    expect(rssSamplesEnabled()).toBe(false);
+  });
+
+  it('turns on with RSS_SAMPLES=1', () => {
+    process.env.RSS_SAMPLES = '1';
+    expect(rssSamplesEnabled()).toBe(true);
+  });
+});

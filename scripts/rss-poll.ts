@@ -46,6 +46,7 @@ import {
   isNewUpload,
   unknownEntryPlan,
   shouldStoreSample,
+  rssSamplesEnabled,
   completedChannelRows,
   LAST_SAMPLES_SQL,
   SEED_SUBSET_SQL,
@@ -355,7 +356,7 @@ for (const part of chunk(allIds, CHUNK)) {
                  where video_id = any($1) order by video_id, version desc`, [part]),
     // The change-based rss_samples dedupe (shouldStoreSample). ONE set-based read per chunk,
     // in the snapshot phase — never a per-channel query inside the fetch loop.
-    pool.query(LAST_SAMPLES_SQL, [part]),
+    rssSamplesEnabled() ? pool.query(LAST_SAMPLES_SQL, [part]) : Promise.resolve({ rows: [] as any[] }),
   ]);
   for (const r of v.rows) snap.set(r.id, { title: r.title, description: null, published_at: r.published_at, title_observed_at: r.title_observed_at });
   for (const r of d.rows) { const s = snap.get(r.video_id); if (s) { s.descVersion = r.version; s.descSha = r.sha256; } }
@@ -376,6 +377,10 @@ log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} al
 // ---------------------------------------------------------------- phase 3: diff, in memory
 
 const t2 = Date.now();
+// Feed view counts are no longer stored as data (2026-09-06): view readings come from the Data
+// API only. RSS_SAMPLES=1 turns the free trace back on for a one-off investigation.
+const storeSamples = rssSamplesEnabled();
+if (!storeSamples) log('rss_samples writes disabled (set RSS_SAMPLES=1 to re-enable)');
 let titleChanges = 0, titleSyncs = 0, descChanges = 0, skippedOld = 0;
 let sampled = 0, skippedSamples = 0;
 const diffedChannels = new Set<string>();
@@ -399,14 +404,14 @@ for (const f of snapshotComplete ? fetched : []) {
       const plan = unknownEntryPlan(e, observedAt, lastSamples.get(e.video_id));
       if (plan.queue) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
       else skippedOld++;
-      if (plan.sample) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
+      if (storeSamples && plan.sample) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
       continue;
     }
 
     // Free stats trace for EVERY entry the feed carries, deduped on change rather than on age
     // (shouldStoreSample). The old 30-day gate threw away the back-catalogue readings the
     // long-tail fit has no data for, and still wrote a repeat row every tick for young videos.
-    if (shouldStoreSample(lastSamples.get(e.video_id), e.views, observedAt)) {
+    if (storeSamples && shouldStoreSample(lastSamples.get(e.video_id), e.views, observedAt)) {
       buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes });
       sampled++;
     } else {

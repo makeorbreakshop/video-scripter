@@ -137,80 +137,13 @@ export function dueFetchCap(apiIdCap: number): number {
 
 export interface DueRow { video_id: string; priority_tier: number; published_at: Date | string }
 
-// ---------------------------------------------------------------- RSS roll-in
-/**
- * Pass 0 of every tick. YouTube's channel feed carries a view count for the newest 15 videos of
- * each channel and the RSS poller samples every feed on every tick at zero quota, so a due
- * video with a recent feed reading needs no API call at all: the reading becomes its snapshot
- * and it is rescheduled exactly as an API read would have rescheduled it.
- *
- * DRIVEN FROM THE DUE BATCH, not from the feed table. The nightly asked rss_samples for its
- * whole 20-hour window and joined that to the due list; MEASURED 2026-09-05 that is a 31-second
- * plan — a 1.3M-row parallel scan of rss_samples plus a 13MB external-merge sort. Once a night
- * that was tolerable; ninety-six times a day it is exactly the IO this database has had
- * incidents over. Probing (video_id, at) for the tick's own bounded slice of due ids instead
- * makes the cost proportional to the tick, and it covers precisely the videos whose quota the
- * roll-in is there to save.
- *
- * LATERAL, not `where video_id = any($1)`: with an id list the planner still preferred
- * idx_rss_samples_at and applied the ids as a filter over the whole window (6.8s, 1.2M buffers,
- * MEASURED 2026-09-05). unnest + lateral forces one rss_samples_pkey (video_id, at) probe per
- * due id, which is what makes this proportional to the tick rather than to the feed.
- * $1 = the tick's due video ids.
- */
-export const RSS_FOR_DUE_SQL = `
-  select x.video_id, s.views, s.likes
-    from unnest($1::text[]) as x(video_id)
-   cross join lateral (
-     select r.views, r.likes
-       from rss_samples r
-      where r.video_id = x.video_id
-        and r.at > now() - interval '20 hours'
-        and r.views > 0
-      order by r.at desc
-      limit 1
-   ) s`;
-
-export interface RssReading { video_id: string; views: number; likes: number | null }
-
-/**
- * Split the tick's due slice: everything the feed already covers is free, and the API budget is
- * spent on the rest, still oldest-due first. Pure.
- */
-export function partitionDue(
-  due: DueRow[],
-  rss: Map<string, RssReading>,
-  apiIdCap: number
-): { rssRows: Array<DueRow & RssReading>; apiRows: DueRow[] } {
-  const rssRows: Array<DueRow & RssReading> = [];
-  const apiRows: DueRow[] = [];
-  for (const row of due) {
-    const reading = rss.get(row.video_id);
-    if (reading) rssRows.push({ ...row, ...reading });
-    else if (apiRows.length < apiIdCap) apiRows.push(row);
-  }
-  return { rssRows, apiRows };
-}
+// The RSS roll-in lived here until 2026-09-06. It turned a channel-feed view count into a due
+// video's daily snapshot at zero quota. Removed with the feed poller's demotion: YouTube's
+// robots.txt disallows /feeds/videos.xml and its terms forbid automated access outside the API,
+// and view_samples from videos.list was already the source of truth for scoring. Every due
+// video is an API read again — measured cost of the change is ~+1,100 units/day.
 
 export type DueSnapshotRow = Omit<SnapshotRow, 'next_track_date'> & DueSchedule;
-
-/** The snapshot + schedule rows a set of feed readings turns into. Zero quota. Pure. */
-export function rssRollDueRows(rows: Array<DueRow & RssReading>, now: Date): DueSnapshotRow[] {
-  const today = now.toISOString().split('T')[0];
-  return rows.map((r) => {
-    const published = new Date(r.published_at);
-    return {
-      video_id: r.video_id,
-      snapshot_date: today,
-      view_count: clampCount(Number(r.views)),
-      like_count: r.likes == null ? null : clampCount(Number(r.likes)),
-      comment_count: null,
-      days_since_published: ageDaysAt(published, now),
-      daily_views_rate: null,
-      ...nextTrackAt(published, now, r.priority_tier),
-    };
-  });
-}
 
 // ---------------------------------------------------------------- API due select
 /**
