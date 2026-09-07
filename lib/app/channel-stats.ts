@@ -8,6 +8,7 @@
 // Direct Postgres only (lib/admin/db.ts) — never supabase-js (2026-08-31 org-wide egress
 // incident).
 import { q } from '../admin/db';
+import { currentBaselineSql } from './channel-baseline';
 
 /**
  * Recompute and upsert channel_stats. Pass the channels an ingest/scoring run touched;
@@ -58,7 +59,11 @@ export function refreshChannelStatsSql(scoped: boolean): string {
             from videos vv where vv.channel_id = c.channel_id
        ) v on true
        left join lateral (
-          select percentile_cont(0.5) within group (order by vs.baseline) as baseline,
+          -- baseline is the channel's normal NOW: C(30) from the newest scored long-form video
+          -- (lib/app/channel-baseline.ts). It was a lifetime median over every score row, which
+          -- misreported a third of channels by more than 2x. outliers is a count over the
+          -- channel's HISTORY and is deliberately unchanged.
+          select ${currentBaselineSql('c.channel_id')} as baseline,
                  count(*) filter (where vs.score >= 2 and vs.confidence <> 'insufficient')::int as outliers
             from video_scores vs where vs.channel_id = c.channel_id
        ) s on true

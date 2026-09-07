@@ -7,6 +7,7 @@
 import { q, one } from '../admin/db';
 import { versionThumbUrl } from './video-page';
 import { longformSql } from '../scoring/longform';
+import { currentBaselineSql } from './channel-baseline';
 
 export type ChannelHeader = {
   channelId: string;
@@ -85,9 +86,9 @@ export async function channelHeader(channelId: string): Promise<ChannelHeader | 
             max(cm.subscriber_count) as subscriber_count,
             min(v.import_date) as tracked_since,
             coalesce(max(cs.video_count), count(*)::int) as video_count,
-            coalesce(max(cs.baseline),
-                     (select percentile_cont(0.5) within group (order by s.baseline)
-                        from video_scores s where s.channel_id = $1 and s.baseline is not null)) as baseline,
+            -- The channel's normal NOW. One definition, shared with channel_stats.baseline so
+            -- the stored value and this fallback cannot mean different things.
+            coalesce(max(cs.baseline), ${currentBaselineSql('$1')}) as baseline,
             (select count(*)::int from video_scores s
               where s.channel_id = $1 and s.score is not null and s.confidence <> 'insufficient') as scored_count,
             (select count(*)::int from video_scores s
