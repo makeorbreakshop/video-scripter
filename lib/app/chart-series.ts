@@ -20,7 +20,8 @@ export type SeriesKind = 'measured' | 'implied' | 'forecast';
  * five). The chart draws the inner solid and the outer as a fainter edge, so the reader sees the
  * likely case without being told the tail does not exist.
  */
-export type SeriesPoint = { day: number; views: number; kind: SeriesKind; interpolated?: boolean; band?: ForecastBand };
+type TimedActual = { day: number; views: number; timeBasis?: string; receivedAt?: string | Date };
+export type SeriesPoint = { timeBasis?: string; receivedAt?: string | Date; day: number; views: number; kind: SeriesKind; interpolated?: boolean; band?: ForecastBand };
 
 /** A symmetric log range, for the segments whose uncertainty is not a fitted quantile. */
 const sym = (v: number, sigma: number): ForecastBand =>
@@ -28,7 +29,7 @@ const sym = (v: number, sigma: number): ForecastBand =>
 
 export interface BuildSeriesInput {
   /** The video's real measurements, in any order; days are days since publish. */
-  actuals: { day: number; views: number }[];
+  actuals: TimedActual[];
   baseline: number | null | undefined;
   est30: number | null | undefined;
   mult: Mult;
@@ -89,13 +90,13 @@ function shapeFn(baseline: number | null | undefined, mult: Mult, lt: Longtail |
   return (d: number) => lg(d);
 }
 
-function dedupeActuals(actuals: { day: number; views: number }[]) {
-  const byDay = new Map<number, number>();
+function dedupeActuals(actuals: TimedActual[]) {
+  const byDay = new Map<number, TimedActual>();
   for (const a of actuals) {
     if (!Number.isFinite(a.day) || a.day < 0 || !(a.views >= 0) || !Number.isFinite(a.views)) continue;
-    byDay.set(a.day, a.views);
+    byDay.set(a.day, a);
   }
-  return [...byDay.entries()].map(([day, views]) => ({ day, views })).sort((a, b) => a.day - b.day);
+  return [...byDay.values()].sort((a, b) => a.day - b.day);
 }
 
 /** The days the series is sampled at: every integer day, the real measurements, and a launch grid. */
@@ -129,7 +130,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   if (!acts.length) return [];
   const shape = shapeFn(input.baseline, mult, lt);
   const days = seriesDays(horizonDay, acts.map((a) => a.day));
-  const byDay = new Map(acts.map((a) => [a.day, a.views] as const));
+  const byDay = new Map(acts.map((a) => [a.day, a] as const));
 
   const first = acts[0];
   const last = acts[acts.length - 1];
@@ -144,7 +145,7 @@ export function buildSeries(input: BuildSeriesInput): SeriesPoint[] {
   const out: SeriesPoint[] = [];
   for (const day of days) {
     if (byDay.has(day)) {
-      out.push({ day, views: byDay.get(day)!, kind: 'measured' });
+      out.push({ ...byDay.get(day)!, kind: 'measured' });
       continue;
     }
 

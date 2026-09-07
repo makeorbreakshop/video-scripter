@@ -23,7 +23,7 @@ import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
 import { readStatsResponse } from '../lib/nightly/stats-response';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
 import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
-import { LAST_SAMPLES_SQL } from '../lib/rss/poll-policy';
+import { CURRENT_RSS_RESPONSES_SQL } from '../lib/rss/current-response';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
 // 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
@@ -159,7 +159,7 @@ type RssRow = { video_id: string; at: string; views: number | null };
 const candidates = due.rows as DueRow[];
 const candidateIds = candidates.map((r) => r.video_id);
 const rssRows: RssRow[] = candidateIds.length
-  ? (await pool.query(LAST_SAMPLES_SQL, [candidateIds])).rows
+  ? (await pool.query(CURRENT_RSS_RESPONSES_SQL, [candidateIds, candidates.map(r => r.channel_id)])).rows
   : [];
 const rssById = new Map(rssRows.map((r) => [r.video_id, r]));
 const now = new Date();

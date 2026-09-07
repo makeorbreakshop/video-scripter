@@ -95,16 +95,16 @@ async function records(ids: string[]): Promise<Map<string, Obs[]>> {
   for (const group of chunk(ids, 2000)) {
     const rows = await q(
       `with src as (
-          select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views, 2 as rank
+          select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views, 2 as rank, null::timestamptz as received_at
             from view_snapshots where video_id = any($1)
           union all
-          select video_id, sampled_at, view_count, 1 from view_samples where video_id = any($1)
+          select video_id, sampled_at, view_count, 1, null::timestamptz from view_samples where video_id = any($1)
           union all
-          select video_id, at, views, 0 from rss_samples where video_id = any($1) and views is not null
+          select video_id, at, views, 0, received_at from rss_samples where video_id = any($1) and views is not null and model_eligible and not conflicted
         ), paid as (select video_id, at from src where rank > 0)
         select x.video_id,
                extract(epoch from (x.at - v.published_at))/86400.0 as day,
-               x.views, extract(epoch from x.at)*1000 as at_ms
+               x.views, extract(epoch from greatest(x.at, x.received_at))*1000 as at_ms
           from src x join videos v on v.id = x.video_id
          where x.views > 0 and x.at >= v.published_at
            and (x.rank > 0 or not exists (

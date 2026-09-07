@@ -32,6 +32,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
+import { archiveResponses } from '../lib/rss/response-archive';
 import { saveRssObservations } from '../lib/rss/response-store';
 import type { FeedResponse, ResponseEvidence } from '../lib/rss/response-freshness';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
@@ -281,11 +282,15 @@ const buf = empty();
 let ok200 = 0, notModified = 0, sameBody = 0, errors = 0;
 interface Fetched { channel_id: string; entries: RssEntry[]; observedAt: Date; evidence: ResponseEvidence }
 const fetched: Fetched[] = [];
+const receipts: unknown[] = [];
+const archiveName = `${now.getTime()}.jsonl.gz`;
 
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
   if (job.signal.aborted) break;
   await Promise.all(group.map(async (c) => {
     let status = 0;
+    let recorded = false;
+    let responseHeaders: Record<string, string> = {};
     try {
       const headers: Record<string, string> = {};
       // Fetch the body even when unchanged: counts need a heartbeat and titles need evidence.
@@ -294,6 +299,12 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
         headers, signal: AbortSignal.timeout(RSS_POLICY.timeoutMs),
       });
       status = res.status;
+      responseHeaders = Object.fromEntries(res.headers);
+      const body = await res.text();
+      const observedAt = new Date();
+      receipts.push({ channelId: c.channel_id, fetchedAt: observedAt.toISOString(),
+        status, headers: responseHeaders, body });
+      recorded = true;
       if (status === 304) {
         notModified++;
         buf.channels.push({ channel_id: c.channel_id, status: 304, body_sha: null, etag: c.rss_etag,
@@ -302,17 +313,18 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
       }
       if (!res.ok) throw new Error(`HTTP ${status}`);
       ok200++;
-      const body = await res.text();
       const bodySha = sha(body);
       buf.channels.push({ channel_id: c.channel_id, status: 200, body_sha: bodySha,
                           etag: res.headers.get('etag'), interval_sec: null, backoff_until: null, clear_woken: true });
       if (!hasFeedBodyChanged(c.rss_body_sha, bodySha)) sameBody++;
-      const observedAt = new Date();
       fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body), observedAt,
         evidence: { fetchedAt: observedAt.toISOString(), date: res.headers.get('date'),
-          age: res.headers.get('age'), cacheControl: res.headers.get('cache-control') } });
+          age: res.headers.get('age'), cacheControl: res.headers.get('cache-control'),
+          archiveRef: `${archiveName}#${c.channel_id}:${observedAt.toISOString()}` } });
     } catch (err) {
       errors++;
+      if (!recorded) receipts.push({ channelId: c.channel_id, fetchedAt: new Date().toISOString(),
+        status: status || null, headers: responseHeaders, body: null, error: err instanceof Error ? err.message : String(err) });
       const b = backoffAfter(status || 599, c.rss_state, c.rss_interval_sec, now);
       buf.channels.push({ channel_id: c.channel_id, status: status || null, body_sha: null, etag: c.rss_etag,
                           interval_sec: b.intervalSec, backoff_until: b.backoffUntil ? b.backoffUntil.toISOString() : null,
@@ -321,6 +333,10 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
     }
   }));
 }
+// Archive raw HTTP receipts before any database writes. Observation dedupe never deletes
+// evidence; archive expiration is explicit and independent of chart history retention.
+const archive = await archiveResponses(process.env.RSS_ARCHIVE_DIR || path.join(process.cwd(), 'logs/rss-responses'), now.getTime(), receipts);
+log(`raw archive: ${archive.name}, ${archive.bytes} bytes; ${archive.expired.length} expired segments; ${archive.totalBytes} bytes retained${archive.overBudget ? '; WARNING newest segment exceeds archive budget' : ''}`);
 const fetchSecs = secs(t0);
 log(`fetch: ${fetchSecs}s — ${ok200} x 200 (${sameBody} identical body), ${notModified} x 304, ${errors} errors; ${fetched.length} feeds to diff`);
 

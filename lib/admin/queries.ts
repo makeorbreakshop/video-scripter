@@ -297,7 +297,7 @@ export type VideoPageData = {
   snapshots: { at: string; created_at: string | null; views: number; days_since_published: number; like_count: number; comment_count: number }[];
   samples: { at: string; views: number }[];
   /** Free RSS readings, lowest priority in mergeActuals. */
-  rss: { at: string; views: number }[];
+  rss: { at: string; views: number; timeBasis?: string; receivedAt?: string }[];
   thumbs: { version: number; first_seen: string; last_checked: string; sha256: string | null; phash: string | null; r2_uploaded_at: string | null }[];
   titles: { version: number; title: string; first_seen: string }[];
   score: OutlierRow | null;
@@ -329,7 +329,7 @@ export async function videoPage(id: string): Promise<VideoPageData> {
     q<any>(`select sampled_at as at, view_count as views from view_samples where video_id = $1 order by sampled_at`, [id]),
     // Free RSS readings — the lowest-priority measurement source (see mergeActuals). Same
     // (video_id, at) index as the poller's dedupe read.
-    q<any>(`select at, views from rss_samples where video_id = $1 and views is not null order by at`, [id]),
+    q<any>(`select at, views, time_basis as "timeBasis", received_at as "receivedAt" from rss_samples where video_id = $1 and views is not null and not conflicted order by at`, [id]),
     q<any>(
       `select version, first_seen, last_checked, sha256, phash, r2_uploaded_at
        from thumbnail_versions where video_id = $1 order by version`,

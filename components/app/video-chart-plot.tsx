@@ -466,6 +466,7 @@ export default function VideoChartPlot({
               // Three lines on a point we counted; the ranges belong to the forecast alone.
               const lines = tooltipLines({
                 at, kind: (kindByDay.get(Number(label)) ?? 'measured') as TooltipKind,
+                timeBasis: series.find(p => p.day === Number(label))?.timeBasis,
                 views: mine ?? null, typical: row.expected ?? null,
                 inner: row.bandInner ?? null, outer: row.bandOuter ?? null,
               });

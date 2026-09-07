@@ -1,4 +1,4 @@
-export type ResponseEvidence = { fetchedAt: string; date: string | null; age: string | null; cacheControl: string | null };
+export type ResponseEvidence = { fetchedAt: string; date: string | null; age: string | null; cacheControl: string | null; archiveRef?: string };
 /** HTTP Date describes the response, not when YouTube measured its counts.
  * Age without Date is insufficient to establish an exact comparable source clock.
  */
@@ -13,8 +13,10 @@ export function assessResponse(previousDate: string | null, evidence: ResponseEv
 export type FeedResponse = ResponseEvidence & { channelId: string; views: Record<string, number> };
 export type ResponseCounters = Record<'responses' | 'unknownResponses' | 'staleResponses' |
   'readings' | 'staleDecreases' | 'unknownDecreases' | 'rawComparisons' | 'rawDecreases' | 'acceptedComparisons' | 'acceptedDecreases', number>;
+export type ResponseDelay = Record<'under5' | 'from5to15' | 'from15to60' | 'over60', number>;
 export type ResponseState = {
-  since: string; watermark: string | null; latest: FeedResponse;
+  delayMinutes?: ResponseDelay;
+  current?: FeedResponse | null; since: string; watermark: string | null; latest: FeedResponse;
   rejected: FeedResponse | null; acceptedViews: Record<string, number>; counters: ResponseCounters;
 };
 export function advanceResponse(previous: ResponseState | null, response: FeedResponse): { state: ResponseState; accepted: boolean; replay: boolean } {
@@ -26,6 +28,11 @@ export function advanceResponse(previous: ResponseState | null, response: FeedRe
     responses: 0, unknownResponses: 0, staleResponses: 0, readings: 0, staleDecreases: 0, unknownDecreases: 0,
     rawComparisons: 0, rawDecreases: 0, acceptedComparisons: 0, acceptedDecreases: 0,
   };
+  const delayMinutes: ResponseDelay = { under5: 0, from5to15: 0, from15to60: 0, over60: 0, ...previous?.delayMinutes };
+  if (assessment.responseDate) {
+    const minutes = (Date.parse(response.fetchedAt) - Date.parse(assessment.responseDate)) / 60000;
+    delayMinutes[minutes < 5 ? 'under5' : minutes < 15 ? 'from5to15' : minutes < 60 ? 'from15to60' : 'over60']++;
+  }
   counters.responses++;
   if (!assessment.responseDate) counters.unknownResponses++;
   if (assessment.stale) counters.staleResponses++;
@@ -50,8 +57,9 @@ export function advanceResponse(previous: ResponseState | null, response: FeedRe
   }
   return { accepted: !assessment.stale, replay: false, state: {
     since: previous?.since ?? response.fetchedAt, watermark: assessment.watermark,
+    current: assessment.responseDate && !assessment.stale ? response : previous?.current ?? null,
     latest: response, rejected: assessment.stale ? response : previous?.rejected ?? null,
     acceptedViews: assessment.stale ? previous?.acceptedViews ?? {} : response.views,
-    counters,
+    counters, delayMinutes,
   } };
 }

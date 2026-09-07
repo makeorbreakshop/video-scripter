@@ -583,7 +583,7 @@ async function v5(signal: AbortSignal) {
           left join video_scores sc on sc.video_id = v.id
           where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public' ${ceil} ${chFilter}
             and (sc.video_id is null
-                 or exists (select 1 from rss_samples r where r.video_id = v.id and r.at > sc.scored_at and r.at <= now() and r.views >= 0)
+                 or exists (select 1 from rss_samples r where r.video_id = v.id and coalesce(r.received_at, r.at) > sc.scored_at and r.at <= now() and r.views >= 0 and r.model_eligible and not r.conflicted)
                  or exists (select 1 from view_samples s where s.video_id = v.id and s.sampled_at > sc.scored_at)
                  or exists (select 1 from view_snapshots s where s.video_id = v.id and s.created_at > sc.scored_at))
           order by v.published_at desc ${cap}`,

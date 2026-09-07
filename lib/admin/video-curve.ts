@@ -21,7 +21,7 @@ export type CurvePoint = { day: number; expected: number; lo: number; hi: number
  */
 export type TypicalPoint = { day: number; expected: number | null };
 export type ProjPoint = { day: number; projected: number };
-export type Actual = { day: number; views: number; source: 'snapshot' | 'sample' | 'rss'; at: string };
+export type Actual = import('../scoring/observations').Observation;
 export type Marker = {
   kind: 'thumb' | 'title';
   day: number;

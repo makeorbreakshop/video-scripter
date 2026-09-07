@@ -322,6 +322,7 @@ export function nextScale(mode: ScaleMode): ScaleMode {
 export type TooltipKind = 'measured' | 'implied' | 'interpolated' | 'forecast';
 
 export interface TooltipPoint {
+  timeBasis?: string;
   /** The moment under the cursor, as an ISO string or Date. */
   at: string | Date;
   /** Absent behaves as a measured point: a count, and no talk of ranges. */
@@ -369,6 +370,10 @@ export function tooltipLines(p: TooltipPoint): string[] {
   }
   if (p.kind === 'implied') lines.push('Estimated history · assumes zero at publish');
   if (p.kind === 'interpolated') lines.push('Interpolated between observations');
+  if (!p.kind || p.kind === 'measured') {
+    if (p.timeBasis === 'response-date-estimate') lines.push('RSS · estimated response time');
+    if (p.timeBasis === 'fetch-time-only') lines.push('RSS · response time unknown');
+  }
   if (p.kind !== 'forecast') return lines.slice(0, 3);
   if (!p.inner && !p.outer) lines.push('Tentative projection');
   /** A band whose two ends print the same number is a point, and a point is not a range. */

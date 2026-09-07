@@ -62,3 +62,9 @@ test('the report can attribute raw decreases to rejected responses without subtr
   const unknown = advanceResponse(stale.state, feed(20, null, 80));
   expect(unknown.state.counters).toMatchObject({ staleDecreases: 1, unknownDecreases: 1 });
 });
+
+// Cache response delay is measured independently of count disagreement.
+test('delay histogram counts every known response clock, including unchanged readings', () => {
+  const r = { channelId: 'c', fetchedAt: '2026-09-07T12:10:00Z', date: '2026-09-07T12:00:00Z', age: '600', cacheControl: null, views: { v: 100 } };
+  expect(advanceResponse(null, r).state.delayMinutes).toEqual({ under5: 0, from5to15: 1, from15to60: 0, over60: 0 });
+});

@@ -251,7 +251,7 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     ...(() => {
       // One grid for both lines: the series days. See channelCurve for why they cannot differ.
       const series: SeriesPoint[] = broadcast.isBroadcast
-        ? actuals.map(a => ({ day: a.day, views: a.views, kind: 'measured' as const }))
+        ? actuals.map(a => ({ ...a, kind: 'measured' as const }))
         : buildSeries({
         actuals,
         baseline: score?.baseline ?? null,

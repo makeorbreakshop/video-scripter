@@ -34,13 +34,13 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
       [id]
     ),
     q<any>(
-      `select at, views, source from (
+      `select at, views, source, time_basis, received_at from (
          select snapshot_date::timestamptz + interval '12 hours' as at,
-                view_count as views, 'snapshot' as source from view_snapshots where video_id = $1
+                view_count as views, 'snapshot' as source, null::text as time_basis, null::timestamptz as received_at from view_snapshots where video_id = $1
          union all
-         select sampled_at, view_count, 'sample' from view_samples where video_id = $1
+         select sampled_at, view_count, 'sample', null::text, null::timestamptz from view_samples where video_id = $1
          union all
-         select at, views, 'rss' from rss_samples where video_id = $1
+         select at, views, 'rss', time_basis, received_at from rss_samples where video_id = $1 and not conflicted
        ) x where at >= $2::timestamptz and at <= now() order by at desc limit ${CURVE_LIMIT}`,
       [id, video.published_at]
     ),
@@ -55,7 +55,7 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
     ),
   ]);
 
-  const points = (source: string) => rawCurve.filter(p => p.source === source).map(p => ({ at: p.at, views: Number(p.views) }));
+  const points = (source: string) => rawCurve.filter(p => p.source === source).map(p => ({ at: p.at, views: Number(p.views), timeBasis: p.time_basis, receivedAt: p.received_at }));
   const curve = mergeActuals(video.published_at, points('snapshot'), points('sample'), points('rss'));
 
   // What each packaging change did to views: views/hour before vs after, with a plain verdict.
@@ -92,7 +92,7 @@ export const GET = withApiKey(async (_req, _caller, ctx: { params: Promise<{ id:
           confidence: score.confidence,
         }
       : null,
-    curve: curve.map((p) => ({ day: Number(p.day), views: Number(p.views), source: p.source })),
+    curve: curve.map((p) => ({ day: Number(p.day), views: Number(p.views), source: p.source, ...(p.timeBasis ? { time_basis: p.timeBasis, received_at: p.receivedAt } : {}) })),
     thumbnail_versions: thumbs.map((t) => ({
       version: t.version,
       first_seen: t.first_seen,
