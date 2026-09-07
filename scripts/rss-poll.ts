@@ -32,6 +32,8 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
+import { saveRssObservations } from '../lib/rss/response-store';
+import type { FeedResponse, ResponseEvidence } from '../lib/rss/response-freshness';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { reenter } from '../lib/nightly/launch-core';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
@@ -86,6 +88,7 @@ const STAMP_MAX_AGE = "interval '1 hour'";
 // ---------------------------------------------------------------- buffers
 
 interface Buffers {
+  responses: FeedResponse[];
   samples: { video_id: string; at: string; views: number | null; likes: number | null }[];
   /** Videos whose title we looked at, changed or not. This is the evidence the 7-day rule reads. */
   observed: string[];
@@ -103,7 +106,7 @@ interface Buffers {
 }
 
 const empty = (): Buffers => ({
-  samples: [], observed: [], titleVersions: [], videoTitles: [], reentries: [],
+  responses: [], samples: [], observed: [], titleVersions: [], videoTitles: [], reentries: [],
   titleChecks: [], descVersions: [], dueNow: [], touchQueue: [], channels: [],
 });
 
@@ -139,11 +142,7 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
     written[name] = (written[name] ?? 0) + n;
   };
 
-  await insert('rss_samples',
-    `insert into rss_samples (video_id, at, views, likes)
-     select * from unnest($1::text[], $2::timestamptz[], $3::bigint[], $4::bigint[])
-     on conflict do nothing`,
-    b.samples, (p) => [p.map((r: any) => r.video_id), p.map((r: any) => r.at), p.map((r: any) => r.views), p.map((r: any) => r.likes)]);
+  written['rss_samples'] = await saveRssObservations(pool, b.samples, b.responses);
 
   await insert('title_versions',
     `insert into title_versions (video_id, version, title, first_seen, backfill)
@@ -280,7 +279,7 @@ type DueChannel = {
 const t0 = Date.now();
 const buf = empty();
 let ok200 = 0, notModified = 0, sameBody = 0, errors = 0;
-interface Fetched { channel_id: string; entries: RssEntry[]; observedAt: Date }
+interface Fetched { channel_id: string; entries: RssEntry[]; observedAt: Date; evidence: ResponseEvidence }
 const fetched: Fetched[] = [];
 
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
@@ -308,7 +307,10 @@ for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
       buf.channels.push({ channel_id: c.channel_id, status: 200, body_sha: bodySha,
                           etag: res.headers.get('etag'), interval_sec: null, backoff_until: null, clear_woken: true });
       if (!hasFeedBodyChanged(c.rss_body_sha, bodySha)) sameBody++;
-      fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body), observedAt: new Date() });
+      const observedAt = new Date();
+      fetched.push({ channel_id: c.channel_id, entries: parseRssEntries(body), observedAt,
+        evidence: { fetchedAt: observedAt.toISOString(), date: res.headers.get('date'),
+          age: res.headers.get('age'), cacheControl: res.headers.get('cache-control') } });
     } catch (err) {
       errors++;
       const b = backoffAfter(status || 599, c.rss_state, c.rss_interval_sec, now);
@@ -377,7 +379,6 @@ log(`snapshot: ${snapSecs}s — ${allIds.length} feed video ids, ${snap.size} al
 // ---------------------------------------------------------------- phase 3: diff, in memory
 
 const t2 = Date.now();
-// Feed view counts are no longer stored as data (2026-09-06): view readings come from the Data
 // Feed view samples are ON by default (they are the 15-minute readings past the launch window); RSS_SAMPLES=0 turns them off.
 const storeSamples = rssSamplesEnabled();
 if (!storeSamples) log('rss_samples writes disabled (RSS_SAMPLES=0)');
@@ -467,6 +468,11 @@ for (const f of snapshotComplete ? fetched : []) {
       buf.dueNow.push({ video_id: e.video_id, version: cur.thumbVersion });
     }
   }
+  // Preserve evidence even for identical counts: these reads are the denominator and
+  // can advance the response watermark without adding another rss_samples row.
+  buf.responses.push({ ...f.evidence, channelId: f.channel_id,
+    views: Object.fromEntries(f.entries.filter(e => e.views != null && Number.isFinite(e.views) && e.views >= 0)
+      .map(e => [e.video_id, e.views!])) });
   diffedChannels.add(f.channel_id);
 }
 
@@ -507,7 +513,7 @@ log(
   `${written['touch_queue'] ?? 0} new videos queued of ${buf.touchQueue.length} offered ` +
   `(${skippedOld} older unknown entries skipped), ` +
   `${titleChanges} title changes (${titleSyncs} synced), ${descChanges} description changes, ` +
-  `${buf.dueNow.length} marked due-now, ${sampled} rss_samples (${skippedSamples} unchanged readings skipped)`
+  `${buf.dueNow.length} marked due-now, ${written['rss_samples'] ?? 0} rss_samples (${sampled} candidates before freshness/replay filtering; ${skippedSamples} unchanged readings skipped)`
 );
 log(`rows written: ${JSON.stringify(written)}`);
 await pool.end();
