@@ -25,16 +25,22 @@
 // Prior day-30 estimates come from core.priorV30 for every rule, so the only thing that differs
 // between rules is how the priors are combined.
 //
-// Usage: npx tsx scripts/backtest-baseline-trend.ts [--from 2025-07-01] [--to 2025-08-31] [--limit 4000]
+// CADENCE VARIANT (scripts/scratch/, kept from the 2026-09-07 baseline coverage audit and
+// re-run for v5.2): adds rule `cad<k>` -- identical to `tw30` except the half-life is
+// max(30, k x median publish gap of the CENSORED prior set), i.e. lib/scoring/curve
+// cadenceHalfLifeDays. `--cadence-k 2` is the shipped rule; `tw30` is the control.
+//
+// Usage: npx tsx scripts/scratch/backtest-baseline-cadence.ts [--from 2025-07-01] [--to 2025-08-31] [--limit 4000]
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import {
   scoreVideo, bucketFor, median, MODEL_VERSION,
   priorV30 as corePriorV30, publishGapDays, priorWindow, PRIOR_STALE_DAYS, MIN_PROJECT_AGE,
+  BASELINE_HALF_LIFE_DAYS,
   type GlobalParams,
-} from '../lib/scoring/core';
-import { longformSql } from '../lib/scoring/longform';
+} from '../../lib/scoring/core';
+import { longformSql } from '../../lib/scoring/longform';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const FROM = arg('--from') ?? '2025-07-01';
@@ -48,12 +54,18 @@ const HALF_LIVES = (arg('--half-lives') ?? '45,90,180').split(',').map(Number);
 const TREND_CUT = 0.3;
 const DAY = 86_400_000;
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_SESSION_URL ?? process.env.DATABASE_URL, max: 3 });
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
-const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
+// The Supabase pooler (6543, transaction mode) ignores both `set statement_timeout` on pool
+// checkout and startup `options`, so the server's 2-minute default kills the neighbours scan.
+// One dedicated session-mode client, with the timeout set on it, survives (2026-09-07 audit).
+const client = await pool.connect();
+await client.query('set statement_timeout = 900000');
+const q = async (sql: string, params?: any[]): Promise<any[]> => (await client.query(sql, params)).rows as any[];
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
+const CADENCE_K = (arg('--cadence-k') ?? '').split(',').map(Number).filter((k) => Number.isFinite(k) && k > 0);
 const paramRows = await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [PARAMS_VERSION]);
 if (!paramRows.length) { console.error(`no score_params for ${PARAMS_VERSION}`); process.exit(1); }
 const params: GlobalParams = paramRows[0].params;
@@ -93,7 +105,8 @@ const day30Of = (s: Snap[] | undefined, before = Infinity): number | null => {
 const recs = await snapsFor(ids);
 
 // neighbours: last N_TW priors and next K_SIDE followers per holdout video
-const nbrRows: { video_id: string; nid: string; npub: number; side: 'prior' | 'next' }[] = await q(
+const nbrRows: { video_id: string; nid: string; npub: number; side: 'prior' | 'next' }[] = [];
+for (let i = 0; i < ids.length; i += 400) nbrRows.push(...await q(
   `select r.id as video_id, p.id as nid, extract(epoch from p.published_at)*1000 as npub, 'prior' as side
      from unnest($1::text[]) as r(id) join videos v on v.id=r.id
      join lateral (select p.id, p.published_at from videos p
@@ -108,7 +121,7 @@ const nbrRows: { video_id: string; nid: string; npub: number; side: 'prior' | 'n
                     where p.channel_id=v.channel_id and p.published_at > v.published_at
                       and ${longformSql('p')}
                       and coalesce(p.privacy_status,'public')='public' and coalesce(p.view_count,0)>0
-                    order by p.published_at asc limit ${K_SIDE}) p on true`, [ids]);
+                    order by p.published_at asc limit ${K_SIDE}) p on true`, [ids.slice(i, i + 400)]) as any[]);
 const priorsOf = new Map<string, { id: string; pub: number }[]>();
 const nextOf = new Map<string, { id: string; pub: number }[]>();
 for (const r of nbrRows) {
@@ -152,10 +165,27 @@ function wlsAt(x: number[], y: number[], w: number[], x0: number): number | null
 
 type Rule = string;
 const LASTN = (arg('--last-n') ?? '5,7').split(',').map(Number);
-const RULES: Rule[] = ['current', ...LASTN.map((n) => `last${n}`), ...HALF_LIVES.map((h) => `tw${h}`), ...(arg('--no-trend') ? [] : HALF_LIVES.map((h) => `trend${h}`))];
+const RULES: Rule[] = ['current', ...LASTN.map((n) => `last${n}`), ...HALF_LIVES.map((h) => `tw${h}`),
+  ...CADENCE_K.map((k) => `cad${k}`),
+  ...(arg('--no-trend') ? [] : HALF_LIVES.map((h) => `trend${h}`))];
 
 type Est = { v30: number; kind: string; ageDays: number };
 function baselineFor(rule: Rule, ests: Est[], gapDays: number | null): { baseline: number | null; neff: number } {
+  // cad<k>: the shipped kernel, widened to the channel's own rhythm. The prior set is the same
+  // censored one every other rule sees, so the ONLY difference from tw30 is the half-life --
+  // which is exactly lib/scoring/curve.cadenceHalfLifeDays over those priors' publish times.
+  if (rule.startsWith('cad')) {
+    const k = Number(rule.slice(3));
+    const pubs = ests.map((e) => -e.ageDays * DAY);
+    const h = Math.max(BASELINE_HALF_LIFE_DAYS, k * (publishGapDays(pubs) ?? Infinity) || BASELINE_HALF_LIFE_DAYS);
+    const hl = Number.isFinite(h) ? h : BASELINE_HALF_LIFE_DAYS;
+    const ws = ests.map((e) => Math.pow(2, -e.ageDays / hl));
+    const ys = ests.map((e) => Math.log(e.v30));
+    const neff = effectiveN(ws);
+    if (ests.length < 3 || neff < 2) return { baseline: null, neff };
+    const m = weightedMedian(ys, ws);
+    return { baseline: m == null ? null : Math.exp(m), neff };
+  }
   if (rule === 'current' || rule.startsWith('last')) {
     const pool = ests.slice(0, rule === 'current' ? priorWindow(gapDays) : Number(rule.slice(4)));
     return { baseline: pool.length >= 3 ? median(pool.map((e) => e.v30)) : null, neff: pool.length };
@@ -258,4 +288,5 @@ for (const t of T_LIST) for (const sl of ['all', 'growing', 'flat', 'declining',
     `${String(t).padEnd(2)} ${rule.padEnd(9)} ${sl.padEnd(10)} ${String(a.n).padEnd(5)} ${(a.cov / a.n).toFixed(2)}  ${f(median(a.bias))}   ${f(median(a.bErr))}       ${f(median(a.sErr))}      ${f(p, 2)} ${f(r, 2)} ${f(f1, 2)}  ${f(median(a.neff), 1)}`
   );
 }
+client.release();
 await pool.end();

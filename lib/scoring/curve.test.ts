@@ -1,5 +1,5 @@
 import { growthExponent, type GlobalParams } from './core';
-import { channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
+import { cadenceHalfLifeDays, cadenceHalfLifeForPriors, channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
 import { growthLog, logToRef } from './growth';
 
 const P: GlobalParams = {
@@ -98,10 +98,16 @@ describe('channelCurve', () => {
     expect(c.n).toBe(2);
   });
   it('returns null below the neff >= 2 floor -- one fresh prior plus a stale tail is not a history', () => {
-    const c = channelCurve([prior(0, [[3, 1000]]), prior(400, [[3, 1000]]), prior(500, [[3, 1000]])], 3, P);
+    const ps = [prior(0, [[3, 1000]]), prior(400, [[3, 1000]]), prior(500, [[3, 1000]])];
+    const c = channelCurve(ps, 3, P, 30);
     expect(c.n).toBe(3);
     expect(c.neff).toBeLessThan(2);
     expect(c.typical).toBeNull();
+    // ... but at THIS channel's cadence (median gap 250d) those three are its last three
+    // videos, not a stale tail, and v5.2's kernel says so. See cadenceHalfLifeDays.
+    const cadence = channelCurve(ps, 3, P);
+    expect(cadence.neff).toBeGreaterThan(2);
+    expect(cadence.typical).toBeCloseTo(1000, 6);
   });
   it('reports the measured share when the denominator is part modelled', () => {
     const c = channelCurve([prior(3, [[3, 900]]), prior(10, [[1, 400]]), prior(20, [], [9000, 300])], 3, P);
@@ -306,5 +312,66 @@ describe('sub-day channel curve (KFVqHUvp-0w, 3D Printing Nerd, 2026-09-04)', ()
     expect(Math.abs(Math.log(c.typical! / pageTypical))).toBeLessThan(0.10);
     expect(VIEWS / c.typical!).toBeGreaterThan(1);   // 5,345 views is ABOVE typical, not 0.35x
     expect(VIEWS / c.typical!).toBeLessThan(1.6);
+  });
+});
+
+// ---- cadence-scaled half-life (v5.2) --------------------------------------------------
+// "Normal for this channel" is judged in the channel's own rhythm: recent means the channel's
+// last handful of videos, whether that spans a month or two years.
+
+const pubs = (gapDays: number, n = 8, from = Date.parse('2026-01-01T00:00:00Z')): number[] =>
+  Array.from({ length: n }, (_, i) => from - i * gapDays * 86_400_000);
+
+describe('cadenceHalfLifeDays', () => {
+  it('leaves fast channels on the 30-day floor', () => {
+    expect(cadenceHalfLifeDays(pubs(1))).toBe(30);    // daily
+    expect(cadenceHalfLifeDays(pubs(7))).toBe(30);    // weekly
+    expect(cadenceHalfLifeDays(pubs(14))).toBe(30);   // fortnightly: 2 x 14 = 28 < 30
+  });
+
+  it('opens the kernel to two median gaps once the channel is slower than fortnightly', () => {
+    expect(cadenceHalfLifeDays(pubs(20))).toBeCloseTo(40, 6);
+    expect(cadenceHalfLifeDays(pubs(90))).toBeCloseTo(180, 6);
+  });
+
+  it('has no measurable cadence under three priors, so the floor stands', () => {
+    expect(cadenceHalfLifeDays([])).toBe(30);
+    expect(cadenceHalfLifeDays(pubs(90, 2))).toBe(30);
+    expect(cadenceHalfLifeDays([Date.now(), Date.now(), Date.now()])).toBe(30);  // zero gaps
+  });
+
+  it('reads the same cadence off the priors, whose ageDays run the other way', () => {
+    const priors = [0, 90, 180, 270, 360].map((ageDays) => prior(ageDays, []));
+    expect(cadenceHalfLifeForPriors(priors)).toBeCloseTo(180, 6);
+  });
+});
+
+describe('a monthly channel gets a baseline (Steve Ramsey, real prior gaps)', () => {
+  // R_sabzFjKYU (published 2026-01-20). Its seven fresh priors' publish gaps, straight from
+  // production: 2026-09-07 stored n_baseline 7, typical_neff 1.43, baseline NULL, 'insufficient'.
+  const GAPS = [18.2, 90.1, 181.1, 279.4, 374.4, 434.3, 455.3];
+  // Each prior is a pre-tracking video with only a lifetime count, which is how this channel's
+  // history actually reaches the curve. Values are the route, not the point of the test.
+  const RAMSEY = GAPS.map((g, i) => prior(g, [], [30_000 + i * 1_000, g + 227]));
+
+  it('is starved by the fixed 30-day kernel -- neff under 2, no typical at all', () => {
+    const c = channelCurve(RAMSEY, 227, P, 30);
+    expect(c.n).toBe(7);
+    expect(c.neff).toBeLessThan(2);
+    expect(c.neff).toBeCloseTo(1.43, 1);   // the stored typical_neff
+    expect(c.typical).toBeNull();
+  });
+
+  it('scores in its own rhythm: half-life = 2 x its 81d median gap', () => {
+    expect(cadenceHalfLifeForPriors(RAMSEY)).toBeCloseTo(162.9, 1);
+    const c = channelCurve(RAMSEY, 227, P);          // no half-life argument = the v5.2 rule
+    expect(c.n).toBe(7);
+    expect(c.neff).toBeGreaterThan(4);
+    expect(c.typical).toBeGreaterThan(0);
+  });
+
+  it('is a no-op on a weekly channel: the cadence kernel IS the 30-day kernel', () => {
+    const weekly = Array.from({ length: 8 }, (_, i) => prior(i * 7, [[30, 10_000 + i * 100]]));
+    expect(channelCurve(weekly, 30, P).typical).toBe(channelCurve(weekly, 30, P, 30).typical);
   });
 });

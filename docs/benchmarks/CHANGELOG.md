@@ -6,6 +6,54 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-07 — v5.2: the baseline half-life is the channel's own cadence
+
+"Normal for this channel" is judged in the channel's own rhythm. `lib/scoring/curve.channelCurve`
+now weights priors with `halfLife = max(30, 2 x median publish gap of the priors)` instead of a
+fixed 30 days (`cadenceHalfLifeDays`). `MIN_BASELINE_PRIORS` and `MIN_BASELINE_NEFF` are unchanged;
+`MODEL_VERSION` -> `v5.2`. Backtest scripts still pass an explicit half-life, so they stay controls.
+
+The problem (`~/shared-memory/knowledge/projects/video-scripter/2026-09-07-baseline-coverage-audit.md`):
+a monthly channel's own previous video weighs half, the one before it a quarter, so `neff` falls
+under 2 and the channel has NO baseline despite a full history. 12,379 corpus rows (38% of every
+missing baseline) and 149 of 500 tracked channels. Steve Ramsey's 2026-01-20 video: `n_baseline 7,
+typical_neff 1.43, baseline NULL`.
+
+k = 2, not 3 or 4: it is the only value that is free on the slices the holdout can measure.
+
+`scripts/scratch/backtest-baseline-cadence.ts --params-version v3.0 --limit 3000 --n-tw 15
+--half-lives 30 --cadence-k 2 --no-trend` — 2,222 holdout videos, Jul-Aug 2025, centered oracle,
+strict walk-forward censoring. `tw30` is the shipped kernel, `cad2` the candidate.
+
+| t | slice | rule | n | cov | bias | base_medALE | score_medALE | F1 |
+|---|---|---|---|---|---|---|---|---|
+| 3 | all | tw30 | 1554 | 0.99 | 0.013 | 0.144 | 0.230 | 0.70 |
+| 3 | all | cad2 | 1554 | 0.99 | 0.013 | 0.144 | 0.231 | 0.70 |
+| 3 | weekly | tw30 / cad2 | 759 | 0.99 | -0.002 | 0.127 | 0.240 | 0.68 |
+| 3 | sparse | tw30 | 141 | 0.96 | -0.000 | 0.145 | 0.247 | 0.65 |
+| 3 | sparse | cad2 | 141 | 0.99 | -0.000 | 0.147 | 0.248 | 0.63 |
+| 7 | all | tw30 / cad2 | 1669 | 1.00 | 0.006 | 0.131 | 0.166 | 0.76 |
+| 7 | weekly | tw30 / cad2 | 816 | 1.00 | -0.000 | 0.122 | 0.166 | 0.76 |
+| 7 | sparse | tw30 | 151 | 0.98 | -0.000 | 0.122 | 0.171 | 0.77 |
+| 7 | sparse | cad2 | 151 | 1.00 | -0.000 | 0.135 | 0.175 | 0.73 |
+
+Daily and weekly are byte-identical (2 x gap < 30 for anything published more often than
+fortnightly). Sparse buys +2-4pp coverage for +0.002 base_medALE at t=3 and +0.013 at t=7.
+**Recorded, not hidden: F1 on the sparse slice moves -0.02 at t=3 (inside the skill's 0.03 gate)
+and -0.04 at t=7 (marginally outside it, on n=151).** The audit called that thin enough to want a
+second cut; Brandon accepted the trade to fix the coverage. The measurable holdout also cannot see
+the benefit at all — it requires >= 3 centered oracle neighbours, which selects for dense channels,
+so the 12,379 starved rows are almost entirely outside it. k=3/k=4 fail the gate outright
+(sparse t=3 F1 .65 -> .57 / .53).
+
+Leak checks — the v3/v4 `core.scoreVideo` path must not move, and does not:
+- `scripts/benchmark-scores.ts --params-version v3.0 --compare docs/benchmarks/v3.0-2026-09-04.json`
+  — **0 better / 42 wash / 0 worse => wash**, every cell delta exactly 0.000.
+- `scripts/check-band-calibration.ts --params-version v3.0` — 1,522 checks, inner **50.7%**
+  (claims 50), outer **79.6%** (claims 80). Unchanged and calibrated.
+
+BASELINE.json not moved: this is a v5-path change and the reference run is v3.0.
+
 ## 2026-09-04 — Shorts repair: 1,289 long-form videos returned to the corpus (BASELINE not moved)
 
 Not a model change. `trigger_set_video_is_short` on `videos` was recomputing `is_short` from

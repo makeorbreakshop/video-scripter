@@ -17,7 +17,7 @@
 // (Allrecipes "18 Microwave Hacks" at 3d: null, n_same_age 0).
 import {
   BASELINE_HALF_LIFE_DAYS, MIN_BASELINE_NEFF, MIN_BASELINE_PRIORS,
-  baselineWeight, bucketFor, effectiveN, fittedBuckets, growthExponent, weightedMedian,
+  baselineWeight, bucketFor, effectiveN, fittedBuckets, growthExponent, median, weightedMedian,
   type GlobalParams, type Snapshot,
 } from './core';
 import { growthLog, allowedHorizon, belowAgeFloor, type GrowthContext } from './growth';
@@ -128,6 +128,47 @@ export function contributionAt(
 }
 
 /**
+ * How many median publish gaps wide the age kernel is on a slow channel. k = 2 from the
+ * 2026-09-07 baseline coverage audit: on the slices the holdout can measure it is a no-op
+ * (daily/weekly channels never leave the 30-day floor) and on the sparse slice it costs
+ * +0.003 base_medALE at t=3 and +0.013 at t=7 while recovering 76% of the starved 20-45d
+ * videos and 97% of the 45-90d ones. k = 3 and k = 4 fail the skill's 0.03 F1 gate on sparse.
+ */
+export const CADENCE_HALF_LIFE_K = 2;
+
+/**
+ * The half-life of the baseline age kernel, in the channel's own rhythm.
+ *
+ * "Recent" is the channel's last handful of videos, whether that spans a month or two years.
+ * A fixed 30-day half-life reads a monthly channel's own previous video at half weight and the
+ * one before it at a quarter, so `neff` falls under MIN_BASELINE_NEFF and the channel has no
+ * baseline at all despite a full history (12,379 rows corpus-wide, 2026-09-07 audit). Scaling
+ * the kernel by the channel's median publish gap keeps the same "last handful of videos"
+ * meaning at every cadence, and the 30-day floor keeps fast channels exactly where they were.
+ *
+ * `priorPublishTimes` are epoch milliseconds. Fewer than three priors has no measurable
+ * cadence, so the floor stands.
+ */
+export function cadenceHalfLifeDays(priorPublishTimes: readonly number[]): number {
+  const p = [...priorPublishTimes].filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
+  if (p.length < 3) return BASELINE_HALF_LIFE_DAYS;
+  const gaps: number[] = [];
+  for (let i = 1; i < p.length; i++) gaps.push((p[i] - p[i - 1]) / 86_400_000);
+  const g = median(gaps);
+  if (!(g != null && Number.isFinite(g) && g > 0)) return BASELINE_HALF_LIFE_DAYS;
+  return Math.max(BASELINE_HALF_LIFE_DAYS, CADENCE_HALF_LIFE_K * g);
+}
+
+/**
+ * The same rule off the priors themselves. `ageDays` is days BEFORE the target's publish, so
+ * negating it gives a publish time on an arbitrary but consistent clock -- the gaps are what
+ * the cadence is made of, and they are identical either way.
+ */
+export function cadenceHalfLifeForPriors(priors: readonly CurvePrior[]): number {
+  return cadenceHalfLifeDays(priors.map((p) => -p.ageDays * 86_400_000));
+}
+
+/**
  * C(t) -- what a normal video on this channel has at age t. Time-weighted median in LOG space
  * (v4's rule, unchanged) over the priors' contributions at that age. Null unless there are
  * >= MIN_BASELINE_PRIORS contributions AND effective n >= MIN_BASELINE_NEFF.
@@ -136,12 +177,15 @@ export function channelCurve(
   priors: readonly CurvePrior[],
   targetAge: number,
   params: GlobalParams,
-  halfLife = BASELINE_HALF_LIFE_DAYS
+  halfLife?: number
 ): CurveResult {
+  // Omitted means "this channel's own rhythm" -- the production rule since v5.2. The backtest
+  // harnesses pass an explicit half-life to hold the kernel fixed as a control.
+  const hl = halfLife ?? cadenceHalfLifeForPriors(priors);
   const contributions: Contribution[] = [];
   for (const p of priors) {
     const c = contributionAt(p, targetAge, params);
-    if (c) contributions.push({ ...c, weight: baselineWeight(p.ageDays, halfLife) });
+    if (c) contributions.push({ ...c, weight: baselineWeight(p.ageDays, hl) });
   }
   const ws = contributions.map((c) => c.weight);
   const neff = effectiveN(ws);
