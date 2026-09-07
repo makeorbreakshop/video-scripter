@@ -6,10 +6,70 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-07 (review pass) — v5.2 corrections: k = 1.5, and rows that say which math wrote them
+
+Four things the review found, all fixed on `scoring/v5.2-cadence`.
+
+**1. `k = 2` was outside the F1 gate; shipped `k = 1.5`.** The −0.04 at t=7 sparse is real. It is
+not the seed (there is none: the Jul–Aug 2025 holdout is the entire eligible population, 2,222
+videos, and no other month has both an early and a day-30 snapshot — `--limit 3000` returns all of
+it every time), and it is not the coverage confound (`--dump` on the cadence backtest now writes
+one line per age/rule/video; restricted to the rows `tw30` and `cad2` both cover the F1s are
+unchanged to three decimals, because every row the wider kernel newly covers is a true negative).
+
+| slice | tw30 | k=1.25 | k=1.5 | k=1.75 | k=2 |
+|---|---|---|---|---|---|
+| t=3 sparse (n=141) | .653 | .625 | .625 | .625 | .625 |
+| t=7 sparse (n=151) | .767 | .746 | **.746** | .733 | .733 |
+
+k = 1.5 is inside the 0.03 gate at both ages; k = 2 is not, at t=7 (−0.034). What it costs: on
+250 videos from tracked channels publishing slower than weekly, scored through the production
+loader at each half-life, k = 1.5 recovers **56%** of the rows the fixed 30-day kernel starves
+against k = 2's **61%** — 91% of the coverage, for half the F1 deficit. Said plainly, at t=7 the
+whole difference between k=1.5 and k=2 is one video moving from true positive to false positive on
+33 positives; neither is separable from noise, and honouring the gate is nearly free.
+`--channels-min-gap`'s no-op boundary moves from a 15-day to a 20-day median gap.
+
+**2. `video_scores.model_version` said `v5.1-rss` for v5.2 rows.** The writer used
+`OBSERVATION_SCORE_VERSION` — the observation contract's tag — so the whole rescore claimed to be
+v5.1 and sat indistinguishable beside the v5.0 rows it replaced. It also broke the refresh
+watermark: `scoreRefreshSql` compares the stored label to the current one, so bumping
+`MODEL_VERSION` without moving the written label meant nothing was ever due for rescore.
+`SCORE_ROW_VERSION = MODEL_VERSION` now, at both write sites, the watermark and `FINAL_VERSION`;
+the observation contract keeps its provenance in `video_score_history.extra.observation_version`.
+
+**3. The equality test failed against production.** `lib/app/typical-curve.db.test.ts` compared
+stored C(t) to a recomputation and came out 4.3× apart. The invariant is fine; the row selection
+was not — `order by scored_at desc` lands on the corpus's oldest videos, whose priors predate
+tracking and reach the curve through a LIFETIME count read at `now()`. That number grows between
+write and read, and C(t) is a weighted MEDIAN, so a hair of movement snaps the answer to a
+different prior's value (two failing rows returned exactly the neighbouring video's stored C(t)).
+Restricted to `typical_measured_share = 1` and ages 1–60 days it is exact on 12 of 12 rows.
+
+**4. Cadence and a change of speed.** `cadenceHalfLifeDays` reads the priors' gaps only. That is
+right, and for a reason now pinned in `curve.test.ts`: `neff = (Σw)²/Σw²` is scale-free, so
+pushing every prior uniformly further into the past leaves it untouched. A weekly channel that
+stops for four months keeps its baseline; a channel sliding from weekly to monthly keeps it through
+every step. What starves a channel is the SPREAD of its gaps, not their size.
+
+### Still outstanding
+
+- **The rescore must be redone.** All 101,825 rows were written at k = 2 and labelled `v5.1-rss`.
+  No production run overlapped it (0 rows written between its end at 12:44:42Z and this review),
+  so nothing is corrupted — but nothing carries the v5.2 label either, and the math has moved.
+- **`channel_stats.baseline` is stale on 5,530 of 6,406 channels.** The refresh reached the ~500
+  tracked ones; `channel_stats` covers `user_channels ∪ channel_tracking`. The header does
+  `coalesce(max(cs.baseline), <newest scored C(30)>)`, so the stale STORED value wins and the
+  majority of channel pages still show the lifetime median. One unscoped
+  `npx tsx scripts/refresh-channel-stats.ts` fixes it.
+- **Fit and mechanism moved together.** `score_params` was refitted under `v5.2` (26,480 videos)
+  in the same hour as the kernel change, so the rescore's numbers cannot attribute a movement to
+  the kernel. The backtests and leak checks were run on `v3.0` params and are unaffected.
+
 ## 2026-09-07 — v5.2: the baseline half-life is the channel's own cadence
 
 "Normal for this channel" is judged in the channel's own rhythm. `lib/scoring/curve.channelCurve`
-now weights priors with `halfLife = max(30, 2 x median publish gap of the priors)` instead of a
+now weights priors with `halfLife = max(30, 1.5 x median publish gap of the priors)` instead of a
 fixed 30 days (`cadenceHalfLifeDays`). `MIN_BASELINE_PRIORS` and `MIN_BASELINE_NEFF` are unchanged;
 `MODEL_VERSION` -> `v5.2`. Backtest scripts still pass an explicit half-life, so they stay controls.
 
