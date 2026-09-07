@@ -30,10 +30,11 @@ import {
   type TailPair, type LaunchRow5,
 } from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
+import { curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, type PriorRef } from '../lib/scoring/prior-load';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
 import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
-import { OBSERVATION_SCORE_VERSION, OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
+import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
 import { readScoreCheckpoint, validateScoreCheckpointScope, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
@@ -50,6 +51,12 @@ const arg = (name: string): string | null => {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : null;
 };
 const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filter(Boolean);
+// --channels-min-gap <days>: every channel whose MEDIAN PUBLISH GAP is wider than <days>. Since
+// v5.2 the baseline half-life is max(30, 2 x that gap) (lib/scoring/curve.cadenceHalfLifeDays),
+// so the scoring math is byte-identical on anything publishing more often than fortnightly: a
+// rescore after the v5.2 change only has to touch the slow channels. Resolved to a channel list
+// before selection, so it composes with --all/--force exactly as --channels does.
+const MIN_GAP = Number(arg('--channels-min-gap') ?? 0) || null;
 const LIMIT = Number(arg('--limit') ?? 0) || null;
 const CHECKPOINT_PATH = arg('--checkpoint');
 // --since <days>: rescore EVERY video published within the last <days>, whether or not a new
@@ -83,12 +90,7 @@ async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
     }
     return out;
   }
-  const out = new Map<string, Snapshot[]>();
-  // Bound each key array: very large IN sets can turn these reads into corpus-wide scans.
-  for (const part of chunk(ids, 100)) {
-    for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
-  }
-  return out;
+  return loadRecords(q, ids);
 }
 
 // Day-30 truth for a set of videos (snapshot at day 27..33 nearest 30), else null.
@@ -104,14 +106,7 @@ async function day30(ids: string[]): Promise<Map<string, number>> {
 
 // Current lifetime count + age (days) for a set of videos, for the long-tail fallback.
 type Meta = { views: number; age: number };
-async function meta(ids: string[]): Promise<Map<string, Meta>> {
-  const rows = await q(
-    `select id, coalesce(view_count,0) as views, extract(epoch from (now() - published_at))/86400.0 as age
-       from videos where id = any($1)`,
-    [ids]
-  );
-  return new Map<string, Meta>(rows.map((r: any) => [r.id as string, { views: Number(r.views), age: Number(r.age) }]));
-}
+const meta = (ids: string[]) => loadMeta(q, ids);
 
 // Day-30 views for a video: real snapshot, else lifetime normalized down the long-tail curve.
 function v30Of(id: string, truth: Map<string, number>, metas: Map<string, Meta>, lt: GlobalParams['longtail']) {
@@ -124,30 +119,8 @@ function v30Of(id: string, truth: Map<string, number>, metas: Map<string, Meta>,
 // This full pool is the v4.0 BASELINE pool (the age kernel handles staleness); the est30 side
 // still narrows it to priorWindow(cadence) -- 15 normally, 10 on sparse channels. `ageDays` is
 // the target's publish time minus the prior's, which is what the kernel weights by.
-export interface Prior { id: string; pub: number; ageDays: number }
-async function priorsFor(ids: string[]): Promise<Map<string, Prior[]>> {
-  const rows: { video_id: string; prior_id: string; gap_days: number; pub: string }[] = await q(
-    `select r.id as video_id, p.id as prior_id,
-            extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days,
-            p.published_at as pub
-       from unnest($1::text[]) as r(id) join videos v on v.id = r.id
-       join lateral (select p.id, p.published_at from videos p
-                      where p.channel_id = v.channel_id and p.published_at < v.published_at
-                        and ${longformSql('p')}
-                        and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
-                      order by p.published_at desc nulls last limit ${PRIOR_WINDOW}) p on true
-      order by r.id, p.published_at desc`,
-    [ids]
-  );
-  const out = new Map<string, Prior[]>();
-  for (const r of rows) {
-    const ageDays = Number(r.gap_days);
-    if (ageDays > PRIOR_STALE_DAYS) continue;
-    if (!out.has(r.video_id)) out.set(r.video_id, []);
-    out.get(r.video_id)!.push({ id: r.prior_id, pub: new Date(r.pub).getTime(), ageDays });
-  }
-  return out;
-}
+export type Prior = PriorRef;
+const priorsFor = (ids: string[]) => loadPriorRefs(q, ids);
 
 /** The est30 side keeps the v3 window: priorMultLogs / priorSameAge are unchanged by v4.0. */
 function estPool(ps: Prior[]): Prior[] {
@@ -417,13 +390,7 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
     if (!snaps?.length) continue;
     const latest = snaps[snaps.length - 1];
     const pool2 = priorsOf.get(t.id) ?? [];
-    const curvePriors: CurvePrior[] = pool2.map((pp) => {
-      const m = priorMeta.get(pp.id);
-      return {
-        id: pp.id, ageDays: pp.ageDays, samples: priorRec.get(pp.id) ?? [],
-        lifetime: m && m.views > 0 ? { views: m.views, ageDays: m.age } : null,
-      };
-    });
+    const curvePriors: CurvePrior[] = curvePriorsFrom(pool2, priorRec, priorMeta);
     // the est30-side channel multiplier still feeds G's blend (unchanged from v3)
     const bucket = bucketFor(latest.day, fittedBuckets(params));
     const tol = bucketTolerance(bucket);
@@ -441,6 +408,38 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
     });
   }
   return out;
+}
+
+/**
+ * Channels whose median gap between consecutive long-form publishes exceeds `days`, measured
+ * over the last PRIOR_WINDOW + 1 videos -- the same window the age kernel sees.
+ */
+async function channelsSlowerThan(days: number): Promise<string[]> {
+  const rows = await q(
+    `select channel_id
+       from (
+         select channel_id,
+                percentile_cont(0.5) within group (order by gap) as med_gap
+           from (
+             select p.channel_id,
+                    extract(epoch from (p.published_at - lag(p.published_at) over w))/86400.0 as gap
+               from (
+                 select v.channel_id, v.published_at,
+                        row_number() over (partition by v.channel_id order by v.published_at desc) as rn
+                   from videos v
+                  where ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
+                    and coalesce(v.view_count,0) > 0
+               ) p
+              where p.rn <= ${PRIOR_WINDOW + 1}
+             window w as (partition by p.channel_id order by p.published_at)
+           ) g
+          where gap is not null
+          group by channel_id
+       ) m
+      where med_gap > $1`,
+    [days]
+  );
+  return rows.map((r: any) => r.channel_id as string);
 }
 
 async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
@@ -612,6 +611,12 @@ try {
   await runScoringWorker({
     args: process.argv.slice(2),
     run: async (signal) => {
+      if (MIN_GAP && !FIT) {
+        const slow = await channelsSlowerThan(MIN_GAP);
+        log(`--channels-min-gap ${MIN_GAP}: ${slow.length} channels publish less often than that`);
+        CHANNELS.push(...slow.filter((c) => !CHANNELS.includes(c)));
+        if (!CHANNELS.length) { log('nothing to score'); return; }
+      }
       if (FIT) await fit(); else if (V5) await v5(signal); else if (FINAL) await final(signal); else await score(signal);
         // The atomic batch already refreshed headlines. Invalidate every committed channel
       // even on a cooperative stop; otherwise clean scores can leave cached headlines stale.

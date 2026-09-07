@@ -10,9 +10,9 @@ import { videoPage as adminVideoPage, type VideoPageData } from '../admin/querie
 import { q, one } from '../admin/db';
 import {
   mergeActuals,
-  type Actual, type CurvePoint,
+  type Actual, type TypicalPoint,
   expectedAtAge } from '../admin/video-curve';
-import { buildSeries, channelCurve, type SeriesPoint } from './chart-series';
+import { buildSeries, channelCurve, seriesDays, type SeriesPoint } from './chart-series';
 import { gapReasonWords, MIN_PRIORS } from '../scoring/score-gaps';
 import { thumbUrl } from '../thumbs/storage';
 import { thumbnailVariants, testState, type Variant, type TestState } from './packaging';
@@ -21,6 +21,8 @@ import { horizonFor } from './chart-horizon';
 import { isSameAgeScore, scoreComparison, type ScoreComparison } from './chart-comparison';
 import { scoreParamsQuery } from './score-version';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
+import { videoTypicalCurve } from './typical-curve';
+import { cachedTypicalPriors } from './cached';
 
 /** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
  *  to an earlier image is a new version but the same variant (lib/app/packaging.ts). */
@@ -50,7 +52,7 @@ export type VideoPageView = {
   thumbFallbackUrl: string | null;
   score: VideoPageData['score'];
   actuals: Actual[];
-  curve: CurvePoint[];
+  curve: TypicalPoint[];
   comparison: ScoreComparison | null;
   /**
    * One value per day from publish to the horizon — measured / implied / forecast. This is the
@@ -213,6 +215,14 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     .map((x) => new Date(x as string).getTime())
     .sort((a, b) => b - a)[0];
 
+  // The chart's day grid, decided once: the typical line and the series are read off the SAME
+  // days, so the reader can compare them point for point.
+  const gridDays = seriesDays(maxDay, actuals.map((a) => a.day));
+  // The channel's typical line: channelCurve at every one of those ages, on the priors the
+  // scorer used (lib/app/typical-curve.ts). A broadcast has no ordinary same-age denominator
+  // yet (2026-09-04 livestream findings), so it still gets no line.
+  const typical = broadcast.isBroadcast ? [] : await videoTypicalCurve(id, gridDays, (vid) => cachedTypicalPriors(vid, v.channel_id));
+
   const hero = heroThumb(id, thumbs, v.thumbnail_url ?? null);
   const thumbRows = thumbs.map((t) => ({ version: t.version, sha256: t.sha256 ?? null, phash: t.phash ?? null, first_seen: t.first_seen }));
   const { variants, states } = thumbnailVariants(thumbRows);
@@ -254,9 +264,16 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
         bands,
         assumeZeroOrigin: v.duration !== 'P0D',
       });
-      // C(30) scaled by global growth is not V5's weighted C(t). Until scoring stores the
-      // frozen prior/fit context, show the exact scored comparison instead of a false curve.
-      return { series, curve: broadcast.isBroadcast || isSameAgeScore(score) ? [] : channelCurve(series, score?.baseline ?? null, mult, longtail) };
+      // The typical line is channelCurve itself now -- the score's own denominator at every age
+      // (lib/app/typical-curve.ts), not C(30) dragged along the global growth shape, which is a
+      // different curve and was suppressed entirely for v5 rows. Pre-v5 rows, which have no
+      // stored same-age denominator, keep the old shape.
+      return {
+        series,
+        curve: broadcast.isBroadcast ? []
+          : isSameAgeScore(score) ? typical
+          : channelCurve(series, score?.baseline ?? null, mult, longtail),
+      };
     })(),
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
       variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),

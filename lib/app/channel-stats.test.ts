@@ -1,5 +1,6 @@
 jest.mock('../admin/db', () => ({ q: jest.fn() }));
 import { q } from '../admin/db';
+import { currentBaselineSql } from './channel-baseline';
 import { refreshChannelStats, refreshChannelStatsSql, touchPackagingChange } from './channel-stats';
 
 const mq = q as jest.Mock;
@@ -33,14 +34,24 @@ describe('refreshChannelStats', () => {
     }
   });
 
-  it('keeps parity with the old inline listUserChannels aggregates, Shorts included', () => {
+  it('counts videos and outliers exactly as the old inline aggregates did, Shorts included', () => {
     const sql = norm(refreshChannelStatsSql(false));
-    // Deliberately no longform predicate here: the channel list has always counted Shorts.
-    expect(sql).not.toContain('shorts_checked_at');
-    expect(sql).toContain('percentile_cont(0.5) within group (order by vs.baseline)');
+    // Deliberately no longform predicate on the VIDEO COUNT: the channel list has always
+    // counted Shorts, and that is preserved on purpose (see the module header).
+    expect(sql).toContain('select count(*)::int as video_count, max(vv.channel_name) as name');
+    expect(sql).not.toMatch(/from videos vv where vv\.channel_id = c\.channel_id and/);
+    expect(sql).toContain("count(*) filter (where vs.score >= 2 and vs.confidence <> 'insufficient')");
     expect(sql).toContain("count(*) filter (where vs.score >= 2 and vs.confidence <> 'insufficient')");
     expect(sql).toContain('tv.version > 1');
     expect(sql).toContain('ti.version > 1');
+  });
+
+  it("stores the channel's normal NOW as its baseline, not a lifetime median", () => {
+    const sql = norm(refreshChannelStatsSql(false));
+    expect(sql).not.toContain('percentile_cont');
+    expect(sql).toContain(norm(currentBaselineSql('c.channel_id')));
+    // long-form only on THAT subquery: a Short's C(30) is not this channel's normal
+    expect(sql).toContain('order by vb.published_at desc nulls last limit 1');
   });
 
   it('reports how many rows it wrote', async () => {

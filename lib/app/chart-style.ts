@@ -7,7 +7,7 @@
 // invites the eye to read it as a projection — and the future keeps the accent, the dash and
 // its (now fitted, lib/scoring/bands.ts) band.
 import type { SeriesKind, SeriesPoint } from './chart-series';
-import type { Actual, CurvePoint } from '../admin/video-curve';
+import type { Actual, TypicalPoint } from '../admin/video-curve';
 import { compactNumber } from './feed-format';
 import { localDay, localDateTimeZone } from './local-time';
 
@@ -207,7 +207,7 @@ export interface ChartRow {
  * band around a reconstruction of something that already happened would read as a projection,
  * and the channel's typical curve is a baseline, not a prediction.
  */
-export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: Actual[]): ChartRow[] {
+export function chartRows(series: SeriesPoint[], curve: TypicalPoint[], actuals: Actual[]): ChartRow[] {
   const byDay = new Map<number, ChartRow>();
   const at = (d: number) => {
     let r = byDay.get(d);
@@ -216,7 +216,9 @@ export function chartRows(series: SeriesPoint[], curve: CurvePoint[], actuals: A
   };
   // The channel curve contributes its LINE and nothing else — see TYPICAL_STYLE. Its lo/hi are
   // read (and still fitted) but never drawn: one chart, one uncertainty, and it is the forecast's.
-  for (const c of curve) at(c.day).expected = c.expected;
+  // A null point is a GAP, not a zero: the row simply has no `expected` key, and the plot draws
+  // the typical line with connectNulls off so the hole survives to the screen.
+  for (const c of curve) if (c.expected != null) at(c.day).expected = c.expected;
   const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
   for (let i = 0; i < series.length; i++) {
     const p = series[i];

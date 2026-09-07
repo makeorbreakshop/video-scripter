@@ -22,6 +22,7 @@ import {
 import { channelBaselineSeries as channelBaselineSeriesUncached, type BaselinePoint } from './channel-analytics';
 import { loadVideoPage as loadVideoPageUncached, type VideoPageView } from './video-page';
 import { channelSparklines as channelSparklinesUncached, type Sparkline } from './channel-sparklines';
+import { loadTypicalPriors } from './typical-curve';
 import { channelTag, videoTag } from './cache-tags';
 
 export { channelTag, videoTag };
@@ -104,5 +105,21 @@ export function cachedSparklines(channelIds: string[]): Promise<Record<string, S
     () => channelSparklinesUncached(ids),
     ['channel-sparklines', ids.join(',')],
     { revalidate: CHANNEL_TTL }
+  )();
+}
+
+/**
+ * The prior set behind a video's "typical for this channel" line.
+ *
+ * It is the channel's history, censored at this video's publish time, so it changes only when
+ * the CHANNEL changes — a new upload, a rescore — and never when this video gets a reading.
+ * Hence the channel tag: one rescore of the channel drops every one of its videos' prior sets
+ * together. Keyed by video because the censoring is per video; three reads saved per page view.
+ */
+export function cachedTypicalPriors(videoId: string, channelId: string) {
+  return unstable_cache(
+    () => loadTypicalPriors(videoId),
+    ['typical-priors', videoId],
+    { revalidate: CHANNEL_TTL, tags: [channelTag(channelId)] }
   )();
 }

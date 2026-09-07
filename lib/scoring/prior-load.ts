@@ -1,0 +1,109 @@
+// Loading the prior set the score divides by — once, for everybody.
+//
+// The video page's dashed "typical for this channel" line must be the same function the score
+// divides by, which means it must be built from the same priors, censored the same way. That was
+// only true by hand-copying before: the prior loading lived inside scripts/score-videos.ts's
+// v5Batch, so lib/admin/video-curve.ts drew C(30) x a global growth shape instead — a different
+// curve that disagreed with the score by up to 3.6x, and for v5 rows was suppressed entirely.
+//
+// Everything here takes a `q` rather than importing a pool: the scorer runs on its own pg pool
+// and the app runs on lib/admin/db's, and neither should have to know about the other.
+import { chunk } from '../nightly/tracking-core';
+import { PRIOR_STALE_DAYS, PRIOR_WINDOW, type Snapshot } from './core';
+import { longformSql } from './longform';
+import { OBSERVATION_RECORDS_SQL, observationRecords } from './observations';
+import type { CurvePrior } from './curve';
+
+export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
+
+/** One of a target's prior videos: its id, publish time (epoch ms) and gap before the target. */
+export interface PriorRef { id: string; pub: number; ageDays: number }
+/** Lifetime count and the age it was read at — the route a pre-tracking prior contributes by. */
+export interface PriorMeta { views: number; age: number }
+
+/**
+ * Recent prior long-form, public videos of each target's channel, newest first: the v4.0 BASELINE
+ * pool. Up to PRIOR_WINDOW of them, minus anything published more than PRIOR_STALE_DAYS before
+ * the target. `ageDays` is the target's publish time minus the prior's — what the age kernel
+ * weights by, and what lib/scoring/curve reads the channel's cadence off.
+ */
+export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise<Map<string, PriorRef[]>> {
+  const out = new Map<string, PriorRef[]>();
+  if (!ids.length) return out;
+  const rows: { video_id: string; prior_id: string; gap_days: number; pub: string }[] = await q(
+    `select r.id as video_id, p.id as prior_id,
+            extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days,
+            p.published_at as pub
+       from unnest($1::text[]) as r(id) join videos v on v.id = r.id
+       join lateral (select p.id, p.published_at from videos p
+                      where p.channel_id = v.channel_id and p.published_at < v.published_at
+                        and ${longformSql('p')}
+                        and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
+                      order by p.published_at desc nulls last limit ${PRIOR_WINDOW}) p on true
+      order by r.id, p.published_at desc`,
+    [ids as string[]]
+  );
+  for (const r of rows) {
+    const ageDays = Number(r.gap_days);
+    if (ageDays > PRIOR_STALE_DAYS) continue;
+    if (!out.has(r.video_id)) out.set(r.video_id, []);
+    out.get(r.video_id)!.push({ id: r.prior_id, pub: new Date(r.pub).getTime(), ageDays });
+  }
+  return out;
+}
+
+/**
+ * The canonical observation record for a set of videos, at TRUE age: snapshots, high-res samples
+ * and RSS merged by lib/scoring/observations. Key arrays are bounded — a very large IN set turns
+ * these reads into corpus-wide scans.
+ */
+export async function loadRecords(q: QueryFn, ids: readonly string[]): Promise<Map<string, Snapshot[]>> {
+  const out = new Map<string, Snapshot[]>();
+  if (!ids.length) return out;
+  for (const part of chunk([...ids], 100)) {
+    for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
+  }
+  return out;
+}
+
+/** Current lifetime count and age in days, for the priors with no usable samples. */
+export async function loadMeta(q: QueryFn, ids: readonly string[]): Promise<Map<string, PriorMeta>> {
+  if (!ids.length) return new Map();
+  const rows = await q(
+    `select id, coalesce(view_count,0) as views, extract(epoch from (now() - published_at))/86400.0 as age
+       from videos where id = any($1)`,
+    [ids as string[]]
+  );
+  return new Map(rows.map((r: any) => [r.id as string, { views: Number(r.views), age: Number(r.age) }]));
+}
+
+/** Assemble the CurvePriors from parts already in hand. Pure — the seam the tests use. */
+export function curvePriorsFrom(
+  refs: readonly PriorRef[],
+  records: Map<string, Snapshot[]>,
+  metas: Map<string, PriorMeta>
+): CurvePrior[] {
+  return refs.map((p) => {
+    const m = metas.get(p.id);
+    return {
+      id: p.id,
+      ageDays: p.ageDays,
+      samples: records.get(p.id) ?? [],
+      lifetime: m && m.views > 0 ? { views: m.views, ageDays: m.age } : null,
+    };
+  });
+}
+
+/**
+ * The whole prior set for a batch of targets, ready for channelCurve/scoreV5. Three reads.
+ * This is THE definition of "the priors this video is scored against"; anything drawing the
+ * channel's typical line must come through here or it is drawing a different curve.
+ */
+export async function loadCurvePriors(q: QueryFn, ids: readonly string[]): Promise<Map<string, CurvePrior[]>> {
+  const refsOf = await loadPriorRefs(q, ids);
+  const priorIds = [...new Set([...refsOf.values()].flat().map((p) => p.id))];
+  const [records, metas] = await Promise.all([loadRecords(q, priorIds), loadMeta(q, priorIds)]);
+  const out = new Map<string, CurvePrior[]>();
+  for (const id of ids) out.set(id, curvePriorsFrom(refsOf.get(id) ?? [], records, metas));
+  return out;
+}

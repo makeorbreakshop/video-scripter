@@ -14,6 +14,12 @@ export type Mult = Record<number, number>;
 /** Fitted long tail past day 30: `mult[i]` is views at `ages[i]` as a multiple of day-30 views. */
 export type Longtail = { ages: number[]; mult: number[] };
 export type CurvePoint = { day: number; expected: number; lo: number; hi: number };
+/**
+ * One point of the channel's typical line as the chart consumes it. `expected` is NULL where the
+ * model cannot say what normal is at that age (lib/app/typical-curve.ts) -- the chart leaves a
+ * GAP there rather than drawing a zero, which would claim a typical video has no views at all.
+ */
+export type TypicalPoint = { day: number; expected: number | null };
 export type ProjPoint = { day: number; projected: number };
 export type Actual = { day: number; views: number; source: 'snapshot' | 'sample' | 'rss'; at: string };
 export type Marker = {

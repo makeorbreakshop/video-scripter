@@ -20,7 +20,7 @@ import {
   Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
   ReferenceDot, ReferenceArea,
 } from 'recharts';
-import { type Actual, type CurvePoint } from '@/lib/admin/video-curve';
+import { type Actual, type TypicalPoint } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ScoreComparison } from '@/lib/app/chart-comparison';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
@@ -302,7 +302,7 @@ export default function VideoChartPlot({
 }: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
-  curve: CurvePoint[];
+  curve: TypicalPoint[];
   /** One value per day with its kind; kind decides styling, never whether a value exists. */
   series: SeriesPoint[];
   /** The packaging groups on the day axis — lib/app/packaging-groups.ts, the strip's own call. */
@@ -375,7 +375,13 @@ export default function VideoChartPlot({
 
   // The end labels belong to the horizon, so they are drawn only when the horizon is in view.
   const inView = (d: number) => d >= domain[0] && d <= domain[1];
-  const endBaseline = curve.length && inView(curve[curve.length - 1].day) ? curve[curve.length - 1] : null;
+  // The last point the typical line actually HAS -- past the horizon a channel curve can run out
+  // (no prior has a reading that old), and the label belongs on the ink, not on the gap.
+  const lastCurve = useMemo(() => {
+    for (let i = curve.length - 1; i >= 0; i--) if (curve[i].expected != null) return curve[i];
+    return null;
+  }, [curve]);
+  const endBaseline = lastCurve && inView(lastCurve.day) ? lastCurve : null;
   const lastSeries = series.length ? series[series.length - 1] : null;
   const endProjected = lastSeries?.kind === 'forecast' && inView(lastSeries.day) ? { day: lastSeries.day, projected: lastSeries.views } : null;
   /**
@@ -480,9 +486,9 @@ export default function VideoChartPlot({
             <Area key={ring} dataKey={ring === 'inner' ? 'bandInner' : 'bandOuter'} {...areaProps(ring, C.accent, C.mode)} />
           ))}
 
-          {curve.length > 0 && (
+          {curve.some((c) => c.expected != null) && (
             <Line
-              dataKey="expected" name={SERIES_LABELS.expected} legendType="none" connectNulls dot={false} activeDot={false}
+              dataKey="expected" name={SERIES_LABELS.expected} legendType="none" connectNulls={false} dot={false} activeDot={false}
               stroke={C[TYPICAL_STYLE.strokeToken]} strokeWidth={TYPICAL_STYLE.width}
               strokeDasharray={TYPICAL_STYLE.dash} isAnimationActive={false}
             />
@@ -529,8 +535,8 @@ export default function VideoChartPlot({
 
           {endBaseline && (
             <ReferenceDot
-              x={endBaseline.day} y={endBaseline.expected} r={3} fill={C.muted} stroke="none" isFront
-              label={{ value: fmtViews(endBaseline.expected), fontSize: CHART_TYPE.label, fill: C.muted, position: 'left', offset: 10, dy: 12 }}
+              x={endBaseline.day} y={endBaseline.expected ?? undefined} r={3} fill={C.muted} stroke="none" isFront
+              label={{ value: fmtViews(endBaseline.expected ?? 0), fontSize: CHART_TYPE.label, fill: C.muted, position: 'left', offset: 10, dy: 12 }}
             />
           )}
           {endProjected && (
@@ -616,7 +622,7 @@ export default function VideoChartPlot({
           brush, which put three names in the gap where the timeline handle belongs. */}
       <div style={{ marginTop: 8 }}>
         <ChartLegend
-          entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.length > 0 }, series.some(p => p.kind === 'forecast' && !!p.band))}
+          entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.some((c) => c.expected != null) }, series.some(p => p.kind === 'forecast' && !!p.band))}
           accent={C.accent} muted={C.muted} mode={C.mode}
         />
       </div>

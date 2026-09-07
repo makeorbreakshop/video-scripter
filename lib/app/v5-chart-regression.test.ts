@@ -5,8 +5,14 @@ import { chartRows, legendEntries, tooltipLines } from './chart-style';
 import { scoreComparison } from './chart-comparison';
 import { headerLines, loadVideoPage } from './video-page';
 import { videoPage } from '../admin/queries';
+import { videoTypicalCurve } from './typical-curve';
+import { seriesDays } from './chart-series';
 
 jest.mock('../admin/queries', () => ({ videoPage: jest.fn() }));
+// The typical line is a second read (the scorer's own prior set); the frozen fixture has no
+// priors in it, so this suite pins the COMPOSITION -- that the page asks for the series' own
+// grid and draws exactly what comes back.
+jest.mock('./typical-curve', () => ({ videoTypicalCurve: jest.fn(async () => []) }));
 const data: any = fixture;
 const params = data.params.params;
 const capturedAt = Date.parse(data.capturedAt);
@@ -43,9 +49,14 @@ describe.each<[string, string]>(data.videos.map((v: any) => [v.channel_name, v.i
   it('composes the page with scorer timestamps and the exact stored comparison only', async () => {
     const s = scenario(id);
     jest.mocked(videoPage).mockResolvedValue({ ...s, thumbs: [], titles: [], mult: params.mult, longtail: params.longtail, bands: null } as any);
+    jest.mocked(videoTypicalCurve).mockResolvedValue([]);
     const view = await loadVideoPage(id, capturedAt);
     expect(view!.actuals).toEqual(s.actuals);
     expect(view!.curve).toEqual([]);
+    // it asked for the typical line on the SAME days the series is drawn on
+    const [askedId, askedDays] = jest.mocked(videoTypicalCurve).mock.calls.at(-1)!;
+    expect(askedId).toBe(id);
+    expect([...askedDays]).toEqual(seriesDays(view!.horizonDay, s.actuals.map((a) => a.day)));
     expect(view!.comparison).toEqual(scoreComparison(s.score));
     const comparison = view!.comparison;
     if (comparison) {
@@ -73,4 +84,23 @@ test('withheld or inconsistent comparisons cannot produce a multiplier marker', 
 test('projection disclosure has no ribbon swatch without a validated interval', () => {
   expect(legendEntries({ forecast: true }, false)).toEqual([{ key: 'forecast', label: 'tentative projection', swatch: 'projection', ribbon: false }]);
   expect(tooltipLines({ kind: 'interpolated', at: '2026-09-04', views: 100 })).toContain('Interpolated between observations');
+});
+
+test('the typical line the page draws IS the line the score divides by', async () => {
+  // The whole point of lib/app/typical-curve.ts: one function, so views / line at the video's
+  // own age is the headline multiple and not a second opinion.
+  jest.mocked(videoTypicalCurve).mockResolvedValue([
+    { day: 1, expected: 100 }, { day: 3, expected: 250 }, { day: 9.8, expected: 22686 },
+  ]);
+  const s = scenario(data.videos[0].id);
+  jest.mocked(videoPage).mockResolvedValue({
+    ...s, thumbs: [], titles: [], mult: params.mult, longtail: params.longtail, bands: null,
+    score: { ...s.score, model_version: 'v5.1-rss', age_days: 9.8, typical_at_age: 22686, score: 4.78, views: 108438 },
+  } as any);
+  const view = await loadVideoPage(s.video.id, capturedAt);
+  expect(view!.curve).toEqual([
+    { day: 1, expected: 100 }, { day: 3, expected: 250 }, { day: 9.8, expected: 22686 },
+  ]);
+  const atScoredAge = view!.curve.find((c) => c.day === 9.8)!;
+  expect(108438 / atScoredAge.expected!).toBeCloseTo(4.78, 2);
 });
