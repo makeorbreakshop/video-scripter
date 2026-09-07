@@ -1,9 +1,14 @@
 ---
 title: Reject stale RSS view responses and measure residual decreases
-status: active
-artifact_readiness: implementation-ready
+status: revision-required
+artifact_readiness: requirements-only
 execution: code
 ---
+
+## Current decision — do not deploy the discard-only implementation
+Brandon requested preservation of responses and historical placement of late cached readings, then asked to test that approach first. The old implementation below is superseded as a rollout candidate. No production changes were made. A standalone experiment in scripts/experiments/rss-response-history.ts now tests response-time reconstruction, audit receipt preservation, observation deduplication, and conflicts. It is not imported by production code.
+
+13 new experiment tests pass (6 failures observed against fetch-time baseline before changing the experiment). Four scoped suites / 58 tests pass; targeted TypeScript passes. All 24 captured per-video receipts preserved, 21 historical observations after exact video/time/count deduplication. Both pilot arrival-order drops disappear through actual chart math, including API combinations. Earlier stored database rows corroborate the cached count/time within one second for Every and PTFO. Unknown timestamps and newer count corrections remain; same-time conflicts are explicit. HTTP Date/Age are not exact view measurement timestamps. Full raw-XML archiving, retention/storage design, production metadata propagation/labels, and revised persistence remain unimplemented. Historical September 6 drops cannot be retroactively diagnosed from missing headers.
 
 ## Outcome
 Preserve response freshness; reject RSS count updates from an older known HTTP Date; measure decreases before and after that filter, with all comparable fetched readings as denominator. No automatic API checks.

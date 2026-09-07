@@ -1,0 +1,386 @@
+[
+  {
+    "eventId": "round-1:1EEw36H2zLo",
+    "videoId": "1EEw36H2zLo",
+    "channel": "Every",
+    "views": 88694,
+    "fetchedAt": 1788779897185,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:17 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 88694,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-1:_cmpHXDgnWo",
+    "videoId": "_cmpHXDgnWo",
+    "channel": "TheEllenShow",
+    "views": 9348,
+    "fetchedAt": 1788779897191,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:17 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 9348,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-1:OkiEwe_GPIM",
+    "videoId": "OkiEwe_GPIM",
+    "channel": "MakerDan",
+    "views": 250,
+    "fetchedAt": 1788779897248,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:17 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 250,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-1:s61DyBI4dHA",
+    "videoId": "s61DyBI4dHA",
+    "channel": "Hey Brickey!",
+    "views": 139836,
+    "fetchedAt": 1788779897272,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:17 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 139836,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-1:YBvdMVY7LW4",
+    "videoId": "YBvdMVY7LW4",
+    "channel": "PABLO TORRE FINDS OUT",
+    "views": 454789,
+    "fetchedAt": 1788779897180,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:17 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 454789,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-1:z6ZvfLYyiRA",
+    "videoId": "z6ZvfLYyiRA",
+    "channel": "Josh Pate's College Football Show",
+    "views": 117424,
+    "fetchedAt": 1788779897115,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:08:02 GMT",
+      "age": "615",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 117424,
+    "apiAt": 1788779897100
+  },
+  {
+    "eventId": "round-2:1EEw36H2zLo",
+    "videoId": "1EEw36H2zLo",
+    "channel": "Every",
+    "views": 88653,
+    "fetchedAt": 1788779939286,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:11:24 GMT",
+      "age": "455",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 88694,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-2:_cmpHXDgnWo",
+    "videoId": "_cmpHXDgnWo",
+    "channel": "TheEllenShow",
+    "views": 9348,
+    "fetchedAt": 1788779939366,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:59 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 9348,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-2:OkiEwe_GPIM",
+    "videoId": "OkiEwe_GPIM",
+    "channel": "MakerDan",
+    "views": 250,
+    "fetchedAt": 1788779939426,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:59 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 250,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-2:s61DyBI4dHA",
+    "videoId": "s61DyBI4dHA",
+    "channel": "Hey Brickey!",
+    "views": 139836,
+    "fetchedAt": 1788779939427,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:59 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 139836,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-2:YBvdMVY7LW4",
+    "videoId": "YBvdMVY7LW4",
+    "channel": "PABLO TORRE FINDS OUT",
+    "views": 454699,
+    "fetchedAt": 1788779939288,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:11:30 GMT",
+      "age": "449",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 454789,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-2:z6ZvfLYyiRA",
+    "videoId": "z6ZvfLYyiRA",
+    "channel": "Josh Pate's College Football Show",
+    "views": 117424,
+    "fetchedAt": 1788779939431,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:59 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 117424,
+    "apiAt": 1788779939345
+  },
+  {
+    "eventId": "round-3:1EEw36H2zLo",
+    "videoId": "1EEw36H2zLo",
+    "channel": "Every",
+    "views": 88653,
+    "fetchedAt": 1788779958450,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:11:24 GMT",
+      "age": "474",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 88694,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-3:_cmpHXDgnWo",
+    "videoId": "_cmpHXDgnWo",
+    "channel": "TheEllenShow",
+    "views": 9348,
+    "fetchedAt": 1788779958465,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:18:59 GMT",
+      "age": "19",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 9348,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-3:OkiEwe_GPIM",
+    "videoId": "OkiEwe_GPIM",
+    "channel": "MakerDan",
+    "views": 250,
+    "fetchedAt": 1788779958539,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:18 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 250,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-3:s61DyBI4dHA",
+    "videoId": "s61DyBI4dHA",
+    "channel": "Hey Brickey!",
+    "views": 139836,
+    "fetchedAt": 1788779958618,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:18 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 139836,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-3:YBvdMVY7LW4",
+    "videoId": "YBvdMVY7LW4",
+    "channel": "PABLO TORRE FINDS OUT",
+    "views": 454789,
+    "fetchedAt": 1788779958579,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:18 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 454789,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-3:z6ZvfLYyiRA",
+    "videoId": "z6ZvfLYyiRA",
+    "channel": "Josh Pate's College Football Show",
+    "views": 117424,
+    "fetchedAt": 1788779958475,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:15:31 GMT",
+      "age": "227",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 117424,
+    "apiAt": 1788779958512
+  },
+  {
+    "eventId": "round-4:1EEw36H2zLo",
+    "videoId": "1EEw36H2zLo",
+    "channel": "Every",
+    "views": 88694,
+    "fetchedAt": 1788779969327,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:29 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 88694,
+    "apiAt": 1788779969285
+  },
+  {
+    "eventId": "round-4:_cmpHXDgnWo",
+    "videoId": "_cmpHXDgnWo",
+    "channel": "TheEllenShow",
+    "views": 9348,
+    "fetchedAt": 1788779969328,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:29 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 9348,
+    "apiAt": 1788779969285
+  },
+  {
+    "eventId": "round-4:OkiEwe_GPIM",
+    "videoId": "OkiEwe_GPIM",
+    "channel": "MakerDan",
+    "views": 250,
+    "fetchedAt": 1788779969267,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:18 GMT",
+      "age": "11",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 250,
+    "apiAt": 1788779969285
+  },
+  {
+    "eventId": "round-4:s61DyBI4dHA",
+    "videoId": "s61DyBI4dHA",
+    "channel": "Hey Brickey!",
+    "views": 139836,
+    "fetchedAt": 1788779969504,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:29 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 139836,
+    "apiAt": 1788779969285
+  },
+  {
+    "eventId": "round-4:YBvdMVY7LW4",
+    "videoId": "YBvdMVY7LW4",
+    "channel": "PABLO TORRE FINDS OUT",
+    "views": 454789,
+    "fetchedAt": 1788779969340,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:19:29 GMT",
+      "age": null,
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 454789,
+    "apiAt": 1788779969285
+  },
+  {
+    "eventId": "round-4:z6ZvfLYyiRA",
+    "videoId": "z6ZvfLYyiRA",
+    "channel": "Josh Pate's College Football Show",
+    "views": 117424,
+    "fetchedAt": 1788779969268,
+    "headers": {
+      "date": "Mon, 07 Sep 2026 11:11:23 GMT",
+      "age": "486",
+      "cache-control": "public, max-age=900",
+      "etag": null,
+      "last-modified": null
+    },
+    "apiViews": 117424,
+    "apiAt": 1788779969285
+  }
+]
