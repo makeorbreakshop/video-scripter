@@ -128,13 +128,26 @@ export function contributionAt(
 }
 
 /**
- * How many median publish gaps wide the age kernel is on a slow channel. k = 2 from the
- * 2026-09-07 baseline coverage audit: on the slices the holdout can measure it is a no-op
- * (daily/weekly channels never leave the 30-day floor) and on the sparse slice it costs
- * +0.003 base_medALE at t=3 and +0.013 at t=7 while recovering 76% of the starved 20-45d
- * videos and 97% of the 45-90d ones. k = 3 and k = 4 fail the skill's 0.03 F1 gate on sparse.
+ * How many median publish gaps wide the age kernel is on a slow channel.
+ *
+ * k = 1.5, from the k sweep on the Jul-Aug 2025 holdout (2,222 videos, the whole eligible
+ * population -- there is no second cut: no other month has both an early and a day-30 snapshot).
+ * Every k is a no-op on the daily and weekly slices, so the sparse slice at 1.5 / 2 decides it:
+ *
+ *   t=3 sparse (n=141)  tw30 F1 .653   k=1.5 .625 (-.028)   k=2 .625 (-.028)
+ *   t=7 sparse (n=151)  tw30 F1 .767   k=1.5 .746 (-.021)   k=2 .733 (-.034)
+ *
+ * k = 2 is outside the skill's 0.03 F1 gate at t=7 and k = 1.5 is inside it, and the deficit is
+ * not a coverage artefact: restricted to the rows BOTH rules cover the numbers are unchanged to
+ * three decimals, because the rows the wider kernel newly covers are all true negatives. It is
+ * also barely anything -- at t=7 the whole difference between k=1.5 and k=2 is one video moving
+ * from true positive to false positive, well inside the noise of 33 positives. The gate is the
+ * gate, and k = 1.5 costs almost nothing to honour: on 250 videos from tracked channels
+ * publishing slower than weekly it recovers 56% of the rows the fixed 30-day kernel starves
+ * against k = 2's 61%, i.e. 91% of the coverage k = 2 buys. (k = 3 recovers 72% and fails the
+ * gate outright, .65 -> .57 at t=3.)
  */
-export const CADENCE_HALF_LIFE_K = 2;
+export const CADENCE_HALF_LIFE_K = 1.5;
 
 /**
  * The half-life of the baseline age kernel, in the channel's own rhythm.

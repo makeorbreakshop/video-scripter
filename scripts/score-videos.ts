@@ -60,8 +60,8 @@ const arg = (name: string): string | null => {
 };
 const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filter(Boolean);
 // --channels-min-gap <days>: every channel whose MEDIAN PUBLISH GAP is wider than <days>. Since
-// v5.2 the baseline half-life is max(30, 2 x that gap) (lib/scoring/curve.cadenceHalfLifeDays),
-// so the scoring math is byte-identical on anything publishing more often than fortnightly: a
+// v5.2 the baseline half-life is max(30, 1.5 x that gap) (lib/scoring/curve.cadenceHalfLifeDays),
+// so the scoring math is byte-identical on anything publishing more often than every 20 days: a
 // rescore after the v5.2 change only has to touch the slow channels. Resolved to a channel list
 // before selection, so it composes with --all/--force exactly as --channels does.
 const MIN_GAP = Number(arg('--channels-min-gap') ?? 0) || null;

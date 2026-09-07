@@ -326,12 +326,13 @@ describe('cadenceHalfLifeDays', () => {
   it('leaves fast channels on the 30-day floor', () => {
     expect(cadenceHalfLifeDays(pubs(1))).toBe(30);    // daily
     expect(cadenceHalfLifeDays(pubs(7))).toBe(30);    // weekly
-    expect(cadenceHalfLifeDays(pubs(14))).toBe(30);   // fortnightly: 2 x 14 = 28 < 30
+    expect(cadenceHalfLifeDays(pubs(14))).toBe(30);   // fortnightly: 1.5 x 14 = 21 < 30
+    expect(cadenceHalfLifeDays(pubs(20))).toBe(30);   // three-weekly: 1.5 x 20 = 30, the floor
   });
 
-  it('opens the kernel to two median gaps once the channel is slower than fortnightly', () => {
-    expect(cadenceHalfLifeDays(pubs(20))).toBeCloseTo(40, 6);
-    expect(cadenceHalfLifeDays(pubs(90))).toBeCloseTo(180, 6);
+  it('opens the kernel to 1.5 median gaps once the channel is slower than three-weekly', () => {
+    expect(cadenceHalfLifeDays(pubs(30))).toBeCloseTo(45, 6);
+    expect(cadenceHalfLifeDays(pubs(90))).toBeCloseTo(135, 6);
   });
 
   it('has no measurable cadence under three priors, so the floor stands', () => {
@@ -342,7 +343,7 @@ describe('cadenceHalfLifeDays', () => {
 
   it('reads the same cadence off the priors, whose ageDays run the other way', () => {
     const priors = [0, 90, 180, 270, 360].map((ageDays) => prior(ageDays, []));
-    expect(cadenceHalfLifeForPriors(priors)).toBeCloseTo(180, 6);
+    expect(cadenceHalfLifeForPriors(priors)).toBeCloseTo(135, 6);
   });
 });
 
@@ -362,8 +363,8 @@ describe('a monthly channel gets a baseline (Steve Ramsey, real prior gaps)', ()
     expect(c.typical).toBeNull();
   });
 
-  it('scores in its own rhythm: half-life = 2 x its 81d median gap', () => {
-    expect(cadenceHalfLifeForPriors(RAMSEY)).toBeCloseTo(162.9, 1);
+  it('scores in its own rhythm: half-life = 1.5 x its 81d median gap', () => {
+    expect(cadenceHalfLifeForPriors(RAMSEY)).toBeCloseTo(122.2, 1);
     const c = channelCurve(RAMSEY, 227, P);          // no half-life argument = the v5.2 rule
     expect(c.n).toBe(7);
     expect(c.neff).toBeGreaterThan(4);

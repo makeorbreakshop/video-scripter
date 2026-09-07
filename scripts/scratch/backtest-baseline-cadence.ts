@@ -65,6 +65,7 @@ const q = async (sql: string, params?: any[]): Promise<any[]> => (await client.q
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
+const DUMP: string[] | null = arg('--dump') ? [] : null;
 const CADENCE_K = (arg('--cadence-k') ?? '').split(',').map(Number).filter((k) => Number.isFinite(k) && k > 0);
 const paramRows = await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [PARAMS_VERSION]);
 if (!paramRows.length) { console.error(`no score_params for ${PARAMS_VERSION}`); process.exit(1); }
@@ -260,6 +261,10 @@ for (const t of T_LIST) {
 
     for (const rule of RULES) {
       const { baseline, neff } = baselineFor(rule, ests, gap);
+      // --dump: one line per (age, rule, video) so coverage, paired flips and sub-cuts can be
+      // read off the SAME run. The F1 in the table below is over each rule's OWN covered rows,
+      // so a rule that covers more is judged on rows the control never had to classify.
+      if (DUMP) DUMP.push(`${t},${rule},${cad},${trend},${v.id},${v.pub},${baseline ?? ''},${est30},${v30},${oracle}`);
       for (const key of [`${t}|${rule}|all`, `${t}|${rule}|${trend}`, `${t}|${rule}|${cad}`]) {
         const a = get(key);
         a.n++;
@@ -287,6 +292,11 @@ for (const t of T_LIST) for (const sl of ['all', 'growing', 'flat', 'declining',
   console.log(
     `${String(t).padEnd(2)} ${rule.padEnd(9)} ${sl.padEnd(10)} ${String(a.n).padEnd(5)} ${(a.cov / a.n).toFixed(2)}  ${f(median(a.bias))}   ${f(median(a.bErr))}       ${f(median(a.sErr))}      ${f(p, 2)} ${f(r, 2)} ${f(f1, 2)}  ${f(median(a.neff), 1)}`
   );
+}
+if (DUMP) {
+  const path = arg('--dump')!;
+  (await import('node:fs')).writeFileSync(path, 't,rule,cadence,trend,video_id,pub,baseline,est30,v30,oracle\n' + DUMP.join('\n') + '\n');
+  console.log(`\ndumped ${DUMP.length} rows to ${path}`);
 }
 client.release();
 await pool.end();
