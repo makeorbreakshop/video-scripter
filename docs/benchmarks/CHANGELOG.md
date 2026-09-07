@@ -54,6 +54,31 @@ Leak checks — the v3/v4 `core.scoreVideo` path must not move, and does not:
 
 BASELINE.json not moved: this is a v5-path change and the reference run is v3.0.
 
+### Shipped alongside it (display, no scoring math)
+
+- **The channel header baseline** was a lifetime median of every `video_scores.baseline` on the
+  channel, in `channel_stats.baseline` and in the page's inline fallback alike. Both now read
+  C(30) from the newest scored long-form video (`lib/app/channel-baseline.ts`, one shared SQL
+  fragment). Karpathy 312,038 -> 5,782,654; Morley Kert 12,172 -> 899,262; Myers Woodshop
+  8,486 -> 43; Steve Ramsey 121,367 -> 26,697. `refresh-channel-stats.ts` applied to all 500
+  tracked channels; the plan is index-driven (`idx_video_scores_channel` + `videos_pkey`, a
+  sort over ~130 rows per channel).
+- **The video page's dashed "typical for this channel" line** is `channelCurve` at every age on
+  the chart's grid, over the prior set the scorer uses (`lib/scoring/prior-load.ts`, factored out
+  of `score-videos.ts`'s v5Batch). It was C(30) x the global growth shape, which is a different
+  function and was therefore drawn as nothing at all for v5 rows. Ages with no curve leave a gap.
+  `lib/app/typical-curve.db.test.ts` asserts `views / line(age) == the stored score` within 1% on
+  live rows.
+
+### Rescore
+
+`score-videos.ts --channels-min-gap 15 --all --force` — 1,714 channels, 101,995 selected,
+101,825 written. Videos that are `confidence='insufficient'` with `n_baseline >= 3` on tracked
+channels: **1,492 -> 498**. Any baseline missing on tracked channels: 3,222 -> 2,228. Steve
+Ramsey's six unscorable videos (2025-04-16 .. 2026-01-20) all score; his 2026-01-20 video went
+from `neff 1.43, baseline NULL` to `neff 4.83, C(30) 48,252, 0.63x`. Channels publishing more
+often than fortnightly were deliberately not rescored: the kernel is byte-identical there.
+
 ## 2026-09-04 — Shorts repair: 1,289 long-form videos returned to the corpus (BASELINE not moved)
 
 Not a model change. `trigger_set_video_is_short` on `videos` was recomputing `is_short` from
