@@ -376,3 +376,61 @@ describe('a monthly channel gets a baseline (Steve Ramsey, real prior gaps)', ()
     expect(channelCurve(weekly, 30, P).typical).toBe(channelCurve(weekly, 30, P, 30).typical);
   });
 });
+
+describe('a channel whose cadence just changed', () => {
+  // The kernel is read off the PRIORS' gaps only -- the target's own gap from the newest prior
+  // is not one of them. That is deliberate, and these tests pin what it costs and what it does
+  // not cost, because the intuition ("the newest video on a channel that just changed speed
+  // must be mis-weighted") is mostly wrong, for a reason worth writing down:
+  //
+  //   neff = (sum w)^2 / sum w^2 is SCALE-FREE. Pushing every prior uniformly further into the
+  //   past shrinks every weight by the same factor and leaves neff untouched. What starves a
+  //   channel is the SPREAD of its gaps, not their size -- one recent prior beside a tail of
+  //   much older ones. So a channel that simply stops for months keeps its baseline, and the
+  //   channels the fixed 30-day kernel actually starves are the ones whose gaps widen.
+  //
+  // The rhythm is a median over up to fifteen gaps, so one holiday break or one double upload
+  // cannot widen the kernel and drag stale history into the denominator. The price is that a
+  // channel that genuinely changes speed is recognised only once the change is the median.
+  // Including the target's own gap would not change that: one gap against fourteen barely
+  // moves a median.
+
+  it('a weekly channel that just stopped for four months keeps its baseline, kernel unchanged', () => {
+    // 14 weekly priors, then nothing for 120 days, then this video. Every weight is tiny and
+    // they are all tiny together, so the channel is not starved -- and the 30-day floor holds.
+    const priors = Array.from({ length: 14 }, (_, i) => prior(120 + i * 7, [[30, 10_000]]));
+    expect(cadenceHalfLifeForPriors(priors)).toBe(30);   // median gap 7d: still on the floor
+    const c = channelCurve(priors, 30, P);
+    expect(c.n).toBe(14);
+    expect(c.neff).toBeGreaterThan(2);
+    expect(c.typical).toBeCloseTo(10_000, 6);
+  });
+
+  it('a channel mid-slowdown is judged on the whole transition, not on its newest gap', () => {
+    // Weekly a year ago, monthly now, every step in between: ages 60, 115, 160 ... 303 days.
+    // The median gap is 17.5d, so the kernel is still on the 30-day floor -- and that is fine,
+    // because neff does not collapse here. The channel keeps a baseline through the change.
+    const gaps = [60, 55, 45, 40, 30, 21, 14, 10, 7, 7, 7, 7];
+    let at = 0;
+    const priors = gaps.map((g) => prior((at += g), [[30, 10_000]]));
+    expect(cadenceHalfLifeForPriors(priors)).toBe(30);
+    const fixed = channelCurve(priors, 30, P, 30);
+    const cadence = channelCurve(priors, 30, P);
+    expect(fixed.neff).toBeGreaterThan(2);
+    expect(cadence.typical).toBe(fixed.typical);   // byte-identical: nothing to fix here
+    // What starves a channel is not a change of speed but a settled slow one, where the gaps
+    // are wide AND spread -- Steve Ramsey above, whose 18d..455d prior ages give neff 1.43.
+  });
+
+  it('a monthly channel that just sped up keeps the wide kernel, and the old videos still count', () => {
+    // Two videos three days apart on top of a year of monthly ones. The rhythm is still monthly,
+    // so the year of history is still what "normal for this channel" is made of -- a burst of
+    // two uploads is not a new cadence, and the score does not swing onto one video.
+    const priors = [prior(3, [[30, 10_000]]), ...Array.from({ length: 12 }, (_, i) => prior(30 + i * 30, [[30, 10_000]]))];
+    expect(cadenceHalfLifeForPriors(priors)).toBeCloseTo(45, 6);
+    const c = channelCurve(priors, 30, P);
+    expect(c.n).toBe(13);
+    expect(c.neff).toBeGreaterThan(channelCurve(priors, 30, P, 30).neff);
+    expect(c.typical).toBeCloseTo(10_000, 6);
+  });
+});
