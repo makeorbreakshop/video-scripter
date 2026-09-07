@@ -44,8 +44,16 @@ const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
 const FORCE = process.argv.includes('--force');
 const FINAL = process.argv.includes('--final');
+// A row carries the version of the MATH that produced it. `video_scores.model_version` is
+// MODEL_VERSION (lib/scoring/core.ts) -- v5.2 rows say v5.2 -- so a stored row can be attributed
+// to a kernel and so a version bump makes every stale row due for rescore
+// (lib/scoring/refresh-sql.ts). The observation contract is a different concern and keeps its
+// own provenance in video_score_history.extra.observation_version; it is not what scored a row.
+// Until 2026-09-07 both writes used OBSERVATION_SCORE_VERSION, so the whole v5.2 rescore landed
+// labelled 'v5.1-rss' and was indistinguishable from the v5.0 rows beside it.
+const SCORE_ROW_VERSION = MODEL_VERSION;
 // Final rows are written once and never revisited; the version marks them so we can skip them.
-const FINAL_VERSION = `${OBSERVATION_SCORE_VERSION}-final`;
+const FINAL_VERSION = `${SCORE_ROW_VERSION}-final`;
 const arg = (name: string): string | null => {
   const i = process.argv.indexOf(name);
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : null;
@@ -478,7 +486,7 @@ async function score(signal: AbortSignal) {
       const readStartedAt = new Date();
       const batch = await v5Batch(group, params);
       for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
-      written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, OBSERVATION_SCORE_VERSION, b.views, b.o)), readStartedAt);
+      written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, SCORE_ROW_VERSION, b.views, b.o)), readStartedAt);
       if (written % 1000 < 100) log(`score: ${written} written`);
       if (ALL) await sleep(SLEEP_MS);
     }
@@ -499,7 +507,7 @@ async function score(signal: AbortSignal) {
       signal,
       initialCursor: checkpoint && !checkpoint.complete ? checkpoint.cursor : null,
       fetchPage: async (cursor, limit) => {
-        const query = incrementalScoreTargetsSql({ all: ALL, channels: CHANNELS, limit, cursor, version: OBSERVATION_SCORE_VERSION });
+        const query = incrementalScoreTargetsSql({ all: ALL, channels: CHANNELS, limit, cursor, version: SCORE_ROW_VERSION });
         return q(query.text, query.values);
       },
       onPage: processTargets,
@@ -594,7 +602,7 @@ async function v5(signal: AbortSignal) {
       if (o.score == null) noCurve++;
       scored++;
       lines.push([
-        t.id, t.channel_id, OBSERVATION_SCORE_VERSION, o.ageDays.toFixed(4), views,
+        t.id, t.channel_id, SCORE_ROW_VERSION, o.ageDays.toFixed(4), views,
         o.score ?? '', o.typicalAtAge?.toFixed(2) ?? '', o.nTypical, o.typicalNeff.toFixed(3),
         o.typicalMeasuredShare.toFixed(4), o.projection.toFixed(2), o.projectionHorizon,
         o.q ?? '', o.confidence,
