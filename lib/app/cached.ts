@@ -27,11 +27,20 @@ import { channelTag, videoTag } from './cache-tags';
 
 export { channelTag, videoTag };
 
+/**
+ * Benchmark escape hatch. scripts/bench-pages.ts measures the cost of the reads themselves, and
+ * an unstable_cache hit measures nothing: the second run of a URL would be a memory read. With
+ * BENCH=1 every wrapper below calls the uncached function directly — deterministic, and it
+ * cannot leak into production because the flag is only ever set by the bench harness.
+ */
+const BENCH = process.env.BENCH === '1';
+
 export const CHANNEL_TTL = 300;
 export const VIDEO_TTL = 120;
 
 
 export function cachedChannelHeader(channelId: string): Promise<ChannelHeader | null> {
+  if (BENCH) return channelHeaderUncached(channelId);
   return unstable_cache(
     () => channelHeaderUncached(channelId),
     ['channel-header', channelId],
@@ -46,6 +55,7 @@ export function cachedChannelVideos(
   offset = 0,
   range: RangeKey = 'all'
 ): Promise<{ videos: GridVideo[]; hasMore: boolean }> {
+  if (BENCH) return channelVideosUncached(channelId, sort, limit, offset, range);
   return unstable_cache(
     () => channelVideosUncached(channelId, sort, limit, offset, range),
     ['channel-videos', channelId, sort, String(limit), String(offset), range],
@@ -54,6 +64,7 @@ export function cachedChannelVideos(
 }
 
 export function cachedChannelVideoCount(channelId: string, range: RangeKey): Promise<number> {
+  if (BENCH) return channelVideoCountUncached(channelId, range);
   return unstable_cache(
     () => channelVideoCountUncached(channelId, range),
     ['channel-video-count', channelId, range],
@@ -63,6 +74,7 @@ export function cachedChannelVideoCount(channelId: string, range: RangeKey): Pro
 
 /** The Analytics tab's series. Same shape of read as the grid: channel + range, no user in it. */
 export function cachedChannelBaseline(channelId: string, range: RangeKey): Promise<BaselinePoint[]> {
+  if (BENCH) return channelBaselineSeriesUncached(channelId, range);
   return unstable_cache(
     () => channelBaselineSeriesUncached(channelId, range),
     ['channel-baseline', channelId, range],
@@ -81,6 +93,7 @@ export function cachedChannelBaseline(channelId: string, range: RangeKey): Promi
  * looked up first and the channel tag added on the second pass.
  */
 export function cachedVideoPage(videoId: string, channelId?: string | null): Promise<VideoPageView | null> {
+  if (BENCH) return loadVideoPageUncached(videoId);
   const tags = channelId ? [videoTag(videoId), channelTag(channelId)] : [videoTag(videoId)];
   return unstable_cache(
     () => loadVideoPageUncached(videoId),
@@ -104,6 +117,7 @@ export function cachedVideoPage(videoId: string, channelId?: string | null): Pro
 export function cachedSparklines(channelIds: string[]): Promise<Record<string, Sparkline>> {
   const ids = Array.from(new Set((channelIds || []).filter(Boolean))).sort();
   if (!ids.length) return Promise.resolve({});
+  if (BENCH) return channelSparklinesUncached(ids);
   return unstable_cache(
     () => channelSparklinesUncached(ids),
     ['channel-sparklines', ids.join(',')],
@@ -120,6 +134,7 @@ export function cachedSparklines(channelIds: string[]): Promise<Record<string, S
  * together. Keyed by video because the censoring is per video; three reads saved per page view.
  */
 export function cachedTypicalPriors(videoId: string, channelId: string) {
+  if (BENCH) return loadTypicalPriors(videoId);
   return unstable_cache(
     () => loadTypicalPriors(videoId),
     ['typical-priors', videoId],
