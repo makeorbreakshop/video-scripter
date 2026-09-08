@@ -103,9 +103,25 @@ export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg
   return p;
 }
 
+/**
+ * The app's read path. Deliberately NOT wrapped in withTimeout.
+ *
+ * Measured 2026-09-08 against the :6543 pooler: a plain parameterised query is 47.5 ms, the same
+ * query inside `begin; set local statement_timeout; …; commit` is 140.9 ms — +93 ms, three times
+ * the cost, on every read. A video page issues eight of them behind a pool of three or four, so
+ * that is roughly +280 ms of server time per page view to buy a timeout.
+ *
+ * The old `pool.on('connect')` SET bought nothing at all (it landed after the queries it was
+ * meant to protect), so removing it is not a regression — this path has been running at the role
+ * default all along, and now says so.
+ *
+ * The right fix for the app path is server-side and free, and needs a decision rather than a
+ * commit: `alter role <app role> set statement_timeout = '45s'`, which every connection then
+ * inherits at no per-query cost. Until that is set, batch scripts get their limits through
+ * makeTimedPool, where +93 ms against a multi-second statement is noise.
+ */
 export async function q<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-  const rows = await poolWithTimeout(getPool(), DEFAULT_STATEMENT_TIMEOUT_MS,
-    async (c) => (await c.query(sql, params)).rows);
+  const { rows } = await getPool().query(sql, params);
   return rows as T[];
 }
 
