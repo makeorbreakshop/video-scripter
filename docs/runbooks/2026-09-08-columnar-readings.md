@@ -54,8 +54,17 @@ the mark can be lost, the readings cannot.
 
 `lib/admin/queries.ts videoPage()` tries the series file first and falls back to the same five
 Postgres queries on a miss, counting both (`[series] fallback to postgres video=… rate=…%`).
-`SERIES_DISABLE=1` forces every read back to Postgres — the kill switch, and the control arm of
-the equality test. `?raw=1` is untouched: it still reads the day-partitioned parquet archive
+**It is off by default.** A miss is not free: measured on 60 recent videos, an R2 GET is **121 ms**
+— on top of the Postgres reads it was meant to replace. With the backfill incomplete the fallback
+rate is **100 %**, so switching it on early would make every video page slower and buy nothing.
+
+    SERIES_READ=1      read the series file, fall back to Postgres on a miss
+    SERIES_DISABLE=1   hard off, overriding SERIES_READ — the rollback, and the control arm of
+                       the equality test
+
+Turn `SERIES_READ=1` on once `npm run series:backfill` has covered the corpus and the fallback
+rate in the logs is low. The win here is **database load**, not page latency: one R2 GET replaces
+three range scans over the three biggest tables in the database. `?raw=1` is untouched: it still reads the day-partitioned parquet archive
 through `lib/app/raw-readings.ts`.
 
 ### Proof
@@ -67,6 +76,13 @@ points, the packaging marks and events, the horizon and the counts.
 ```
 series equality: 26 videos compared, 0 differing, max deviation 0.0000%
 ```
+
+### Where it stands
+
+226 series files written so far (a 200-video sample plus the test's videos). The corpus backfill
+has **not** run — it belongs in the 04:00 slot, and at the measured rate (200 videos in 85 s
+serially, 8 PUTs in flight by default now) a full pass is a few hours. Until it has run, the
+fallback rate is 100 % and `SERIES_READ` stays off.
 
 ### Commands
 

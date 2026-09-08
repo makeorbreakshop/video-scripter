@@ -323,10 +323,19 @@ export type VideoPageData = {
  * from every page view; a miss falls back and says so, so the fallback rate is measurable.
  */
 async function videoSeriesParts(id: string): Promise<Pick<VideoPageData, 'snapshots' | 'samples' | 'rss' | 'thumbs' | 'titles'>> {
-  // The kill switch. SERIES_DISABLE=1 sends every read back to Postgres — the rollback if a
-  // bad backfill ever ships, and the control arm of the equality test.
-  const file = process.env.SERIES_DISABLE === '1' ? null : await readSeriesFile(id);
-  if (process.env.SERIES_DISABLE !== '1') noteSeriesRead(id, file);
+  // OPT-IN, and off by default until the backfill has covered the corpus.
+  //
+  // A miss is not free: it is a 121 ms R2 round trip (measured, 60 recent videos) ON TOP OF the
+  // Postgres reads it was supposed to replace. With the backfill incomplete the fallback rate is
+  // 100 %, so switching this on early would make every video page slower and buy nothing. Turn it
+  // on once `npm run series:backfill` has run and the fallback rate is low:
+  //
+  //     SERIES_READ=1        read the series file, fall back on a miss
+  //     SERIES_DISABLE=1     hard off, overriding SERIES_READ — the rollback, and the control
+  //                          arm of lib/readings/series-equality.integration.test.ts
+  const on = process.env.SERIES_READ === '1' && process.env.SERIES_DISABLE !== '1';
+  const file = on ? await readSeriesFile(id) : null;
+  if (on) noteSeriesRead(id, file);
   if (file) {
     return {
       snapshots: file.snapshots.map((r) => ({

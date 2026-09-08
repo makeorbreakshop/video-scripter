@@ -93,6 +93,7 @@ d('the series file draws the same chart as Postgres', () => {
 
     let compared = 0, differing = 0, maxDeviation = 0;
     for (const id of ids) {
+      process.env.SERIES_READ = '1';
       process.env.SERIES_DISABLE = '1';
       let fromPg = drawn(await loadVideoPage(id, NOW));
       delete process.env.SERIES_DISABLE;
