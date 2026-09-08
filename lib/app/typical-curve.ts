@@ -28,10 +28,15 @@ export function typicalCurveOver(
   params: GlobalParams
 ): TypicalPoint[] {
   return days.map((day) => {
-    // Age 0 has no growth curve to stand on and no prior reading at it; the grid's own first
-    // point is the publish instant, which is not an age the model speaks about.
-    const typical = day > 0 ? channelCurve(priors, day, params).typical : null;
-    return { day, expected: typical };
+    // v5.3: the line starts at 0. Age 0 itself is not an age the growth curve speaks about
+    // (log(0) is not a number), so the publish instant is read at the curve's own minute floor
+    // -- the same floor growth.logToRef uses. What changed is everything after it: channelCurve
+    // no longer returns null wherever fewer than three priors were measured, which on most
+    // channels was the whole first day, so the line began at day 1 with nothing to its left and
+    // the reader had a score with no picture. It is now drawn from 0 and MARKED: dashed where
+    // the priors were measured, dotted where the level was slid there from another age.
+    const c = channelCurve(priors, Math.max(day, 1 / 1440), params);
+    return { day, expected: c.typical, kind: c.kind, anchorAge: c.anchorAge };
   });
 }
 

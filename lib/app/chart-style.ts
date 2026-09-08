@@ -48,6 +48,16 @@ export function seriesStyle(kind: SeriesKind): SeriesStyle {
  */
 export const TYPICAL_STYLE = { strokeToken: 'muted' as StrokeToken, dash: '4 3', width: 1.5, band: false as const };
 
+/**
+ * The ESTIMATED stretches of that same line (v5.3) -- ages where no prior of this channel was
+ * measured, so the level was slid there from the nearest age where some were.
+ *
+ * Same grey, same width, DOTTED: the chart already says "we did not watch this" in dots, for
+ * this video's own reconstructed history (STYLES.implied). One ink, one meaning, wherever it
+ * appears -- so a reader who has learned the dots once does not have to learn them again.
+ */
+export const TYPICAL_ESTIMATED_STYLE = { ...TYPICAL_STYLE, dash: '2 3' };
+
 /** The colour a kind is actually stroked with, given the theme's two tokens. */
 export function seriesStroke(kind: SeriesKind, colors: Record<StrokeToken, string>): string {
   return colors[STYLES[kind].strokeToken];
@@ -59,6 +69,7 @@ export const SERIES_LABELS = {
   implied: 'this video · estimated before tracking',
   forecast: 'expected from here',
   expected: 'typical for this channel',
+  expectedEstimated: 'typical for this channel · estimated',
 } as const;
 
 /**
@@ -196,6 +207,8 @@ export interface ChartRow {
   implied?: number;
   views?: number;
   dot?: number;
+  /** The estimated stretch of the typical line, drawn dotted. See TYPICAL_ESTIMATED_STYLE. */
+  expectedEst?: number;
 }
 
 /**
@@ -218,7 +231,18 @@ export function chartRows(series: SeriesPoint[], curve: TypicalPoint[], actuals:
   // read (and still fitted) but never drawn: one chart, one uncertainty, and it is the forecast's.
   // A null point is a GAP, not a zero: the row simply has no `expected` key, and the plot draws
   // the typical line with connectNulls off so the hole survives to the screen.
-  for (const c of curve) if (c.expected != null) at(c.day).expected = c.expected;
+  // The typical line is TWO series over one set of rows: measured (dashed) and estimated
+  // (dotted). Each boundary point belongs to BOTH, or the two stretches meet at a visible gap
+  // instead of joining -- the same rule the video's own solid/dotted segments follow above.
+  for (let i = 0; i < curve.length; i++) {
+    const c = curve[i];
+    if (c.expected == null) continue;
+    const row = at(c.day);
+    const est = c.kind === 'estimated';
+    const nb = (k: number) => curve[k] && curve[k].expected != null && (curve[k].kind === 'estimated') !== est;
+    if (!est || nb(i - 1) || nb(i + 1)) row.expected = c.expected;
+    if (est || nb(i - 1) || nb(i + 1)) row.expectedEst = c.expected;
+  }
   const kindAt = new Map(series.map((p) => [p.day, p.kind] as const));
   for (let i = 0; i < series.length; i++) {
     const p = series[i];
@@ -262,7 +286,7 @@ export function visibleYDomain(
   const vals: number[] = [];
   for (const r of rows) {
     if (!(r.day >= domain[0] && r.day <= domain[1])) continue;
-    for (const v of [r.views, r.implied, r.projected, r.expected, r.dot, r.bandInner?.[0], r.bandInner?.[1]]) {
+    for (const v of [r.views, r.implied, r.projected, r.expected, r.expectedEst, r.dot, r.bandInner?.[0], r.bandInner?.[1]]) {
       if (v != null && Number.isFinite(v)) vals.push(v as number);
     }
   }

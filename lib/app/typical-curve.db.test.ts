@@ -56,14 +56,21 @@ describeDb('the typical line equals the score denominator, on production rows', 
     }
   }, 120_000);
 
-  it('leaves a gap rather than a zero where it cannot say what normal is', async () => {
+  it('v5.3: the line starts at age 0, marked estimated, and is never zero', async () => {
     const [row] = await q<any>(
       `select video_id from video_scores
         where scored_at > now() - interval '6 hours' and score is not null
         order by scored_at desc limit 1`
     );
     const pts = await videoTypicalCurve(row.video_id, [0, 0.0001, 30]);
-    expect(pts.find((p) => p.day === 0)!.expected).toBeNull();
+    const zero = pts.find((p) => p.day === 0)!;
+    // A channel with a level anywhere has a level at publish. It is an ESTIMATE, and it says so.
+    expect(zero.expected).not.toBeNull();
+    expect(zero.expected).toBeGreaterThan(0);
+    expect(zero.kind).toBe('estimated');
+    expect(zero.anchorAge).not.toBeNull();
+    // ...and it is below the day-30 level, because growth only runs one way.
+    expect(zero.expected!).toBeLessThan(pts.find((p) => p.day === 30)!.expected!);
     for (const p of pts) expect(p.expected).not.toBe(0);
   }, 60_000);
 });

@@ -14,14 +14,25 @@ export const GAP_BUCKETS = [
   'outside-scoring-window',
   /** No snapshot and no sample: the scorer has nothing of this video's own to read. */
   'no-observations',
-  /** Fewer than three prior long-form videos on the channel — no baseline is possible. */
+  /**
+   * Fewer than three prior long-form videos on the channel — no baseline is possible.
+   * From v5.3 this is the TRUE-NULL case: the only reason channelCurve returns null.
+   */
   'no-channel-baseline',
   /** Priors exist, but fewer than three of them yield a day-30 estimate (all too young). */
   'priors-unusable',
   /** Inside the window with everything it needs, and still no row: a run was skipped. */
   'never-scored-in-window',
   /** Everything present and a row exists, but the score is still null. */
-  /** v5: the channel has a curve, but the video is under the age at which a same-age comparison is honest. */
+  /**
+   * v5: the channel has a curve, but the video is under the age at which a same-age comparison
+   * is honest.
+   *
+   * RARE FROM v5.3. A channel with a level at ANY age now yields a denominator at every age --
+   * estimated below the ages it was measured at -- so a young video gets a score with
+   * confidence 'early' rather than a blank. This bucket survives for rows written by v5.2 and
+   * earlier, and for the corner where a curve exists at day 30 but every ladder rung fails.
+   */
   'video-too-young',
   'other',
 ] as const;

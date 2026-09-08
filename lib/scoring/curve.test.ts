@@ -1,6 +1,6 @@
 import { growthExponent, type GlobalParams } from './core';
-import { cadenceHalfLifeDays, cadenceHalfLifeForPriors, channelCurve, contributionAt, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
-import { growthLog, logToRef } from './growth';
+import { cadenceHalfLifeDays, cadenceHalfLifeForPriors, channelCurve, contributionAt, estimateLadder, measuredCurveAt, priorsSpanning, estimateSlideLog, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
+import { AGE_FLOOR_DAYS, growthLog, logToRef } from './growth';
 
 const P: GlobalParams = {
   mult: {
@@ -287,15 +287,58 @@ describe('sub-day channel curve (KFVqHUvp-0w, 3D Printing Nerd, 2026-09-04)', ()
     expect(contributionAt(day17, 25, PROD)!.kind).toBe('interpolated');
   });
 
-  it('with no usable prior below a day the score is withheld, not invented', () => {
+  it('v5.3: no prior can be measured at hour five, so C is ESTIMATED there, not null', () => {
     const c = channelCurve(PRIORS, AGE, PROD);
-    expect(c.n).toBe(0);
-    expect(c.typical).toBeNull();
+    // Nothing was measured AT the target age -- that half of v5.2 is unchanged and still true.
+    expect(measuredCurveAt(PRIORS, AGE, PROD).typical).toBeNull();
+    // ...but the channel has a level, so the curve says so instead of going silent.
+    expect(c.kind).toBe('estimated');
+    expect(c.typical).toBeGreaterThan(0);
+    expect(c.measuredShare).toBe(0);            // nothing here was measured at t, and it says so
+    expect(c.anchorAge).not.toBeNull();
+    // The anchor is the nearest rung the channel actually has a level at. Below a day every rung
+    // starves for the same reason the target does, so it lands at the first day-scale one.
+    expect(c.anchorAge).toBe(1);
+    // and it IS the anchor's level slid along G, exactly.
+    const at = measuredCurveAt(PRIORS, c.anchorAge!, PROD);
+    expect(Math.log(c.typical! / at.typical!)).toBeCloseTo(growthLog(PROD, c.anchorAge!, AGE), 10);
+
     const o = scoreV5({ vt: VIEWS, age: AGE, snaps: [{ day: 0.05, views: 900 }, { day: AGE, views: VIEWS }], priors: PRIORS, params: PROD });
-    expect(o.score).toBeNull();
-    expect(o.typicalAtAge).toBeNull();
-    expect(o.confidence).toBe('early');          // a fact about the clock, not the channel
+    expect(o.score).toBeCloseTo(VIEWS / c.typical!, 10);
+    expect(o.typicalAtAge).toBe(c.typical);
+    expect(o.typicalKind).toBe('estimated');
+    expect(o.typicalAnchorAge).toBe(1);
+    expect(o.confidence).toBe('early');          // a fact about the clock, said out loud
     expect(o.typicalAt30).toBeGreaterThan(33000); // the display anchor survives
+  });
+
+  it('the estimate at hour five lands near the line the page draws off C(30)', () => {
+    // lib/admin/video-curve.expectedAtAge is C(30) x exp(-logToRef(age)) -- the same slide, from
+    // a further anchor. The two should not disagree by much, or the ladder is picking badly.
+    const c30 = channelCurve(PRIORS, 30, PROD).typical!;
+    const fromDay30 = c30 * Math.exp(-logToRef(PROD, AGE));
+    const est = channelCurve(PRIORS, AGE, PROD).typical!;
+    expect(Math.abs(Math.log(est / fromDay30))).toBeLessThan(0.7);
+  });
+
+  it('score is present under the age floor, marked early rather than withheld', () => {
+    const young = AGE_FLOOR_DAYS / 2;
+    const o = scoreV5({ vt: 400, age: young, snaps: [{ day: young, views: 400 }], priors: PRIORS, params: PROD });
+    expect(o.belowAgeFloor).toBe(true);
+    expect(o.score).not.toBeNull();
+    expect(o.typicalAtAge).not.toBeNull();
+    expect(o.confidence).toBe('early');
+  });
+
+  it('the true null: a channel with no level at ANY age', () => {
+    const two = PRIORS.slice(0, 2);              // under MIN_BASELINE_PRIORS everywhere
+    const c = channelCurve(two, AGE, PROD);
+    expect(c.typical).toBeNull();
+    expect(c.kind).toBe('measured');
+    expect(c.anchorAge).toBeNull();
+    const o = scoreV5({ vt: VIEWS, age: AGE, snaps: [{ day: AGE, views: VIEWS }], priors: two, params: PROD });
+    expect(o.score).toBeNull();
+    expect(o.confidence).toBe('insufficient');
   });
 
   it('a prior WITH a sub-day sample does contribute, and C(t) then agrees with the page', () => {
@@ -432,5 +475,84 @@ describe('a channel whose cadence just changed', () => {
     expect(c.n).toBe(13);
     expect(c.neff).toBeGreaterThan(channelCurve(priors, 30, P, 30).neff);
     expect(c.typical).toBeCloseTo(10_000, 6);
+  });
+});
+
+// ---- the v5.3 estimate ladder and slide -------------------------------------------------
+
+describe('estimateLadder', () => {
+  it('is nearest-first in LOG age and never returns the target itself', () => {
+    const l = estimateLadder(0.22);
+    expect(l).not.toContain(0.22);
+    expect(l[0]).toBe(4 / 24);                 // 0.167 is nearer 0.22 in log age than 0.333
+    const d = (a: number) => Math.abs(Math.log(a) - Math.log(0.22));
+    for (let i = 1; i < l.length; i++) expect(d(l[i])).toBeGreaterThanOrEqual(d(l[i - 1]));
+  });
+
+  it('carries day 30 and the long tail out to 1500, and drops the exact rung it stands on', () => {
+    expect(estimateLadder(0.01)).toContain(30);
+    expect(estimateLadder(0.01)).toContain(1500);
+    expect(estimateLadder(30)).not.toContain(30);
+  });
+
+  it('is the same ladder for every target -- only the order changes', () => {
+    expect([...estimateLadder(0.5), 0.5].sort((a, b) => a - b))
+      .toEqual([...estimateLadder(7), 7].sort((a, b) => a - b));
+  });
+});
+
+describe('the estimated slide', () => {
+  const dense = (ageDays: number, at: [number, number][]): CurvePrior =>
+    ({ ageDays, samples: at.map(([day, views]) => ({ day, views })), lifetime: null });
+  // Six priors with a reading at 12h AND at day 3: the only shape that reaches the blend.
+  const SPAN = [1, 8, 15, 22, 29, 36].map((a, i) =>
+    dense(a, [[0.5, 1000 + i * 10], [3, 3000 + i * 30]]));
+
+  it('anchor -> target is the identity when they are the same age', () => {
+    expect(estimateSlideLog(SPAN, 3, 3, P).log).toBe(0);
+  });
+
+  it('is monotone: a later target is never a smaller slide', () => {
+    let prev = -Infinity;
+    for (const t of [0.05, 0.2, 0.5, 1, 2, 3, 7, 14, 30, 90]) {
+      const g = estimateSlideLog([], 1, t, P).log;
+      expect(g).toBeGreaterThanOrEqual(prev);
+      prev = g;
+    }
+  });
+
+  it('is antisymmetric on the global shape, so sliding out and back returns the level', () => {
+    const there = estimateSlideLog([], 30, 0.25, P).log;
+    const back = estimateSlideLog([], 0.25, 30, P).log;
+    expect(there + back).toBeCloseTo(0, 12);
+  });
+
+  it('uses the GLOBAL shape when fewer than MIN_SPAN_PRIORS span both ends', () => {
+    const few = SPAN.slice(0, 3);
+    expect(priorsSpanning(few, 0.5, 3).n).toBe(3);
+    expect(estimateSlideLog(few, 0.5, 3, P).log).toBe(growthLog(P, 0.5, 3));
+  });
+
+  it('blends the channel-s own ratio in once >= MIN_SPAN_PRIORS span both ends', () => {
+    const { n } = priorsSpanning(SPAN, 0.5, 3);
+    expect(n).toBe(6);
+    const { log, channelN } = estimateSlideLog(SPAN, 0.5, 3, P);
+    expect(channelN).toBe(6);
+    const ch = Math.log(3090 / 1030);           // the median prior-s own 12h -> day-3 ratio
+    const w = 6 / 8;
+    expect(log).toBeCloseTo(w * ch + (1 - w) * growthLog(P, 0.5, 3), 6);
+  });
+
+  it('a channel measured only at day 30 still has a curve at hour twelve', () => {
+    const only30 = [2, 9, 16, 23].map((a) => dense(a, [[30, 50_000]]));
+    expect(measuredCurveAt(only30, 0.5, P).typical).toBeNull();
+    const c = channelCurve(only30, 0.5, P);
+    expect(c.kind).toBe('estimated');
+    // The nearest rung with a level is day 1 -- where the priors' day-30 readings are already
+    // allowed to slide -- not day 30 itself. The answer is the same either way, because
+    // logToRef is cumulative: 30 -> 1 -> 0.5 is 30 -> 0.5.
+    expect(c.anchorAge).toBe(1);
+    expect(c.typical).toBeCloseTo(50_000 * Math.exp(growthLog(P, 30, 0.5)), 6);
+    expect(c.n).toBe(4);
   });
 });

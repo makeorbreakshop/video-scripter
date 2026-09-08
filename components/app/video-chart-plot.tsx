@@ -26,7 +26,7 @@ import type { ScoreComparison } from '@/lib/app/chart-comparison';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel, trackingLabelPlacement,
-  TYPICAL_STYLE, legendEntries, areaProps, DRAWN_RINGS, SCALE_MODES, nextScale, tooltipLines,
+  TYPICAL_STYLE, TYPICAL_ESTIMATED_STYLE, legendEntries, areaProps, DRAWN_RINGS, SCALE_MODES, nextScale, tooltipLines,
   visibleYDomain, niceTicks, CHART_TYPE, type ScaleMode, type TooltipKind,
 } from '@/lib/app/chart-style';
 import { markerLayout, markAt } from '@/lib/app/chart-marks';
@@ -63,8 +63,12 @@ function LegendSwatchMark({ swatch, accent, muted, mode }: {
                 strokeDasharray={S.forecast.dash} strokeOpacity={S.forecast.opacity} />
         </>
       )}
-      {swatch === 'dashed' && (
-        <line x1={0} y1={6} x2={26} y2={6} stroke={muted} strokeWidth={TYPICAL_STYLE.width} strokeDasharray={TYPICAL_STYLE.dash} />
+      {/* One subject, two inks: the estimated stretch of the channel's line and the measured
+          one, shown the way the plot draws them rather than named in a second legend row. */}
+      {swatch === 'dashed' && (<>
+        <line x1={0} y1={6} x2={11} y2={6} stroke={muted} strokeWidth={TYPICAL_ESTIMATED_STYLE.width}
+              strokeDasharray={TYPICAL_ESTIMATED_STYLE.dash} />
+        <line x1={11} y1={6} x2={26} y2={6} stroke={muted} strokeWidth={TYPICAL_STYLE.width} strokeDasharray={TYPICAL_STYLE.dash} /></>
       )}
       {swatch === 'projection' && (
         <line x1={0} y1={6} x2={26} y2={6} stroke={accent} strokeWidth={S.forecast.width} strokeDasharray={S.forecast.dash} />
@@ -487,6 +491,13 @@ export default function VideoChartPlot({
             <Area key={ring} dataKey={ring === 'inner' ? 'bandInner' : 'bandOuter'} {...areaProps(ring, C.accent, C.mode)} />
           ))}
 
+          {curve.some((c) => c.expected != null && c.kind === 'estimated') && (
+            <Line
+              dataKey="expectedEst" name={SERIES_LABELS.expectedEstimated} legendType="none" connectNulls={false} dot={false} activeDot={false}
+              stroke={C[TYPICAL_ESTIMATED_STYLE.strokeToken]} strokeWidth={TYPICAL_ESTIMATED_STYLE.width}
+              strokeDasharray={TYPICAL_ESTIMATED_STYLE.dash} isAnimationActive={false}
+            />
+          )}
           {curve.some((c) => c.expected != null) && (
             <Line
               dataKey="expected" name={SERIES_LABELS.expected} legendType="none" connectNulls={false} dot={false} activeDot={false}

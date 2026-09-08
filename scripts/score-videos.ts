@@ -318,7 +318,7 @@ const SCORE_COLUMNS = [
   'video_id', 'channel_id', 'model_version', 'snapshot_day', 'views', 'q', 'est30', 'baseline',
   'n_baseline', 'score', 'same_age_ratio', 'n_same_age', 'confidence', 'priors_from_lifetime',
   'age_days', 'typical_at_age', 'n_typical', 'typical_neff', 'typical_measured_share',
-  'projection', 'projection_horizon',
+  'projection', 'projection_horizon', 'typical_kind', 'typical_anchor_age',
 ] as const;
 
 type ScoreRow = Record<(typeof SCORE_COLUMNS)[number], any>;
@@ -352,7 +352,8 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
       typical_measured_share: r.typical_measured_share, projection: r.projection,
       projection_horizon: r.projection_horizon, est30: r.est30, baseline: r.baseline,
       n_baseline: r.n_baseline, confidence: r.confidence,
-      extra: { params_version: MODEL_VERSION, observation_version: OBSERVATION_SCORE_VERSION, q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime },
+      extra: { params_version: MODEL_VERSION, observation_version: OBSERVATION_SCORE_VERSION, q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime,
+        typical_kind: r.typical_kind, typical_anchor_age: r.typical_anchor_age },
     })));
     if (hist) await client.query(hist.text, hist.values);
     // Headline scores commit with the score/history batch, including partial/stopped runs.
@@ -378,6 +379,8 @@ function rowFromV5(
     age_days: o.ageDays, typical_at_age: o.typicalAtAge, n_typical: o.nTypical,
     typical_neff: o.typicalNeff, typical_measured_share: o.typicalMeasuredShare,
     projection: o.projection, projection_horizon: o.projectionHorizon,
+    // v5.3: whether the denominator was measured at this age or slid here (sql/scoring-v5-3.sql).
+    typical_kind: o.typicalKind, typical_anchor_age: o.typicalAnchorAge,
   };
 }
 
@@ -593,7 +596,7 @@ async function v5(signal: AbortSignal) {
 
   const out = arg('--out') ?? `docs/benchmarks/v5.0-scores-${new Date().toISOString().slice(0, 10)}.csv`;
   fs.mkdirSync('docs/benchmarks', { recursive: true });
-  const lines = ['video_id,channel_id,model_version,age_days,views,score,typical_at_age,n_typical,typical_neff,typical_measured_share,projection,projection_horizon,q,confidence'];
+  const lines = ['video_id,channel_id,model_version,age_days,views,score,typical_at_age,n_typical,typical_neff,typical_measured_share,projection,projection_horizon,q,confidence,typical_kind,typical_anchor_age'];
   let scored = 0, noCurve = 0;
 
   for (const group of scoringTargetBatches(targets)) {
@@ -605,7 +608,7 @@ async function v5(signal: AbortSignal) {
         t.id, t.channel_id, SCORE_ROW_VERSION, o.ageDays.toFixed(4), views,
         o.score ?? '', o.typicalAtAge?.toFixed(2) ?? '', o.nTypical, o.typicalNeff.toFixed(3),
         o.typicalMeasuredShare.toFixed(4), o.projection.toFixed(2), o.projectionHorizon,
-        o.q ?? '', o.confidence,
+        o.q ?? '', o.confidence, o.typicalKind, o.typicalAnchorAge ?? '',
       ].join(','));
     }
     if (scored % 5000 < 500) log(`v5: ${scored} scored`);

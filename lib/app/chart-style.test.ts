@@ -3,7 +3,7 @@
 // from series kind to how it is drawn — the one place the two are made to look different.
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel,
-  seriesStroke, TYPICAL_STYLE, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
+  seriesStroke, TYPICAL_STYLE, TYPICAL_ESTIMATED_STYLE, visibleYDomain, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
   LEGEND_ORDER, LEGEND_LABELS, legendEntries, type ThemeMode,
 } from './chart-style';
 import type { SeriesPoint } from './chart-series';
@@ -522,5 +522,51 @@ describe('niceTicks: round numbers, and no orphan at the top', () => {
   it('has nothing to draw for a domain with no height', () => {
     expect(niceTicks([5, 5])).toEqual([]);
     expect(niceTicks([NaN, 5])).toEqual([]);
+  });
+});
+
+// ---- v5.3: the typical line's estimated stretches ---------------------------------------
+
+describe('chartRows splits the typical line by kind', () => {
+  const C = (day: number, expected: number, kind: 'measured' | 'estimated') => ({ day, expected, kind });
+
+  it('puts estimated points on expectedEst and measured ones on expected', () => {
+    const rows = chartRows([], [C(0, 10, 'estimated'), C(1, 100, 'estimated'), C(3, 300, 'measured'), C(7, 700, 'measured')], []);
+    const at = (d: number) => rows.find((r) => r.day === d)!;
+    expect(at(0).expectedEst).toBe(10);
+    expect(at(0).expected).toBeUndefined();
+    expect(at(7).expected).toBe(700);
+    expect(at(7).expectedEst).toBeUndefined();
+  });
+
+  it('shares the boundary point, so the dotted and dashed stretches JOIN', () => {
+    const rows = chartRows([], [C(1, 100, 'estimated'), C(3, 300, 'measured')], []);
+    const one = rows.find((r) => r.day === 1)!, three = rows.find((r) => r.day === 3)!;
+    expect(one.expectedEst).toBe(100);
+    expect(one.expected).toBe(100);      // the last estimated point is also the dashed line's first
+    expect(three.expected).toBe(300);
+    expect(three.expectedEst).toBe(300);
+  });
+
+  it('an all-measured curve draws no dotted series at all', () => {
+    const rows = chartRows([], [C(3, 300, 'measured'), C(7, 700, 'measured')], []);
+    expect(rows.every((r) => r.expectedEst === undefined)).toBe(true);
+  });
+
+  it('a curve with no kind at all behaves as it did before v5.3', () => {
+    const rows = chartRows([], [{ day: 3, expected: 300 }], []);
+    expect(rows[0].expected).toBe(300);
+    expect(rows[0].expectedEst).toBeUndefined();
+  });
+
+  it('the estimated stretch sets the visible y axis like every other drawn line', () => {
+    const rows = chartRows([], [C(0.5, 5, 'estimated'), C(30, 900, 'measured')], []);
+    expect(visibleYDomain(rows, [0, 1])![1]).toBeGreaterThanOrEqual(5);
+  });
+
+  it('the estimated style is the dotted ink the video-s own reconstruction already uses', () => {
+    expect(TYPICAL_ESTIMATED_STYLE.dash).toBe(seriesStyle('implied').dash);
+    expect(TYPICAL_ESTIMATED_STYLE.strokeToken).toBe(TYPICAL_STYLE.strokeToken);
+    expect(TYPICAL_ESTIMATED_STYLE.dash).not.toBe(TYPICAL_STYLE.dash);
   });
 });

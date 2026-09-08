@@ -16,7 +16,7 @@
 // `same_age_ratio`, which in v4 was simply null whenever no prior had a real sample near t
 // (Allrecipes "18 Microwave Hacks" at 3d: null, n_same_age 0).
 import {
-  BASELINE_HALF_LIFE_DAYS, MIN_BASELINE_NEFF, MIN_BASELINE_PRIORS,
+  ALL_BUCKETS, BASELINE_HALF_LIFE_DAYS, LONGTAIL_AGES, MIN_BASELINE_NEFF, MIN_BASELINE_PRIORS,
   baselineWeight, bucketFor, effectiveN, fittedBuckets, growthExponent, median, weightedMedian,
   type GlobalParams, type Snapshot,
 } from './core';
@@ -62,9 +62,21 @@ export interface Contribution {
   weight: number;
 }
 
+/**
+ * How C(t) was arrived at.
+ *   measured    >= MIN_BASELINE_PRIORS contributions exist AT t and neff clears the floor.
+ *   estimated   they do not, so C was read at the nearest anchor age where they do and slid to
+ *               t along G. Everything the reader is told about n / neff belongs to the ANCHOR.
+ */
+export type TypicalKind = 'measured' | 'estimated';
+
 export interface CurveResult {
   /** C(t): time-weighted geometric median of the contributions. Null when the floors fail. */
   typical: number | null;
+  /** Whether `typical` was measured at t or slid to t from `anchorAge`. */
+  kind: TypicalKind;
+  /** For 'estimated': the age C was actually measured at. Null for 'measured' and for null C. */
+  anchorAge: number | null;
   /** Priors that produced a usable contribution. */
   n: number;
   /** Effective prior count after age weighting: (sum w)^2 / sum w^2. */
@@ -182,18 +194,92 @@ export function cadenceHalfLifeForPriors(priors: readonly CurvePrior[]): number 
 }
 
 /**
- * C(t) -- what a normal video on this channel has at age t. Time-weighted median in LOG space
- * (v4's rule, unchanged) over the priors' contributions at that age. Null unless there are
- * >= MIN_BASELINE_PRIORS contributions AND effective n >= MIN_BASELINE_NEFF.
+ * The ages an ESTIMATED C(t) is allowed to be anchored at, nearest-first in LOG age.
+ *
+ * A fixed ladder rather than "any age the priors happen to have a reading at": the anchor has to
+ * be reproducible from the target age alone, or two runs on the same channel can pick different
+ * anchors as snapshots arrive and the line moves for a reason no one can name. The rungs are the
+ * fitted growth buckets (ALL_BUCKETS -- the hour ladder and the day buckets), the long-tail ages,
+ * and day 30 explicitly, which is the one age every scored channel has a level at (it is the
+ * display anchor the channel chart already plots).
  */
-export function channelCurve(
+export const ESTIMATE_ANCHORS: readonly number[] =
+  [...new Set([...ALL_BUCKETS, 30, ...LONGTAIL_AGES])].sort((a, b) => a - b);
+
+/** The ladder for one target age: every rung but the target itself, nearest first in log age. */
+export function estimateLadder(targetAge: number): number[] {
+  const t = Math.max(targetAge, 1 / 1440);
+  return ESTIMATE_ANCHORS
+    .filter((a) => Math.abs(Math.log(a) - Math.log(t)) > 1e-9)
+    .sort((a, b) => Math.abs(Math.log(a) - Math.log(t)) - Math.abs(Math.log(b) - Math.log(t)));
+}
+
+/**
+ * How many priors this channel has an actual reading for at BOTH ages -- the support behind a
+ * channel-specific anchor -> target multiplier. `sameAgeTolerance` at each end, the same window
+ * that decides whether a contribution counts as MEASURED.
+ */
+export function priorsSpanning(
+  priors: readonly CurvePrior[],
+  fromAge: number,
+  toAge: number
+): { n: number; logs: number[] } {
+  const near = (p: CurvePrior, age: number) => {
+    const tol = sameAgeTolerance(age);
+    return [...p.samples].filter((sm) => sm.views > 0 && Math.abs(sm.day - age) <= tol)
+      .sort((a, b) => Math.abs(a.day - age) - Math.abs(b.day - age))[0] ?? null;
+  };
+  const logs: number[] = [];
+  for (const p of priors) {
+    const a = near(p, fromAge), b = near(p, toAge);
+    if (a && b) logs.push(Math.log(b.views / a.views));
+  }
+  return { n: logs.length, logs };
+}
+
+/** Priors needed at BOTH ends before the channel's own slide is preferred to the global shape. */
+export const MIN_SPAN_PRIORS = 5;
+
+/**
+ * Log growth from `fromAge` to `toAge` used to slide an estimated C.
+ *
+ * The global shape (growth.growthLog) unless this channel has >= MIN_SPAN_PRIORS priors with a
+ * real reading at both ends, in which case their own median log ratio is blended in by
+ * n / (n + k) -- the shrinkage the rest of the model uses for a channel multiplier. In practice
+ * the blended branch is close to unreachable: MIN_SPAN_PRIORS priors with a reading at the
+ * target age would themselves be MEASURED contributions there, so the curve would not be
+ * estimated at all. It exists for the neff-starved corner (enough contributions, lopsided
+ * weights) and is asserted rather than assumed.
+ */
+export function estimateSlideLog(
+  priors: readonly CurvePrior[],
+  fromAge: number,
+  toAge: number,
+  params: GlobalParams
+): { log: number; channelN: number } {
+  const g = growthLog(params, fromAge, toAge);
+  const { n, logs } = priorsSpanning(priors, fromAge, toAge);
+  if (n < MIN_SPAN_PRIORS) return { log: g, channelN: n };
+  const ch = median([...logs]);
+  if (ch == null || !Number.isFinite(ch)) return { log: g, channelN: n };
+  const w = n / (n + 2);
+  return { log: w * ch + (1 - w) * g, channelN: n };
+}
+
+/**
+ * C(t) MEASURED AT t -- what a normal video on this channel has at age t, from the priors' own
+ * readings at that age. Time-weighted median in LOG space (v4's rule, unchanged). Null unless
+ * there are >= MIN_BASELINE_PRIORS contributions AND effective n >= MIN_BASELINE_NEFF.
+ *
+ * This is `channelCurve` up to v5.2. From v5.3 it is the first half of it: when it comes back
+ * null, `channelCurve` estimates instead of giving up.
+ */
+export function measuredCurveAt(
   priors: readonly CurvePrior[],
   targetAge: number,
   params: GlobalParams,
   halfLife?: number
 ): CurveResult {
-  // Omitted means "this channel's own rhythm" -- the production rule since v5.2. The backtest
-  // harnesses pass an explicit half-life to hold the kernel fixed as a control.
   const hl = halfLife ?? cadenceHalfLifeForPriors(priors);
   const contributions: Contribution[] = [];
   for (const p of priors) {
@@ -204,11 +290,63 @@ export function channelCurve(
   const neff = effectiveN(ws);
   const nReal = contributions.filter((c) => c.kind === 'real').length;
   const measuredShare = contributions.length ? nReal / contributions.length : 0;
+  const base = { kind: 'measured' as const, anchorAge: null, n: contributions.length, neff, measuredShare, contributions };
   if (contributions.length < MIN_BASELINE_PRIORS || neff < MIN_BASELINE_NEFF) {
-    return { typical: null, n: contributions.length, neff, measuredShare, contributions };
+    return { typical: null, ...base };
   }
   const m = weightedMedian(contributions.map((c) => Math.log(c.views)), ws);
-  return { typical: m == null ? null : Math.exp(m), n: contributions.length, neff, measuredShare, contributions };
+  return { typical: m == null ? null : Math.exp(m), ...base };
+}
+
+/**
+ * C(t) -- what a normal video on this channel has at age t. v5.3.
+ *
+ * WHY THIS CHANGED. Up to v5.2 this returned null whenever fewer than three priors could
+ * contribute AT t, and on most channels that is every age under about a day: launch sampling
+ * only began 2026-09-01, so a prior published before then has no reading in its own first hours,
+ * and the sub-day rule (lifetime counts excluded under a day; a slide allowed only from a sample
+ * younger than SUBDAY_SLIDE_MAX_AGE) correctly refuses to invent one. The consequence was not a
+ * missing prior, it was a missing ANSWER: the video page's "typical for this channel" line began
+ * at day 1 with nothing to its left, and every sub-day score was null. But a channel that has a
+ * level at day 3 has a level at hour 12 -- we know the shape of the first day from the global
+ * growth curve even when this channel never sat still to be measured there. Refusing to say so
+ * is not caution, it is silence with the same face as ignorance.
+ *
+ * So: measured where measured, estimated everywhere else, and the difference is CARRIED
+ * (`kind`, `anchorAge`, `measuredShare`) rather than hidden -- the chart draws an estimated
+ * stretch dotted, the row stores which it was. Null survives for exactly one case: a channel
+ * with no level at ANY age on the ladder, i.e. no scored priors at all.
+ */
+export function channelCurve(
+  priors: readonly CurvePrior[],
+  targetAge: number,
+  params: GlobalParams,
+  halfLife?: number
+): CurveResult {
+  // Omitted means "this channel's own rhythm" -- the production rule since v5.2. The backtest
+  // harnesses pass an explicit half-life to hold the kernel fixed as a control.
+  const hl = halfLife ?? cadenceHalfLifeForPriors(priors);
+  const measured = measuredCurveAt(priors, targetAge, params, hl);
+  if (measured.typical != null) return measured;
+
+  for (const anchor of estimateLadder(targetAge)) {
+    const at = measuredCurveAt(priors, anchor, params, hl);
+    if (at.typical == null) continue;
+    const { log } = estimateSlideLog(priors, anchor, targetAge, params);
+    const typical = at.typical * Math.exp(log);
+    if (!(typical > 0) || !Number.isFinite(typical)) continue;
+    return {
+      typical, kind: 'estimated', anchorAge: anchor,
+      // n and neff describe the ANCHOR -- the only place this channel was actually measured.
+      n: at.n, neff: at.neff,
+      // Nothing here was measured at t. Saying otherwise would let a page claim a sub-day
+      // denominator came from readings that do not exist.
+      measuredShare: 0,
+      contributions: at.contributions,
+    };
+  }
+  // No level anywhere on the ladder: this channel has no scored history. The only null.
+  return measured;
 }
 
 // ---- the score ------------------------------------------------------------------------
@@ -241,12 +379,21 @@ export interface V5Output {
   nTypical: number;
   typicalNeff: number;
   typicalMeasuredShare: number;
+  /** Whether typicalAtAge was measured at this age or slid from `typicalAnchorAge`. */
+  typicalKind: TypicalKind;
+  /** The age C was measured at when `typicalKind` is 'estimated'; null when measured. */
+  typicalAnchorAge: number | null;
   /** v̂(T) along G from the latest reading. */
   projection: number;
   projectionHorizon: number;
   q: number | null;
   confidence: 'insufficient' | 'early' | 'likely' | 'confirmed';
-  /** True when age < growth.AGE_FLOOR_HOURS: raw views only, no score. */
+  /**
+   * True when age < growth.AGE_FLOOR_HOURS. From v5.3 this NO LONGER withholds the score --
+   * it is a confidence fact ('early'), not an absence. G's reconstruction error under four
+   * hours is large, and the honest way to say so is a word on the number, not a blank where
+   * the number goes.
+   */
   belowAgeFloor: boolean;
 }
 
@@ -271,23 +418,25 @@ export function scoreV5(inp: V5Input): V5Output {
     bucket: bucketFor(inp.age, fittedBuckets(inp.params)),
   };
   const projection = project(inp.params, inp.vt, inp.age, horizon, ctx);
-  // Under AGE_FLOOR_HOURS, G's own reconstruction error exceeds the signal (leave-one-out
-  // medALE 1.60 under an hour), so there is no honest denominator yet. Views are still carried;
-  // only the ratio is withheld. See growth.AGE_FLOOR_HOURS.
+  // Under AGE_FLOOR_HOURS, G's own reconstruction error is large (leave-one-out medALE 1.60
+  // under an hour). Up to v5.2 that withheld the ratio entirely. v5.3 computes it and SAYS SO
+  // instead -- confidence 'early' -- because a reader who is shown nothing concludes the product
+  // is broken, while a reader shown a number marked early can decide what it is worth.
   const tooYoung = belowAgeFloor(inp.age);
-  const score = !tooYoung && c.typical && c.typical > 0 ? inp.vt / c.typical : null;
+  const score = c.typical && c.typical > 0 ? inp.vt / c.typical : null;
   const confidence: V5Output['confidence'] =
     tooYoung ? 'early'
-    // Under a day, "no usable prior at this age" is a fact about the CLOCK, not about the
-    // channel's history: the same priors will produce a denominator tomorrow. So it reads
-    // 'early', not 'insufficient'. Views are still stored; only the ratio is withheld.
-    : c.typical == null ? (inp.age < 1 ? 'early' : 'insufficient')
+    // A null curve now means the channel has NO level at any age -- no scored priors at all --
+    // so 'insufficient' is the truth about the channel at every age, including under a day.
+    : c.typical == null ? 'insufficient'
     : inp.age < 3 ? 'early' : inp.age < 7 ? 'likely' : 'confirmed';
   return {
-    score, ageDays: inp.age, typicalAtAge: tooYoung ? null : c.typical,
+    score, ageDays: inp.age, typicalAtAge: c.typical,
     typicalAt30: c30.typical,
     nTypical: c.n, typicalNeff: c.neff,
-    typicalMeasuredShare: c.measuredShare, projection, projectionHorizon: horizon, q, confidence,
+    typicalMeasuredShare: c.measuredShare,
+    typicalKind: c.kind, typicalAnchorAge: c.anchorAge,
+    projection, projectionHorizon: horizon, q, confidence,
     belowAgeFloor: tooYoung,
   };
 }

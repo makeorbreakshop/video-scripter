@@ -19,7 +19,19 @@ export type CurvePoint = { day: number; expected: number; lo: number; hi: number
  * model cannot say what normal is at that age (lib/app/typical-curve.ts) -- the chart leaves a
  * GAP there rather than drawing a zero, which would claim a typical video has no views at all.
  */
-export type TypicalPoint = { day: number; expected: number | null };
+export type TypicalPoint = {
+  day: number;
+  expected: number | null;
+  /**
+   * How the model arrived at this point (lib/scoring/curve.TypicalKind). 'estimated' means no
+   * prior was measured at this age and the level was slid here from the nearest age where some
+   * were -- drawn DOTTED, the same ink this chart already uses for this video's own
+   * reconstructed history, so "we did not watch this" looks the same wherever it appears.
+   */
+  kind?: 'measured' | 'estimated';
+  /** For 'estimated': the age the level was actually measured at. */
+  anchorAge?: number | null;
+};
 export type ProjPoint = { day: number; projected: number };
 export type Actual = import('../scoring/observations').Observation;
 export type Marker = {
