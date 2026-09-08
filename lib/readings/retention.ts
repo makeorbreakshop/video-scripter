@@ -25,9 +25,9 @@ import { createHash } from 'node:crypto';
 
 export const READING_RETENTION = {
   /** Readings younger than this keep their full native resolution. */
-  denseWindowDays: 7,
+  denseWindowDays: 4,
   /** Between denseWindowDays and this, one reading per video per UTC hour survives. */
-  hourlyWindowDays: 30,
+  hourlyWindowDays: 14,
   /**
    * A video's first days are never thinned below hourly, however old the readings get.
    *

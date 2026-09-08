@@ -18,24 +18,24 @@ const ago = (days: number, extra = 0) => new Date(NOW - days * 86_400_000 + extr
 const r = (video_id: string, at: string, views: number): Reading => ({ video_id, at, views });
 
 describe('tiers', () => {
-  test('the dense window is 7 days and the hourly window ends at 30', () => {
-    expect(READING_RETENTION.denseWindowDays).toBe(7);
-    expect(READING_RETENTION.hourlyWindowDays).toBe(30);
+  test('the dense window is 4 days and the hourly window ends at 14 (2026-09-08: 7/30 fills the disk)', () => {
+    expect(READING_RETENTION.denseWindowDays).toBe(4);
+    expect(READING_RETENTION.hourlyWindowDays).toBe(14);
   });
 
   test('a reading falls in the tier its age puts it in', () => {
     expect(tierOf(ago(0), NOW)).toBe('dense');
-    expect(tierOf(ago(6.99), NOW)).toBe('dense');
-    expect(tierOf(ago(7.01), NOW)).toBe('hourly');
-    expect(tierOf(ago(29.99), NOW)).toBe('hourly');
-    expect(tierOf(ago(30.01), NOW)).toBe('daily');
+    expect(tierOf(ago(3.99), NOW)).toBe('dense');
+    expect(tierOf(ago(4.01), NOW)).toBe('hourly');
+    expect(tierOf(ago(13.99), NOW)).toBe('hourly');
+    expect(tierOf(ago(14.01), NOW)).toBe('daily');
     expect(tierOf(ago(400), NOW)).toBe('daily');
   });
 
-  test('the boundaries are exactly 7 and 30 days, not 6.5 or 31', () => {
-    expect(tierOf(NOW - 7 * 86_400_000 + 1, NOW)).toBe('dense');
-    expect(tierOf(NOW - 7 * 86_400_000, NOW)).toBe('hourly');
-    expect(tierOf(NOW - 30 * 86_400_000, NOW)).toBe('daily');
+  test('the boundaries are exactly 4 and 14 days, not 3.5 or 15', () => {
+    expect(tierOf(NOW - 4 * 86_400_000 + 1, NOW)).toBe('dense');
+    expect(tierOf(NOW - 4 * 86_400_000, NOW)).toBe('hourly');
+    expect(tierOf(NOW - 14 * 86_400_000, NOW)).toBe('daily');
   });
 });
 
@@ -347,7 +347,7 @@ describe('day arithmetic', () => {
   });
 
   test('the newest archivable day is a full dense window behind now', () => {
-    expect(newestArchivableDay(NOW)).toBe('2026-09-01');
+    expect(newestArchivableDay(NOW)).toBe('2026-09-04');
   });
 
   test('utcDay/utcHour are UTC, not local', () => {
