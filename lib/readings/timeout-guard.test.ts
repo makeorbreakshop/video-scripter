@@ -19,6 +19,11 @@ const CONVERTED = [
   'scripts/archive-readings.ts',
   'scripts/thin-readings.ts',
   'scripts/verify-archive.ts',
+  // The benchmark/backtest harness. Converted 2026-09-08: on the v5.3 attempt these ran at the
+  // role default, the client gave up first, and the query kept running server-side.
+  'scripts/backtest-baseline-trend.ts',
+  'scripts/check-band-calibration.ts',
+  'scripts/benchmark-scores.ts',
 ];
 
 /**
@@ -55,6 +60,14 @@ describe('statement_timeout is set in a form that actually applies', () => {
 
   test('the archive scripts take their timeout from makeTimedPool, not from a bare SET', () => {
     for (const f of ['scripts/archive-readings.ts', 'scripts/thin-readings.ts', 'scripts/verify-archive.ts']) {
+      expect(read(f)).toMatch(/makeTimedPool\(\{[^}]*timeoutMs:/);
+    }
+  });
+
+  // A benchmark that abandons a query without stopping it is how the database got saturated on
+  // 2026-09-08: the harness moved on, the backend kept reading, and the next run piled on top.
+  test('the benchmark harness cannot orphan a query', () => {
+    for (const f of ['scripts/backtest-baseline-trend.ts', 'scripts/check-band-calibration.ts', 'scripts/benchmark-scores.ts']) {
       expect(read(f)).toMatch(/makeTimedPool\(\{[^}]*timeoutMs:/);
     }
   });

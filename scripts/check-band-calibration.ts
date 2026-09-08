@@ -9,6 +9,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import { longformSql } from '../lib/scoring/longform';
 import { chunk } from '../lib/nightly/tracking-core';
 import { MODEL_VERSION, logMultTo30, type GlobalParams } from '../lib/scoring/core';
@@ -47,8 +48,13 @@ const BRIEF = process.argv.includes('--brief');
  * baseline-only change does not touch.
  */
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
+// Heavy analysis queries run through makeTimedPool: each pool.query becomes
+// `begin; set local statement_timeout = N; ...; commit`. The old
+// `pool.on('connect', c => c.query('set statement_timeout = ...'))` below it did nothing on the
+// :6543 pooler -- the SET lands after the queries it was meant to protect -- so these scripts
+// ran at the 300 s role default and, when the client gave up first, left the query running
+// server-side. That is what orphaned backends during the 2026-09-08 v5.3 attempt.
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 600_000 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]) => (await pool.query(sql, params)).rows as any[];
 

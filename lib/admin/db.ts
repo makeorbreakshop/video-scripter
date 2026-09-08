@@ -115,10 +115,33 @@ export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg
  * meant to protect), so removing it is not a regression — this path has been running at the role
  * default all along, and now says so.
  *
- * The right fix for the app path is server-side and free, and needs a decision rather than a
- * commit: `alter role <app role> set statement_timeout = '45s'`, which every connection then
- * inherits at no per-query cost. Until that is set, batch scripts get their limits through
- * makeTimedPool, where +93 ms against a multi-second statement is noise.
+ * Re-measured 2026-09-08 (25 iterations each, same parameterised single-row read): plain median
+ * 40 ms, wrapped median 128-183 ms. The +93 ms is real and reproducible, so this stays plain.
+ *
+ * Three cheaper ways to get a server-side limit on this path were tested that day and ALL FAIL:
+ *
+ *   pg.Pool({ statement_timeout: 45000 })   `show statement_timeout` returned 2min. Supavisor
+ *                                           does not forward the startup parameter.
+ *   pg.Pool({ options: '-c statement_timeout=45000' })   returned 5min, 5min, 2min - ignored,
+ *                                           and the drift across three queries on one pool is
+ *                                           Supavisor handing out whatever server connection is
+ *                                           free. Nothing session-level is reliable here.
+ *   ?options=-c%20statement_timeout in the URL           returned 2min. Stripped, as in the audit.
+ *   pg.Pool({ query_timeout: 5000 })        aborts the CLIENT at 5 s but the backend keeps running:
+ *                                           pg_stat_activity still showed the pg_sleep(60) active
+ *                                           9 s after the client gave up. This is worse than no
+ *                                           timeout - it orphans work instead of stopping it.
+ *
+ * That leaves `alter role ... set statement_timeout`, and the app cannot use it as things stand:
+ * DATABASE_URL, DATABASE_POOLER_URL and every pipeline script all connect as the SAME role
+ * (`select current_user` -> `postgres`). Setting 45 s on it would also cap track-due, rss-poll,
+ * launch-track, feed-materialize and ~25 other plain-pool scripts, which is a worse failure than
+ * the one being fixed. (Scripts on makeTimedPool are immune - their `set local` overrides the role
+ * default - but most scripts are not on it.)
+ *
+ * So the real fix is a SEPARATE least-privilege role for the web app with its own role-level
+ * timeout, and that is a decision, not a commit: it needs a new role + password and a Vercel
+ * DATABASE_URL rotation. Until then this path runs at the role default and says so.
  */
 export async function q<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   const { rows } = await getPool().query(sql, params);

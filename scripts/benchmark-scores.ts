@@ -24,6 +24,7 @@ dotenv.config({ path: '.env.local' });
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import {
   scoreVideo, fitParams, bucketFor, fittedBuckets, bucketTolerance, growthExponent, median,
   priorV30 as corePriorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS,
@@ -79,8 +80,13 @@ if (COMPARE) {
 }
 
 // ------------------------------------------------------------------- run mode
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
+// Heavy analysis queries run through makeTimedPool: each pool.query becomes
+// `begin; set local statement_timeout = N; ...; commit`. The old
+// `pool.on('connect', c => c.query('set statement_timeout = ...'))` below it did nothing on the
+// :6543 pooler -- the SET lands after the queries it was meant to protect -- so these scripts
+// ran at the 300 s role default and, when the client gave up first, left the query running
+// server-side. That is what orphaned backends during the 2026-09-08 v5.3 attempt.
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 600_000 });
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const chunk = <T,>(xs: T[], n: number): T[][] => { const o: T[][] = []; for (let i = 0; i < xs.length; i += n) o.push(xs.slice(i, i + n)); return o; };
