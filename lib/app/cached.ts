@@ -84,7 +84,10 @@ export function cachedVideoPage(videoId: string, channelId?: string | null): Pro
   const tags = channelId ? [videoTag(videoId), channelTag(channelId)] : [videoTag(videoId)];
   return unstable_cache(
     () => loadVideoPageUncached(videoId),
-    ['video-page', videoId],
+    // v2: the entry's SHAPE changed (packagingEvents / packagingCards). A cached v1 entry has
+    // neither, and the page reading `.length` off undefined is a server-side exception served
+    // to every reader whose video was already warm. A new shape is a new key.
+    ['video-page-v2', videoId],
     { revalidate: VIDEO_TTL, tags }
   )();
 }
