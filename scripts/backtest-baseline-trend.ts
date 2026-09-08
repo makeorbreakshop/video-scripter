@@ -78,7 +78,7 @@ const params: GlobalParams = paramRows[0].params;
 // This measures the SLIDE and nothing else: same priors, same kernel, same weights, one input
 // removed. It is not an outcome backtest and does not claim to be.
 if (process.argv.includes('--estimate-coverage')) {
-  const { channelCurve, measuredCurveAt } = await import('../lib/scoring/curve');
+  const { channelCurve, measuredCurveAt, SUBDAY_SLIDE_MAX_AGE } = await import('../lib/scoring/curve');
   const { loadCurvePriors } = await import('../lib/scoring/prior-load');
   const T_EST = Number(arg('--t') ?? 0.5);
   const BAND = Number(arg('--band') ?? 0.3);
@@ -104,42 +104,57 @@ if (process.argv.includes('--estimate-coverage')) {
       order by v.published_at desc limit $1`, [LIM]);
   log(`candidate targets: ${tgt.length}`);
 
-  const errs: number[] = [];
-  const anchors = new Map<number, number>();
-  let measurable = 0, estimable = 0;
+  // TWO masks, because "starved" is not one condition.
+  //   >=1d   every reading under a day removed. A prior with a day-1..3 reading still contributes
+  //          at 0.5 by INTERPOLATION (contributionAt step 2 allows a slide from under
+  //          SUBDAY_SLIDE_MAX_AGE), so this mostly does NOT reach the v5.3 estimate branch. It
+  //          measures the older sub-day path, and is reported to show how often that suffices.
+  //   >3d    every reading under SUBDAY_SLIDE_MAX_AGE removed. This is the real corpus: a channel
+  //          whose priors were first seen at day 17 or day 45. Nothing can contribute at 0.5, so
+  //          v5.2 returned null and v5.3 estimates. THIS is the cell that validates the slide.
+  const MASKS: [string, number][] = [['>=1d', 1], ['>3d', SUBDAY_SLIDE_MAX_AGE + 1e-9]];
+  const res = new Map<string, { errs: number[]; est: number; stillMeasured: number; anchors: Map<number, number> }>();
+  for (const [name] of MASKS) res.set(name, { errs: [], est: 0, stillMeasured: 0, anchors: new Map() });
+  let measurable = 0, targets = 0;
   for (let i = 0; i < tgt.length; i += 200) {
     const batch = tgt.slice(i, i + 200).map((r) => r.id);
     const byVideo = await loadCurvePriors(q, batch);
     for (const id of batch) {
       const priors = byVideo.get(id) ?? [];
       if (!priors.length) continue;
+      targets++;
       const truth = measuredCurveAt(priors, T_EST, params);
       if (truth.typical == null) continue;      // no measured C(0.5) here: nothing to check against
       measurable++;
-      // The starved channel: every prior reading under a day removed, lifetime kept. This is
-      // the exact state the rest of the corpus is in, reproduced on a channel we can check.
-      const starved = priors.map((p) => ({ ...p, samples: p.samples.filter((sm) => sm.day >= 1) }));
-      const est = channelCurve(starved, T_EST, params);
-      if (est.typical == null || est.kind !== 'estimated') continue;
-      estimable++;
-      anchors.set(est.anchorAge!, (anchors.get(est.anchorAge!) ?? 0) + 1);
-      errs.push(Math.log(est.typical / truth.typical));
+      for (const [name, cut] of MASKS) {
+        const a = res.get(name)!;
+        const starved = priors.map((p) => ({ ...p, samples: p.samples.filter((sm) => sm.day >= cut) }));
+        const est = channelCurve(starved, T_EST, params);
+        if (est.typical == null) continue;
+        if (est.kind !== 'estimated') { a.stillMeasured++; continue; }
+        a.est++;
+        a.anchors.set(est.anchorAge!, (a.anchors.get(est.anchorAge!) ?? 0) + 1);
+        a.errs.push(Math.log(est.typical / truth.typical));
+      }
     }
   }
-  const abs = errs.map(Math.abs);
-  const within = abs.filter((x) => x <= BAND).length;
-  console.log(`
---- v5.3 estimate validation, t=${T_EST} (params ${PARAMS_VERSION}) ---`);
-  console.log(`channels with a MEASURED C(${T_EST}):        ${measurable}`);
-  console.log(`of those, v5.3 produced an ESTIMATE:      ${estimable}`);
-  console.log(`paired rows:                              ${errs.length}`);
-  if (errs.length) {
-    console.log(`medALE  |log(est/measured)|:             ${median(abs)!.toFixed(4)}`);
-    console.log(`bias     log(est/measured):              ${median(errs)!.toFixed(4)}`);
-    console.log(`within +-${BAND} log:                       ${within}/${errs.length} (${(100 * within / errs.length).toFixed(1)}%)`);
-    const s = [...abs].sort((a, b) => a - b);
-    console.log(`p90 ALE:                                  ${s[Math.floor(0.9 * (s.length - 1))].toFixed(4)}`);
-    console.log(`anchors chosen: ${[...anchors.entries()].sort((a, b) => b[1] - a[1]).map(([a, n]) => `${a}d=${n}`).join('  ')}`);
+  console.log(`\n--- v5.3 estimate validation, t=${T_EST} (params ${PARAMS_VERSION}) ---`);
+  console.log(`targets with priors:                 ${targets}`);
+  console.log(`of those, a MEASURED C(${T_EST}) exists:  ${measurable}`);
+  for (const [name] of MASKS) {
+    const a = res.get(name)!;
+    const errs = a.errs, abs = errs.map(Math.abs);
+    const within = abs.filter((x) => x <= BAND).length;
+    console.log(`\n  mask keep samples ${name}`);
+    console.log(`    still measurable at t (no estimate needed): ${a.stillMeasured}`);
+    console.log(`    reached the ESTIMATE branch:                ${a.est}`);
+    if (!errs.length) { console.log('    (no paired rows)'); continue; }
+    const srt = [...abs].sort((x, y) => x - y);
+    console.log(`    medALE |log(est/measured)|:                 ${median(abs)!.toFixed(4)}`);
+    console.log(`    bias    log(est/measured):                  ${median(errs)!.toFixed(4)}`);
+    console.log(`    within +-${BAND} log:                          ${within}/${errs.length} (${(100 * within / errs.length).toFixed(1)}%)`);
+    console.log(`    p90 ALE:                                    ${srt[Math.floor(0.9 * (srt.length - 1))].toFixed(4)}`);
+    console.log(`    anchors: ${[...a.anchors.entries()].sort((x, y) => y[1] - x[1]).map(([ag, n]) => `${ag}d=${n}`).join('  ')}`);
   }
   await pool.end();
   process.exit(0);

@@ -204,7 +204,9 @@ export function cadenceHalfLifeForPriors(priors: readonly CurvePrior[]): number 
  * display anchor the channel chart already plots).
  */
 export const ESTIMATE_ANCHORS: readonly number[] =
-  [...new Set([...ALL_BUCKETS, 30, ...LONGTAIL_AGES])].sort((a, b) => a - b);
+  [...ALL_BUCKETS, 30, ...LONGTAIL_AGES]
+    .filter((a, i, xs) => xs.indexOf(a) === i)
+    .sort((a, b) => a - b);
 
 /** The ladder for one target age: every rung but the target itself, nearest first in log age. */
 export function estimateLadder(targetAge: number): number[] {

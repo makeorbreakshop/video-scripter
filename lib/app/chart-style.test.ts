@@ -3,7 +3,7 @@
 // from series kind to how it is drawn — the one place the two are made to look different.
 import {
   seriesStyle, chartRows, bandStyle, SERIES_LABELS, trackingBeganLabel,
-  seriesStroke, TYPICAL_STYLE, TYPICAL_ESTIMATED_STYLE, visibleYDomain, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
+  seriesStroke, TYPICAL_STYLE, TYPICAL_ESTIMATED_STYLE, trackingLabelPlacement, BAND_OPACITY_FLOOR, BAND_STYLES,
   LEGEND_ORDER, LEGEND_LABELS, legendEntries, type ThemeMode,
 } from './chart-style';
 import type { SeriesPoint } from './chart-series';
