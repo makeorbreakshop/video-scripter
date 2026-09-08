@@ -13,7 +13,7 @@
 // Reads: videos, view_snapshots, view_samples, rss_samples, score_params. Writes: video_scores, score_params (--fit).
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import { longformSql } from '../lib/scoring/longform';
 import { refreshScoredChannels } from '../lib/scoring/channel-refresh';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
@@ -77,8 +77,10 @@ if (CHECKPOINT_PATH) {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 300000').catch(() => {}); });
+// makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
+// The old on-connect SET was queued asynchronously and landed after the queries it was meant
+// to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 

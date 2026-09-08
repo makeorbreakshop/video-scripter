@@ -22,14 +22,90 @@ export function getPool() {
       idleTimeoutMillis: serverless ? 5_000 : 30_000,
       keepAlive: true,
     });
-    // pgbouncer strips startup options, so set the timeout per connection.
-    pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 45000').catch(() => {}); });
   }
   return pool;
 }
 
+/** The role default this database runs at when nothing sets a timeout. */
+export const DEFAULT_STATEMENT_TIMEOUT_MS = 45_000;
+
+/**
+ * Run `fn` with a statement timeout that actually applies.
+ *
+ * `pool.on('connect', c => c.query('set statement_timeout = …'))` — the pattern this repo used
+ * in seven places — is broken on the :6543 transaction pooler: the SET is queued asynchronously
+ * and lands after the queries it was meant to protect (measured 2026-09-08 — the first three
+ * queries on a fresh client all reported the 5-minute role default). `?options=-c …` in the
+ * connection string is stripped by Supavisor. `set local` inside an explicit transaction is the
+ * one form that works, because the pooler cannot hand the connection away mid-transaction.
+ *
+ * Scripts that genuinely need more than the 300 s role default should connect on
+ * DATABASE_SESSION_URL (:5432) instead, keeping session-mode clients ≤ 15.
+ */
+export async function withTimeout<T>(
+  client: pg.PoolClient | pg.Client,
+  timeoutMs: number,
+  fn: (c: pg.PoolClient | pg.Client) => Promise<T>
+): Promise<T> {
+  const n = Math.max(1, Math.round(timeoutMs));
+  // begin and the SET go in one simple-protocol message, so the guarantee costs one extra
+  // round trip on the way in and one on the way out, not three.
+  await client.query(`begin; set local statement_timeout = ${n}`);
+  try {
+    const out = await fn(client);
+    await client.query('commit');
+    return out;
+  } catch (err) {
+    await client.query('rollback').catch(() => {});
+    throw err;
+  }
+}
+
+/** withTimeout against a pool: checks a client out, wraps, always releases. */
+export async function poolWithTimeout<T>(
+  p: pg.Pool,
+  timeoutMs: number,
+  fn: (c: pg.PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await p.connect();
+  try {
+    return await withTimeout(client, timeoutMs, (c) => fn(c as pg.PoolClient));
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * A pool whose `pool.query(...)` actually honours `timeoutMs`.
+ *
+ * The scripts were all written as `pool.on('connect', … set statement_timeout …)` followed by
+ * bare `pool.query(...)` calls, which silently ran at the 300 s role default. Rather than
+ * rewrite every call site into an explicit transaction — which would also mean holding a pooler
+ * connection open across a script's whole run — this wraps each `query` in its own
+ * `begin; set local statement_timeout = N; …; commit`. Call sites stay exactly as they were.
+ *
+ * `pool.connect()` is untouched: a caller that checks a client out is doing something
+ * transactional already and should use `withTimeout` directly.
+ */
+export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg.Pool {
+  const { timeoutMs, ...poolConfig } = config;
+  const p = new pg.Pool(poolConfig);
+  const original = p.query.bind(p) as (...a: any[]) => Promise<any>;
+  (p as any).query = (text: any, values?: any, cb?: any) => {
+    // Callback form and cursor/QueryStream submittables bypass the wrapper — neither is used
+    // by the scripts this exists for, and silently changing their semantics would be worse.
+    if (typeof values === 'function' || typeof cb === 'function' || typeof text?.submit === 'function') {
+      return original(text, values, cb);
+    }
+    return poolWithTimeout(p, timeoutMs, async (c) =>
+      values === undefined ? c.query(text) : c.query(text, values));
+  };
+  return p;
+}
+
 export async function q<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-  const { rows } = await getPool().query(sql, params);
+  const rows = await poolWithTimeout(getPool(), DEFAULT_STATEMENT_TIMEOUT_MS,
+    async (c) => (await c.query(sql, params)).rows);
   return rows as T[];
 }
 

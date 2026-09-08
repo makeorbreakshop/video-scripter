@@ -1,3 +1,8 @@
+// SUPERSEDED 2026-09-08 by scripts/archive-readings.ts + scripts/thin-readings.ts, which archive
+// to R2 and verify the archive before deleting anything. Its LaunchAgent has been retired; this
+// file remains only for a manual one-off. Running it alongside the new job would delete rows the
+// new policy keeps.
+//
 // Thin the rss_samples tail: past the dense window, keep one reading per video per day.
 // Scheduled daily by com.mfm.video-scripter-rss-retention. Policy + SQL (pure, tested) live in
 // lib/rss/retention.ts; this file is I/O only. Direct Postgres only (2026-08-31 egress rule).

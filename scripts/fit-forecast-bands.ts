@@ -17,7 +17,7 @@
 // scripts/check-band-calibration.ts can measure coverage on videos neither fit has seen.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import { longformSql } from '../lib/scoring/longform';
 import { chunk } from '../lib/nightly/tracking-core';
 import { MODEL_VERSION, logMultTo30, type GlobalParams } from '../lib/scoring/core';
@@ -33,8 +33,10 @@ const MIN_CHANNEL_VIDEOS = 8;
 const SHRINK_SCALE = Number(arg('--shrink-scale') ?? 1);
 /** Per-bucket evidence gate, swept against held-out calibration. */
 const MIN_BUCKET_N = arg('--min-bucket-n') != null ? Number(arg('--min-bucket-n')) : MIN_CHANNEL_BUCKET_N;
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
+// makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
+// The old on-connect SET was queued asynchronously and landed after the queries it was meant
+// to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 600000 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]) => (await pool.query(sql, params)).rows as any[];
 

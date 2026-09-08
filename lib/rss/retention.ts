@@ -1,3 +1,13 @@
+// SUPERSEDED 2026-09-08 by lib/readings/retention.ts. Kept only so an already-scheduled run of
+// scripts/rss-retention.ts still behaves; do not add callers.
+//
+// This module thins rss_samples to one row per video per day past a 30-day window, with no
+// archive behind it — a deleted row is gone. The replacement writes the raw day to Cloudflare R2,
+// reads it back and checks a checksum BEFORE deleting anything, keeps a launch window at full
+// resolution, and covers view_samples and video_score_history as well. Its LaunchAgent
+// (com.mfm.video-scripter-archive-readings) replaces com.mfm.video-scripter-rss-retention; the
+// two must never both be installed, or two jobs delete the same rows to two different policies.
+//
 // rss_samples retention. Pure decision logic + its SQL; the runner is scripts/rss-retention.ts.
 //
 // The dense trace only earns its disk while it is dense. Past the window below, 96 readings of

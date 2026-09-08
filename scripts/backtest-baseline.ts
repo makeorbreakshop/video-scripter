@@ -26,7 +26,7 @@
 // Usage: npx tsx scripts/backtest-baseline.ts [--from 2025-07-01] [--to 2025-08-31] [--limit 8000] [--min-prior-age 2]
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import {
   scoreVideo, bucketFor, median, estimateV30, MODEL_VERSION,
   priorV30 as corePriorV30, publishGapDays, priorWindow, PRIOR_WINDOW, PRIOR_STALE_DAYS, MIN_PROJECT_AGE,
@@ -42,8 +42,10 @@ const MIN_PRIOR_AGE = Number(arg('--min-prior-age') ?? MIN_PROJECT_AGE);
 const T_LIST = [1, 3, 7];
 const N_CURRENT = 10, N_PROPOSED = PRIOR_WINDOW;
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 600000').catch(() => {}); });
+// makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
+// The old on-connect SET was queued asynchronously and landed after the queries it was meant
+// to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 600000 });
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
