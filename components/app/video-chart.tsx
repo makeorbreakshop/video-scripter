@@ -10,8 +10,9 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { Actual, CurvePoint } from '@/lib/admin/video-curve';
+import type { Actual, TypicalPoint } from '@/lib/admin/video-curve';
 import type { PackagingMark } from '@/lib/app/packaging-groups';
+import type { PackagingEvent } from '@/lib/app/packaging-events';
 import type { SeriesPoint } from '@/lib/app/chart-series';
 import type { ScoreComparison } from '@/lib/app/chart-comparison';
 import type { ThemeMode } from '@/lib/app/chart-style';
@@ -165,9 +166,11 @@ const VideoChartPlot = dynamic(() => import('./video-chart-plot'), {
 export function VideoChart(props: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
-  curve: CurvePoint[];
+  curve: TypicalPoint[];
   series: SeriesPoint[];
   marks: PackagingMark[];
+  /** The numbered packaging events — the chips under the axis. */
+  events?: PackagingEvent[];
   score: number | null;
   comparison?: ScoreComparison | null;
 }) {

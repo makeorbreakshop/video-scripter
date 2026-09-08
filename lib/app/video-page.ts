@@ -22,6 +22,7 @@ import { isSameAgeScore, scoreComparison, type ScoreComparison } from './chart-c
 import { scoreParamsQuery } from './score-version';
 import { groupPackaging, packagingMarks, type PackagingGroup, type PackagingMark } from './packaging-groups';
 import { videoTypicalCurve } from './typical-curve';
+import { buildPackaging, type PackagingCard, type PackagingEvent } from './packaging-events';
 import { cachedTypicalPriors } from './cached';
 
 /** One state of the live thumbnail. `variant` is the distinct image (A, B …); a rotation back
@@ -61,6 +62,10 @@ export type VideoPageView = {
   series: SeriesPoint[];
   /** The packaging history grouped by TEST — the same call the strip below the chart makes. */
   packagingGroups: PackagingGroup[];
+  /** Those groups NUMBERED: one event per group, the chips under the chart's axis. */
+  packagingEvents: PackagingEvent[];
+  /** The strip's cards, sharing those numbers — a test is one card per variant, one index. */
+  packagingCards: PackagingCard[];
   /** Those groups placed on the chart's day axis: a test is a window, a swap or title a rule. */
   marks: PackagingMark[];
   thumbs: ThumbVersionView[];
@@ -226,6 +231,30 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   const hero = heroThumb(id, thumbs, v.thumbnail_url ?? null);
   const thumbRows = thumbs.map((t) => ({ version: t.version, sha256: t.sha256 ?? null, phash: t.phash ?? null, first_seen: t.first_seen }));
   const { variants, states } = thumbnailVariants(thumbRows);
+
+  // One grid for both lines: the series days. See channelCurve for why they cannot differ.
+  const builtSeries: SeriesPoint[] = broadcast.isBroadcast
+    ? actuals.map(a => ({ ...a, kind: 'measured' as const }))
+    : buildSeries({
+      actuals,
+      baseline: score?.baseline ?? null,
+      est30: score?.age_days != null && actuals.length && Math.abs(Number(score.age_days) - actuals[actuals.length - 1].day) > 1e-6
+        ? null : score?.est30 ?? null,
+      mult,
+      longtail,
+      horizonDay: maxDay,
+      ageDays,
+      bands,
+      assumeZeroOrigin: v.duration !== 'P0D',
+    });
+  // The typical line is channelCurve itself now -- the score's own denominator at every age
+  // (lib/app/typical-curve.ts), not C(30) dragged along the global growth shape, which is a
+  // different curve and was suppressed entirely for v5 rows. Pre-v5 rows, which have no
+  // stored same-age denominator, keep the old shape.
+  const builtCurve: TypicalPoint[] = broadcast.isBroadcast ? []
+    : isSameAgeScore(score) ? typical
+    : channelCurve(builtSeries, score?.baseline ?? null, mult, longtail);
+
   const variantOf = new Map(states.map((s) => [s.version, s]));
 
   return {
@@ -248,33 +277,8 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
     score,
     actuals,
     comparison: broadcast.isBroadcast ? null : scoreComparison(score),
-    ...(() => {
-      // One grid for both lines: the series days. See channelCurve for why they cannot differ.
-      const series: SeriesPoint[] = broadcast.isBroadcast
-        ? actuals.map(a => ({ ...a, kind: 'measured' as const }))
-        : buildSeries({
-        actuals,
-        baseline: score?.baseline ?? null,
-        est30: score?.age_days != null && actuals.length && Math.abs(Number(score.age_days) - actuals[actuals.length - 1].day) > 1e-6
-          ? null : score?.est30 ?? null,
-        mult,
-        longtail,
-        horizonDay: maxDay,
-        ageDays,
-        bands,
-        assumeZeroOrigin: v.duration !== 'P0D',
-      });
-      // The typical line is channelCurve itself now -- the score's own denominator at every age
-      // (lib/app/typical-curve.ts), not C(30) dragged along the global growth shape, which is a
-      // different curve and was suppressed entirely for v5 rows. Pre-v5 rows, which have no
-      // stored same-age denominator, keep the old shape.
-      return {
-        series,
-        curve: broadcast.isBroadcast ? []
-          : isSameAgeScore(score) ? typical
-          : channelCurve(series, score?.baseline ?? null, mult, longtail),
-      };
-    })(),
+    series: builtSeries,
+    curve: builtCurve,
     thumbs: thumbs.map((t) => ({ version: t.version, first_seen: new Date(t.first_seen).toISOString(), url: thumbUrls[t.version],
       variant: variantOf.get(t.version)?.variant ?? 'A', isReturn: variantOf.get(t.version)?.isReturn ?? false })),
     variants,
@@ -294,8 +298,22 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
         score: !broadcast.isBroadcast && score?.score != null ? Number(score.score) : null,
         now,
       });
+      // ONE numbering, read by the chips and by the strip: chip 3 and card 3 are the same
+      // event. The lift on a card is the same-age score either side of it, off the series and
+      // the typical curve the chart is already drawing — no second query, no second answer.
+      const numbered = buildPackaging({
+        originAt: broadcast.chartOriginAt,
+        publishedAt,
+        title: v.title,
+        publishedUrl: thumbUrls[thumbRows[0]?.version] ?? hero.src,
+        groups,
+        series: builtSeries,
+        curve: builtCurve,
+      });
       return {
         packagingGroups: groups,
+        packagingEvents: numbered.events,
+        packagingCards: numbered.cards,
         marks: packagingMarks(groups, broadcast.chartOriginAt),
         timeline: clips,
         timelineTicks: timelineTicks(clips),
@@ -460,6 +478,61 @@ export function headerLines(v: HeaderInput): HeaderLines {
     };
   }
   return { meta, big: null, over: false, verdict: gapWords(v) };
+}
+
+/**
+ * The word on the chip at the top right — SETTLED / LIKELY / EARLY.
+ *
+ * The same confidence the verdict sentence used to carry, promoted to the one place it belongs
+ * now that the sentence is gone. 'confirmed' is a model word; a creator reads 'settled'.
+ * Null when the model has nothing to say, because a chip that says "unknown" is noise.
+ */
+export function confidenceChip(confidence: string | null | undefined): string | null {
+  const c = (confidence || '').toLowerCase();
+  if (c === 'confirmed') return 'SETTLED';
+  if (c === 'likely') return 'LIKELY';
+  if (c === 'early') return 'EARLY';
+  return null;
+}
+
+/** One labelled figure in the header's mono stat row. */
+export type HeaderStat = { key: string; value: string; label: string };
+
+/**
+ * The header's stat row: the ratio, then the three numbers it is MADE of.
+ *
+ * This replaced the sentence — "typical 36K at 7d old · tentative 92K by day 30 · comparison
+ * used 74K views · settled" — which said in prose what four labelled figures say at a glance,
+ * and repeated the view count the metadata line already carried. There is deliberately no
+ * day-30 figure here: the projection is the dashed line on the chart, which is the picture of
+ * it, and a number beside a picture of the same thing is the fact twice.
+ */
+export function headerStats(v: HeaderInput): { big: string | null; over: boolean; stats: HeaderStat[]; confidence: string | null } {
+  const sc = v.score;
+  if (v.broadcastNotice) return { big: null, over: false, stats: [], confidence: null };
+  const pct = (x: number) => `${x.toFixed(x < 10 ? 1 : 0)}×`;
+  const sameAge = isSameAgeScore(sc);
+  const ratio = sameAge && sc?.score != null ? Number(sc.score) : v.pace;
+  const typical = sameAge ? sc?.typical_at_age ?? sc?.baseline ?? null : v.expectedNow;
+  return {
+    big: ratio != null && Number.isFinite(ratio) ? pct(ratio) : null,
+    over: ratio != null && ratio >= 1,
+    confidence: confidenceChip(sc?.confidence),
+    stats: [
+      { key: 'views', value: fmt(Number(v.views)), label: 'VIEWS' },
+      { key: 'age', value: ageShort(v.ageDays), label: 'OLD' },
+      ...(typical != null ? [{ key: 'typical', value: fmt(Math.round(Number(typical))), label: 'TYPICAL' }] : []),
+    ],
+  };
+}
+
+/** "7d" / "18h" / "40m" — an age with no word after it, for a labelled stat. */
+export function ageShort(days: number): string {
+  if (!Number.isFinite(days) || days < 0) return '–';
+  const hrs = Math.floor(days * 24);
+  if (hrs < 1) return `${Math.max(0, Math.round(days * 1440))}m`;
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
 }
 
 /** "1d old" / "18h old" — the same words the rest of the app uses for an age. */

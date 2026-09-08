@@ -18,7 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
-  ReferenceDot, ReferenceArea,
+  ReferenceDot,
 } from 'recharts';
 import { type Actual, type TypicalPoint } from '@/lib/admin/video-curve';
 import type { SeriesPoint } from '@/lib/app/chart-series';
@@ -35,6 +35,8 @@ import {
   BRUSH_HEIGHT, HANDLE_HIT, HANDLE_WIDTH, PLOT_INSET, brushPaths, clampWindow, dragEdge,
   nudgeEdge, panWindow, partAt, windowRect, type Edge,
 } from '@/lib/app/chart-brush';
+import type { PackagingEvent } from '@/lib/app/packaging-events';
+import { PackagingChips } from './packaging-chips';
 import { useMarkerHover, useThemeColors, fmtViews, axisDate, HoverCard } from './video-chart';
 
 /**
@@ -87,15 +89,44 @@ function LegendSwatchMark({ swatch, accent, muted, mode }: {
   );
 }
 
-function ChartLegend({ entries, accent, muted, mode }: {
+/**
+ * The legend, plus the two things the chart stopped saying in sentences.
+ *
+ * `estimated` is the dotted ink, named once — it used to be a line of prose above the plot
+ * ("tracking began Sep 1 · dotted history is estimated") explaining an ink the swatch can just
+ * show. `kinds` are the packaging chips' colours, which are otherwise three borders with no key.
+ */
+const EVENT_LEGEND: Array<{ kind: 'thumbnail' | 'title' | 'test'; token: string; label: string }> = [
+  { kind: 'thumbnail', token: 'var(--cs-accent)', label: 'thumbnail' },
+  { kind: 'title', token: 'var(--cs-good)', label: 'title' },
+  { kind: 'test', token: 'var(--cs-warn)', label: 'test' },
+];
+
+function ChartLegend({ entries, accent, muted, mode, estimated, kinds }: {
   entries: ReturnType<typeof legendEntries>;
   accent: string; muted: string; mode: 'light' | 'dark';
+  estimated?: boolean;
+  kinds?: ReadonlySet<string>;
 }) {
   return (
     <ul style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '4px 16px', margin: 0, padding: 0, listStyle: 'none' }}>
       {entries.map((e) => (
         <li key={e.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
           <LegendSwatchMark swatch={e.swatch} accent={accent} muted={muted} mode={mode} />
+          <span>{e.label}</span>
+        </li>
+      ))}
+      {estimated && (
+        <li key="estimated" style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
+          <svg width={26} height={12} aria-hidden style={{ flex: '0 0 auto' }}>
+            <line x1={0} y1={6} x2={26} y2={6} stroke={muted} strokeWidth={1.5} strokeDasharray="2 3" />
+          </svg>
+          <span>estimated</span>
+        </li>
+      )}
+      {EVENT_LEGEND.filter((e) => kinds?.has(e.kind)).map((e) => (
+        <li key={e.kind} style={{ display: 'flex', alignItems: 'center', gap: 6, color: muted, fontSize: 11 }}>
+          <span aria-hidden style={{ width: 9, height: 9, borderRadius: 2, border: `2px solid ${e.token}`, flex: '0 0 auto' }} />
           <span>{e.label}</span>
         </li>
       ))}
@@ -302,7 +333,7 @@ function BrushTrack({ full, view, onView, points, C }: {
 }
 
 export default function VideoChartPlot({
-  actuals, curve, series, marks, comparison, publishedAt,
+  actuals, curve, series, marks, events, comparison, publishedAt,
 }: {
   publishedAt?: string | Date | null;
   actuals: Actual[];
@@ -311,6 +342,8 @@ export default function VideoChartPlot({
   series: SeriesPoint[];
   /** The packaging groups on the day axis — lib/app/packaging-groups.ts, the strip's own call. */
   marks: PackagingMark[];
+  /** The same groups NUMBERED — the chips drawn under the axis (lib/app/packaging-events.ts). */
+  events?: PackagingEvent[];
   score: number | null;
   comparison?: ScoreComparison | null;
 }) {
@@ -351,6 +384,7 @@ export default function VideoChartPlot({
   const ticks = useMemo(() => axisTicks(domain), [domain]);
   const launch = domain[1] - domain[0] <= 3;
   const laid = useMemo(() => markerLayout(marks, domain), [marks, domain]);
+  const eventKinds = useMemo(() => new Set((events ?? []).map((e) => e.kind)), [events]);
   /**
    * A click on a test window opens that test in the strip below and scrolls to it. recharts
    * reports a click as an x value rather than "you hit this ReferenceArea", so the hit test is
@@ -431,11 +465,6 @@ export default function VideoChartPlot({
       <RangeChips chips={chips} active={active} muted={C.muted} accent={C.accent} line={C.line}
                   surface={C.surface} ink={C.ink} scale={scale} onScale={() => setScale(nextScale(scale))}
                   onPick={pickChip} />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', color: C.muted, fontSize: CHART_TYPE.label, marginBottom: 4 }}>
-        {trackingBegan && <span>{trackingBegan} · dotted history is estimated</span>}
-        {lastMeasured && <span>Last observed {axisDate(publishedAt, lastMeasured.day, true)}</span>}
-      </div>
-
       {/* Recharts sizes its legend wrapper from the legend's own content, which on a narrow
           screen is wider than the chart and would stretch the whole page. Clipping it here is
           what keeps the chart from giving the WHOLE PAGE a horizontal scrollbar at 375px. */}
@@ -470,7 +499,6 @@ export default function VideoChartPlot({
               // Three lines on a point we counted; the ranges belong to the forecast alone.
               const lines = tooltipLines({
                 at, kind: (kindByDay.get(Number(label)) ?? 'measured') as TooltipKind,
-                timeBasis: series.find(p => p.day === Number(label))?.timeBasis,
                 views: mine ?? null, typical: row.expected ?? null,
                 inner: row.bandInner ?? null, outer: row.bandOuter ?? null,
               });
@@ -590,41 +618,29 @@ export default function VideoChartPlot({
             />
           )}
 
-          {/* The packaging groups. A TEST is a shaded window from its first rotation to the
-              settle — one experiment, however many state rows it wrote — and a single change
-              is one rule. The grouping is the strip's own (lib/app/packaging-groups.ts); the
-              layout, including which windows collapse at this zoom, is chart-marks. */}
+          {/* The packaging groups, as faint vertical guides and nothing else. The grey A/B
+              window and its "3 changes" chip are gone: a rectangle is a claim about a span the
+              chart cannot support, and the label was a count of database rows sitting on the
+              plot. What each event WAS is the chip under the axis, at full thumbnail. */}
           {laid.map((m) => {
             const on = m.markerKeys.some((k) => k === hovered);
-            const isTest = m.kind === 'test' || m.kind === 'cluster';
-            const color = isTest ? C.accent : C.ink;
-            const handlers = {
-              onMouseEnter: () => setHovered(m.markerKeys[0] ?? null),
-              onMouseLeave: () => setHovered(null),
-              onClick: () => setOpened(m.groupKeys[0] ?? null),
-              style: { cursor: 'pointer' },
-            } as any;
-            const label = {
-              value: m.chip, fontSize: CHART_TYPE.label, fill: color, fontWeight: on ? 700 : 500,
-              position: m.chipAnchor === 'end' ? 'insideTopRight' : 'insideTopLeft',
-              dx: m.chipAnchor === 'end' ? -4 : 4, dy: 4, ...handlers,
-            } as any;
-            return m.endDay != null && m.endDay > m.startDay ? (
-              <ReferenceArea
-                key={m.key} x1={m.startDay} x2={m.endDay} fill={color}
-                fillOpacity={on ? 0.16 : 0.08} stroke={color} strokeOpacity={on ? 0.5 : 0.2}
-                label={label} {...handlers}
-              />
-            ) : (
+            return (
               <ReferenceLine
-                key={m.key} x={m.chipX} stroke={color} strokeWidth={on ? 2 : 1}
-                strokeOpacity={on ? 0.9 : 0.25} label={label} {...handlers}
+                key={m.key} x={m.chipX} stroke={C.muted}
+                strokeWidth={on ? 1.5 : 1} strokeOpacity={on ? 0.55 : 0.2}
               />
             );
           })}
 
         </ComposedChart>
       </ResponsiveContainer>
+
+      {/* The packaging chips, on the same axis as the plot above them: same left inset, same
+          right inset, same zoom domain, so a chip is under the day it happened. */}
+      {events && events.length > 0 && (
+        <PackagingChips events={events} domain={domain}
+                        insetLeft={PLOT_INSET.left} insetRight={PLOT_INSET.right} />
+      )}
 
       {/* The handle on the timeline. It is inside the clipped container so it can never be the
           thing that gives the page a horizontal scrollbar. */}
@@ -636,6 +652,8 @@ export default function VideoChartPlot({
         <ChartLegend
           entries={legendEntries({ video: hasMeasured || hasImplied, forecast: hasForecast, expected: curve.some((c) => c.expected != null) }, series.some(p => p.kind === 'forecast' && !!p.band))}
           accent={C.accent} muted={C.muted} mode={C.mode}
+          estimated={hasImplied || curve.some((c) => c.expected != null && c.kind === 'estimated')}
+          kinds={eventKinds}
         />
       </div>
       </div>
