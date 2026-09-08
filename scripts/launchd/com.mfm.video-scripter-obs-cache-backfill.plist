@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ONE-SHOT, tonight at 04:45 ET: fill video_obs_cache for every tracked channel's prior window.
+
+  This is the backfill behind the biggest read win in the 2026-09-08 speed work: with it done,
+  scripts/score-videos.ts stops rebuilding each prior's observation record from the three big
+  reading tables every hour (118M disk blocks in four days), and the video page's typical curve
+  stops doing it live. Until it runs, lib/scoring/prior-load.ts falls back to the raw union and
+  behaviour is exactly what it is today — which is why this is safe to schedule after the deploy
+  rather than before it.
+
+  04:45 is after the 04:00 series backfill, so the rows are built from a corpus whose series
+  files and archive have already settled for the night.
+
+  Throttled by construction: one channel at a time, 200 videos per statement, 500 ms between
+  batches, and it stops itself if anything has been running in Postgres for over two minutes.
+  Resumable — rerunning skips rows built in the last 48 hours. Measured rate ~20 rows/s, so the
+  ~16,000 priors take roughly 15 minutes.
+
+  Install (one-shot; remove it again after it has run):
+    cp scripts/launchd/com.mfm.video-scripter-obs-cache-backfill.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-obs-cache-backfill.plist
+
+  Remove:
+    launchctl bootout gui/$UID/com.mfm.video-scripter-obs-cache-backfill
+    rm ~/Library/LaunchAgents/com.mfm.video-scripter-obs-cache-backfill.plist
+
+  By hand instead, watched:
+    npx tsx scripts/backfill-obs-cache.ts --batch 200 --sleep-ms 500
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-obs-cache-backfill</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/backfill-obs-cache.ts --batch 200 --sleep-ms 500</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>4</integer><key>Minute</key><integer>45</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/obs-cache-backfill-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/obs-cache-backfill-launchd.err.log</string>
+</dict></plist>

@@ -30,6 +30,8 @@ import {
   SERIES_DIRTY_COUNT_SQL, writeSeriesFile,
 } from '../lib/readings/series-store';
 import { r2Config, MISSING_CREDENTIALS, rawReadings } from '../lib/readings/archive';
+import { OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
+import { OBS_CACHE_DDL, OBS_CACHE_UPSERT_SQL, encodeObservations } from '../lib/scoring/obs-cache';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -50,6 +52,13 @@ const CHUNK = Number(arg('--chunk') ?? 0) || 50;
  * at 1, which would be five days for the whole corpus.
  */
 const CONCURRENCY = Number(arg('--concurrency') ?? 0) || 8;
+/**
+ * Also refresh video_obs_cache — the merged observation record the scorer and the video page's
+ * typical curve divide by (lib/scoring/obs-cache.ts). It rides this queue because the queue
+ * already knows exactly which videos moved. One extra bounded read per chunk here removes
+ * ~16 unions per scored video per hour downstream.
+ */
+const withObs = !has('--no-obs');
 
 const cfg = r2Config();
 if (!cfg && !dry) { console.error(MISSING_CREDENTIALS); process.exit(1); }
@@ -131,19 +140,40 @@ async function withArchived(file: VideoSeriesFile): Promise<VideoSeriesFile> {
   return mergeSeriesFiles(archived, file);
 }
 
+/**
+ * The merged observation record for a chunk, straight from the canonical query. Deliberately the
+ * SAME statement lib/scoring/prior-load.ts used to run inline: storing the output of the real
+ * query makes a cache hit equal to a raw read by construction, where re-deriving it from the
+ * series file's rows would be a second implementation free to drift from the first.
+ */
+async function refreshObsCache(ids: string[]): Promise<number> {
+  const byVideo = observationRecords(await q(OBSERVATION_RECORDS_SQL, [ids]));
+  // A video with no readings at all still gets a row: an empty record is an answer, and without
+  // it every such prior would fall through to the union on every scoring run for ever.
+  const [vids, ns, bufs] = [[] as string[], [] as number[], [] as Buffer[]];
+  for (const id of ids) {
+    const points = byVideo.get(id) ?? [];
+    vids.push(id); ns.push(points.length); bufs.push(encodeObservations(points));
+  }
+  await pool.query(OBS_CACHE_UPSERT_SQL, [vids, ns, bufs]);
+  return vids.length;
+}
+
 const busy = await busyReason();
 if (busy && !dry && !has('--force')) { console.error(`refusing to run: ${busy} (--force to override, only for a small supervised run)`); await pool.end(); process.exit(2); }
 
 await pool.query(SERIES_DIRTY_DDL);
+if (withObs && !dry) await pool.query(OBS_CACHE_DDL);
 const pending = Number((await q<{ n: string }>(SERIES_DIRTY_COUNT_SQL))[0]?.n ?? 0);
 const ids = await videoIds();
 console.log(`series rebuild: ${ids.length} video(s)${drain ? ` (queue depth ${pending})` : ''}${withArchive ? ' +archive' : ''}${dry ? ' [dry run]' : ''}`);
 
-let written = 0, bytes = 0, empty = 0;
+let written = 0, bytes = 0, empty = 0, obsRows = 0;
 const t0 = Date.now();
 for (let i = 0; i < ids.length; i += CHUNK) {
   const chunk = ids.slice(i, i + CHUNK);
   const files = await buildChunk(chunk);
+  if (withObs && !dry) obsRows += await refreshObsCache(chunk);
   const done: string[] = [];
   let cursor = 0;
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunk.length) }, async () => {
@@ -163,4 +193,5 @@ for (let i = 0; i < ids.length; i += CHUNK) {
 
 console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
+if (withObs) console.log(`obs cache: ${obsRows} row(s) refreshed`);
 await pool.end();

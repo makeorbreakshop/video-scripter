@@ -35,6 +35,7 @@ import {
 } from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import { curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, type PriorRef } from '../lib/scoring/prior-load';
+import { obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
 import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
@@ -658,5 +659,9 @@ try {
     },
   });
 } finally {
+  // The number that says whether the priors are actually coming out of video_obs_cache. A miss
+  // rate that stays high after the backfill means series_dirty is draining slower than readings
+  // land, and the run just paid the old union price for those priors.
+  log(obsCacheSummary());
   await pool.end();
 }

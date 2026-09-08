@@ -12,6 +12,7 @@ import { chunk } from '../nightly/tracking-core';
 import { PRIOR_STALE_DAYS, PRIOR_WINDOW, type Snapshot } from './core';
 import { longformSql } from './longform';
 import { OBSERVATION_RECORDS_SQL, observationRecords } from './observations';
+import { OBS_CACHE_READ_SQL, decodeObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
 import type { CurvePrior } from './curve';
 
 export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
@@ -60,11 +61,35 @@ export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise
 export async function loadRecords(q: QueryFn, ids: readonly string[]): Promise<Map<string, Snapshot[]>> {
   const out = new Map<string, Snapshot[]>();
   if (!ids.length) return out;
+  const raw: string[] = [];
   for (const part of chunk([...ids], 100)) {
+    // The cache (lib/scoring/obs-cache.ts) holds exactly what this function used to compute, and
+    // returns nothing for a video whose readings have moved since. Everything it cannot answer
+    // falls through to the union below, so behaviour is identical whether or not it is populated
+    // — which is what makes the backfill safe to run after the deploy rather than before it.
+    let hits = 0;
+    if (obsCacheEnabled()) {
+      let rows: { video_id: string; obs: Buffer }[] = [];
+      try {
+        rows = await q(OBS_CACHE_READ_SQL, [part]);
+      } catch (err) {
+        // A missing table on a database that has not run the migration is a miss, not an outage.
+        if (!warnedObsCache) { warnedObsCache = true; console.warn(`[obs-cache] unavailable, using the raw union: ${(err as Error).message}`); }
+      }
+      for (const r of rows) { out.set(r.video_id, decodeObservations(r.obs)); hits++; }
+    }
+    obsCacheStats.hits += hits;
+    obsCacheStats.misses += part.length - hits;
+    for (const id of part) if (!out.has(id)) raw.push(id);
+  }
+  for (const part of chunk(raw, 100)) {
     for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
   }
   return out;
 }
+
+/** One line per process, not one per chunk, when the cache table is not there at all. */
+let warnedObsCache = false;
 
 /** Current lifetime count and age in days, for the priors with no usable samples. */
 export async function loadMeta(q: QueryFn, ids: readonly string[]): Promise<Map<string, PriorMeta>> {
