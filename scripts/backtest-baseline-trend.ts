@@ -90,11 +90,13 @@ if (process.argv.includes('--estimate-coverage')) {
   // Driven from view_samples (the launch ladder, running since 2026-08-01) rather than from a
   // scan of every video: the sub-day readings are the scarce side, so they lead the plan.
   const tgt: { id: string }[] = await q(
-    `with subday as (
+    `with recent as (
+       select id, channel_id, published_at from videos
+        where published_at >= '2026-08-01' and published_at < now() - interval '1 day'),
+     subday as (
        select distinct p.channel_id, p.id
-         from view_samples s join videos p on p.id = s.video_id
-        where s.sampled_at >= '2026-08-01'
-          and s.sampled_at < p.published_at + interval '1 day'
+         from recent p join view_samples s on s.video_id = p.id
+        where s.sampled_at < p.published_at + interval '1 day'
           and s.view_count > 0),
      ch as (select channel_id from subday group by channel_id having count(*) >= 3)
      select v.id from videos v join ch on ch.channel_id = v.channel_id
