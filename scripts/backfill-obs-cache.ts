@@ -73,7 +73,9 @@ const stop = await heavy();
 if (stop && !has('--force')) { console.error(`refusing to run: ${stop}`); await pool.end(); process.exit(2); }
 
 await pool.query(OBS_CACHE_DDL);
-const channels = (await q<{ channel_id: string }>(
+// --channels narrows a supervised run to a named set; the nightly run takes them all.
+const only = (arg('--channels', '') ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+const channels = only.length ? only : (await q<{ channel_id: string }>(
   `select distinct channel_id from channel_tracking order by channel_id`)).map((r) => r.channel_id);
 console.log(`obs-cache backfill: ${channels.length} channel(s)${DRY ? ' [dry run]' : ''}, batch ${BATCH}, sleep ${SLEEP}ms`);
 
