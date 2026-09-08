@@ -1066,3 +1066,101 @@ button.pt-clip:hover .pt-deck .pt-shot:first-child { transform: rotate(3deg) tra
   .cs-selbar-left, .cs-selbar-right { gap: 12px; flex-wrap: wrap; }
   .cs-sheet-row, .cs-sheet-head, .cs-sheet-foot { padding-inline: 16px; }
 }
+
+/* ---------------------------------------------------------------- the video page ----
+   The header is a picture, a title and a ROW OF FIGURES — the multiple the reader came for,
+   at 48px, and the three numbers it is made of beside it in the same mono. It replaced a
+   sentence that said the same thing in prose and repeated the view count above it.
+   The confidence word is a chip on the right: settled takes the accent, a read still
+   forming takes the quiet plate, because those are two different states and not two styles. */
+.vp-head { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 22px; }
+.vp-th { width: 280px; flex: none; }
+.vp-mid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.vp-chan { color: var(--cs-accent); font-size: 13px; font-weight: 500; line-height: 16px; text-decoration: none; }
+.vp-chan:hover { text-decoration: underline; }
+.vp-title { margin: 0; font-size: 24px; line-height: 28px; letter-spacing: -0.02em; }
+.vp-stats { display: flex; align-items: flex-end; gap: 36px; padding-top: 10px; flex-wrap: wrap; }
+.vp-stat { display: flex; flex-direction: column; gap: 2px; }
+/* Accent is the channel's own good news; a video under its channel's normal gets the ordinary
+   ink, not a green that would contradict the label under it. */
+.vp-big { font-size: 48px; line-height: 44px; font-weight: 700; letter-spacing: -0.03em; color: var(--cs-ink); }
+.vp-big[data-over="true"] { color: var(--cs-accent); }
+.vp-stat-value { font-size: 22px; line-height: 26px; font-weight: 600; color: var(--cs-ink); }
+.vp-stat-label { font-size: 10px; line-height: 12px; letter-spacing: 0.08em; color: var(--cs-muted); }
+.vp-right { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 4px; }
+.vp-when { font-size: 12px; line-height: 16px; color: var(--cs-muted); text-align: right; }
+.vp-yt { color: var(--cs-muted); text-decoration: underline; }
+.vp-conf { display: inline-flex; align-items: center; height: 30px; padding: 0 10px; border-radius: 15px;
+  background: var(--cs-surface-2); color: var(--cs-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.vp-conf[data-settled] { background: var(--cs-accent-soft); color: var(--cs-accent); }
+
+@media (max-width: 899px) {
+  .vp-head { flex-wrap: wrap; gap: 16px; }
+  .vp-right { order: -1; width: 100%; align-items: flex-start; flex-direction: row; justify-content: space-between; }
+  .vp-when { text-align: left; }
+}
+@media (max-width: 719px) {
+  .vp-th { width: 100%; max-width: 320px; }
+  .vp-mid { flex-basis: 100%; }
+  .vp-stats { gap: 24px; }
+  .vp-big { font-size: 36px; line-height: 34px; }
+}
+
+/* --- packaging chips: one row under the chart's axis, one size for every event ---------
+   The size of a chip encodes nothing, so every chip is 48×27; what it carries is a number,
+   and that number is the card's number in the strip. The border is the event's own ink. */
+.pc-row { margin-top: 2px; }
+.pc-track { position: relative; height: 62px; }
+.pc-slot { position: absolute; top: 0; transform: translateX(-24px);
+  display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pc-tick { width: 2px; height: 8px; flex: none; border-radius: 1px; opacity: 0.7; }
+.pc-slot[data-hot] .pc-tick { opacity: 1; }
+.pc-hit { display: block; padding: 0; border: 0; background: none; cursor: pointer; }
+.pc-hit:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 3px; border-radius: 6px; }
+.pc-chip { display: block; position: relative; width: 48px; height: 27px; flex: none;
+  border: 2px solid var(--cs-line); border-radius: 4px; overflow: hidden; background: var(--cs-surface-2); }
+.pc-chip :where(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* A title change wears the picture that was live at the time, so the glyph is what says the
+   words changed rather than the image. */
+.pc-glyph { position: absolute; right: 2px; bottom: -1px; font-family: var(--font-mono), monospace;
+  font-size: 10px; font-weight: 700; line-height: 12px;
+  text-shadow: 0 0 3px var(--cs-surface), 0 0 3px var(--cs-surface); }
+.pc-stack { display: block; position: relative; height: 27px; }
+.pc-count { position: absolute; top: 0; display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 27px; border: 2px solid var(--cs-line); border-radius: 4px;
+  background: var(--cs-surface-2); font-family: var(--font-mono), monospace; font-size: 11px;
+  font-weight: 700; color: var(--cs-ink); }
+.pc-index { font-size: 9px; line-height: 12px; color: var(--cs-muted); }
+.pc-slot[data-hot] .pc-index { color: var(--cs-ink); font-weight: 700; }
+/* The plate anchors ABOVE the stack — over the plot, never off the bottom of the page — and
+   lib/app/packaging-events.clampPopover keeps it inside the plot's own width. */
+.pc-pop { position: absolute; bottom: 100%; margin-bottom: 8px; padding: 8px; z-index: 5;
+  display: flex; flex-direction: column; gap: 6px; }
+.pc-pop-label { font-size: 10px; line-height: 12px; letter-spacing: 0.06em; white-space: nowrap; }
+.pc-pop-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.pc-pop-chip { display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 0; border: 0; background: none; cursor: pointer; }
+
+/* --- packaging strip: YouTube cards, one per change, numbered like the chips ------------ */
+.ps-wrap { position: relative; }
+.ps-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.ps-head :where(h2) { margin: 0; }
+.ps-arrows { display: flex; gap: 6px; }
+/* No fade over the last card: a gradient that hides a thumbnail to suggest there is more is a
+   decoration standing where the arrows already say it. */
+.ps-track { display: flex; align-items: flex-start; gap: 16px; overflow-x: auto;
+  padding-bottom: 4px; scrollbar-width: none; }
+.ps-track::-webkit-scrollbar { display: none; }
+.ps-card { flex: none; width: 256px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.ps-card:focus-visible { outline: 2px solid var(--cs-accent); outline-offset: 4px; border-radius: 12px; }
+.ps-label { font-size: 10px; line-height: 12px; letter-spacing: 0.06em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-shot { display: block; position: relative; width: 256px; height: 144px; border-radius: 10px;
+  overflow: hidden; border: 2px solid transparent; background: var(--cs-surface-2); }
+.ps-shot :where(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ps-card[data-hot] .ps-shot { outline: 2px solid var(--cs-ink); outline-offset: 2px; }
+.ps-winner { position: absolute; left: 8px; top: 8px; padding: 2px 6px; border-radius: 4px;
+  background: var(--cs-accent); color: var(--cs-accent-on); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+.ps-title { font-size: 14px; font-weight: 500; line-height: 19px; color: var(--cs-ink); }
+.ps-title[data-rule] { border-left: 2px solid var(--cs-good); padding-left: 8px; }
+.ps-title-old { font-size: 13px; line-height: 17px; color: var(--cs-muted); text-decoration: line-through; }
