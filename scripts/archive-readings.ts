@@ -107,6 +107,25 @@ async function archiveDay(source: ReadingSource, day: string) {
     return;
   }
 
+  // THE REGRESSION GUARD.
+  //
+  // Re-running a day is idempotent only BEFORE that day has been thinned. Afterwards Postgres
+  // holds the hourly survivors, not the full day, so a re-run would overwrite a complete archive
+  // with a smaller one and the deleted readings would be gone from both stores. That happened
+  // once, on rss 2026-09-03 (2026-09-08): a re-archive to pick up new columns rewrote 1.9 M rows
+  // as 286 k. The ledger already knows how many rows the existing file has, so this is checkable.
+  const [prior] = await q<{ rows: string; verified_at: string | null }>(
+    `select rows::text as rows, verified_at from readings_archive_days where day = $1::date and source = $2`,
+    [day, source]);
+  if (prior?.verified_at && Number(prior.rows) > rows && !has('--allow-shrink')) {
+    log(`REFUSED ${source} ${day}: archive holds ${Number(prior.rows).toLocaleString()} rows, Postgres now has ` +
+        `${rows.toLocaleString()} — this day has been thinned and re-archiving it would DELETE ` +
+        `${(Number(prior.rows) - rows).toLocaleString()} readings from the archive. ` +
+        `Pass --allow-shrink only if you mean it.`);
+    failed++;
+    return;
+  }
+
   // Write: walk the day in video_id keyset chunks straight into the parquet writer.
   const writer = await openReadingsDayWriter(cfg!, source, day);
   const perBatch = videosPerBatch(source === 'rss' ? 96 : 2);

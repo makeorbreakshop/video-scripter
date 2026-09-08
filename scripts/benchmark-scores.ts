@@ -32,6 +32,8 @@ import {
 } from '../lib/scoring/core';
 import { heldOut } from '../lib/scoring/bands';
 import { activeParamsQuery } from '../lib/scoring/params-status';
+import { harnessSource } from '../lib/readings/harness-source';
+import { HARNESS_QUERIES } from '../lib/scoring/harness-sql';
 import { longformSql } from '../lib/scoring/longform';
 import {
   buildReport, reportMarkdown, compareMarkdown, compareReports, PACKAGING_COVERAGE_START,
@@ -92,7 +94,12 @@ if (COMPARE) {
 // ran at the 300 s role default and, when the client gave up first, left the query running
 // server-side. That is what orphaned backends during the 2026-09-08 v5.3 attempt.
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 600_000 });
-const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
+// Where the readings come from. `--source parquet` runs the whole harness over the R2 archive
+// through DuckDB and touches production Postgres for nothing but score_params, which is one
+// small indexed row and is the thing a refit is judging (lib/readings/harness-source.ts).
+const source = await harnessSource(pool);
+const q = source.q;
+const pgq = source.pgq;
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const chunk = <T,>(xs: T[], n: number): T[][] => { const o: T[][] = []; for (let i = 0; i < xs.length; i += n) o.push(xs.slice(i, i + n)); return o; };
 
@@ -104,26 +111,7 @@ type Obs = { day: number; views: number; at: number };
 async function records(ids: string[]): Promise<Map<string, Obs[]>> {
   const out = new Map<string, Obs[]>();
   for (const group of chunk(ids, 2000)) {
-    const rows = await q(
-      `with src as (
-          select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views, 2 as rank, null::timestamptz as received_at
-            from view_snapshots where video_id = any($1)
-          union all
-          select video_id, sampled_at, view_count, 1, null::timestamptz from view_samples where video_id = any($1)
-          union all
-          select video_id, at, views, 0, received_at from rss_samples where video_id = any($1) and views is not null and model_eligible and not conflicted
-        ), paid as (select video_id, at from src where rank > 0)
-        select x.video_id,
-               extract(epoch from (x.at - v.published_at))/86400.0 as day,
-               x.views, extract(epoch from greatest(x.at, x.received_at))*1000 as at_ms
-          from src x join videos v on v.id = x.video_id
-         where x.views > 0 and x.at >= v.published_at
-           and (x.rank > 0 or not exists (
-                 select 1 from paid p where p.video_id = x.video_id
-                   and abs(extract(epoch from (p.at - x.at))) < 43200))
-         order by x.video_id, x.at`,
-      [group]
-    );
+    const rows = await q(HARNESS_QUERIES.benchmarkRecords, [group]);
     for (const r of rows) {
       if (!out.has(r.video_id)) out.set(r.video_id, []);
       out.get(r.video_id)!.push({ day: Number(r.day), views: Number(r.views), at: Number(r.at_ms) });
@@ -137,14 +125,7 @@ type Truth = { v30: number; day: number; at: number };
 async function day30(ids: string[]): Promise<Map<string, Truth>> {
   const out = new Map<string, Truth>();
   for (const group of chunk(ids, 5000)) {
-    const rows = await q(
-      `select distinct on (s.video_id) s.video_id, s.view_count, s.days_since_published as day,
-              extract(epoch from (s.snapshot_date::timestamptz + interval '12 hours'))*1000 as at_ms
-         from view_snapshots s
-        where s.video_id = any($1) and s.days_since_published between 27 and 33 and s.view_count > 0
-        order by s.video_id, abs(s.days_since_published - 30)`,
-      [group]
-    );
+    const rows = await q(HARNESS_QUERIES.benchmarkDay30, [group]);
     for (const r of rows) out.set(r.video_id, { v30: Number(r.view_count), day: Number(r.day), at: Number(r.at_ms) });
   }
   return out;
@@ -152,19 +133,8 @@ async function day30(ids: string[]): Promise<Map<string, Truth>> {
 
 // ---------------------------------------------------------------- population
 log(`population: long-form videos published in the last ${MONTHS} months with a day-27..33 truth and an early reading`);
-const pop: { id: string; channel_id: string; pub: number }[] = (await q(
-  `select v.id, v.channel_id, extract(epoch from v.published_at)*1000 as pub
-     from videos v
-    where v.published_at > now() - ($1 || ' months')::interval
-      and ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
-      and exists (select 1 from view_snapshots s
-                   where s.video_id = v.id and s.days_since_published between 27 and 33 and s.view_count > 0)
-      -- and at least one reading inside the first 14 days: a video we only ever saw once, at
-      -- day 30, cannot be replayed at any age and is not what the hourly scorer works on either.
-      and exists (select 1 from view_snapshots s
-                   where s.video_id = v.id and s.days_since_published <= 14 and s.view_count > 0)`,
-  [MONTHS]
-)).map((r: any) => ({ id: r.id, channel_id: r.channel_id, pub: Number(r.pub) }));
+const pop: { id: string; channel_id: string; pub: number }[] = (await q(HARNESS_QUERIES.benchmarkPopulation, [MONTHS]))
+  .map((r: any) => ({ id: r.id, channel_id: r.channel_id, pub: Number(r.pub) }));
 log(`population: ${pop.length} videos`);
 
 const pubs = pop.map((v) => v.pub).sort((a, b) => a - b);
@@ -184,8 +154,8 @@ log(`train ${trainPop.length}  test ${testPop.length} (heldout ${testPop.filter(
 
 // -------------------------------------------------------------- refit params
 const storedRows = PARAMS_ID
-  ? await q(`select params from score_params where id = $1`, [PARAMS_ID])
-  : await q(activeParamsQuery('params'), [PARAMS_VERSION]);
+  ? await pgq(`select params from score_params where id = $1`, [PARAMS_ID])
+  : await pgq(activeParamsQuery('params'), [PARAMS_VERSION]);
 if (!storedRows.length) { console.error(`no score_params row (${PARAMS_ID ?? PARAMS_VERSION})`); process.exit(1); }
 const stored: GlobalParams = storedRows[0].params;
 log(`stored params (long tail + launch ladder) from score_params ${PARAMS_ID ? `id=${PARAMS_ID}` : `active ${PARAMS_VERSION}`}`);
@@ -409,4 +379,5 @@ if (WRITE_BASELINE) {
 }
 log(`wrote ${path.join(OUT_DIR, stem)}.{json,md,rows.csv}`);
 console.log(reportMarkdown(rep));
+await source.close();
 await pool.end();

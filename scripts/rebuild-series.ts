@@ -132,7 +132,7 @@ async function withArchived(file: VideoSeriesFile): Promise<VideoSeriesFile> {
 }
 
 const busy = await busyReason();
-if (busy && !dry) { console.error(`refusing to run: ${busy}`); await pool.end(); process.exit(2); }
+if (busy && !dry && !has('--force')) { console.error(`refusing to run: ${busy} (--force to override, only for a small supervised run)`); await pool.end(); process.exit(2); }
 
 await pool.query(SERIES_DIRTY_DDL);
 const pending = Number((await q<{ n: string }>(SERIES_DIRTY_COUNT_SQL))[0]?.n ?? 0);

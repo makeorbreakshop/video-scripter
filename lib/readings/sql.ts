@@ -28,8 +28,11 @@ const LAUNCH_DENSE_SQL = `${READING_RETENTION.launchDenseHours} hours`;
 
 /** The two tables that hold raw readings, and the column each calls its clock. */
 export const READING_TABLES = {
-  rss: { table: 'rss_samples', ts: 'at', views: 'views', likes: 'likes', timeBasis: 'time_basis' },
-  api: { table: 'view_samples', ts: 'sampled_at', views: 'view_count', likes: 'like_count', timeBasis: null },
+  rss: { table: 'rss_samples', ts: 'at', views: 'views', likes: 'likes', timeBasis: 'time_basis',
+         // Only rss_samples carries the scorer's eligibility flags (lib/scoring/observations.ts).
+         flags: 'model_eligible, conflicted, received_at' },
+  api: { table: 'view_samples', ts: 'sampled_at', views: 'view_count', likes: 'like_count', timeBasis: null,
+         flags: 'true as model_eligible, false as conflicted, null::timestamptz as received_at' },
 } as const;
 
 export function tableFor(source: ReadingSource) {
@@ -48,7 +51,8 @@ export function selectDaySql(source: ReadingSource): string {
            ${t.views}::bigint as views,
            ${t.likes}::bigint as likes,
            '${source}'::text as source,
-           ${basis} as time_basis
+           ${basis} as time_basis,
+           ${t.flags}
       from ${t.table}
      where ${t.ts} >= $1::date and ${t.ts} < ($1::date + interval '1 day')
      order by video_id ${C}, ${t.ts}`;
@@ -69,7 +73,8 @@ export function selectDayForVideosSql(source: ReadingSource): string {
            ${t.views}::bigint as views,
            ${t.likes}::bigint as likes,
            '${source}'::text as source,
-           ${basis} as time_basis
+           ${basis} as time_basis,
+           ${t.flags}
       from ${t.table}
      where ${t.ts} >= $1::date and ${t.ts} < ($1::date + interval '1 day')
        and video_id = any($2)

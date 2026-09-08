@@ -37,6 +37,8 @@ import {
 } from '../lib/scoring/core';
 import { longformSql } from '../lib/scoring/longform';
 import { activeParamsQuery } from '../lib/scoring/params-status';
+import { harnessSource } from '../lib/readings/harness-source';
+import { HARNESS_QUERIES } from '../lib/scoring/harness-sql';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const FROM = arg('--from') ?? '2025-07-01';
@@ -57,15 +59,20 @@ const DAY = 86_400_000;
 // ran at the 300 s role default and, when the client gave up first, left the query running
 // server-side. That is what orphaned backends during the 2026-09-08 v5.3 attempt.
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 600_000 });
-const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
+// Where the readings come from. `--source parquet` runs the whole harness over the R2 archive
+// through DuckDB and touches production Postgres for nothing but score_params, which is one
+// small indexed row and is the thing a refit is judging (lib/readings/harness-source.ts).
+const source = await harnessSource(pool);
+const q = source.q;
+const pgq = source.pgq;
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
 /** One specific score_params row (a candidate under gate), instead of the newest active one. */
 const PARAMS_ID = arg('--params-id') ? Number(arg('--params-id')) : null;
 const paramRows = PARAMS_ID
-  ? await q(`select params from score_params where id = $1`, [PARAMS_ID])
-  : await q(activeParamsQuery('params'), [PARAMS_VERSION]);
+  ? await pgq(`select params from score_params where id = $1`, [PARAMS_ID])
+  : await pgq(activeParamsQuery('params'), [PARAMS_VERSION]);
 if (!paramRows.length) { console.error(`no score_params for ${PARAMS_ID ?? PARAMS_VERSION}`); process.exit(1); }
 const params: GlobalParams = paramRows[0].params;
 
@@ -188,10 +195,7 @@ const ids = vids.map((v) => v.id);
 async function snapsFor(vidIds: string[]): Promise<Map<string, Snap[]>> {
   const out = new Map<string, Snap[]>();
   for (let i = 0; i < vidIds.length; i += 5000) {
-    const rows = await q(
-      `select video_id, days_since_published as day, view_count as views,
-              extract(epoch from (snapshot_date::timestamptz + interval '12 hours'))*1000 as at
-         from view_snapshots where video_id = any($1) and view_count > 0 order by video_id, snapshot_date`,
+    const rows = await q(HARNESS_QUERIES.backtestSnapshots,
       [vidIds.slice(i, i + 5000)]
     );
     for (const r of rows) { if (!out.has(r.video_id)) out.set(r.video_id, []); out.get(r.video_id)!.push({ day: Number(r.day), views: Number(r.views), at: Number(r.at) }); }
@@ -371,4 +375,5 @@ for (const t of T_LIST) for (const sl of ['all', 'growing', 'flat', 'declining',
     `${String(t).padEnd(2)} ${rule.padEnd(9)} ${sl.padEnd(10)} ${String(a.n).padEnd(5)} ${(a.cov / a.n).toFixed(2)}  ${f(median(a.bias))}   ${f(median(a.bErr))}       ${f(median(a.sErr))}      ${f(p, 2)} ${f(r, 2)} ${f(f1, 2)}  ${f(median(a.neff), 1)}`
   );
 }
+await source.close();
 await pool.end();

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly at 03:15 ET: export the non-readings tables the scoring harness needs to R2 parquet.
+
+  The raw readings already go to R2 at 02:30 (com.mfm.video-scripter-archive-readings). These are
+  the tables that go WITH them — videos (slim columns only, plus a precomputed is_longform),
+  video_scores, and view_snapshots — so that a benchmark, a backtest or a band calibration can run
+  end to end with ZERO production reads:
+
+    npx tsx scripts/benchmark-scores.ts --source parquet
+    npx tsx scripts/weekly-refit.ts --source parquet
+
+  03:15 is after the archive job so a harness reading the newest export sees a corpus and an
+  archive from the same night.
+
+  It refuses to start while anything has been running in Postgres for over two minutes, reads in
+  keyset batches on the primary key with a real statement_timeout, and runs Nice 10 / LowPriorityIO.
+
+  Install:
+    cp scripts/launchd/com.mfm.video-scripter-export-tables.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-export-tables.plist
+
+  Try it small first (a scoped corpus, its own key, cannot be mistaken for the real one):
+    npx tsx scripts/export-tables.ts --channel UC... 
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-export-tables</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/export-tables.ts</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>15</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/export-tables-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/export-tables-launchd.err.log</string>
+</dict></plist>

@@ -15,6 +15,8 @@ import { chunk } from '../lib/nightly/tracking-core';
 import { MODEL_VERSION, logMultTo30, type GlobalParams } from '../lib/scoring/core';
 import { expectedAt } from '../lib/admin/video-curve';
 import { activeParamsQuery } from '../lib/scoring/params-status';
+import { harnessSource } from '../lib/readings/harness-source';
+import { HARNESS_QUERIES } from '../lib/scoring/harness-sql';
 import {
   forecastBand, fitTrajectory, trajectoryFactor, tableFromRows, heldOut, BAND_AGES,
   TRAJECTORY_RMS_SCALE, TRAJECTORY_SPAN_FULL,
@@ -59,14 +61,19 @@ const PARAMS_ID = arg('--params-id') ? Number(arg('--params-id')) : null;
 // server-side. That is what orphaned backends during the 2026-09-08 v5.3 attempt.
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 600_000 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
-const q = async (sql: string, params?: any[]) => (await pool.query(sql, params)).rows as any[];
+// Where the readings come from. `--source parquet` runs the whole harness over the R2 archive
+// through DuckDB and touches production Postgres for nothing but score_params, which is one
+// small indexed row and is the thing a refit is judging (lib/readings/harness-source.ts).
+const source = await harnessSource(pool);
+const q = source.q;
+const pgq = source.pgq;
 
 // The nightly `--fit` rewrites score_params WITHOUT bands (fit-forecast-bands.ts is a separate
 // job that writes its own row), so "the newest row for this version" is usually band-less and
 // this check would exit before doing anything. Take the newest row that actually carries bands.
 const p = PARAMS_ID
-  ? await q(`select params, fitted_at from score_params where id = $1 and params ? 'bands'`, [PARAMS_ID])
-  : await q(activeParamsQuery('params, fitted_at', "params ? 'bands'"), [PARAMS_VERSION]);
+  ? await pgq(`select params, fitted_at from score_params where id = $1 and params ? 'bands'`, [PARAMS_ID])
+  : await pgq(activeParamsQuery('params, fitted_at', "params ? 'bands'"), [PARAMS_VERSION]);
 if (!p.length) { console.error(`no score_params row for ${PARAMS_ID ?? PARAMS_VERSION} carries bands; run fit-forecast-bands first`); process.exit(1); }
 const params: GlobalParams = p[0].params;
 const globalBands: BandTable = (params as any).bands;
@@ -97,18 +104,9 @@ let videos = 0;
 for (const group of chunk(ids, 500)) {
   if (videos >= TARGET) break;
   const [obs, truth, meta] = await Promise.all([
-    q(`select x.video_id, extract(epoch from (x.at - v.published_at))/86400.0 as day, x.views
-         from (select video_id, snapshot_date::timestamptz + interval '12 hours' as at, view_count as views
-                 from view_snapshots where video_id = any($1)
-               union all
-               select video_id, sampled_at, view_count from view_samples where video_id = any($1)) x
-         join videos v on v.id = x.video_id
-        where x.views > 0 and x.at >= v.published_at`, [group]),
-    q(`select distinct on (video_id) video_id, view_count as v30 from view_snapshots
-        where video_id = any($1) and days_since_published between 27 and 33 and view_count > 0
-        order by video_id, abs(days_since_published - 30)`, [group]),
-    q(`select v.id, v.channel_id, sc.baseline::float8 as baseline from videos v
-        left join video_scores sc on sc.video_id = v.id where v.id = any($1)`, [group]),
+    q(HARNESS_QUERIES.calibrationRecords, [group]),
+    q(HARNESS_QUERIES.calibrationDay30, [group]),
+    q(HARNESS_QUERIES.calibrationMeta, [group]),
   ]);
   const byVideo = new Map<string, { day: number; views: number }[]>();
   for (const r of obs) {
@@ -197,4 +195,5 @@ const ch = hits.filter((h) => h.channel), gl = hits.filter((h) => !h.channel);
 if (ch.length) console.log(`  channel-conditioned  n=${ch.length}  inner ${pct(ch, 'inner').toFixed(1)}%  outer ${pct(ch, 'outer').toFixed(1)}%`);
 if (gl.length) console.log(`  global fallback      n=${gl.length}  inner ${pct(gl, 'inner').toFixed(1)}%  outer ${pct(gl, 'outer').toFixed(1)}%`);
 console.log();
+await source.close();
 await pool.end();

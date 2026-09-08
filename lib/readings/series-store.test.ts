@@ -4,7 +4,7 @@ const client = (fail?: (sql: string) => boolean) => {
   const calls: string[] = [];
   return {
     calls,
-    query: jest.fn(async (sql: string) => {
+    query: jest.fn(async (sql: string, _values?: any[]) => {
       calls.push(sql.trim().split('\n')[0]);
       if (fail?.(sql)) throw new Error('relation "series_dirty" does not exist');
       return { rowCount: 1, rows: [] };
@@ -17,7 +17,7 @@ describe('markSeriesDirty', () => {
     const c = client();
     expect(await markSeriesDirty(c, Array.from({ length: 5000 }, (_, i) => `v${i}`))).toBe(5000);
     expect(c.query).toHaveBeenCalledTimes(1);
-    expect(c.query.mock.calls[0][1][0]).toHaveLength(5000);
+    expect((c.query.mock.calls[0] as any[])[1][0]).toHaveLength(5000);
   });
 
   test('deduplicates and drops empties', async () => {

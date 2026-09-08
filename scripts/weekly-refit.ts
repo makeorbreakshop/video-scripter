@@ -102,13 +102,27 @@ interface StageOut { code: number | null; stdout: string; timedOut: boolean }
  * would leave the child running against the database. The harnesses' own `set local
  * statement_timeout` is what guarantees the DATABASE side stops too.
  */
+/** postgres (default) or parquet — passed down to every gate harness. */
+const SOURCE = (() => {
+  const i = process.argv.indexOf('--source');
+  const v = (i >= 0 ? process.argv[i + 1] : undefined) ?? process.env.HARNESS_SOURCE ?? 'postgres';
+  if (v !== 'postgres' && v !== 'parquet') throw new Error(`--source must be postgres or parquet, got ${v}`);
+  return v;
+})();
+
 function stage(name: string, args: string[], minutes = STAGE_MIN): Promise<StageOut> {
   return new Promise((resolve) => {
     log(`stage ${name}: npx tsx ${args.join(' ')}  (budget ${minutes}m)`);
     const started = Date.now();
     const child = spawn('npx', ['tsx', ...args], {
       cwd: process.cwd(),
-      env: { ...process.env, WEEKLY_REFIT_EMIT: '1' },
+      // HARNESS_SOURCE reaches the three gate harnesses (benchmark-scores,
+      // backtest-baseline-trend, check-band-calibration), which read it in
+      // lib/readings/harness-source.ts. With --source parquet the whole gate runs off the R2
+      // archive and touches production Postgres only for score_params.
+      // score-videos --fit and fit-forecast-bands are NOT converted: they WRITE score_params
+      // and score the live corpus, so they belong on the database by definition.
+      env: { ...process.env, WEEKLY_REFIT_EMIT: '1', HARNESS_SOURCE: SOURCE },
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });

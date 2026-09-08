@@ -87,6 +87,27 @@ export async function getObject(cfg: R2Config, key: string): Promise<Buffer | nu
   }
 }
 
+/**
+ * Every key under a prefix, with its size. Paged, so a bucket with thousands of day-partitions
+ * is one loop rather than one call that silently truncates at 1,000.
+ */
+export async function listObjects(
+  cfg: R2Config, prefix: string
+): Promise<{ key: string; size: number; modified: number }[]> {
+  const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+  const c = await s3(cfg);
+  const out: { key: string; size: number; modified: number }[] = [];
+  let token: string | undefined;
+  do {
+    const res = await c.send(new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: prefix, ContinuationToken: token }));
+    for (const o of res.Contents ?? []) {
+      if (o.Key) out.push({ key: o.Key, size: Number(o.Size ?? 0), modified: o.LastModified?.getTime() ?? 0 });
+    }
+    token = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (token);
+  return out;
+}
+
 export async function objectExists(cfg: R2Config, key: string): Promise<boolean> {
   const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
   const c = await s3(cfg);
@@ -113,6 +134,13 @@ async function readingsSchema() {
     likes: { type: 'INT64', optional: true },
     source: { type: 'UTF8' },
     time_basis: { type: 'UTF8', optional: true },
+    // Added 2026-09-08 for the parquet harness. lib/scoring/observations.ts filters rss on
+    // `model_eligible and not conflicted`; without these the archive cannot answer the question
+    // the scorer actually asks. Optional, and read back with coalesce(…, true/false), so days
+    // archived before this change still parse — they are simply unfiltered, as they were.
+    model_eligible: { type: 'BOOLEAN', optional: true },
+    conflicted: { type: 'BOOLEAN', optional: true },
+    received_at: { type: 'INT64', optional: true },
   });
 }
 
@@ -203,6 +231,10 @@ export function encodeReading(r: Reading, source: ReadingSource): Record<string,
     likes: int(r.likes),
     source: r.source ?? source,
     time_basis: r.time_basis ?? null,
+    model_eligible: (r as { model_eligible?: boolean }).model_eligible ?? null,
+    conflicted: (r as { conflicted?: boolean }).conflicted ?? null,
+    received_at: (r as unknown as { received_at?: string | Date | null }).received_at == null
+      ? null : ms((r as unknown as { received_at: string | Date }).received_at),
   };
 }
 
