@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ONE-SHOT, tonight at 05:30 ET: copy videos.description / metadata / llm_summary into video_text.
+
+  Why: description + metadata + llm_summary average 1,233 bytes of a ~1,650-byte `videos` heap
+  row (pg_stats, 2026-09-08), so three quarters of every heap fetch on the 1.7 GB table is text
+  no page renders. Moving them should take the hot table to roughly 500 MB, which is the
+  difference between the feed's working set fitting in a 512 MB buffer pool and not.
+
+  It COPIES. Nothing is nulled or dropped: `videos` stays authoritative, a trigger keeps the two
+  in step, and the null-out plus VACUUM FULL is a separate change that is NOT scheduled.
+
+  05:30 is after the 04:00 series backfill and the 04:45 obs-cache backfill, so the three jobs
+  that walk large amounts of data never overlap.
+
+  Throttled: keyset cursor on the primary key, 2,000 rows a batch, 250 ms between batches, and it
+  stops itself if anything has been running in Postgres for over two minutes. Fully resumable —
+  the cursor comes from what is already in video_text. Measured rate suggests ~15-20 minutes.
+
+  Install (one-shot; remove it again after it has run):
+    cp scripts/launchd/com.mfm.video-scripter-move-video-text.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-move-video-text.plist
+
+  Remove:
+    launchctl bootout gui/$UID/com.mfm.video-scripter-move-video-text
+    rm ~/Library/LaunchAgents/com.mfm.video-scripter-move-video-text.plist
+
+  Check it afterwards:
+    npx tsx scripts/move-video-text.ts --verify
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-move-video-text</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/move-video-text.ts --batch 2000 --sleep-ms 250</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>30</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/move-video-text-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/move-video-text-launchd.err.log</string>
+</dict></plist>
