@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Weekly gated refit. Sundays 05:00 local (ET on this machine).
+
+  Slot: archive-readings runs 02:30, score-fit 04:15. 05:00 leaves the nightly fit 45 minutes,
+  which it has never needed more than, and the whole run is read-heavy so it must not overlap
+  either. weekly-refit's own preflight is the backstop: if pg_stat_activity still shows a query
+  older than two minutes it skips and records why rather than piling on.
+
+  Install:
+    cp launchd/com.mfm.video-scripter-weekly-refit.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mfm.video-scripter-weekly-refit.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mfm.video-scripter-weekly-refit</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/npx</string>
+        <string>tsx</string>
+        <string>scripts/weekly-refit.ts</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key><integer>0</integer>
+        <key>Hour</key><integer>5</integer>
+        <key>Minute</key><integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/weekly-refit-launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/weekly-refit-launchd.err.log</string>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>Nice</key>
+    <integer>5</integer>
+</dict>
+</plist>
