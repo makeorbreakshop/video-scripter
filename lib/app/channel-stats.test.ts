@@ -69,7 +69,9 @@ describe('touchPackagingChange', () => {
     // Never an insert: a stub row would read as video_count 0 on the channel list.
     expect(sql).not.toContain('insert');
     expect(sql).not.toContain('video_count');
-    expect(mq.mock.calls[0][1]).toEqual(['UC1', '2026-09-03T00:00:00.000Z']);
+    // The third parameter is the count increment: 0 unless the video just gained a
+    // second packaging version, which is what makes the materialised count safe to bump.
+    expect(mq.mock.calls[0][1]).toEqual(['UC1', '2026-09-03T00:00:00.000Z', 0]);
   });
 
   it('is a no-op without a channel', async () => {

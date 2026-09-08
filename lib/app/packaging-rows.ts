@@ -42,21 +42,46 @@ export function parseChangeKind(value: string | string[] | null | undefined): Ch
   return v === 'thumbnails' || v === 'titles' || v === 'outliers' ? v : 'all';
 }
 
-/** How many of a channel's videos have packaging history — the Changes tab's count. */
-export async function changedVideoCount(channelId: string, range: RangeKey = 'all'): Promise<number> {
-  const iv = RANGE_INTERVAL[range];
-  const rows = await q<{ n: number }>(
-    `select count(*)::int as n from (
+/**
+ * How many of a channel's videos have packaging history, as SQL. One definition, two callers:
+ * the live read below and the channel_stats precompute (lib/app/channel-stats.ts). Sharing the
+ * text is what makes "the cached number equals the computed number" true by construction rather
+ * than by two queries that have to be kept in step by hand.
+ *
+ * `channelExpr` is whatever evaluates to the channel id in the caller's scope — `$1` for the
+ * live read, `c.channel_id` inside the stats upsert's lateral.
+ */
+export function changedVideoCountSql(channelExpr: string, rangeInterval: string | null = null): string {
+  return `select count(*)::int as n from (
        select v.id
          from videos v
          left join thumbnail_versions t on t.video_id = v.id
          left join title_versions n on n.video_id = v.id
-        where v.channel_id = $1 and ${longformSql('v')}${iv ? ` and v.published_at >= now() - interval '${iv}'` : ''}
+        where v.channel_id = ${channelExpr} and ${longformSql('v')}${rangeInterval ? ` and v.published_at >= now() - interval '${rangeInterval}'` : ''}
         group by v.id
        having count(distinct t.version) > 1 or count(distinct n.version) > 1
-     ) c`,
-    [channelId]
-  );
+     ) c`;
+}
+
+/**
+ * How many of a channel's videos have packaging history — the Changes tab's count.
+ *
+ * The unranged count is the one every channel page renders, and computing it live is a 3-way
+ * join over the channel's whole catalogue: 6,300 shared blocks on a 1,745-video channel,
+ * measured 2026-09-08, which was over half the page's total. It is materialised into
+ * channel_stats by the same SQL, and read from there; the ranged variants are rare (they need a
+ * range chip) and stay live.
+ */
+export async function changedVideoCount(channelId: string, range: RangeKey = 'all'): Promise<number> {
+  const iv = RANGE_INTERVAL[range];
+  if (!iv) {
+    const hit = await q<{ n: number | null }>(
+      `select packaging_change_count as n from channel_stats where channel_id = $1`, [channelId]);
+    // null means the row predates the column or has never been refreshed — compute it rather
+    // than show a zero the reader would believe.
+    if (hit[0]?.n != null) return Number(hit[0].n);
+  }
+  const rows = await q<{ n: number }>(changedVideoCountSql('$1', iv), [channelId]);
   return rows[0]?.n ?? 0;
 }
 

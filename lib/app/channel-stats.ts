@@ -9,6 +9,7 @@
 // incident).
 import { q } from '../admin/db';
 import { currentBaselineSql } from './channel-baseline';
+import { changedVideoCountSql } from './packaging-rows';
 
 /**
  * Recompute and upsert channel_stats. Pass the channels an ingest/scoring run touched;
@@ -35,7 +36,8 @@ export async function refreshChannelStats(channelIds?: string[]): Promise<number
  */
 export function refreshChannelStatsSql(scoped: boolean): string {
   return `insert into channel_stats
-       (channel_id, video_count, latest_thumbnail_url, name, baseline, outliers, last_packaging_change, updated_at)
+       (channel_id, video_count, latest_thumbnail_url, name, baseline, outliers, last_packaging_change,
+        packaging_change_count, last_upload_at, updated_at)
      select c.channel_id,
             coalesce(v.video_count, 0),
             v.thumbnail_url,
@@ -43,6 +45,11 @@ export function refreshChannelStatsSql(scoped: boolean): string {
             s.baseline,
             coalesce(s.outliers, 0),
             ch.last_packaging_change,
+            -- Both new columns exist to keep a page off the videos table: the Changes count was a 3-way
+            -- join over the channel's whole catalogue on every channel page, and last_upload_at
+            -- was a lateral probe into videos per channel on every /app/channels render.
+            pkn.n,
+            v.last_upload_at,
             now()
        from (
          ${scoped
@@ -54,6 +61,8 @@ export function refreshChannelStatsSql(scoped: boolean): string {
        left join lateral (
           select count(*)::int as video_count,
                  max(vv.channel_name) as name,
+                 -- Free: this lateral is already reading the channel's rows.
+                 max(vv.published_at) as last_upload_at,
                  (array_agg(vv.thumbnail_url order by vv.published_at desc)
                     filter (where vv.thumbnail_url is not null))[1] as thumbnail_url
             from videos vv where vv.channel_id = c.channel_id
@@ -82,6 +91,17 @@ export function refreshChannelStatsSql(scoped: boolean): string {
              where vv3.channel_id = c.channel_id and ti.version > 1
           ) pk
        ) ch on true
+       -- The Changes tab's count, from the ONE definition of it (lib/app/packaging-rows.ts).
+       --
+       -- Scoped refreshes only. This is a 3-way join over one channel's whole catalogue (~2,000
+       -- shared blocks); across all 500 tracked channels in a single statement that is ~8 GB of
+       -- buffer traffic against a 512 MB pool, which is exactly the kind of read this work
+       -- exists to remove. The unscoped refresh therefore leaves the column alone (the upsert
+       -- coalesces rather than overwriting) and scripts/refresh-packaging-counts.ts walks the
+       -- channels one at a time, throttled, on its own schedule.
+       left join lateral (
+          ${scoped ? changedVideoCountSql('c.channel_id') : 'select null::int as n'}
+       ) pkn on true
       where c.channel_id is not null
      on conflict (channel_id) do update set
         video_count = excluded.video_count,
@@ -90,6 +110,8 @@ export function refreshChannelStatsSql(scoped: boolean): string {
         baseline = excluded.baseline,
         outliers = excluded.outliers,
         last_packaging_change = excluded.last_packaging_change,
+        packaging_change_count = coalesce(excluded.packaging_change_count, channel_stats.packaging_change_count),
+        last_upload_at = excluded.last_upload_at,
         updated_at = excluded.updated_at
      returning channel_id`;
 }
@@ -103,13 +125,36 @@ export function refreshChannelStatsSql(scoped: boolean): string {
  * refresh. A channel with no row yet picks the timestamp up from refreshChannelStats, which
  * computes last_packaging_change from the version tables anyway.
  */
-export async function touchPackagingChange(channelId: string, at: Date | string): Promise<void> {
+export async function touchPackagingChange(
+  channelId: string,
+  at: Date | string,
+  /** True only when the video crossed from one packaging version to two — i.e. it has just
+   *  joined the set the Changes count counts. A third version changes the timestamp and not the
+   *  count, so passing false is the common case. */
+  newlyChanged = false
+): Promise<void> {
   if (!channelId) return;
   await q(
     `update channel_stats
         set last_packaging_change = greatest(last_packaging_change, $2::timestamptz),
+            packaging_change_count = coalesce(packaging_change_count, 0) + $3::int,
             updated_at = now()
       where channel_id = $1`,
-    [channelId, at instanceof Date ? at.toISOString() : at]
+    [channelId, at instanceof Date ? at.toISOString() : at, newlyChanged ? 1 : 0]
+  );
+}
+
+/**
+ * Cheap path for an upload: the ingest already knows a video landed, and this is the only thing
+ * the channel list needed `videos` for. greatest() so an out-of-order backfill cannot walk the
+ * timestamp backwards.
+ */
+export async function touchLastUpload(channelId: string, publishedAt: Date | string): Promise<void> {
+  if (!channelId || !publishedAt) return;
+  await q(
+    `update channel_stats
+        set last_upload_at = greatest(last_upload_at, $2::timestamptz), updated_at = now()
+      where channel_id = $1`,
+    [channelId, publishedAt instanceof Date ? publishedAt.toISOString() : publishedAt]
   );
 }

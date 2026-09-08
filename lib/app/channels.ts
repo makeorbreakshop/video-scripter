@@ -641,7 +641,7 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
             -- what compactNumber needs and is exact well past any subscriber count.
             cm.subscriber_count::float8 as subscriber_count,
             coalesce(gm.groups, '{}') as groups,
-            lu.last_upload_at
+            cs.last_upload_at
        from user_channels uc
        left join channel_tracking ct on ct.channel_id = uc.channel_id
        left join channel_meta cm on cm.channel_id = uc.channel_id
@@ -652,15 +652,10 @@ export async function listUserChannels(userId: string): Promise<UserChannelRow[]
            from channel_group_members m
           where m.user_id = uc.user_id and m.channel_id = uc.channel_id
        ) gm on true
-       -- The subline's fact. idx_videos_channel_published makes this one backward index
-       -- probe per channel, so it rides along with the list instead of a second round trip.
-       left join lateral (
-         select v.published_at as last_upload_at
-           from videos v
-          where v.channel_id = uc.channel_id and v.published_at is not null
-          order by v.published_at desc
-          limit 1
-       ) lu on true
+       -- The subline's fact, materialised. It was a backward index probe into videos per
+       -- channel: cheap per row, but at 500 tracked channels it is 500 probes into the widest
+       -- table in the database on every render of the list. channel_stats already holds one row
+       -- per channel and is refreshed by the same jobs that create the uploads.
       where uc.user_id = $1
       order by uc.added_at asc`,
     [userId]
