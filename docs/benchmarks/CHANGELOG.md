@@ -6,6 +6,70 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-08 (self-improvement) — a fit is a candidate until it passes the gates
+
+No model change. This changes WHO decides one.
+
+**The problem.** `score-videos.ts --fit` ran at 04:15 every night and its new `score_params` row
+was live the moment it committed, because every reader took "the newest row for this
+model_version". A refit is a model change — it moves the long-tail table, the launch ladder and
+the Q-residuals under every score in the app — and it was going out nightly, unbenchmarked, on a
+cron. The evidence pass above exists because v5.3 shipped ungated; the nightly fit was shipping
+ungated every single night and nobody had to forget anything for it to happen.
+
+**What now happens.** `score_params` has a `status` (`sql/score-params-status.sql`, applied):
+
+| status | meaning |
+|---|---|
+| `candidate` | fitted, read by nothing but the gates judging it |
+| `active` | what the scorer and every app surface read (newest active wins) |
+| `rejected` | a candidate that failed a gate, kept with its reason |
+
+The column defaults to `active`, so applying the migration changed nothing: every existing row
+became active and "newest active" returned the row "newest" already returned. Every reader goes
+through `lib/scoring/params-status.ts` (`activeParamsQuery`) — `lib/app/score-version.ts` for the
+app, `score-videos.loadParams` for the scorer, and the eight analysis scripts. The three gate
+harnesses gained `--params-id` so they can be pointed at a candidate rather than the champion.
+
+**THE NIGHTLY FIT IS NOW CANDIDATE-ONLY.** It keeps running at 04:15 and keeps producing a fresh
+fit every night; that fit is simply not live. `scripts/weekly-refit.ts` (Sundays 05:00 ET,
+`launchd/com.mfm.video-scripter-weekly-refit.plist`) is the only thing that promotes one. The
+alternative — leave the nightly fit live, gate weekly — was rejected: it would mean six nights a
+week of ungated model changes, which is the thing being fixed.
+
+**The gates**, in the order they are read (`lib/scoring/refit-gates.ts`, unit-tested):
+
+| gate | source | pass condition |
+|---|---|---|
+| estimate | `backtest-baseline-trend --estimate-coverage` (`>3d` mask) | medALE not worse than the champion's by more than max(0.005, 3% of it) |
+| benchmark | `benchmark-scores --compare` vs `BASELINE.json` | no cell worse: medALE past max(0.005, 3% of ref), or F1 past 0.03 |
+| stability | the same two reports | median churn on unchanged-truth pairs up by no more than 0.03 |
+| calibration | `check-band-calibration` | inner 50 % ± 5, outer 80 % ± 5 |
+
+The estimate gate is first because it is the ONLY one that sees v5.3 — the other two replay
+through `core.scoreVideo` and are structurally blind to `channelCurve`, as the evidence pass
+above measured. `no_change` is read before `pooled` when naming the worst cell, because packaging
+coverage starts 2026-09-01 and pooled quietly contains unseen swaps. **An inconclusive gate is
+not a pass**: a harness that produced no comparable numbers blocks promotion exactly as a failure
+does. Promoting on absent evidence is how v5.3 shipped ungated.
+
+Every run — promote, reject, skip or error — writes one `model_evals` row with each gate's
+numbers. On a pass the run's own benchmark report becomes the new `BASELINE.json` and an entry
+lands here automatically. Preflight checks `pg_stat_activity` and skips (with the reason recorded)
+if another heavy job is already running; every stage is spawned with a wall-clock budget and
+killed by process group, and every query on both sides runs under `set local statement_timeout`,
+so a killed stage cannot orphan a backend.
+
+**The scorecard.** `scripts/scorecard-refresh.ts` grades old claims against the day-30 counts that
+settled them, by age, channel size, confidence word, `typical_kind` and packaging stratum, into
+the `scorecard` table; `/admin/scoring` reads it. Two sources, never mixed: `history`
+(`video_score_history` — what the app actually showed) and `benchmark` (the replay dumps).
+**History is empty and will be until ~2026-10-02**: the table began 2026-09-02, so no claim in it
+is yet 30 days old. The first real numbers are from the replay of 2026-09-08 (3,996 claims):
+medALE 0.455 at t=0.5 falling to 0.039 at t=14, F1 0.42 rising to 0.91, and the confidence words
+ordered exactly as they should be (`early` 0.248 medALE / 0.60 F1, `confirmed` 0.048 / 0.90).
+
+
 ## 2026-09-08 (evidence pass) — v5.3 benchmarked: it holds
 
 The 2026-09-08 v5.3 entry below shipped with no gate run, because the database was IO-bound and

@@ -21,3 +21,18 @@ export function canSeeInspiration(
   const email = (user.email ?? '').trim().toLowerCase();
   return !!email && inspirationAllowlist(env).has(email);
 }
+
+/**
+ * The scoring scorecard grades the model in public numbers -- medALE, bias, the outlier calls it
+ * got wrong -- and names the rejected fits. That is Brandon's back office, not a product surface.
+ * /admin is already behind Clerk; this is the second gate that makes it his.
+ */
+export function isOwner(
+  user: { email?: string | null; plan?: string | null } | null | undefined,
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  if (!user) return false;
+  if ((user.plan ?? '').toLowerCase() === 'owner') return true;
+  const email = (user.email ?? '').trim().toLowerCase();
+  return !!email && inspirationAllowlist(env).has(email);
+}
