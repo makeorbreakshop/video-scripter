@@ -19,12 +19,39 @@ run(['scripts/track-due.ts', '--pool', 'main', '--budget', '3000', '--deadline-m
 run(['scripts/backfill-catalog.ts', '--budget', '3000', '--jobs', '60']); // main key; the library catch-up rides this queue
 // 3. channel identity for any tracked channel missing it
 run(['scripts/channel-meta-backfill.ts']);
-// 4. scores: user-lane channels whose videos older than 60d have no final score yet
-const { rows } = await pool.query(
-  `select ct.channel_id from channel_tracking ct where ct.lane = 'user'
-     and exists (select 1 from videos v where v.channel_id = ct.channel_id and v.published_at < now() - interval '60 days'
-                   and ${longformSql('v')} and not exists (select 1 from video_scores s where s.video_id = v.id))
-   limit 5`);
+// 4. scores: user-lane channels whose videos older than 60d have no final score yet.
+//
+// This EXISTS was the second most expensive statement in the database per call: 34,578 shared
+// blocks and 24 s, every fifteen minutes. The reason is the channels that are already FULLY
+// scored — for those the subquery has to examine every video in the catalogue before it can
+// answer "no", and there is no index that can shortcut an anti-join against another table.
+//
+// So the sweep is bounded instead of exhaustive: a channel is examined at most once a day, and
+// each run looks at CANDIDATES of them (oldest check first) rather than all of the user lane.
+// The work still gets done — a channel with unscored videos is picked up within a day and then
+// scored on every run until it is clean — and the per-run cost is bounded by CANDIDATES.
+const CANDIDATES = 20;
+const candidates = (await pool.query<{ channel_id: string }>(
+  `select channel_id from channel_tracking
+    where lane = 'user'
+      and (unscored_checked_at is null or unscored_checked_at < now() - interval '1 day')
+    order by unscored_checked_at nulls first
+    limit $1`, [CANDIDATES])).rows.map((r) => r.channel_id);
+
+const rows = candidates.length ? (await pool.query<{ channel_id: string }>(
+  `select ct.channel_id from channel_tracking ct
+    where ct.channel_id = any($1::text[])
+      and exists (select 1 from videos v where v.channel_id = ct.channel_id and v.published_at < now() - interval '60 days'
+                    and ${longformSql('v')} and not exists (select 1 from video_scores s where s.video_id = v.id))
+    limit 5`, [candidates])).rows : [];
+
+// Stamp everything examined, clean or not, so the next run moves on to a different slice.
+if (candidates.length) {
+  await pool.query(
+    `update channel_tracking set unscored_checked_at = now() where channel_id = any($1::text[])`,
+    [candidates]);
+}
+
 if (rows.length) {
   const ids = rows.map((r) => r.channel_id).join(',');
   run(['scripts/score-videos.ts', '--final', '--channels', ids]);
