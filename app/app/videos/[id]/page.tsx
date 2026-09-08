@@ -42,7 +42,7 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
           curve={v.curve}
           series={v.series}
           marks={v.marks}
-          events={v.packagingEvents}
+          events={v.packagingEvents ?? []}
           score={v.broadcastNotice ? null : v.score?.score ?? null}
           comparison={v.comparison}
         />
@@ -51,7 +51,7 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
       {/* One card is a history too: card 0 is the publish. A video that never changed its
           packaging has exactly that one card and no chips, which is the whole answer. */}
       <section className="cs-section">
-        {v.packagingCards.length > 1
+        {(v.packagingCards?.length ?? 0) > 1
           ? <PackagingStrip cards={v.packagingCards} />
           : <><h2>Packaging</h2><p className="cs-sub">No changes since publish.</p></>}
       </section>
