@@ -1,5 +1,5 @@
-import { growthExponent, type GlobalParams } from './core';
-import { cadenceHalfLifeDays, cadenceHalfLifeForPriors, channelCurve, contributionAt, estimateLadder, measuredCurveAt, priorsSpanning, estimateSlideLog, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
+import { baselineWeight, effectiveN, growthExponent, type GlobalParams } from "./core";
+import { cadenceHalfLifeDays, cadenceHalfLifeForPriors, channelCurve, contributionAt, estimateLadder, kernelHalfLifeForPriors, MAX_PRIOR_WEIGHT_SHARE, maxWeightShare, measuredCurveAt, priorsSpanning, estimateSlideLog, sameAgeTolerance, scoreV5, project, type CurvePrior } from './curve';
 import { AGE_FLOOR_DAYS, growthLog, logToRef } from './growth';
 
 const P: GlobalParams = {
@@ -554,5 +554,56 @@ describe('the estimated slide', () => {
     expect(c.anchorAge).toBe(1);
     expect(c.typical).toBeCloseTo(50_000 * Math.exp(growthLog(P, 30, 0.5)), 6);
     expect(c.n).toBe(4);
+  });
+});
+
+describe('the kernel cannot hand the median to a single prior (Cabinets, real prior gaps)', () => {
+  // Av0K0TRhbhw "Cabinets are expensive" (UCGhyz7J9HmS0GT8Y_BR_crA), scored 2026-09-07 at age
+  // 325.9d: 1.53M views, stored typical_at_age 90,048, score 17.0x, typical_neff 2.44. The 90,048
+  // is the ONE prior published 35 days earlier ("it's like cheating", 93k lifetime -- the
+  // channel's weakest video in two years). With the 55d cadence half-life it carried 0.643 of a
+  // total weight of 1.077, i.e. more than half, so the weighted median WAS that prior and every
+  // other video on the channel was ignored. The neighbour scored a month later divided by 1.01M.
+  const AGE = 325.857;
+  const CABINETS: [number, number][] = [
+    [35, 90_048], [120, 663_280], [184, 1_025_447], [221, 301_266], [303, 870_231], [341, 2_403_529],
+    [406, 415_973], [433, 190_067], [448, 205_558], [483, 750_078], [496, 226_025], [531, 231_508],
+  ];
+  const priors = CABINETS.map(([gap, views]) => prior(gap, [[AGE, views]]));
+
+  it('the cadence half-life alone gives the newest prior the majority of the weight', () => {
+    const hl = cadenceHalfLifeForPriors(priors);
+    const ws = priors.map((p) => baselineWeight(p.ageDays, hl));
+    expect(Math.max(...ws) / ws.reduce((a, b) => a + b, 0)).toBeGreaterThan(0.5);
+  });
+
+  it('widens the kernel until no prior holds more than a third of the weight', () => {
+    const hl = kernelHalfLifeForPriors(priors);
+    expect(hl).toBeGreaterThan(cadenceHalfLifeForPriors(priors));
+    expect(maxWeightShare(priors.map((p) => baselineWeight(p.ageDays, hl)))).toBeLessThanOrEqual(MAX_PRIOR_WEIGHT_SHARE);
+    // and not by more than one step: the search stops at the first half-life that clears it
+    expect(maxWeightShare(priors.map((p) => baselineWeight(p.ageDays, hl / 1.25)))).toBeGreaterThan(MAX_PRIOR_WEIGHT_SHARE);
+  });
+
+  it('C(t) is a level of the channel, not the previous upload', () => {
+    const c = channelCurve(priors, AGE, P);
+    expect(c.kind).toBe('measured');
+    expect(maxWeightShare(c.contributions.map((x) => x.weight))).toBeLessThanOrEqual(MAX_PRIOR_WEIGHT_SHARE);
+    expect(c.typical).not.toBeCloseTo(90_048, 0);
+    // the channel's own Feb-2024 video (301k at this age) is the median; 1.53M is 5.1x it
+    expect(c.typical!).toBeGreaterThan(250_000);
+    expect(c.typical!).toBeLessThan(1_100_000);
+    expect(1_533_284 / c.typical!).toBeLessThan(6);
+  });
+
+  it('leaves a fast channel exactly where it was: 15 daily priors keep the 30-day kernel', () => {
+    const daily = Array.from({ length: 15 }, (_, i) => prior(i + 1, [[AGE, 1000]]));
+    expect(kernelHalfLifeForPriors(daily)).toBe(30);
+    expect(channelCurve(daily, AGE, P).neff).toBeCloseTo(effectiveN(daily.map((p) => baselineWeight(p.ageDays, 30))), 8);
+  });
+
+  it('fewer than three priors has nothing to widen for', () => {
+    const two = [prior(10, [[AGE, 100]]), prior(500, [[AGE, 900]])];
+    expect(kernelHalfLifeForPriors(two)).toBe(cadenceHalfLifeForPriors(two));
   });
 });

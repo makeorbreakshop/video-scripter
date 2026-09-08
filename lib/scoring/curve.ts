@@ -194,6 +194,49 @@ export function cadenceHalfLifeForPriors(priors: readonly CurvePrior[]): number 
 }
 
 /**
+ * The largest share of the kernel's total weight one prior may hold.
+ *
+ * A weighted median is only a median while no single weight reaches half the total. The moment
+ * one prior carries more than half, the "median" is that prior's number and the rest of the
+ * channel is ignored -- and MIN_BASELINE_NEFF (2) does not prevent it: neff 2.44 still lets the
+ * newest prior hold 60%. That is exactly what happened to Av0K0TRhbhw ("Cabinets are expensive",
+ * scored 2026-09-07 at 326d): a 55d cadence kernel put 0.643 of 1.077 total weight on the one
+ * video published 35 days before it -- the channel's weakest in two years, 90k -- so C(t) was
+ * 90,048 and the score read 17.0x, while the video published a month later divided by 1.01M.
+ * At a third, crossing the half-way mark always takes at least two priors, so the median is
+ * a level of the channel and never a single upload. Fifteen daily priors on the 30-day kernel
+ * have a top share of 0.10, so fast channels never widen.
+ */
+export const MAX_PRIOR_WEIGHT_SHARE = 1 / 3;
+
+/** Widening step for the kernel search; the result is deterministic in the prior gaps alone. */
+const KERNEL_WIDEN_STEP = 1.25;
+
+/** Largest single weight as a fraction of the total. 1 for a single prior, 0 for none. */
+export function maxWeightShare(ws: readonly number[]): number {
+  const ok = ws.filter((w) => w > 0 && Number.isFinite(w));
+  if (!ok.length) return 0;
+  return Math.max(...ok) / ok.reduce((a, b) => a + b, 0);
+}
+
+/**
+ * The half-life the baseline kernel actually uses: the cadence rule (`cadenceHalfLifeForPriors`),
+ * widened by KERNEL_WIDEN_STEP until no prior holds more than MAX_PRIOR_WEIGHT_SHARE of the
+ * total weight. With three or more priors the search always terminates: as the half-life grows
+ * the weights flatten toward equal and the top share toward 1/n <= 1/3. Under three priors there
+ * is no baseline anyway (MIN_BASELINE_PRIORS), so the cadence value is returned unchanged.
+ */
+export function kernelHalfLifeForPriors(priors: readonly CurvePrior[]): number {
+  let hl = cadenceHalfLifeForPriors(priors);
+  const gaps = priors.map((p) => p.ageDays).filter((g) => Number.isFinite(g));
+  if (gaps.length < MIN_BASELINE_PRIORS) return hl;
+  const shareAt = (h: number) => maxWeightShare(gaps.map((g) => baselineWeight(g, h)));
+  for (let i = 0; i < 200 && shareAt(hl) > MAX_PRIOR_WEIGHT_SHARE; i++) hl *= KERNEL_WIDEN_STEP;
+  return hl;
+}
+
+
+/**
  * The ages an ESTIMATED C(t) is allowed to be anchored at, nearest-first in LOG age.
  *
  * A fixed ladder rather than "any age the priors happen to have a reading at": the anchor has to
@@ -282,7 +325,7 @@ export function measuredCurveAt(
   params: GlobalParams,
   halfLife?: number
 ): CurveResult {
-  const hl = halfLife ?? cadenceHalfLifeForPriors(priors);
+  const hl = halfLife ?? kernelHalfLifeForPriors(priors);
   const contributions: Contribution[] = [];
   for (const p of priors) {
     const c = contributionAt(p, targetAge, params);
@@ -327,7 +370,7 @@ export function channelCurve(
 ): CurveResult {
   // Omitted means "this channel's own rhythm" -- the production rule since v5.2. The backtest
   // harnesses pass an explicit half-life to hold the kernel fixed as a control.
-  const hl = halfLife ?? cadenceHalfLifeForPriors(priors);
+  const hl = halfLife ?? kernelHalfLifeForPriors(priors);
   const measured = measuredCurveAt(priors, targetAge, params, hl);
   if (measured.typical != null) return measured;
 
