@@ -220,7 +220,7 @@ export function maxWeightShare(ws: readonly number[]): number {
 }
 
 /**
- * The half-life the baseline kernel actually uses: the cadence rule (`cadenceHalfLifeForPriors`),
+ * v5.4. The half-life the baseline kernel actually uses: the cadence rule (`cadenceHalfLifeForPriors`),
  * widened by KERNEL_WIDEN_STEP until no prior holds more than MAX_PRIOR_WEIGHT_SHARE of the
  * total weight. With three or more priors the search always terminates: as the half-life grows
  * the weights flatten toward equal and the top share toward 1/n <= 1/3. Under three priors there
