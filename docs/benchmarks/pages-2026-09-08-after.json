@@ -1,0 +1,919 @@
+{
+  "label": "after",
+  "at": "2026-09-08T23:43:19.759Z",
+  "role": "channelsmith_app",
+  "runs": 2,
+  "videoIds": [
+    "ANmTVYkEtLw",
+    "fo-uubnajWM",
+    "9mVaKmmhYFc",
+    "W-AvIBUyHfQ"
+  ],
+  "channels": [
+    {
+      "id": "UCjWkNxpp3UHdEavpM_19--Q",
+      "note": "Make or Break Shop (245 videos)"
+    },
+    {
+      "id": "UCGhyz7J9HmS0GT8Y_BR_crA",
+      "note": "wittworks (62 videos)"
+    },
+    {
+      "id": "UCBJycsmduvYEL83R_U4JriQ",
+      "note": "Marques Brownlee (1745 videos)"
+    }
+  ],
+  "results": [
+    {
+      "name": "feed/all",
+      "url": "/app/feed",
+      "runs": [
+        {
+          "wallMs": 465,
+          "status": 200,
+          "dbMs": 8,
+          "read": 0,
+          "hit": 2215,
+          "top": [
+            {
+              "queryid": "-3088971402813984001",
+              "calls": 1,
+              "ms": 2.593699000000015,
+              "read": 0,
+              "hit": 1560,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.925895999999966,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.25705999999991036,
+              "read": 0,
+              "hit": 106,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 697,
+          "status": 200,
+          "dbMs": 10,
+          "read": 0,
+          "hit": 2234,
+          "top": [
+            {
+              "queryid": "-3088971402813984001",
+              "calls": 1,
+              "ms": 3.9152279999998427,
+              "read": 0,
+              "hit": 1560,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 5.325091000000043,
+              "read": 0,
+              "hit": 497,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.5029230000000098,
+              "read": 0,
+              "hit": 106,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "feed/outliers",
+      "url": "/app/feed?seg=outliers",
+      "runs": [
+        {
+          "wallMs": 815,
+          "status": 200,
+          "dbMs": 25,
+          "read": 0,
+          "hit": 10141,
+          "top": [
+            {
+              "queryid": "5454826829439888577",
+              "calls": 1,
+              "ms": 20.16950799999904,
+              "read": 0,
+              "hit": 9505,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.870939000000021,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.3796679999999242,
+              "read": 0,
+              "hit": 146,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 599,
+          "status": 200,
+          "dbMs": 30,
+          "read": 0,
+          "hit": 10141,
+          "top": [
+            {
+              "queryid": "5454826829439888577",
+              "calls": 1,
+              "ms": 24.214004000001296,
+              "read": 0,
+              "hit": 9505,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 5.235476000000062,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.3638490000000729,
+              "read": 0,
+              "hit": 146,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "feed/tests",
+      "url": "/app/feed?seg=tests",
+      "runs": [
+        {
+          "wallMs": 522,
+          "status": 200,
+          "dbMs": 12,
+          "read": 0,
+          "hit": 2422,
+          "top": [
+            {
+              "queryid": "5454826829439888577",
+              "calls": 1,
+              "ms": 6.686373000000458,
+              "read": 0,
+              "hit": 1735,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.6500369999999975,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "6301982483117927370",
+              "calls": 1,
+              "ms": 0.6791229999998905,
+              "read": 0,
+              "hit": 155,
+              "q": "select video_id, version, sha256, phash, first_seen from thumbnail_versions where video_id = any($1::text[]) order by video_id, version"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 368,
+          "status": 200,
+          "dbMs": 10,
+          "read": 0,
+          "hit": 2419,
+          "top": [
+            {
+              "queryid": "5454826829439888577",
+              "calls": 1,
+              "ms": 4.684865999999602,
+              "read": 0,
+              "hit": 1732,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.742234999999937,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "6301982483117927370",
+              "calls": 1,
+              "ms": 0.43639600000005885,
+              "read": 0,
+              "hit": 155,
+              "q": "select video_id, version, sha256, phash, first_seen from thumbnail_versions where video_id = any($1::text[]) order by video_id, version"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "feed/uploads",
+      "url": "/app/feed?seg=uploads",
+      "runs": [
+        {
+          "wallMs": 520,
+          "status": 200,
+          "dbMs": 11,
+          "read": 0,
+          "hit": 5653,
+          "top": [
+            {
+              "queryid": "-4819510531479549068",
+              "calls": 1,
+              "ms": 6.396253999999999,
+              "read": 0,
+              "hit": 5015,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.679131999999981,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.36061600000005,
+              "read": 0,
+              "hit": 148,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 486,
+          "status": 200,
+          "dbMs": 11,
+          "read": 0,
+          "hit": 5653,
+          "top": [
+            {
+              "queryid": "-4819510531479549068",
+              "calls": 1,
+              "ms": 6.124883000000182,
+              "read": 0,
+              "hit": 5015,
+              "q": "select e.id::text as id, e.type, e.at, e.channel_id, e.video_id, e.payload, v.title as video_title, v.thumbnail_url, v.channel_name, v.published_at, v.view_coun"
+            },
+            {
+              "queryid": "7143135980508744147",
+              "calls": 1,
+              "ms": 4.896824000000038,
+              "read": 0,
+              "hit": 489,
+              "q": "select (select coalesce(json_agg(t order by t.name nulls last), $2::json) from ( select uc.channel_id, coalesce(cm.title, cs.name) as name from user_channels uc"
+            },
+            {
+              "queryid": "-4902722760500208085",
+              "calls": 1,
+              "ms": 0.3476100000000315,
+              "read": 0,
+              "hit": 148,
+              "q": "select channel_id, avatar_url from channel_meta where channel_id = any($1)"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "channels",
+      "url": "/app/channels",
+      "runs": [
+        {
+          "wallMs": 834,
+          "status": 200,
+          "dbMs": 196,
+          "read": 163,
+          "hit": 90434,
+          "top": [
+            {
+              "queryid": "-6451285056916554991",
+              "calls": 1,
+              "ms": 183.9251959999965,
+              "read": 163,
+              "hit": 88932,
+              "q": "select v.channel_id, v.published_at as t, s.baseline from videos v join video_scores s on s.video_id = v.id where v.channel_id = any($1::text[]) and v.published"
+            },
+            {
+              "queryid": "8030742360206573270",
+              "calls": 1,
+              "ms": 11.190354000000003,
+              "read": 0,
+              "hit": 1464,
+              "q": "select uc.channel_id, uc.role, uc.watched_closely, uc.notify, uc.added_at, ct.lane, ct.backfill_status, coalesce(cm.title, cs.name) as name, cs.latest_thumbnail"
+            },
+            {
+              "queryid": "1398255104700978216",
+              "calls": 1,
+              "ms": 0.24415400000000886,
+              "read": 0,
+              "hit": 18,
+              "q": "select u.plan, count(uc.channel_id) as tracked, count(*) filter (where uc.watched_closely) as watched from app_users u left join user_channels uc on uc.user_id "
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 1001,
+          "status": 200,
+          "dbMs": 184,
+          "read": 0,
+          "hit": 90594,
+          "top": [
+            {
+              "queryid": "-6451285056916554991",
+              "calls": 1,
+              "ms": 173.28453200000513,
+              "read": 0,
+              "hit": 89092,
+              "q": "select v.channel_id, v.published_at as t, s.baseline from videos v join video_scores s on s.video_id = v.id where v.channel_id = any($1::text[]) and v.published"
+            },
+            {
+              "queryid": "8030742360206573270",
+              "calls": 1,
+              "ms": 10.434480999999998,
+              "read": 0,
+              "hit": 1461,
+              "q": "select uc.channel_id, uc.role, uc.watched_closely, uc.notify, uc.added_at, ct.lane, ct.backfill_status, coalesce(cm.title, cs.name) as name, cs.latest_thumbnail"
+            },
+            {
+              "queryid": "1398255104700978216",
+              "calls": 1,
+              "ms": 0.2403889999999933,
+              "read": 0,
+              "hit": 18,
+              "q": "select u.plan, count(uc.channel_id) as tracked, count(*) filter (where uc.watched_closely) as watched from app_users u left join user_channels uc on uc.user_id "
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "channel/UCjWkNxpp3UHdEavpM_19--Q",
+      "url": "/app/channels/UCjWkNxpp3UHdEavpM_19--Q",
+      "note": "Make or Break Shop (245 videos)",
+      "runs": [
+        {
+          "wallMs": 420,
+          "status": 200,
+          "dbMs": 5,
+          "read": 0,
+          "hit": 1371,
+          "top": [
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 2.4966170000000147,
+              "read": 0,
+              "hit": 623,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            },
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 1.2462169999998878,
+              "read": 0,
+              "hit": 521,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 0.7022110000000055,
+              "read": 0,
+              "hit": 220,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 503,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 1367,
+          "top": [
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 1.6189750000000913,
+              "read": 0,
+              "hit": 619,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            },
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 0.957393000000593,
+              "read": 0,
+              "hit": 521,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 0.6871720000000039,
+              "read": 0,
+              "hit": 220,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "channel/UCGhyz7J9HmS0GT8Y_BR_crA",
+      "url": "/app/channels/UCGhyz7J9HmS0GT8Y_BR_crA",
+      "note": "wittworks (62 videos)",
+      "runs": [
+        {
+          "wallMs": 417,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 732,
+          "top": [
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 1.7485560000000078,
+              "read": 0,
+              "hit": 566,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            },
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 0.4246800000000803,
+              "read": 0,
+              "hit": 89,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 0.2760549999999995,
+              "read": 0,
+              "hit": 59,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 359,
+          "status": 200,
+          "dbMs": 2,
+          "read": 0,
+          "hit": 721,
+          "top": [
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 1.522034000000076,
+              "read": 0,
+              "hit": 566,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            },
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 0.32632699999885517,
+              "read": 0,
+              "hit": 89,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 0.2688930000000056,
+              "read": 0,
+              "hit": 59,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "channel/UCBJycsmduvYEL83R_U4JriQ",
+      "url": "/app/channels/UCBJycsmduvYEL83R_U4JriQ",
+      "note": "Marques Brownlee (1745 videos)",
+      "runs": [
+        {
+          "wallMs": 419,
+          "status": 200,
+          "dbMs": 33,
+          "read": 0,
+          "hit": 3996,
+          "top": [
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 21.848124000000098,
+              "read": 0,
+              "hit": 1755,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 7.071283000000008,
+              "read": 0,
+              "hit": 1630,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            },
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 3.623434999999972,
+              "read": 0,
+              "hit": 604,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 411,
+          "status": 200,
+          "dbMs": 12,
+          "read": 0,
+          "hit": 3996,
+          "top": [
+            {
+              "queryid": "8919688856731864307",
+              "calls": 1,
+              "ms": 4.956969000002573,
+              "read": 0,
+              "hit": 1755,
+              "q": "select v.channel_id, coalesce(max(cm.title), max(cs.name), max(v.channel_name)) as name, max(cm.avatar_url) as avatar_url, max(cm.subscriber_count) as subscribe"
+            },
+            {
+              "queryid": "-3723648271067912497",
+              "calls": 1,
+              "ms": 4.884221999999994,
+              "read": 0,
+              "hit": 1630,
+              "q": "select count(*)::int as n from videos v where v.channel_id = $1 and (coalesce(v.is_short, $2) = $3 and coalesce(v.duration, $4) <> $5 and not (v.shorts_checked_"
+            },
+            {
+              "queryid": "5577811561927269158",
+              "calls": 1,
+              "ms": 1.694641000000047,
+              "read": 0,
+              "hit": 604,
+              "q": "with page as ( select v.id, v.title, v.published_at, v.view_count, v.thumbnail_url from videos v where v.channel_id = $1 and (coalesce(v.is_short, $4) = $5 and "
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "video/ANmTVYkEtLw",
+      "url": "/app/videos/ANmTVYkEtLw",
+      "runs": [
+        {
+          "wallMs": 1328,
+          "status": 200,
+          "dbMs": 7,
+          "read": 0,
+          "hit": 1591,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 4.153365999998641,
+              "read": 0,
+              "hit": 1094,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 1.372400000000198,
+              "read": 0,
+              "hit": 236,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.606247,
+              "read": 0,
+              "hit": 98,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 2335,
+          "status": 200,
+          "dbMs": 7,
+          "read": 0,
+          "hit": 1629,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 4.909830000004149,
+              "read": 0,
+              "hit": 1094,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.5446270000002187,
+              "read": 0,
+              "hit": 236,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.6277609999999998,
+              "read": 0,
+              "hit": 123,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "video/fo-uubnajWM",
+      "url": "/app/videos/fo-uubnajWM",
+      "runs": [
+        {
+          "wallMs": 1354,
+          "status": 200,
+          "dbMs": 5,
+          "read": 0,
+          "hit": 1701,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 3.153035999988788,
+              "read": 0,
+              "hit": 1094,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.682608999999502,
+              "read": 0,
+              "hit": 333,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.4510830000000001,
+              "read": 0,
+              "hit": 94,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 1275,
+          "status": 200,
+          "dbMs": 5,
+          "read": 0,
+          "hit": 1691,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 2.5331200000073295,
+              "read": 0,
+              "hit": 1094,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.7685740000006263,
+              "read": 0,
+              "hit": 333,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.4400560000000002,
+              "read": 0,
+              "hit": 94,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "video/9mVaKmmhYFc",
+      "url": "/app/videos/9mVaKmmhYFc",
+      "runs": [
+        {
+          "wallMs": 688,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 890,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 1.5466310000047088,
+              "read": 0,
+              "hit": 560,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.6193830000001981,
+              "read": 0,
+              "hit": 114,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.22774499999999964,
+              "read": 0,
+              "hit": 71,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 723,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 890,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 1.5904719999962253,
+              "read": 0,
+              "hit": 560,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.4321539999991728,
+              "read": 0,
+              "hit": 114,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.30101599999999973,
+              "read": 0,
+              "hit": 71,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    },
+    {
+      "name": "video/W-AvIBUyHfQ",
+      "url": "/app/videos/W-AvIBUyHfQ",
+      "runs": [
+        {
+          "wallMs": 854,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 762,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 1.5737009999866132,
+              "read": 0,
+              "hit": 464,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.22813099999984843,
+              "read": 0,
+              "hit": 83,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.25785700000000045,
+              "read": 0,
+              "hit": 71,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        },
+        {
+          "wallMs": 615,
+          "status": 200,
+          "dbMs": 3,
+          "read": 0,
+          "hit": 762,
+          "top": [
+            {
+              "queryid": "-3556901729813604172",
+              "calls": 1,
+              "ms": 1.25960699999996,
+              "read": 0,
+              "hit": 464,
+              "q": "with target_videos as materialized ( select id, published_at from videos where id = any($1) ) select x.video_id, x.at, x.views, x.source, x.received_at, v.publi"
+            },
+            {
+              "queryid": "4217755669367419726",
+              "calls": 1,
+              "ms": 0.19583500000044296,
+              "read": 0,
+              "hit": 83,
+              "q": "select at, views, time_basis as \"timeBasis\", received_at as \"receivedAt\" from rss_samples where video_id = $1 and views is not null and not conflicted order by "
+            },
+            {
+              "queryid": "8567579451444469022",
+              "calls": 1,
+              "ms": 0.20805199999999946,
+              "read": 0,
+              "hit": 71,
+              "q": "select c.video_id, c.obs from video_obs_cache c left join series_dirty d on d.video_id = c.video_id where c.video_id = any($1::text[]) and d.video_id is null"
+            }
+          ],
+          "busy": []
+        }
+      ]
+    }
+  ]
+}
