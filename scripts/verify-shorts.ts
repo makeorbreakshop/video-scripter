@@ -16,7 +16,7 @@
 // hours. If you change this predicate, change the indexes with it and re-check EXPLAIN.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import { SHORT_MAX_SECONDS, longformSql } from '../lib/scoring/longform';
 import { shortsVerdict, type ShortsVerdict } from '../lib/thumbs/shorts';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
@@ -33,10 +33,10 @@ const ONLY_FLAGGED = process.argv.includes('--only-flagged');
 const job = startManagedJob({ name: ONLY_FLAGGED ? 'verify-shorts:flagged' : 'verify-shorts:default' });
 if (!job.acquired) process.exit(0);
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-// Same guard the other scheduled scripts use: a query that cannot be served from an index dies
-// instead of holding IO for ten minutes (scripts/score-videos.ts).
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 300000').catch(() => {}); });
+// makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
+// The old on-connect SET was queued asynchronously and landed after the queries it was meant
+// to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000 });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

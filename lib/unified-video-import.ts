@@ -7,6 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Pinecone } from '@pinecone-database/pinecone';
 import pg from 'pg';
+import { withTimeout } from './admin/db.ts';
 import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
@@ -708,10 +709,10 @@ export class VideoImportService {
     let client;
     try {
       client = await tempPool.connect();
-      
-      // Set a long timeout for this session (10 minutes in milliseconds)
-      await client.query("SET statement_timeout = '600000'");
-      
+      // The timeout is set per chunk with `set local` inside withTimeout below, not once for
+      // the session: a session-level SET on the transaction pooler does not survive between
+      // statements, so this path was running at the 300 s role default (2026-09-08).
+
       // Process in chunks of 500 to avoid parameter limit
       const CHUNK_SIZE = 500;
       let totalStored = 0;
@@ -810,7 +811,7 @@ export class VideoImportService {
             updated_at = NOW()
         `;
         
-        await client.query(query, values);
+        await withTimeout(client, 600_000, (c) => c.query(query, values));
         totalStored += chunk.length;
         console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
         

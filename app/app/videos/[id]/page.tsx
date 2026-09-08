@@ -21,6 +21,8 @@ import { MarkerHoverProvider, VideoChart } from '@/components/app/video-chart';
 import { PackagingStrip } from '@/components/app/packaging-strip';
 import { Thumb, ThumbFallbackScript } from '@/components/app/thumb';
 import { LocalTime } from '@/components/app/local-time';
+import { cachedRawReadings, rawIsAvailable } from '@/lib/app/raw-readings';
+import { mergeObservations } from '@/lib/scoring/observations';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,15 +31,35 @@ export const dynamic = 'force-dynamic';
  * behind a Suspense boundary while the header — four small reads (loadVideoHead) — is already
  * on screen.
  */
-async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
+async function VideoBody({ id, channelId, raw }: { id: string; channelId: string; raw?: boolean }) {
   const v = await cachedVideoPage(id, channelId);
   if (!v) return null;
+
+  // ?raw=1 — every fetch behind the line, read from the R2 archive rather than from the thinned
+  // Postgres rows. Deliberately additive and deliberately off by default: it changes what the
+  // MEASURED points are, not the shape of the answer, and it costs an object-store read.
+  // A failure here must not take the page down, so it degrades to the ordinary series.
+  let actuals = v.actuals;
+  let rawNote: string | null = null;
+  if (raw && rawIsAvailable(v.publishedAt)) {
+    try {
+      const archived = await cachedRawReadings(id, v.publishedAt);
+      if (archived.length) {
+        const merged = mergeObservations(v.chartOriginAt, [], [], archived, Date.now());
+        const seen = new Set(actuals.map((a) => a.at));
+        actuals = [...actuals, ...merged.filter((m) => !seen.has(m.at))].sort((a, b) => a.day - b.day);
+        rawNote = `${archived.length.toLocaleString()} archived readings`;
+      }
+    } catch { /* the thinned series is still the right answer */ }
+  }
+
   return (
     <>
       <section className="cs-section" style={{ marginTop: 18 }}>
         {!v.broadcastNotice && <h2>Views since publish</h2>}
+        {rawNote && <p className="cs-sub">{rawNote}</p>}
         <VideoChart
-          actuals={v.actuals}
+          actuals={actuals}
           publishedAt={v.chartOriginAt}
           curve={v.curve}
           series={v.series}
@@ -59,8 +81,14 @@ async function VideoBody({ id, channelId }: { id: string; channelId: string }) {
   );
 }
 
-export default async function AppVideoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AppVideoPage(
+  { params, searchParams }: {
+    params: Promise<{ id: string }>;
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  }
+) {
   const { id } = await params;
+  const raw = (await searchParams)?.raw === '1';
   const v = await loadVideoHead(id);
   if (!v) notFound();
 
@@ -118,7 +146,7 @@ export default async function AppVideoPage({ params }: { params: Promise<{ id: s
       </div>
 
       <Suspense fallback={<VideoBodySkeleton />}>
-        <VideoBody id={v.id} channelId={v.channelId} />
+        <VideoBody id={v.id} channelId={v.channelId} raw={raw} />
       </Suspense>
 
     </MarkerHoverProvider>

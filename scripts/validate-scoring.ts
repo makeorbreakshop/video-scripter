@@ -5,12 +5,14 @@
 // Usage: npx tsx scripts/validate-scoring.ts
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import pg from 'pg';
+import { makeTimedPool } from '../lib/admin/db';
 import { scoreVideo, bucketFor, GlobalParams, MODEL_VERSION, Snapshot, median } from '../lib/scoring/core';
 import { longformSql } from '../lib/scoring/longform';
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
-pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 300000').catch(() => {}); });
+// makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
+// The old on-connect SET was queued asynchronously and landed after the queries it was meant
+// to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000 });
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 
 const params: GlobalParams = (await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [MODEL_VERSION]))[0].params;

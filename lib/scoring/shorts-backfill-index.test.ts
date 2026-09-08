@@ -46,9 +46,13 @@ describe('verify-shorts target query is index-served', () => {
     expect(script).not.toMatch(/extract\(epoch from v\.duration::interval\)/);
   });
 
-  test('the backfill stays polite: concurrency capped at 3 and a per-connection statement_timeout', () => {
+  test('the backfill stays polite: concurrency capped at 3 and a statement_timeout that applies', () => {
     expect(script).toMatch(/Math\.min\(Number\(arg\('--concurrency'\)[^)]*\)[^,]*,\s*3\)/);
-    expect(script).toMatch(/set statement_timeout = 300000/);
+    // Was `pool.on('connect', … set statement_timeout = 300000)`, which the transaction pooler
+    // queues asynchronously so it lands after the queries it was meant to protect (2026-09-08).
+    // makeTimedPool wraps each query in `begin; set local statement_timeout = N; …; commit`.
+    expect(script).toMatch(/makeTimedPool\(\{[^}]*timeoutMs:\s*300000/);
+    expect(script).not.toMatch(/pool\.on\(\s*['"]connect['"]/);
     expect(script).toMatch(/Math\.min\(Number\(arg\('--limit'\)[^)]*\)[^,]*,\s*20000\)/);
   });
 });

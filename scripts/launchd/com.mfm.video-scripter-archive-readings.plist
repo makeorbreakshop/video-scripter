@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly at 02:30 ET: archive every reading that is about to leave Postgres to Cloudflare R2,
+  read it back, and only then thin Postgres down to the serving resolution.
+
+  The two steps run in sequence in one job on purpose. Thinning is gated on the
+  readings_archive_days ledger (lib/readings/retention.ts isThinnable), so it can only ever
+  delete a day the archive step has already written, read back and matched; running it in the
+  same job means the gate is checked against a ledger written seconds earlier rather than a day
+  earlier. If archiving fails, thinning finds no verified day and deletes nothing — which is the
+  behaviour we want: disk pressure is preferable to data loss.
+
+  This job REPLACES com.mfm.video-scripter-rss-retention. That job thinned rss_samples on a
+  different rule (one row per video per day past 30 days) with no archive behind it, so leaving
+  both installed would mean two jobs deleting the same rows to two different policies. Retire it:
+
+    launchctl bootout gui/$UID/com.mfm.video-scripter-rss-retention
+    mv ~/Library/LaunchAgents/com.mfm.video-scripter-rss-retention.plist{,.retired-20260908}
+
+  Install:
+    cp scripts/launchd/com.mfm.video-scripter-archive-readings.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-archive-readings.plist
+
+  Check what it would do, without writing or deleting anything:
+    npx tsx scripts/archive-readings.ts --dry-run && npx tsx scripts/thin-readings.ts --dry-run
+    npm run verify:archive
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-archive-readings</string>
+  <!-- launchd starts with a minimal PATH, so npx cannot find node (exit 127). Match the other
+       video-scripter agents and put Homebrew's bin first. -->
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/archive-readings.ts &amp;&amp; npx tsx scripts/thin-readings.ts</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>2</integer><key>Minute</key><integer>30</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/archive-readings-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/archive-readings-launchd.err.log</string>
+</dict></plist>

@@ -51,11 +51,15 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "launchd:install": "tsx scripts/launchd/install-background-jobs.ts --write",
-    "launchd:check": "tsx scripts/launchd/install-background-jobs.ts --check"
+    "launchd:check": "tsx scripts/launchd/install-background-jobs.ts --check",
+    "verify:archive": "tsx scripts/verify-archive.ts",
+    "archive:readings": "tsx scripts/archive-readings.ts",
+    "thin:readings": "tsx scripts/thin-readings.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
     "@anthropic-ai/sdk": "^0.39.0",
+    "@aws-sdk/client-s3": "^3.1127.0",
     "@clerk/nextjs": "^7.8.4",
     "@distube/ytdl-core": "^4.16.12",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
@@ -135,6 +139,7 @@
     "node-cron": "^4.2.1",
     "openai": "^5.12.2",
     "p-limit": "^6.2.0",
+    "parquetjs-lite": "^0.8.7",
     "pg": "^8.16.3",
     "puppeteer": "^24.12.1",
     "puppeteer-extra": "^3.3.6",
