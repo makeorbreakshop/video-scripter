@@ -6,6 +6,95 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-08 (evidence pass) — v5.3 benchmarked: it holds
+
+The 2026-09-08 v5.3 entry below shipped with no gate run, because the database was IO-bound and
+the harness timed out and orphaned its own queries. All three gates have now been run. **v5.3
+holds. The pointer stays on v3.0** — moving it needs Brandon.
+
+**First, why the harness could not finish.** All three scripts set their timeout with
+`pool.on('connect', c => c.query('set statement_timeout = 600000'))`, which on the :6543 pooler
+lands after the queries it was meant to protect. So they ran at the 300 s role default, the
+client gave up first, and the backend kept reading — each attempt left work running and the next
+attempt piled on top. `backtest-baseline-trend.ts`, `check-band-calibration.ts` and
+`benchmark-scores.ts` are now on `makeTimedPool` (`begin; set local statement_timeout`), which
+the database itself enforces, and `lib/readings/timeout-guard.test.ts` covers them. The
+`--estimate-coverage` run that was killed at 45 minutes now finishes in **8m 45s**.
+
+### 1. Does the estimate slide work? (`backtest-baseline-trend.ts --estimate-coverage`, t=0.5)
+
+This is the only gate that actually tests v5.3. 4,000 targets, 3,947 with a measured C(0.5) to
+check against; the prior's sub-day readings are masked out and the estimate is compared to the
+truth it was denied.
+
+| mask | reached the estimate branch | medALE | bias | within ±0.3 | p90 |
+|---|---|---|---|---|---|
+| `>=1d` (interpolation still possible) | 505 | **0.0857** | −0.0813 | 98.4 % | 0.205 |
+| `>3d` (**the cell that validates the slide**) | 3,947 | **0.1834** | −0.1016 | 70.4 % | 0.521 |
+
+On the hard corpus — channels whose priors were first seen at day 17 or day 45, where v5.2
+returned `null` and the line simply was not drawn — the estimate lands within 18 % of the truth
+for the median video. That is a real answer where there was none.
+
+**But it is biased low by a consistent 10 %** (`exp(−0.1016) = 0.90`) in both masks, and
+**every one of the 4,452 estimates anchored on the 1d rung** — the ladder's other rungs were
+never used at t=0.5. The slide from day 1 down to day 0.5 rides the global `growthLog`, and
+`estimateSlideLog` only blends in a per-channel ratio once `MIN_SPAN_PRIORS = 5` priors have
+readings at both ends, which on this corpus is almost never. So the estimate is the global curve
+wearing the channel's level, and the global curve is 10 % too shallow across that half-day.
+Worth fixing, not a reason to hold v5.3: −10 % beats a blank.
+
+### 2. Does v5.3 regress anything? (`benchmark-scores.ts --params-version v3.0 --compare`)
+
+`docs/benchmarks/v5.3-pv3.0-2026-09-08.json` vs `docs/benchmarks/v3.0-2026-09-04.json`:
+**10 better / 32 wash / 0 worse → better**, exit 0.
+
+Read that with care. Every medALE delta is 0.000–0.002 and `n` is identical in all 42 cells, which
+is the point: `benchmark-scores.ts` replays through `core.scoreVideo`, the v3 mechanism, and is
+**structurally blind to `channelCurve`**. It cannot validate v5.3 — it can only prove v5.3 did not
+disturb the v3 path, and it does. The 10 `better` cells are all F1, from a params refit on today's
+larger train set (15,274 rows), not from v5.3. `no_change` and `pooled` are identical everywhere
+and `changed` is empty in all 42 cells, because packaging history starts 2026-09-01 and no such
+video has a day-30 truth yet (`cov full/none` = 0/693 at t=7 time).
+
+Stability is flat — median churn on unchanged-truth pairs moves by ≤0.015 in every row, both
+splits, e.g. time `1->2` 0.2101 vs 0.2034 ref, heldout `2->3` 0.1238 vs 0.1390 ref.
+
+### 3. Band calibration (`check-band-calibration.ts --params-version v3.1`)
+
+1,511 (video, age) checks over 500 held-out videos: **inner 50.2 % (target 50), outer 79.5 %
+(target 80)** — on target, and unchanged from v5.2's 50.7 / 79.6. Note the version: no v5.3 or
+v3.0 `score_params` row carries a `bands` key, so the run defaults to exiting; v3.1's
+2026-09-04 fit is the newest that has one. Sub-day stays the weak spot (n=13 at t=0.5, inner
+23.1 %), which is the same open finding the benchmark's own notes carry.
+
+### Leak check
+
+`select model_version, count(*) from video_scores group by 1` — v5.1-rss 486,309 / v5.2 148,912 /
+**v5.3 42,884** / v3.1-semantic-backfill 28,010 / v3.0 13,279 / v5.1-rss-final 4,508 /
+v5.3-final 259 / v3.0-final 153. The v5.3 rows are production output — `sql/scoring-v5-3.sql` is
+applied (`typical_kind`, `typical_anchor_age` exist) and the nightly scorer has been writing
+v5.3 since it shipped. Nothing in this run writes: all three scripts are read-only, verified by
+grep, and none of the 42,884 rows came from this worktree.
+
+### Verdict
+
+**v5.3 holds.** It regresses nothing, stability and calibration are unmoved, and its own
+mechanism is right to within 18 % on the corpus where its predecessor said nothing at all.
+
+### Still outstanding
+
+- The −10 % slide bias. Two candidate fixes, neither applied here (no model change without a
+  benchmark that can see the model): lower `MIN_SPAN_PRIORS` from 5 so the per-channel ratio
+  actually engages, or carry a fitted correction on the global `growthLog` below day 1 — which is
+  the same sub-day disagreement the benchmark's OPEN FINDING already describes from the other side.
+- **`benchmark-scores.ts` cannot see v5.3 and no gate in this repo can.** Until a v5 replay path
+  exists (`scoreV5` / `channelCurve` per the skill's "a benchmark calling `core.scoreVideo` does
+  not establish V5 accuracy"), `--compare` is a no-regression test and nothing more.
+- No `score_params` row for v5.3 (or v3.0) carries `bands`; `fit-forecast-bands.ts` has not been
+  run since 2026-09-04 on v3.1.
+- BASELINE.json still points at v3.0 / 2026-09-04. Moving it is Brandon's call.
+
 ## 2026-09-08 — v5.3: the channel curve estimates instead of going silent
 
 **The defect, in Brandon's words:** "we should always be able to estimate that line even if we
