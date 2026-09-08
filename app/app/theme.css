@@ -707,7 +707,12 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
   transform: translate(calc(var(--tr-i) * 9px), calc(var(--tr-i) * -6px)) rotate(calc(var(--tr-i) * 2.5deg));
   box-shadow: 0 0 0 2px var(--cs-surface), 0 2px 8px rgba(16, 19, 26, 0.20);
   transition: transform 280ms cubic-bezier(0.2, 0, 0, 1); }
+/* A running rotation is ONE unit, so left alone it fills the column like an upload, and the
+   hover fan then deals two column-wide cards half off the card — which is what read as two
+   cropped portraits. The unit takes the half a swap's unit takes, centred, and the fan deals
+   the second card into the empty half. Fixed 2026-09-08. */
 .tr-live { justify-content: center; }
+.tr-live .cs-vid { flex: 0 1 calc(50% - 8px); }
 .tr-live:hover .tr-deck .tr-deck-card, .tr-media:focus-visible .tr-deck .tr-deck-card {
   transform: translateX(calc((var(--tr-i) - (var(--tr-n) - 1) / 2) * (100% + 10px))); }
 .tr-title { text-decoration: none; }
