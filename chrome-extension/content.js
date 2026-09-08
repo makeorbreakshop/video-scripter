@@ -231,9 +231,17 @@
     if (observer) return;
     injectCss();
     loadTrackedCache().then(collectIds);
+    let firstMutationAt = 0;
     observer = new MutationObserver(() => {
+      const now = Date.now();
+      if (!firstMutationAt) firstMutationAt = now;
       clearTimeout(timer);
-      timer = setTimeout(collectIds, 1500);
+      const sinceFirst = now - firstMutationAt;
+      const wait = Math.max(0, Math.min(250, 1e3 - sinceFirst));
+      timer = setTimeout(() => {
+        firstMutationAt = 0;
+        collectIds();
+      }, wait);
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }

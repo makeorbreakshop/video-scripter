@@ -156,9 +156,18 @@ function startObserving() {
   if (observer) return;
   injectCss();
   loadTrackedCache().then(collectIds);
+  // Trailing debounce WITH a ceiling. YouTube's home and results pages keep mutating for
+  // seconds after navigation (tiles, ads, the sidebar), and a plain trailing timer restarts
+  // on every one of them, so badges could sit blank until the page went quiet. Now a pass
+  // runs 250ms after the last mutation, and never later than 1s after the first one.
+  let firstMutationAt = 0;
   observer = new MutationObserver(() => {
+    const now = Date.now();
+    if (!firstMutationAt) firstMutationAt = now;
     clearTimeout(timer);
-    timer = setTimeout(collectIds, 1500);
+    const sinceFirst = now - firstMutationAt;
+    const wait = Math.max(0, Math.min(250, 1000 - sinceFirst));
+    timer = setTimeout(() => { firstMutationAt = 0; collectIds(); }, wait);
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }

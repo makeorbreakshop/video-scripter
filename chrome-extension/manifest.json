@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ChannelSmith Channel Ingest",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Send YouTube channels and videos to ChannelSmith; optional passive logging of what you watch.",
   "permissions": [
     "storage",
