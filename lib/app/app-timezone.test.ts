@@ -45,7 +45,8 @@ describe('no hardcoded Eastern anywhere the app renders', () => {
   const CONVERTED = [
     'components/app/video-chart.tsx',
     'components/app/video-chart-plot.tsx',
-    'components/app/packaging-timeline.tsx',
+    'components/app/packaging-strip.tsx',
+  'components/app/packaging-chips.tsx',
     'app/app/videos/[id]/page.tsx',
     'app/app/inspiration/page.tsx',
   ];
