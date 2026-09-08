@@ -76,6 +76,13 @@ else, and it is not an outcome backtest.
 ### Outstanding before this ships
 
 - Run `--estimate-coverage` to completion and record medALE / bias / within-±0.3 at t=0.5.
+  It did not finish on 2026-09-08: the target query
+  (`with recent as ... join view_samples`) ran >45 min and was observed RESTARTING under
+  `pg_stat_activity` (a fresh `query_start` on a new pid while the client still waited), so it
+  never returns. Cancelled server-side. The database was IO-bound all session —
+  `wait_event = DataFileRead` on every backend — which is also what killed the two
+  `benchmark-scores` attempts. Re-run when the database is quiet, or precompute the target list
+  into a table first.
 - `check-band-calibration.ts --params-version v3.0` — not run.
 - Fit v5.3 params (`score_params` has no v5.3 row; the app needs `SCORE_READ_VERSION=v5.2` until
   it does) and rescore `--since 3`.
