@@ -35,6 +35,36 @@ The score is also no longer withheld below `AGE_FLOOR_HOURS`. G's reconstruction
 large and that is worth saying, but the way to say it is a word on the number (`confidence:
 'early'`), not a blank where the number goes.
 
+### Evidence, and what it is worth
+
+**NOT ACCEPTED YET.** The gates in the header could not be run on 2026-09-08, and one of them
+would not have measured this change even if it had.
+
+**`benchmark-scores.ts` is blind to v5.3, structurally.** It replays `core.scoreVideo` — the v3
+mechanism — not `scoreV5`, and it never calls `channelCurve`. A `--compare` against
+`v3.0-2026-09-04` is therefore a wash BY CONSTRUCTION: it cannot show the sub-day coverage this
+change adds, and a wash from it is evidence of no leak into `core`, not evidence of accuracy. Two
+attempts also failed to complete: the 18-month population query over `view_snapshots` ran past
+600s both times (the pool's `set statement_timeout` is issued on the `connect` event and does not
+reliably beat the first statement, so it never fired). Cells before/after: **none measured**.
+
+**The validation that does bear on the change** is new:
+`backtest-baseline-trend.ts --estimate-coverage`. On channels that DO have launch samples, hide
+every prior reading under a day — the exact starvation the rest of the corpus is in — and compare
+the resulting ESTIMATE of C(0.5) against the C(0.5) those channels can actually measure:
+`err = log(C_est / C_measured)`, reported as medALE, signed bias, and the share inside ±0.3 log.
+Same priors, same kernel, same weights, one input removed; it measures the SLIDE and nothing
+else, and it is not an outcome backtest.
+
+### Outstanding before this ships
+
+- Run `--estimate-coverage` to completion and record medALE / bias / within-±0.3 at t=0.5.
+- `check-band-calibration.ts --params-version v3.0` — not run.
+- Fit v5.3 params (`score_params` has no v5.3 row; the app needs `SCORE_READ_VERSION=v5.2` until
+  it does) and rescore `--since 3`.
+- Apply `sql/scoring-v5-3.sql` — NOT applied.
+- Fix the harnesses' `statement_timeout`: set it in the connection string, not on `connect`.
+
 ## 2026-09-07 (review pass) — v5.2 corrections: k = 1.5, and rows that say which math wrote them
 
 Four things the review found, all fixed on `scoring/v5.2-cadence`.
