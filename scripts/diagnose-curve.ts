@@ -10,12 +10,16 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import {
-  bucketFor, fittedBuckets, growthExponent, MODEL_VERSION, type GlobalParams, type Snapshot,
+  bucketFor, fittedBuckets, growthExponent, MODEL_VERSION as SHIPPED, type GlobalParams, type Snapshot,
 } from '../lib/scoring/core';
 import { logToRef, growthLog } from '../lib/scoring/growth';
 import { channelCurve, contributionAt, sameAgeTolerance, scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import { expectedAtAge } from '../lib/admin/video-curve';
 import { longformSql } from '../lib/scoring/longform';
+
+// --params-version lets the diagnostic run on a candidate build before that version has a fit,
+// which is exactly when the curve most needs looking at.
+const MODEL_VERSION = (() => { const i = process.argv.indexOf('--params-version'); return i >= 0 ? process.argv[i + 1] : SHIPPED; })();
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const q = async (sql: string, p?: any[]): Promise<any[]> => (await pool.query(sql, p)).rows as any[];
