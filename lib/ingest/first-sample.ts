@@ -8,6 +8,7 @@ import { broadcastMetadata } from '../youtube/broadcast';
 // implied past (lib/app/chart-series.ts) covers the launch we could not have seen; this covers
 // the part we could.
 import { clampCount } from '../nightly/tracking-core';
+import { seriesDirtyWrite } from '../readings/series-store';
 
 export interface Write { sql: string; params: any[] }
 
@@ -50,6 +51,10 @@ export function ingestWrites(item: any, tier: number, at: Date): Write[] {
           values ($1, $2, current_date + 1) on conflict (video_id) do nothing`,
     params: [item.id, tier],
   });
+  // The sample and the snapshot above make this video's series file stale, so the rebuild is
+  // queued in the same list of writes the caller is already executing.
+  const dirty = seriesDirtyWrite([item.id]);
+  if (dirty) out.push(dirty);
   return out;
 }
 

@@ -15,6 +15,7 @@ import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 import { classifyForInsert, skipForInsert } from '../ingest/classify';
 import { firstSampleWrite, broadcastMetadataWrite } from '../ingest/first-sample';
+import { SERIES_DIRTY_MARK_SQL } from '../readings/series-store';
 import { refreshChannelStats } from './channel-stats';
 import { revalidateChannel } from './revalidate';
 
@@ -420,6 +421,8 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
       if (broadcast) await q(broadcast.sql, broadcast.params);
       const sample = firstSampleWrite(v, new Date());
       if (sample) await q(sample.sql, sample.params).catch(() => {});
+      // This video now has a reading; queue its series file for rebuild.
+      await q(SERIES_DIRTY_MARK_SQL, [[v.id]]).catch(() => {});
       await q(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
          values ($1, current_date, $2, $3, $4, greatest(0, current_date - $5::date))

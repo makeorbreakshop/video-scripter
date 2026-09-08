@@ -2,6 +2,8 @@
 import { unstable_cache } from 'next/cache';
 import { tableFromRows, type BandTable } from '../scoring/bands';
 import { q, one } from './db';
+import { readSeriesFile, noteSeriesRead } from '../readings/series-store';
+import { seriesRss } from '../readings/series';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
 import { scoreParamsQuery } from '../app/score-version';
@@ -311,15 +313,40 @@ export type VideoPageData = {
   bands: BandTable | null;
 };
 
-export async function videoPage(id: string): Promise<VideoPageData> {
-  const [video, snapshots, samples, rss, thumbs, titles, score, params] = await Promise.all([
-    one<any>(
-      `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.like_count,
-              v.comment_count, v.duration, v.metadata, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
-              p.priority_tier, p.last_tracked, p.next_track_date
-       from videos v left join view_tracking_priority p on p.video_id = v.id where v.id = $1`,
-      [id]
-    ),
+/**
+ * The five reads that make up a video's drawn line and its packaging markers, from the R2 series
+ * file when there is one (lib/readings/series.ts) and from Postgres when there is not.
+ *
+ * This is the whole point of the columnar split: Postgres holds what the product DECIDES with
+ * (the score, the fitted params, the bands — small, indexed, changing hourly), R2 holds what it
+ * DRAWS. A hit here removes three range scans over view_snapshots, view_samples and rss_samples
+ * from every page view; a miss falls back and says so, so the fallback rate is measurable.
+ */
+async function videoSeriesParts(id: string): Promise<Pick<VideoPageData, 'snapshots' | 'samples' | 'rss' | 'thumbs' | 'titles'>> {
+  // The kill switch. SERIES_DISABLE=1 sends every read back to Postgres — the rollback if a
+  // bad backfill ever ships, and the control arm of the equality test.
+  const file = process.env.SERIES_DISABLE === '1' ? null : await readSeriesFile(id);
+  if (process.env.SERIES_DISABLE !== '1') noteSeriesRead(id, file);
+  if (file) {
+    return {
+      snapshots: file.snapshots.map((r) => ({
+        at: r.at, created_at: r.created_at, views: r.views,
+        days_since_published: r.days_since_published as number, like_count: r.like_count as number,
+        comment_count: r.comment_count as number,
+      })),
+      samples: file.samples.map((r) => ({ at: r.at, views: r.views })),
+      // The page's own predicate, kept in one place: lib/readings/series.ts seriesRss('page').
+      rss: seriesRss(file, 'page').map((r) => ({
+        at: r.at, views: r.views as number,
+        ...(r.timeBasis ? { timeBasis: r.timeBasis } : {}),
+        ...(r.receivedAt ? { receivedAt: r.receivedAt } : {}),
+      })),
+      thumbs: file.thumbs.map((t) => ({ version: t.version, first_seen: t.first_seen, last_checked: t.last_checked as string,
+        sha256: t.sha256, phash: t.phash, r2_uploaded_at: t.r2_uploaded_at })),
+      titles: file.titles.map((t) => ({ version: t.version, title: t.title, first_seen: t.first_seen })),
+    };
+  }
+  const [snapshots, samples, rss, thumbs, titles] = await Promise.all([
     q<any>(
       `select (snapshot_date::timestamptz + interval '12 hours') as at, created_at, view_count as views,
               days_since_published, like_count, comment_count
@@ -336,6 +363,20 @@ export async function videoPage(id: string): Promise<VideoPageData> {
       [id]
     ),
     q<any>(`select version, title, first_seen from title_versions where video_id = $1 order by version`, [id]),
+  ]);
+  return { snapshots, samples, rss, thumbs, titles };
+}
+
+export async function videoPage(id: string): Promise<VideoPageData> {
+  const [video, parts, score, params] = await Promise.all([
+    one<any>(
+      `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.like_count,
+              v.comment_count, v.duration, v.metadata, v.thumbnail_url, v.format_type, v.topic_niche, v.is_short,
+              p.priority_tier, p.last_tracked, p.next_track_date
+       from videos v left join view_tracking_priority p on p.video_id = v.id where v.id = $1`,
+      [id]
+    ),
+    videoSeriesParts(id),
     one<OutlierRow>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),
     one<{ mult: Record<number, number>; longtail: { ages: number[]; mult: number[] } | null; bands: BandTable | null }>(
       ...scoreParamsQuery(`params->'mult' as mult, params->'longtail' as longtail, params->'bands' as bands`)
@@ -348,6 +389,6 @@ export async function videoPage(id: string): Promise<VideoPageData> {
         `select age_bucket, n, q10, q25, q50, q75, q90 from channel_forecast_bands
           where channel_id = $1 order by age_bucket`, [video.channel_id]))
     : null;
-  return { video, snapshots, samples, rss, thumbs, titles, score, mult: params?.mult ?? {},
+  return { video, ...parts, score, mult: params?.mult ?? {},
            longtail: params?.longtail ?? null, bands: chBands ?? params?.bands ?? null };
 }

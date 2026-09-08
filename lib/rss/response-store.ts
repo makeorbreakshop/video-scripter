@@ -1,5 +1,6 @@
 import type pg from 'pg';
 import { advanceResponse, assessResponse, type ResponseState, type FeedResponse } from './response-freshness';
+import { markSeriesDirty } from '../readings/series-store';
 export type RssSampleWrite = { video_id: string; at: string; views: number | null; likes: number | null };
 export const INSERT_RSS_SAMPLES_SQL = `insert into rss_samples (video_id, at, views, likes)
  select video_id, at, views, likes from jsonb_to_recordset($1::jsonb)
@@ -9,7 +10,12 @@ export const INSERT_RSS_SAMPLES_SQL = `insert into rss_samples (video_id, at, vi
  */
 export async function saveRssObservations(pool: pg.Pool, samples: RssSampleWrite[], responses: FeedResponse[]): Promise<number> {
   // A pre-upgrade pending buffer has no response evidence. Preserve its previous behavior.
-  if (!responses.length) return (await pool.query(INSERT_RSS_SAMPLES_SQL, [JSON.stringify(samples)])).rowCount ?? 0;
+  if (!responses.length) {
+    const n = (await pool.query(INSERT_RSS_SAMPLES_SQL, [JSON.stringify(samples)])).rowCount ?? 0;
+    // The series file for every video that just moved is now stale (lib/readings/series-store.ts).
+    await markSeriesDirty(pool, samples.map(s => s.video_id));
+    return n;
+  }
   const client = await pool.connect();
   try {
     await client.query('begin');
@@ -41,6 +47,9 @@ export async function saveRssObservations(pool: pg.Pool, samples: RssSampleWrite
       return m ? [{ ...s, ...m }] : [];
     });
     const result = await client.query(INSERT_TIMED_RSS_SQL, [JSON.stringify(kept)]);
+    // Inside the same transaction as the readings: either both land or neither does, so the
+    // queue can never miss a video whose readings committed.
+    await markSeriesDirty(client, kept.map(s => s.video_id), { transactional: true });
     await client.query('commit');
     return result.rowCount ?? 0;
   } catch (error) {

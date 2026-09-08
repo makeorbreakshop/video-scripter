@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Every 10 minutes: rebuild the per-video series files for the videos whose readings moved.
+
+  The ingest paths (scripts/rss-poll.ts, scripts/launch-track.ts, the nightly and channel
+  imports) do not write to R2 — they mark a row in `series_dirty` inside the transaction that
+  commits the reading (lib/readings/series-store.ts). This job is what drains that queue, so a
+  tick with 5,000 readings costs one R2 PUT per video that moved, not one per reading.
+
+  It backs off on its own if anything has been running in Postgres for over two minutes, and
+  each drain is a bounded number of index reads, so it is safe on the ten-minute cadence.
+
+  Install:
+    cp scripts/launchd/com.mfm.video-scripter-series-drain.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-series-drain.plist
+    launchctl kickstart -p gui/$UID/com.mfm.video-scripter-series-drain    # run once now
+
+  Dry run first:
+    npx tsx scripts/rebuild-series.ts --drain --dry-run
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-series-drain</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/rebuild-series.ts --drain --limit 4000</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartInterval</key><integer>600</integer>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/series-drain-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/series-drain-launchd.err.log</string>
+</dict></plist>

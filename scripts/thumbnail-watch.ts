@@ -26,6 +26,7 @@ import { longformSql } from '../lib/scoring/longform';
 import { recordTitleChange, recordTitleObservations } from '../lib/rss/title-change';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
+import { markSeriesDirty } from '../lib/readings/series-store';
 import {
   HOT_TARGETS_SQL,
   LONG_TAIL_TARGETS_SQL,
@@ -178,6 +179,8 @@ for (const group of chunk(targets, 50)) {
            values ($1,$2,$3,$4,$5,$6, case when $7 then now() end, $8) on conflict do nothing`,
           [id, version, sha, buf.length, path.relative(process.cwd(), file), phash, uploaded, etag]
         );
+        // A new thumbnail version is a new packaging marker on the chart's axis.
+        await markSeriesDirty(pool, [id]);
         if (version === 1) news++;
         else {
           changes++;

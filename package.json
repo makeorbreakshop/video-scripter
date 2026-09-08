@@ -54,7 +54,9 @@
     "launchd:check": "tsx scripts/launchd/install-background-jobs.ts --check",
     "verify:archive": "tsx scripts/verify-archive.ts",
     "archive:readings": "tsx scripts/archive-readings.ts",
-    "thin:readings": "tsx scripts/thin-readings.ts"
+    "thin:readings": "tsx scripts/thin-readings.ts",
+    "series:drain": "tsx scripts/rebuild-series.ts --drain",
+    "series:backfill": "tsx scripts/rebuild-series.ts --all --with-archive"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.15",
@@ -62,6 +64,7 @@
     "@aws-sdk/client-s3": "^3.1127.0",
     "@clerk/nextjs": "^7.8.4",
     "@distube/ytdl-core": "^4.16.12",
+    "@duckdb/node-api": "^1.5.5-r.4",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",

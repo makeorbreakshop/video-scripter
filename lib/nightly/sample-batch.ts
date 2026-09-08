@@ -1,3 +1,5 @@
+import { markSeriesDirty } from '../readings/series-store';
+
 /** One already-fetched API batch; the caller owns its transaction and retry. */
 export interface SampleWrite {
   videoId: string; sampledAt: Date; views: number; likes: number; comments: number;
@@ -32,5 +34,8 @@ export async function writeSampleBatch(client: BatchClient, rows: SampleWrite[])
     from jsonb_to_recordset($1::jsonb) as x(video_id text, phase text, next_check timestamptz,
       sampled_at timestamptz, views integer, prior_next_check timestamptz, prior_updated_at timestamptz)
     where s.video_id=x.video_id and s.next_check = x.prior_next_check and s.updated_at = x.prior_updated_at`, [payload]);
+  // Every video in the batch has a new reading, so its series file is stale. Same client, so
+  // the mark commits with the writes (lib/readings/series-store.ts: a queue, not a PUT).
+  await markSeriesDirty(client, rows.map(r => r.videoId), { transactional: true });
   return result.rowCount ?? 0;
 }

@@ -39,6 +39,7 @@ import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { reenter } from '../lib/nightly/launch-core';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../lib/rss/title-change';
+import { markSeriesDirty } from '../lib/readings/series-store';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -144,6 +145,9 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
   };
 
   written['rss_samples'] = await saveRssObservations(pool, b.samples, b.responses);
+  // saveRssObservations queues the videos whose readings moved; a title change moves the
+  // packaging markers the same chart draws, so those videos are queued here too.
+  await markSeriesDirty(pool, b.titleVersions.map((r: any) => r.video_id));
 
   await insert('title_versions',
     `insert into title_versions (video_id, version, title, first_seen, backfill)

@@ -9,6 +9,7 @@ import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-cor
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
 import { firstSampleWrite, broadcastMetadataWrite } from '../lib/ingest/first-sample';
+import { markSeriesDirty } from '../lib/readings/series-store';
 import { refreshChannelStatsSql } from '../lib/app/channel-stats';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
 
@@ -203,6 +204,8 @@ for (const group of chunk(newIds, 50)) {
         if (broadcast) await pool.query(broadcast.sql, broadcast.params);
         const sample = firstSampleWrite(v, new Date());
         if (sample) await pool.query(sample.sql, sample.params);
+        // This video now has a reading; queue its series file for rebuild.
+        await markSeriesDirty(pool, [v.id]);
       }
       await pool.query(
         `insert into view_snapshots (video_id, snapshot_date, view_count, like_count, comment_count, days_since_published)
