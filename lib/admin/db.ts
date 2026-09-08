@@ -139,9 +139,12 @@ export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg
  * the one being fixed. (Scripts on makeTimedPool are immune - their `set local` overrides the role
  * default - but most scripts are not on it.)
  *
- * So the real fix is a SEPARATE least-privilege role for the web app with its own role-level
- * timeout, and that is a decision, not a commit: it needs a new role + password and a Vercel
- * DATABASE_URL rotation. Until then this path runs at the role default and says so.
+ * DONE 2026-09-08: production DATABASE_POOLER_URL now connects as `channelsmith_app`, a
+ * separate login role (BYPASSRLS, all privileges on public, default privileges from postgres)
+ * with `alter role channelsmith_app set statement_timeout = '45s'`. Verified through the :6543
+ * pooler: `show statement_timeout` -> 45s and `pg_sleep(50)` is cancelled server-side. Pipeline
+ * scripts keep connecting as `postgres` with no cap. Local dev on DATABASE_URL still runs at the
+ * role default. New tables/functions created by `postgres` are granted automatically.
  */
 export async function q<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   const { rows } = await getPool().query(sql, params);
