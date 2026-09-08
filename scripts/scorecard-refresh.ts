@@ -7,11 +7,18 @@
 // TWO SOURCES, never mixed in a cell.
 //
 //   history    `video_score_history` -- the numbers the app actually put in front of Brandon.
-//              This is the one that matters. It also began on 2026-09-02, so a claim made at
-//              age 1 whose day-30 has since arrived would have to have been written before the
-//              table existed: measured 2026-09-08, the join returns ZERO rows and will keep
-//              returning zero until roughly 2026-10-02. It is written now so that it starts
-//              filling itself in without anyone remembering to come back.
+//              This is the one that matters, and TODAY IT IS EMPTY AND CANNOT FILL.
+//
+//              Two reasons, and the second is the one that needs a decision. (1) The table only
+//              began on 2026-09-02, so nothing in it is 30 days old yet. (2) The R2 readings
+//              archive shipped the same week with `historyDays: 14`
+//              (lib/readings/retention.ts): rows older than fourteen days are deleted from
+//              Postgres. A claim made at age t can only be graded once the video reaches day 30,
+//              which is 23-29 days after the claim was written -- so under a 14-day retention
+//              EVERY gradable claim has already been deleted by the time it becomes gradable.
+//              This source is a no-op until either `historyDays` rises past ~45 or this script
+//              learns to read the Parquet archive in the `channelsmith-readings` bucket.
+//              Measured 2026-09-08: the join returns 0 rows at every age.
 //   benchmark  the per-row dump from scripts/benchmark-scores.ts -- the REAL scorer
 //              (core.scoreVideo) replayed as of each age with everything after that instant
 //              hidden, against the same day-30 truth. Not the production write path, but the
@@ -119,8 +126,9 @@ async function fromHistory(): Promise<{ rows: ScorecardRow[]; note: string }> {
   if (!out.length) {
     return {
       rows: [],
-      note: `video_score_history begins 2026-09-02; no claim in it is yet 30 days old, so there is ` +
-            `nothing to grade. First rows expected ~2026-10-02.`,
+      note: `video_score_history has nothing gradable: it began 2026-09-02, and retention.historyDays ` +
+            `is 14 -- a claim becomes gradable ~23-29 days after it is written, by which time it has ` +
+            `been deleted. Needs historyDays >= ~45, or a reader for the R2 archive.`,
     };
   }
   await decorate(out);

@@ -60,12 +60,32 @@ if another heavy job is already running; every stage is spawned with a wall-cloc
 killed by process group, and every query on both sides runs under `set local statement_timeout`,
 so a killed stage cannot orphan a backend.
 
+**Two things the first gated run turned up, neither caused by the gating.**
+
+1. **`benchmark-scores.ts` silently excludes every video published in the last 12 months.** Its
+   population rule requires a `view_snapshots` row with `days_since_published <= 14`, and measured
+   2026-09-08: `--months 12` returns **0 videos**, `--months 18` returns 5,143. The early readings
+   for recent videos are in `view_samples` / `rss_samples` — which `records()` reads and the
+   ELIGIBILITY test does not. So the harness is benchmarking only the older half of the corpus, and
+   a 12-month window crashes on `new Date(NaN)` rather than saying so. Not fixed here: changing the
+   population changes every historical comparison, and that is its own decision.
+2. **`fit-forecast-bands.ts` now produces a degenerate table on a 12-month window** — 233 residuals,
+   all in the 21-day bucket, every age from 0.5 to 14 at n=0 — for the same reason. On a random
+   3,000-video sample of last-year videos with a day-30 truth, `view_snapshots` retains readings
+   only at ages 15–24 and 25+. The calibration gate refused to promote on it (inner 10.5 %,
+   outer 10.5 %, n=19), which is the machinery working.
+
 **The scorecard.** `scripts/scorecard-refresh.ts` grades old claims against the day-30 counts that
 settled them, by age, channel size, confidence word, `typical_kind` and packaging stratum, into
 the `scorecard` table; `/admin/scoring` reads it. Two sources, never mixed: `history`
 (`video_score_history` — what the app actually showed) and `benchmark` (the replay dumps).
-**History is empty and will be until ~2026-10-02**: the table began 2026-09-02, so no claim in it
-is yet 30 days old. The first real numbers are from the replay of 2026-09-08 (3,996 claims):
+**History is empty and, as things stand, cannot fill.** The table began 2026-09-02, so nothing in
+it is 30 days old yet — but the harder reason is that the R2 readings archive shipped the same week
+with `historyDays: 14` (`lib/readings/retention.ts`), and a claim made at age t only becomes
+gradable 23–29 days later, when the video reaches day 30. Under a fourteen-day retention every
+gradable claim has already been deleted by the time it is gradable. **The scorecard's real source
+needs `historyDays` raised to ~45, or a reader for the Parquet archive in `channelsmith-readings`.**
+That is a decision for Brandon, not a thing to change underneath the archive work. The first real numbers are from the replay of 2026-09-08 (3,996 claims):
 medALE 0.455 at t=0.5 falling to 0.039 at t=14, F1 0.42 rising to 0.91, and the confidence words
 ordered exactly as they should be (`early` 0.248 medALE / 0.60 F1, `confirmed` 0.048 / 0.90).
 
