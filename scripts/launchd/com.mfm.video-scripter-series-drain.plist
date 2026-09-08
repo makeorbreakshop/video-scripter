@@ -27,7 +27,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>npx tsx scripts/rebuild-series.ts --drain --limit 4000</string>
+    <string>npx tsx scripts/rebuild-series.ts --drain --limit 12000 --concurrency 48</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
   <key>StartInterval</key><integer>600</integer>

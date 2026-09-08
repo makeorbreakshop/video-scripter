@@ -30,7 +30,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>npx tsx scripts/rebuild-series.ts --all --with-archive</string>
+    <string>npx tsx scripts/rebuild-series.ts --all --with-archive --concurrency 48</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
   <key>StartCalendarInterval</key><dict><key>Hour</key><integer>4</integer><key>Minute</key><integer>0</integer></dict>
