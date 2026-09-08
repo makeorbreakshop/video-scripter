@@ -35,6 +35,23 @@ The score is also no longer withheld below `AGE_FLOOR_HOURS`. G's reconstruction
 large and that is worth saying, but the way to say it is a word on the number (`confidence:
 'early'`), not a blank where the number goes.
 
+### The case that started it, on real priors
+
+`npx tsx scripts/diagnose-curve.ts KFVqHUvp-0w --age 0.22 --params-version v5.2` — 3D Printing
+Nerd, five hours old, the video the v5.2 sub-day work was written against. Its fifteen priors were
+all first seen at day 17 or later, so nothing can be measured at hour five and nothing may be slid
+there under `SUBDAY_SLIDE_MAX_AGE`.
+
+| | v5.2 | v5.3 |
+|---|---|---|
+| C(0.22d) | null | 6,742, ESTIMATED from age 1.0d (n=15, neff=10.7, measuredShare 0) |
+| score | null | 3.38, confidence `early` |
+
+The old page-path number — `C(30) x exp(-logToRef(0.22))`, the line
+`lib/admin/video-curve.expectedAtAge` used to draw — is 5,147, a factor of 1.31 below the
+estimate. Both are the same growth curve; the difference is the lever arm. v5.3 anchors one rung
+away (day 1) instead of thirty days away, which is the whole reason the ladder is nearest-first.
+
 ### Evidence, and what it is worth
 
 **NOT ACCEPTED YET.** The gates in the header could not be run on 2026-09-08, and one of them
