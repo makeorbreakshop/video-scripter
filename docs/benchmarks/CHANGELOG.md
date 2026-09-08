@@ -6,6 +6,35 @@ no cell regressed past the threshold, and held-out band calibration
 (`npx tsx scripts/check-band-calibration.ts`) stayed within tolerance.
 The protocol lives in the `outlier-score` skill (`~/shared-memory/skills/outlier-score/SKILL.md`).
 
+## 2026-09-08 — v5.3: the channel curve estimates instead of going silent
+
+**The defect, in Brandon's words:** "we should always be able to estimate that line even if we
+don't have priors for that channel at that age. Something seems wrong." He is right.
+
+`channelCurve` returned `typical: null` at every age where fewer than three priors could
+CONTRIBUTE. In practice that is every age under about a day on any channel whose priors predate
+launch sampling (which began 2026-09-01): a prior has no reading in its own first hours, and the
+sub-day rule correctly refuses to stand a day-17 snapshot or a lifetime count in for hour five.
+The consequence was not a missing prior, it was a missing ANSWER — the video page's "typical for
+this channel" line began at day 1 with nothing to its left, and every sub-day score was null.
+
+But a channel that has a level at day 3 has a level at hour 12. The shape of the first day is
+what the global growth curve is FOR. Refusing to say so is not caution; it is silence wearing the
+same face as ignorance, and the reader cannot tell them apart.
+
+**The rule (v5.3).** Measured where measured — unchanged, and it still reports `measuredShare`.
+Otherwise ESTIMATED: read C at the nearest rung of a fixed ladder (`ALL_BUCKETS` + day 30 +
+`LONGTAIL_AGES`, nearest-first in log age) where the channel does have three contributions, and
+slide it to the target, `C(anchor) x exp(growthLog(anchor, target))`. The channel's own
+anchor→target ratio is blended in by n/(n+2) when at least five priors have a reading at BOTH
+ends, else the global shape. The result carries `kind`, `anchorAge` and `measuredShare = 0`, so
+the weaker claim is visible rather than hidden: dotted on the chart, `typical_kind` on the row.
+Null survives for exactly one case — a channel with no level at ANY age, i.e. no scored priors.
+
+The score is also no longer withheld below `AGE_FLOOR_HOURS`. G's reconstruction error there is
+large and that is worth saying, but the way to say it is a word on the number (`confidence:
+'early'`), not a blank where the number goes.
+
 ## 2026-09-07 (review pass) — v5.2 corrections: k = 1.5, and rows that say which math wrote them
 
 Four things the review found, all fixed on `scoring/v5.2-cadence`.

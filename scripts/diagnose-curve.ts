@@ -107,9 +107,10 @@ async function main() {
   const cT = channelCurve(curvePriors, age, P);
   const c30 = channelCurve(curvePriors, 30, P);
   console.log(`\n--- channelCurve ------------------------------------------------------------------`);
-  console.log(`C(${f(age, 3)}d) = ${f(cT.typical, 0)}   n=${cT.n} neff=${f(cT.neff, 2)} measuredShare=${f(cT.measuredShare, 2)}`);
+  console.log(`C(${f(age, 3)}d) = ${f(cT.typical, 0)}   n=${cT.n} neff=${f(cT.neff, 2)} measuredShare=${f(cT.measuredShare, 2)}` +
+    (cT.kind === 'estimated' ? `   [ESTIMATED from age ${f(cT.anchorAge, 3)}d -- n/neff describe THAT age]` : ''));
   console.log(`C(30)      = ${f(c30.typical, 0)}   n=${c30.n} neff=${f(c30.neff, 2)} measuredShare=${f(c30.measuredShare, 2)}`);
-  console.log(`  kinds at t: ${JSON.stringify(cT.contributions.reduce((a: any, c) => ((a[c.kind] = (a[c.kind] ?? 0) + 1), a), {}))}`);
+  console.log(`  kinds at ${cT.kind === 'estimated' ? 'the anchor' : 't'}: ${JSON.stringify(cT.contributions.reduce((a: any, c) => ((a[c.kind] = (a[c.kind] ?? 0) + 1), a), {}))}`);
 
   const pageTypical = expectedAtAge(c30.typical, P.mult as any, age, P.longtail as any);
   console.log(`\n--- lib/admin/video-curve.ts (what the video page draws) ---------------------------`);

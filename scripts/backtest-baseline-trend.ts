@@ -58,6 +58,91 @@ const paramRows = await q(`select params from score_params where model_version=$
 if (!paramRows.length) { console.error(`no score_params for ${PARAMS_VERSION}`); process.exit(1); }
 const params: GlobalParams = paramRows[0].params;
 
+// ============================================================ v5.3 estimate coverage (t=0.5)
+//
+//   npx tsx scripts/backtest-baseline-trend.ts --estimate-coverage [--params-version v3.0]
+//
+// THE QUESTION v5.3 has to answer. channelCurve now returns an ESTIMATE where it used to return
+// null: the channel's level read at the nearest ladder age it does have one at, slid to the
+// target along the global growth curve. Is that slide any good?
+//
+// It can be asked without waiting for outcomes, because a growing number of channels DO have
+// launch samples (5-minute sampling since 2026-08-01) and therefore a MEASURED C(0.5). On those
+// channels, hide every prior reading under a day -- exactly the starvation the rest of the
+// corpus is in -- and let v5.3 estimate C(0.5) from day 1 and up. Then compare:
+//
+//   err = log( C_estimated(0.5) / C_measured(0.5) )
+//
+// medALE, signed bias, and the share inside +-0.3 log (the prespecified band: a denominator
+// within ~35% either way, which at a 2x outlier threshold cannot flip a call on its own).
+// This measures the SLIDE and nothing else: same priors, same kernel, same weights, one input
+// removed. It is not an outcome backtest and does not claim to be.
+if (process.argv.includes('--estimate-coverage')) {
+  const { channelCurve, measuredCurveAt } = await import('../lib/scoring/curve');
+  const { loadCurvePriors } = await import('../lib/scoring/prior-load');
+  const T_EST = Number(arg('--t') ?? 0.5);
+  const BAND = Number(arg('--band') ?? 0.3);
+  const LIM = Number(arg('--limit') ?? 4000);
+
+  // Targets on channels whose PRIORS have sub-day readings: that is where a measured C(0.5)
+  // can exist at all. view_samples is the launch ladder; view_snapshots rarely lands under a day.
+  log(`estimate coverage at t=${T_EST}: targets on channels whose priors have sub-day samples`);
+  // Driven from view_samples (the launch ladder, running since 2026-08-01) rather than from a
+  // scan of every video: the sub-day readings are the scarce side, so they lead the plan.
+  const tgt: { id: string }[] = await q(
+    `with subday as (
+       select distinct p.channel_id, p.id
+         from view_samples s join videos p on p.id = s.video_id
+        where s.sampled_at >= '2026-08-01'
+          and s.sampled_at < p.published_at + interval '1 day'
+          and s.view_count > 0),
+     ch as (select channel_id from subday group by channel_id having count(*) >= 3)
+     select v.id from videos v join ch on ch.channel_id = v.channel_id
+      where ${longformSql('v')} and coalesce(v.privacy_status,'public')='public'
+      order by v.published_at desc limit $1`, [LIM]);
+  log(`candidate targets: ${tgt.length}`);
+
+  const errs: number[] = [];
+  const anchors = new Map<number, number>();
+  let measurable = 0, estimable = 0;
+  for (let i = 0; i < tgt.length; i += 200) {
+    const batch = tgt.slice(i, i + 200).map((r) => r.id);
+    const byVideo = await loadCurvePriors(q, batch);
+    for (const id of batch) {
+      const priors = byVideo.get(id) ?? [];
+      if (!priors.length) continue;
+      const truth = measuredCurveAt(priors, T_EST, params);
+      if (truth.typical == null) continue;      // no measured C(0.5) here: nothing to check against
+      measurable++;
+      // The starved channel: every prior reading under a day removed, lifetime kept. This is
+      // the exact state the rest of the corpus is in, reproduced on a channel we can check.
+      const starved = priors.map((p) => ({ ...p, samples: p.samples.filter((sm) => sm.day >= 1) }));
+      const est = channelCurve(starved, T_EST, params);
+      if (est.typical == null || est.kind !== 'estimated') continue;
+      estimable++;
+      anchors.set(est.anchorAge!, (anchors.get(est.anchorAge!) ?? 0) + 1);
+      errs.push(Math.log(est.typical / truth.typical));
+    }
+  }
+  const abs = errs.map(Math.abs);
+  const within = abs.filter((x) => x <= BAND).length;
+  console.log(`
+--- v5.3 estimate validation, t=${T_EST} (params ${PARAMS_VERSION}) ---`);
+  console.log(`channels with a MEASURED C(${T_EST}):        ${measurable}`);
+  console.log(`of those, v5.3 produced an ESTIMATE:      ${estimable}`);
+  console.log(`paired rows:                              ${errs.length}`);
+  if (errs.length) {
+    console.log(`medALE  |log(est/measured)|:             ${median(abs)!.toFixed(4)}`);
+    console.log(`bias     log(est/measured):              ${median(errs)!.toFixed(4)}`);
+    console.log(`within +-${BAND} log:                       ${within}/${errs.length} (${(100 * within / errs.length).toFixed(1)}%)`);
+    const s = [...abs].sort((a, b) => a - b);
+    console.log(`p90 ALE:                                  ${s[Math.floor(0.9 * (s.length - 1))].toFixed(4)}`);
+    console.log(`anchors chosen: ${[...anchors.entries()].sort((a, b) => b[1] - a[1]).map(([a, n]) => `${a}d=${n}`).join('  ')}`);
+  }
+  await pool.end();
+  process.exit(0);
+}
+
 type Snap = { day: number; views: number; at: number };
 
 log(`holdout: videos published ${FROM}..${TO} with an early (<=3d) snapshot and day-30 truth (limit ${LIMIT})`);
