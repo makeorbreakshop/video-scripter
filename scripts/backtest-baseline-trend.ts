@@ -36,6 +36,7 @@ import {
   type GlobalParams,
 } from '../lib/scoring/core';
 import { longformSql } from '../lib/scoring/longform';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 
 const arg = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const FROM = arg('--from') ?? '2025-07-01';
@@ -60,8 +61,12 @@ const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.que
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
-const paramRows = await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [PARAMS_VERSION]);
-if (!paramRows.length) { console.error(`no score_params for ${PARAMS_VERSION}`); process.exit(1); }
+/** One specific score_params row (a candidate under gate), instead of the newest active one. */
+const PARAMS_ID = arg('--params-id') ? Number(arg('--params-id')) : null;
+const paramRows = PARAMS_ID
+  ? await q(`select params from score_params where id = $1`, [PARAMS_ID])
+  : await q(activeParamsQuery('params'), [PARAMS_VERSION]);
+if (!paramRows.length) { console.error(`no score_params for ${PARAMS_ID ?? PARAMS_VERSION}`); process.exit(1); }
 const params: GlobalParams = paramRows[0].params;
 
 // ============================================================ v5.3 estimate coverage (t=0.5)

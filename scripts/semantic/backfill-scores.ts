@@ -15,6 +15,7 @@
 // when --write is present. Does not import or use the Supabase REST client.
 
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 
 import fs from 'fs';
@@ -93,7 +94,7 @@ function saveCheckpoint(state: Checkpoint) {
 
 async function params(): Promise<GlobalParams> {
   const rows = await q(
-    `select params from score_params where model_version = $1 order by fitted_at desc limit 1`,
+    activeParamsQuery('params'),
     [opts.paramsVersion]
   );
   if (!rows.length) throw new Error(`no score_params found for ${opts.paramsVersion}; run the scorer fit first`);

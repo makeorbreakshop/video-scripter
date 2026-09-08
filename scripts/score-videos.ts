@@ -1,5 +1,9 @@
 // Model v5 scorer with versioned RSS observation contract. Direct Postgres only.
-//   npx tsx scripts/score-videos.ts --fit        refit global params from the last 12 months (nightly)
+//   npx tsx scripts/score-videos.ts --fit        refit global params from the last 12 months (nightly).
+//                                                Since 2026-09-08 the fit writes a CANDIDATE row:
+//                                                it is NOT live. scripts/weekly-refit.ts runs the
+//                                                gates and is the only thing that promotes one to
+//                                                active. Scoring always reads the newest ACTIVE row.
 //   npx tsx scripts/score-videos.ts [--all]      score videos published <=60d whose latest snapshot/sample
 //                                                is newer than their stored score (hourly); --all covers all ages
 //   --all --force                             explicitly rewrite every selected row; not for resumable loops
@@ -37,6 +41,7 @@ import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 import { readScoreCheckpoint, validateScoreCheckpointScope, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
 
 const FIT = process.argv.includes('--fit');
@@ -204,7 +209,16 @@ async function fit() {
     minRows: LAUNCH_MIN_ROWS, since: LAUNCH_FIT_SINCE, fittedAt: new Date().toISOString(),
   };
   log(`fit: launch ladder ${HOUR_BUCKETS.map((b) => `${Math.round(b * 24)}h x${launch.mult[b] != null ? Math.exp(launch.mult[b]).toFixed(2) : '-'} (n=${launch.n[b]}${launch.carried.includes(b) ? ',carried' : ''})`).join('  ')}`);
-  await pool.query(`insert into score_params (model_version, n_videos, params) values ($1, $2, $3)`, [MODEL_VERSION, ids.length, JSON.stringify(params)]);
+  // CANDIDATE, not live. Before 2026-09-08 this insert was the promotion: the row was the newest
+  // for its version and therefore what the next scorer run read, with no benchmark in between.
+  // The nightly fit now only proposes; scripts/weekly-refit.ts is the only thing that promotes.
+  const ins = await pool.query(
+    `insert into score_params (model_version, n_videos, params, status, status_at, status_note)
+     values ($1, $2, $3, 'candidate', now(), $4) returning id`,
+    [MODEL_VERSION, ids.length, JSON.stringify(params), 'nightly --fit; awaiting weekly-refit gates']
+  );
+  log(`fit: score_params id=${ins.rows[0].id} status=candidate (not live until weekly-refit promotes it)`);
+  if (process.env.WEEKLY_REFIT_EMIT) console.log(`::params-id=${ins.rows[0].id}`);
   log(`fit: stored params from ${fitRows.length} (video, bucket) rows; mult=${JSON.stringify(Object.fromEntries(Object.entries(params.mult).map(([k, v]) => [k, Number(Math.exp(v).toFixed(2))])))}`);
   const lt = params.longtail;
   log(`fit: longtail ${lt.ages.map((a, i) => `${a}d x${lt.mult[i].toFixed(2)} (n=${lt.n[i]})`).join('  ')}`);
@@ -455,9 +469,16 @@ async function channelsSlowerThan(days: number): Promise<string[]> {
   return rows.map((r: any) => r.channel_id as string);
 }
 
+// The scorer reads the newest ACTIVE row (lib/scoring/params-status.ts). A nightly --fit writes
+// a CANDIDATE, so a fit no longer changes what production scores with; scripts/weekly-refit.ts
+// promotes one only after the gates pass.
 async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
-  const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [version]);
-  if (!p.length) { console.error(`no score_params for ${version}; run --fit first`); process.exit(1); }
+  const p = await q(activeParamsQuery('params'), [version]);
+  if (!p.length) {
+    console.error(`no ACTIVE score_params for ${version}; run --fit then scripts/weekly-refit.ts, ` +
+                  `or promote a row by hand (update score_params set status='active' where id=...)`);
+    process.exit(1);
+  }
   return p[0].params as GlobalParams;
 }
 

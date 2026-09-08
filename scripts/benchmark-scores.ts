@@ -31,6 +31,7 @@ import {
   MODEL_VERSION, DAY_BUCKETS, type GlobalParams, type FitRow, type Snapshot,
 } from '../lib/scoring/core';
 import { heldOut } from '../lib/scoring/bands';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 import { longformSql } from '../lib/scoring/longform';
 import {
   buildReport, reportMarkdown, compareMarkdown, compareReports, PACKAGING_COVERAGE_START,
@@ -55,6 +56,10 @@ const WRITE_BASELINE = has('--baseline');
 // fitted launch ladder, and the sub-day cells move for a reason that has nothing to do with
 // the change under test.
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
+// --params-id <id>: read one specific score_params row instead of the newest ACTIVE one for the
+// version. This is how scripts/weekly-refit.ts points the harness at the CANDIDATE it is judging;
+// without it the run would silently score the champion's tables and call it a candidate run.
+const PARAMS_ID = arg('--params-id') ? Number(arg('--params-id')) : null;
 const AGES = [0.5, 1, 2, 3, 5, 7, 14];
 const SPLITS = ['heldout', 'time'];
 const HOLDOUT_SHARE = Number(arg('--holdout') ?? 1 / 16);
@@ -178,10 +183,12 @@ const testPop = pop.filter((v) => splitOf(v).length > 0);
 log(`train ${trainPop.length}  test ${testPop.length} (heldout ${testPop.filter((v) => isHeld(v.id)).length}, time ${testPop.filter((v) => v.pub > TIME_CUT).length})`);
 
 // -------------------------------------------------------------- refit params
-const stored: GlobalParams = (await q(
-  `select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [PARAMS_VERSION]
-))[0].params;
-log(`stored params (long tail + launch ladder) from score_params model_version=${PARAMS_VERSION}`);
+const storedRows = PARAMS_ID
+  ? await q(`select params from score_params where id = $1`, [PARAMS_ID])
+  : await q(activeParamsQuery('params'), [PARAMS_VERSION]);
+if (!storedRows.length) { console.error(`no score_params row (${PARAMS_ID ?? PARAMS_VERSION})`); process.exit(1); }
+const stored: GlobalParams = storedRows[0].params;
+log(`stored params (long tail + launch ladder) from score_params ${PARAMS_ID ? `id=${PARAMS_ID}` : `active ${PARAMS_VERSION}`}`);
 
 const shuffle = <T,>(xs: T[], seed = 42): T[] => {
   const a = [...xs]; let s = seed;

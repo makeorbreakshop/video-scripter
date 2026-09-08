@@ -25,6 +25,7 @@
 //
 // Usage: npx tsx scripts/backtest-baseline.ts [--from 2025-07-01] [--to 2025-08-31] [--limit 8000] [--min-prior-age 2]
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
 import {
@@ -49,7 +50,7 @@ const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3,
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
-const params: GlobalParams = (await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [MODEL_VERSION]))[0].params;
+const params: GlobalParams = (await q(activeParamsQuery('params'), [MODEL_VERSION]))[0].params;
 
 type Snap = { day: number; views: number; at: number }; // at = epoch ms of the snapshot
 

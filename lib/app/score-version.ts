@@ -8,9 +8,14 @@
 // unfiltered and the flip to v5 is atomic with the rescore. What still needs a version is
 // `score_params`, which has one row per fit per version. That is what this resolves.
 //
+// Since 2026-09-08 the row also has to be ACTIVE (lib/scoring/params-status.ts): a nightly fit
+// writes a candidate, and only scripts/weekly-refit.ts promotes one. The app never reads a fit
+// that has not passed the gates.
+//
 // SCORE_READ_VERSION exists as an escape hatch: point the app back at a previous version's
 // params without a deploy if a rescore has to be rolled back.
 import { MODEL_VERSION } from '../scoring/core';
+import { activeParamsQuery } from '../scoring/params-status';
 
 /** The model version the app should read params for. Env override, else the shipped model. */
 export function scoreReadVersion(env: NodeJS.ProcessEnv = process.env): string {
@@ -26,8 +31,5 @@ export function scoreParamsQuery(
   cols: string,
   env: NodeJS.ProcessEnv = process.env
 ): [string, [string]] {
-  return [
-    `select ${cols} from score_params where model_version = $1 order by fitted_at desc limit 1`,
-    [scoreReadVersion(env)],
-  ];
+  return [activeParamsQuery(cols), [scoreReadVersion(env)]];
 }

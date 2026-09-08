@@ -18,6 +18,7 @@
 //   7 regression to v4 at t=30
 //   8 gates -- reported, not computed here (see the leak query in the outlier-score skill)
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 import fs from 'node:fs';
 import path from 'node:path';
@@ -158,7 +159,7 @@ const allIds = [...new Set([...testIds, ...otherIds])];
 const [rec, metas] = await Promise.all([records(allIds), metaOf(allIds)]);
 log(`records: ${rec.size} videos with readings`);
 
-const stored = await q(`select params, fitted_at from score_params where model_version = $1 order by fitted_at desc limit 1`, [PARAMS_VERSION]);
+const stored = await q(activeParamsQuery('params, fitted_at'), [PARAMS_VERSION]);
 if (!stored.length) { console.error(`no score_params for ${PARAMS_VERSION}; run scripts/score-videos.ts --fit`); process.exit(1); }
 const params: GlobalParams = stored[0].params;
 log(`params from score_params ${PARAMS_VERSION} fitted ${stored[0].fitted_at}`);

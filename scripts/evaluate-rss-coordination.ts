@@ -1,6 +1,7 @@
 // Read-only paired evaluation of the v5.0 two-source reader against v5.1 RSS observations.
 // Uses the same targets, priors, parameters and evaluation clock for both arms.
 import dotenv from 'dotenv'; dotenv.config({ path: '.env.local' });
+import { activeParamsQuery } from '../lib/scoring/params-status';
 import pg from 'pg';
 import {
   MODEL_VERSION, PRIOR_WINDOW, PRIOR_STALE_DAYS, bucketFor, bucketTolerance, fittedBuckets,
@@ -82,7 +83,7 @@ const [oldRows, oldMs] = await elapsed(() => chunked(
 const [newRows, newMs] = await elapsed(() => chunked(OBSERVATION_RECORDS_SQL, allIds));
 const metaRows = await chunked(`select id, coalesce(view_count,0) views, extract(epoch from(now()-published_at))/86400.0 age from videos where id=any($1)`, allIds);
 const truthRows = await chunked(`select distinct on(video_id) video_id,view_count from view_snapshots where video_id=any($1) and days_since_published between 27 and 33 and view_count>0 order by video_id,abs(days_since_published-30)`, allIds);
-const paramsRows = await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
+const paramsRows = await q(activeParamsQuery('params'), [MODEL_VERSION]);
 if (!paramsRows.length) throw new Error(`missing ${MODEL_VERSION} parameters`);
 const params = paramsRows[0].params as GlobalParams;
 const oldRec = oldRecords(oldRows);

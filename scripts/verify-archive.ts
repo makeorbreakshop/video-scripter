@@ -15,6 +15,7 @@
 //
 // Direct Postgres only (2026-08-31 org-wide egress rule).
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
 import {
@@ -182,7 +183,7 @@ for (const id of chartIds) {
 // retention policy keeps both by construction, so this check is what proves the construction.
 
 const [paramsRow] = await q<{ params: GlobalParams }>(
-  `select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
+  activeParamsQuery('params'), [MODEL_VERSION]);
 
 const sample = await q<{ id: string; published_at: string }>(
   `select v.id, v.published_at from videos v

@@ -7,6 +7,7 @@
 // C(30) against lib/admin/video-curve.ts's expectedAtAge(C(30), mult, t) -- the number the video
 // page draws. The two must agree; when they do not, this is the file that says why.
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
 import {
@@ -48,7 +49,7 @@ async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
 async function main() {
   if (!VIDEO) { console.error('usage: diagnose-curve.ts <videoId> [--age <days>]'); process.exit(1); }
   const [params] = await q(
-    `select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
+    activeParamsQuery('params'), [MODEL_VERSION]);
   if (!params) { console.error(`no score_params for ${MODEL_VERSION}`); process.exit(1); }
   const P: GlobalParams = params.params;
 

@@ -10,7 +10,8 @@
 //
 // Two fits from the same residuals:
 //   global   -> ONE new score_params row: the current params, unchanged, plus a `bands` key.
-//               The scorer reads the newest row, so its behaviour does not move.
+//               The row is written as a CANDIDATE (2026-09-08), so the scorer -- which reads the
+//               newest ACTIVE row -- does not move until weekly-refit promotes it.
 //   channel  -> channel_forecast_bands, for every channel with at least MIN_CHANNEL_VIDEOS
 //               day-30 videos, already shrunk toward the global fit by n (shrinkToGlobal).
 // A deterministic share of videos is HELD OUT of both fits (bands.ts heldOut) so
@@ -21,6 +22,7 @@ import { makeTimedPool } from '../lib/admin/db';
 import { longformSql } from '../lib/scoring/longform';
 import { chunk } from '../lib/nightly/tracking-core';
 import { MODEL_VERSION, logMultTo30, type GlobalParams } from '../lib/scoring/core';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 import { fitBands, shrinkToGlobal, heldOut, BAND_AGES, QUANTILE_KEYS, SHRINK_K, MIN_CHANNEL_BUCKET_N, type BandRow, type BandTable } from '../lib/scoring/bands';
 
 const arg = (n: string) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : null; };
@@ -40,8 +42,14 @@ const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2,
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]) => (await pool.query(sql, params)).rows as any[];
 
-const p = await q(`select params from score_params where model_version = $1 order by fitted_at desc limit 1`, [MODEL_VERSION]);
-if (!p.length) { console.error('no score_params; run score-videos --fit first'); process.exit(1); }
+// Read the LIVE params to measure the residuals against; write the bands onto a CANDIDATE row.
+// --from-params <id> instead reads a specific row, which is how weekly-refit fits bands for the
+// candidate it is about to judge rather than for the champion.
+const FROM_PARAMS = arg('--from-params');
+const p = FROM_PARAMS
+  ? await q(`select params from score_params where id = $1`, [Number(FROM_PARAMS)])
+  : await q(activeParamsQuery('params'), [MODEL_VERSION]);
+if (!p.length) { console.error('no score_params to fit bands from; run score-videos --fit first'); process.exit(1); }
 const params: GlobalParams = p[0].params;
 
 // Only videos that actually have a day-30 truth: everything else has nothing to be wrong about.
@@ -144,11 +152,14 @@ if (DRY) { log('dry run: not written'); await pool.end(); process.exit(0); }
 // The current params verbatim plus the band table: the scorer reads the newest row, so nothing
 // it depends on moves.
 const next = { ...params, bands };
-await pool.query(
-  `insert into score_params (model_version, n_videos, params) values ($1, $2, $3)`,
-  [MODEL_VERSION, withTruth, JSON.stringify(next)]
+const insBands = await pool.query(
+  `insert into score_params (model_version, n_videos, params, status, status_at, status_note)
+   values ($1, $2, $3, 'candidate', now(), $4) returning id`,
+  [MODEL_VERSION, withTruth, JSON.stringify(next), 'fit-forecast-bands; awaiting weekly-refit gates']
 );
-log(`stored bands on a new ${MODEL_VERSION} score_params row from ${withTruth} videos / ${rows.length} residuals`);
+log(`stored bands on a new ${MODEL_VERSION} score_params row id=${insBands.rows[0].id} status=candidate ` +
+    `from ${withTruth} videos / ${rows.length} residuals`);
+if (process.env.WEEKLY_REFIT_EMIT) console.log(`::params-id=${insBands.rows[0].id}`);
 
 // One statement per batch of channels rather than per row: 718 channels x 10 buckets.
 let written = 0;

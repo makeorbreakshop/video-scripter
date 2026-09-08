@@ -4,6 +4,7 @@
 // lib/scoring/core functions the hourly job uses. Compare medALE to the harness (v3 time split: .30/.19/.10).
 // Usage: npx tsx scripts/validate-scoring.ts
 import dotenv from 'dotenv';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
 import { scoreVideo, bucketFor, GlobalParams, MODEL_VERSION, Snapshot, median } from '../lib/scoring/core';
@@ -15,7 +16,7 @@ import { longformSql } from '../lib/scoring/longform';
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000 });
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 
-const params: GlobalParams = (await q(`select params from score_params where model_version=$1 order by fitted_at desc limit 1`, [MODEL_VERSION]))[0].params;
+const params: GlobalParams = (await q(activeParamsQuery('params'), [MODEL_VERSION]))[0].params;
 
 // holdout videos: published 2025-07-20..2025-08-15 (inside the fit window: a port check, not an out-of-sample test — the harness did that), non-short, with day-30 truth
 const vids: { id: string; channel_id: string; published_at: string }[] = await q(

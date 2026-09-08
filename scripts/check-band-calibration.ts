@@ -14,6 +14,7 @@ import { longformSql } from '../lib/scoring/longform';
 import { chunk } from '../lib/nightly/tracking-core';
 import { MODEL_VERSION, logMultTo30, type GlobalParams } from '../lib/scoring/core';
 import { expectedAt } from '../lib/admin/video-curve';
+import { activeParamsQuery } from '../lib/scoring/params-status';
 import {
   forecastBand, fitTrajectory, trajectoryFactor, tableFromRows, heldOut, BAND_AGES,
   TRAJECTORY_RMS_SCALE, TRAJECTORY_SPAN_FULL,
@@ -48,6 +49,8 @@ const BRIEF = process.argv.includes('--brief');
  * baseline-only change does not touch.
  */
 const PARAMS_VERSION = arg('--params-version') ?? MODEL_VERSION;
+/** One specific score_params row (a candidate under gate), instead of the newest active one. */
+const PARAMS_ID = arg('--params-id') ? Number(arg('--params-id')) : null;
 // Heavy analysis queries run through makeTimedPool: each pool.query becomes
 // `begin; set local statement_timeout = N; ...; commit`. The old
 // `pool.on('connect', c => c.query('set statement_timeout = ...'))` below it did nothing on the
@@ -61,14 +64,13 @@ const q = async (sql: string, params?: any[]) => (await pool.query(sql, params))
 // The nightly `--fit` rewrites score_params WITHOUT bands (fit-forecast-bands.ts is a separate
 // job that writes its own row), so "the newest row for this version" is usually band-less and
 // this check would exit before doing anything. Take the newest row that actually carries bands.
-const p = await q(
-  `select params, fitted_at from score_params where model_version=$1 and params ? 'bands'
-    order by fitted_at desc limit 1`, [PARAMS_VERSION]
-);
-if (!p.length) { console.error(`no score_params row for ${PARAMS_VERSION} carries bands; run fit-forecast-bands first`); process.exit(1); }
+const p = PARAMS_ID
+  ? await q(`select params, fitted_at from score_params where id = $1 and params ? 'bands'`, [PARAMS_ID])
+  : await q(activeParamsQuery('params, fitted_at', "params ? 'bands'"), [PARAMS_VERSION]);
+if (!p.length) { console.error(`no score_params row for ${PARAMS_ID ?? PARAMS_VERSION} carries bands; run fit-forecast-bands first`); process.exit(1); }
 const params: GlobalParams = p[0].params;
 const globalBands: BandTable = (params as any).bands;
-log(`bands from score_params model_version=${PARAMS_VERSION} fitted_at=${new Date(p[0].fitted_at).toISOString()}`);
+log(`bands from score_params ${PARAMS_ID ? `id=${PARAMS_ID}` : `active ${PARAMS_VERSION}`} fitted_at=${new Date(p[0].fitted_at).toISOString()}`);
 
 const chRows = await q(`select channel_id, age_bucket, n, q10, q25, q50, q75, q90 from channel_forecast_bands`);
 const chTables = new Map<string, BandTable>();
