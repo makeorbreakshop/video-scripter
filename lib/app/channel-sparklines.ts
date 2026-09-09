@@ -4,13 +4,14 @@
 // the channel's typical day-30 views as of each video's publish date. Read in publish order
 // it IS the channel-level line.
 //
-// ONE set-based query for the whole list — not one per row, and not a LATERAL per channel.
-// The date range is what makes it cheap: `channel_id = any(...) and published_at >= …` is a
-// single ranged walk of idx_videos_channel_published_longform, so the number of rows read
-// tracks how much the list actually published rather than how many channels are in it. The
-// LATERAL version read 60 rows per channel and probed video_scores 15k times: 23.6 s for 500
-// channels, against 0.8 s warm here. Downsampling and the percent change are pure
-// (lib/app/groups-view.ts).
+// MATERIALISED (2026-09-08). The set-based read below is the right shape, but for a 500-channel
+// account it was 89,120 of the page's 92,630 buffers — the whole cost of /app/channels
+// (docs/runbooks/2026-09-08-site-speed.md). A 90-day trend does not need to be recomputed on
+// every page view, so the built line lives in channel_stats.spark and the page reads one row per
+// channel. scripts/refresh-sparklines.ts rebuilds the tracked set nightly; a channel with no
+// stored line yet (just added, or never refreshed) is built live from the same query and written
+// back, so the second reader never pays again. The builder is pure and shared, so the stored
+// line and a live line can never disagree.
 import { q } from '../admin/db';
 import { longformSql } from '../scoring/longform';
 import { SPARK_MAX_POINTS, downsample, percentChange, type SparkPoint } from './groups-view';
@@ -28,25 +29,24 @@ export const SPARK_DAYS = 90;
  */
 const FALLBACK_DAYS = 730;
 
+export interface SparkRow { channel_id: string; t: string | Date; baseline: string | number | null }
+
+/** The raw points behind the line: one ranged walk of idx_videos_channel_published_longform. */
+export const SPARK_ROWS_SQL = `
+  select v.channel_id, v.published_at as t, s.baseline
+    from videos v
+    join video_scores s on s.video_id = v.id
+   where v.channel_id = any($1::text[])
+     and v.published_at >= now() - ($2 || ' days')::interval
+     and ${longformSql('v')}
+     and s.baseline is not null and s.baseline > 0`;
+
 /**
- * A channel with nothing published in the window still gets a line: its most recent points
- * are better than a blank lane, and the percent change says the same thing either way.
+ * Pure: rows → one line per requested channel. A channel with nothing published in the window
+ * still gets a line: its most recent points are better than a blank lane, and the percent
+ * change says the same thing either way.
  */
-export async function channelSparklines(channelIds: string[]): Promise<Record<string, Sparkline>> {
-  const ids = Array.from(new Set((channelIds || []).filter(Boolean)));
-  if (!ids.length) return {};
-
-  const rows = await q<{ channel_id: string; t: string; baseline: string | number | null }>(
-    `select v.channel_id, v.published_at as t, s.baseline
-       from videos v
-       join video_scores s on s.video_id = v.id
-      where v.channel_id = any($1::text[])
-        and v.published_at >= now() - ($2 || ' days')::interval
-        and ${longformSql('v')}
-        and s.baseline is not null and s.baseline > 0`,
-    [ids, String(FALLBACK_DAYS)]
-  );
-
+export function buildSparklines(rows: SparkRow[], ids: string[], now = Date.now()): Record<string, Sparkline> {
   const byChannel = new Map<string, SparkPoint[]>();
   for (const r of rows) {
     const v = Number(r.baseline);
@@ -58,7 +58,7 @@ export async function channelSparklines(channelIds: string[]): Promise<Record<st
     list.push({ t, v });
   }
 
-  const cutoff = Date.now() - SPARK_DAYS * 86_400_000;
+  const cutoff = now - SPARK_DAYS * 86_400_000;
   const out: Record<string, Sparkline> = {};
   for (const id of ids) {
     const all = (byChannel.get(id) || []).sort((a, b) => a.t - b.t);
@@ -68,6 +68,48 @@ export async function channelSparklines(channelIds: string[]): Promise<Record<st
     const chosen = inWindow.length >= 2 ? inWindow.slice(-SPARK_MAX_POINTS) : all.slice(-12);
     const points = downsample(chosen);
     out[id] = { points, pct: percentChange(points) };
+  }
+  return out;
+}
+
+type QueryFn = <T = any>(sql: string, params?: any[]) => Promise<T[]>;
+
+/** Build the lines live for `ids` and store them. What the nightly refresh and the miss path share. */
+export async function refreshChannelSparklines(ids: string[], query: QueryFn = q, now = Date.now()): Promise<Record<string, Sparkline>> {
+  if (!ids.length) return {};
+  const rows = await query<SparkRow>(SPARK_ROWS_SQL, [ids, String(FALLBACK_DAYS)]);
+  const built = buildSparklines(rows, ids, now);
+  await query(
+    `update channel_stats cs
+        set spark = x.spark::jsonb, spark_at = now()
+       from (select unnest($1::text[]) as channel_id, unnest($2::text[]) as spark) x
+      where cs.channel_id = x.channel_id`,
+    [ids, ids.map((id) => JSON.stringify(built[id]))]
+  );
+  return built;
+}
+
+function isSparkline(v: unknown): v is Sparkline {
+  return !!v && typeof v === 'object' && Array.isArray((v as Sparkline).points);
+}
+
+/** The lane: stored lines, with a live build for whatever has none yet. */
+export async function channelSparklines(channelIds: string[], query: QueryFn = q): Promise<Record<string, Sparkline>> {
+  const ids = Array.from(new Set((channelIds || []).filter(Boolean)));
+  if (!ids.length) return {};
+
+  const stored = await query<{ channel_id: string; spark: unknown }>(
+    `select channel_id, spark from channel_stats where channel_id = any($1::text[]) and spark is not null`,
+    [ids]
+  );
+  const out: Record<string, Sparkline> = {};
+  for (const r of stored) if (isSparkline(r.spark)) out[r.channel_id] = r.spark;
+
+  const missing = ids.filter((id) => !out[id]);
+  if (missing.length) {
+    // A channel without a channel_stats row gets nothing stored (the update matches no row),
+    // which is fine: refreshChannelStats creates the row and the next read fills the line.
+    Object.assign(out, await refreshChannelSparklines(missing, query));
   }
   return out;
 }

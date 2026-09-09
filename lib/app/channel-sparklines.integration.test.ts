@@ -25,7 +25,7 @@ const BUDGET_MS = 2_000;
  * ranged walk touches ~17,000. A stopwatch measures the network to us-east-1 as much as the
  * query — this measures the query.
  */
-const BUFFER_BUDGET = 40_000;
+const BUFFER_BUDGET = 4_000;
 
 jest.setTimeout(120_000);
 
@@ -67,21 +67,17 @@ d('the sparkline lane, on a 500-channel account', () => {
   });
 
   it(`reads under ${BUFFER_BUDGET} buffers for the whole list`, async () => {
+    // The lane is materialised in channel_stats.spark (2026-09-08); the page pays one row per
+    // channel. The live build behind it (SPARK_ROWS_SQL) was 89,120 buffers for this account and
+    // now runs nightly in scripts/refresh-sparklines.ts, not on a page view.
     const { q } = await import('../admin/db');
     const { listUserChannels } = await import('./channels');
-    const { longformSql } = await import('../scoring/longform');
     const ids = (await listUserChannels(HEAVY_USER)).map((r) => r.channel_id);
 
     const plan = await q<{ 'QUERY PLAN': string }>(
       `explain (analyze, buffers)
-       select v.channel_id, v.published_at as t, s.baseline
-         from videos v
-         join video_scores s on s.video_id = v.id
-        where v.channel_id = any($1::text[])
-          and v.published_at >= now() - ($2 || ' days')::interval
-          and ${longformSql('v')}
-          and s.baseline is not null and s.baseline > 0`,
-      [ids, '730']
+       select channel_id, spark from channel_stats where channel_id = any($1::text[]) and spark is not null`,
+      [ids]
     );
     const text = plan.map((r) => r['QUERY PLAN']).join('\n');
     const total = [...(text.match(/Buffers: shared (.*)/)?.[1] ?? '')

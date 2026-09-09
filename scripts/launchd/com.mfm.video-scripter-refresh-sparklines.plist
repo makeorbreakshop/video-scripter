@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly at 05:05 ET: keep channel_stats.packaging_change_count and .last_upload_at true.
+
+  These two columns took the Changes count (a 3-way join over the channel's whole catalogue) and
+  the channel list's last-upload probe off the request path. The count is deliberately not part
+  of the unscoped refreshChannelStats statement -- across 500 channels in one query it is ~8 GB
+  of buffer traffic against a 512 MB pool -- so it is maintained here, one channel at a time.
+
+  Measured: 500 tracked channels in 5.7 minutes at 150 ms between channels.
+
+  It refuses to start while anything has been running in Postgres for over two minutes, and it
+  re-checks every 25 channels and stops if that changes.
+
+  Install:
+    cp scripts/launchd/com.mfm.video-scripter-refresh-sparklines.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-refresh-sparklines.plist
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-refresh-sparklines</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/refresh-sparklines.ts --sleep-ms 300</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>15</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/refresh-sparklines-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/refresh-sparklines-launchd.err.log</string>
+</dict></plist>
