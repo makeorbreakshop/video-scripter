@@ -1,6 +1,7 @@
 import {
   applyObservationChanges,
   decodeObservationState,
+  emptyObservationState,
   encodeObservationState,
   observationsFromState,
   type ObservationChange,
@@ -75,11 +76,21 @@ export function planObservationMaterialization(
 
   for (const claim of claims) {
     const key = claimKey(claim);
-    if (claim.requiresBootstrap || claim.format !== 2 || !claim.obs || !claim.publishedAt) {
+    if (claim.requiresBootstrap || !claim.publishedAt) {
       needsBootstrap.push(key);
       continue;
     }
-    const current = decodeObservationState(claim.obs);
+    let current: ObservationState;
+    if (claim.format === 2 && claim.obs) {
+      current = decodeObservationState(claim.obs);
+    } else if (claim.format == null && !claim.obs && claim.lastChangeId === 0) {
+      // The trigger marks only post-cutover imports as safe to start empty. Their entire source
+      // history was captured in observation_change_log, so no raw-table bootstrap is needed.
+      current = emptyObservationState(claim.videoId, claim.publishedAt);
+    } else {
+      needsBootstrap.push(key);
+      continue;
+    }
     const relevant = (byVideo.get(claim.videoId) ?? [])
       .filter((change) => change.changeId > claim.lastChangeId && change.changeId <= claim.generation);
     if (!relevant.length && claim.lastChangeId < claim.generation) {
@@ -207,4 +218,3 @@ export async function materializeObservationBatch(
     throw error;
   }
 }
-

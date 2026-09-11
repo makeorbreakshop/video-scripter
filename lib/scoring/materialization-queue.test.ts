@@ -39,6 +39,11 @@ test('the migration captures every source at statement scope and protects intern
   expect(sql).toContain('observation_change_log');
   expect(sql).toContain('obs_cache_dirty');
   expect(sql).toContain('score_dirty');
+  expect(sql).toMatch(/import_date\s*>=\s*m\.capture_started_at/i);
+  for (const source of ['snapshot', 'sample', 'rss']) {
+    expect(sql).toMatch(new RegExp(`function public\\.queue_${source}_updates`, 'i'));
+  }
+  expect(sql.match(/referencing old table as old_rows new table as new_rows/gi)?.length).toBe(3);
   expect(sql).toMatch(/revoke all on table[\s\S]*from anon, authenticated/i);
 });
 

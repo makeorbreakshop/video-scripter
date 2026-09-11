@@ -69,9 +69,13 @@ alter table public.observation_change_log enable row level security;
 alter table public.obs_cache_dirty enable row level security;
 alter table public.score_dirty enable row level security;
 alter table public.observation_materialization_meta enable row level security;
+alter table public.series_dirty enable row level security;
+alter table public.video_obs_cache enable row level security;
 revoke all on table public.observation_change_log, public.obs_cache_dirty, public.score_dirty,
-  public.observation_materialization_meta from anon, authenticated;
-revoke all on sequence public.pipeline_generation_seq from anon, authenticated;
+  public.observation_materialization_meta, public.series_dirty, public.video_obs_cache
+  from anon, authenticated;
+revoke all on sequence public.pipeline_generation_seq,
+  public.observation_change_log_change_id_seq from anon, authenticated;
 
 create or replace function public.enqueue_observation_changes(p_rows jsonb)
 returns void
@@ -98,7 +102,13 @@ begin
   ), obs_queue as (
     insert into public.obs_cache_dirty(video_id, generation, requires_bootstrap, marked_at, not_before)
     select p.video_id, p.generation,
-           not exists (select 1 from public.video_obs_cache c where c.video_id=p.video_id and c.format=2),
+           not exists (select 1 from public.video_obs_cache c where c.video_id=p.video_id and c.format=2)
+           and not exists (
+             select 1
+               from public.videos v
+               join public.observation_materialization_meta m on m.singleton
+              where v.id=p.video_id and v.import_date >= m.capture_started_at
+           ),
            now(), now()
       from per_video p
     on conflict (video_id) do update set
@@ -143,6 +153,20 @@ begin
     'at',snapshot_date::timestamptz + interval '12 hours')) from old_rows));
   return null;
 end $$;
+create or replace function public.queue_snapshot_updates()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+    select jsonb_build_object(
+      'video_id',video_id,'source','snapshot','operation','delete',
+      'at',snapshot_date::timestamptz + interval '12 hours') as payload from old_rows
+    union all
+    select jsonb_build_object(
+      'video_id',video_id,'source','snapshot','operation','upsert',
+      'at',snapshot_date::timestamptz + interval '12 hours','views',view_count) from new_rows
+  ) changes));
+  return null;
+end $$;
 
 create or replace function public.queue_sample_upserts()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
@@ -157,6 +181,19 @@ returns trigger language plpgsql security definer set search_path=pg_catalog,pub
 begin
   perform public.enqueue_observation_changes((select jsonb_agg(jsonb_build_object(
     'video_id',video_id,'source','sample','operation','delete','at',sampled_at)) from old_rows));
+  return null;
+end $$;
+create or replace function public.queue_sample_updates()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+    select jsonb_build_object(
+      'video_id',video_id,'source','sample','operation','delete','at',sampled_at) as payload from old_rows
+    union all
+    select jsonb_build_object(
+      'video_id',video_id,'source','sample','operation','upsert',
+      'at',sampled_at,'views',view_count) from new_rows
+  ) changes));
   return null;
 end $$;
 
@@ -176,13 +213,34 @@ begin
     'video_id',video_id,'source','rss','operation','delete','at',at)) from old_rows));
   return null;
 end $$;
+create or replace function public.queue_rss_updates()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+    select jsonb_build_object(
+      'video_id',video_id,'source','rss','operation','delete','at',at) as payload from old_rows
+    union all
+    select jsonb_build_object(
+      'video_id',video_id,'source','rss','operation','upsert','at',at,'views',views,
+      'time_basis',time_basis,'received_at',received_at,'model_eligible',model_eligible,
+      'conflicted',conflicted) from new_rows
+  ) changes));
+  return null;
+end $$;
+
+revoke execute on function public.enqueue_observation_changes(jsonb) from public, anon, authenticated;
+revoke execute on function public.queue_snapshot_upserts(), public.queue_snapshot_deletes(),
+  public.queue_snapshot_updates(), public.queue_sample_upserts(), public.queue_sample_deletes(),
+  public.queue_sample_updates(), public.queue_rss_upserts(), public.queue_rss_deletes(),
+  public.queue_rss_updates() from public, anon, authenticated;
 
 drop trigger if exists queue_view_snapshots_insert on public.view_snapshots;
 create trigger queue_view_snapshots_insert after insert on public.view_snapshots
   referencing new table as new_rows for each statement execute function public.queue_snapshot_upserts();
 drop trigger if exists queue_view_snapshots_update on public.view_snapshots;
 create trigger queue_view_snapshots_update after update on public.view_snapshots
-  referencing new table as new_rows for each statement execute function public.queue_snapshot_upserts();
+  referencing old table as old_rows new table as new_rows
+  for each statement execute function public.queue_snapshot_updates();
 drop trigger if exists queue_view_snapshots_delete on public.view_snapshots;
 create trigger queue_view_snapshots_delete after delete on public.view_snapshots
   referencing old table as old_rows for each statement execute function public.queue_snapshot_deletes();
@@ -192,7 +250,8 @@ create trigger queue_view_samples_insert after insert on public.view_samples
   referencing new table as new_rows for each statement execute function public.queue_sample_upserts();
 drop trigger if exists queue_view_samples_update on public.view_samples;
 create trigger queue_view_samples_update after update on public.view_samples
-  referencing new table as new_rows for each statement execute function public.queue_sample_upserts();
+  referencing old table as old_rows new table as new_rows
+  for each statement execute function public.queue_sample_updates();
 drop trigger if exists queue_view_samples_delete on public.view_samples;
 create trigger queue_view_samples_delete after delete on public.view_samples
   referencing old table as old_rows for each statement execute function public.queue_sample_deletes();
@@ -202,7 +261,8 @@ create trigger queue_rss_samples_insert after insert on public.rss_samples
   referencing new table as new_rows for each statement execute function public.queue_rss_upserts();
 drop trigger if exists queue_rss_samples_update on public.rss_samples;
 create trigger queue_rss_samples_update after update on public.rss_samples
-  referencing new table as new_rows for each statement execute function public.queue_rss_upserts();
+  referencing old table as old_rows new table as new_rows
+  for each statement execute function public.queue_rss_updates();
 drop trigger if exists queue_rss_samples_delete on public.rss_samples;
 create trigger queue_rss_samples_delete after delete on public.rss_samples
   referencing old table as old_rows for each statement execute function public.queue_rss_deletes();

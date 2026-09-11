@@ -32,6 +32,17 @@ test('a bounded delta batch produces a v2 upsert and exact-generation completion
   expect(plan.stats).toEqual(expect.objectContaining({ videos: 1, changes: 2, completed: 1 }));
 });
 
+test('a post-cutover video can materialize its complete delta log from an empty state', () => {
+  const plan = planObservationMaterialization([
+    baseClaim({ format: null, obs: null, lastChangeId: 0, requiresBootstrap: false }),
+  ], [delta(1, 10), delta(2, 20)], {
+    maxVideos: 100, maxChanges: 5000, maxCompressedBytes: 5_000_000, changesTruncated: false,
+  });
+  expect(plan.needsBootstrap).toEqual([]);
+  expect(plan.completed).toEqual([{ video_id: 'video', generation: 2 }]);
+  expect(plan.upserts[0].state.points).toHaveLength(2);
+});
+
 test('a globally truncated change page advances safely but does not clear the claimed generation', () => {
   const plan = planObservationMaterialization([baseClaim({ generation: 3 })], [delta(1, 10), delta(2, 20)], {
     maxVideos: 100, maxChanges: 2, maxCompressedBytes: 5_000_000, changesTruncated: true,
@@ -64,4 +75,3 @@ test('hard video, delta, and compressed-byte ceilings fail before producing writ
   expect(() => planObservationMaterialization([baseClaim()], [delta(1, 10)], { ...opts, maxCompressedBytes: 1 }))
     .toThrow('compressed');
 });
-
