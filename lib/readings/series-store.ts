@@ -56,6 +56,22 @@ export const SERIES_DIRTY_FAIL_SQL =
 
 export const SERIES_DIRTY_COUNT_SQL = `/* trace:series.queue-count */ select count(*)::bigint as n from series_dirty`;
 
+export type SeriesTargetDisposition = 'build' | 'retire-legacy' | 'wait-for-state';
+
+/**
+ * Generation zero is the queue imported at cutover, before event-driven observation state
+ * existed. A miss there cannot become buildable without rereading raw history, so retire the
+ * obsolete derived-work mark. Every post-cutover mark has a sequence generation and must remain
+ * queued until its matching materialized state arrives.
+ */
+export function seriesTargetDisposition(
+  generation: number | undefined,
+  hasMaterializedState: boolean,
+): SeriesTargetDisposition {
+  if (hasMaterializedState) return 'build';
+  return generation === 0 ? 'retire-legacy' : 'wait-for-state';
+}
+
 /** Anything that can run a parameterised statement: a Pool, a checked-out client, or the
  *  narrower BatchClient the nightly batch writer passes. */
 export interface Queryable { query(sql: string, values?: any[]): Promise<any> }

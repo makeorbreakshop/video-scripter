@@ -1,6 +1,7 @@
 import {
   markSeriesDirty, seriesDirtyWrite, SERIES_DIRTY_MARK_SQL, SERIES_DIRTY_CLAIM_SQL,
   SERIES_DIRTY_CLEAR_SQL, seriesReads, noteSeriesRead, seriesFallbackRate,
+  seriesTargetDisposition,
 } from './series-store';
 
 const client = (fail?: (sql: string) => boolean) => {
@@ -77,6 +78,17 @@ describe('watermark-safe series queue', () => {
   test('claims and clears the exact generation so a concurrent mark survives', () => {
     expect(SERIES_DIRTY_CLAIM_SQL).toContain('generation');
     expect(SERIES_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
+  });
+
+  test('retires only a pre-cutover miss while preserving every new-generation miss', () => {
+    expect(seriesTargetDisposition(0, false)).toBe('retire-legacy');
+    expect(seriesTargetDisposition(1, false)).toBe('wait-for-state');
+    expect(seriesTargetDisposition(9_001, false)).toBe('wait-for-state');
+  });
+
+  test('builds any target whose materialized state is ready', () => {
+    expect(seriesTargetDisposition(0, true)).toBe('build');
+    expect(seriesTargetDisposition(9_001, true)).toBe('build');
   });
 });
 

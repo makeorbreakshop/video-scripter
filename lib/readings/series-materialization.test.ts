@@ -35,4 +35,6 @@ test('the R2 drainer never queries raw observation history or refreshes the scor
   expect(script).not.toContain('refreshObsCache');
   expect(script).toContain('readSeriesFile');
   expect(script).toContain('JSON.stringify(done)');
+  expect(script).toContain("seriesTargetDisposition(target?.generation, Boolean(current))");
+  expect(script).toContain("disposition === 'retire-legacy'");
 });

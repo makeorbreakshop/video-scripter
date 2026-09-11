@@ -27,7 +27,7 @@ import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supab
 import { buildSeriesFile, mergeSeriesFiles, type VideoSeriesFile } from '../lib/readings/series';
 import {
   SERIES_SQL, SERIES_DIRTY_DDL, SERIES_DIRTY_CLAIM_SQL, SERIES_DIRTY_CLEAR_SQL,
-  SERIES_DIRTY_COUNT_SQL, readSeriesFile, writeSeriesFile,
+  SERIES_DIRTY_COUNT_SQL, readSeriesFile, writeSeriesFile, seriesTargetDisposition,
 } from '../lib/readings/series-store';
 import { r2Config, MISSING_CREDENTIALS, rawReadings } from '../lib/readings/archive';
 import { OBS_CACHE_SERIES_READ_SQL } from '../lib/scoring/obs-cache';
@@ -176,7 +176,7 @@ async function withArchived(file: VideoSeriesFile): Promise<VideoSeriesFile> {
   return mergeSeriesFiles(archived, file);
 }
 
-let written = 0, bytes = 0, empty = 0, skipped = 0, cacheReadBytes = 0;
+let written = 0, bytes = 0, empty = 0, skipped = 0, retiredLegacy = 0, cacheReadBytes = 0;
 try {
   const busy = await busyReason();
   if (busy && !dry && !has('--force')) {
@@ -209,11 +209,19 @@ try {
           const id = chunk[cursor++];
           if (id === undefined) return;
           const current = files.get(id);
-          if (!current) { skipped++; continue; }
+          const target = targetById.get(id);
+          const disposition = seriesTargetDisposition(target?.generation, Boolean(current));
+          if (disposition === 'retire-legacy') {
+            retiredLegacy++;
+            if (drain && target?.generation !== undefined) {
+              done.push({ video_id: id, generation: target.generation });
+            }
+            continue;
+          }
+          if (disposition === 'wait-for-state' || !current) { skipped++; continue; }
           const previous = cfg ? await readSeriesFile(id, cfg) : null;
           let file = previous ? mergeSeriesFiles(previous, current) : current;
           file = await withArchived(file);
-          const target = targetById.get(id);
           if (drain && target?.generation !== undefined) {
             done.push({ video_id: id, generation: target.generation });
           }
@@ -226,7 +234,7 @@ try {
       if ((i / CHUNK) % 10 === 0) console.log(`  ${Math.min(i + CHUNK, ids.length)}/${ids.length} · ${written} written · ${(bytes / 1e6).toFixed(1)} MB`);
     }
 
-    console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${retiredLegacy} legacy mark(s) retired, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
     console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
   }
 } catch (error) {
@@ -234,6 +242,6 @@ try {
   throw error;
 } finally {
   await pool.end();
-  trace.finish({ files_written: written, r2_bytes: bytes, cache_read_bytes: cacheReadBytes, skipped });
+  trace.finish({ files_written: written, r2_bytes: bytes, cache_read_bytes: cacheReadBytes, retired_legacy: retiredLegacy, skipped });
   job.finish();
 }
