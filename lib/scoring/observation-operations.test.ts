@@ -14,7 +14,9 @@ test('the guarded rollout surface replaces unbounded legacy jobs', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   expect(pkg.scripts['observations:materialize']).toBe('tsx scripts/materialize-observations.ts');
   expect(pkg.scripts['observations:bootstrap']).toBe('tsx scripts/bootstrap-observation-cache.ts');
-  expect(pkg.scripts['scores:drain']).toBe('tsx scripts/score-videos.ts --limit 1000');
+  // The worker owns the safe 1,000 default. Keeping it out of the npm wrapper lets a supervised
+  // canary pass --limit 100 without an earlier duplicate flag silently winning.
+  expect(pkg.scripts['scores:drain']).toBe('tsx scripts/score-videos.ts');
   expect(pkg.scripts['scores:rollout']).toBe('tsx scripts/enqueue-score-rollout.ts');
   expect(pkg.scripts['observations:health']).toBe('tsx scripts/observation-pipeline-health.ts');
   expect(pkg.scripts['series:backfill']).toBeUndefined();

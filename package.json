@@ -58,7 +58,7 @@
     "observations:materialize": "tsx scripts/materialize-observations.ts",
     "observations:bootstrap": "tsx scripts/bootstrap-observation-cache.ts",
     "observations:health": "tsx scripts/observation-pipeline-health.ts",
-    "scores:drain": "tsx scripts/score-videos.ts --limit 1000",
+    "scores:drain": "tsx scripts/score-videos.ts",
     "scores:rollout": "tsx scripts/enqueue-score-rollout.ts",
     "series:drain": "tsx scripts/rebuild-series.ts --drain",
     "export:tables": "tsx scripts/export-tables.ts",
