@@ -10,9 +10,17 @@ import {
 export const MAX_BOOTSTRAP_VIDEOS = 100;
 export const MAX_BOOTSTRAP_RAW_ROWS = 100_000;
 
-export function bootstrapSource(file: VideoSeriesFile | null, captureStartedAt: string | Date): 'r2' | 'raw' {
+export function bootstrapSource(
+  file: VideoSeriesFile | null,
+  captureStartedAt: string | Date,
+  latestPreCaptureWriteAt: string | Date | null,
+): 'r2' | 'raw' {
   if (!file) return 'raw';
-  return Date.parse(file.built_at) >= new Date(captureStartedAt).getTime() ? 'r2' : 'raw';
+  const builtAt = Date.parse(file.built_at);
+  if (!Number.isFinite(builtAt)) return 'raw';
+  if (builtAt >= new Date(captureStartedAt).getTime()) return 'r2';
+  return latestPreCaptureWriteAt === null || builtAt >= new Date(latestPreCaptureWriteAt).getTime()
+    ? 'r2' : 'raw';
 }
 
 export function validateRawBootstrapBudget(
@@ -71,6 +79,25 @@ export const BOOTSTRAP_CLAIM_SQL = `
    limit $1
    for update of d skip locked`;
 
+/**
+ * One timestamp per video, never observation rows. If an R2 series file was built after the last
+ * source write that predates trigger capture, the file plus the captured deltas is a complete
+ * bootstrap source and no history needs to cross the Supabase wire.
+ */
+export const BOOTSTRAP_LATEST_WRITE_SQL = `
+  select requested.video_id,
+         nullif(greatest(
+           coalesce((select max(s.created_at) from view_snapshots s
+                      where s.video_id=requested.video_id and s.created_at < m.capture_started_at), '-infinity'::timestamptz),
+           coalesce((select max(s.sampled_at) from view_samples s
+                      where s.video_id=requested.video_id and s.sampled_at < m.capture_started_at), '-infinity'::timestamptz),
+           coalesce((select max(coalesce(s.received_at,s.at)) from rss_samples s
+                      where s.video_id=requested.video_id and coalesce(s.received_at,s.at) < m.capture_started_at), '-infinity'::timestamptz)
+         ), '-infinity'::timestamptz) as latest_write_at
+    from unnest($1::text[]) as requested(video_id)
+    cross join observation_materialization_meta m
+   where m.singleton`;
+
 export const BOOTSTRAP_RAW_COUNT_SQL = `
   select (
     (select count(*) from view_snapshots where video_id=any($1::text[])) +
@@ -99,4 +126,3 @@ export const BOOTSTRAP_RAW_ROWS_SQL = `
     ) x join target_videos v on v.id=x.video_id
    where x.at >= v.published_at and x.at <= now()
    order by x.video_id, x.at, x.source`;
-

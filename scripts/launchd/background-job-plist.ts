@@ -18,9 +18,13 @@ function calendarSchedule(job: BackgroundJob): string {
   }
   const minutes: number[] = [];
   for (let minute = job.minuteOffset; minute < 60; minute += intervalMinutes) minutes.push(minute);
+  const second = job.secondOffset == null
+    ? ''
+    : `      <key>Second</key>\n      <integer>${job.secondOffset}</integer>\n`;
   return minutes.map((minute) => `    <dict>
       <key>Minute</key>
       <integer>${minute}</integer>
+${second}
     </dict>`).join('\n');
 }
 

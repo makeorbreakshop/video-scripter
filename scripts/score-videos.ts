@@ -4,8 +4,7 @@
 //                                                it is NOT live. scripts/weekly-refit.ts runs the
 //                                                gates and is the only thing that promotes one to
 //                                                active. Scoring always reads the newest ACTIVE row.
-//   npx tsx scripts/score-videos.ts [--all]      score videos published <=60d whose latest snapshot/sample
-//                                                is newer than their stored score (hourly); --all covers all ages
+//   npx tsx scripts/score-videos.ts              drain bounded, age-aware score_dirty work
 //   --all --force                             explicitly rewrite every selected row; not for resumable loops
 //   npx tsx scripts/score-videos.ts --final      one-shot final score for videos older than 60 days
 //   npx tsx scripts/score-videos.ts --since 3    rescore every video published in the last 3 days
@@ -14,7 +13,8 @@
 // Baselines: a prior video's day-30 views come from its day-27..33 snapshot when it has one,
 // otherwise (age >= 45d) from its current lifetime count divided back down the fitted long-tail
 // curve. That is what lets sparsely tracked channels get a baseline at all.
-// Reads: videos, view_snapshots, view_samples, rss_samples, score_params. Writes: video_scores, score_params (--fit).
+// Scheduled reads: score_dirty, compact observation state, videos, score_params. Explicit fit,
+// final, and analysis modes retain their separately governed historical inputs.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';

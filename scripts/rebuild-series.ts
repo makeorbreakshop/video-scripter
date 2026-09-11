@@ -4,9 +4,7 @@
 //   drain    — the videos scripts/rss-poll.ts, launch-track.ts and the ingest paths marked dirty
 //              since the last run. This is the steady state: one R2 PUT per video that moved,
 //              however many readings landed on it.
-//   backfill — a named set of videos, or every video with readings, oldest first. The full run
-//              belongs in the nightly slot (launchd/com.mfm.video-scripter-rebuild-series.plist);
-//              during the day use --limit and keep it small.
+//   repair   — a named/channel set, or an explicitly bounded sample of all tracked videos.
 //
 // With --with-archive the file also carries the readings that Postgres has already thinned away,
 // read back out of the day-partitioned parquet archive. Without it the file is exactly what
@@ -16,7 +14,7 @@
 //   npx tsx scripts/rebuild-series.ts --drain --limit 2000
 //   npx tsx scripts/rebuild-series.ts --videos abc123,def456 --with-archive
 //   npx tsx scripts/rebuild-series.ts --channel UC... --limit 200
-//   npx tsx scripts/rebuild-series.ts --all --limit 500          # nightly: drop --limit
+//   npx tsx scripts/rebuild-series.ts --all --limit 500          # limit is mandatory
 //   npx tsx scripts/rebuild-series.ts --drain --dry-run
 //
 // Routine drains never read raw observation history from Postgres. They read the compact v2
@@ -33,6 +31,7 @@ import {
 import { r2Config, MISSING_CREDENTIALS, rawReadings } from '../lib/readings/archive';
 import { OBS_CACHE_READ_SQL } from '../lib/scoring/obs-cache';
 import { decodeObservationState, seriesInputFromObservationState } from '../lib/scoring/observation-state';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -44,7 +43,9 @@ const dry = has('--dry-run') || has('--dry');
 const withArchive = has('--with-archive');
 const channel = arg('--channel');
 const only = (arg('--videos') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-const limit = Number(arg('--limit') ?? 0) || (drain ? 2000 : all ? 0 : 500);
+const explicitLimit = Number(arg('--limit') ?? 0);
+if (all && !(explicitLimit > 0)) throw new Error('--all requires an explicit positive --limit');
+const limit = explicitLimit || (drain ? 2000 : 500);
 /** Videos per chunk of reads. Each chunk is four bounded index reads. */
 const CHUNK = Number(arg('--chunk') ?? 0) || 50;
 /**
@@ -53,6 +54,10 @@ const CHUNK = Number(arg('--chunk') ?? 0) || 50;
  * at 1, which would be five days for the whole corpus.
  */
 const CONCURRENCY = Number(arg('--concurrency') ?? 0) || 8;
+const job = dry
+  ? { acquired: true as const, signal: new AbortController().signal, finish: () => {} }
+  : startManagedJob({ name: 'series-rebuild', args });
+if (!job.acquired) process.exit(0);
 const cfg = r2Config();
 if (!cfg && !dry) { console.error(MISSING_CREDENTIALS); process.exit(1); }
 
@@ -154,13 +159,14 @@ console.log(`series rebuild: ${ids.length} video(s)${drain ? ` (queue depth ${pe
 
 let written = 0, bytes = 0, empty = 0, skipped = 0;
 const t0 = Date.now();
-for (let i = 0; i < ids.length; i += CHUNK) {
+for (let i = 0; i < ids.length && !job.signal.aborted; i += CHUNK) {
   const chunk = ids.slice(i, i + CHUNK);
   const files = await buildChunk(chunk);
   const done: Array<{ video_id: string; generation: number }> = [];
   let cursor = 0;
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunk.length) }, async () => {
     for (;;) {
+      if (job.signal.aborted) return;
       const id = chunk[cursor++];
       if (id === undefined) return;
       const current = files.get(id);
@@ -184,3 +190,4 @@ for (let i = 0; i < ids.length; i += CHUNK) {
 console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
 await pool.end();
+job.finish();

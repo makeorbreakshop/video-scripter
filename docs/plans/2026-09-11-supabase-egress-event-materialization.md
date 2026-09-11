@@ -111,7 +111,7 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 
 - Focused Jest suites cover the pure projection, cache policy, queues, scorer target selection,
   materializer, bootstrap budgets, migration contract, and series drainer.
-- A local-PostgreSQL integration test (when `RSS_TEST_DATABASE_URL` is local) applies the migration,
+- A local-PostgreSQL integration test (when `EVENT_MATERIALIZATION_TEST_DATABASE_URL` is local) applies the migration,
   writes/upserts/deletes raw observations, and observes the change/dirty rows.
 - Run all active `lib/**/*.test.ts`, scoped TypeScript diagnostics, lint if the repository command
   is functional, and `npm run build` as the integration gate.

@@ -7,7 +7,7 @@ import { makeTimedPool } from '../lib/admin/db';
 import { readSeriesFile } from '../lib/readings/series-store';
 import { r2Config } from '../lib/readings/archive';
 import {
-  BOOTSTRAP_CLAIM_SQL, BOOTSTRAP_RAW_COUNT_SQL, BOOTSTRAP_RAW_ROWS_SQL,
+  BOOTSTRAP_CLAIM_SQL, BOOTSTRAP_LATEST_WRITE_SQL, BOOTSTRAP_RAW_COUNT_SQL, BOOTSTRAP_RAW_ROWS_SQL,
   MAX_BOOTSTRAP_RAW_ROWS, MAX_BOOTSTRAP_VIDEOS, bootstrapSource,
   observationStateFromRows, validateRawBootstrapBudget, type BootstrapObservationRow,
 } from '../lib/scoring/observation-bootstrap';
@@ -51,9 +51,16 @@ try {
   const cfg = r2Config();
   const states = new Map<string, ObservationState>();
   const rawIds: string[] = [];
+  const latestWrites = new Map<string, string | null>();
+  if (claims.length) {
+    const rows = (await client.query(BOOTSTRAP_LATEST_WRITE_SQL, [claims.map((claim: any) => claim.videoId)])).rows;
+    for (const row of rows) {
+      latestWrites.set(row.video_id, row.latest_write_at ? new Date(row.latest_write_at).toISOString() : null);
+    }
+  }
   for (const claim of claims) {
     const file = cfg ? await readSeriesFile(claim.videoId, cfg) : null;
-    if (bootstrapSource(file, claim.captureStartedAt) === 'r2') {
+    if (bootstrapSource(file, claim.captureStartedAt, latestWrites.get(claim.videoId) ?? null) === 'r2') {
       states.set(claim.videoId, observationStateFromSeries(file!, 0));
     } else rawIds.push(claim.videoId);
   }
@@ -129,4 +136,3 @@ try {
   client.release();
   await pool.end();
 }
-

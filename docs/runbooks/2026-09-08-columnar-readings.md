@@ -1,5 +1,10 @@
 # Columnar readings — the serving/analytics split
 
+> Update, 2026-09-11: the raw-reading archive and serving split still applies, but the full-corpus
+> series/cache backfills described below are retired. Routine series builds now consume the
+> event-driven format-2 projection. Use `docs/runbooks/2026-09-11-event-driven-scoring.md` for
+> activation and recovery.
+
 *2026-09-08, branch `feat/columnar-readings`. Follows `~/shared-memory/knowledge/projects/
 video-scripter/2026-09-08-r2-readings-archive.md` and `2026-09-08-database-performance-
 investigation.md`, which are still the source for the numbers this builds on.*
@@ -62,10 +67,10 @@ rate is **100 %**, so switching it on early would make every video page slower a
     SERIES_DISABLE=1   hard off, overriding SERIES_READ — the rollback, and the control arm of
                        the equality test
 
-Turn `SERIES_READ=1` on once `npm run series:backfill` has covered the corpus and the fallback
-rate in the logs is low. The win here is **database load**, not page latency: one R2 GET replaces
-three range scans over the three biggest tables in the database. `?raw=1` is untouched: it still reads the day-partitioned parquet archive
-through `lib/app/raw-readings.ts`.
+Turn `SERIES_READ=1` on only after the event-driven bootstrap and drain report low fallback and
+queue lag. The win here is **database load**, not page latency: one R2 GET replaces three range
+scans over the three biggest tables in the database. `?raw=1` is untouched: it still reads the
+day-partitioned parquet archive through `lib/app/raw-readings.ts`.
 
 ### Proof
 
@@ -77,19 +82,12 @@ points, the packaging marks and events, the horizon and the counts.
 series equality: 26 videos compared, 0 differing, max deviation 0.0000%
 ```
 
-### Where it stands
-
-226 series files written so far (a 200-video sample plus the test's videos). The corpus backfill
-has **not** run — it belongs in the 04:00 slot, and at the measured rate (200 videos in 85 s
-serially, 8 PUTs in flight by default now) a full pass is a few hours. Until it has run, the
-fallback rate is 100 % and `SERIES_READ` stays off.
-
 ### Commands
 
 ```bash
 npm run series:drain                       # rebuild the queued videos
-npm run series:backfill                    # every video, incl. archived readings
 npx tsx scripts/rebuild-series.ts --videos abc,def --with-archive
+npx tsx scripts/rebuild-series.ts --all --limit 500 --with-archive
 npx tsx scripts/rebuild-series.ts --drain --dry-run
 ```
 

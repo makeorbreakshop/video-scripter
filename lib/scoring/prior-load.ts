@@ -76,18 +76,18 @@ export async function loadRecords(
   const raw: string[] = [];
   const rawMissBudget = options.rawMissBudget ?? 25;
   for (const part of chunk([...ids], 100)) {
-    // The cache (lib/scoring/obs-cache.ts) holds exactly what this function used to compute, and
-    // returns nothing for a video whose readings have moved since. Everything it cannot answer
-    // falls through to the union below, so behaviour is identical whether or not it is populated
-    // — which is what makes the backfill safe to run after the deploy rather than before it.
+    // The cache holds the versioned source state and returns nothing unless its watermark is
+    // current. Miss handling is explicit: scheduled scoring passes a zero budget and defers;
+    // interactive reads retain a small allowance for availability during rollout.
     let hits = 0;
     if (obsCacheEnabled()) {
       let rows: { video_id: string; obs: Buffer; format?: number }[] = [];
       try {
         rows = await q(OBS_CACHE_READ_SQL, [part]);
       } catch (err) {
-        // A missing table on a database that has not run the migration is a miss, not an outage.
-        if (!warnedObsCache) { warnedObsCache = true; console.warn(`[obs-cache] unavailable, using the raw union: ${(err as Error).message}`); }
+        // A missing table on a database that has not run the migration is a miss; the caller's
+        // budget still decides whether raw access is allowed.
+        if (!warnedObsCache) { warnedObsCache = true; console.warn(`[obs-cache] unavailable: ${(err as Error).message}`); }
       }
       for (const r of rows) {
         const format = Number(r.format ?? 1);

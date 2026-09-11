@@ -7,6 +7,7 @@ import {
   MATERIALIZER_LIMITS,
   materializeObservationBatch,
 } from '../lib/scoring/observation-materializer';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
 const args = process.argv.slice(2);
 const arg = (name: string, fallback: number): number => {
@@ -20,6 +21,10 @@ const maxChanges = arg('--max-changes', MATERIALIZER_LIMITS.changes);
 const maxCacheBytes = arg('--max-cache-bytes', MATERIALIZER_LIMITS.cacheBytes);
 const maxCompressedBytes = arg('--max-compressed-bytes', MATERIALIZER_LIMITS.compressedBytes);
 const dryRun = args.includes('--dry-run') || args.includes('--dry');
+const job = dryRun
+  ? { acquired: true as const, signal: new AbortController().signal, finish: () => {} }
+  : startManagedJob({ name: 'observation-materializer', args });
+if (!job.acquired) process.exit(0);
 
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000 });
 const client = await pool.connect();
@@ -33,4 +38,5 @@ try {
 } finally {
   client.release();
   await pool.end();
+  job.finish();
 }

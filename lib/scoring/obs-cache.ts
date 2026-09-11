@@ -1,4 +1,4 @@
-// The merged observation record, cached: one narrow row per video instead of three range scans.
+// The versioned observation state: one narrow row per video instead of three range scans.
 //
 // WHY. lib/scoring/prior-load.ts loadRecords is the single most expensive read in the system.
 // Every scored video is divided by ~16 priors, and each prior's observation record was rebuilt
@@ -7,10 +7,9 @@
 // render. Measured 2026-09-08: 118M shared blocks read from disk in four days from the scorer
 // alone (~900 GB against a 512 MB buffer pool), and 4,450 blocks for one video page.
 //
-// The output of that work is tiny and changes only when a reading lands. mergeObservations
-// collapses a two-year video's thousands of rows into a few hundred points; gzipped that is a
-// few hundred bytes. So it is cached: `video_obs_cache` holds the merged record, and a prior
-// costs one index probe on a narrow table.
+// Format 2 stores the mutable raw source subset plus an exact change watermark. It stays small
+// under gzip, supports insert/update/delete deltas, and is merged by the canonical function when
+// read. A prior costs one index probe on a narrow table.
 //
 // WHY POSTGRES, NOT THE R2 SERIES FILE. Both hold the same readings, and the series file is
 // already built by the same drain. But the R2 file is the RAW rows (~50 KB decompressed, the
@@ -21,18 +20,15 @@
 // mergeObservations on 5 MB of raw JSON per chunk. The R2 file stays the chart's serving format
 // (docs/runbooks/2026-09-08-columnar-readings.md); this is the scorer's.
 //
-// EXACTNESS. The refresher runs OBSERVATION_RECORDS_SQL itself and stores exactly what
-// observationRecords() returned, so a cache hit is equal to the raw union by construction rather
-// than by a reimplementation that could drift. Two things could still make a hit differ from a
-// fresh read: a reading that landed after the row was built, and mergeObservations' `asOf` clock.
-// Both are handled by treating any video sitting in `series_dirty` as a miss — every writer of a
-// reading marks the video dirty in the same transaction (lib/readings/series-store.ts) — so a
-// video with unincorporated readings falls back to the raw union and is exact.
+// EXACTNESS. Database statement triggers append source-keyed deltas and advance obs_cache_dirty in
+// the same transaction as the reading. The materializer applies through a claimed generation and
+// the read accepts a row only when its last_change_id covers that generation. Concurrent marks
+// therefore remain misses until their own delta is committed.
 import { gzipSync, gunzipSync } from 'node:zlib';
 import type { Observation } from './observations';
 import { decodeObservationState, observationsFromState } from './observation-state';
 
-/** Created by scripts/rebuild-series.ts and by the backfill; the read path never creates it. */
+/** Created by the migration; materializer/bootstrap commands own format-2 writes. */
 export const OBS_CACHE_DDL = `
   create table if not exists video_obs_cache (
     video_id   text primary key,
@@ -46,9 +42,8 @@ export const OBS_CACHE_DDL = `
   alter table video_obs_cache add column if not exists last_change_id bigint not null default 0`;
 
 /**
- * Cache hits for a set of ids. The anti-join against series_dirty is what makes a hit safe: a
- * video whose readings moved since the row was built is queued for rebuild, and until the drain
- * gets to it we do not trust the row.
+ * Cache hits for a set of ids. A dirty row is accepted only when the committed cache watermark
+ * already covers it; normally the exact-generation clear removes the queue row entirely.
  */
 export const OBS_CACHE_READ_SQL = `
   select c.video_id, c.obs, c.format, c.last_change_id
@@ -92,18 +87,17 @@ export function decodeCachedObservations(format: number, buf: Buffer | Uint8Arra
 
 /**
  * How often the cache could not answer, since process start. The scorer logs it at the end of a
- * run: a rate that stops falling after the backfill means rows are being invalidated faster than
- * the drain rebuilds them, which is a queue problem, not a cache problem.
+ * run: a rate that stays high after bootstrap means materialization is falling behind.
  */
 export const obsCacheStats = { hits: 0, misses: 0 };
 
 export function obsCacheSummary(): string {
   const { hits, misses } = obsCacheStats;
   const total = hits + misses;
-  return total ? `obs cache ${hits}/${total} hits (${((100 * misses) / total).toFixed(1)}% fell back to the raw union)` : 'obs cache unused';
+  return total ? `obs cache ${hits}/${total} hits (${((100 * misses) / total).toFixed(1)}% misses)` : 'obs cache unused';
 }
 
-/** The kill switch. OBS_CACHE=0 makes every read go to the raw union, as it did before. */
+/** The kill switch. A caller may still fail closed when its raw-miss budget is zero. */
 export function obsCacheEnabled(): boolean {
   return process.env.OBS_CACHE !== '0';
 }

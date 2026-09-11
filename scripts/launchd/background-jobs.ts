@@ -4,6 +4,7 @@ export interface BackgroundJob {
   args: string[];
   intervalSeconds: number;
   minuteOffset: number;
+  secondOffset?: number;
   maxSeconds: number;
   nice: number;
   stdout: string;
@@ -72,9 +73,49 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
     args: [],
     intervalSeconds: 300,
     minuteOffset: 4,
+    secondOffset: 30,
     maxSeconds: 240,
     nice: 10,
     stdout: 'touch-drain-launchd.log',
     stderr: 'touch-drain-launchd.err.log',
+  },
+  {
+    label: 'com.mfm.video-scripter-observation-materializer',
+    script: 'materialize-observations.ts',
+    args: [
+      '--max-videos', '20000',
+      '--max-changes', '50000',
+      '--max-cache-bytes', '25000000',
+      '--max-compressed-bytes', '25000000',
+    ],
+    intervalSeconds: 300,
+    minuteOffset: 3,
+    secondOffset: 30,
+    maxSeconds: 240,
+    nice: 10,
+    stdout: 'observation-materializer-launchd.log',
+    stderr: 'observation-materializer-launchd.err.log',
+  },
+  {
+    label: 'com.mfm.video-scripter-score',
+    script: 'score-videos.ts',
+    args: ['--limit', '1000'],
+    intervalSeconds: 300,
+    minuteOffset: 4,
+    maxSeconds: 240,
+    nice: 10,
+    stdout: 'score-launchd.log',
+    stderr: 'score-launchd.err.log',
+  },
+  {
+    label: 'com.mfm.video-scripter-series-drain',
+    script: 'rebuild-series.ts',
+    args: ['--drain', '--limit', '12000', '--concurrency', '16'],
+    intervalSeconds: 600,
+    minuteOffset: 9,
+    maxSeconds: 540,
+    nice: 10,
+    stdout: 'series-drain-launchd.log',
+    stderr: 'series-drain-launchd.err.log',
   },
 ];
