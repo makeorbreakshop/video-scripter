@@ -39,7 +39,13 @@ export const OBS_CACHE_DDL = `
     last_change_id bigint not null default 0
   );
   alter table video_obs_cache add column if not exists format smallint not null default 1;
-  alter table video_obs_cache add column if not exists last_change_id bigint not null default 0`;
+  alter table video_obs_cache add column if not exists last_change_id bigint not null default 0;
+  create table if not exists video_day30_truth (
+    video_id text primary key,
+    snapshot_day integer not null,
+    snapshot_date date not null,
+    views bigint not null
+  )`;
 
 /**
  * Cache hits for a set of ids. A dirty row is accepted only when the committed cache watermark
@@ -47,9 +53,10 @@ export const OBS_CACHE_DDL = `
  */
 export const OBS_CACHE_READ_SQL = `
   /* trace:observation.cache-read */
-  select c.video_id, c.obs, c.format, c.last_change_id
+  select c.video_id, c.obs, c.format, c.last_change_id, t.views as day30_views
     from video_obs_cache c
     left join obs_cache_dirty d on d.video_id = c.video_id
+    left join video_day30_truth t on t.video_id = c.video_id
    where c.video_id = any($1::text[])
      and (d.video_id is null or c.last_change_id >= d.generation)`;
 

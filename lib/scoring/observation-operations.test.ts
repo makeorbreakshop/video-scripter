@@ -67,3 +67,24 @@ test('an unhealthy pipeline marks the trace run failed before returning a failin
     /if \(unhealthy\) \{\s*trace\.markFailed\(\);\s*process\.exitCode = 1;\s*\}/,
   );
 });
+
+test('the scheduled score batch derives day-30 truth without a raw snapshot query', () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), 'scripts', 'score-videos.ts'),
+    'utf8',
+  );
+  const scheduledBatch = source.slice(source.indexOf('async function v5Batch'), source.indexOf('async function channelsSlowerThan'));
+  expect(scheduledBatch).toContain('day30Sink: truth');
+  expect(scheduledBatch).not.toContain('day30(priorIds)');
+  expect(scheduledBatch).not.toMatch(/view_snapshots|view_samples|rss_samples/);
+});
+
+test('the migration maintains exact day-30 truth as a narrow event projection', () => {
+  const migration = fs.readFileSync(
+    path.join(process.cwd(), 'supabase', 'migrations', '20260911153000_event_driven_scoring.sql'),
+    'utf8',
+  );
+  expect(migration).toContain('create table if not exists public.video_day30_truth');
+  expect(migration).toContain('refresh_day30_truth');
+  expect(migration).toMatch(/days_since_published between 27 and 33/i);
+});

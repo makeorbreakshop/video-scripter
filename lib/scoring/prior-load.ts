@@ -13,6 +13,11 @@ import { PRIOR_STALE_DAYS, PRIOR_WINDOW, type Snapshot } from './core';
 import { longformSql } from './longform';
 import { OBSERVATION_RECORDS_SQL, observationRecords } from './observations';
 import { OBS_CACHE_READ_SQL, decodeCachedObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
+import {
+  decodeObservationState,
+  observationsFromState,
+  type ObservationState,
+} from './observation-state';
 import type { CurvePrior } from './curve';
 
 export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
@@ -21,7 +26,14 @@ export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
 export interface PriorRef { id: string; pub: number; ageDays: number }
 /** Lifetime count and the age it was read at — the route a pre-tracking prior contributes by. */
 export interface PriorMeta { views: number; age: number }
-export interface RecordLoadOptions { rawMissBudget?: number; requireFormat2?: boolean }
+export interface RecordLoadOptions {
+  rawMissBudget?: number;
+  requireFormat2?: boolean;
+  /** Optional cache-only side channel for callers that need source-specific facts. */
+  stateSink?: Map<string, ObservationState>;
+  /** Exact day-30 snapshot projection returned by the same compact cache query. */
+  day30Sink?: Map<string, number>;
+}
 
 export class ObservationCacheMissError extends Error {
   constructor(public readonly missingIds: string[], public readonly rawMissBudget: number) {
@@ -93,7 +105,17 @@ export async function loadRecords(
       for (const r of rows) {
         const format = Number(r.format ?? 1);
         if (options.requireFormat2 && format !== 2) continue;
-        out.set(r.video_id, decodeCachedObservations(format, r.obs)); hits++;
+        if (format === 2) {
+          const state = decodeObservationState(r.obs);
+          options.stateSink?.set(r.video_id, state);
+          if (r.day30_views !== null && r.day30_views !== undefined) {
+            options.day30Sink?.set(r.video_id, Number(r.day30_views));
+          }
+          out.set(r.video_id, observationsFromState(state));
+        } else {
+          out.set(r.video_id, decodeCachedObservations(format, r.obs));
+        }
+        hits++;
       }
     }
     obsCacheStats.hits += hits;

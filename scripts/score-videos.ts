@@ -39,6 +39,7 @@ import {
   curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, ObservationCacheMissError,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
+import type { ObservationState } from '../lib/scoring/observation-state';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
@@ -438,8 +439,11 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
   const priorsOf = await priorsFor(ids);
   const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
   const cacheOnly = { rawMissBudget: 0, requireFormat2: true } as const;
+  const priorStates = new Map<string, ObservationState>();
+  const truth = new Map<string, number>();
   const [targetResult, priorResult] = await Promise.allSettled([
-    records(ids, cacheOnly), records(priorIds, cacheOnly),
+    records(ids, cacheOnly),
+    records(priorIds, { ...cacheOnly, stateSink: priorStates, day30Sink: truth }),
   ]);
   const misses = [targetResult, priorResult]
     .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
@@ -450,7 +454,7 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
   }
   if (targetResult.status === 'rejected') throw targetResult.reason;
   if (priorResult.status === 'rejected') throw priorResult.reason;
-  const [priorMeta, truth] = await Promise.all([meta(priorIds), day30(priorIds)]);
+  const priorMeta = await meta(priorIds);
   const rec = targetResult.value;
   const priorRec = priorResult.value;
   const out: { t: { id: string; channel_id: string }; views: number; o: ReturnType<typeof scoreV5> }[] = [];

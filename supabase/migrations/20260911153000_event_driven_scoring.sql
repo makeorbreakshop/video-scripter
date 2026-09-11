@@ -65,14 +65,23 @@ alter table public.video_obs_cache add column if not exists format smallint not 
 alter table public.video_obs_cache add column if not exists last_change_id bigint not null default 0;
 alter table public.video_obs_cache alter column obs set storage external;
 
+create table if not exists public.video_day30_truth (
+  video_id text primary key,
+  snapshot_day integer not null,
+  snapshot_date date not null,
+  views bigint not null
+);
+
 alter table public.observation_change_log enable row level security;
 alter table public.obs_cache_dirty enable row level security;
 alter table public.score_dirty enable row level security;
 alter table public.observation_materialization_meta enable row level security;
 alter table public.series_dirty enable row level security;
 alter table public.video_obs_cache enable row level security;
+alter table public.video_day30_truth enable row level security;
 revoke all on table public.observation_change_log, public.obs_cache_dirty, public.score_dirty,
-  public.observation_materialization_meta, public.series_dirty, public.video_obs_cache
+  public.observation_materialization_meta, public.series_dirty, public.video_obs_cache,
+  public.video_day30_truth
   from anon, authenticated;
 revoke all on sequence public.pipeline_generation_seq,
   public.observation_change_log_change_id_seq from anon, authenticated;
@@ -178,12 +187,31 @@ begin
   return null;
 end $$;
 
+-- The scorer used to re-read view_snapshots for every prior's exact day-30 anchor after its
+-- compact observation-cache hit. Keep that small fact event-maintained instead: the scheduled
+-- scorer receives it through the same cache query and never opens a raw history table.
+create or replace function public.refresh_day30_truth(p_video_ids text[])
+returns void language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  if p_video_ids is null or cardinality(p_video_ids) = 0 then return; end if;
+  delete from public.video_day30_truth where video_id=any(p_video_ids);
+  insert into public.video_day30_truth(video_id,snapshot_day,snapshot_date,views)
+  select distinct on (s.video_id)
+         s.video_id, s.days_since_published, s.snapshot_date, s.view_count
+    from public.view_snapshots s
+   where s.video_id=any(p_video_ids)
+     and s.days_since_published between 27 and 33
+     and s.view_count > 0
+   order by s.video_id, abs(s.days_since_published - 30), s.snapshot_date desc;
+end $$;
+
 create or replace function public.queue_snapshot_upserts()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
   perform public.enqueue_observation_changes((select jsonb_agg(jsonb_build_object(
     'video_id',video_id,'source','snapshot','operation','upsert',
     'at',snapshot_date::timestamptz + interval '12 hours','views',view_count)) from new_rows));
+  perform public.refresh_day30_truth(array(select distinct video_id from new_rows));
   return null;
 end $$;
 create or replace function public.queue_snapshot_deletes()
@@ -192,6 +220,7 @@ begin
   perform public.enqueue_observation_changes((select jsonb_agg(jsonb_build_object(
     'video_id',video_id,'source','snapshot','operation','delete',
     'at',snapshot_date::timestamptz + interval '12 hours')) from old_rows));
+  perform public.refresh_day30_truth(array(select distinct video_id from old_rows));
   return null;
 end $$;
 create or replace function public.queue_snapshot_updates()
@@ -206,6 +235,9 @@ begin
       'video_id',video_id,'source','snapshot','operation','upsert',
       'at',snapshot_date::timestamptz + interval '12 hours','views',view_count), 1 from new_rows
   ) changes));
+  perform public.refresh_day30_truth(array(
+    select video_id from old_rows union select video_id from new_rows
+  ));
   return null;
 end $$;
 
@@ -270,6 +302,7 @@ begin
 end $$;
 
 revoke execute on function public.enqueue_observation_changes(jsonb) from public, anon, authenticated;
+revoke execute on function public.refresh_day30_truth(text[]) from public, anon, authenticated;
 revoke execute on function public.queue_new_video_bootstraps(),
   public.queue_snapshot_upserts(), public.queue_snapshot_deletes(),
   public.queue_snapshot_updates(), public.queue_sample_upserts(), public.queue_sample_deletes(),
@@ -318,5 +351,16 @@ create trigger queue_rss_samples_delete after delete on public.rss_samples
 insert into public.obs_cache_dirty(video_id, generation, requires_bootstrap)
 select video_id, 0, true from public.video_obs_cache where format <> 2
 on conflict (video_id) do update set requires_bootstrap=true, marked_at=now();
+
+insert into public.video_day30_truth(video_id,snapshot_day,snapshot_date,views)
+select distinct on (s.video_id)
+       s.video_id, s.days_since_published, s.snapshot_date, s.view_count
+  from public.view_snapshots s
+ where s.days_since_published between 27 and 33 and s.view_count > 0
+ order by s.video_id, abs(s.days_since_published - 30), s.snapshot_date desc
+on conflict (video_id) do update set
+  snapshot_day=excluded.snapshot_day,
+  snapshot_date=excluded.snapshot_date,
+  views=excluded.views;
 
 commit;
