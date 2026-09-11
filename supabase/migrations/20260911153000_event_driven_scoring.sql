@@ -103,14 +103,11 @@ begin
     insert into public.obs_cache_dirty(video_id, generation, requires_bootstrap, marked_at, not_before)
     select p.video_id, p.generation,
            not exists (select 1 from public.video_obs_cache c where c.video_id=p.video_id and c.format=2)
-           and not exists (
-             select 1
-               from public.videos v
-               join public.observation_materialization_meta m on m.singleton
-              where v.id=p.video_id and v.import_date >= m.capture_started_at
-           ),
+           and not (v.import_date >= m.capture_started_at),
            now(), now()
       from per_video p
+      join public.videos v on v.id=p.video_id
+      join public.observation_materialization_meta m on m.singleton
     on conflict (video_id) do update set
       generation = greatest(public.obs_cache_dirty.generation, excluded.generation),
       requires_bootstrap = public.obs_cache_dirty.requires_bootstrap or excluded.requires_bootstrap,
@@ -121,6 +118,7 @@ begin
     insert into public.score_dirty(video_id, generation, reason, marked_at, not_before)
     select p.video_id, nextval('public.pipeline_generation_seq'), 'observation', now(), now()
       from per_video p
+      join public.videos v on v.id=p.video_id
     on conflict (video_id) do update set
       generation = excluded.generation, reason = excluded.reason,
       marked_at = excluded.marked_at,
@@ -129,6 +127,7 @@ begin
   ), series_queue as (
     insert into public.series_dirty(video_id, marked_at, generation)
     select p.video_id, now(), nextval('public.pipeline_generation_seq') from per_video p
+      join public.videos v on v.id=p.video_id
     on conflict (video_id) do update set
       marked_at = excluded.marked_at, generation = excluded.generation
     returning video_id

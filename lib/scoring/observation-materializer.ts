@@ -11,9 +11,10 @@ import { OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
 import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLEAR_SQL, type QueueClaim } from './materialization-queue';
 
 export const MATERIALIZER_LIMITS = {
-  videos: 100,
-  changes: 5_000,
-  compressedBytes: 5_000_000,
+  videos: 20_000,
+  changes: 50_000,
+  cacheBytes: 25_000_000,
+  compressedBytes: 25_000_000,
 } as const;
 
 export interface ObservationMaterializationClaim {
@@ -161,15 +162,16 @@ const number = (value: unknown): number => Number(value ?? 0);
 
 export async function materializeObservationBatch(
   client: TransactionClient,
-  options: { maxVideos: number; maxChanges: number; maxCompressedBytes: number; dryRun?: boolean },
+  options: { maxVideos: number; maxChanges: number; maxCacheBytes: number; maxCompressedBytes: number; dryRun?: boolean },
 ): Promise<ObservationMaterializationPlan> {
   if (options.maxVideos > MATERIALIZER_LIMITS.videos || options.maxChanges > MATERIALIZER_LIMITS.changes
+    || options.maxCacheBytes > MATERIALIZER_LIMITS.cacheBytes
     || options.maxCompressedBytes > MATERIALIZER_LIMITS.compressedBytes) {
     throw new Error('materializer options exceed recurring hard limits');
   }
   await client.query('begin');
   try {
-    const claimRows = (await client.query(OBS_DIRTY_CLAIM_SQL, [options.maxVideos])).rows;
+    const claimRows = (await client.query(OBS_DIRTY_CLAIM_SQL, [options.maxVideos, options.maxCacheBytes])).rows;
     const claims: ObservationMaterializationClaim[] = claimRows.map((row) => ({
       videoId: row.video_id,
       generation: number(row.generation),

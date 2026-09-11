@@ -17,6 +17,7 @@ const arg = (name: string, fallback: number): number => {
 };
 const maxVideos = arg('--max-videos', MATERIALIZER_LIMITS.videos);
 const maxChanges = arg('--max-changes', MATERIALIZER_LIMITS.changes);
+const maxCacheBytes = arg('--max-cache-bytes', MATERIALIZER_LIMITS.cacheBytes);
 const maxCompressedBytes = arg('--max-compressed-bytes', MATERIALIZER_LIMITS.compressedBytes);
 const dryRun = args.includes('--dry-run') || args.includes('--dry');
 
@@ -24,7 +25,7 @@ const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2,
 const client = await pool.connect();
 try {
   const result = await materializeObservationBatch(client, {
-    maxVideos, maxChanges, maxCompressedBytes, dryRun,
+    maxVideos, maxChanges, maxCacheBytes, maxCompressedBytes, dryRun,
   });
   const s = result.stats;
   console.log(`observation materializer${dryRun ? ' [dry run]' : ''}: ${s.videos} videos, ${s.changes} deltas, `
@@ -33,4 +34,3 @@ try {
   client.release();
   await pool.end();
 }
-

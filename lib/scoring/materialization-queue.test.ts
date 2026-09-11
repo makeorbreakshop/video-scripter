@@ -39,6 +39,7 @@ test('the migration captures every source at statement scope and protects intern
   expect(sql).toContain('observation_change_log');
   expect(sql).toContain('obs_cache_dirty');
   expect(sql).toContain('score_dirty');
+  expect(sql.match(/join public\.videos v on v\.id=p\.video_id/gi)?.length).toBeGreaterThanOrEqual(3);
   expect(sql).toMatch(/import_date\s*>=\s*m\.capture_started_at/i);
   for (const source of ['snapshot', 'sample', 'rss']) {
     expect(sql).toMatch(new RegExp(`function public\\.queue_${source}_updates`, 'i'));

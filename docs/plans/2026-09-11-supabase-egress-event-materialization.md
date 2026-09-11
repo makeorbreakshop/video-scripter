@@ -133,8 +133,10 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 
 ## Stop Conditions and Budgets
 
-- Recurring materializer defaults: at most 100 videos, 5,000 delta rows, and 5 MB compressed cache
-  output per run; each is a hard stop, not a warning.
+- Recurring materializer defaults: at most 20,000 videos, 50,000 delta rows, 25 MB compressed
+  cache input, and 25 MB compressed output per run. These ceilings cover the measured
+  2,500–14,400 changed RSS rows per poll while bounding wire egress even if individual cache rows
+  grow; each is a hard stop, not a warning.
 - Scorer defaults: at most 1,000 targets per run, fetched in pages/batches of at most 100.
 - Raw bootstrap runs only with explicit `--raw-video-budget` and `--raw-row-budget`; exceeding the
   count aborts before the raw query.

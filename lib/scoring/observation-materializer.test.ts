@@ -3,9 +3,11 @@ import {
   type ObservationChange,
 } from './observation-state';
 import {
+  MATERIALIZER_LIMITS,
   planObservationMaterialization,
   type ObservationMaterializationClaim,
 } from './observation-materializer';
+import { OBS_DIRTY_CLAIM_SQL } from './materialization-queue';
 
 const publishedAt = '2026-09-01T00:00:00.000Z';
 const baseClaim = (overrides: Partial<ObservationMaterializationClaim> = {}): ObservationMaterializationClaim => ({
@@ -67,11 +69,22 @@ test('missing, legacy, and gapped state is routed to bootstrap instead of guesse
 });
 
 test('hard video, delta, and compressed-byte ceilings fail before producing writes', () => {
-  const opts = { maxVideos: 100, maxChanges: 5000, maxCompressedBytes: 5_000_000, changesTruncated: false };
-  expect(() => planObservationMaterialization(Array.from({ length: 101 }, (_, i) => baseClaim({ videoId: `v${i}` })), [], opts))
-    .toThrow('100');
-  expect(() => planObservationMaterialization([baseClaim()], Array.from({ length: 5001 }, (_, i) => delta(i + 1, i)), opts))
-    .toThrow('5000');
+  const opts = { maxVideos: MATERIALIZER_LIMITS.videos, maxChanges: MATERIALIZER_LIMITS.changes,
+    maxCompressedBytes: MATERIALIZER_LIMITS.compressedBytes, changesTruncated: false };
+  expect(() => planObservationMaterialization(
+    Array.from({ length: MATERIALIZER_LIMITS.videos + 1 }, (_, i) => baseClaim({ videoId: `v${i}` })), [], opts,
+  )).toThrow(String(MATERIALIZER_LIMITS.videos));
+  expect(() => planObservationMaterialization(
+    [baseClaim()], Array.from({ length: MATERIALIZER_LIMITS.changes + 1 }, (_, i) => delta(i + 1, i)), opts,
+  )).toThrow(String(MATERIALIZER_LIMITS.changes));
   expect(() => planObservationMaterialization([baseClaim()], [delta(1, 10)], { ...opts, maxCompressedBytes: 1 }))
     .toThrow('compressed');
+});
+
+test('the recurring claim is capped by both video count and cache bytes on the server', () => {
+  expect(MATERIALIZER_LIMITS.videos).toBe(20_000);
+  expect(MATERIALIZER_LIMITS.changes).toBe(50_000);
+  expect(MATERIALIZER_LIMITS.cacheBytes).toBe(25_000_000);
+  expect(OBS_DIRTY_CLAIM_SQL).toMatch(/octet_length\(c\.obs\)/i);
+  expect(OBS_DIRTY_CLAIM_SQL).toMatch(/running_bytes\s*<=\s*\$2/i);
 });

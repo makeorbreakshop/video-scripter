@@ -13,7 +13,9 @@
 - [x] Queue/projection slice — v2 raw state, fail-closed cache policy, event-capture migration,
   rollback SQL, and generation-safe queue contracts — 18 focused tests passing.
 - [x] Bounded materializer slice — delta-only transaction planner/runner and CLI with hard caps of
-  100 videos, 5,000 changes, and 5 MB compressed output; bootstrap work cannot starve delta work.
+  20,000 videos, 50,000 changes, 25 MB cache input, and 25 MB compressed output; these limits are
+  sized above the measured 2,500–14,400 changes per RSS poll and bootstrap work cannot starve
+  delta work.
 - [x] Queue-driven scorer slice — default live selection reads only `score_dirty`, applies age
   cadence, caps work at 1,000/100, requires clean format-2 cache, defers misses, and clears exact
   generations atomically with committed score/history/headline writes; 20 focused tests passing.
