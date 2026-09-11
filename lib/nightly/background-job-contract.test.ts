@@ -10,6 +10,7 @@ const guardedScripts = [
   'feed-materialize.ts',
   'drain-touch-queue.ts',
   'materialize-observations.ts',
+  'bootstrap-observation-cache.ts',
   'rebuild-series.ts',
 ];
 const scheduledScripts = [
@@ -42,12 +43,18 @@ describe('scheduled background job wiring', () => {
   it('schedules bounded observation, score, and R2 drains', async () => {
     const { BACKGROUND_JOBS } = await import('../../scripts/launchd/background-jobs');
     const observation = BACKGROUND_JOBS.find((job) => job.script === 'materialize-observations.ts');
+    const bootstrap = BACKGROUND_JOBS.find((job) => job.script === 'bootstrap-observation-cache.ts');
     const score = BACKGROUND_JOBS.find((job) => job.script === 'score-videos.ts');
     const series = BACKGROUND_JOBS.find((job) => job.script === 'rebuild-series.ts');
     expect(observation?.args).toEqual([
       '--max-videos', '20000', '--max-changes', '50000', '--max-cache-bytes', '25000000',
       '--max-compressed-bytes', '25000000',
     ]);
+    expect(bootstrap?.args).toEqual([
+      '--max-videos', '25', '--max-changes', '5000',
+      '--raw-video-budget', '25', '--raw-row-budget', '10000',
+    ]);
+    expect(bootstrap?.intervalSeconds).toBe(900);
     expect(score?.args).toEqual(['--limit', '1000']);
     expect(series?.args).toEqual([
       '--drain', '--limit', '12000', '--concurrency', '16', '--max-cache-bytes', '25000000',

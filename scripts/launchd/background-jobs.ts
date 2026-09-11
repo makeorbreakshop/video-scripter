@@ -97,6 +97,26 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
     stderr: 'observation-materializer-launchd.err.log',
   },
   {
+    // Slow self-healing for legacy videos discovered after cutover. The preflight count aborts
+    // before a raw read above 25 videos or 10k narrow rows; at four runs/hour that also bounds
+    // the recurring raw-read rate while ordinary event materialization remains raw-free.
+    label: 'com.mfm.video-scripter-observation-bootstrap',
+    script: 'bootstrap-observation-cache.ts',
+    args: [
+      '--max-videos', '25',
+      '--max-changes', '5000',
+      '--raw-video-budget', '25',
+      '--raw-row-budget', '10000',
+    ],
+    intervalSeconds: 900,
+    minuteOffset: 6,
+    secondOffset: 30,
+    maxSeconds: 120,
+    nice: 15,
+    stdout: 'observation-bootstrap-launchd.log',
+    stderr: 'observation-bootstrap-launchd.err.log',
+  },
+  {
     label: 'com.mfm.video-scripter-score',
     script: 'score-videos.ts',
     args: ['--limit', '1000'],

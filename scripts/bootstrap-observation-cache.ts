@@ -22,6 +22,7 @@ import {
 import { OBS_CACHE_V2_UPSERT_SQL } from '../lib/scoring/obs-cache';
 import { OBS_DIRTY_CLEAR_SQL, type QueueClaim } from '../lib/scoring/materialization-queue';
 import { OBS_CHANGES_DELETE_SQL, OBS_CHANGES_FOR_CLAIMS_SQL } from '../lib/scoring/observation-materializer';
+import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
 const args = process.argv.slice(2);
 const optionalInt = (name: string): number | undefined => {
@@ -44,6 +45,10 @@ if (maxChanges > 5_000) throw new Error('--max-changes exceeds 5000');
 if (rawRowBudget !== undefined && rawRowBudget > MAX_BOOTSTRAP_RAW_ROWS) {
   throw new Error(`--raw-row-budget exceeds hard limit ${MAX_BOOTSTRAP_RAW_ROWS}`);
 }
+const job = dryRun
+  ? { acquired: true as const, signal: new AbortController().signal, finish: () => {} }
+  : startManagedJob({ name: 'observation-bootstrap', args });
+if (!job.acquired) process.exit(0);
 
 const trace = new SupabaseQueryTracer('observation-bootstrap');
 const pool = makeTimedPool({
@@ -162,4 +167,5 @@ try {
   client?.release();
   await pool.end();
   trace.finish(traceStats);
+  job.finish();
 }
