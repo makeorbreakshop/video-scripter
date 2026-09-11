@@ -9,7 +9,8 @@
 //
 // This is scripts/verify-archive.ts's idea applied to the serving path: deviation must be 0.
 //
-// Against the real database and the real bucket; skipped without either, so CI still passes.
+// This writes derived series files. It therefore requires an explicit production-integration
+// opt-in even when the suite is targeted and credentials happen to be present.
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
@@ -28,7 +29,9 @@ import { r2Config } from './archive';
 
 const HAVE_DB = !!process.env.DATABASE_URL;
 const HAVE_R2 = !!r2Config();
-const d = HAVE_DB && HAVE_R2 ? describe : describe.skip;
+const d = process.env.ALLOW_PRODUCTION_INTEGRATION_TESTS === '1' && HAVE_DB && HAVE_R2
+  ? describe
+  : describe.skip;
 
 jest.setTimeout(300_000);
 

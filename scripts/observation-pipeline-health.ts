@@ -2,10 +2,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
+import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 
-const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 1, timeoutMs: 30_000 });
+const trace = new SupabaseQueryTracer('observation-health', (line) => console.error(line));
+const pool = makeTimedPool({
+  connectionString: process.env.DATABASE_URL, max: 1, timeoutMs: 30_000,
+  application_name: supabaseApplicationName('observation-health'),
+});
 try {
-  const row = (await pool.query(`
+  const row = (await trace.query(pool, `/* trace:pipeline.health */
     select
       (select count(*)::int from observation_change_log) as change_rows,
       (select count(*)::int from obs_cache_dirty) as observation_queue,
@@ -19,7 +24,7 @@ try {
          from score_dirty where not_before <= now()) as score_due_oldest_seconds,
       (select coalesce(extract(epoch from now()-min(marked_at)),0)::int
          from series_dirty) as series_oldest_seconds
-  `)).rows[0];
+  `)).rows![0];
   const report = Object.fromEntries(Object.entries(row).map(([key, value]) => [key, Number(value)]));
   const unhealthy = report.observation_oldest_seconds > 15 * 60
     || report.score_due_oldest_seconds > 15 * 60
@@ -29,4 +34,5 @@ try {
   if (unhealthy) process.exitCode = 1;
 } finally {
   await pool.end();
+  trace.finish();
 }

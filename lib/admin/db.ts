@@ -29,6 +29,26 @@ export function getPool() {
 /** The role default this database runs at when nothing sets a timeout. */
 export const DEFAULT_STATEMENT_TIMEOUT_MS = 45_000;
 
+/** One simple-protocol preamble, including a pooler-proof component tag when supplied. */
+export function transactionPreambleSql(timeoutMs: number, applicationName?: string): string {
+  const n = Math.max(1, Math.round(timeoutMs));
+  if (!applicationName) return `begin; set local statement_timeout = ${n}`;
+  if (applicationName.includes('\0')) throw new Error('application_name cannot contain a null byte');
+  const escaped = applicationName.replace(/'/g, "''");
+  return `begin; set local statement_timeout = ${n}; select set_config('application_name', '${escaped}', true)`;
+}
+
+/** Apply attribution inside an explicit transaction; Supavisor replaces startup application_name. */
+export async function setLocalApplicationName(
+  client: { query(sql: string, values?: any[]): Promise<unknown> },
+  applicationName: string,
+): Promise<void> {
+  await client.query(
+    `/* trace:pipeline.application-name */ select set_config('application_name', $1, true)`,
+    [applicationName],
+  );
+}
+
 /**
  * Run `fn` with a statement timeout that actually applies.
  *
@@ -45,12 +65,12 @@ export const DEFAULT_STATEMENT_TIMEOUT_MS = 45_000;
 export async function withTimeout<T>(
   client: pg.PoolClient | pg.Client,
   timeoutMs: number,
-  fn: (c: pg.PoolClient | pg.Client) => Promise<T>
+  fn: (c: pg.PoolClient | pg.Client) => Promise<T>,
+  applicationName?: string,
 ): Promise<T> {
-  const n = Math.max(1, Math.round(timeoutMs));
-  // begin and the SET go in one simple-protocol message, so the guarantee costs one extra
-  // round trip on the way in and one on the way out, not three.
-  await client.query(`begin; set local statement_timeout = ${n}`);
+  // BEGIN, timeout, and optional attribution go in one simple-protocol message, so the
+  // guarantees cost one extra round trip on the way in and one on the way out, not four.
+  await client.query(transactionPreambleSql(timeoutMs, applicationName));
   try {
     const out = await fn(client);
     await client.query('commit');
@@ -65,11 +85,12 @@ export async function withTimeout<T>(
 export async function poolWithTimeout<T>(
   p: pg.Pool,
   timeoutMs: number,
-  fn: (c: pg.PoolClient) => Promise<T>
+  fn: (c: pg.PoolClient) => Promise<T>,
+  applicationName?: string,
 ): Promise<T> {
   const client = await p.connect();
   try {
-    return await withTimeout(client, timeoutMs, (c) => fn(c as pg.PoolClient));
+    return await withTimeout(client, timeoutMs, (c) => fn(c as pg.PoolClient), applicationName);
   } finally {
     client.release();
   }
@@ -89,6 +110,9 @@ export async function poolWithTimeout<T>(
  */
 export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg.Pool {
   const { timeoutMs, ...poolConfig } = config;
+  const applicationName = typeof poolConfig.application_name === 'string'
+    ? poolConfig.application_name
+    : undefined;
   const p = new pg.Pool(poolConfig);
   const original = p.query.bind(p) as (...a: any[]) => Promise<any>;
   (p as any).query = (text: any, values?: any, cb?: any) => {
@@ -98,7 +122,7 @@ export function makeTimedPool(config: pg.PoolConfig & { timeoutMs: number }): pg
       return original(text, values, cb);
     }
     return poolWithTimeout(p, timeoutMs, async (c) =>
-      values === undefined ? c.query(text) : c.query(text, values));
+      values === undefined ? c.query(text) : c.query(text, values), applicationName);
   };
   return p;
 }

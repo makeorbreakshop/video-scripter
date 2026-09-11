@@ -72,4 +72,3 @@ test('the v2 projection has a deterministic gzip round trip', () => {
   expect(decodeObservationState(encodeObservationState(state))).toEqual(state);
   expect(encodeObservationState(state)).toEqual(encodeObservationState(state));
 });
-

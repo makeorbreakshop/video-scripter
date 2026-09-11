@@ -46,28 +46,55 @@ export const OBS_CACHE_DDL = `
  * already covers it; normally the exact-generation clear removes the queue row entirely.
  */
 export const OBS_CACHE_READ_SQL = `
+  /* trace:observation.cache-read */
   select c.video_id, c.obs, c.format, c.last_change_id
     from video_obs_cache c
     left join obs_cache_dirty d on d.video_id = c.video_id
    where c.video_id = any($1::text[])
      and (d.video_id is null or c.last_change_id >= d.generation)`;
 
+/**
+ * Series drains enforce their remaining run budget before returning any bytea in the chunk. A
+ * null-video sentinel reports the rejected chunk's size using only one tiny row.
+ */
+export const OBS_CACHE_SERIES_READ_SQL = `
+  /* trace:series.observation-cache-read */
+  with cache_rows as materialized (
+    select c.video_id, c.obs, c.format, c.last_change_id
+      from video_obs_cache c
+      left join obs_cache_dirty d on d.video_id = c.video_id
+     where c.video_id = any($1::text[])
+       and (d.video_id is null or c.last_change_id >= d.generation)
+  ), totals as (
+    select coalesce(sum(octet_length(obs)), 0)::bigint as total_cache_bytes from cache_rows
+  )
+  select r.video_id, r.obs, r.format, r.last_change_id, t.total_cache_bytes::text
+    from cache_rows r cross join totals t
+   where t.total_cache_bytes <= $2
+  union all
+  select null::text, null::bytea, null::smallint, null::bigint, t.total_cache_bytes::text
+    from totals t where t.total_cache_bytes > $2`;
+
 export const OBS_CACHE_UPSERT_SQL = `
+  /* trace:observation.cache-upsert-v1 */
   insert into video_obs_cache (video_id, built_at, n, obs, format, last_change_id)
   select x.video_id, now(), x.n, x.obs, 1, 0
     from unnest($1::text[], $2::int[], $3::bytea[]) as x(video_id, n, obs)
   on conflict (video_id) do update
      set built_at = excluded.built_at, n = excluded.n, obs = excluded.obs,
-         format = excluded.format, last_change_id = excluded.last_change_id`;
+         format = excluded.format, last_change_id = excluded.last_change_id
+   where video_obs_cache.last_change_id <= excluded.last_change_id`;
 
 export const OBS_CACHE_V2_UPSERT_SQL = `
+  /* trace:observation.cache-upsert-v2 */
   insert into video_obs_cache (video_id, built_at, n, obs, format, last_change_id)
   select x.video_id, now(), x.n, x.obs, 2, x.last_change_id
     from unnest($1::text[], $2::int[], $3::bytea[], $4::bigint[])
       as x(video_id, n, obs, last_change_id)
   on conflict (video_id) do update
      set built_at = excluded.built_at, n = excluded.n, obs = excluded.obs,
-         format = excluded.format, last_change_id = excluded.last_change_id`;
+         format = excluded.format, last_change_id = excluded.last_change_id
+   where video_obs_cache.last_change_id <= excluded.last_change_id`;
 
 export const OBS_CACHE_COVERAGE_SQL = `select count(*)::bigint as n from video_obs_cache`;
 

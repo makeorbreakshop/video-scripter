@@ -9,9 +9,9 @@ import {
   walkScoreDirtyTargets,
 } from './materialization-queue';
 
-test('observation work is claimed in bounded lock-safe pages and cleared by exact generation', () => {
+test('observation work is claimed without holding ingest-blocking locks and cleared by exact generation', () => {
   expect(OBS_DIRTY_CLAIM_SQL).toMatch(/limit \$1/i);
-  expect(OBS_DIRTY_CLAIM_SQL).toMatch(/for update[^;]*skip locked/i);
+  expect(OBS_DIRTY_CLAIM_SQL).not.toMatch(/for update/i);
   expect(OBS_DIRTY_CLAIM_SQL).toMatch(/not d\.requires_bootstrap/i);
   expect(OBS_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
   expect(SCORE_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
@@ -36,15 +36,23 @@ test('the migration captures every source at statement scope and protects intern
     expect(sql).toMatch(new RegExp(`on public\\.${table}`, 'i'));
   }
   expect(sql.match(/for each statement/gi)?.length).toBeGreaterThanOrEqual(9);
+  expect(sql).toMatch(/function public\.queue_new_video_bootstraps/i);
+  expect(sql).toMatch(/join public\.videos v on v\.id=x\.video_id/i);
+  expect(sql).toMatch(/jsonb_array_elements\(p_rows\) with ordinality/i);
+  expect(sql).toMatch(/order by item\.position/i);
   expect(sql).toContain('observation_change_log');
   expect(sql).toContain('obs_cache_dirty');
   expect(sql).toContain('score_dirty');
   expect(sql.match(/join public\.videos v on v\.id=p\.video_id/gi)?.length).toBeGreaterThanOrEqual(3);
-  expect(sql).toMatch(/import_date\s*>=\s*m\.capture_started_at/i);
+  expect(sql).toMatch(/coalesce\(v\.import_date\s*>=\s*m\.capture_started_at,\s*false\)/i);
+  expect(sql).toMatch(/sc\.scored_at\s*\+\s*case/i);
+  expect(sql).toMatch(/when public\.score_dirty\.reason\s*=\s*'model-rollout'/i);
+  expect(sql).toMatch(/least\(public\.score_dirty\.not_before,\s*excluded\.not_before\)/i);
   for (const source of ['snapshot', 'sample', 'rss']) {
     expect(sql).toMatch(new RegExp(`function public\\.queue_${source}_updates`, 'i'));
   }
   expect(sql.match(/referencing old table as old_rows new table as new_rows/gi)?.length).toBe(3);
+  expect(sql.match(/jsonb_agg\(payload order by phase\)/gi)?.length).toBe(3);
   expect(sql).toMatch(/revoke all on table[\s\S]*from anon, authenticated/i);
 });
 

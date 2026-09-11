@@ -2,7 +2,9 @@
 // delta log captured by the database triggers; it never reads raw history tables.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import { makeTimedPool } from '../lib/admin/db';
+import type { PoolClient } from 'pg';
+import { makeTimedPool, setLocalApplicationName } from '../lib/admin/db';
+import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 import {
   MATERIALIZER_LIMITS,
   materializeObservationBatch,
@@ -26,17 +28,36 @@ const job = dryRun
   : startManagedJob({ name: 'observation-materializer', args });
 if (!job.acquired) process.exit(0);
 
-const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000 });
-const client = await pool.connect();
+const trace = new SupabaseQueryTracer('observation-materializer');
+const pool = makeTimedPool({
+  connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000,
+  application_name: supabaseApplicationName('observation-materializer'),
+});
+let client: PoolClient | null = null;
+let traceStats: Record<string, number> = {};
 try {
-  const result = await materializeObservationBatch(client, {
+  client = await pool.connect();
+  const tracedClient = { query: (sql: string, values?: any[]) => trace.query(client!, sql, values) };
+  const result = await materializeObservationBatch(tracedClient, {
     maxVideos, maxChanges, maxCacheBytes, maxCompressedBytes, dryRun,
+    afterBegin: (transaction) => setLocalApplicationName(
+      transaction,
+      supabaseApplicationName('observation-materializer'),
+    ),
   });
   const s = result.stats;
+  traceStats = {
+    videos: s.videos, changes: s.changes, completed: s.completed,
+    partial: s.partial, bootstraps: s.bootstraps, compressed_bytes: s.compressedBytes,
+  };
   console.log(`observation materializer${dryRun ? ' [dry run]' : ''}: ${s.videos} videos, ${s.changes} deltas, `
     + `${s.completed} complete, ${s.partial} partial, ${s.bootstraps} bootstrap, ${s.compressedBytes} compressed bytes`);
+} catch (error) {
+  trace.markFailed();
+  throw error;
 } finally {
-  client.release();
+  client?.release();
   await pool.end();
+  trace.finish(traceStats);
   job.finish();
 }

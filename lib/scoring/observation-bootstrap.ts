@@ -70,14 +70,14 @@ export function observationStateFromRows(
 }
 
 export const BOOTSTRAP_CLAIM_SQL = `
+  /* trace:bootstrap.queue-claim */
   select d.video_id, d.generation, v.published_at, m.capture_started_at
     from obs_cache_dirty d
     join videos v on v.id=d.video_id
     cross join observation_materialization_meta m
    where d.requires_bootstrap and d.not_before <= now() and m.singleton
    order by d.not_before, d.marked_at, d.video_id
-   limit $1
-   for update of d skip locked`;
+   limit $1`;
 
 /**
  * One timestamp per video, never observation rows. If an R2 series file was built after the last
@@ -85,6 +85,7 @@ export const BOOTSTRAP_CLAIM_SQL = `
  * bootstrap source and no history needs to cross the Supabase wire.
  */
 export const BOOTSTRAP_LATEST_WRITE_SQL = `
+  /* trace:bootstrap.latest-write */
   select requested.video_id,
          nullif(greatest(
            coalesce((select max(s.created_at) from view_snapshots s
@@ -99,6 +100,7 @@ export const BOOTSTRAP_LATEST_WRITE_SQL = `
    where m.singleton`;
 
 export const BOOTSTRAP_RAW_COUNT_SQL = `
+  /* trace:bootstrap.raw-count */
   select (
     (select count(*) from view_snapshots where video_id=any($1::text[])) +
     (select count(*) from view_samples where video_id=any($1::text[])) +
@@ -106,6 +108,7 @@ export const BOOTSTRAP_RAW_COUNT_SQL = `
   )::text as n`;
 
 export const BOOTSTRAP_RAW_ROWS_SQL = `
+  /* trace:bootstrap.raw-read */
   with target_videos as materialized (
     select id, published_at from videos where id=any($1::text[])
   )

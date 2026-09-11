@@ -25,7 +25,8 @@ test('format-2 observation state converts to the exact raw series source rows', 
 
 test('the R2 drainer never queries raw observation history or refreshes the score cache', () => {
   const script = fs.readFileSync(path.join(process.cwd(), 'scripts/rebuild-series.ts'), 'utf8');
-  expect(script).toContain('OBS_CACHE_READ_SQL');
+  expect(script).toContain('OBS_CACHE_SERIES_READ_SQL');
+  expect(script).toContain('MAX_SERIES_CACHE_BYTES = 25_000_000');
   expect(script).toContain('decodeObservationState');
   expect(script).not.toContain('SERIES_SQL.snapshots');
   expect(script).not.toContain('SERIES_SQL.samples');

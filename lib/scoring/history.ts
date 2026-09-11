@@ -55,7 +55,8 @@ export function historyInsert(rows: readonly HistoryRow[]): HistoryInsert | null
     tuples.push(`(${HISTORY_COLUMNS.map((_, i) => `$${start + i + 1}`).join(',')})`);
   }
   return {
-    text: `insert into video_score_history (${HISTORY_COLUMNS.join(', ')}) values ${tuples.join(',')}`,
+    text: `/* trace:score.history-write */
+      insert into video_score_history (${HISTORY_COLUMNS.join(', ')}) values ${tuples.join(',')}`,
     values,
   };
 }

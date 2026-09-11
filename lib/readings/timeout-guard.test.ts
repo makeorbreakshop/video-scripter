@@ -58,6 +58,12 @@ describe('statement_timeout is set in a form that actually applies', () => {
     expect(src).toMatch(/poolWithTimeout\(p, timeoutMs/);
   });
 
+  test('makeTimedPool reapplies application_name inside the pooler transaction', () => {
+    const src = read('lib/admin/db.ts');
+    expect(src).toContain("set_config('application_name'");
+    expect(src).toMatch(/poolWithTimeout\(p, timeoutMs,[\s\S]*applicationName/);
+  });
+
   test('the archive scripts take their timeout from makeTimedPool, not from a bare SET', () => {
     for (const f of ['scripts/archive-readings.ts', 'scripts/thin-readings.ts', 'scripts/verify-archive.ts']) {
       expect(read(f)).toMatch(/makeTimedPool\(\{[^}]*timeoutMs:/);

@@ -11,8 +11,9 @@
 // So the writers do one thing, in the transaction that already exists: mark the videos dirty.
 // That is a single statement over an unnest(), inserting into a narrow table with a primary key
 // on video_id, so a tick with 5,000 readings is ONE statement and at most 5,000 tiny rows —
-// and re-marking a video that is already dirty is a no-op. `scripts/rebuild-series.ts` drains
-// the queue on a schedule, one R2 PUT per distinct video per drain however many readings landed.
+// and re-marking an already-dirty video only advances its generation. `scripts/rebuild-series.ts`
+// drains the queue on a schedule, one R2 PUT per distinct video per drain however many readings
+// landed. The exact-generation clear preserves a mark that arrives during an R2 write.
 //
 // Marking dirty must never break ingestion: markSeriesDirty swallows its own errors and reports
 // how many it marked. A missed mark costs a stale series file, which the page detects and falls
@@ -22,6 +23,7 @@ import { r2Config, getObject, putObject, type R2Config } from './archive';
 import { seriesKey, encodeSeries, decodeSeries, SERIES_CONTENT_TYPE, type VideoSeriesFile } from './series';
 
 export const SERIES_DIRTY_DDL = `
+  /* trace:series.queue-ddl */
   create sequence if not exists pipeline_generation_seq;
   create table if not exists series_dirty (
     video_id   text primary key,
@@ -33,7 +35,7 @@ export const SERIES_DIRTY_DDL = `
 
 /** One statement, any number of videos, idempotent. $1 = video_id[]. */
 export const SERIES_DIRTY_MARK_SQL = `
-  insert into series_dirty (video_id, marked_at, generation)
+  insert into series_dirty (video_id, marked_at, generation) /* trace:series.queue-mark */
   select v, now(), nextval('pipeline_generation_seq') from unnest($1::text[]) as v
   where v is not null and v <> ''
   on conflict (video_id) do update set
@@ -41,16 +43,18 @@ export const SERIES_DIRTY_MARK_SQL = `
 
 /** The next batch to rebuild, oldest mark first. $1 = limit. */
 export const SERIES_DIRTY_CLAIM_SQL = `
+  /* trace:series.queue-claim */
   select video_id, generation from series_dirty order by marked_at, video_id limit $1`;
 
 export const SERIES_DIRTY_CLEAR_SQL = `
+  /* trace:series.queue-clear */
   delete from series_dirty d using jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
 export const SERIES_DIRTY_FAIL_SQL =
   `update series_dirty set attempts = attempts + 1, marked_at = now() where video_id = any($1::text[])`;
 
-export const SERIES_DIRTY_COUNT_SQL = `select count(*)::bigint as n from series_dirty`;
+export const SERIES_DIRTY_COUNT_SQL = `/* trace:series.queue-count */ select count(*)::bigint as n from series_dirty`;
 
 /** Anything that can run a parameterised statement: a Pool, a checked-out client, or the
  *  narrower BatchClient the nightly batch writer passes. */
@@ -153,7 +157,7 @@ export function seriesFallbackRate(): number {
  * and seriesRss() applies the predicate, so one file serves both the page and the scorer.
  */
 export const SERIES_SQL = {
-  video: `select id, published_at from videos where id = any($1::text[])`,
+  video: `/* trace:series.video-read */ select id, published_at from videos where id = any($1::text[])`,
   snapshots: `select video_id, (snapshot_date::timestamptz + interval '12 hours') as at, created_at,
                      view_count as views, days_since_published, like_count, comment_count
                 from view_snapshots where video_id = any($1::text[]) order by video_id, snapshot_date`,
@@ -161,9 +165,10 @@ export const SERIES_SQL = {
               from view_samples where video_id = any($1::text[]) order by video_id, sampled_at`,
   rss: `select video_id, at, views, time_basis, received_at, model_eligible, conflicted
           from rss_samples where video_id = any($1::text[]) order by video_id, at`,
-  thumbs: `select video_id, version, first_seen, last_checked, sha256, phash, r2_uploaded_at
+  thumbs: `/* trace:series.thumbnail-read */
+           select video_id, version, first_seen, last_checked, sha256, phash, r2_uploaded_at
              from thumbnail_versions where video_id = any($1::text[]) order by video_id, version`,
-  titles: `select video_id, version, title, first_seen
+  titles: `/* trace:series.title-read */ select video_id, version, title, first_seen
              from title_versions where video_id = any($1::text[]) order by video_id, version`,
 } as const;
 

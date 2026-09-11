@@ -90,12 +90,15 @@ begin
   with logged as (
     insert into public.observation_change_log
       (video_id, source, operation, at, views, time_basis, received_at, model_eligible, conflicted)
-    select video_id, source, operation, at, views, time_basis, received_at,
-           coalesce(model_eligible, true), coalesce(conflicted, false)
-      from jsonb_to_recordset(p_rows) as x(
+    select x.video_id, x.source, x.operation, x.at, x.views, x.time_basis, x.received_at,
+           coalesce(x.model_eligible, true), coalesce(x.conflicted, false)
+      from jsonb_array_elements(p_rows) with ordinality as item(payload, position)
+      cross join lateral jsonb_to_record(item.payload) as x(
         video_id text, source text, operation text, at timestamptz, views bigint,
         time_basis text, received_at timestamptz, model_eligible boolean, conflicted boolean)
-     where video_id is not null and video_id <> '' and at is not null
+      join public.videos v on v.id=x.video_id
+     where x.video_id is not null and x.video_id <> '' and x.at is not null
+     order by item.position
     returning video_id, change_id
   ), per_video as materialized (
     select video_id, max(change_id) as generation from logged group by video_id
@@ -103,7 +106,7 @@ begin
     insert into public.obs_cache_dirty(video_id, generation, requires_bootstrap, marked_at, not_before)
     select p.video_id, p.generation,
            not exists (select 1 from public.video_obs_cache c where c.video_id=p.video_id and c.format=2)
-           and not (v.import_date >= m.capture_started_at),
+           and not coalesce(v.import_date >= m.capture_started_at, false),
            now(), now()
       from per_video p
       join public.videos v on v.id=p.video_id
@@ -116,11 +119,30 @@ begin
     returning video_id
   ), score_queue as (
     insert into public.score_dirty(video_id, generation, reason, marked_at, not_before)
-    select p.video_id, nextval('public.pipeline_generation_seq'), 'observation', now(), now()
+    select p.video_id, nextval('public.pipeline_generation_seq'), 'observation', now(),
+           case when sc.scored_at is null then now()
+                else sc.scored_at + case
+                  when now() - v.published_at < interval '1 day' then interval '5 minutes'
+                  when now() - v.published_at < interval '7 days' then interval '1 hour'
+                  when now() - v.published_at < interval '30 days' then interval '1 day'
+                  when now() - v.published_at < interval '60 days' then interval '3 days'
+                  else interval '7 days'
+                end
+           end
       from per_video p
       join public.videos v on v.id=p.video_id
+      left join public.video_scores sc on sc.video_id=p.video_id
+     where v.published_at is not null
+       and coalesce(v.privacy_status,'public') = 'public'
+       and coalesce(v.is_short,false) = false
+       and coalesce(v.duration,'') <> 'P0D'
+       and not (v.shorts_checked_at is null
+                and v.duration ~ '^PT[0-9HMS]+$'
+                and extract(epoch from v.duration::interval) <= 180)
     on conflict (video_id) do update set
-      generation = excluded.generation, reason = excluded.reason,
+      generation = excluded.generation,
+      reason = case when public.score_dirty.reason = 'model-rollout'
+                    then public.score_dirty.reason else excluded.reason end,
       marked_at = excluded.marked_at,
       not_before = least(public.score_dirty.not_before, excluded.not_before)
     returning video_id
@@ -135,6 +157,26 @@ begin
   select count(*) into affected from per_video;
 end;
 $$;
+
+-- RSS discovery can observe a catalog id before the corresponding videos row is imported. Such
+-- observations are deliberately not retained forever in the delta log. If the video is imported
+-- later, bootstrap its already-present raw history once instead of pretending it started empty.
+create or replace function public.queue_new_video_bootstraps()
+returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
+begin
+  insert into public.obs_cache_dirty(video_id, generation, requires_bootstrap, marked_at, not_before)
+  select n.id, 0, true, now(), now()
+    from new_videos n
+   where not exists (
+           select 1 from public.video_obs_cache c where c.video_id=n.id and c.format=2)
+     and (exists (select 1 from public.view_snapshots s where s.video_id=n.id)
+       or exists (select 1 from public.view_samples s where s.video_id=n.id)
+       or exists (select 1 from public.rss_samples s where s.video_id=n.id))
+  on conflict (video_id) do update set
+    requires_bootstrap=true, marked_at=excluded.marked_at,
+    not_before=least(public.obs_cache_dirty.not_before,excluded.not_before);
+  return null;
+end $$;
 
 create or replace function public.queue_snapshot_upserts()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
@@ -155,14 +197,14 @@ end $$;
 create or replace function public.queue_snapshot_updates()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
-  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+  perform public.enqueue_observation_changes((select jsonb_agg(payload order by phase) from (
     select jsonb_build_object(
       'video_id',video_id,'source','snapshot','operation','delete',
-      'at',snapshot_date::timestamptz + interval '12 hours') as payload from old_rows
+      'at',snapshot_date::timestamptz + interval '12 hours') as payload, 0 as phase from old_rows
     union all
     select jsonb_build_object(
       'video_id',video_id,'source','snapshot','operation','upsert',
-      'at',snapshot_date::timestamptz + interval '12 hours','views',view_count) from new_rows
+      'at',snapshot_date::timestamptz + interval '12 hours','views',view_count), 1 from new_rows
   ) changes));
   return null;
 end $$;
@@ -185,13 +227,13 @@ end $$;
 create or replace function public.queue_sample_updates()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
-  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+  perform public.enqueue_observation_changes((select jsonb_agg(payload order by phase) from (
     select jsonb_build_object(
-      'video_id',video_id,'source','sample','operation','delete','at',sampled_at) as payload from old_rows
+      'video_id',video_id,'source','sample','operation','delete','at',sampled_at) as payload, 0 as phase from old_rows
     union all
     select jsonb_build_object(
       'video_id',video_id,'source','sample','operation','upsert',
-      'at',sampled_at,'views',view_count) from new_rows
+      'at',sampled_at,'views',view_count), 1 from new_rows
   ) changes));
   return null;
 end $$;
@@ -215,23 +257,28 @@ end $$;
 create or replace function public.queue_rss_updates()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
-  perform public.enqueue_observation_changes((select jsonb_agg(payload) from (
+  perform public.enqueue_observation_changes((select jsonb_agg(payload order by phase) from (
     select jsonb_build_object(
-      'video_id',video_id,'source','rss','operation','delete','at',at) as payload from old_rows
+      'video_id',video_id,'source','rss','operation','delete','at',at) as payload, 0 as phase from old_rows
     union all
     select jsonb_build_object(
       'video_id',video_id,'source','rss','operation','upsert','at',at,'views',views,
       'time_basis',time_basis,'received_at',received_at,'model_eligible',model_eligible,
-      'conflicted',conflicted) from new_rows
+      'conflicted',conflicted), 1 from new_rows
   ) changes));
   return null;
 end $$;
 
 revoke execute on function public.enqueue_observation_changes(jsonb) from public, anon, authenticated;
-revoke execute on function public.queue_snapshot_upserts(), public.queue_snapshot_deletes(),
+revoke execute on function public.queue_new_video_bootstraps(),
+  public.queue_snapshot_upserts(), public.queue_snapshot_deletes(),
   public.queue_snapshot_updates(), public.queue_sample_upserts(), public.queue_sample_deletes(),
   public.queue_sample_updates(), public.queue_rss_upserts(), public.queue_rss_deletes(),
   public.queue_rss_updates() from public, anon, authenticated;
+
+drop trigger if exists queue_videos_insert_bootstrap on public.videos;
+create trigger queue_videos_insert_bootstrap after insert on public.videos
+  referencing new table as new_videos for each statement execute function public.queue_new_video_bootstraps();
 
 drop trigger if exists queue_view_snapshots_insert on public.view_snapshots;
 create trigger queue_view_snapshots_insert after insert on public.view_snapshots

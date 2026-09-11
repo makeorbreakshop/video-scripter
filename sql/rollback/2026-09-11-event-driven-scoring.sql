@@ -1,4 +1,5 @@
 begin;
+drop trigger if exists queue_videos_insert_bootstrap on public.videos;
 drop trigger if exists queue_view_snapshots_insert on public.view_snapshots;
 drop trigger if exists queue_view_snapshots_update on public.view_snapshots;
 drop trigger if exists queue_view_snapshots_delete on public.view_snapshots;
@@ -17,6 +18,7 @@ drop function if exists public.queue_sample_updates();
 drop function if exists public.queue_rss_upserts();
 drop function if exists public.queue_rss_deletes();
 drop function if exists public.queue_rss_updates();
+drop function if exists public.queue_new_video_bootstraps();
 drop function if exists public.enqueue_observation_changes(jsonb);
 drop table if exists public.score_dirty;
 drop table if exists public.obs_cache_dirty;

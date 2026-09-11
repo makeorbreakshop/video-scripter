@@ -130,6 +130,7 @@ export function planObservationMaterialization(
 }
 
 export const OBS_CHANGES_FOR_CLAIMS_SQL = `
+  /* trace:observation.delta-read */
   with claims as (
     select * from jsonb_to_recordset($1::jsonb)
       as x(video_id text, generation bigint, last_change_id bigint)
@@ -142,11 +143,13 @@ export const OBS_CHANGES_FOR_CLAIMS_SQL = `
    limit $2`;
 
 export const OBS_CHANGES_DELETE_SQL = `
+  /* trace:observation.delta-clear */
   delete from observation_change_log l
   using jsonb_to_recordset($1::jsonb) as x(video_id text, last_change_id bigint)
   where l.video_id=x.video_id and l.change_id <= x.last_change_id`;
 
 export const OBS_DIRTY_REQUIRE_BOOTSTRAP_SQL = `
+  /* trace:observation.queue-bootstrap */
   update obs_cache_dirty d
      set requires_bootstrap=true, attempts=d.attempts+1,
          not_before=greatest(d.not_before, now() + interval '5 minutes'),
@@ -162,7 +165,14 @@ const number = (value: unknown): number => Number(value ?? 0);
 
 export async function materializeObservationBatch(
   client: TransactionClient,
-  options: { maxVideos: number; maxChanges: number; maxCacheBytes: number; maxCompressedBytes: number; dryRun?: boolean },
+  options: {
+    maxVideos: number;
+    maxChanges: number;
+    maxCacheBytes: number;
+    maxCompressedBytes: number;
+    dryRun?: boolean;
+    afterBegin?: (transaction: TransactionClient) => Promise<void>;
+  },
 ): Promise<ObservationMaterializationPlan> {
   if (options.maxVideos > MATERIALIZER_LIMITS.videos || options.maxChanges > MATERIALIZER_LIMITS.changes
     || options.maxCacheBytes > MATERIALIZER_LIMITS.cacheBytes
@@ -171,6 +181,7 @@ export async function materializeObservationBatch(
   }
   await client.query('begin');
   try {
+    if (options.afterBegin) await options.afterBegin(client);
     const claimRows = (await client.query(OBS_DIRTY_CLAIM_SQL, [options.maxVideos, options.maxCacheBytes])).rows;
     const claims: ObservationMaterializationClaim[] = claimRows.map((row) => ({
       videoId: row.video_id,

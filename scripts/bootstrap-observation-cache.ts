@@ -3,7 +3,9 @@
 // budgets plus a server-side row count that passes before the history query runs.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import { makeTimedPool } from '../lib/admin/db';
+import type { PoolClient } from 'pg';
+import { makeTimedPool, setLocalApplicationName } from '../lib/admin/db';
+import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 import { readSeriesFile } from '../lib/readings/series-store';
 import { r2Config } from '../lib/readings/archive';
 import {
@@ -38,11 +40,20 @@ if (rawRowBudget !== undefined && rawRowBudget > MAX_BOOTSTRAP_RAW_ROWS) {
   throw new Error(`--raw-row-budget exceeds hard limit ${MAX_BOOTSTRAP_RAW_ROWS}`);
 }
 
-const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000 });
-const client = await pool.connect();
+const trace = new SupabaseQueryTracer('observation-bootstrap');
+const pool = makeTimedPool({
+  connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000,
+  application_name: supabaseApplicationName('observation-bootstrap'),
+});
+let client: PoolClient | null = null;
+let tracedClient: { query: (sql: string, values?: any[]) => Promise<any> } | null = null;
+let traceStats: Record<string, number> = {};
 try {
-  await client.query('begin isolation level repeatable read');
-  const claims = (await client.query(BOOTSTRAP_CLAIM_SQL, [maxVideos])).rows.map((row: any) => ({
+  client = await pool.connect();
+  tracedClient = { query: (sql: string, values?: any[]) => trace.query(client!, sql, values) };
+  await tracedClient.query('begin isolation level repeatable read');
+  await setLocalApplicationName(tracedClient, supabaseApplicationName('observation-bootstrap'));
+  const claims = (await tracedClient.query(BOOTSTRAP_CLAIM_SQL, [maxVideos])).rows!.map((row: any) => ({
     videoId: row.video_id as string,
     generation: Number(row.generation),
     publishedAt: new Date(row.published_at).toISOString(),
@@ -53,7 +64,7 @@ try {
   const rawIds: string[] = [];
   const latestWrites = new Map<string, string | null>();
   if (claims.length) {
-    const rows = (await client.query(BOOTSTRAP_LATEST_WRITE_SQL, [claims.map((claim: any) => claim.videoId)])).rows;
+    const rows = (await tracedClient.query(BOOTSTRAP_LATEST_WRITE_SQL, [claims.map((claim: any) => claim.videoId)])).rows!;
     for (const row of rows) {
       latestWrites.set(row.video_id, row.latest_write_at ? new Date(row.latest_write_at).toISOString() : null);
     }
@@ -66,9 +77,9 @@ try {
   }
 
   if (rawIds.length) {
-    const count = Number((await client.query(BOOTSTRAP_RAW_COUNT_SQL, [rawIds])).rows[0]?.n ?? 0);
+    const count = Number((await tracedClient.query(BOOTSTRAP_RAW_COUNT_SQL, [rawIds])).rows![0]?.n ?? 0);
     validateRawBootstrapBudget({ videos: rawIds.length, rows: count }, { rawVideoBudget, rawRowBudget });
-    const rows = (await client.query(BOOTSTRAP_RAW_ROWS_SQL, [rawIds])).rows;
+    const rows = (await tracedClient.query(BOOTSTRAP_RAW_ROWS_SQL, [rawIds])).rows!;
     const byVideo = new Map<string, BootstrapObservationRow[]>();
     for (const row of rows) {
       const group = byVideo.get(row.video_id) ?? [];
@@ -86,7 +97,7 @@ try {
     video_id: claim.videoId, generation: claim.generation, last_change_id: 0,
   }));
   const deltaRows = claims.length
-    ? (await client.query(OBS_CHANGES_FOR_CLAIMS_SQL, [JSON.stringify(claimPayload), maxChanges + 1])).rows
+    ? (await tracedClient.query(OBS_CHANGES_FOR_CLAIMS_SQL, [JSON.stringify(claimPayload), maxChanges + 1])).rows!
     : [];
   if (deltaRows.length > maxChanges) throw new Error(`bootstrap delta count exceeds ${maxChanges}`);
   const changesByVideo = new Map<string, ObservationChange[]>();
@@ -117,22 +128,28 @@ try {
     ready.push({ claim: { video_id: claim.videoId, generation: claim.generation }, state, obs, n: observationsFromState(state).length });
   }
   if (ready.length) {
-    await client.query(OBS_CACHE_V2_UPSERT_SQL, [
+    await tracedClient.query(OBS_CACHE_V2_UPSERT_SQL, [
       ready.map((row) => row.claim.video_id), ready.map((row) => row.n), ready.map((row) => row.obs),
       ready.map((row) => row.state.lastChangeId),
     ]);
-    await client.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(ready.map((row) => ({
+    await tracedClient.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(ready.map((row) => ({
       video_id: row.claim.video_id, last_change_id: row.state.lastChangeId,
     })))]);
-    await client.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(ready.map((row) => row.claim))]);
+    await tracedClient.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(ready.map((row) => row.claim))]);
   }
-  await client.query(dryRun ? 'rollback' : 'commit');
+  await tracedClient.query(dryRun ? 'rollback' : 'commit');
+  traceStats = {
+    videos: ready.length, raw_videos: rawIds.length, r2_videos: ready.length - rawIds.length,
+    changes: deltaRows.length, compressed_bytes: compressedBytes,
+  };
   console.log(`observation bootstrap${dryRun ? ' [dry run]' : ''}: ${ready.length} videos, `
     + `${rawIds.length} raw, ${ready.length - rawIds.length} R2, ${deltaRows.length} deltas, ${compressedBytes} bytes`);
 } catch (error) {
-  await client.query('rollback').catch(() => {});
+  trace.markFailed();
+  if (tracedClient) await tracedClient.query('rollback').catch(() => {});
   throw error;
 } finally {
-  client.release();
+  client?.release();
   await pool.end();
+  trace.finish(traceStats);
 }

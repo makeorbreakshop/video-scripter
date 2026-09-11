@@ -9,6 +9,7 @@ export interface ScoreDirtyTarget {
 }
 
 export const OBS_DIRTY_CLAIM_SQL = `
+  /* trace:observation.queue-claim */
   with candidates as materialized (
     select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at,
            c.format, c.last_change_id, c.obs, v.published_at,
@@ -31,18 +32,20 @@ export const OBS_DIRTY_CLAIM_SQL = `
     from budgeted b
     join obs_cache_dirty d on d.video_id=b.video_id and d.generation=b.generation
    where b.running_bytes <= $2
-   order by b.not_before, b.marked_at, b.video_id
-   for update of d skip locked`;
+   order by b.not_before, b.marked_at, b.video_id`;
 
 export const OBS_DIRTY_CLEAR_SQL = `
+  /* trace:observation.queue-clear */
   delete from obs_cache_dirty d using jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
 export const SCORE_DIRTY_CLEAR_SQL = `
+  /* trace:score.queue-clear */
   delete from score_dirty d using jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
 export const SCORE_DIRTY_DEFER_SQL = `
+  /* trace:score.queue-defer */
   update score_dirty d set not_before = greatest(d.not_before, now() + ($2 || ' seconds')::interval),
          attempts = d.attempts + 1
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
@@ -51,7 +54,8 @@ export const SCORE_DIRTY_DEFER_SQL = `
 export function ensureObservationMaterializationSql(ids: readonly string[]): { text: string; values: unknown[] } {
   const unique = [...new Set(ids.filter(Boolean))];
   return {
-    text: `with requested as (select unnest($1::text[]) as video_id), state as (
+    text: `/* trace:observation.queue-ensure */
+    with requested as (select unnest($1::text[]) as video_id), state as (
       select r.video_id, coalesce(max(l.change_id), c.last_change_id, 0) as generation,
              coalesce(c.format = 2, false) as has_v2
         from requested r
@@ -77,7 +81,8 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
   const channels = options.channels.length ? `and v.channel_id = any(${bind(options.channels)})` : '';
   const limit = bind(options.limit);
   return {
-    text: `select v.id, v.channel_id, v.published_at::text as published_at, d.generation::text as generation
+    text: `/* trace:score.queue-targets */
+    select v.id, v.channel_id, v.published_at::text as published_at, d.generation::text as generation
       from score_dirty d
       join videos v on v.id = d.video_id
       left join video_scores sc on sc.video_id = v.id

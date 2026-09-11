@@ -21,5 +21,37 @@ test('the guarded rollout surface replaces unbounded legacy jobs', () => {
   const runbook = fs.readFileSync(path.join(root, 'docs/runbooks/2026-09-11-event-driven-scoring.md'), 'utf8');
   expect(runbook).toContain('Capture first');
   expect(runbook).toContain('Raw fallback budget: zero');
+  expect(runbook).toContain('estimated_response_bytes');
+  expect(runbook).toContain('application_name');
   expect(runbook).toContain('Rollback');
+});
+
+test('every scheduled database worker emits attributed Supabase query traces', () => {
+  const root = process.cwd();
+  for (const file of [
+    'materialize-observations.ts',
+    'bootstrap-observation-cache.ts',
+    'score-videos.ts',
+    'rebuild-series.ts',
+    'observation-pipeline-health.ts',
+    'enqueue-score-rollout.ts',
+  ]) {
+    const source = fs.readFileSync(path.join(root, 'scripts', file), 'utf8');
+    expect(source).toContain('SupabaseQueryTracer');
+    expect(source).toContain('supabaseApplicationName');
+    expect(source).toContain('application_name:');
+    expect(source).toContain('.finish(');
+  }
+});
+
+test('workers with explicit transactions set attribution after BEGIN', () => {
+  const root = process.cwd();
+  for (const file of [
+    'materialize-observations.ts',
+    'bootstrap-observation-cache.ts',
+    'score-videos.ts',
+  ]) {
+    const source = fs.readFileSync(path.join(root, 'scripts', file), 'utf8');
+    expect(source).toContain('setLocalApplicationName');
+  }
 });

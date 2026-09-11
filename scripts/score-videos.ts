@@ -5,9 +5,9 @@
 //                                                gates and is the only thing that promotes one to
 //                                                active. Scoring always reads the newest ACTIVE row.
 //   npx tsx scripts/score-videos.ts              drain bounded, age-aware score_dirty work
-//   --all --force                             explicitly rewrite every selected row; not for resumable loops
-//   npx tsx scripts/score-videos.ts --final      one-shot final score for videos older than 60 days
-//   npx tsx scripts/score-videos.ts --since 3    rescore every video published in the last 3 days
+//   --all --force --limit N                  explicitly rewrite a bounded selection
+//   npx tsx scripts/score-videos.ts --final --limit N      final scores for older videos
+//   npx tsx scripts/score-videos.ts --since 3 --limit N    rescore a bounded recent selection
 // Common flags: --channels <id,id>  restrict to those channels; --limit <n>  cap the target list.
 //
 // Baselines: a prior video's day-30 views come from its day-27..33 snapshot when it has one,
@@ -17,7 +17,8 @@
 // final, and analysis modes retain their separately governed historical inputs.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import { makeTimedPool } from '../lib/admin/db';
+import { makeTimedPool, setLocalApplicationName } from '../lib/admin/db';
+import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 import { longformSql } from '../lib/scoring/longform';
 import { refreshScoredChannels } from '../lib/scoring/channel-refresh';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
@@ -38,7 +39,7 @@ import {
   curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, ObservationCacheMissError,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
-import { obsCacheSummary } from '../lib/scoring/obs-cache';
+import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
 import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
@@ -75,20 +76,42 @@ const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filte
 // rescore after the v5.2 change only has to touch the slow channels. Resolved to a channel list
 // before selection, so it composes with --all/--force exactly as --channels does.
 const MIN_GAP = Number(arg('--channels-min-gap') ?? 0) || null;
-const LIMIT = Number(arg('--limit') ?? 0) || null;
+const MAX_SCORE_RUN_LIMIT = 5_000;
+const limitArg = arg('--limit');
+const parsedLimit = limitArg === null ? null : Number(limitArg);
+if (parsedLimit !== null && (!Number.isInteger(parsedLimit) || parsedLimit <= 0)) {
+  throw new Error('--limit must be a positive integer');
+}
+if (parsedLimit !== null && parsedLimit > MAX_SCORE_RUN_LIMIT && !FIT) {
+  throw new Error(`--limit exceeds the hard scoring cap of ${MAX_SCORE_RUN_LIMIT}`);
+}
+const LIMIT = parsedLimit;
 // --since <days>: rescore EVERY video published within the last <days>, whether or not a new
 // reading has landed since its stored score. The hourly pass only picks up videos with a fresh
 // reading, so after a scoring-math fix the young rows would otherwise keep a stale number until
 // their next snapshot. Added 2026-09-04 with the sub-day curve fix.
-const SINCE = Number(arg('--since') ?? 0) || null;
+const sinceArg = arg('--since');
+const parsedSince = sinceArg === null ? null : Number(sinceArg);
+if (parsedSince !== null && (!Number.isFinite(parsedSince) || parsedSince <= 0)) {
+  throw new Error('--since must be a positive number of days');
+}
+const SINCE = parsedSince;
+if (!FIT && (V5 || FINAL || SINCE !== null || (ALL && FORCE)) && LIMIT === null) {
+  throw new Error('explicit scoring modes require --limit');
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
 // makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
 // The old on-connect SET was queued asynchronously and landed after the queries it was meant
 // to protect, so this script actually ran at the 300s role default (2026-09-08 investigation).
-const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000 });
+const trace = new SupabaseQueryTracer('score-videos');
+const pool = makeTimedPool({
+  connectionString: process.env.DATABASE_URL, max: 3, timeoutMs: 300000,
+  application_name: supabaseApplicationName('score-videos'),
+});
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
-const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
+const q = async (sql: string, params?: any[]): Promise<any[]> =>
+  (await trace.query(pool, sql, params)).rows as any[];
 
 // Snapshot record for a set of videos: daily snapshots + high-res samples, as true-age days.
 async function records(ids: string[], options: RecordLoadOptions = {}): Promise<Map<string, Snapshot[]>> {
@@ -112,7 +135,8 @@ async function records(ids: string[], options: RecordLoadOptions = {}): Promise<
 // Day-30 truth for a set of videos (snapshot at day 27..33 nearest 30), else null.
 async function day30(ids: string[]): Promise<Map<string, number>> {
   const rows = await q(
-    `select distinct on (video_id) video_id, view_count
+    `/* trace:score.day30-read */
+     select distinct on (video_id) video_id, view_count
        from view_snapshots where video_id = any($1) and days_since_published between 27 and 33 and view_count > 0
       order by video_id, abs(days_since_published - 30)`,
     [ids]
@@ -213,7 +237,7 @@ async function fit() {
   // CANDIDATE, not live. Before 2026-09-08 this insert was the promotion: the row was the newest
   // for its version and therefore what the next scorer run read, with no benchmark in between.
   // The nightly fit now only proposes; scripts/weekly-refit.ts is the only thing that promotes.
-  const ins = await pool.query(
+  const ins = await trace.query(pool,
     `insert into score_params (model_version, n_videos, params, status, status_at, status_note)
      values ($1, $2, $3, 'candidate', now(), $4) returning id`,
     [MODEL_VERSION, ids.length, JSON.stringify(params), 'nightly --fit; awaiting weekly-refit gates']
@@ -354,10 +378,13 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date(), claims:
   const set = SCORE_COLUMNS.filter((c) => c !== 'video_id')
     .map((c) => `${c}=excluded.${c}`).join(', ');
   const client = await pool.connect();
+  const tracedClient = { query: (sql: string, params?: any[]) => trace.query(client, sql, params) };
   try {
-    await client.query('begin');
-    await client.query(
-      `insert into video_scores (${SCORE_COLUMNS.join(', ')}, scored_at)
+    await tracedClient.query('begin');
+    await setLocalApplicationName(tracedClient, supabaseApplicationName('score-videos'));
+    await tracedClient.query(
+      `/* trace:score.current-write */
+       insert into video_scores (${SCORE_COLUMNS.join(', ')}, scored_at)
        values ${tuples.join(',')}
        on conflict (video_id) do update set ${set}, scored_at=excluded.scored_at`,
       values
@@ -372,13 +399,13 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date(), claims:
       extra: { params_version: MODEL_VERSION, observation_version: OBSERVATION_SCORE_VERSION, q: r.q, n_same_age: r.n_same_age, typical_neff: r.typical_neff, priors_from_lifetime: r.priors_from_lifetime,
         typical_kind: r.typical_kind, typical_anchor_age: r.typical_anchor_age },
     })));
-    if (hist) await client.query(hist.text, hist.values);
+    if (hist) await tracedClient.query(hist.text, hist.values);
     // Headline scores commit with the score/history batch, including partial/stopped runs.
-    await refreshScoredChannels(client, rows.map(row => row.channel_id));
-    if (claims.length) await client.query(SCORE_DIRTY_CLEAR_SQL, [JSON.stringify(claims)]);
-    await client.query('commit');
+    await refreshScoredChannels(tracedClient, rows.map(row => row.channel_id));
+    if (claims.length) await tracedClient.query(SCORE_DIRTY_CLEAR_SQL, [JSON.stringify(claims)]);
+    await tracedClient.query('commit');
     for (const row of rows) if (row.channel_id) scoredChannels.add(row.channel_id);
-  } catch (error) { await client.query('rollback'); throw error; }
+  } catch (error) { await tracedClient.query('rollback'); throw error; }
   finally { client.release(); }
   return rows.length;
 }
@@ -490,9 +517,8 @@ async function channelsSlowerThan(days: number): Promise<string[]> {
 async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
   const p = await q(activeParamsQuery('params'), [version]);
   if (!p.length) {
-    console.error(`no ACTIVE score_params for ${version}; run --fit then scripts/weekly-refit.ts, ` +
-                  `or promote a row by hand (update score_params set status='active' where id=...)`);
-    process.exit(1);
+    throw new Error(`no ACTIVE score_params for ${version}; run --fit then scripts/weekly-refit.ts, ` +
+                    `or promote a row by hand (update score_params set status='active' where id=...)`);
   }
   return p[0].params as GlobalParams;
 }
@@ -692,10 +718,13 @@ try {
       if (!FIT && !V5) await revalidateRemote({ channels: [...scoredChannels] });
     },
   });
+} catch (error) {
+  trace.markFailed();
+  throw error;
 } finally {
-  // The number that says whether the priors are actually coming out of video_obs_cache. A miss
-  // rate that stays high after the backfill means series_dirty is draining slower than readings
-  // land, and the run just paid the old union price for those priors.
+  // Scheduled misses defer instead of reading raw histories; this rate says whether the
+  // materializer is keeping the scorer fed.
   log(obsCacheSummary());
   await pool.end();
+  trace.finish({ cache_hits: obsCacheStats.hits, cache_misses: obsCacheStats.misses });
 }

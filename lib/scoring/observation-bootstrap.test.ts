@@ -5,6 +5,7 @@ import {
   BOOTSTRAP_RAW_COUNT_SQL,
   BOOTSTRAP_RAW_ROWS_SQL,
   BOOTSTRAP_LATEST_WRITE_SQL,
+  BOOTSTRAP_CLAIM_SQL,
   bootstrapSource,
   observationStateFromRows,
   validateRawBootstrapBudget,
@@ -30,6 +31,7 @@ test('raw bootstrap is impossible without both explicit budgets', () => {
 });
 
 test('the tiny count query is separate from and precedes the raw-row query', () => {
+  expect(BOOTSTRAP_CLAIM_SQL).not.toMatch(/for update/i);
   expect(BOOTSTRAP_LATEST_WRITE_SQL).toMatch(/max\(s\.created_at\)/i);
   expect(BOOTSTRAP_LATEST_WRITE_SQL).toMatch(/max\(s\.sampled_at\)/i);
   expect(BOOTSTRAP_LATEST_WRITE_SQL).toMatch(/max\(coalesce\(s\.received_at,s\.at\)\)/i);

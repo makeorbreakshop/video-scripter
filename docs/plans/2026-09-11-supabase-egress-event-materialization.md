@@ -1,7 +1,7 @@
 ---
 title: Event-driven scoring materialization with bounded Supabase egress
-status: active
-artifact_readiness: implementation-ready
+status: complete
+artifact_readiness: verified
 execution: code
 ---
 
@@ -64,6 +64,15 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
    through a separate bounded command.
 7. **Bootstrap budgets.** R2 is first choice. Raw Postgres bootstrap requires an explicit video
    and returned-row ceiling checked by a server-side count before any history leaves Supabase.
+8. **Optimistic, monotonic workers.** Claims do not hold queue-row locks while Node or R2 work is
+   running. Exact-generation clears and cache upserts guarded by `last_change_id` make duplicate
+   workers safe while ensuring stale workers cannot overwrite newer state or block ingestion.
+9. **Direct-Postgres attribution.** Every pipeline query emits a redacted structured span and each
+   run emits totals under one `trace_id`. Component names are applied transaction-locally because
+   Supavisor replaces startup `application_name`; this keeps `video-scripter:*` visible server-side.
+10. **Test isolation.** The default Jest configuration excludes database/external integration
+    suites. The legacy cache and R2 parity suites also require an explicit production-integration
+    opt-in when directly targeted.
 
 ## Acceptance Contract
 
@@ -72,12 +81,15 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 - Insert, update, and delete deltas produce the same merged observations as a fresh full rebuild.
 - A concurrent mark after a claim is not cleared by completion for `series_dirty`,
   `obs_cache_dirty`, or `score_dirty`.
+- An open materializer claim does not block a concurrent observation insert, and an older worker
+  cannot regress a newer cache watermark.
 - The default scorer target query reads `score_dirty`, returns at most 100 rows per page, applies
   age cadence, and contains no raw-table `EXISTS` predicate.
 - Batch scoring has a statically tested zero raw-miss budget; an incomplete cache defers work.
 - Successful score/history/channel-headline writes clear only their claimed score generations in
   the same transaction.
 - The materializer caps videos, change rows, and compressed bytes per run and logs those totals.
+- The R2 drainer stops before more than 25 MB of compact cache bytes can cross the Postgres wire.
 - Bootstrap refuses to query raw histories unless both explicit budgets are present and the
   server-side row count is within them.
 - Old cache rows remain decodable during expansion; only format-2 rows are eligible for the batch
@@ -85,6 +97,9 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 - Migration is idempotent, restricts internal tables from anon/authenticated access, adds indexes
   without a corpus rewrite beyond the small queue/cache tables, and has a rollback script that
   removes triggers before functions/tables.
+- Pipeline logs contain no SQL/bind values/secrets, share one run id, and report returned rows and
+  a comparable lower-bound byte estimate; PostgreSQL sees the matching stable component name.
+- `npm test` cannot discover suites that load production DB/R2 credentials.
 
 ## Work Units
 
@@ -101,10 +116,10 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 - [x] **Separate and repair R2 invalidation (RED → GREEN).** Add generation claims to
   `series_dirty`, remove observation-cache refresh from the R2 drainer, and prove concurrent marks
   survive.
-- [ ] **Operational packaging and verification.** Add inactive LaunchAgent templates/runbook,
+- [x] **Operational packaging and verification.** Add inactive LaunchAgent templates/runbook,
   run focused tests, local PostgreSQL integration when configured, type/lint/build gates, and a
   fixed-base data/architecture review.
-- [ ] **Compound.** Keep executable guards that reject batch raw fallback and unbounded recurring
+- [x] **Compound.** Keep executable guards that reject batch raw fallback and unbounded recurring
   work; update the canonical incident note and project/session memory after verification.
 
 ## Verification Handoff
@@ -137,7 +152,10 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
   cache input, and 25 MB compressed output per run. These ceilings cover the measured
   2,500–14,400 changed RSS rows per poll while bounding wire egress even if individual cache rows
   grow; each is a hard stop, not a warning.
-- Scorer defaults: at most 1,000 targets per run, fetched in pages/batches of at most 100.
+- Scorer defaults: at most 1,000 targets per run, fetched in pages/batches of at most 100. Explicit
+  final/since/all-force/analysis modes require `--limit` and are hard-capped at 5,000.
+- Series-drain defaults: at most 12,000 queued videos and 25 MB of compact cache payload per run;
+  the byte decision is made in Postgres before any rejected payload crosses the wire.
 - Raw bootstrap runs only with explicit `--raw-video-budget` and `--raw-row-budget`; exceeding the
   count aborts before the raw query.
 - Production activation stops if `EXPLAIN (ANALYZE, BUFFERS)` shows a sequential scan on a raw

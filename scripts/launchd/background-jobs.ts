@@ -110,7 +110,7 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
   {
     label: 'com.mfm.video-scripter-series-drain',
     script: 'rebuild-series.ts',
-    args: ['--drain', '--limit', '12000', '--concurrency', '16'],
+    args: ['--drain', '--limit', '12000', '--concurrency', '16', '--max-cache-bytes', '25000000'],
     intervalSeconds: 600,
     minuteOffset: 9,
     maxSeconds: 540,

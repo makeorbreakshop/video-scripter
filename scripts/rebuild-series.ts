@@ -23,13 +23,14 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
+import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 import { buildSeriesFile, mergeSeriesFiles, type VideoSeriesFile } from '../lib/readings/series';
 import {
   SERIES_SQL, SERIES_DIRTY_DDL, SERIES_DIRTY_CLAIM_SQL, SERIES_DIRTY_CLEAR_SQL,
   SERIES_DIRTY_COUNT_SQL, readSeriesFile, writeSeriesFile,
 } from '../lib/readings/series-store';
 import { r2Config, MISSING_CREDENTIALS, rawReadings } from '../lib/readings/archive';
-import { OBS_CACHE_READ_SQL } from '../lib/scoring/obs-cache';
+import { OBS_CACHE_SERIES_READ_SQL } from '../lib/scoring/obs-cache';
 import { decodeObservationState, seriesInputFromObservationState } from '../lib/scoring/observation-state';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
@@ -54,19 +55,33 @@ const CHUNK = Number(arg('--chunk') ?? 0) || 50;
  * at 1, which would be five days for the whole corpus.
  */
 const CONCURRENCY = Number(arg('--concurrency') ?? 0) || 8;
+const MAX_SERIES_CACHE_BYTES = 25_000_000;
+const maxCacheBytes = Number(arg('--max-cache-bytes') ?? MAX_SERIES_CACHE_BYTES);
+if (!Number.isInteger(maxCacheBytes) || maxCacheBytes <= 0 || maxCacheBytes > MAX_SERIES_CACHE_BYTES) {
+  throw new Error(`--max-cache-bytes must be an integer from 1 to ${MAX_SERIES_CACHE_BYTES}`);
+}
 const job = dry
   ? { acquired: true as const, signal: new AbortController().signal, finish: () => {} }
   : startManagedJob({ name: 'series-rebuild', args });
 if (!job.acquired) process.exit(0);
+const trace = new SupabaseQueryTracer('series-drain');
 const cfg = r2Config();
-if (!cfg && !dry) { console.error(MISSING_CREDENTIALS); process.exit(1); }
+if (!cfg && !dry) {
+  console.error(MISSING_CREDENTIALS);
+  trace.markFailed();
+  trace.finish({ missing_r2_credentials: true });
+  job.finish();
+  process.exit(1);
+}
 
 const pool = makeTimedPool({
   connectionString: process.env.DATABASE_URL,
   max: 2,
   timeoutMs: Number(arg('--timeout-ms') ?? 60_000),
+  application_name: supabaseApplicationName('series-drain'),
 });
-const q = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => (await pool.query(sql, params)).rows as T[];
+const q = async <T = any>(sql: string, params: any[] = []): Promise<T[]> =>
+  (await trace.query(pool, sql, params)).rows as T[];
 
 /** Refuse to add load to a database that is already busy. Same preflight as weekly-refit.ts. */
 async function busyReason(): Promise<string | null> {
@@ -99,13 +114,27 @@ async function videoTargets(): Promise<SeriesTarget[]> {
 }
 
 /** One chunk of videos -> one series file each, built from the compact v2 projection. */
-async function buildChunk(ids: string[]): Promise<Map<string, VideoSeriesFile>> {
-  const [videos, cached, thumbs, titles] = [
-    await q(SERIES_SQL.video, [ids]),
-    await q(OBS_CACHE_READ_SQL, [ids]),
-    await q(SERIES_SQL.thumbs, [ids]),
-    await q(SERIES_SQL.titles, [ids]),
-  ];
+async function buildChunk(ids: string[], remainingCacheBytes: number): Promise<{
+  files: Map<string, VideoSeriesFile>;
+  cacheBytes: number;
+  budgetExceeded: boolean;
+}> {
+  const cacheRows = await q<{
+    video_id: string | null; obs: Buffer | null; format: number | null;
+    last_change_id: string | number | null; total_cache_bytes: string | number;
+  }>(
+    OBS_CACHE_SERIES_READ_SQL, [ids, remainingCacheBytes],
+  );
+  const cacheBytes = Number(cacheRows[0]?.total_cache_bytes ?? 0);
+  if (cacheRows.some((row) => row.video_id == null)) {
+    return { files: new Map(), cacheBytes, budgetExceeded: true };
+  }
+  const cached = cacheRows;
+  const [videos, thumbs, titles] = await Promise.all([
+    q(SERIES_SQL.video, [ids]),
+    q(SERIES_SQL.thumbs, [ids]),
+    q(SERIES_SQL.titles, [ids]),
+  ]);
   const bucket = <T extends { video_id: string }>(rows: T[]) => {
     const m = new Map<string, T[]>();
     for (const r of rows) (m.get(r.video_id) ?? m.set(r.video_id, []).get(r.video_id)!).push(r);
@@ -129,7 +158,7 @@ async function buildChunk(ids: string[]): Promise<Map<string, VideoSeriesFile>> 
       thumbs: bt.get(id) ?? [], titles: bl.get(id) ?? [],
     }));
   }
-  return out;
+  return { files: out, cacheBytes, budgetExceeded: false };
 }
 
 /** The readings Postgres has already thinned away, from the parquet archive. */
@@ -147,47 +176,64 @@ async function withArchived(file: VideoSeriesFile): Promise<VideoSeriesFile> {
   return mergeSeriesFiles(archived, file);
 }
 
-const busy = await busyReason();
-if (busy && !dry && !has('--force')) { console.error(`refusing to run: ${busy} (--force to override, only for a small supervised run)`); await pool.end(); process.exit(2); }
+let written = 0, bytes = 0, empty = 0, skipped = 0, cacheReadBytes = 0;
+try {
+  const busy = await busyReason();
+  if (busy && !dry && !has('--force')) {
+    console.error(`refusing to run: ${busy} (--force to override, only for a small supervised run)`);
+    trace.markFailed();
+    process.exitCode = 2;
+  } else {
+    await q(SERIES_DIRTY_DDL);
+    const pending = Number((await q<{ n: string }>(SERIES_DIRTY_COUNT_SQL))[0]?.n ?? 0);
+    const targets = await videoTargets();
+    const ids = targets.map((target) => target.video_id);
+    const targetById = new Map(targets.map((target) => [target.video_id, target]));
+    console.log(`series rebuild: ${ids.length} video(s)${drain ? ` (queue depth ${pending})` : ''}${withArchive ? ' +archive' : ''}${dry ? ' [dry run]' : ''}`);
 
-await pool.query(SERIES_DIRTY_DDL);
-const pending = Number((await q<{ n: string }>(SERIES_DIRTY_COUNT_SQL))[0]?.n ?? 0);
-const targets = await videoTargets();
-const ids = targets.map((target) => target.video_id);
-const targetById = new Map(targets.map((target) => [target.video_id, target]));
-console.log(`series rebuild: ${ids.length} video(s)${drain ? ` (queue depth ${pending})` : ''}${withArchive ? ' +archive' : ''}${dry ? ' [dry run]' : ''}`);
-
-let written = 0, bytes = 0, empty = 0, skipped = 0;
-const t0 = Date.now();
-for (let i = 0; i < ids.length && !job.signal.aborted; i += CHUNK) {
-  const chunk = ids.slice(i, i + CHUNK);
-  const files = await buildChunk(chunk);
-  const done: Array<{ video_id: string; generation: number }> = [];
-  let cursor = 0;
-  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunk.length) }, async () => {
-    for (;;) {
-      if (job.signal.aborted) return;
-      const id = chunk[cursor++];
-      if (id === undefined) return;
-      const current = files.get(id);
-      if (!current) { skipped++; continue; }
-      const previous = cfg ? await readSeriesFile(id, cfg) : null;
-      let file = previous ? mergeSeriesFiles(previous, current) : current;
-      file = await withArchived(file);
-      const target = targetById.get(id);
-      if (drain && target?.generation !== undefined) {
-        done.push({ video_id: id, generation: target.generation });
+    const t0 = Date.now();
+    for (let i = 0; i < ids.length && !job.signal.aborted; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+      const built = await buildChunk(chunk, maxCacheBytes - cacheReadBytes);
+      if (built.budgetExceeded) {
+        console.warn(`series drain stopped before a ${built.cacheBytes}-byte cache chunk exceeded the ${maxCacheBytes}-byte run budget`);
+        break;
       }
-      if (!file.snapshots.length && !file.samples.length && !file.rss.length) { empty++; continue; }
-      if (!dry) bytes += (await writeSeriesFile(file, cfg)).bytes;
-      written++;
+      cacheReadBytes += built.cacheBytes;
+      const files = built.files;
+      const done: Array<{ video_id: string; generation: number }> = [];
+      let cursor = 0;
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunk.length) }, async () => {
+        for (;;) {
+          if (job.signal.aborted) return;
+          const id = chunk[cursor++];
+          if (id === undefined) return;
+          const current = files.get(id);
+          if (!current) { skipped++; continue; }
+          const previous = cfg ? await readSeriesFile(id, cfg) : null;
+          let file = previous ? mergeSeriesFiles(previous, current) : current;
+          file = await withArchived(file);
+          const target = targetById.get(id);
+          if (drain && target?.generation !== undefined) {
+            done.push({ video_id: id, generation: target.generation });
+          }
+          if (!file.snapshots.length && !file.samples.length && !file.rss.length) { empty++; continue; }
+          if (!dry) bytes += (await writeSeriesFile(file, cfg)).bytes;
+          written++;
+        }
+      }));
+      if (drain && !dry && done.length) await q(SERIES_DIRTY_CLEAR_SQL, [JSON.stringify(done)]);
+      if ((i / CHUNK) % 10 === 0) console.log(`  ${Math.min(i + CHUNK, ids.length)}/${ids.length} · ${written} written · ${(bytes / 1e6).toFixed(1)} MB`);
     }
-  }));
-  if (drain && !dry && done.length) await pool.query(SERIES_DIRTY_CLEAR_SQL, [JSON.stringify(done)]);
-  if ((i / CHUNK) % 10 === 0) console.log(`  ${Math.min(i + CHUNK, ids.length)}/${ids.length} · ${written} written · ${(bytes / 1e6).toFixed(1)} MB`);
-}
 
-console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
-await pool.end();
-job.finish();
+    console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
+  }
+} catch (error) {
+  trace.markFailed();
+  throw error;
+} finally {
+  await pool.end();
+  trace.finish({ files_written: written, r2_bytes: bytes, cache_read_bytes: cacheReadBytes, skipped });
+  job.finish();
+}

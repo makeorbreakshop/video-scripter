@@ -9,7 +9,8 @@
 // that did this (process_baseline_batch, calculate_rolling_baselines_batch,
 // get_packaging_performance).
 //
-// Integration test: needs DATABASE_URL (.env.local); read-only. Skipped without one.
+// Integration test: needs DATABASE_URL (.env.local) and an explicit production-integration
+// opt-in, so targeting this file cannot silently use credentials loaded from .env.local.
 import dotenv from 'dotenv';
 import path from 'path';
 import pg from 'pg';
@@ -17,7 +18,9 @@ import pg from 'pg';
 dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 const DSN = process.env.DATABASE_URL;
-const maybe = DSN ? describe : describe.skip;
+const maybe = process.env.ALLOW_PRODUCTION_INTEGRATION_TESTS === '1' && DSN
+  ? describe
+  : describe.skip;
 
 // A function body that reaches for the legacy duration-only helper.
 const CALLS_LEGACY_HELPER = /\bis_youtube_short\s*\(/i;

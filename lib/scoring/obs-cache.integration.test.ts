@@ -8,7 +8,8 @@
 //
 // Deviation must be 0. Not close — the cache is meant to be the same bytes.
 //
-// Against the real database; skipped without one, so CI still passes.
+// This refreshes derived cache rows. It therefore requires an explicit production-integration
+// opt-in even when the suite is targeted and database credentials happen to be present.
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
@@ -20,7 +21,9 @@ import { OBS_CACHE_DDL, OBS_CACHE_UPSERT_SQL, encodeObservations, decodeObservat
 import type { GlobalParams } from './core';
 import { scoreParamsQuery } from '../app/score-version';
 
-const d = process.env.DATABASE_URL ? describe : describe.skip;
+const d = process.env.ALLOW_PRODUCTION_INTEGRATION_TESTS === '1' && process.env.DATABASE_URL
+  ? describe
+  : describe.skip;
 jest.setTimeout(300_000);
 
 /** Small on purpose: every read below is index-backed, but the union arm is the expensive one. */

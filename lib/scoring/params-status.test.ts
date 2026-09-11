@@ -1,7 +1,7 @@
 import { paramsQuery, activeParamsQuery, paramsByIdQuery } from './params-status';
 import { scoreParamsQuery, scoreReadVersion } from '../app/score-version';
 
-const flat = (s: string) => s.replace(/\s+/g, ' ').trim();
+const flat = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
 
 describe('active params resolution', () => {
   it('reads the newest ACTIVE row, not merely the newest row', () => {

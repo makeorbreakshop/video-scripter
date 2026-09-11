@@ -9,6 +9,8 @@ test('the default scorer is queue-driven and statically incapable of raw-history
   expect(hourly).toContain('ObservationCacheMissError');
   expect(hourly).toContain('SCORE_DIRTY_DEFER_SQL');
   expect(hourly).not.toContain('incrementalScoreTargetsSql({');
+  expect(script).toContain('explicit scoring modes require --limit');
+  expect(script).toContain('MAX_SCORE_RUN_LIMIT = 5_000');
 
   const batch = script.slice(script.indexOf('async function v5Batch('), script.indexOf('async function channelsSlowerThan('));
   expect(batch).toContain('rawMissBudget: 0');

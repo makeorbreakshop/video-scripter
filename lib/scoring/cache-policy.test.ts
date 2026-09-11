@@ -1,4 +1,16 @@
 import { loadRecords, ObservationCacheMissError } from './prior-load';
+import { OBS_CACHE_SERIES_READ_SQL, OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
+
+test('a late materializer cannot regress a newer cache watermark', () => {
+  expect(OBS_CACHE_V2_UPSERT_SQL)
+    .toMatch(/where\s+video_obs_cache\.last_change_id\s*<=\s*excluded\.last_change_id/i);
+});
+
+test('the series cache read refuses a chunk before its payload crosses the remaining wire budget', () => {
+  expect(OBS_CACHE_SERIES_READ_SQL).toMatch(/sum\(octet_length\(obs\)\)/i);
+  expect(OBS_CACHE_SERIES_READ_SQL).toMatch(/total_cache_bytes\s*<=\s*\$2/i);
+  expect(OBS_CACHE_SERIES_READ_SQL).toMatch(/null::bytea/i);
+});
 
 test('a zero raw-miss budget defers without querying any raw observation table', async () => {
   const queries: string[] = [];
@@ -20,4 +32,3 @@ test('an explicit interactive budget permits only that many raw misses', async (
     .rejects.toEqual(expect.objectContaining({ missingIds: ['a', 'b'] }));
   expect(q).toHaveBeenCalledTimes(1);
 });
-

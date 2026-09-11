@@ -40,7 +40,8 @@ export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise
   const out = new Map<string, PriorRef[]>();
   if (!ids.length) return out;
   const rows: { video_id: string; prior_id: string; gap_days: number; pub: string }[] = await q(
-    `select r.id as video_id, p.id as prior_id,
+    `/* trace:score.prior-refs */
+     select r.id as video_id, p.id as prior_id,
             extract(epoch from (v.published_at - p.published_at))/86400.0 as gap_days,
             p.published_at as pub
        from unnest($1::text[]) as r(id) join videos v on v.id = r.id
@@ -113,7 +114,8 @@ let warnedObsCache = false;
 export async function loadMeta(q: QueryFn, ids: readonly string[]): Promise<Map<string, PriorMeta>> {
   if (!ids.length) return new Map();
   const rows = await q(
-    `select id, coalesce(view_count,0) as views, extract(epoch from (now() - published_at))/86400.0 as age
+    `/* trace:score.prior-meta */
+     select id, coalesce(view_count,0) as views, extract(epoch from (now() - published_at))/86400.0 as age
        from videos where id = any($1)`,
     [ids as string[]]
   );

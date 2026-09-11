@@ -49,7 +49,9 @@ describe('scheduled background job wiring', () => {
       '--max-compressed-bytes', '25000000',
     ]);
     expect(score?.args).toEqual(['--limit', '1000']);
-    expect(series?.args).toEqual(['--drain', '--limit', '12000', '--concurrency', '16']);
+    expect(series?.args).toEqual([
+      '--drain', '--limit', '12000', '--concurrency', '16', '--max-cache-bytes', '25000000',
+    ]);
     expect(series?.intervalSeconds).toBe(600);
     expect(fs.readFileSync(path.join(root, 'scripts', 'score-videos.ts'), 'utf8')).toContain('runScoringWorker(');
   });

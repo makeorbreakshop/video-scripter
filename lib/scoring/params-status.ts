@@ -21,7 +21,8 @@ export function paramsQuery(
 ): string {
   const status = opts.status ?? 'active';
   const extra = opts.extraWhere ? ` and ${opts.extraWhere}` : '';
-  return `select ${cols} from score_params
+  return `/* trace:score.params */
+           select ${cols} from score_params
            where model_version = $1 and status = '${status}'${extra}
            order by fitted_at desc limit 1`;
 }

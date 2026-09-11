@@ -5,7 +5,8 @@
 // 61-180s band was long-form, wrongly stored as Shorts and dropped from every baseline.)
 //
 // This is an integration test: it needs DATABASE_URL (.env.local) and writes inside a
-// transaction that is always rolled back. It is skipped when no DATABASE_URL is present.
+// transaction that is always rolled back. It still requires an explicit production-integration
+// opt-in so targeting this file cannot silently use credentials loaded from .env.local.
 import dotenv from 'dotenv';
 import path from 'path';
 import pg from 'pg';
@@ -13,7 +14,9 @@ import pg from 'pg';
 dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 const DSN = process.env.DATABASE_URL;
-const maybe = DSN ? describe : describe.skip;
+const maybe = process.env.ALLOW_PRODUCTION_INTEGRATION_TESTS === '1' && DSN
+  ? describe
+  : describe.skip;
 
 maybe('videos.is_short is never overwritten by the database', () => {
   let pool: pg.Pool;

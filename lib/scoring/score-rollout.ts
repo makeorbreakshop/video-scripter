@@ -19,7 +19,8 @@ export function enqueueScoreRolloutSql(options: {
     : '';
   const limit = bind(options.limit);
   return {
-    text: `with candidates as materialized (
+    text: `/* trace:score.rollout-enqueue */
+    with candidates as materialized (
       select v.id, v.published_at
         from videos v left join video_scores sc on sc.video_id=v.id
        where v.published_at is not null and ${longformSql('v')}
@@ -39,4 +40,3 @@ export function enqueueScoreRolloutSql(options: {
     values,
   };
 }
-
