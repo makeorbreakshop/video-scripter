@@ -30,6 +30,7 @@
 // video with unincorporated readings falls back to the raw union and is exact.
 import { gzipSync, gunzipSync } from 'node:zlib';
 import type { Observation } from './observations';
+import { decodeObservationState, observationsFromState } from './observation-state';
 
 /** Created by scripts/rebuild-series.ts and by the backfill; the read path never creates it. */
 export const OBS_CACHE_DDL = `
@@ -37,8 +38,12 @@ export const OBS_CACHE_DDL = `
     video_id   text primary key,
     built_at   timestamptz not null default now(),
     n          int not null,
-    obs        bytea not null
-  )`;
+    obs        bytea not null,
+    format     smallint not null default 1,
+    last_change_id bigint not null default 0
+  );
+  alter table video_obs_cache add column if not exists format smallint not null default 1;
+  alter table video_obs_cache add column if not exists last_change_id bigint not null default 0`;
 
 /**
  * Cache hits for a set of ids. The anti-join against series_dirty is what makes a hit safe: a
@@ -46,17 +51,28 @@ export const OBS_CACHE_DDL = `
  * gets to it we do not trust the row.
  */
 export const OBS_CACHE_READ_SQL = `
-  select c.video_id, c.obs
+  select c.video_id, c.obs, c.format, c.last_change_id
     from video_obs_cache c
-    left join series_dirty d on d.video_id = c.video_id
-   where c.video_id = any($1::text[]) and d.video_id is null`;
+    left join obs_cache_dirty d on d.video_id = c.video_id
+   where c.video_id = any($1::text[])
+     and (d.video_id is null or c.last_change_id >= d.generation)`;
 
 export const OBS_CACHE_UPSERT_SQL = `
-  insert into video_obs_cache (video_id, built_at, n, obs)
-  select x.video_id, now(), x.n, x.obs
+  insert into video_obs_cache (video_id, built_at, n, obs, format, last_change_id)
+  select x.video_id, now(), x.n, x.obs, 1, 0
     from unnest($1::text[], $2::int[], $3::bytea[]) as x(video_id, n, obs)
   on conflict (video_id) do update
-     set built_at = excluded.built_at, n = excluded.n, obs = excluded.obs`;
+     set built_at = excluded.built_at, n = excluded.n, obs = excluded.obs,
+         format = excluded.format, last_change_id = excluded.last_change_id`;
+
+export const OBS_CACHE_V2_UPSERT_SQL = `
+  insert into video_obs_cache (video_id, built_at, n, obs, format, last_change_id)
+  select x.video_id, now(), x.n, x.obs, 2, x.last_change_id
+    from unnest($1::text[], $2::int[], $3::bytea[], $4::bigint[])
+      as x(video_id, n, obs, last_change_id)
+  on conflict (video_id) do update
+     set built_at = excluded.built_at, n = excluded.n, obs = excluded.obs,
+         format = excluded.format, last_change_id = excluded.last_change_id`;
 
 export const OBS_CACHE_COVERAGE_SQL = `select count(*)::bigint as n from video_obs_cache`;
 
@@ -66,6 +82,12 @@ export function encodeObservations(points: readonly Observation[]): Buffer {
 
 export function decodeObservations(buf: Buffer | Uint8Array): Observation[] {
   return JSON.parse(gunzipSync(Buffer.from(buf)).toString('utf8')) as Observation[];
+}
+
+export function decodeCachedObservations(format: number, buf: Buffer | Uint8Array): Observation[] {
+  return format === 2
+    ? observationsFromState(decodeObservationState(buf))
+    : decodeObservations(buf);
 }
 
 /**

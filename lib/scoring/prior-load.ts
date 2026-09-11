@@ -12,7 +12,7 @@ import { chunk } from '../nightly/tracking-core';
 import { PRIOR_STALE_DAYS, PRIOR_WINDOW, type Snapshot } from './core';
 import { longformSql } from './longform';
 import { OBSERVATION_RECORDS_SQL, observationRecords } from './observations';
-import { OBS_CACHE_READ_SQL, decodeObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
+import { OBS_CACHE_READ_SQL, decodeCachedObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
 import type { CurvePrior } from './curve';
 
 export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
@@ -21,6 +21,14 @@ export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
 export interface PriorRef { id: string; pub: number; ageDays: number }
 /** Lifetime count and the age it was read at — the route a pre-tracking prior contributes by. */
 export interface PriorMeta { views: number; age: number }
+export interface RecordLoadOptions { rawMissBudget?: number; requireFormat2?: boolean }
+
+export class ObservationCacheMissError extends Error {
+  constructor(public readonly missingIds: string[], public readonly rawMissBudget: number) {
+    super(`observation cache missed ${missingIds.length} video(s); raw miss budget is ${rawMissBudget}`);
+    this.name = 'ObservationCacheMissError';
+  }
+}
 
 /**
  * Recent prior long-form, public videos of each target's channel, newest first: the v4.0 BASELINE
@@ -58,10 +66,15 @@ export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise
  * and RSS merged by lib/scoring/observations. Key arrays are bounded — a very large IN set turns
  * these reads into corpus-wide scans.
  */
-export async function loadRecords(q: QueryFn, ids: readonly string[]): Promise<Map<string, Snapshot[]>> {
+export async function loadRecords(
+  q: QueryFn,
+  ids: readonly string[],
+  options: RecordLoadOptions = {},
+): Promise<Map<string, Snapshot[]>> {
   const out = new Map<string, Snapshot[]>();
   if (!ids.length) return out;
   const raw: string[] = [];
+  const rawMissBudget = options.rawMissBudget ?? 25;
   for (const part of chunk([...ids], 100)) {
     // The cache (lib/scoring/obs-cache.ts) holds exactly what this function used to compute, and
     // returns nothing for a video whose readings have moved since. Everything it cannot answer
@@ -69,19 +82,24 @@ export async function loadRecords(q: QueryFn, ids: readonly string[]): Promise<M
     // — which is what makes the backfill safe to run after the deploy rather than before it.
     let hits = 0;
     if (obsCacheEnabled()) {
-      let rows: { video_id: string; obs: Buffer }[] = [];
+      let rows: { video_id: string; obs: Buffer; format?: number }[] = [];
       try {
         rows = await q(OBS_CACHE_READ_SQL, [part]);
       } catch (err) {
         // A missing table on a database that has not run the migration is a miss, not an outage.
         if (!warnedObsCache) { warnedObsCache = true; console.warn(`[obs-cache] unavailable, using the raw union: ${(err as Error).message}`); }
       }
-      for (const r of rows) { out.set(r.video_id, decodeObservations(r.obs)); hits++; }
+      for (const r of rows) {
+        const format = Number(r.format ?? 1);
+        if (options.requireFormat2 && format !== 2) continue;
+        out.set(r.video_id, decodeCachedObservations(format, r.obs)); hits++;
+      }
     }
     obsCacheStats.hits += hits;
     obsCacheStats.misses += part.length - hits;
     for (const id of part) if (!out.has(id)) raw.push(id);
   }
+  if (raw.length > rawMissBudget) throw new ObservationCacheMissError(raw, rawMissBudget);
   for (const part of chunk(raw, 100)) {
     for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
   }

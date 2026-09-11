@@ -1,4 +1,7 @@
-import { markSeriesDirty, seriesDirtyWrite, SERIES_DIRTY_MARK_SQL, seriesReads, noteSeriesRead, seriesFallbackRate } from './series-store';
+import {
+  markSeriesDirty, seriesDirtyWrite, SERIES_DIRTY_MARK_SQL, SERIES_DIRTY_CLAIM_SQL,
+  SERIES_DIRTY_CLEAR_SQL, seriesReads, noteSeriesRead, seriesFallbackRate,
+} from './series-store';
 
 const client = (fail?: (sql: string) => boolean) => {
   const calls: string[] = [];
@@ -62,6 +65,18 @@ describe('seriesDirtyWrite', () => {
   test('nothing to mark is null, not an empty statement', () => {
     expect(seriesDirtyWrite([])).toBeNull();
     expect(seriesDirtyWrite([''])).toBeNull();
+  });
+});
+
+describe('watermark-safe series queue', () => {
+  test('a repeated mark advances its generation instead of disappearing', () => {
+    expect(SERIES_DIRTY_MARK_SQL).toMatch(/on conflict[^]*do update/i);
+    expect(SERIES_DIRTY_MARK_SQL).toContain('generation');
+  });
+
+  test('claims and clears the exact generation so a concurrent mark survives', () => {
+    expect(SERIES_DIRTY_CLAIM_SQL).toContain('generation');
+    expect(SERIES_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
   });
 });
 

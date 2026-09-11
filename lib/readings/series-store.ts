@@ -22,24 +22,30 @@ import { r2Config, getObject, putObject, type R2Config } from './archive';
 import { seriesKey, encodeSeries, decodeSeries, SERIES_CONTENT_TYPE, type VideoSeriesFile } from './series';
 
 export const SERIES_DIRTY_DDL = `
+  create sequence if not exists pipeline_generation_seq;
   create table if not exists series_dirty (
     video_id   text primary key,
     marked_at  timestamptz not null default now(),
-    attempts   int not null default 0
-  )`;
+    attempts   int not null default 0,
+    generation bigint not null default 0
+  );
+  alter table series_dirty add column if not exists generation bigint not null default 0`;
 
 /** One statement, any number of videos, idempotent. $1 = video_id[]. */
 export const SERIES_DIRTY_MARK_SQL = `
-  insert into series_dirty (video_id, marked_at)
-  select v, now() from unnest($1::text[]) as v
+  insert into series_dirty (video_id, marked_at, generation)
+  select v, now(), nextval('pipeline_generation_seq') from unnest($1::text[]) as v
   where v is not null and v <> ''
-  on conflict (video_id) do nothing`;
+  on conflict (video_id) do update set
+    marked_at = excluded.marked_at, generation = excluded.generation`;
 
 /** The next batch to rebuild, oldest mark first. $1 = limit. */
 export const SERIES_DIRTY_CLAIM_SQL = `
-  select video_id from series_dirty order by marked_at, video_id limit $1`;
+  select video_id, generation from series_dirty order by marked_at, video_id limit $1`;
 
-export const SERIES_DIRTY_CLEAR_SQL = `delete from series_dirty where video_id = any($1::text[])`;
+export const SERIES_DIRTY_CLEAR_SQL = `
+  delete from series_dirty d using jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
+   where d.video_id = x.video_id and d.generation = x.generation`;
 
 export const SERIES_DIRTY_FAIL_SQL =
   `update series_dirty set attempts = attempts + 1, marked_at = now() where video_id = any($1::text[])`;
