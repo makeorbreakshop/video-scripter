@@ -9,6 +9,18 @@ import {
 
 export const MAX_BOOTSTRAP_VIDEOS = 100;
 export const MAX_BOOTSTRAP_RAW_ROWS = 100_000;
+export const DEFAULT_BOOTSTRAP_R2_CONCURRENCY = 16;
+export const MAX_BOOTSTRAP_R2_CONCURRENCY = 16;
+
+export function validateBootstrapR2Concurrency(value: number): number {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error('--r2-concurrency must be a positive integer');
+  }
+  if (value > MAX_BOOTSTRAP_R2_CONCURRENCY) {
+    throw new Error(`--r2-concurrency exceeds hard limit ${MAX_BOOTSTRAP_R2_CONCURRENCY}`);
+  }
+  return value;
+}
 
 export function bootstrapSource(
   file: VideoSeriesFile | null,

@@ -6,8 +6,11 @@ import {
   BOOTSTRAP_RAW_ROWS_SQL,
   BOOTSTRAP_LATEST_WRITE_SQL,
   BOOTSTRAP_CLAIM_SQL,
+  DEFAULT_BOOTSTRAP_R2_CONCURRENCY,
+  MAX_BOOTSTRAP_R2_CONCURRENCY,
   bootstrapSource,
   observationStateFromRows,
+  validateBootstrapR2Concurrency,
   validateRawBootstrapBudget,
 } from './observation-bootstrap';
 import { observationsFromState } from './observation-state';
@@ -28,6 +31,19 @@ test('raw bootstrap is impossible without both explicit budgets', () => {
   expect(() => validateRawBootstrapBudget({ videos: 3, rows: 10 }, { rawVideoBudget: 2, rawRowBudget: 10 })).toThrow('video');
   expect(() => validateRawBootstrapBudget({ videos: 2, rows: 11 }, { rawVideoBudget: 2, rawRowBudget: 10 })).toThrow('row');
   expect(validateRawBootstrapBudget({ videos: 2, rows: 10 }, { rawVideoBudget: 2, rawRowBudget: 10 })).toBeUndefined();
+});
+
+test('R2 bootstrap concurrency is useful by default and hard-capped', () => {
+  expect(DEFAULT_BOOTSTRAP_R2_CONCURRENCY).toBe(16);
+  expect(MAX_BOOTSTRAP_R2_CONCURRENCY).toBe(16);
+  expect(validateBootstrapR2Concurrency(1)).toBe(1);
+  expect(validateBootstrapR2Concurrency(16)).toBe(16);
+  expect(() => validateBootstrapR2Concurrency(0)).toThrow('positive integer');
+  expect(() => validateBootstrapR2Concurrency(17)).toThrow('exceeds hard limit 16');
+
+  const script = fs.readFileSync(path.join(process.cwd(), 'scripts/bootstrap-observation-cache.ts'), 'utf8');
+  expect(script).toContain('mapWithConcurrency');
+  expect(script).toContain('--r2-concurrency');
 });
 
 test('the tiny count query is separate from and precedes the raw-row query', () => {

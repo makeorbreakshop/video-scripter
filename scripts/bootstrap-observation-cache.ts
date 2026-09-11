@@ -8,10 +8,12 @@ import { makeTimedPool, setLocalApplicationName } from '../lib/admin/db';
 import { SupabaseQueryTracer, supabaseApplicationName } from '../lib/admin/supabase-trace';
 import { readSeriesFile } from '../lib/readings/series-store';
 import { r2Config } from '../lib/readings/archive';
+import { mapWithConcurrency } from '../lib/app/import-batch';
 import {
   BOOTSTRAP_CLAIM_SQL, BOOTSTRAP_LATEST_WRITE_SQL, BOOTSTRAP_RAW_COUNT_SQL, BOOTSTRAP_RAW_ROWS_SQL,
-  MAX_BOOTSTRAP_RAW_ROWS, MAX_BOOTSTRAP_VIDEOS, bootstrapSource,
-  observationStateFromRows, validateRawBootstrapBudget, type BootstrapObservationRow,
+  DEFAULT_BOOTSTRAP_R2_CONCURRENCY, MAX_BOOTSTRAP_RAW_ROWS, MAX_BOOTSTRAP_VIDEOS, bootstrapSource,
+  observationStateFromRows, validateBootstrapR2Concurrency, validateRawBootstrapBudget,
+  type BootstrapObservationRow,
 } from '../lib/scoring/observation-bootstrap';
 import {
   applyObservationChanges, encodeObservationState, observationStateFromSeries,
@@ -31,6 +33,9 @@ const optionalInt = (name: string): number | undefined => {
 };
 const maxVideos = optionalInt('--max-videos') ?? 25;
 const maxChanges = optionalInt('--max-changes') ?? 5_000;
+const r2Concurrency = validateBootstrapR2Concurrency(
+  optionalInt('--r2-concurrency') ?? DEFAULT_BOOTSTRAP_R2_CONCURRENCY,
+);
 const rawVideoBudget = optionalInt('--raw-video-budget');
 const rawRowBudget = optionalInt('--raw-row-budget');
 const dryRun = args.includes('--dry-run') || args.includes('--dry');
@@ -69,8 +74,13 @@ try {
       latestWrites.set(row.video_id, row.latest_write_at ? new Date(row.latest_write_at).toISOString() : null);
     }
   }
-  for (const claim of claims) {
-    const file = cfg ? await readSeriesFile(claim.videoId, cfg) : null;
+  const r2Reads = await mapWithConcurrency(claims, r2Concurrency, async (claim) => ({
+    claim,
+    file: cfg ? await readSeriesFile(claim.videoId, cfg) : null,
+  }));
+  for (const result of r2Reads) {
+    if (!result.ok) throw result.error;
+    const { claim, file } = result.value;
     if (bootstrapSource(file, claim.captureStartedAt, latestWrites.get(claim.videoId) ?? null) === 'r2') {
       states.set(claim.videoId, observationStateFromSeries(file!, 0));
     } else rawIds.push(claim.videoId);
@@ -140,7 +150,7 @@ try {
   await tracedClient.query(dryRun ? 'rollback' : 'commit');
   traceStats = {
     videos: ready.length, raw_videos: rawIds.length, r2_videos: ready.length - rawIds.length,
-    changes: deltaRows.length, compressed_bytes: compressedBytes,
+    r2_concurrency: r2Concurrency, changes: deltaRows.length, compressed_bytes: compressedBytes,
   };
   console.log(`observation bootstrap${dryRun ? ' [dry run]' : ''}: ${ready.length} videos, `
     + `${rawIds.length} raw, ${ready.length - rawIds.length} R2, ${deltaRows.length} deltas, ${compressedBytes} bytes`);
