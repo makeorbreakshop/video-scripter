@@ -96,7 +96,7 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 - [x] **Queue-driven scorer (RED → GREEN).** Test age-aware due selection, cache-only enforcement,
   defer/retry, and atomic generation clear; switch the default scorer path without changing
   explicit fit/final/force lanes.
-- [ ] **Bootstrap and rollout lanes (RED → GREEN).** Test mandatory budgets and bounded SQL; add
+- [x] **Bootstrap and rollout lanes (RED → GREEN).** Test mandatory budgets and bounded SQL; add
   R2-first observation bootstrap and explicit model-version queueing.
 - [ ] **Separate and repair R2 invalidation (RED → GREEN).** Add generation claims to
   `series_dirty`, remove observation-cache refresh from the R2 drainer, and prove concurrent marks

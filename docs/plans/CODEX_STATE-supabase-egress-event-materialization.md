@@ -5,7 +5,7 @@
 - Base branch and starting commit: `main` at `0cef7a6`
 - Worktree: `/Users/brandoncullum/video-scripter-v2/video-scripter/.worktrees/fix-supabase-egress-materialization`
 - Feature branch: `fix-supabase-egress-materialization`
-- First incomplete work unit: bootstrap and rollout lanes
+- First incomplete work unit: separate and repair R2 invalidation
 
 ## Completed
 
@@ -17,6 +17,9 @@
 - [x] Queue-driven scorer slice — default live selection reads only `score_dirty`, applies age
   cadence, caps work at 1,000/100, requires clean format-2 cache, defers misses, and clears exact
   generations atomically with committed score/history/headline writes; 20 focused tests passing.
+- [x] Bootstrap/rollout slice — post-cutover R2-first seeding, explicit/pre-counted raw budgets
+  capped at 100 videos/100K rows, exact delta catch-up, and a separate 5,000-ID model rollout lane;
+  6 focused tests passing.
 
 ## Partial or blocked
 
