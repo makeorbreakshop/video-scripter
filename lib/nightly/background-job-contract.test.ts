@@ -37,7 +37,7 @@ describe('scheduled background job wiring', () => {
     const fiveMinuteJobs = BACKGROUND_JOBS.filter((job) => job.intervalSeconds === 300);
     const starts = fiveMinuteJobs.map((job) => `${job.minuteOffset}:${job.secondOffset ?? 0}`);
     expect(new Set(starts).size).toBe(starts.length);
-    expect(starts.sort()).toEqual(['0:0', '1:0', '2:0', '3:0', '3:30', '4:0', '4:30']);
+    expect(starts.sort()).toEqual(['0:0', '0:30', '1:0', '2:0', '3:0', '3:30', '4:0', '4:30']);
   });
 
   it('schedules bounded observation, score, and R2 drains', async () => {
@@ -54,8 +54,8 @@ describe('scheduled background job wiring', () => {
       '--max-videos', '25', '--max-changes', '5000',
       '--raw-video-budget', '25', '--raw-row-budget', '10000',
     ]);
-    expect(bootstrap?.intervalSeconds).toBe(900);
-    expect(score?.args).toEqual(['--limit', '1000']);
+    expect(bootstrap?.intervalSeconds).toBe(300);
+    expect(score?.args).toEqual(['--limit', '100']);
     expect(series?.args).toEqual([
       '--drain', '--limit', '12000', '--concurrency', '16', '--max-cache-bytes', '25000000',
     ]);
