@@ -5,7 +5,7 @@
 - Base branch and starting commit: `main` at `0cef7a6`
 - Worktree: `/Users/brandoncullum/video-scripter-v2/video-scripter/.worktrees/fix-supabase-egress-materialization`
 - Feature branch: `fix-supabase-egress-materialization`
-- First incomplete work unit: separate and repair R2 invalidation
+- First incomplete work unit: operational packaging and verification
 
 ## Completed
 
@@ -20,6 +20,9 @@
 - [x] Bootstrap/rollout slice — post-cutover R2-first seeding, explicit/pre-counted raw budgets
   capped at 100 videos/100K rows, exact delta catch-up, and a separate 5,000-ID model rollout lane;
   6 focused tests passing.
+- [x] R2 invalidation slice — the drainer reads only clean format-2 compact state plus small
+  metadata tables, merges existing R2 history, and clears exact queue generations; 15 focused
+  projection/series tests passing.
 
 ## Partial or blocked
 

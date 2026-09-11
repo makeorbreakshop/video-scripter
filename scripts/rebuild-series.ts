@@ -19,19 +19,20 @@
 //   npx tsx scripts/rebuild-series.ts --all --limit 500          # nightly: drop --limit
 //   npx tsx scripts/rebuild-series.ts --drain --dry-run
 //
-// Direct Postgres only, one pooled connection, a real statement_timeout, and never two heavy
-// reads at once: the video set is walked in chunks and each chunk is five bounded index reads.
+// Routine drains never read raw observation history from Postgres. They read the compact v2
+// projection produced by materialize-observations.ts, plus the small metadata tables needed by
+// the chart. Existing R2 files are merged back in so already-archived history is retained.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
 import { buildSeriesFile, mergeSeriesFiles, type VideoSeriesFile } from '../lib/readings/series';
 import {
   SERIES_SQL, SERIES_DIRTY_DDL, SERIES_DIRTY_CLAIM_SQL, SERIES_DIRTY_CLEAR_SQL,
-  SERIES_DIRTY_COUNT_SQL, writeSeriesFile,
+  SERIES_DIRTY_COUNT_SQL, readSeriesFile, writeSeriesFile,
 } from '../lib/readings/series-store';
 import { r2Config, MISSING_CREDENTIALS, rawReadings } from '../lib/readings/archive';
-import { OBSERVATION_RECORDS_SQL, observationRecords } from '../lib/scoring/observations';
-import { OBS_CACHE_DDL, OBS_CACHE_UPSERT_SQL, encodeObservations } from '../lib/scoring/obs-cache';
+import { OBS_CACHE_READ_SQL } from '../lib/scoring/obs-cache';
+import { decodeObservationState, seriesInputFromObservationState } from '../lib/scoring/observation-state';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -44,7 +45,7 @@ const withArchive = has('--with-archive');
 const channel = arg('--channel');
 const only = (arg('--videos') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 const limit = Number(arg('--limit') ?? 0) || (drain ? 2000 : all ? 0 : 500);
-/** Videos per chunk of reads. Small on purpose: five index reads per chunk, one chunk at a time. */
+/** Videos per chunk of reads. Each chunk is four bounded index reads. */
 const CHUNK = Number(arg('--chunk') ?? 0) || 50;
 /**
  * R2 PUTs in flight at once. The database sees no extra load from this — the chunk's reads are
@@ -52,14 +53,6 @@ const CHUNK = Number(arg('--chunk') ?? 0) || 50;
  * at 1, which would be five days for the whole corpus.
  */
 const CONCURRENCY = Number(arg('--concurrency') ?? 0) || 8;
-/**
- * Also refresh video_obs_cache — the merged observation record the scorer and the video page's
- * typical curve divide by (lib/scoring/obs-cache.ts). It rides this queue because the queue
- * already knows exactly which videos moved. One extra bounded read per chunk here removes
- * ~16 unions per scored video per hour downstream.
- */
-const withObs = !has('--no-obs');
-
 const cfg = r2Config();
 if (!cfg && !dry) { console.error(MISSING_CREDENTIALS); process.exit(1); }
 
@@ -80,30 +73,31 @@ async function busyReason(): Promise<string | null> {
   return n > 0 ? `${n} query(s) have been running over two minutes` : null;
 }
 
-async function videoIds(): Promise<string[]> {
-  if (only.length) return only;
-  if (drain) return (await q<{ video_id: string }>(SERIES_DIRTY_CLAIM_SQL, [limit || 2000])).map((r) => r.video_id);
+interface SeriesTarget { video_id: string; generation?: number }
+
+async function videoTargets(): Promise<SeriesTarget[]> {
+  if (only.length) return only.map((video_id) => ({ video_id }));
+  if (drain) return (await q<{ video_id: string; generation: string | number }>(SERIES_DIRTY_CLAIM_SQL, [limit || 2000]))
+    .map((row) => ({ video_id: row.video_id, generation: Number(row.generation) }));
   if (channel) {
     return (await q<{ id: string }>(
       `select id from videos where channel_id = $1 order by published_at desc ${limit ? 'limit ' + limit : ''}`,
-      [channel])).map((r) => r.id);
+      [channel])).map((row) => ({ video_id: row.id }));
   }
   if (all) {
     // Index-backed and bounded: the tracking table is the set of videos that have readings at
     // all, and is two orders of magnitude smaller than a scan of `videos`.
     return (await q<{ video_id: string }>(
-      `select video_id from view_tracking_priority order by video_id ${limit ? 'limit ' + limit : ''}`)).map((r) => r.video_id);
+      `select video_id from view_tracking_priority order by video_id ${limit ? 'limit ' + limit : ''}`));
   }
   throw new Error('nothing to do: pass --drain, --all, --channel <id> or --videos a,b,c');
 }
 
-/** One chunk of videos -> one series file each, built from Postgres. */
+/** One chunk of videos -> one series file each, built from the compact v2 projection. */
 async function buildChunk(ids: string[]): Promise<Map<string, VideoSeriesFile>> {
-  const [videos, snapshots, samples, rss, thumbs, titles] = [
+  const [videos, cached, thumbs, titles] = [
     await q(SERIES_SQL.video, [ids]),
-    await q(SERIES_SQL.snapshots, [ids]),
-    await q(SERIES_SQL.samples, [ids]),
-    await q(SERIES_SQL.rss, [ids]),
+    await q(OBS_CACHE_READ_SQL, [ids]),
     await q(SERIES_SQL.thumbs, [ids]),
     await q(SERIES_SQL.titles, [ids]),
   ];
@@ -112,13 +106,21 @@ async function buildChunk(ids: string[]): Promise<Map<string, VideoSeriesFile>> 
     for (const r of rows) (m.get(r.video_id) ?? m.set(r.video_id, []).get(r.video_id)!).push(r);
     return m;
   };
-  const [bs, ba, br, bt, bl] = [bucket(snapshots), bucket(samples), bucket(rss), bucket(thumbs), bucket(titles)];
+  const [bt, bl] = [bucket(thumbs), bucket(titles)];
   const pub = new Map(videos.map((v: any) => [v.id, v.published_at]));
+  const states = new Map<string, ReturnType<typeof decodeObservationState>>();
+  for (const row of cached as Array<{ video_id: string; format: number; obs: Buffer }>) {
+    if (Number(row.format) !== 2) continue;
+    try { states.set(row.video_id, decodeObservationState(row.obs)); }
+    catch (error) { console.warn(`[series] unreadable observation state video=${row.video_id}: ${(error as Error).message}`); }
+  }
   const out = new Map<string, VideoSeriesFile>();
   for (const id of ids) {
+    const state = states.get(id);
+    if (!state) continue;
     out.set(id, buildSeriesFile({
-      videoId: id, publishedAt: pub.get(id) ?? null,
-      snapshots: bs.get(id) ?? [], samples: ba.get(id) ?? [], rss: br.get(id) ?? [],
+      videoId: id, publishedAt: pub.get(id) ?? state.publishedAt,
+      ...seriesInputFromObservationState(state),
       thumbs: bt.get(id) ?? [], titles: bl.get(id) ?? [],
     }));
   }
@@ -140,58 +142,45 @@ async function withArchived(file: VideoSeriesFile): Promise<VideoSeriesFile> {
   return mergeSeriesFiles(archived, file);
 }
 
-/**
- * The merged observation record for a chunk, straight from the canonical query. Deliberately the
- * SAME statement lib/scoring/prior-load.ts used to run inline: storing the output of the real
- * query makes a cache hit equal to a raw read by construction, where re-deriving it from the
- * series file's rows would be a second implementation free to drift from the first.
- */
-async function refreshObsCache(ids: string[]): Promise<number> {
-  const byVideo = observationRecords(await q(OBSERVATION_RECORDS_SQL, [ids]));
-  // A video with no readings at all still gets a row: an empty record is an answer, and without
-  // it every such prior would fall through to the union on every scoring run for ever.
-  const [vids, ns, bufs] = [[] as string[], [] as number[], [] as Buffer[]];
-  for (const id of ids) {
-    const points = byVideo.get(id) ?? [];
-    vids.push(id); ns.push(points.length); bufs.push(encodeObservations(points));
-  }
-  await pool.query(OBS_CACHE_UPSERT_SQL, [vids, ns, bufs]);
-  return vids.length;
-}
-
 const busy = await busyReason();
 if (busy && !dry && !has('--force')) { console.error(`refusing to run: ${busy} (--force to override, only for a small supervised run)`); await pool.end(); process.exit(2); }
 
 await pool.query(SERIES_DIRTY_DDL);
-if (withObs && !dry) await pool.query(OBS_CACHE_DDL);
 const pending = Number((await q<{ n: string }>(SERIES_DIRTY_COUNT_SQL))[0]?.n ?? 0);
-const ids = await videoIds();
+const targets = await videoTargets();
+const ids = targets.map((target) => target.video_id);
+const targetById = new Map(targets.map((target) => [target.video_id, target]));
 console.log(`series rebuild: ${ids.length} video(s)${drain ? ` (queue depth ${pending})` : ''}${withArchive ? ' +archive' : ''}${dry ? ' [dry run]' : ''}`);
 
-let written = 0, bytes = 0, empty = 0, obsRows = 0;
+let written = 0, bytes = 0, empty = 0, skipped = 0;
 const t0 = Date.now();
 for (let i = 0; i < ids.length; i += CHUNK) {
   const chunk = ids.slice(i, i + CHUNK);
   const files = await buildChunk(chunk);
-  if (withObs && !dry) obsRows += await refreshObsCache(chunk);
-  const done: string[] = [];
+  const done: Array<{ video_id: string; generation: number }> = [];
   let cursor = 0;
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunk.length) }, async () => {
     for (;;) {
       const id = chunk[cursor++];
       if (id === undefined) return;
-      const file = await withArchived(files.get(id)!);
-      done.push(id);
+      const current = files.get(id);
+      if (!current) { skipped++; continue; }
+      const previous = cfg ? await readSeriesFile(id, cfg) : null;
+      let file = previous ? mergeSeriesFiles(previous, current) : current;
+      file = await withArchived(file);
+      const target = targetById.get(id);
+      if (drain && target?.generation !== undefined) {
+        done.push({ video_id: id, generation: target.generation });
+      }
       if (!file.snapshots.length && !file.samples.length && !file.rss.length) { empty++; continue; }
       if (!dry) bytes += (await writeSeriesFile(file, cfg)).bytes;
       written++;
     }
   }));
-  if (drain && !dry && done.length) await pool.query(SERIES_DIRTY_CLEAR_SQL, [done]);
+  if (drain && !dry && done.length) await pool.query(SERIES_DIRTY_CLEAR_SQL, [JSON.stringify(done)]);
   if ((i / CHUNK) % 10 === 0) console.log(`  ${Math.min(i + CHUNK, ids.length)}/${ids.length} · ${written} written · ${(bytes / 1e6).toFixed(1)} MB`);
 }
 
-console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+console.log(`done: ${written} file(s), ${(bytes / 1e6).toFixed(2)} MB, ${empty} video(s) with no readings, ${skipped} awaiting v2 state, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 console.log(`mean ${written ? Math.round(bytes / written) : 0} bytes/file`);
-if (withObs) console.log(`obs cache: ${obsRows} row(s) refreshed`);
 await pool.end();

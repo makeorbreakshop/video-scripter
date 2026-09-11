@@ -98,7 +98,7 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
   explicit fit/final/force lanes.
 - [x] **Bootstrap and rollout lanes (RED → GREEN).** Test mandatory budgets and bounded SQL; add
   R2-first observation bootstrap and explicit model-version queueing.
-- [ ] **Separate and repair R2 invalidation (RED → GREEN).** Add generation claims to
+- [x] **Separate and repair R2 invalidation (RED → GREEN).** Add generation claims to
   `series_dirty`, remove observation-cache refresh from the R2 drainer, and prove concurrent marks
   survive.
 - [ ] **Operational packaging and verification.** Add inactive LaunchAgent templates/runbook,

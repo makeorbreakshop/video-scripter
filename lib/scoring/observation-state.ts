@@ -93,6 +93,45 @@ export function observationsFromState(state: ObservationState, asOf = Date.now()
   return mergeObservations(state.publishedAt, bySource.snapshot, bySource.sample, bySource.rss, asOf);
 }
 
+/**
+ * Recreate the raw source-row shapes consumed by buildSeriesFile(). Unlike
+ * observationsFromState(), this deliberately keeps ineligible/conflicted RSS rows because the
+ * chart and scorer apply different filters to the same R2 serving object.
+ */
+export function seriesInputFromObservationState(state: ObservationState): {
+  snapshots: Record<string, unknown>[];
+  samples: Record<string, unknown>[];
+  rss: Record<string, unknown>[];
+} {
+  const snapshots: Record<string, unknown>[] = [];
+  const samples: Record<string, unknown>[] = [];
+  const rss: Record<string, unknown>[] = [];
+  for (const point of state.points) {
+    if (point.source === 'snapshot') {
+      snapshots.push({
+        at: point.at,
+        views: point.views,
+        created_at: null,
+        days_since_published: null,
+        like_count: null,
+        comment_count: null,
+      });
+    } else if (point.source === 'sample') {
+      samples.push({ at: point.at, views: point.views });
+    } else {
+      rss.push({
+        at: point.at,
+        views: point.views,
+        time_basis: point.timeBasis ?? null,
+        received_at: point.receivedAt ?? null,
+        model_eligible: point.modelEligible,
+        conflicted: point.conflicted,
+      });
+    }
+  }
+  return { snapshots, samples, rss };
+}
+
 export function encodeObservationState(state: ObservationState): Buffer {
   return gzipSync(Buffer.from(JSON.stringify({ ...state, points: canonical(state.points) }), 'utf8'), { level: 9 });
 }
@@ -126,4 +165,3 @@ export function observationStateFromSeries(file: VideoSeriesFile, lastChangeId =
   const seeded = applyObservationChanges(emptyObservationState(file.video_id, file.published_at), changes);
   return { ...seeded, lastChangeId };
 }
-
