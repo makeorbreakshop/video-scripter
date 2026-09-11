@@ -4,7 +4,9 @@ import {
   OBS_DIRTY_CLAIM_SQL,
   OBS_DIRTY_CLEAR_SQL,
   SCORE_DIRTY_CLEAR_SQL,
+  ensureObservationMaterializationSql,
   scoreDirtyTargetsSql,
+  walkScoreDirtyTargets,
 } from './materialization-queue';
 
 test('observation work is claimed in bounded lock-safe pages and cleared by exact generation', () => {
@@ -38,4 +40,27 @@ test('the migration captures every source at statement scope and protects intern
   expect(sql).toContain('obs_cache_dirty');
   expect(sql).toContain('score_dirty');
   expect(sql).toMatch(/revoke all on table[\s\S]*from anon, authenticated/i);
+});
+
+test('cache misses request delta work without forcing healthy v2 rows into bootstrap', () => {
+  const q = ensureObservationMaterializationSql(['a', 'a', 'b']);
+  expect(q.values).toEqual([['a', 'b']]);
+  expect(q.text).toContain('obs_cache_dirty');
+  expect(q.text).toContain('video_obs_cache');
+  expect(q.text).toMatch(/format\s*=\s*2/i);
+});
+
+test('the score queue walker never fetches or processes more than 100 at once', async () => {
+  const pending = Array.from({ length: 205 }, (_, i) => ({
+    id: `v${i}`, channel_id: 'c', published_at: '2026-09-01', generation: String(i + 1),
+  }));
+  const pages: number[] = [];
+  const selected = await walkScoreDirtyTargets({
+    limit: 205,
+    signal: new AbortController().signal,
+    fetchPage: async (limit) => pending.splice(0, limit),
+    onPage: async (page) => { pages.push(page.length); },
+  });
+  expect(selected).toBe(205);
+  expect(pages).toEqual([100, 100, 5]);
 });

@@ -34,16 +34,20 @@ import {
   type TailPair, type LaunchRow5,
 } from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
-import { curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, type PriorRef } from '../lib/scoring/prior-load';
+import {
+  curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, ObservationCacheMissError,
+  type PriorRef, type RecordLoadOptions,
+} from '../lib/scoring/prior-load';
 import { obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
-import { scoreRefreshSql } from '../lib/scoring/refresh-sql';
 import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
-import { incrementalScoreTargetsSql, walkIncrementalScoreTargets, type ScoreTargetCursorRow } from '../lib/scoring/target-selection';
 import { activeParamsQuery } from '../lib/scoring/params-status';
-import { readScoreCheckpoint, validateScoreCheckpointScope, writeScoreCheckpoint } from '../lib/scoring/checkpoint';
+import {
+  SCORE_DIRTY_CLEAR_SQL, SCORE_DIRTY_DEFER_SQL, ensureObservationMaterializationSql,
+  scoreDirtyTargetsSql, walkScoreDirtyTargets, type QueueClaim, type ScoreDirtyTarget,
+} from '../lib/scoring/materialization-queue';
 
 const FIT = process.argv.includes('--fit');
 const V5 = process.argv.includes('--v5');
@@ -72,15 +76,11 @@ const CHANNELS = (arg('--channels') ?? '').split(',').map((c) => c.trim()).filte
 // before selection, so it composes with --all/--force exactly as --channels does.
 const MIN_GAP = Number(arg('--channels-min-gap') ?? 0) || null;
 const LIMIT = Number(arg('--limit') ?? 0) || null;
-const CHECKPOINT_PATH = arg('--checkpoint');
 // --since <days>: rescore EVERY video published within the last <days>, whether or not a new
 // reading has landed since its stored score. The hourly pass only picks up videos with a fresh
 // reading, so after a scoring-math fix the young rows would otherwise keep a stale number until
 // their next snapshot. Added 2026-09-04 with the sub-day curve fix.
 const SINCE = Number(arg('--since') ?? 0) || null;
-if (CHECKPOINT_PATH) {
-  validateScoreCheckpointScope({ all: ALL, force: FORCE, since: SINCE, final: FINAL, fit: FIT, v5: V5, channels: CHANNELS });
-}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SLEEP_MS = Number(arg('--sleep') ?? 400);
 // makeTimedPool wraps each pool.query in `begin; set local statement_timeout = N; …; commit`.
@@ -91,7 +91,7 @@ const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]): Promise<any[]> => (await pool.query(sql, params)).rows as any[];
 
 // Snapshot record for a set of videos: daily snapshots + high-res samples, as true-age days.
-async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
+async function records(ids: string[], options: RecordLoadOptions = {}): Promise<Map<string, Snapshot[]>> {
   if (!ids.length) return new Map();
   // Fitting retains its approved paid-only input contract; RSS rollout does not refit v5.0.
   if (FIT) {
@@ -106,7 +106,7 @@ async function records(ids: string[]): Promise<Map<string, Snapshot[]>> {
     }
     return out;
   }
-  return loadRecords(q, ids);
+  return loadRecords(q, ids, options);
 }
 
 // Day-30 truth for a set of videos (snapshot at day 27..33 nearest 30), else null.
@@ -342,7 +342,7 @@ type ScoreRow = Record<(typeof SCORE_COLUMNS)[number], any>;
 const scoredChannels = new Set<string>();
 
 /** Current answer and history commit together. The read watermark leaves concurrently arriving evidence dirty. */
-async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
+async function writeScores(rows: ScoreRow[], readStartedAt = new Date(), claims: QueueClaim[] = []) {
   if (!rows.length) return 0;
   const values: any[] = []; const tuples: string[] = [];
   for (const r of rows) {
@@ -375,6 +375,7 @@ async function writeScores(rows: ScoreRow[], readStartedAt = new Date()) {
     if (hist) await client.query(hist.text, hist.values);
     // Headline scores commit with the score/history batch, including partial/stopped runs.
     await refreshScoredChannels(client, rows.map(row => row.channel_id));
+    if (claims.length) await client.query(SCORE_DIRTY_CLEAR_SQL, [JSON.stringify(claims)]);
     await client.query('commit');
     for (const row of rows) if (row.channel_id) scoredChannels.add(row.channel_id);
   } catch (error) { await client.query('rollback'); throw error; }
@@ -409,9 +410,22 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
   const ids = group.map((r) => r.id);
   const priorsOf = await priorsFor(ids);
   const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
-  const [rec, priorRec, priorMeta, truth] = await Promise.all([
-    records(ids), records(priorIds), meta(priorIds), day30(priorIds),
+  const cacheOnly = { rawMissBudget: 0, requireFormat2: true } as const;
+  const [targetResult, priorResult] = await Promise.allSettled([
+    records(ids, cacheOnly), records(priorIds, cacheOnly),
   ]);
+  const misses = [targetResult, priorResult]
+    .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+    .map((result) => result.reason)
+    .filter((error): error is ObservationCacheMissError => error instanceof ObservationCacheMissError);
+  if (misses.length) {
+    throw new ObservationCacheMissError([...new Set(misses.flatMap((error) => error.missingIds))], 0);
+  }
+  if (targetResult.status === 'rejected') throw targetResult.reason;
+  if (priorResult.status === 'rejected') throw priorResult.reason;
+  const [priorMeta, truth] = await Promise.all([meta(priorIds), day30(priorIds)]);
+  const rec = targetResult.value;
+  const priorRec = priorResult.value;
   const out: { t: { id: string; channel_id: string }; views: number; o: ReturnType<typeof scoreV5> }[] = [];
   for (const t of group) {
     const snaps = rec.get(t.id);
@@ -484,6 +498,8 @@ async function loadParams(version = MODEL_VERSION): Promise<GlobalParams> {
 }
 
 // The hourly pass. Under 60 days, whichever videos got a reading newer than their stored score.
+const DEFAULT_SCORE_RUN_LIMIT = 1_000;
+
 async function score(signal: AbortSignal) {
   const params = await loadParams();
   const chFilter = CHANNELS.length ? `and v.channel_id = any($1)` : '';
@@ -507,13 +523,43 @@ async function score(signal: AbortSignal) {
     args
   ) : null;
   let written = 0, selected = 0, noCurve = 0, tooYoung = 0;
-  const processTargets = async (targets: { id: string; channel_id: string }[]): Promise<boolean> => {
+  let deferred = 0;
+  const processTargets = async (targets: ({ id: string; channel_id: string } & Partial<ScoreDirtyTarget>)[]): Promise<boolean> => {
     for (const group of scoringTargetBatches(targets)) {
       if (signal.aborted) return false;
       const readStartedAt = new Date();
-      const batch = await v5Batch(group, params);
+      let batch: Awaited<ReturnType<typeof v5Batch>>;
+      try {
+        batch = await v5Batch(group, params);
+      } catch (error) {
+        if (!(error instanceof ObservationCacheMissError)) throw error;
+        const request = ensureObservationMaterializationSql(error.missingIds);
+        if (error.missingIds.length) await q(request.text, request.values as any[]);
+        const claims = group.filter((row) => row.generation !== undefined).map((row) => ({
+          video_id: row.id, generation: Number(row.generation),
+        }));
+        if (claims.length) await q(SCORE_DIRTY_DEFER_SQL, [JSON.stringify(claims), 300]);
+        deferred += group.length;
+        log(`score: deferred ${group.length}; ${error.missingIds.length} cache row(s) need materialization`);
+        continue;
+      }
       for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
-      written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, SCORE_ROW_VERSION, b.views, b.o)), readStartedAt);
+      const scoredIds = new Set(batch.map((b) => b.t.id));
+      const claims = group.filter((row) => row.generation !== undefined && scoredIds.has(row.id)).map((row) => ({
+        video_id: row.id, generation: Number(row.generation),
+      }));
+      written += await writeScores(
+        batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, SCORE_ROW_VERSION, b.views, b.o)),
+        readStartedAt,
+        claims,
+      );
+      const unscorable = group.filter((row) => row.generation !== undefined && !scoredIds.has(row.id)).map((row) => ({
+        video_id: row.id, generation: Number(row.generation),
+      }));
+      if (unscorable.length) {
+        await q(SCORE_DIRTY_DEFER_SQL, [JSON.stringify(unscorable), 3600]);
+        deferred += unscorable.length;
+      }
       if (written % 1000 < 100) log(`score: ${written} written`);
       if (ALL) await sleep(SLEEP_MS);
     }
@@ -524,30 +570,18 @@ async function score(signal: AbortSignal) {
     log(`score: ${selected} videos to score${SINCE ? ` (--since ${SINCE}d)` : ' (--all --force)'}`);
     await processTargets(bulkTargets);
   } else {
-    const checkpoint = CHECKPOINT_PATH ? readScoreCheckpoint(CHECKPOINT_PATH) : null;
-    if (checkpoint?.complete) {
-      log(`score: checkpoint complete (${CHECKPOINT_PATH})`);
-      return;
-    }
-    selected = await walkIncrementalScoreTargets<ScoreTargetCursorRow>({
-      limit: LIMIT ?? Number.MAX_SAFE_INTEGER,
+    selected = await walkScoreDirtyTargets<ScoreDirtyTarget>({
+      limit: LIMIT ?? DEFAULT_SCORE_RUN_LIMIT,
       signal,
-      initialCursor: checkpoint && !checkpoint.complete ? checkpoint.cursor : null,
-      fetchPage: async (cursor, limit) => {
-        const query = incrementalScoreTargetsSql({ all: ALL, channels: CHANNELS, limit, cursor, version: SCORE_ROW_VERSION });
+      fetchPage: async (limit) => {
+        const query = scoreDirtyTargetsSql({ channels: CHANNELS, limit });
         return q(query.text, query.values);
       },
       onPage: processTargets,
-      onCheckpoint: CHECKPOINT_PATH
-        ? async (cursor) => writeScoreCheckpoint(CHECKPOINT_PATH, { complete: false, cursor })
-        : undefined,
-      onComplete: CHECKPOINT_PATH
-        ? async () => writeScoreCheckpoint(CHECKPOINT_PATH, { complete: true })
-        : undefined,
     });
   }
   if (selected === 0) log(`score: 0 videos to score${ALL ? ' (--all: whole corpus)' : ''}`);
-  log(`score: ${signal.aborted ? 'stopped' : 'done'}, ${selected} selected, ${written} scored (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
+  log(`score: ${signal.aborted ? 'stopped' : 'done'}, ${selected} selected, ${written} scored, ${deferred} deferred (${noCurve} with no channel curve, ${tooYoung} under the ${AGE_FLOOR_HOURS}h floor)`);
 }
 
 // --final: videos past 60 days that the hourly pass does not select. Under v5 this is the same

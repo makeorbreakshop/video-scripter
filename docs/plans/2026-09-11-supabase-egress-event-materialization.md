@@ -93,7 +93,7 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
   pure projection format and migration.
 - [x] **Bounded observation materializer (RED → GREEN).** Test claim/apply/complete behavior,
   partial batches, bootstrap deferral, and byte ceilings; implement the worker and dry-run surface.
-- [ ] **Queue-driven scorer (RED → GREEN).** Test age-aware due selection, cache-only enforcement,
+- [x] **Queue-driven scorer (RED → GREEN).** Test age-aware due selection, cache-only enforcement,
   defer/retry, and atomic generation clear; switch the default scorer path without changing
   explicit fit/final/force lanes.
 - [ ] **Bootstrap and rollout lanes (RED → GREEN).** Test mandatory budgets and bounded SQL; add

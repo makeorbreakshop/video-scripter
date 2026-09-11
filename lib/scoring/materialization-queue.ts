@@ -1,6 +1,12 @@
 import { longformSql } from './longform';
 
 export interface QueueClaim { video_id: string; generation: number }
+export interface ScoreDirtyTarget {
+  id: string;
+  channel_id: string;
+  published_at: string;
+  generation: string | number;
+}
 
 export const OBS_DIRTY_CLAIM_SQL = `
   select d.video_id, d.generation, d.requires_bootstrap, c.format, c.last_change_id, c.obs,
@@ -26,6 +32,28 @@ export const SCORE_DIRTY_DEFER_SQL = `
          attempts = d.attempts + 1
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
+
+export function ensureObservationMaterializationSql(ids: readonly string[]): { text: string; values: unknown[] } {
+  const unique = [...new Set(ids.filter(Boolean))];
+  return {
+    text: `with requested as (select unnest($1::text[]) as video_id), state as (
+      select r.video_id, coalesce(max(l.change_id), c.last_change_id, 0) as generation,
+             coalesce(c.format = 2, false) as has_v2
+        from requested r
+        left join observation_change_log l on l.video_id=r.video_id
+        left join video_obs_cache c on c.video_id=r.video_id
+       group by r.video_id, c.last_change_id, c.format
+    )
+    insert into obs_cache_dirty(video_id,generation,requires_bootstrap,marked_at,not_before)
+    select video_id,generation,not has_v2,now(),now() from state
+    on conflict (video_id) do update set
+      generation=greatest(obs_cache_dirty.generation,excluded.generation),
+      requires_bootstrap=obs_cache_dirty.requires_bootstrap or excluded.requires_bootstrap,
+      marked_at=excluded.marked_at,
+      not_before=least(obs_cache_dirty.not_before,excluded.not_before)`,
+    values: [unique],
+  };
+}
 
 export function scoreDirtyTargetsSql(options: { limit: number; channels: string[] }): { text: string; values: unknown[] } {
   if (!(options.limit > 0) || options.limit > 100) throw new Error('score dirty page limit must be 1..100');
@@ -53,4 +81,24 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
      limit ${limit}`,
     values,
   };
+}
+
+export async function walkScoreDirtyTargets<T extends ScoreDirtyTarget>(options: {
+  limit: number;
+  signal: AbortSignal;
+  fetchPage: (limit: number) => Promise<T[]>;
+  onPage: (page: T[]) => Promise<void | boolean>;
+}): Promise<number> {
+  let selected = 0;
+  let previous = '';
+  while (!options.signal.aborted && selected < options.limit) {
+    const page = await options.fetchPage(Math.min(100, options.limit - selected));
+    if (!page.length) break;
+    const signature = page.map((row) => `${row.id}:${row.generation}`).join('|');
+    if (signature === previous) throw new Error('score dirty queue made no progress');
+    previous = signature;
+    selected += page.length;
+    if (await options.onPage(page) === false) break;
+  }
+  return selected;
 }
