@@ -55,3 +55,13 @@ test('workers with explicit transactions set attribution after BEGIN', () => {
     expect(source).toContain('setLocalApplicationName');
   }
 });
+
+test('an unhealthy pipeline marks the trace run failed before returning a failing exit code', () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), 'scripts', 'observation-pipeline-health.ts'),
+    'utf8',
+  );
+  expect(source).toMatch(
+    /if \(unhealthy\) \{\s*trace\.markFailed\(\);\s*process\.exitCode = 1;\s*\}/,
+  );
+});

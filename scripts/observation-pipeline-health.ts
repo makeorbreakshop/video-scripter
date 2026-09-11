@@ -31,7 +31,10 @@ try {
     || report.series_oldest_seconds > 30 * 60
     || report.change_rows > 100_000;
   console.log(JSON.stringify({ healthy: !unhealthy, ...report }));
-  if (unhealthy) process.exitCode = 1;
+  if (unhealthy) {
+    trace.markFailed();
+    process.exitCode = 1;
+  }
 } finally {
   await pool.end();
   trace.finish();
