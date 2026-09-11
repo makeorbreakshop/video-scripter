@@ -98,15 +98,15 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
   },
   {
     // Slow self-healing for legacy videos discovered after cutover. The preflight count aborts
-    // before a raw read above 25 videos or 10k narrow rows; at twelve runs/hour that also bounds
+    // before a raw read above 100 videos or 20k narrow rows; at twelve runs/hour that also bounds
     // the recurring raw-read rate while ordinary event materialization remains raw-free.
     label: 'com.mfm.video-scripter-observation-bootstrap',
     script: 'bootstrap-observation-cache.ts',
     args: [
-      '--max-videos', '25',
+      '--max-videos', '100',
       '--max-changes', '5000',
-      '--raw-video-budget', '25',
-      '--raw-row-budget', '10000',
+      '--raw-video-budget', '100',
+      '--raw-row-budget', '20000',
     ],
     intervalSeconds: 300,
     minuteOffset: 0,
