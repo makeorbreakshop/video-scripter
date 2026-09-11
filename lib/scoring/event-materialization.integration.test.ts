@@ -71,6 +71,8 @@ suite('event materialization migration (real local PostgreSQL)', () => {
     `);
     const migration = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/20260911153000_event_driven_scoring.sql'), 'utf8');
     await pool.query(migration);
+    const integrity = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/20260911221000_derived_video_foreign_keys.sql'), 'utf8');
+    await pool.query(integrity);
   }, 30_000);
 
   beforeEach(async () => {
@@ -113,6 +115,30 @@ suite('event materialization migration (real local PostgreSQL)', () => {
     expect(Number((await pool.query('select count(*) n from observation_change_log')).rows[0].n)).toBe(5_000);
     for (const table of ['obs_cache_dirty', 'score_dirty', 'series_dirty']) {
       expect(Number((await pool.query(`select count(*) n from ${table}`)).rows[0].n)).toBe(1);
+    }
+  });
+
+  test('deleting a video cascades every derived projection and work queue', async () => {
+    await addVideo();
+    await pool.query(`truncate observation_change_log,obs_cache_dirty,score_dirty,series_dirty,
+      video_obs_cache,video_day30_truth restart identity`);
+    await pool.query(`
+      insert into observation_change_log(video_id,source,operation,at,views)
+        values('video','sample','upsert',now(),100);
+      insert into obs_cache_dirty(video_id,generation) values('video',1);
+      insert into score_dirty(video_id,generation) values('video',1);
+      insert into series_dirty(video_id,generation) values('video',1);
+      insert into video_obs_cache(video_id,n,obs,format,last_change_id)
+        values('video',1,'x'::bytea,2,1);
+      insert into video_day30_truth(video_id,snapshot_day,snapshot_date,views)
+        values('video',30,current_date,100);
+      delete from videos where id='video';
+    `);
+    for (const table of [
+      'observation_change_log', 'obs_cache_dirty', 'score_dirty',
+      'series_dirty', 'video_obs_cache', 'video_day30_truth',
+    ]) {
+      expect(Number((await pool.query(`select count(*) n from ${table}`)).rows[0].n)).toBe(0);
     }
   });
 

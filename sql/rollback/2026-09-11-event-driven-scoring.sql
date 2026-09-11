@@ -26,6 +26,8 @@ drop table if exists public.score_dirty;
 drop table if exists public.obs_cache_dirty;
 drop table if exists public.observation_change_log;
 drop table if exists public.observation_materialization_meta;
+alter table if exists public.video_obs_cache drop constraint if exists video_obs_cache_video_id_fkey;
+alter table if exists public.series_dirty drop constraint if exists series_dirty_video_id_fkey;
 alter table if exists public.video_obs_cache drop column if exists last_change_id;
 alter table if exists public.video_obs_cache drop column if exists format;
 alter table if exists public.series_dirty drop column if exists generation;
