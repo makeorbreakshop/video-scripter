@@ -91,7 +91,7 @@ refits, backtests, and model-wide rollouts prefer R2/Parquet.
 - [x] **Queue and projection contracts (RED → GREEN).** Add outcome tests for v2 delta parity,
   fail-closed cache reads, statement-level trigger DDL, and watermark-safe queue SQL; implement the
   pure projection format and migration.
-- [ ] **Bounded observation materializer (RED → GREEN).** Test claim/apply/complete behavior,
+- [x] **Bounded observation materializer (RED → GREEN).** Test claim/apply/complete behavior,
   partial batches, bootstrap deferral, and byte ceilings; implement the worker and dry-run surface.
 - [ ] **Queue-driven scorer (RED → GREEN).** Test age-aware due selection, cache-only enforcement,
   defer/retry, and atomic generation clear; switch the default scorer path without changing

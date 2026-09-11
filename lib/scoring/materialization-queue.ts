@@ -8,7 +8,7 @@ export const OBS_DIRTY_CLAIM_SQL = `
     from obs_cache_dirty d
     left join video_obs_cache c on c.video_id = d.video_id
     left join videos v on v.id = d.video_id
-   where d.not_before <= now()
+   where d.not_before <= now() and not d.requires_bootstrap
    order by d.not_before, d.marked_at, d.video_id
    limit $1
    for update of d skip locked`;
@@ -54,4 +54,3 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
     values,
   };
 }
-

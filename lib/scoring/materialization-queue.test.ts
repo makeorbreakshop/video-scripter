@@ -10,6 +10,7 @@ import {
 test('observation work is claimed in bounded lock-safe pages and cleared by exact generation', () => {
   expect(OBS_DIRTY_CLAIM_SQL).toMatch(/limit \$1/i);
   expect(OBS_DIRTY_CLAIM_SQL).toMatch(/for update[^;]*skip locked/i);
+  expect(OBS_DIRTY_CLAIM_SQL).toMatch(/not d\.requires_bootstrap/i);
   expect(OBS_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
   expect(SCORE_DIRTY_CLEAR_SQL).toMatch(/generation\s*=\s*x\.generation/i);
 });
@@ -38,4 +39,3 @@ test('the migration captures every source at statement scope and protects intern
   expect(sql).toContain('score_dirty');
   expect(sql).toMatch(/revoke all on table[\s\S]*from anon, authenticated/i);
 });
-
