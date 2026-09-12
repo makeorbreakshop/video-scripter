@@ -5,6 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from '@modelcontextpro
 import { explorePatternsTool } from './tools/explore-patterns.js';
 import { findCrossNichePatternsTool } from './tools/find-cross-niche.js';
 import { getPatternInsightsTool } from './tools/get-pattern-insights.js';
+import { searchOutlierPackagesDefinition, searchOutlierPackagesTool, } from './tools/search-outlier-packages.js';
 class VideoScripterMCP {
     server;
     constructor() {
@@ -55,7 +56,7 @@ class VideoScripterMCP {
                 },
                 {
                     name: 'find_cross_niche_patterns',
-                    description: 'Find successful patterns from different niches that share psychological triggers',
+                    description: 'Legacy text-only grouping of high performers from different niches by a supplied psychological trigger. Use search_outlier_packages with package_transfer when the complete title/thumbnail/story package matters.',
                     inputSchema: {
                         type: 'object',
                         properties: {
@@ -96,7 +97,8 @@ class VideoScripterMCP {
                         },
                         required: ['pattern_examples']
                     }
-                }
+                },
+                searchOutlierPackagesDefinition,
             ],
         }));
         // Handle tool calls
@@ -110,6 +112,8 @@ class VideoScripterMCP {
                         return await findCrossNichePatternsTool(args);
                     case 'get_pattern_insights':
                         return await getPatternInsightsTool(args);
+                    case 'search_outlier_packages':
+                        return await searchOutlierPackagesTool(args);
                     default:
                         throw new Error(`Unknown tool: ${name}`);
                 }

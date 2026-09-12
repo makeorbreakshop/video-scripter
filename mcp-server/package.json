@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "test:package-search": "npm run build && node test-outlier-package-search.mjs",
+    "test:package-search:live": "npm run build && node test-outlier-package-search-live.mjs",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "setup": "npm install && npm run build && node health-check.js",

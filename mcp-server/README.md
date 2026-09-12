@@ -17,6 +17,12 @@ Local MCP server that provides intelligent pattern exploration tools for YouTube
 
 3. **get_pattern_insights** - Deep analysis of specific video patterns
 
+4. **search_outlier_packages** - Explicitly choose one of two different searches:
+   - `topic`: semantically similar outliers about the same subject
+   - `package_transfer`: unrelated-topic outliers whose complete title, thumbnail, click promise, and opening-story pattern may transfer to the working video
+
+`package_transfer` uses semantic similarity as a negative filter, not a relevance score. It removes the nearest topical results, cheaply screens a diverse set of title-and-description cores, and sends only the promoted shortlist to Gemini 3.1 Flash-Lite with each source's real thumbnail. The response includes the source package, a proposed target translation, evidence requirements, deterministic claim guards, measured outlier provenance, and a usage-based cost estimate. It does not claim that packaging caused the source performance.
+
 ## Setup
 
 ### 1. Install Dependencies
@@ -43,7 +49,10 @@ Add this to your Claude Desktop config (`~/Library/Application Support/Claude/cl
       "command": "node",
       "args": ["/Users/brandoncullum/video-scripter/mcp-server/dist/index.js"],
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "OPENAI_API_KEY": "...",
+        "GEMINI_API_KEY": "...",
+        "QDRANT_URL": "http://127.0.0.1:6333"
       }
     }
   }
@@ -71,6 +80,32 @@ Claude will receive organized data with:
 - Performance metrics
 - Channel gaps (if channel_id provided)
 
+For a same-topic outlier search:
+
+```text
+Use search_outlier_packages with:
+- search_intent: topic
+- target.title: Best Laser Cutter 2026
+- target.description: A category guide based on experience with 47 machines
+```
+
+For cross-topic packaging inspiration:
+
+```text
+Use search_outlier_packages with:
+- search_intent: package_transfer
+- target.title: Best Laser Cutter 2026: Tested 47 Machines, Here's What to Buy
+- target.description: Help a maker choose the right laser category for the jobs and materials they need
+- target.thumbnail_url: https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg (optional)
+- target.available_evidence: footage of representative diode, CO2, and fiber machines
+- target.hard_constraints: do not invent prices, percentages, controlled tests, or a universal winner
+- package_hints: costly mistake, hidden reveal, reputation reversal (optional)
+- top_k: 8
+- max_cost_usd: 0.02
+```
+
+The target thumbnail is optional because an in-progress video may not have one yet. Every source candidate must have a real thumbnail; each result reports whether the target thumbnail was actually used.
+
 ## Development
 
 ### Run in Development Mode
@@ -84,6 +119,9 @@ npm run dev
 ```bash
 # Test directly with a sample request
 node test-mcp.js
+
+# Deterministic package-search contract and end-to-end dependency test
+npm run test:package-search
 ```
 
 ## How It Works
