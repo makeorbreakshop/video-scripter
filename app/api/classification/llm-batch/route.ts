@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { llmFormatClassificationService } from '@/lib/llm-format-classification-service';
+import { videoTextFor } from '@/lib/app/video-text';
+import { hydrateDescriptions } from '@/lib/app/video-text-routes';
 
 export async function POST(request: Request) {
   const supabase = getSupabase();
@@ -12,7 +14,7 @@ export async function POST(request: Request) {
     // Get unclassified videos (only those with valid channel_id)
     const { data: videos, error } = await supabase
       .from('videos')
-      .select('id, title, channel_name, description')
+      .select('id, title, channel_name')
       .is('format_type', null)
       .not('channel_id', 'is', null)
       .limit(batchSize);
@@ -27,12 +29,18 @@ export async function POST(request: Request) {
     }
     
     console.log(`📊 Found ${videos.length} videos to classify`);
+    // The description is no longer a column of `videos`; hydrate it from the side table for
+    // exactly the ids this batch selected.
+    // (the supabase-js generated types resolve these columns to `unknown`; the shape is fixed
+    // by the select list above.)
+    const rows = videos as unknown as Array<{ id: string; title: string; channel_name: string }>;
+    const withText = hydrateDescriptions(rows, await videoTextFor(rows.map(v => v.id)));
     const result = await llmFormatClassificationService.classifyBatch(
-      videos.map(v => ({
+      withText.map(v => ({
         id: v.id,
         title: v.title,
         channel: v.channel_name,
-        description: v.description
+        description: v.description ?? undefined
       }))
     );
     

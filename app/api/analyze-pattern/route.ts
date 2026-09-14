@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { pineconeService } from '@/lib/pinecone-service';
@@ -102,6 +103,26 @@ function generateVisualQueries(pattern: any): string[] {
   }
   
   return queries.slice(0, 2); // Limit to 2 visual queries
+}
+
+/** The `videos` columns this route uses. The long text lives in video_text and is hydrated
+ *  separately, so it is not pulled along with the row. */
+export const TARGET_VIDEO_COLUMNS =
+  'id, title, channel_id, channel_name, view_count, temporal_performance_score, ' +
+  'channel_baseline_at_publish, topic_niche, topic_domain, published_at, thumbnail_url';
+
+export const BASELINE_VIDEO_COLUMNS =
+  'id, title, view_count, temporal_performance_score, published_at, thumbnail_url';
+
+export const CANDIDATE_VIDEO_COLUMNS =
+  'id, title, channel_name, view_count, temporal_performance_score, topic_niche, topic_domain, thumbnail_url';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
 }
 
 interface AnalyzeRequest {
@@ -211,7 +232,7 @@ export async function POST(request: NextRequest) {
     // Get target video with baseline information
     const { data: targetVideo, error: videoError } = await supabase
       .from('videos')
-      .select('*, channel_baseline_at_publish')
+      .select(TARGET_VIDEO_COLUMNS)
       .eq('id', video_id)
       .single();
 
@@ -236,16 +257,23 @@ export async function POST(request: NextRequest) {
       niche: targetVideo.topic_niche || targetVideo.topic_domain
     });
 
+    const [targetWithText] = attachSummaries([targetVideo as any], await videoTextFor([video_id]));
+
     // Get 10 recent baseline videos from same channel (normal performers)
     const { data: baselineVideos } = await supabase
       .from('videos')
-      .select('title, view_count, temporal_performance_score, llm_summary, published_at, thumbnail_url')
+      .select(BASELINE_VIDEO_COLUMNS)
       .eq('channel_id', targetVideo.channel_id)
       .gte('temporal_performance_score', 0.8)
       .lte('temporal_performance_score', 1.2)
       .neq('id', video_id)
       .order('published_at', { ascending: false })
       .limit(10);
+
+    const baselineWithText = attachSummaries(
+      baselineVideos as any[] | null,
+      await videoTextFor(((baselineVideos as any[]) || []).map((v) => v.id))
+    );
 
     logger.log(`📊 Found ${baselineVideos?.length || 0} baseline videos for comparison`);
     logger.log('Baseline Videos:', baselineVideos?.map(v => ({
@@ -274,15 +302,15 @@ CONTEXT:
 TARGET VIDEO BREAKTHROUGH:
 Title: "${targetVideo.title}"
 Performance: ${targetVideo.temporal_performance_score?.toFixed(1)}x normal performance
-Content: ${targetVideo.llm_summary || 'No summary available'}
+Content: ${targetWithText.summary || 'No summary available'}
 Thumbnail: [First image provided - this is the breakthrough thumbnail to analyze]
 
 BASELINE PATTERN (last 10 videos for comparison):
-${(baselineVideos || []).map((v, i) => {
+${baselineWithText.map((v, i) => {
   const hasImage = baselineThumbnails.some(bt => bt.thumbnail_url === v.thumbnail_url);
   return `${i + 1}. Title: "${v.title}"
    Performance: ${((v.temporal_performance_score || 1)).toFixed(1)}x (${v.view_count?.toLocaleString()} views)
-   Content: ${v.llm_summary || 'No summary available'}
+   Content: ${v.summary || 'No summary available'}
    ${hasImage ? `Thumbnail: [Image ${baselineThumbnails.findIndex(bt => bt.thumbnail_url === v.thumbnail_url) + 2} provided]` : 'Thumbnail: Not available'}`
 }).join('\n\n')}
 
@@ -839,13 +867,18 @@ After analysis, confirm your visual observations are actually present in the thu
       // Get full video data with performance scores and summaries
       const { data: allVideos } = await supabase
         .from('videos')
-        .select('id, title, channel_name, view_count, temporal_performance_score, topic_niche, topic_domain, llm_summary, thumbnail_url')
+        .select(CANDIDATE_VIDEO_COLUMNS)
         .in('id', videoIds)
         .gte('temporal_performance_score', 1.5) // Further lowered to catch more candidates
         .lte('temporal_performance_score', 100); // Cap at 100x to exclude corrupted data
 
       // TEST A: Rank by search similarity scores for better candidate selection
-      const videosWithSimilarity = (allVideos || []).map(video => {
+      const allVideosWithText = attachSummaries(
+        allVideos as any[] | null,
+        await videoTextFor(((allVideos as any[]) || []).map((v) => v.id))
+      );
+
+      const videosWithSimilarity = allVideosWithText.map(video => {
         const matchInfo = allFoundVideos.get(video.id);
         let relevanceScore = 0;
         let avgSimilarity = 0;
@@ -929,7 +962,7 @@ Transformation: ${pattern.differentiation_factor || 'Skill mastery to social uti
 CANDIDATE VIDEO:
 Title: "${video.title}"
 Channel: ${video.channel_name} 
-Content: ${video.llm_summary?.substring(0, 200) || 'No summary available'}
+Content: ${video.summary?.substring(0, 200) || 'No summary available'}
 Niche: ${video.topic_niche || video.topic_domain}
 Performance: ${video.temporal_performance_score?.toFixed(1)}x baseline
 
@@ -1071,7 +1104,7 @@ Format: MATCH: Yes/No | TRANSFORMATION: [brief] | PSYCHOLOGY: [brief] | REASON: 
               views: v.video.view_count,
               channel: v.video.channel_name,
               thumbnail_url: v.video.thumbnail_url,
-              summary: v.video.llm_summary || 'No summary available',
+              summary: v.video.summary || 'No summary available',
               validation_reason: v.reason,
               visual_match: v.visualMatch,
               source: v.source
@@ -1159,13 +1192,13 @@ Format: MATCH: Yes/No | TRANSFORMATION: [brief] | PSYCHOLOGY: [brief] | REASON: 
         thumbnail: targetVideo.thumbnail_url,
         baseline: targetVideo.channel_baseline_at_publish,
         published_at: targetVideo.published_at,
-        summary: targetVideo.llm_summary
+        summary: targetWithText.summary
       },
-      baseline_videos: (baselineVideos || []).map(v => ({
+      baseline_videos: baselineWithText.map(v => ({
         title: v.title,
         views: v.view_count,
         score: v.temporal_performance_score,
-        summary: v.llm_summary,
+        summary: v.summary,
         thumbnail_url: v.thumbnail_url,
         published_at: v.published_at
       })),

@@ -16,6 +16,9 @@ interface ViewSnapshot {
   daily_views_rate?: number;
 }
 
+// Renders the /api/videos/[videoId] payload; it never touches the database. The three text
+// fields below are filled by that route from the video_text side table (see hydrateVideoText
+// in lib/app/video-text-routes.ts), so they survive the null-out unchanged.
 interface VideoDetails {
   id: string;
   title: string;

@@ -5,9 +5,30 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { pineconeService } from '@/lib/pinecone-service';
+
+/** The `videos` columns this route uses. The long text lives in video_text and is hydrated
+ *  separately, so it is not pulled along with the row. */
+export const TARGET_VIDEO_COLUMNS =
+  'id, title, channel_id, channel_name, view_count, temporal_performance_score, ' +
+  'channel_baseline_at_publish, topic_niche, topic_domain, published_at, thumbnail_url';
+
+export const BASELINE_VIDEO_COLUMNS =
+  'id, title, view_count, temporal_performance_score, published_at, thumbnail_url';
+
+export const CANDIDATE_VIDEO_COLUMNS =
+  'id, title, channel_name, view_count, temporal_performance_score, topic_niche, topic_domain, thumbnail_url';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
+}
 
 interface AnalyzeRequest {
   video_id: string;
@@ -60,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Get target video with baseline information
     const { data: targetVideo, error: videoError } = await supabase
       .from('videos')
-      .select('*, channel_baseline_at_publish')
+      .select(TARGET_VIDEO_COLUMNS)
       .eq('id', video_id)
       .single();
 
@@ -74,10 +95,12 @@ export async function POST(request: NextRequest) {
     console.log(`📺 Target: "${targetVideo.title}" (${targetVideo.temporal_performance_score?.toFixed(1)}x TPS)`);
     console.log(`🖼️ Thumbnail: ${targetVideo.thumbnail_url ? 'Available' : 'Missing'}`);
 
+    const [targetWithText] = attachSummaries([targetVideo as any], await videoTextFor([video_id]));
+
     // Get 10 recent baseline videos from same channel (normal performers)
     const { data: baselineVideos } = await supabase
       .from('videos')
-      .select('title, view_count, temporal_performance_score, llm_summary, published_at, thumbnail_url')
+      .select(BASELINE_VIDEO_COLUMNS)
       .eq('channel_id', targetVideo.channel_id)
       .gte('temporal_performance_score', 0.8)
       .lte('temporal_performance_score', 1.2)
@@ -99,7 +122,7 @@ Title: "${targetVideo.title}"
 Views: ${targetVideo.view_count.toLocaleString()}
 Channel: ${targetVideo.channel_name}
 Niche: ${targetVideo.topic_niche || targetVideo.topic_domain}
-${targetVideo.llm_summary ? `Summary: ${targetVideo.llm_summary}` : ''}
+${targetWithText.summary ? `Summary: ${targetWithText.summary}` : ''}
 
 CHANNEL BASELINE (normal performers):
 ${(baselineVideos || []).map((v, i) => 
@@ -277,7 +300,7 @@ Return a JSON object with enhanced fields:
       // Get full video data with performance scores and thumbnails
       const { data: videos } = await supabase
         .from('videos')
-        .select('id, title, channel_name, view_count, temporal_performance_score, topic_niche, topic_domain, llm_summary, thumbnail_url')
+        .select(CANDIDATE_VIDEO_COLUMNS)
         .in('id', videoIds)
         .gte('temporal_performance_score', 2.5)
         .order('temporal_performance_score', { ascending: false })

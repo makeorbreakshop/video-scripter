@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase-lazy'
 
-
+// Not a reader of the videos text columns: every `llm_summary` here is the string VALUE of
+// worker_control.worker_type, not the column. Nothing to repoint.
 export async function GET() {
   const supabase = getSupabase();
   try {

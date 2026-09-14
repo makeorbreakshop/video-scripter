@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { llmFormatClassificationService } from '@/lib/llm-format-classification-service';
+import { videoTextFor } from '@/lib/app/video-text';
+import { hydrateDescriptions } from '@/lib/app/video-text-routes';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -215,7 +217,7 @@ async function processAllVideos(totalVideos: number) {
     // Get next chunk of videos
     const { data: videos, error } = await supabase
       .from('videos')
-      .select('id, title, channel_name, description')
+      .select('id, title, channel_name')
       .is('format_type', null)
       .not('channel_id', 'is', null)
       .limit(CONFIG.CHUNK_SIZE)
@@ -226,6 +228,11 @@ async function processAllVideos(totalVideos: number) {
       break;
     }
     
+    // The description is no longer a column of `videos`; hydrate it from the side table for
+    // exactly the ids this chunk selected. Hydrated once, outside the retry loop.
+    const rows = videos as unknown as Array<{ id: string; title: string; channel_name: string }>;
+    const videosWithText = hydrateDescriptions(rows, await videoTextFor(rows.map(v => v.id)));
+
     // Process chunk with retry logic
     let retries = 0;
     let chunkProcessed = false;
@@ -233,11 +240,11 @@ async function processAllVideos(totalVideos: number) {
     while (!chunkProcessed && retries < CONFIG.MAX_RETRIES) {
       try {
         const result = await llmFormatClassificationService.classifyBatch(
-          videos.map(v => ({
+          videosWithText.map(v => ({
             id: v.id,
             title: v.title,
             channel: v.channel_name,
-            description: v.description
+            description: v.description ?? undefined
           }))
         );
         

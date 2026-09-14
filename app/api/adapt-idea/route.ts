@@ -5,12 +5,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import Anthropic from '@anthropic-ai/sdk';
 
 interface AdaptRequest {
   video_id: string;
   target_niche: string;
   pattern_description?: string; // Optional if we extract it fresh
+}
+
+/** The `videos` columns this route renders. The long text lives in video_text now, so it is
+ *  hydrated separately instead of being pulled along with the row. */
+export const SOURCE_VIDEO_COLUMNS =
+  'id, title, channel_name, channel_id, view_count, temporal_performance_score, ' +
+  'topic_niche, topic_domain, published_at, thumbnail_url';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
 }
 
 interface Adaptation {
@@ -38,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Get the source video
     const { data: sourceVideo, error: videoError } = await supabase
       .from('videos')
-      .select('*')
+      .select(SOURCE_VIDEO_COLUMNS)
       .eq('id', video_id)
       .single();
 
@@ -48,6 +63,8 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const [sourceWithText] = attachSummaries([sourceVideo as any], await videoTextFor([video_id]));
 
     // Get successful videos from the target niche (for context)
     const { data: targetNicheVideos } = await supabase
@@ -71,7 +88,7 @@ Title: "${sourceVideo.title}"
 Channel: ${sourceVideo.channel_name}
 Niche: ${sourceVideo.topic_niche || sourceVideo.topic_domain}
 Views: ${sourceVideo.view_count.toLocaleString()}
-${sourceVideo.llm_summary ? `Summary: ${sourceVideo.llm_summary}` : ''}
+${sourceWithText.summary ? `Summary: ${sourceWithText.summary}` : ''}
 
 ${pattern_description ? `IDENTIFIED PATTERN: ${pattern_description}\n` : ''}
 

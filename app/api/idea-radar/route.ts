@@ -5,6 +5,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
+
+/** The `videos` columns this route renders. The summary lives in video_text now and is
+ *  hydrated separately, so it is not pulled along with the row. */
+export const OUTLIER_COLUMNS =
+  'id, title, channel_name, channel_id, thumbnail_url, view_count, ' +
+  'temporal_performance_score, topic_domain, topic_niche, topic_micro, published_at';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
+}
 
 interface OutlierVideo {
   video_id: string;
@@ -223,7 +238,7 @@ export async function GET(request: NextRequest) {
       // Query with adjusted offset
       let query = supabase
         .from('videos')
-        .select('id, title, channel_name, channel_id, thumbnail_url, view_count, temporal_performance_score, topic_domain, topic_niche, topic_micro, llm_summary, published_at')
+        .select(OUTLIER_COLUMNS)
         .gte('temporal_performance_score', minScore)
         .lte('temporal_performance_score', 100) // Cap at 100x
         .gte('published_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -251,7 +266,7 @@ export async function GET(request: NextRequest) {
       }
       
       // Batch fetch channel avatars for non-randomized path
-      const channelIds = [...new Set((videos || []).map(v => v.channel_id).filter(Boolean))];
+      const channelIds = [...new Set((((videos as any[]) || []).map(v => v.channel_id) as string[]).filter(Boolean))];
       let channelAvatars: Record<string, string> = {};
       
       if (channelIds.length > 0) {
@@ -267,8 +282,13 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const videosWithText = attachSummaries(
+        videos as any[] | null,
+        await videoTextFor(((videos as any[]) || []).map((v) => v.id))
+      );
+
       // Transform to response format
-      const outliers: OutlierVideo[] = (videos || []).map(v => ({
+      const outliers: OutlierVideo[] = videosWithText.map(v => ({
         video_id: v.id,
         title: v.title,
         channel_name: v.channel_name,
@@ -281,7 +301,7 @@ export async function GET(request: NextRequest) {
         micro: v.topic_micro || '',
         views: v.view_count,
         age_days: Math.floor((Date.now() - new Date(v.published_at).getTime()) / (1000 * 60 * 60 * 24)),
-        summary: v.llm_summary
+        summary: v.summary
       }));
 
       const hasMore = adjustedOffset + limit < (totalCount || 0);

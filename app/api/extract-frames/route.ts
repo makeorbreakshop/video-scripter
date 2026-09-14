@@ -6,8 +6,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import Anthropic from '@anthropic-ai/sdk';
 
+
+/** The `videos` columns this route uses. The long text lives in video_text and is hydrated
+ *  separately, so it is not pulled along with the row. */
+export const FULL_VIDEO_COLUMNS =
+  'id, title, channel_name, thumbnail_url, view_count, published_at, temporal_performance_score';
+
+export const USER_HIGH_PERFORMER_COLUMNS =
+  'id, title, thumbnail_url, view_count, temporal_performance_score, published_at';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
+}
 
 interface FrameExtractionRequest {
   search_results: Array<{
@@ -74,10 +91,7 @@ export async function POST(request: NextRequest) {
     console.log('🗄️  Querying Supabase for video details...');
     const { data: fullVideos, error: videoError } = await supabase
       .from('videos')
-      .select(`
-        id, title, channel_name, thumbnail_url, view_count, published_at,
-        temporal_performance_score, llm_summary, description
-      `)
+      .select(FULL_VIDEO_COLUMNS)
       .in('id', videoIds);
 
     console.log(`📦 Found ${fullVideos?.length || 0} videos in database (${videoIds.length} requested)`);
@@ -99,6 +113,11 @@ export async function POST(request: NextRequest) {
       throw new Error(`No video data found for analysis. Searched for ${videoIds.length} video IDs but found 0 in database.`);
     }
 
+    const fullVideosWithText = attachSummaries(
+      fullVideos as any[],
+      await videoTextFor(((fullVideos as any[]) || []).map((v) => v.id))
+    );
+
     // 2. Get user's channel context if provided
     let userChannelContext = null;
     if (user_channel_id) {
@@ -111,10 +130,7 @@ export async function POST(request: NextRequest) {
 
       const { data: userHighPerformers } = await supabase
         .from('videos')
-        .select(`
-          id, title, thumbnail_url, view_count, temporal_performance_score,
-          llm_summary, published_at
-        `)
+        .select(USER_HIGH_PERFORMER_COLUMNS)
         .eq('channel_id', user_channel_id)
         .gte('temporal_performance_score', 1.5)
         .gte('published_at', twoYearsAgo.toISOString())
@@ -132,8 +148,13 @@ export async function POST(request: NextRequest) {
 
       const avgPerformance = userRecent?.reduce((sum, v) => sum + (v.temporal_performance_score || 1), 0) / (userRecent?.length || 1);
 
+      const userHighPerformersWithText = attachSummaries(
+        userHighPerformers as any[] | null,
+        await videoTextFor(((userHighPerformers as any[]) || []).map((v) => v.id))
+      );
+
       userChannelContext = {
-        high_performers: userHighPerformers || [],
+        high_performers: userHighPerformersWithText,
         avg_performance_score: avgPerformance,
         total_recent_videos: userRecent?.length || 0
       };
@@ -153,12 +174,12 @@ export async function POST(request: NextRequest) {
 
     // 3. Prepare analysis data
     const analysisData = {
-      competitor_videos: fullVideos.map(video => ({
+      competitor_videos: fullVideosWithText.map(video => ({
         title: video.title,
         channel: video.channel_name,
         views: video.view_count,
         performance_score: video.temporal_performance_score,
-        summary: video.llm_summary?.substring(0, 500) || 'No summary available',
+        summary: video.summary?.substring(0, 500) || 'No summary available',
         thumbnail_url: video.thumbnail_url
       })),
       user_concept,
@@ -192,7 +213,7 @@ Recent Video Count: ${userChannelContext.total_recent_videos}
 Your Proven High Performers:
 ${userChannelContext.high_performers.map((video, i) => `
 ${i + 1}. "${video.title}" (${video.temporal_performance_score.toFixed(1)}x baseline)
-   Summary: ${video.llm_summary?.substring(0, 300) || 'No summary'}
+   Summary: ${video.summary?.substring(0, 300) || 'No summary'}
 `).join('')}
 ` : ''}
 

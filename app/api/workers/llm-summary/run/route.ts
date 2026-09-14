@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
+import { getSupabase } from '@/lib/supabase-lazy'
+import { q } from '@/lib/admin/db'
+import { SUMMARY_PENDING_COUNT_SQL } from '@/lib/app/video-text-routes'
 
 
 export async function POST(request: Request) {
@@ -24,12 +27,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get count of videos needing summaries
-    const { count: totalVideos } = await supabase
-      .from('videos')
-      .select('*', { count: 'exact', head: true })
-      .is('llm_summary', null)
-      .neq('channel_name', 'Make or Break Shop')
+    // Get count of videos needing summaries, from video_text. `.is('llm_summary', null)` on
+    // `videos` would size this job at the entire corpus once the null-out has run.
+    const pending = await q<{ count: number }>(SUMMARY_PENDING_COUNT_SQL, ['Make or Break Shop'])
+    const totalVideos = pending[0]?.count ?? 0
 
     // Create a new job
     const jobId = uuidv4()

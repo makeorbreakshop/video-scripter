@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
+import { hydrateVideoText } from '@/lib/app/video-text-routes';
 
 export async function GET(
   request: NextRequest,
@@ -46,14 +48,11 @@ export async function GET(
       );
     }
 
-    // Parse metadata if it's a string
-    if (video.metadata && typeof video.metadata === 'string') {
-      try {
-        video.metadata = JSON.parse(video.metadata);
-      } catch (e) {
-        console.error('Error parsing metadata:', e);
-      }
-    }
+    // `select('*')` no longer brings back description / metadata / llm_summary — they live in
+    // video_text. Hydrate them here, because this payload is what app/videos/[id]/page.tsx and
+    // components/video-detail-modal.tsx render; neither of them touches the database itself.
+    // (hydrateVideoText also does the JSON.parse the metadata column used to need.)
+    Object.assign(video, hydrateVideoText(video, (await videoTextFor([videoId])).get(videoId)));
 
     // Handle video_performance_metrics which might be an array
     if (Array.isArray(video.video_performance_metrics) && video.video_performance_metrics.length > 0) {

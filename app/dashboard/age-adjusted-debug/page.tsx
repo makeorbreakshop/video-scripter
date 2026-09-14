@@ -82,7 +82,6 @@ export default function AgeAdjustedDebugPage() {
           title,
           published_at,
           duration,
-          description,
           view_snapshots (
             days_since_published,
             view_count,
@@ -97,6 +96,19 @@ export default function AgeAdjustedDebugPage() {
         return;
       }
 
+      // The description moved out of `videos` into the `video_text` side table, so it comes
+      // back in a second read keyed on the ids we just selected. It is only used for the
+      // #shorts hashtag check below; if the side table is unreadable from the browser the map
+      // is simply empty and shorts detection falls back to duration alone — which is exactly
+      // what a NULL description would have given us anyway.
+      const { data: texts } = await supabase
+        .from('video_text')
+        .select('video_id, description')
+        .in('video_id', videos.map(v => v.id as string));
+      const descriptionById = new Map<string, string | null>(
+        (texts || []).map(t => [t.video_id as string, t.description as string | null])
+      );
+
       // Extract all data points, filtering out shorts
       const allPoints: DataPoint[] = [];
       let totalVideos = 0;
@@ -107,7 +119,7 @@ export default function AgeAdjustedDebugPage() {
       console.log('Processing videos:', videos.length);
       videos.forEach((v, i) => {
         // Skip YouTube Shorts
-        if (isYouTubeShort(v.duration, v.title, v.description)) {
+        if (isYouTubeShort(v.duration, v.title, descriptionById.get(v.id as string) ?? undefined)) {
           shortsFiltered++;
           return;
         }

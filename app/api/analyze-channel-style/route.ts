@@ -5,10 +5,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import Anthropic from '@anthropic-ai/sdk';
 
 interface ChannelStyleRequest {
   channel_id: string;
+}
+
+/** Top performers carry a summary into the prompt; the summary itself comes from video_text. */
+export const TOP_PERFORMER_COLUMNS =
+  'id, title, view_count, temporal_performance_score, published_at';
+
+/** Put hydrated long text back on rows that were selected without it. */
+export function attachSummaries<T extends { id: string }>(
+  rows: T[] | null | undefined,
+  texts: Map<string, { llmSummary: string | null }>
+): Array<T & { summary: string | null }> {
+  return (rows ?? []).map((row) => ({ ...row, summary: texts.get(row.id)?.llmSummary ?? null }));
 }
 
 interface ChannelStyle {
@@ -42,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Get top performers (for understanding what works)
     const { data: topPerformers, error: topError } = await supabase
       .from('videos')
-      .select('title, view_count, temporal_performance_score, llm_summary, published_at')
+      .select(TOP_PERFORMER_COLUMNS)
       .eq('channel_id', channel_id)
       .not('temporal_performance_score', 'is', null)
       .gte('temporal_performance_score', 2.0)
@@ -53,6 +66,11 @@ export async function POST(request: NextRequest) {
       console.error('❌ Failed to fetch top performers:', topError);
       throw topError;
     }
+
+    const topPerformersWithText = attachSummaries(
+      topPerformers as any[] | null,
+      await videoTextFor(((topPerformers as any[]) || []).map((v) => v.id))
+    );
 
     // Get recent videos (for current style)
     const { data: recentVideos, error: recentError } = await supabase
@@ -111,9 +129,9 @@ export async function POST(request: NextRequest) {
     const analysisPrompt = `Analyze the YouTube channel "${channelName}" to extract their content style and patterns.
 
 TOP PERFORMERS (${topPerformers?.length || 0} videos, avg ${topPerformerAvg.toFixed(1)}x baseline):
-${(topPerformers || []).map((v, i) => 
+${topPerformersWithText.map((v, i) => 
   `${i + 1}. "${v.title}" - ${v.temporal_performance_score ? v.temporal_performance_score.toFixed(1) + 'x' : 'N/A'}
-     ${v.llm_summary ? `Summary: ${v.llm_summary.slice(0, 150)}...` : ''}`
+     ${v.summary ? `Summary: ${v.summary.slice(0, 150)}...` : ''}`
 ).join('\n')}
 
 RECENT VIDEOS (last ${recentVideos?.length || 0} videos):

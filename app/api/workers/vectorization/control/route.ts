@@ -12,6 +12,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('worker_control')
       .select('*')
+      // 'llm_summary_vectorization' is a worker_type value, not the videos.llm_summary column.
       .in('worker_type', ['title_vectorization', 'thumbnail_vectorization', 'llm_summary_vectorization']);
     
     if (error) {

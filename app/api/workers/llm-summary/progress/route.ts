@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { q } from '@/lib/admin/db'
+import { SUMMARY_PENDING_COUNT_SQL, SUMMARY_DONE_COUNT_SQL } from '@/lib/app/video-text-routes'
 
 export async function GET() {
   const supabase = createClient(
@@ -7,18 +9,15 @@ export async function GET() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   try {
-    // Get total videos needing summaries
-    const { count: totalVideos } = await supabase
-      .from('videos')
-      .select('*', { count: 'exact', head: true })
-      .is('llm_summary', null)
-      .neq('channel_name', 'Make or Break Shop')
-
-    // Get videos with summaries
-    const { count: completedVideos } = await supabase
-      .from('videos')
-      .select('*', { count: 'exact', head: true })
-      .not('llm_summary', 'is', null)
+    // Counted over video_text, not over videos.llm_summary: after the null-out the old
+    // `.is('llm_summary', null)` matched all 1.1 M rows and `.not(... 'is', null)` matched none,
+    // which would have reported 0 % complete forever.
+    const [pending, done] = await Promise.all([
+      q<{ count: number }>(SUMMARY_PENDING_COUNT_SQL, ['Make or Break Shop']),
+      q<{ count: number }>(SUMMARY_DONE_COUNT_SQL),
+    ])
+    const totalVideos = pending[0]?.count ?? 0
+    const completedVideos = done[0]?.count ?? 0
 
     // Get recent job info
     const { data: recentJob } = await supabase

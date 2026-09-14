@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { vectorizationProgressCache } from '@/lib/simple-cache';
+import { q } from '@/lib/admin/db';
+import { SUMMARY_VECTORIZATION_TOTAL_SQL, SUMMARY_VECTORIZATION_DONE_SQL } from '@/lib/app/video-text-routes';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,18 +44,15 @@ export async function GET() {
         .not('thumbnail_url', 'is', null)
     ]);
     
-    // Get LLM summary vectorization progress - optimize by selecting only id
-    const [llmSummaryTotal, llmSummaryDone] = await Promise.all([
-      supabase
-        .from('videos')
-        .select('id', { count: 'exact', head: true })
-        .not('llm_summary', 'is', null),
-      supabase
-        .from('videos')
-        .select('id', { count: 'exact', head: true })
-        .eq('llm_summary_embedding_synced', true)
-        .not('llm_summary', 'is', null)
+    // Get LLM summary vectorization progress. Counted over video_text: `.not('llm_summary',
+    // 'is', null)` on `videos` reports zero summaries the moment the null-out has run, so the
+    // bar would read 0/0 rather than complete. The embedding flag stays on `videos`.
+    const [llmSummaryTotalRows, llmSummaryDoneRows] = await Promise.all([
+      q<{ count: number }>(SUMMARY_VECTORIZATION_TOTAL_SQL),
+      q<{ count: number }>(SUMMARY_VECTORIZATION_DONE_SQL),
     ]);
+    const llmSummaryTotal = { count: llmSummaryTotalRows[0]?.count ?? 0 };
+    const llmSummaryDone = { count: llmSummaryDoneRows[0]?.count ?? 0 };
     
     const titleProgress = {
       total: titleTotal.count || 0,

@@ -424,6 +424,7 @@ export default function WorkerDashboard() {
       const response = await fetch('/api/workers/vectorization/control', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // A worker_type value, not the videos.llm_summary column — nothing to repoint here.
         body: JSON.stringify({ workerType: 'llm_summary_vectorization', enabled: enable })
       })
       

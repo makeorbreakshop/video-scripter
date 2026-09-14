@@ -20,6 +20,8 @@ export async function GET(request: Request) {
     // Get the source video
     const { data: sourceVideo, error: sourceError } = await supabase
       .from('videos')
+      // llm_summary_embedding_synced is a bookkeeping flag that stays on `videos`; this route
+      // never reads the summary text itself — the vector comes from Pinecone.
       .select('id, title, llm_summary_embedding_synced')
       .eq('id', videoId)
       .single();
