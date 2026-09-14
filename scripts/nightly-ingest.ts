@@ -12,6 +12,7 @@ import { firstSampleWrite, broadcastMetadataWrite } from '../lib/ingest/first-sa
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { refreshChannelStatsSql } from '../lib/app/channel-stats';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
+import { nightlyDoneSuffix, nightlyStepFailureReport, type StepFailure } from '../lib/nightly/failure-report';
 
 const maxChannels = parseInt(process.argv[2] || '0', 10);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
@@ -236,6 +237,9 @@ await pool.query(`insert into quota_ledger (category, units) values ('ingest', $
 // avatar fallback copies. Best effort: a failure in either must not fail the ingest.
 // launchd runs this with a bare PATH, so spawn the repo's own tsx via the current node binary
 // rather than relying on `npx` being findable.
+// A child step that dies must be visible in this script's own log: owned-analytics-sync
+// failed nightly for a week behind a revoked token and the run still said "Done."
+const failedSteps: StepFailure[] = [];
 {
   const { execFileSync } = await import('node:child_process');
   const tsx = new URL('../node_modules/tsx/dist/cli.mjs', import.meta.url).pathname;
@@ -245,7 +249,10 @@ await pool.query(`insert into quota_ledger (category, units) values ('ingest', $
                       ['scripts/avatar-cache-sync.ts'], ['scripts/thumbnail-r2-backfill.ts', '300', '5000']]) {
     try {
       execFileSync(process.execPath, [tsx, ...args], { stdio: 'inherit', timeout: 15 * 60_000, cwd: new URL('..', import.meta.url).pathname });
-    } catch (e: any) { console.error(`${args[0]}: ${e.message}`); }
+    } catch (e: any) {
+      failedSteps.push({ label: args[0], message: e.message });
+      console.error(`${args[0]}: ${e.message}`);
+    }
   }
 }
 await pool.query('select refresh_channel_directory()').catch((e: any) => console.error('channel_directory refresh:', e.message));
@@ -257,5 +264,6 @@ const statsRefreshed = await pool.query(refreshChannelStatsSql(false))
 // Next runtime, so ask the running app to drop the tags. Best effort, never fatal.
 await revalidateRemote({ channels: statsRefreshed.rows.map((r: any) => r.channel_id) });
 
-console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.`);
+for (const line of nightlyStepFailureReport(failedSteps)) console.log(line);
+console.log(`Done. ${inserted} new videos inserted, ${apiCalls} YouTube API units used.${nightlyDoneSuffix(failedSteps)}`);
 await pool.end();
