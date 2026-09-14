@@ -19,10 +19,12 @@ import {
   type ReadingSource, type Reading,
 } from '../lib/readings/retention';
 import {
-  selectDayForVideosSql, nextVideosSql, countDaySql, oldestDaySql, videosPerBatch,
+  selectDayForVideosSql, dayVideosSql, countDaySql, oldestDaySql, videosPerBatch,
   HISTORY_SELECT_DAY_SQL, HISTORY_COUNT_DAY_SQL, HISTORY_OLDEST_DAY_SQL,
-  ARCHIVE_LEDGER_DDL, LEDGER_UPSERT_SQL,
+  ARCHIVE_LEDGER_DDL, ARCHIVE_LEDGER_THINNED_DDL, LEDGER_UPSERT_SQL, LEDGER_SELECT_SQL,
 } from '../lib/readings/sql';
+import { decideArchive, archiveExitCode, summarizeArchive, type LedgerRow } from '../lib/readings/chain';
+import { chunk } from '../lib/readings/thin-safety';
 import {
   r2Config, MISSING_CREDENTIALS, openReadingsDayWriter, writeHistoryDay,
   verifyReadingsDay, readReadingsDay,
@@ -61,9 +63,16 @@ const sources: ReadingSource[] =
   sourcesArg === 'rss' ? ['rss'] : sourcesArg === 'api' ? ['api'] : ['rss', 'api'];
 const doHistory = !sourcesArg || sourcesArg === 'history';
 
-if (!dry) await pool.query(ARCHIVE_LEDGER_DDL);
+if (!dry) {
+  await pool.query(ARCHIVE_LEDGER_DDL);
+  await pool.query(ARCHIVE_LEDGER_THINNED_DDL);
+}
 
-let archived = 0, verified = 0, failed = 0, bytesTotal = 0, rowsTotal = 0;
+// The ledger is read ONCE, up front. Every decision below is made against this snapshot, which
+// is also what lib/readings/chain.test.ts exercises.
+const ledger: LedgerRow[] = dry ? [] : await q<LedgerRow>(LEDGER_SELECT_SQL);
+
+let archived = 0, verified = 0, failed = 0, refused = 0, skipped = 0, bytesTotal = 0, rowsTotal = 0;
 
 async function recordLedger(
   day: string, source: ReadingSource | 'history',
@@ -107,37 +116,41 @@ async function archiveDay(source: ReadingSource, day: string) {
     return;
   }
 
-  // THE REGRESSION GUARD.
-  //
-  // Re-running a day is idempotent only BEFORE that day has been thinned. Afterwards Postgres
-  // holds the hourly survivors, not the full day, so a re-run would overwrite a complete archive
-  // with a smaller one and the deleted readings would be gone from both stores. That happened
-  // once, on rss 2026-09-03 (2026-09-08): a re-archive to pick up new columns rewrote 1.9 M rows
-  // as 286 k. The ledger already knows how many rows the existing file has, so this is checkable.
-  const [prior] = await q<{ rows: string; verified_at: string | null }>(
-    `select rows::text as rows, verified_at from readings_archive_days where day = $1::date and source = $2`,
-    [day, source]);
-  if (prior?.verified_at && Number(prior.rows) > rows && !has('--allow-shrink')) {
-    log(`REFUSED ${source} ${day}: archive holds ${Number(prior.rows).toLocaleString()} rows, Postgres now has ` +
-        `${rows.toLocaleString()} — this day has been thinned and re-archiving it would DELETE ` +
-        `${(Number(prior.rows) - rows).toLocaleString()} readings from the archive. ` +
-        `Pass --allow-shrink only if you mean it.`);
+  // Should this day be written at all? lib/readings/chain.ts decideArchive() owns the answer,
+  // and lib/readings/chain.test.ts owns the reasons. Three of them matter here:
+  //   SKIP    — verified and unchanged. Re-archiving all 17 days every night wrote 737 MB to R2
+  //             to produce byte-identical objects, and read the whole database to do it.
+  //   REFUSE  — Postgres has fewer rows than the archive, so this day has been thinned and a
+  //             rewrite would delete the difference from the only store that still holds it.
+  //             (rss 2026-09-03, 2026-09-08: 1.9 M rows overwritten as 286 k.)
+  //   WRITE   — new, unverified, or genuinely grown.
+  const decision = decideArchive(day, source, rows, ledger, { allowShrink: has('--allow-shrink') });
+  if (decision.action === 'skip') {
+    skipped++;
+    log(`SKIP     ${source} ${day}: ${rows.toLocaleString()} rows, already verified in R2 with the same count`);
+    return;
+  }
+  if (decision.action === 'refuse') {
+    // A REFUSAL IS NOT A FAILURE. It used to exit 1, and because the plist ran `archive && thin`
+    // that skipped thinning entirely for six nights (2026-09-08..13) while rss_samples grew to
+    // 9.4 M stale rows. It is counted separately and the exit code ignores it.
     refused++;
+    log(`REFUSED  ${source} ${day}: archive holds ${decision.archiveRows.toLocaleString()} rows, ` +
+        `Postgres now has ${decision.pgRows.toLocaleString()} — this day has been thinned and ` +
+        `re-archiving it would DELETE ${(decision.archiveRows - decision.pgRows).toLocaleString()} ` +
+        `readings from the archive. Pass --allow-shrink only if you mean it.`);
     return;
   }
 
   // Write: walk the day in video_id keyset chunks straight into the parquet writer.
   const writer = await openReadingsDayWriter(cfg!, source, day);
   const perBatch = videosPerBatch(source === 'rss' ? 96 : 2);
-  let cursor = '';
+  // One scan for the day's video ids, then slice: the keyset cursor this replaces re-aggregated
+  // the whole day on every batch (1.6 GB of buffers, 1.2 s each). See sql.ts dayVideosSql().
+  const videoIds = (await q<{ video_id: string }>(dayVideosSql(source), [day])).map((r) => r.video_id);
   try {
-    for (;;) {
-      const ids = (await q<{ video_id: string }>(nextVideosSql(source), [day, cursor, perBatch]))
-        .map((r) => r.video_id);
-      if (!ids.length) break;
-      const chunk = await q<Reading>(selectDayForVideosSql(source), [day, ids]);
-      await writer.push(chunk);
-      cursor = ids[ids.length - 1];
+    for (const ids of chunk(videoIds, perBatch)) {
+      await writer.push(await q<Reading>(selectDayForVideosSql(source), [day, ids]));
     }
   } catch (err) {
     await writer.abort();
@@ -166,13 +179,9 @@ async function archiveDay(source: ReadingSource, day: string) {
 async function readWholeDay(source: ReadingSource, day: string): Promise<Reading[]> {
   const out: Reading[] = [];
   const perBatch = videosPerBatch(source === 'rss' ? 96 : 2);
-  let cursor = '';
-  for (;;) {
-    const ids = (await q<{ video_id: string }>(nextVideosSql(source), [day, cursor, perBatch]))
-      .map((r) => r.video_id);
-    if (!ids.length) break;
+  const videoIds = (await q<{ video_id: string }>(dayVideosSql(source), [day])).map((r) => r.video_id);
+  for (const ids of chunk(videoIds, perBatch)) {
     out.push(...await q<Reading>(selectDayForVideosSql(source), [day, ids]));
-    cursor = ids[ids.length - 1];
   }
   return out;
 }
@@ -222,9 +231,14 @@ if (doHistory) {
   }
 }
 
-log(`done: ${archived} day(s) written, ${verified} verified, ${failed} failed, ` +
+const counts = { verified, failed, refused, skipped };
+log(`done: ${archived} day(s) written, ${summarizeArchive(counts)}, ` +
     `${rowsTotal.toLocaleString()} rows, ${mb(bytesTotal)} MB` + (dry ? ' (DRY RUN)' : ''));
 if (failed) log('one or more days failed verification — Postgres was NOT modified for those days');
+if (refused) log(`${refused} day(s) refused by the shrink guard — the archive is intact; thinning is unaffected`);
 
 await pool.end();
-process.exit(failed ? 1 : 0); // a REFUSED shrink is a guard doing its job, not a failure — it must not block thin-readings (2026-09-08..13: `archive && thin` never thinned).
+// Only a genuine verification failure is a failure. A refusal is the shrink guard working and a
+// skip is a day that is already archived; neither must stop the thinning step. See
+// lib/readings/chain.ts archiveExitCode() and the six nights it is named for.
+process.exit(archiveExitCode(counts));

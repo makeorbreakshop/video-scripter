@@ -109,6 +109,29 @@ export function nextVideosSql(source: ReadingSource): string {
            order by video_id ${C} limit $3`;
 }
 
+/**
+ * EVERY distinct video in one UTC day, in archive order. One statement, one scan, per day.
+ *
+ * nextVideosSql() above is a keyset cursor, and on this table it is a trap. The pk is
+ * (video_id, at), so a query filtered on `at` and grouped by `video_id` cannot walk the index in
+ * video_id order — it aggregates the whole day and takes the top N. Measured on rss 2026-09-05
+ * (2026-09-14): 1.6 GB of buffer traffic and 1,195 ms to return 52 ids, and the day has 98,947
+ * distinct videos, so a full pass paid that 1,903 times — 38 minutes of cursoring per day before
+ * one row was deleted. That is what made a no-op day cost 3.5 minutes.
+ *
+ * The whole list is ~11 bytes per video, ~1.1 MB for the biggest day. Read it once, slice it in
+ * memory with thin-safety.ts chunk(), and the per-batch cost becomes the delete alone.
+ *
+ * $1 = day (YYYY-MM-DD).
+ */
+export function dayVideosSql(source: ReadingSource): string {
+  const t = tableFor(source);
+  return `select video_id from ${t.table}
+           where ${t.ts} >= $1::date and ${t.ts} < ($1::date + interval '1 day')
+           group by video_id
+           order by video_id ${C}`;
+}
+
 export type Bucket = 'hour' | 'day';
 
 /**
@@ -129,10 +152,19 @@ export function thinBatchSql(source: ReadingSource, bucket: Bucket): string {
     : `case when s0.${t.ts} < v.published_at + interval '${LAUNCH_WINDOW_SQL}'
              then date_trunc('hour', s0.${t.ts} at time zone 'UTC')
              else date_trunc('day',  s0.${t.ts} at time zone 'UTC') end`;
+  // Doomed rows are identified by the PRIMARY KEY (video_id, <ts>) and deleted in that order.
+  //
+  // This used to select and delete by `ctid`. ctid names a row just as exactly, but it is
+  // PHYSICAL order, and that is what deadlocked the 2026-09-14 run against live RSS ingestion:
+  // both transactions reach the same obs_cache_dirty / score_dirty / series_dirty rows through
+  // the Sep 11 statement triggers, the writer in video_id order and the thinner in heap order.
+  // Taking the rows in key order makes the two agree. Nothing is lost by the change: the pk is
+  // unique, so (video_id, <ts>) cannot name more than one row, and the `ctid` tie-breaks inside
+  // the window functions are kept because they still order rows that share a timestamp.
   return `
     with doomed as (
-      select ctid from (
-        select s0.ctid,
+      select video_id, ${t.ts} from (
+        select s0.video_id, s0.${t.ts},
                row_number() over (
                  partition by s0.video_id, ${part}
                  order by s0.${t.ts} desc, s0.ctid desc
@@ -148,12 +180,58 @@ export function thinBatchSql(source: ReadingSource, bucket: Bucket): string {
          where s0.${t.ts} >= $1::date and s0.${t.ts} < ($1::date + interval '1 day')
            and s0.video_id = any($2)
       ) x where rn > 1 and rn_first > 1 and not launch_dense
+      order by video_id ${C}, ${t.ts}
     )
-    delete from ${t.table} s using doomed d where s.ctid = d.ctid`;
+    delete from ${t.table} s using doomed d
+     where s.video_id = d.video_id and s.${t.ts} = d.${t.ts}`;
+}
+
+/**
+ * Suppress the Sep 11 observation-delta triggers for the duration of one transaction.
+ *
+ * THE DESIGN DECISION, and why it is this one (docs/runbooks/2026-09-14-thin-deadlock.md):
+ *
+ * A thinning delete is NOT a correction. lib/readings/retention.ts chooses the survivor set so
+ * that every value a consumer can compute is unchanged — the last reading of each bucket, plus
+ * the first reading of each (video, day, views>0) because growthExponent() reads exactly those
+ * two rows. scripts/verify-archive.ts measured that directly: 0 of 200 videos changed a
+ * score-affecting bin, max deviation 0.000 %. So the obs cache and the series files do not need
+ * to hear about it; rebuilding either from the survivors produces the same answer.
+ *
+ * Propagating anyway would be actively harmful. 9.4 M delete deltas would append 9.4 M rows to
+ * observation_change_log — growing the database during a disk-pressure emergency whose whole
+ * point is to shrink it — and would mark essentially the entire live corpus dirty in
+ * obs_cache_dirty, score_dirty AND series_dirty at once. That is a full corpus re-materialisation
+ * and a full re-score: precisely the unbounded raw-history traffic the 2026-09-11 egress rework
+ * exists to prevent. The disk fix would re-create the egress incident.
+ *
+ * A GUC rather than `alter table … disable trigger`: the ALTER takes ACCESS EXCLUSIVE on a
+ * 2.2 GB table the RSS poller writes to continuously, which would stall every live writer for
+ * the length of the run, and it is a global change that outlives a crashed session. `set local`
+ * is transaction-scoped, takes no lock, cannot leak past a rollback, and is the one form
+ * Supavisor's :6543 transaction pooler honours (lib/admin/db.ts).
+ */
+export const THIN_SUPPRESS_DELTAS_SQL =
+  `set local channelsmith.suppress_observation_deltas = 'on'`;
+
+/**
+ * The preamble for a thinning transaction: bound the statement, bound the LOCK WAIT, and
+ * suppress the delete deltas — in one simple-protocol round trip.
+ *
+ * lock_timeout is the part that was missing. Without it a batch blocked behind a live writer
+ * waits for the whole statement_timeout (600 s) while holding every lock it has already taken,
+ * which is what turns ordinary contention into a deadlock. With it the batch gives up in
+ * seconds and lib/readings/thin-safety.ts retries it.
+ */
+export function thinTransactionPreamble(statementTimeoutMs: number, lockTimeoutMs: number): string {
+  const s = Math.max(1, Math.round(statementTimeoutMs));
+  const l = Math.max(1, Math.round(lockTimeoutMs));
+  return `begin; set local statement_timeout = ${s}; set local lock_timeout = ${l}; ` +
+         THIN_SUPPRESS_DELTAS_SQL;
 }
 
 /** Videos per batch, so one statement stays under batchSize rows at the given readings/video/day. */
-export function videosPerBatch(readingsPerVideoPerDay: number, batchSize = READING_RETENTION.batchSize): number {
+export function videosPerBatch(readingsPerVideoPerDay: number, batchSize: number = READING_RETENTION.batchSize): number {
   const per = Math.max(1, Math.floor(readingsPerVideoPerDay));
   return Math.max(1, Math.floor(batchSize / per));
 }
@@ -200,8 +278,18 @@ export const ARCHIVE_LEDGER_DDL = `
     object_key text        not null,
     written_at timestamptz not null default now(),
     verified_at timestamptz,
+    -- What the last thinning pass reduced this day to. Same tier + unchanged row count means
+    -- tonight's pass has provably nothing to do and can skip the walk entirely.
+    thinned_tier text check (thinned_tier is null or thinned_tier in ('hour','day')),
+    thinned_rows bigint,
     primary key (day, source)
   )`;
+
+/** Additive, for a ledger created before 2026-09-14. Cheap and idempotent; no table rewrite. */
+export const ARCHIVE_LEDGER_THINNED_DDL = `
+  alter table readings_archive_days
+    add column if not exists thinned_tier text,
+    add column if not exists thinned_rows bigint`;
 
 /** Idempotent: re-running a day overwrites its ledger row, as it overwrites its R2 key. */
 export const LEDGER_UPSERT_SQL = `
@@ -211,11 +299,21 @@ export const LEDGER_UPSERT_SQL = `
     rows = excluded.rows, bytes = excluded.bytes, checksum = excluded.checksum,
     object_key = excluded.object_key, written_at = excluded.written_at,
     verified_at = excluded.verified_at`;
+    // thinned_tier / thinned_rows are deliberately NOT reset here. They describe Postgres, not
+    // the archive, and decideThin() compares thinned_rows against the live count anyway — so a
+    // day that was re-archived because it grew is re-thinned on the count, not on a cleared flag.
 
 export const LEDGER_SELECT_SQL = `
   select day::text as day, source, rows::bigint as rows, bytes::bigint as bytes,
-         checksum, object_key, written_at, verified_at
+         checksum, object_key, written_at, verified_at,
+         thinned_tier, thinned_rows::bigint as thinned_rows
     from readings_archive_days order by day, source`;
+
+/** Record what a thinning pass left behind, so the next night can skip a day that is done. */
+export const LEDGER_THINNED_UPSERT_SQL = `
+  update readings_archive_days
+     set thinned_tier = $3, thinned_rows = $4::bigint
+   where day = $1::date and source = $2`;
 
 /** Indexes the keyset thinning walks. Both already exist as primary keys; this is the guard. */
 export const REQUIRED_INDEXES = [

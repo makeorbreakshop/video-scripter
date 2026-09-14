@@ -46,6 +46,17 @@ export const READING_RETENTION = {
   launchDenseHours: 6,
   /** Rows deleted per statement. Kept well under a lock-worrying size. */
   batchSize: 20_000,
+  /**
+   * Rows targeted per THINNING statement, which is smaller than batchSize on purpose.
+   *
+   * A thinning delete holds row locks on rss_samples for the length of the statement while the
+   * RSS poller is inserting into the same table. 2026-09-14: a 20,000-row batch deadlocked
+   * against a live writer and the run exited 1 having deleted nothing. Fewer rows per statement
+   * means a shorter lock window and a cheaper retry when one is needed.
+   */
+  thinBatchRows: 5_000,
+  /** How long a thinning batch waits for a lock before giving up and retrying. */
+  thinLockTimeoutMs: 5_000,
   /** video_score_history keeps this many days in Postgres; older rows live only in R2. */
   historyDays: 14,
 } as const;
