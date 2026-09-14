@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Pinecone } from '@pinecone-database/pinecone';
 import pg from 'pg';
 import { withTimeout } from './admin/db.ts';
+import { writeVideoText, videoTextFor, type VideoText } from './app/video-text.ts';
 import { batchGenerateTitleEmbeddings } from './title-embeddings.ts';
 import { batchGenerateThumbnailEmbeddings, exportThumbnailEmbeddings } from './thumbnail-embeddings.ts';
 import { pineconeService } from './pinecone-service.ts';
@@ -24,6 +25,72 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const { Pool } = pg;
+
+/**
+ * description / metadata / llm_summary have moved to `video_text`. The import is the main thing
+ * that fills them, so it writes them through lib/app/video-text.ts and no longer names them in
+ * the `videos` upsert. The bookkeeping siblings (llm_summary_model, llm_summary_generated_at,
+ * llm_summary_embedding_synced) are NOT part of the move and stay on `videos`.
+ */
+const MOVED_TEXT_KEYS = ['description', 'metadata', 'llm_summary'] as const;
+
+/** The columns the bulk upsert writes, in the order its VALUES tuples are built. */
+export const VIDEO_UPSERT_COLUMNS = [
+  'id', 'title', 'channel_id', 'channel_name', 'published_at', 'duration',
+  'view_count', 'like_count', 'comment_count', 'thumbnail_url', 'is_short',
+  'performance_ratio', 'channel_subscriber_count', 'tags', 'category_id',
+  'data_source', 'is_competitor',
+  'topic_level_1', 'topic_level_2', 'topic_level_3', 'topic_confidence',
+  'format_type', 'format_confidence', 'format_reasoning',
+  'llm_summary_model',
+] as const;
+
+/** Columns never overwritten on conflict, because something else settles them. */
+const UPSERT_CUSTOM_CONFLICT: Record<string, string> = {
+  id: '',
+  // is_short is settled by lib/ingest/classify.ts against YouTube's own /shorts/<id>
+  // routing and stamped with shorts_checked_at. This path carries no such stamp, so it
+  // must never overwrite a verified verdict with a duration-only guess.
+  is_short: 'is_short = case when EXCLUDED.shorts_checked_at is not null then EXCLUDED.is_short else videos.is_short end',
+};
+
+export function buildVideoUpsertSql(valueStrings: readonly string[]): string {
+  const setClauses = VIDEO_UPSERT_COLUMNS
+    .filter((c) => c !== 'id')
+    .map((c) => UPSERT_CUSTOM_CONFLICT[c] ?? `${c} = EXCLUDED.${c}`)
+    .concat('updated_at = NOW()');
+  return `
+          INSERT INTO videos (
+            ${VIDEO_UPSERT_COLUMNS.join(', ')}
+          ) VALUES ${valueStrings.join(', ')}
+          ON CONFLICT (id) DO UPDATE SET
+            ${setClauses.join(',\n            ')}
+        `;
+}
+
+/** A `videos` row with the three moved columns removed. */
+export function stripVideoText<T extends Record<string, any>>(video: T): Omit<T, 'description' | 'metadata' | 'llm_summary'> {
+  const out: Record<string, any> = { ...video };
+  for (const k of MOVED_TEXT_KEYS) delete out[k];
+  return out as Omit<T, 'description' | 'metadata' | 'llm_summary'>;
+}
+
+/** The same rows, turned into side-table rows for writeVideoText. */
+export function videoTextRowsFrom(videos: ReadonlyArray<Record<string, any>>): VideoText[] {
+  return videos
+    .filter((v) => !!v.id)
+    .map((v) => ({
+      videoId: v.id as string,
+      description: v.description ?? null,
+      metadata: v.metadata ?? null,
+      llmSummary: v.llm_summary ?? null,
+    }));
+}
+
+/** The videos columns read for summary-embedding metadata — none of them moved. */
+export const SUMMARY_EMBED_META_COLUMNS = ['id', 'title', 'channel_name', 'view_count'] as const;
+export const SUMMARY_EMBED_META_SELECT = SUMMARY_EMBED_META_COLUMNS.join(', ');
+
 
 // Initialize Supabase client with service role for full database access
 const supabase = createClient(
@@ -730,14 +797,13 @@ export class VideoImportService {
         let paramIndex = 1;
         
         for (const video of chunk) {
-          const valueString = `($${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++})`;
+          const valueString = `(${VIDEO_UPSERT_COLUMNS.map(() => `$${paramIndex++}`).join(', ')})`;
           valueStrings.push(valueString);
           
-          // Add all video fields in order
+          // Add all video fields in order — same order as VIDEO_UPSERT_COLUMNS
           values.push(
             video.id,
             video.title,
-            video.description,
             video.channel_id,
             video.channel_name,
             video.published_at,
@@ -753,7 +819,6 @@ export class VideoImportService {
             video.category_id,
             video.data_source || 'discovery',
             video.is_competitor || true,
-            video.metadata || {},
             video.topic_level_1,
             video.topic_level_2,
             video.topic_level_3,
@@ -761,57 +826,16 @@ export class VideoImportService {
             video.format_type,
             video.format_confidence,
             video.format_reasoning,
-            video.llm_summary,
             video.llm_summary_model || 'gpt-4o-mini'
           );
         }
         
         // Build and execute the INSERT query with ON CONFLICT
-        const query = `
-          INSERT INTO videos (
-            id, title, description, channel_id, channel_name, published_at, duration,
-            view_count, like_count, comment_count, thumbnail_url, is_short,
-            performance_ratio, channel_subscriber_count, tags, category_id,
-            data_source, is_competitor, metadata,
-            topic_level_1, topic_level_2, topic_level_3, topic_confidence,
-            format_type, format_confidence, format_reasoning,
-            llm_summary, llm_summary_model
-          ) VALUES ${valueStrings.join(', ')}
-          ON CONFLICT (id) DO UPDATE SET
-            title = EXCLUDED.title,
-            description = EXCLUDED.description,
-            channel_id = EXCLUDED.channel_id,
-            channel_name = EXCLUDED.channel_name,
-            published_at = EXCLUDED.published_at,
-            duration = EXCLUDED.duration,
-            view_count = EXCLUDED.view_count,
-            like_count = EXCLUDED.like_count,
-            comment_count = EXCLUDED.comment_count,
-            thumbnail_url = EXCLUDED.thumbnail_url,
-            -- is_short is settled by lib/ingest/classify.ts against YouTube's own /shorts/<id>
-            -- routing and stamped with shorts_checked_at. This path carries no such stamp, so it
-            -- must never overwrite a verified verdict with a duration-only guess.
-            is_short = case when EXCLUDED.shorts_checked_at is not null then EXCLUDED.is_short else videos.is_short end,
-            performance_ratio = EXCLUDED.performance_ratio,
-            channel_subscriber_count = EXCLUDED.channel_subscriber_count,
-            tags = EXCLUDED.tags,
-            category_id = EXCLUDED.category_id,
-            data_source = EXCLUDED.data_source,
-            is_competitor = EXCLUDED.is_competitor,
-            metadata = EXCLUDED.metadata,
-            topic_level_1 = EXCLUDED.topic_level_1,
-            topic_level_2 = EXCLUDED.topic_level_2,
-            topic_level_3 = EXCLUDED.topic_level_3,
-            topic_confidence = EXCLUDED.topic_confidence,
-            format_type = EXCLUDED.format_type,
-            format_confidence = EXCLUDED.format_confidence,
-            format_reasoning = EXCLUDED.format_reasoning,
-            llm_summary = EXCLUDED.llm_summary,
-            llm_summary_model = EXCLUDED.llm_summary_model,
-            updated_at = NOW()
-        `;
+        const query = buildVideoUpsertSql(valueStrings);
         
         await withTimeout(client, 600_000, (c) => c.query(query, values));
+        // The three moved columns are not in that INSERT any more — they go to video_text.
+        await writeVideoText(videoTextRowsFrom(chunk as any));
         totalStored += chunk.length;
         console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
         
@@ -867,7 +891,7 @@ export class VideoImportService {
           async () => {
             const result = await supabase
               .from('videos')
-              .upsert(chunk, {
+              .upsert(chunk.map(v => stripVideoText(v as any)), {
                 onConflict: 'id',
                 ignoreDuplicates: false
               });
@@ -911,6 +935,7 @@ export class VideoImportService {
             throw new Error(`Chunk ${chunkNumber} failed: ${error.message}`);
           }
         } else {
+          await writeVideoText(videoTextRowsFrom(chunk as any));
           successCount += chunk.length;
           console.log(`✅ Chunk ${chunkNumber}/${totalChunks} complete (${chunk.length} videos)`);
         }
@@ -960,7 +985,7 @@ export class VideoImportService {
           async () => {
             const result = await supabase
               .from('videos')
-              .upsert(subChunk, {
+              .upsert(subChunk.map(v => stripVideoText(v as any)), {
                 onConflict: 'id',
                 ignoreDuplicates: false
               });
@@ -983,6 +1008,8 @@ export class VideoImportService {
         if (error) {
           throw new Error(`Sub-chunk failed after retries: ${error.message}`);
         }
+        
+        await writeVideoText(videoTextRowsFrom(subChunk as any));
         
         // Small delay between sub-chunks
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -1149,13 +1176,17 @@ export class VideoImportService {
       // Get video metadata for the embeddings
       const { data: videos } = await supabase
         .from('videos')
-        .select('id, title, channel_name, llm_summary, view_count')
+        // kept in step with SUMMARY_EMBED_META_COLUMNS, which pins that none of these moved
+        .select('id, title, channel_name, view_count')
         .in('id', videoIds);
       
       if (!videos || videos.length === 0) {
         console.error('❌ Failed to fetch video metadata for embeddings');
         return;
       }
+      
+      // The summary itself is no longer on `videos`.
+      const summaryText = await videoTextFor(videoIds);
       
       // Create vectors with metadata
       const vectors = successfulEmbeddings.map(embedding => {
@@ -1166,7 +1197,7 @@ export class VideoImportService {
           metadata: {
             title: video?.title || '',
             channel_name: video?.channel_name || '',
-            summary: video?.llm_summary?.substring(0, 200) || '',
+            summary: summaryText.get(embedding.videoId)?.llmSummary?.substring(0, 200) || '',
             view_count: video?.view_count || 0,
             embedding_version: 'v1'
           }

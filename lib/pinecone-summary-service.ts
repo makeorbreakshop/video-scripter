@@ -1,6 +1,8 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { q } from './admin/db';
+import { VIDEO_TEXT_JOIN, videoTextFor, type VideoText } from './app/video-text';
 
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
@@ -14,6 +16,36 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+/**
+ * Videos that have a summary but no embedding yet.
+ *
+ * The summary is read from `video_text`; `llm_summary_embedding_synced` is a bookkeeping flag
+ * that stays on `videos` and is not part of the move. Asking `videos` for the summary would,
+ * after the null-out, either find nothing or — for the `is not null` form — find everything.
+ */
+export const PENDING_SUMMARY_EMBEDDING_SQL = `
+  select v.id, v.title, v.channel_name, vt.llm_summary as llm_summary, v.created_at
+    from videos v ${VIDEO_TEXT_JOIN}
+   where vt.llm_summary is not null
+     and v.llm_summary_embedding_synced = false
+   limit $1`;
+
+/** Overlay the side-table text onto rows selected from `videos`, whose copies are being nulled. */
+export function withVideoText<T extends { id: string }>(
+  rows: readonly T[],
+  text: ReadonlyMap<string, VideoText>,
+): Array<T & { description: string | null; metadata: any; llm_summary: string | null }> {
+  return rows.map((row) => {
+    const t = text.get(row.id);
+    return {
+      ...row,
+      description: t?.description ?? null,
+      metadata: t?.metadata ?? null,
+      llm_summary: t?.llmSummary ?? null,
+    };
+  });
+}
 
 export class PineconeSummaryService {
   private indexName = process.env.PINECONE_SUMMARY_INDEX_NAME || 'video-summaries';
@@ -64,16 +96,9 @@ export class PineconeSummaryService {
     const index = await this.initializeIndex();
     
     // Get videos with summaries but no embeddings
-    const { data: videos, error } = await supabase
-      .from('videos')
-      .select('id, title, channel_name, llm_summary, created_at')
-      .not('llm_summary', 'is', null)
-      .eq('llm_summary_embedding_synced', false)
-      .limit(batchSize);
-    
-    if (error) {
-      throw new Error(`Failed to fetch videos: ${error.message}`);
-    }
+    const videos = await q<{
+      id: string; title: string; channel_name: string; llm_summary: string; created_at: string;
+    }>(PENDING_SUMMARY_EMBEDDING_SQL, [batchSize]);
     
     if (!videos || videos.length === 0) {
       console.log('No summaries need embedding sync!');
@@ -160,10 +185,14 @@ export class PineconeSummaryService {
     // Get full video details from database
     const videoIds = results.matches.map(m => m.id);
     
-    const { data: videos } = await supabase
+    const { data: rows } = await supabase
       .from('videos')
       .select('*')
       .in('id', videoIds);
+    
+    // `select('*')` cannot name its columns, so the three moved ones are overwritten from the
+    // side table here — after the null-out the copies in `videos` are all NULL.
+    const videos = rows ? withVideoText(rows as Array<{ id: string }>, await videoTextFor(videoIds)) : null;
     
     // Merge scores with video data
     const videosWithScores = videos?.map(video => {

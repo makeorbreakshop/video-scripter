@@ -5,6 +5,7 @@
 
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { videoTextFor, writeVideoText, type VideoText } from './app/video-text';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +15,30 @@ const supabase = createClient(
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
+
+/** What still belongs on `videos` after the summary itself moved to `video_text`. */
+export function summaryBookkeepingUpdate(model: string, generatedAt: string) {
+  return {
+    llm_summary_generated_at: generatedAt,
+    llm_summary_model: model,
+  };
+}
+
+/** writeVideoText replaces the whole row, so the existing description/metadata ride along. */
+export function summaryTextRows(
+  existing: ReadonlyMap<string, VideoText>,
+  summaries: ReadonlyArray<{ videoId: string; summary: string }>,
+): VideoText[] {
+  return summaries.map(({ videoId, summary }) => {
+    const prior = existing.get(videoId);
+    return {
+      videoId,
+      description: prior?.description ?? null,
+      metadata: prior?.metadata ?? null,
+      llmSummary: summary,
+    };
+  });
+}
 
 // The refined prompt that performed best in testing
 const ACTION_FIRST_PROMPT = `Extract the core content from this YouTube description, ignoring all promotional material, links, and channel information.
@@ -89,14 +114,12 @@ export async function generateVideoSummaries(
         const summary = response.choices[0].message.content?.trim() || null;
         
         if (summary) {
-          // Update database immediately
+          // Update database immediately. The summary text goes to video_text (below, once the
+          // batch resolves, so the side-table read and write are batched); only the bookkeeping
+          // columns are still written to `videos`.
           await supabase
             .from('videos')
-            .update({
-              llm_summary: summary,
-              llm_summary_generated_at: new Date().toISOString(),
-              llm_summary_model: model
-            })
+            .update(summaryBookkeepingUpdate(model, new Date().toISOString()))
             .eq('id', video.id);
         }
         
@@ -118,6 +141,14 @@ export async function generateVideoSummaries(
     
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
+    
+    const generated = batchResults
+      .filter((r) => r.success && r.summary)
+      .map((r) => ({ videoId: r.videoId, summary: r.summary as string }));
+    if (generated.length) {
+      const existing = await videoTextFor(generated.map((g) => g.videoId));
+      await writeVideoText(summaryTextRows(existing, generated));
+    }
     
     console.log(`Progress: ${Math.min((i + maxConcurrent), videosNeedingSummaries.length)}/${videosNeedingSummaries.length}`);
     

@@ -37,6 +37,31 @@ interface BatchClassificationResult {
   processingTimeMs: number;
 }
 
+/**
+ * The exact set of columns this service writes back to `videos`.
+ *
+ * It is pinned because the service is handed `description` by its caller and it would be an easy
+ * mistake to "helpfully" persist that (or a summary) here: description / metadata / llm_summary
+ * live in `video_text` now and are written only through lib/app/video-text.ts.
+ */
+export const FORMAT_UPDATE_COLUMNS = [
+  'format_type',
+  'format_confidence',
+  'format_primary',
+  'classification_llm_used',
+  'classification_timestamp',
+] as const;
+
+export function formatClassificationUpdate(c: FormatClassification, classifiedAt: string) {
+  return {
+    format_type: c.format,
+    format_confidence: c.confidence,
+    format_primary: c.format, // Using format_primary instead of video_format
+    classification_llm_used: true,
+    classification_timestamp: classifiedAt,
+  };
+}
+
 export class LLMFormatClassificationService {
   private readonly BATCH_SIZE = 15; // Optimal batch size to avoid JSON truncation
   private readonly MAX_PARALLEL_BATCHES = 20; // Maximum parallel API calls
@@ -269,11 +294,7 @@ ${JSON.stringify(videoList, null, 2)}`;
   async storeClassifications(classifications: FormatClassification[]): Promise<void> {
     const updates = classifications.map(c => ({
       id: c.videoId,
-      format_type: c.format,
-      format_confidence: c.confidence,
-      format_primary: c.format, // Using format_primary instead of video_format
-      classification_llm_used: true,
-      classification_timestamp: new Date().toISOString()
+      ...formatClassificationUpdate(c, new Date().toISOString()),
     }));
 
     // Update videos in batches (use update, not upsert)
@@ -284,16 +305,11 @@ ${JSON.stringify(videoList, null, 2)}`;
       // Update each video individually to avoid issues with missing required fields
       let successCount = 0;
       for (const update of batch) {
+        const { id, ...columns } = update;
         const { error } = await supabase
           .from('videos')
-          .update({
-            format_type: update.format_type,
-            format_confidence: update.format_confidence,
-            format_primary: update.format_primary,
-            classification_llm_used: update.classification_llm_used,
-            classification_timestamp: update.classification_timestamp
-          })
-          .eq('id', update.id);
+          .update(columns)
+          .eq('id', id);
           
         if (error) {
           console.error('   ❌ Error storing classification for video', update.id, ':', error.message);
@@ -319,7 +335,8 @@ ${JSON.stringify(videoList, null, 2)}`;
     // Get total count
     const { count: totalCount, error: countError } = await supabase
       .from('videos')
-      .select('*', { count: 'exact', head: true })
+      // head: true — a count, no rows, so no text column is ever transferred.
+      .select('id', { count: 'exact', head: true })
       .not('format_type', 'is', null);
 
     if (countError) throw countError;

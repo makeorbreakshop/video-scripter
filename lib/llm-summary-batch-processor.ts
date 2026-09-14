@@ -2,6 +2,51 @@ import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import fs from 'fs/promises';
 import path from 'path';
+import { q } from './admin/db';
+import { VIDEO_TEXT_JOIN, videoTextFor, writeVideoText, type VideoText } from './app/video-text';
+
+/**
+ * The videos that still need a summary, asked of `video_text` rather than of `videos`.
+ *
+ * Both halves of the old predicate broke at the null-out: `description` came back NULL for
+ * every row, and `llm_summary is null` on `videos` matched the whole 1.1 M-row table.
+ */
+export function pendingSummarySql(limit?: number): string {
+  // coalesce, not a bare `vt.x`: 1,097,222 of 1,118,401 videos have no video_text row yet, so
+  // `vt.llm_summary is null` is true for all of them — including every video that already has
+  // a summary in `videos`. This query feeds an OpenAI batch file; over-selecting costs money.
+  if (!limit || !Number.isFinite(limit) || limit < 1) {
+    throw new Error('pendingSummarySql requires a limit: `order by created_at desc` over ' +
+                    '`videos` without one sorts 1.1 M wide rows off a 4 GB table');
+  }
+  return `select v.id, v.title, v.channel_name,
+                 coalesce(vt.description, v.description) as description
+            from videos v ${VIDEO_TEXT_JOIN}
+           where coalesce(vt.llm_summary, v.llm_summary) is null
+             and coalesce(vt.description, v.description) is not null
+             and char_length(coalesce(vt.description, v.description)) >= 50
+           order by v.created_at desc
+           limit $1`;
+}
+
+/**
+ * writeVideoText replaces the whole side-table row, so a summary-only write would blank the
+ * description and metadata next to it. Carry the existing text through.
+ */
+export function summaryTextRows(
+  existing: ReadonlyMap<string, VideoText>,
+  summaries: ReadonlyArray<{ videoId: string; summary: string }>,
+): VideoText[] {
+  return summaries.map(({ videoId, summary }) => {
+    const prior = existing.get(videoId);
+    return {
+      videoId,
+      description: prior?.description ?? null,
+      metadata: prior?.metadata ?? null,
+      llmSummary: summary,
+    };
+  });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,24 +90,11 @@ export class LLMSummaryBatchProcessor {
     // Create batch directory
     await fs.mkdir(this.batchDir, { recursive: true });
     
-    // Get videos without summaries
-    const query = supabase
-      .from('videos')
-      .select('id, title, description, channel_name')
-      .is('llm_summary', null)
-      .not('description', 'is', null)
-      .gte('char_length(description)', 50)
-      .order('created_at', { ascending: false });
-    
-    if (limit) {
-      query.limit(limit);
-    }
-    
-    const { data: videos, error } = await query;
-    
-    if (error) {
-      throw new Error(`Failed to fetch videos: ${error.message}`);
-    }
+    // Get videos without summaries, from the side table.
+    const videos = await q<{ id: string; title: string; description: string | null; channel_name: string }>(
+      pendingSummarySql(limit),
+      [limit],
+    );
     
     if (!videos || videos.length === 0) {
       console.log('No videos need summary generation!');
@@ -202,15 +234,17 @@ export class LLMSummaryBatchProcessor {
     let successCount = 0;
     let errorCount = 0;
     
+    const generated: Array<{ videoId: string; summary: string }> = [];
+    
     for (const result of results) {
       if (result.response?.status_code === 200) {
         const videoId = result.custom_id;
         const summary = result.response.body.choices[0].message.content.trim();
         
+        // The bookkeeping columns stay on `videos`; the summary itself goes to video_text.
         const { error } = await supabase
           .from('videos')
           .update({
-            llm_summary: summary,
             llm_summary_generated_at: new Date().toISOString(),
             llm_summary_model: 'gpt-4o-mini'
           })
@@ -220,11 +254,17 @@ export class LLMSummaryBatchProcessor {
           console.error(`Failed to update video ${videoId}:`, error);
           errorCount++;
         } else {
+          generated.push({ videoId, summary });
           successCount++;
         }
       } else {
         errorCount++;
       }
+    }
+    
+    if (generated.length) {
+      const existing = await videoTextFor(generated.map((g) => g.videoId));
+      await writeVideoText(summaryTextRows(existing, generated));
     }
     
     console.log(`✅ Processed ${successCount} summaries successfully`);
