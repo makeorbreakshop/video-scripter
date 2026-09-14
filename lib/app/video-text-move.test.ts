@@ -8,7 +8,8 @@
 import {
   moveBatchSql, MOVE_COUNT_REMAINING_SQL,
   nullBatchSql, NULL_COUNT_REMAINING_SQL, NULL_VERIFY_SQL,
-  TEXT_COLUMNS,
+  TEXT_COLUMNS, MIRROR_TRIGGER_SQL, NULL_COVERAGE_SQL, MOVED_COUNT_SQL,
+  nullCountRemainingSql, nullVerifySql,
 } from './video-text-move';
 
 describe('the mover cursor', () => {
@@ -102,7 +103,117 @@ describe('the null-out', () => {
     }
   });
 
+  it('does not call a NULL original a disagreement — there is nothing there to lose', () => {
+    // Once the writers stop populating videos.description/metadata/llm_summary and write only
+    // to video_text, the ordinary state of a freshly-summarised row is: videos.llm_summary
+    // NULL, video_text.llm_summary a real summary. The bare `is distinct from` form calls that
+    // a disagreement, so the gate would refuse to let the null-out run at all — on rows where
+    // there is, by definition, nothing to destroy. The gate exists to protect text that only
+    // `videos` holds, so it must look only at originals that are not null.
+    for (const c of TEXT_COLUMNS) {
+      expect(NULL_VERIFY_SQL).toMatch(new RegExp(`v\\.${c} is not null and v\\.${c} is distinct from vt\\.${c}`));
+    }
+  });
+
   it('counts what remains against videos that have been moved', () => {
     expect(NULL_COUNT_REMAINING_SQL).toMatch(/join video_text/);
+  });
+});
+
+
+describe('the mirror trigger, which the null-out must not run underneath', () => {
+  it('is looked for by name before anything is cleared', () => {
+    // THE HAZARD THIS EXISTS FOR. sql/2026-09-08-video-text.sql installs
+    // video_text_mirror_upd: AFTER UPDATE ON videos, WHEN one of the three columns changed,
+    // copy the NEW values into video_text. nullBatchSql() is an UPDATE that sets all three to
+    // NULL. The trigger fires on exactly that update and writes NULL into video_text — so the
+    // null-out would not free 2 GB of text, it would DELETE the only remaining copy of it,
+    // row by row, with the verification gate satisfied at every step because the two copies
+    // would indeed agree: both NULL.
+    //
+    // The trigger has to be dropped before the null-out, and the null-out has to check.
+    expect(MIRROR_TRIGGER_SQL).toMatch(/pg_trigger/);
+    expect(MIRROR_TRIGGER_SQL).toMatch(/video_text_mirror/);
+    expect(MIRROR_TRIGGER_SQL).toMatch(/videos'::regclass/);
+  });
+
+  it('looks for the UPDATE trigger specifically, not just any trigger on videos', () => {
+    expect(MIRROR_TRIGGER_SQL).not.toMatch(/select \* from pg_trigger\s*$/i);
+    expect(MIRROR_TRIGGER_SQL).toMatch(/not tgisinternal/);
+  });
+});
+
+describe('the dry-run coverage report', () => {
+  it('splits the sample into the three states the null-out cares about', () => {
+    for (const bucket of ['verified_equal', 'disagree', 'already_clear', 'sampled']) {
+      expect(NULL_COVERAGE_SQL).toContain(bucket);
+    }
+  });
+
+  it('classifies a disagreement by which column disagrees, so a report is actionable', () => {
+    for (const c of TEXT_COLUMNS) expect(NULL_COVERAGE_SQL).toContain(`disagree_${c}`);
+  });
+
+  it('never scans `videos` — it drives off video_text and joins in by primary key', () => {
+    // The left-joined form of this query is a seq scan of a 1,734 MB heap. It was written that
+    // way, run once on 2026-09-14, and cancelled by the 120-second statement timeout.
+    expect(NULL_COVERAGE_SQL).not.toMatch(/from videos v/);
+    expect(NULL_COVERAGE_SQL).toMatch(/from video_text vt/);
+    expect(NULL_COVERAGE_SQL).toMatch(/join videos v on v\.id = s\.video_id/);
+  });
+
+  it('is bounded — the sample takes a LIMIT', () => {
+    expect(NULL_COVERAGE_SQL).toMatch(/limit \$1/);
+  });
+
+  it('counts what has been moved over video_text alone, not over the wide table', () => {
+    expect(MOVED_COUNT_SQL).toMatch(/from video_text/);
+    expect(MOVED_COUNT_SQL).not.toMatch(/videos/);
+  });
+});
+
+describe('clearing one column at a time', () => {
+  // The three columns did not become safe together, and waiting for the slowest is a choice to
+  // reclaim nothing. As of 2026-09-14 the sweep says: llm_summary 0 direct readers,
+  // description 10, metadata 18. So llm_summary can be cleared now and the other two cannot.
+  const only = ['llm_summary'] as const;
+
+  it('clears exactly the columns it was given', () => {
+    const sql = nullBatchSql(only);
+    expect(sql).toMatch(/llm_summary = null/);
+    expect(sql).not.toMatch(/description = null/);
+    expect(sql).not.toMatch(/metadata = null/);
+  });
+
+  it('proves equality only for the columns it is about to clear', () => {
+    // Requiring description to agree before clearing llm_summary would block every row whose
+    // description the mover has not reached — which is 98 % of them.
+    const sql = nullBatchSql(only);
+    expect(sql).toMatch(/v\.llm_summary is not distinct from vt\.llm_summary/);
+    expect(sql).not.toMatch(/v\.description is not distinct from vt\.description/);
+  });
+
+  it('stays idempotent within the columns it clears', () => {
+    expect(nullBatchSql(only)).toMatch(/\(v\.llm_summary is not null\)/);
+  });
+
+  it('still defaults to all three, so nothing silently narrows', () => {
+    const sql = nullBatchSql();
+    for (const c of TEXT_COLUMNS) expect(sql).toMatch(new RegExp(`${c} = null`));
+  });
+
+  it('refuses an empty column list rather than emitting `set` with nothing after it', () => {
+    expect(() => nullBatchSql([] as any)).toThrow(/at least one column/i);
+  });
+
+  it('refuses a column that is not one of the three', () => {
+    expect(() => nullBatchSql(['title'] as any)).toThrow(/title/);
+  });
+
+  it('scopes the remaining-work count and the verification gate the same way', () => {
+    expect(nullCountRemainingSql(only)).toMatch(/v\.llm_summary is not null/);
+    expect(nullCountRemainingSql(only)).not.toMatch(/v\.description/);
+    expect(nullVerifySql(only)).toMatch(/v\.llm_summary is not null and v\.llm_summary is distinct from vt\.llm_summary/);
+    expect(nullVerifySql(only)).not.toMatch(/v\.description/);
   });
 });
