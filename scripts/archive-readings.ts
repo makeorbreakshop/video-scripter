@@ -122,7 +122,7 @@ async function archiveDay(source: ReadingSource, day: string) {
         `${rows.toLocaleString()} — this day has been thinned and re-archiving it would DELETE ` +
         `${(Number(prior.rows) - rows).toLocaleString()} readings from the archive. ` +
         `Pass --allow-shrink only if you mean it.`);
-    failed++;
+    refused++;
     return;
   }
 
@@ -227,4 +227,4 @@ log(`done: ${archived} day(s) written, ${verified} verified, ${failed} failed, `
 if (failed) log('one or more days failed verification — Postgres was NOT modified for those days');
 
 await pool.end();
-process.exit(failed ? 1 : 0);
+process.exit(failed ? 1 : 0); // a REFUSED shrink is a guard doing its job, not a failure — it must not block thin-readings (2026-09-08..13: `archive && thin` never thinned).

@@ -56,7 +56,11 @@ if (stop && !has('--force')) { console.error(`refusing to run: ${stop}`); await 
 
 // Resume point: the highest id already moved. `videos.id` is the primary key, so this is a
 // single index probe and the walk below is one ordered index range per batch.
-let cursor = (await q<{ id: string | null }>(`select max(video_id) as id from video_text`))[0]?.id ?? '';
+// The cursor is NOT max(video_id) in video_text: the mirror trigger inserts every new video
+// there as it arrives, so that max was a fresh id near the top of the key space and the walk
+// believed it was finished after 19,659 rows (2026-09-09..14). Walk videos in id order and skip
+// what video_text already holds; the keyset still makes each batch one index range.
+let cursor = '';
 console.log(`move-video-text: batch ${BATCH}, sleep ${SLEEP}ms${DRY ? ' [dry run]' : ''}, resuming after '${cursor}'`);
 
 let moved = 0, batches = 0, bytes = 0;
@@ -65,7 +69,9 @@ for (;;) {
   const rows = await q<{ id: string; b: string }>(
     `with page as (
        select id, description, metadata, llm_summary
-         from videos where id > $1 order by id limit $2
+         from videos v where v.id > $1
+          and not exists (select 1 from video_text vt where vt.video_id = v.id)
+        order by v.id limit $2
      )
      ${DRY ? `select id, coalesce(length(description),0) + coalesce(length(metadata::text),0) as b from page`
            : `, ins as (
