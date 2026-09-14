@@ -37,7 +37,7 @@ function Lines({ title, lines, stated, themes }: { title: string; lines: Evidenc
   const shown = stated?.trim() ? stated.split('\n').map((text) => text.trim()).filter(Boolean)
     .map((text): EvidenceLine => ({ text, source: 'stated' })) : lines;
   if (!shown.length) return null;
-  return <section className={styles.section}><h2>{title}</h2><ul className={styles.lines}>
+  return <section className={styles.section}><h2>{title}{stated?.trim() && <span className={styles.edited}>Edited by you</span>}</h2><ul className={styles.lines}>
     {shown.map((line, i) => <li key={i} data-source={line.source}>
       <div className={styles.claim}><span>{line.text}</span>{linkedEvidence(line, themes)}</div>
     </li>)}
@@ -106,7 +106,7 @@ export default async function AudiencePage() {
       <Lines title="Specific interests" lines={sections.specific_interests} stated={stated.specific_interests} themes={themes} />
       <section className={styles.section}><h2>Content buckets</h2><div className={styles.buckets}>
         {buckets.map((bucket, i) => <div key={i} className={styles.bucket} data-source={bucket.source}>
-          <h3>{bucket.title}</h3>{bucket.text && <p>{bucket.text}</p>}
+          <h3>{bucket.title}{bucket.source === 'stated' && <span className={styles.edited}>Your pick</span>}</h3>{bucket.text && <p>{bucket.text}</p>}
           <ul>{bucket.video_ids.map((id) => {
             const video = winners.get(id) as WinningVideo | undefined;
             return video && <li key={id}><a href={`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`} target="_blank" rel="noreferrer">{video.title} ↗</a><span>{Number(video.views).toLocaleString()} views</span></li>;
