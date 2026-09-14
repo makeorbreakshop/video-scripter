@@ -1,0 +1,68 @@
+-- Redundant indexes on view_snapshots and view_tracking_priority — 2026-09-14
+--
+-- view_snapshots carries 740 MB of indexes on a 271 MB heap. Seven of them. The audit below
+-- proved two things, one of which was a surprise, and only the proven drops are here.
+--
+-- METHOD. `pg_stat_database.stats_reset` is null, so idx_scan counts are since the last server
+-- restart and cannot be dated — they are evidence, never proof. Each candidate was therefore
+-- proved structurally and then measured: inside a transaction, `drop index`, `EXPLAIN (analyze,
+-- buffers)` every query shape that touches the table (found by rg over app/ lib/ scripts/
+-- workers/ supabase/), then `rollback`. A drop is only listed here if no query shape fell back
+-- to a sequential scan AND none got materially slower.
+--
+-- ============================================================================
+-- DROP 1 — idx_view_snapshots_video_date, 119 MB
+-- ============================================================================
+--   CREATE INDEX idx_view_snapshots_video_date
+--     ON view_snapshots USING btree (video_id, snapshot_date DESC)
+--
+-- Structurally redundant: idx_view_snapshots_video_date_desc has the IDENTICAL key columns in
+-- the identical order and merely adds INCLUDE (view_count, like_count, comment_count). A
+-- covering index is a strict superset — anything that can use the narrow one can use the wide
+-- one. (And a btree is readable in both directions, so the plain UNIQUE constraint index
+-- view_snapshots_video_id_snapshot_date_key serves these shapes too.)
+--
+-- Measured. Both video-keyed shapes already chose idx_view_snapshots_video_date_desc with this
+-- index still present, and were unchanged without it:
+--   one video, newest first  : idx_view_snapshots_video_date_desc, 2.567 ms -> 0.079 ms
+--   many videos (scorer)     : idx_view_snapshots_video_date_desc, 0.062 ms -> 0.065 ms
+--
+-- ============================================================================
+-- NOT DROPPED — idx_view_snapshots_date, 34 MB. THE SURPRISE.
+-- ============================================================================
+--   CREATE INDEX idx_view_snapshots_date ON view_snapshots USING btree (snapshot_date)
+--
+-- It IS a strict key prefix of idx_view_snapshots_date_video (snapshot_date, video_id), so by
+-- the usual rule it is redundant and droppable. The measurement says otherwise, because the
+-- composite is 121 MB against this one's 34 MB and a range scan reads the pages it walks:
+--   a date range (13 days) : 427.831 ms -> 3051.173 ms   (7.1x slower)
+--   one exact day          :   7.844 ms ->   16.059 ms   (2.0x slower)
+--
+-- 34 MB is not worth a 7x regression on the daily rollup. KEPT. This is why the EXPLAIN step
+-- exists and why "redundant by prefix" is not sufficient on its own.
+--
+-- ============================================================================
+-- DROP 2 — idx_view_tracking_priority_tier_date, 65 MB
+-- ============================================================================
+--   CREATE INDEX idx_view_tracking_priority_tier_date
+--     ON view_tracking_priority USING btree (priority_tier, next_track_date)
+--     INCLUDE (video_id, last_tracked) WHERE (next_track_date IS NOT NULL)
+--
+-- Same key columns as idx_tracking_priority_tier (priority_tier, next_track_date), which is
+-- 20 MB and has 74,227 lifetime scans against this one's 32. The INCLUDE and the partial
+-- predicate buy an index-only scan for one query shape; 45 MB of extra index is a poor price.
+--
+-- Measured:
+--   due-now by tier   : idx_view_tracking_priority_tier_date 47.265 ms
+--                    -> idx_tracking_priority_tier           54.897 ms   (+16%, 32 scans/restart)
+--   tier w/ null date : idx_view_tracking_priority_null_date  9.298 ms -> 0.137 ms (unaffected)
+--
+-- No query shape fell back to a sequential scan in any run.
+--
+-- ============================================================================
+-- Total reclaimed: 184 MB.
+-- CONCURRENTLY so no reader or writer is blocked. It cannot run inside a transaction block.
+-- ============================================================================
+
+drop index concurrently if exists idx_view_snapshots_video_date;
+drop index concurrently if exists idx_view_tracking_priority_tier_date;
