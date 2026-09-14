@@ -1,0 +1,31 @@
+-- Drop idx_videos_id_llm_summary (189 MB). Same night step as the llm_summary null-out.
+--
+-- CREATE INDEX idx_videos_id_llm_summary ON public.videos USING btree (id, llm_summary)
+--
+-- It exists to serve one query shape: `where llm_summary is null and id > $cursor order by id`
+-- — the keyset walk that all seven workers/llm-summary-* variants used to find work. It is a
+-- covering index for that, which is why it has 54,282,547 scans against 182,801,882 tuples read.
+--
+-- Both reasons to keep it are gone:
+--   1. Those seven workers are one worker now, and it asks video_text what is outstanding
+--      (lib/app/video-text.ts needsSummaryBatchSql), so nothing reads this index any more.
+--   2. Once scripts/null-video-text.ts has cleared llm_summary, the second index column is NULL
+--      for all 1,118,401 rows. The index degenerates to a second, wider copy of videos_pkey.
+--
+-- ORDER MATTERS: drop it AFTER the null-out in the same run, not before. While llm_summary is
+-- still populated, dropping it first would make any straggler query fall back to a sequential
+-- scan of a 1,734 MB heap.
+--
+-- CONCURRENTLY so nothing waits on an ACCESS EXCLUSIVE lock. It cannot run inside a
+-- transaction block, which is why there is no begin/commit here.
+--
+-- Rollback: sql/rollback/2026-09-14-drop-idx-videos-id-llm-summary.sql
+--
+-- NOT dropped here, but both become dead weight after the null-out and are worth a follow-up:
+--   idx_videos_llm_summary_null   (27 MB, partial WHERE llm_summary IS NULL) — the predicate
+--     becomes true for every row, so the "partial" index becomes a full one.
+--   idx_videos_llm_summary_status (23 MB, partial WHERE llm_summary IS NOT NULL) — the
+--     predicate becomes false for every row, so the index becomes empty.
+-- Neither is dropped tonight because both are still used by queries outside this refactor's
+-- sweep, and one irreversible change per night is enough.
+drop index concurrently if exists idx_videos_id_llm_summary;
