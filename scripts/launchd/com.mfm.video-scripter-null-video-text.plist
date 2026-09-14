@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  06:00 ET: clear videos.llm_summary for every row video_text has proved a copy of, then drop
+  idx_videos_id_llm_summary (189 MB). The only irreversible step in the reclaim sequence.
+
+  llm_summary ONLY. Not description, not metadata. As of 2026-09-14 the sweep in
+  lib/app/video-text-sweep.ts finds 0 direct readers of llm_summary, 10 of description and 18 of
+  metadata — and five of the description ones WRITE it back into `videos` on every import, so
+  clearing it would be undone by the next ingest. lib/app/video-text-access.test.ts is the gate;
+  add a column here only when that test says it is cleared.
+
+  PRECONDITION, AND IT IS NOT OPTIONAL. Apply sql/2026-09-14-retire-video-text-mirror.sql first.
+  video_text_mirror_upd fires AFTER UPDATE ON videos when one of the three columns changes —
+  which is exactly what this job does — and copies the new value into video_text. Left in place
+  it turns the null-out into a delete of the side table, silently, with every other safety check
+  still passing. Both the wrapper and scripts/null-video-text.ts refuse to run while it exists,
+  and --force does not override that one.
+
+  WHY A WRAPPER AND NOT scripts/null-video-text.ts DIRECTLY. scripts/move-video-text.ts starts
+  at 05:30 with 1,097,222 rows to go; at the measured rate that finishes about 05:48, twelve
+  minutes before this job. Twelve minutes is a coincidence, not a margin — the mover stops
+  itself whenever anything has been running in Postgres for over two minutes, and both the 04:15
+  fit and the 05:05 packaging counts can overrun into its window. So the wrapper polls for the
+  move to actually finish, waits until 05:48 ET, and if it has not finished it exits 0 having
+  changed nothing and tries again tomorrow. Standing down is the correct outcome: the null-out
+  is irreversible, and not running tonight costs one night of disk.
+
+  DAILY, not one-shot, because "reschedule itself" is what standing down means. Remove it once
+  it has actually run — the log ends with "done: llm_summary cleared".
+
+  Install:
+    cp scripts/launchd/com.mfm.video-scripter-null-video-text.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-null-video-text.plist
+
+  Watch it, the morning after:
+    tail -n 100 logs/null-video-text-launchd.log
+    npx tsx scripts/null-video-text.ts --verify
+
+  Remove once it has run:
+    launchctl bootout gui/$UID/com.mfm.video-scripter-null-video-text
+    rm ~/Library/LaunchAgents/com.mfm.video-scripter-null-video-text.plist
+
+  Rehearse without touching anything:
+    npx tsx scripts/null-video-text.ts --dry-run
+    npx tsx scripts/null-video-text-tonight.ts --dry-run --deadline 23:59
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-null-video-text</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/null-video-text-tonight.ts --deadline 05:48</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/null-video-text-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/null-video-text-launchd.err.log</string>
+</dict></plist>

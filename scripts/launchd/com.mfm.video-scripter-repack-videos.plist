@@ -4,14 +4,27 @@
   ONE-SHOT. pg_repack the `videos` heap after scripts/null-video-text.ts has cleared the
   description / metadata / llm_summary columns.
 
-  NOT INSTALLED, AND NOT READY TO BE. Every precondition is listed in
-  docs/runbooks/2026-09-14-videos-reclaim.md; as of 2026-09-14 none of them is met:
+  DISABLED. Two of the four preconditions are now met; two are not.
 
-    1. the null-out has not run (30 live call sites still read the columns off `videos` —
-       lib/app/video-text-access.test.ts enumerates them and blocks on them);
-    2. the pg_repack CLIENT is not installed locally (`which pg_repack` → not found);
-    3. the extension is not created on the instance (available 1.5.2, installed null);
-    4. free disk for a second copy of the table has not been verified.
+    1. NOT MET — the null-out has not run, and when it does (06:00, com.mfm.video-scripter-
+       null-video-text) it clears llm_summary ONLY. description still has 10 direct readers and
+       metadata 18, so those two columns keep their text. description averages 1,038 bytes of a
+       2,065-byte row and metadata 742; llm_summary is 210. Repacking now would therefore
+       reclaim the llm_summary dead space and almost nothing else — a few hundred MB of a
+       3,984 MB table. THE REPACK IS NOT WORTH A NIGHT UNTIL description IS CLEARED TOO.
+    2. MET — the client binary exists. scripts/docker/pg-repack.Dockerfile builds pg_repack
+       1.5.2 from source against PostgreSQL 15; no packaged 1.5.2 client exists for this
+       machine (brew has no formula, apt has only 1.5.3 and 1.4.8, and the local psql is 14.17
+       against a 15.8 server). pg_repack refuses to run on a version mismatch.
+    3. MET — the extension is created. `create extension pg_repack` SUCCEEDS as the `postgres`
+       role on this Supabase instance, which is NOT a true superuser (pg_user.usesuper = false).
+       It does not need the dashboard. Installed 2026-09-14, version 1.5.2, schema public.
+    4. NOT VERIFIED — free disk for a second copy. The database is 10 GB of an 18 GB volume and
+       `videos` is 3,984 MB. Check again on the night, after the null-out.
+
+  CANARY, 2026-09-14: repacked public.channel_stats through this exact image and flag set.
+  2,680 kB -> 1,728 kB (36 % reclaimed), 6,683 rows before and after, about 12 seconds of which
+  most was spent waiting for one open transaction to finish. Online throughout; nothing blocked.
 
   Nulling the columns does NOT shrink the file — it frees space inside the heap. This is the
   step that returns it to the filesystem.
@@ -22,12 +35,11 @@
   blocks: the app, the RSS poller, the scorer, the classification workers. Do not schedule it.
 
   Prepare:
-    brew install pg_repack && pg_repack --version     # must match the server's 1.5.2
-    # then, in the Supabase SQL editor, as superuser:
-    #   create extension pg_repack;
+    docker build -t pg-repack:1.5.2-pg15 -f scripts/docker/pg-repack.Dockerfile scripts/docker
+    docker run --rm pg-repack:1.5.2-pg15 pg_repack --version    # must print exactly 1.5.2
     npx tsx scripts/null-video-text.ts --verify
 
-  Install, run once, watch, then remove:
+  Install, run once, watch, then remove — on a night that is NOT the null-out's night:
     cp scripts/launchd/com.mfm.video-scripter-repack-videos.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-repack-videos.plist
     launchctl kickstart -p gui/$UID/com.mfm.video-scripter-repack-videos
@@ -51,10 +63,19 @@
       DATABASE_SESSION_URL (:5432), not DATABASE_URL (:6543). pg_repack holds advisory locks and
       temporary state across statements on ONE session; the transaction-mode pooler hands the
       connection to someone else between statements and the repack fails or corrupts its own
-      bookkeeping. --no-superuser-check because Supabase's postgres role is not a true superuser.
-      -k skips the check that would otherwise refuse on that basis.
+      bookkeeping.
+
+      -k is the SHORT FORM of --no-superuser-check, not a companion to it. Passing both is what
+      this line used to do, and pg_repack rejects it outright: "option -k, --no-superuser-check
+      should be specified only once". The flag is needed because Supabase's `postgres` role is
+      not a true superuser.
+
+      Run through the container: no 1.5.2 client can be installed on the host (see
+      scripts/docker/pg-repack.Dockerfile), and pg_repack will not run against a 1.5.2 extension
+      with any other client version. --network host is not needed; Supabase is reached over the
+      internet from inside the container.
     -->
-    <string>set -a; . ./.env.local; set +a; exec pg_repack -k --no-superuser-check -d "$DATABASE_SESSION_URL" -t public.videos --wait-timeout 300</string>
+    <string>set -a; . ./.env.local; set +a; exec docker run --rm pg-repack:1.5.2-pg15 pg_repack -k -d "$DATABASE_SESSION_URL" -t public.videos --wait-timeout 300 --elevel=INFO</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
   <key>StartCalendarInterval</key><dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
