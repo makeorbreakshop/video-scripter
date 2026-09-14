@@ -1,4 +1,4 @@
-import { batchesByVideo, parseModelJson, verifiedObservations } from './extraction-core';
+import { batchesByVideo, parseModelJson, verifiedObservations, specificSignal } from './extraction-core';
 
 test('batches remain within one video and 40 comments', () => {
   const comments = Array.from({ length: 85 }, (_, i) => ({ comment_id: String(i), video_id: i < 45 ? 'a' : 'b', text: 'A specific question' }));
@@ -17,4 +17,12 @@ test('rejects hallucinated or altered quotes and unknown comment IDs', () => {
 
 test('parses a fenced JSON payload while ignoring model prose after it', () => {
   expect(parseModelJson('```json\n[]\n```\nExplanation')).toEqual([]);
+});
+
+test('rejects generic praise and acquisition intent masquerading as ownership', () => {
+  expect(specificSignal('praise', 'Dude this is amazing. Good work.')).toBe(false);
+  expect(specificSignal('praise', 'This comparison clearly explained the price differences.')).toBe(true);
+  expect(specificSignal('tool_ownership', 'Yep, got one on the way!')).toBe(false);
+  expect(specificSignal('tool_ownership', "I'm expecting my F2 Ultra tomorrow.")).toBe(false);
+  expect(specificSignal('tool_ownership', 'I have an F2 Ultra and use it weekly.')).toBe(true);
 });

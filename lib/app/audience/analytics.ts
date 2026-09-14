@@ -14,9 +14,16 @@ export async function pullChannelAudience(channelId: string): Promise<Record<Aud
     for (const [key, value] of Object.entries({ ids: 'channel==MINE', startDate, endDate, ...report })) {
       if (value) url.searchParams.set(key, value);
     }
-    const res = await fetch(url, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(30000) });
-    const body = await res.json() as AnalyticsReport & { error?: { message?: string } };
-    if (!res.ok) throw new Error(`analytics ${dimension} ${res.status}: ${body.error?.message || 'unknown error'}`);
+    let body: AnalyticsReport & { error?: { message?: string } };
+    for (let attempt = 0; ; attempt++) {
+      const res = await fetch(url, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(30000) });
+      body = await res.json() as AnalyticsReport & { error?: { message?: string } };
+      if (res.ok) break;
+      if (attempt >= 2 || (res.status !== 429 && res.status < 500)) {
+        throw new Error(`analytics ${dimension} ${res.status}: ${body.error?.message || 'unknown error'}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
     const parsed = reportRows(dimension, body);
     counts[dimension] = parsed.length;
     facts.push(...parsed);

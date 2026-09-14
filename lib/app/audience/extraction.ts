@@ -18,14 +18,40 @@ export async function mineComments(channelId: string, opts: { limit?: number; sa
   const receipt: MineReceipt = { comments: 0, observations: 0, rejected: 0, calls: 0 };
   if (!comments.length) return receipt;
   const client = new Anthropic();
-  for (const batch of batchesByVideo(comments)) {
-    const response = await client.messages.create({ model: 'claude-sonnet-5', max_tokens: 4096,
-      messages: [{ role: 'user', content: extractionPrompt(batch) }] });
-    if (response.stop_reason !== 'end_turn') throw new Error(`extractor incomplete: ${response.stop_reason}`);
+  const pending = batchesByVideo(comments, 20);
+  async function worker() {
+   while (pending.length) {
+    const batch = pending.shift()!;
+    let response;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        response = await client.messages.create({ model: 'claude-sonnet-5', max_tokens: 4096,
+          messages: [{ role: 'user', content: extractionPrompt(batch) }] });
+        break;
+      } catch (error) {
+        if (attempt >= 2 || (error as { status?: number }).status !== 429) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+    }
+    if (response.stop_reason !== 'end_turn') {
+      if (response.stop_reason === 'max_tokens' && batch.length > 1) {
+        const middle = Math.floor(batch.length / 2);
+        pending.unshift(batch.slice(0, middle), batch.slice(middle));
+        continue;
+      }
+      throw new Error(`extractor incomplete: ${response.stop_reason}`);
+    }
     const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
     let raw: unknown;
     try { raw = parseModelJson(text); }
-    catch (error) { throw new Error(`invalid extraction JSON (${(error as Error).message}): ${JSON.stringify(text.slice(0, 400))}`); }
+    catch (error) {
+      if (batch.length > 1) {
+        const middle = Math.floor(batch.length / 2);
+        pending.unshift(batch.slice(0, middle), batch.slice(middle));
+        continue;
+      }
+      throw new Error(`invalid extraction JSON (${(error as Error).message}): ${JSON.stringify(text.slice(0, 400))}`);
+    }
     const verified = verifiedObservations(raw, batch);
     receipt.calls++;
     receipt.rejected += Array.isArray(raw) ? raw.length - verified.length : 0;
@@ -39,6 +65,8 @@ export async function mineComments(channelId: string, opts: { limit?: number; sa
       [channelId, batch.map((c) => c.comment_id)]);
     receipt.comments += batch.length;
     receipt.observations += verified.length;
+   }
   }
+  await Promise.all(Array.from({ length: 6 }, () => worker()));
   return receipt;
 }

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeProvider, ThemeToggle, THEME_BOOT_SCRIPT } from './theme';
 import { MARK_CELLS, MARK_GRID } from '@/lib/app/brand';
+import styles from './app-shell.module.css';
 
 /** The anvil, inline so it takes the plate's colour and needs no request. */
 function Mark() {
@@ -19,14 +20,16 @@ function Mark() {
 const NAV = [
   { href: '/app/feed', label: 'Feed' },
   { href: '/app/inspiration', label: 'Inspiration' },
+  { href: '/app/audience', label: 'Audience' },
   { href: '/app/channels', label: 'Channels' },
   { href: '/app/settings', label: 'Settings' },
 ];
 
-function Nav({ className, showInspiration }: { className: string; showInspiration: boolean }) {
+function Nav({ className, showInspiration, showAudience }: { className: string; showInspiration: boolean; showAudience: boolean }) {
   const path = usePathname() || '';
   if (path.startsWith('/app/onboarding')) return null;
-  const items = NAV.filter((n) => showInspiration || n.href !== '/app/inspiration');
+  const items = NAV.filter((n) => (showInspiration || n.href !== '/app/inspiration') &&
+    (showAudience || n.href !== '/app/audience'));
   return (
     <nav className={className}>
       {items.map((n) => (
@@ -38,7 +41,7 @@ function Nav({ className, showInspiration }: { className: string; showInspiratio
   );
 }
 
-export default function AppShell({ children, showInspiration = false }: { children: React.ReactNode; showInspiration?: boolean }) {
+export default function AppShell({ children, showInspiration = false, showAudience = false }: { children: React.ReactNode; showInspiration?: boolean; showAudience?: boolean }) {
   return (
     <ThemeProvider>
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
@@ -50,14 +53,14 @@ export default function AppShell({ children, showInspiration = false }: { childr
             <Mark />
             CHANNELSMITH
           </Link>
-          <Nav className="cs-nav" showInspiration={showInspiration} />
+          <Nav className="cs-nav" showInspiration={showInspiration} showAudience={showAudience} />
           <div className="cs-header-right">
             <ThemeToggle />
             <UserButton />
           </div>
         </div>
         <div className="cs-wrap">
-          <Nav className="cs-nav cs-nav-mobile" showInspiration={showInspiration} />
+          <Nav className={`cs-nav cs-nav-mobile ${styles.compactMobile}`} showInspiration={showInspiration} showAudience={showAudience} />
         </div>
       </header>
       <main className="cs-wrap cs-main">{children}</main>

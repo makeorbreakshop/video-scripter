@@ -16,6 +16,7 @@ async function main() {
             (select count(*) from audience_observations o join audience_comments c using (comment_id)
               where o.channel_id = $1 and strpos(c.text, o.quote) = 0) invalid_quotes,
             (select count(*) from audience_themes where channel_id = $1 and profile_version = 1) themes`, [id]);
+  if (Number(counts.mined) !== 200) throw new Error('The 200-comment sample gate is historical; refusing to overwrite its receipt after the full run');
   const observations = await q<{ type: string; quote: string; summary: string }>(
     `select type, quote, summary from (
        select type, quote, summary, row_number() over(partition by type order by confidence desc,id) rn
