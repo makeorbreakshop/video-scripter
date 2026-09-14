@@ -220,3 +220,88 @@ All four are already applied to production and are additive — no reader change
 - `sql/2026-09-08-channel-stats-precompute.sql`
 - `sql/2026-09-08-video-text.sql` (table + mirror trigger)
 - `sql/2026-09-08-track-drain-unscored-cursor.sql`
+
+---
+
+# Index audit — 2026-09-14
+
+Re-measured during the storage work. `pg_stat_database.stats_reset` is **still null**, so every
+`idx_scan` below is "since the last server restart" and cannot be dated. Scan counts are
+evidence; they are not proof, and nothing here is dropped on a scan count alone.
+
+## Done — 184 MB dropped, with proof
+
+`sql/2026-09-14-drop-redundant-indexes.sql` (rollback alongside it). Each candidate was proved
+structurally, then measured: inside a transaction, `drop index`, `EXPLAIN (analyze, buffers)`
+every query shape that touches the table, `rollback`.
+
+| dropped | size | why |
+|---|---:|---|
+| `idx_view_snapshots_video_date` | 119 MB | identical key columns to `idx_view_snapshots_video_date_desc`, which merely adds `INCLUDE (view_count, like_count, comment_count)`. Both video-keyed shapes already chose the covering index with this one present. |
+| `idx_view_tracking_priority_tier_date` | 65 MB | same keys as `idx_tracking_priority_tier` (20 MB, 74,227 scans vs 32). Due-now query 47.3 → 54.9 ms. |
+
+### The one that looked redundant and is not
+
+`idx_view_snapshots_date` (snapshot_date, 34 MB) is a **strict key prefix** of
+`idx_view_snapshots_date_video` (snapshot_date, video_id) — textbook redundant. Measured, it is
+not: the composite is 121 MB against its 34 MB, and a range scan reads the pages it walks.
+
+```
+a date range (13 days) :  427.8 ms ->  3051.2 ms   (7.1x slower)
+one exact day          :    7.8 ms ->    16.1 ms   (2.0x slower)
+```
+
+**Kept.** 34 MB is not worth a 7x regression on the daily rollup. This is the reason the EXPLAIN
+step exists.
+
+## Not done — the 19 cold `videos` indexes, 385 MB
+
+Still a plan, not an action, and for the same reason as 2026-09-08: an index with 33 lifetime
+scans may be the one thing between a monthly job and a sequential scan of a 1,734 MB heap, and
+undoing a drop means `CREATE INDEX CONCURRENTLY` on that table. Neither half of "trivially safe
+and reversible" holds. Fresh counts, `videos`, 42 indexes / 1,352 MB total:
+
+```
+   102 MB  scans=    33  idx_videos_channel_views          <- a quarter of the whole prize
+    29 MB  scans=    68  idx_videos_classified_at
+    27 MB  scans=    44  idx_videos_competitor_metadata
+    24 MB  scans=   596  idx_videos_competitor_channel
+    21 MB  scans=   135  idx_videos_topic_niche
+    21 MB  scans=    37  idx_videos_topic_domain
+    20 MB  scans=   110  idx_videos_format_primary
+    18 MB  scans=   240  idx_videos_thumbnail_version
+    17 MB  scans=   101  idx_videos_idea_radar_complete
+    17 MB  scans=   414  idx_videos_title_observed
+    16 MB  scans=   556  idx_videos_is_short
+    16 MB  scans=     6  idx_videos_topic_level_2
+    15 MB  scans=   302  idx_videos_topic_level_3
+    15 MB  scans=    32  idx_videos_user_id
+    13 MB  scans=    30  idx_videos_channel_name_lower_pattern
+  8656 kB  scans=   311  idx_videos_bertopic_version
+  4088 kB  scans=   969  videos_shorts_backfill_idx
+  2952 kB  scans=     7  videos_shorts_flagged_unchecked_idx
+    40 kB  scans=   900  idx_videos_channel_published_views
+```
+
+### The scheduled night step, when it is taken
+
+Do **not** batch these. One index, one night, in this order, each with the same
+drop-inside-a-transaction EXPLAIN proof used above:
+
+1. `pg_stat_reset()` — then wait **a full week and a full monthly cycle** before reading a count
+   again. Without this the numbers above stay undatable and every drop is a guess.
+2. Night 1: `idx_videos_channel_views` alone (102 MB, a quarter of the prize).
+3. Nights 2..n: the rest, largest first, one per night.
+
+Each night: `drop index concurrently if exists <name>;` at 06:30 ET, with the exact
+`pg_get_indexdef()` output recorded in `sql/rollback/` **before** the drop, and the morning
+check being that no new sequential scan on `videos` has appeared in `pg_stat_user_tables`.
+
+### One that will become free
+
+`idx_videos_id_llm_summary` is **189 MB with 53,539,056 scans** — very much alive, and it exists
+only because callers read `llm_summary` off `videos`. When the thirty direct readers are
+repointed at `lib/app/video-text.ts` and `scripts/null-video-text.ts` has run
+(`docs/runbooks/2026-09-14-videos-reclaim.md`), that index indexes a column that is entirely
+NULL. It becomes the single largest safe drop on the table, and it is not on the cold list
+because today it is the opposite of cold.
