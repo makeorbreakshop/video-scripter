@@ -45,13 +45,7 @@ const KNOWN_DIRECT_READERS = [
   'lib/pinecone-summary-service.ts',
   'lib/unified-import-summary-integration.ts',
   'lib/unified-video-import.ts',
-  'workers/llm-summary-vectorization-worker.js',
-  'workers/llm-summary-worker-450.js',
-  'workers/llm-summary-worker-fast.js',
-  'workers/llm-summary-worker-optimized-io.js',
-  'workers/llm-summary-worker-optimized.js',
-  'workers/llm-summary-worker-speed-optimized.js',
-  'workers/llm-summary-worker.js',
+  'workers/llm-summary-vectorization-worker.ts',
 ];
 
 /** The accessor itself, and the two migration scripts, are allowed to name the columns. */

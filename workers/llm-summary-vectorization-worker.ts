@@ -1,19 +1,23 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 import pLimit from 'p-limit';
+import { q } from '../lib/admin/db';
+import {
+  needsSummaryEmbeddingBatchSql, NEEDS_SUMMARY_EMBEDDING_COUNT_SQL,
+} from '../lib/app/video-text';
 
 // Load environment variables
 config();
 
 // Initialize clients
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const openai = new OpenAI({
@@ -21,7 +25,7 @@ const openai = new OpenAI({
 });
 
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY,
+  apiKey: process.env.PINECONE_API_KEY!,
 });
 
 // Worker configuration - Dynamic IOPS optimization
@@ -39,7 +43,7 @@ let currentDelayMs = 10000; // Start with 10 second delay
 let batchSize = 10; // Start with tiny batch size
 
 // IOPS tracking
-let iopsHistory = [];
+let iopsHistory: { time: number; ops: number }[] = [];
 let lastIOPSCheck = Date.now();
 let operationsInWindow = 0;
 
@@ -48,15 +52,15 @@ const limit = pLimit(CONCURRENT_REQUESTS);
 
 // Worker state
 let isRunning = false;
-let currentJobId = null;
+let currentJobId: string | null = null;
 let processedCount = 0;
 let failedCount = 0;
-let startTime = null;
+let startTime: number | null = null;
 
 /**
  * Generate embeddings for multiple summaries
  */
-async function generateBatchEmbeddings(summaries) {
+async function generateBatchEmbeddings(summaries: string[]) {
   try {
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',
@@ -124,7 +128,7 @@ async function shouldContinue() {
  * Update job progress
  */
 async function updateJobProgress() {
-  if (!currentJobId) return;
+  if (!currentJobId || startTime === null) return;
   
   const elapsed = Date.now() - startTime;
   const rate = processedCount / (elapsed / 1000 / 60);
@@ -178,15 +182,13 @@ async function runWorker() {
   
   try {
     // Initialize Pinecone index
-    const index = pinecone.index(process.env.PINECONE_INDEX_NAME);
+    const index = pinecone.index(process.env.PINECONE_INDEX_NAME!);
     const namespaceIndex = index.namespace(NAMESPACE);
     
     // Get total count of videos with summaries but no embeddings
-    const { count: totalCount } = await supabase
-      .from('videos')
-      .select('*', { count: 'exact', head: true })
-      .not('llm_summary', 'is', null)
-      .eq('llm_summary_embedding_synced', false);
+    // Through lib/app/video-text.ts: `videos.llm_summary` is about to be NULL for every row,
+    // and `.not('llm_summary','is',null)` against it would then report zero work for ever.
+    const totalCount = Number((await q(NEEDS_SUMMARY_EMBEDDING_COUNT_SQL))[0].n);
     
     console.log(`📊 Found ${totalCount} summaries needing embeddings`);
     
@@ -206,16 +208,10 @@ async function runWorker() {
       const readIOPS = trackIOPS(1);
       
       // Fetch next batch of videos with summaries
-      const { data: videos, error } = await supabase
-        .from('videos')
-        .select('id, title, channel_name, llm_summary, view_count, published_at')
-        .not('llm_summary', 'is', null)
-        .eq('llm_summary_embedding_synced', false)
-        .gt('id', lastId)
-        .order('id')
-        .limit(batchSize);
-      
-      if (error) {
+      let videos;
+      try {
+        videos = await q(needsSummaryEmbeddingBatchSql(), [lastId, batchSize]);
+      } catch (error) {
         console.error('Error fetching videos:', error);
         break;
       }
