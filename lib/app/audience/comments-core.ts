@@ -43,7 +43,8 @@ export function parseThread(thread: CommentThread, channelId: string, videoId: s
   return comments.flatMap((c) => {
     const s = c.snippet;
     const text = s?.textOriginal ?? '';
-    if (text.trim().length < 15 || !s?.authorChannelId?.value || !s.publishedAt || !c.id) return [];
+    if (text.trim().length < 15 || !s?.authorChannelId?.value ||
+        s.authorChannelId.value === channelId || !s.publishedAt || !c.id) return [];
     return [{
       comment_id: c.id, video_id: videoId, channel_id: channelId,
       parent_id: c === parent ? null : (s.parentId || parent?.id || null),

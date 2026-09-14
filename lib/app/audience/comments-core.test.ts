@@ -23,3 +23,15 @@ test('thread parser stores verbatim comment and keyed hash, never raw author', (
   expect(JSON.stringify(rows)).not.toContain('UC-secret');
   expect(rows[1].parent_id).toBe('c');
 });
+
+test('thread parser excludes comments written by the owner channel', () => {
+  const secret = Buffer.alloc(32, 4).toString('base64');
+  const thread = { snippet: { topLevelComment: { id: 'viewer', snippet: {
+    textOriginal: 'I need a machine for clear acrylic.', authorChannelId: { value: 'UC-viewer' },
+    publishedAt: '2026-09-01T12:00:00Z',
+  } } }, replies: { comments: [{ id: 'owner', snippet: {
+    textOriginal: 'I will test that material next week.', authorChannelId: { value: 'UC-owner' },
+    parentId: 'viewer', publishedAt: '2026-09-02T12:00:00Z',
+  } }] } };
+  expect(parseThread(thread, 'UC-owner', 'video', secret).map((row) => row.comment_id)).toEqual(['viewer']);
+});
