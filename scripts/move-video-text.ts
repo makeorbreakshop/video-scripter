@@ -16,6 +16,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
+import { moveBatchSql, MOVE_COUNT_REMAINING_SQL } from '../lib/app/video-text-move';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -54,37 +55,19 @@ if (has('--verify')) {
 const stop = await heavy();
 if (stop && !has('--force')) { console.error(`refusing to run: ${stop}`); await pool.end(); process.exit(2); }
 
-// Resume point: the highest id already moved. `videos.id` is the primary key, so this is a
-// single index probe and the walk below is one ordered index range per batch.
-// The cursor is NOT max(video_id) in video_text: the mirror trigger inserts every new video
-// there as it arrives, so that max was a fresh id near the top of the key space and the walk
-// believed it was finished after 19,659 rows (2026-09-09..14). Walk videos in id order and skip
-// what video_text already holds; the keyset still makes each batch one index range.
+// The cursor ALWAYS starts at '' and the anti-join does the resuming. See
+// lib/app/video-text-move.ts for the defect this replaces: resuming from max(video_id) in
+// video_text read a value the mirror trigger keeps fresh, so the walk started near the top of
+// the key space and reported success after 19,659 of 1,107,961 rows — six nights running.
 let cursor = '';
-console.log(`move-video-text: batch ${BATCH}, sleep ${SLEEP}ms${DRY ? ' [dry run]' : ''}, resuming after '${cursor}'`);
+const remaining = Number((await q<{ n: string }>(MOVE_COUNT_REMAINING_SQL))[0].n);
+console.log(`move-video-text: batch ${BATCH}, sleep ${SLEEP}ms${DRY ? ' [dry run]' : ''}, ` +
+            `${remaining.toLocaleString()} video(s) still to move`);
 
 let moved = 0, batches = 0, bytes = 0;
 const t0 = Date.now();
 for (;;) {
-  const rows = await q<{ id: string; b: string }>(
-    `with page as (
-       select id, description, metadata, llm_summary
-         from videos v where v.id > $1
-          and not exists (select 1 from video_text vt where vt.video_id = v.id)
-        order by v.id limit $2
-     )
-     ${DRY ? `select id, coalesce(length(description),0) + coalesce(length(metadata::text),0) as b from page`
-           : `, ins as (
-       insert into video_text (video_id, description, metadata, llm_summary, moved_at)
-       select id, description, metadata, llm_summary, now() from page
-       on conflict (video_id) do update
-          set description = excluded.description, metadata = excluded.metadata,
-              llm_summary = excluded.llm_summary, moved_at = excluded.moved_at
-       returning video_id
-     )
-     select p.id, (coalesce(length(p.description),0) + coalesce(length(p.metadata::text),0))::text as b
-       from page p where exists (select 1 from ins)`}`,
-    [cursor, BATCH]);
+  const rows = await q<{ id: string; b: string }>(moveBatchSql(DRY), [cursor, BATCH]);
   if (!rows.length) { console.log('nothing left to move'); break; }
   cursor = rows[rows.length - 1].id;
   moved += rows.length;
@@ -98,5 +81,7 @@ for (;;) {
   if (MAX_BATCHES && batches >= MAX_BATCHES) { console.log(`--max-batches ${MAX_BATCHES} reached`); break; }
   await sleep(SLEEP);
 }
-console.log(`done: ${moved} row(s), ${(bytes / 1e6).toFixed(0)} MB of text, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+const left = Number((await q<{ n: string }>(MOVE_COUNT_REMAINING_SQL))[0].n);
+console.log(`done: ${moved} row(s), ${(bytes / 1e6).toFixed(0)} MB of text, ` +
+            `${((Date.now() - t0) / 1000).toFixed(0)}s, ${left.toLocaleString()} still to move`);
 await pool.end();

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ONE-SHOT. pg_repack the `videos` heap after scripts/null-video-text.ts has cleared the
+  description / metadata / llm_summary columns.
+
+  NOT INSTALLED, AND NOT READY TO BE. Every precondition is listed in
+  docs/runbooks/2026-09-14-videos-reclaim.md; as of 2026-09-14 none of them is met:
+
+    1. the null-out has not run (30 live call sites still read the columns off `videos` —
+       lib/app/video-text-access.test.ts enumerates them and blocks on them);
+    2. the pg_repack CLIENT is not installed locally (`which pg_repack` → not found);
+    3. the extension is not created on the instance (available 1.5.2, installed null);
+    4. free disk for a second copy of the table has not been verified.
+
+  Nulling the columns does NOT shrink the file — it frees space inside the heap. This is the
+  step that returns it to the filesystem.
+
+  Why pg_repack and not VACUUM FULL: pg_repack rewrites online, taking ACCESS EXCLUSIVE only
+  briefly at the start and at the swap. VACUUM FULL holds it for the WHOLE rewrite — tens of
+  minutes on a 1,734 MB heap at 5-23 ms/block, during which every read and write of `videos`
+  blocks: the app, the RSS poller, the scorer, the classification workers. Do not schedule it.
+
+  Prepare:
+    brew install pg_repack && pg_repack --version     # must match the server's 1.5.2
+    # then, in the Supabase SQL editor, as superuser:
+    #   create extension pg_repack;
+    npx tsx scripts/null-video-text.ts --verify
+
+  Install, run once, watch, then remove:
+    cp scripts/launchd/com.mfm.video-scripter-repack-videos.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-repack-videos.plist
+    launchctl kickstart -p gui/$UID/com.mfm.video-scripter-repack-videos
+    tail -f logs/repack-videos.log
+    launchctl bootout gui/$UID/com.mfm.video-scripter-repack-videos
+    rm ~/Library/LaunchAgents/com.mfm.video-scripter-repack-videos.plist
+
+  Interrupting it is safe: it builds a copy and swaps at the end, so the original is untouched.
+  Clean up after a kill with `drop schema repack cascade;`.
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-repack-videos</string>
+  <key>Disabled</key><true/>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <!--
+      DATABASE_SESSION_URL (:5432), not DATABASE_URL (:6543). pg_repack holds advisory locks and
+      temporary state across statements on ONE session; the transaction-mode pooler hands the
+      connection to someone else between statements and the repack fails or corrupts its own
+      bookkeeping. --no-superuser-check because Supabase's postgres role is not a true superuser.
+      -k skips the check that would otherwise refuse on that basis.
+    -->
+    <string>set -a; . ./.env.local; set +a; exec pg_repack -k --no-superuser-check -d "$DATABASE_SESSION_URL" -t public.videos --wait-timeout 300</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/repack-videos.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/repack-videos.err.log</string>
+</dict></plist>
