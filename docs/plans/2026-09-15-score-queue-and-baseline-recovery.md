@@ -1,6 +1,6 @@
 ---
 title: Restore prompt scoring and honest baseline display
-status: active
+status: complete
 artifact_readiness: implementation-ready
 execution: code
 ---
@@ -48,8 +48,18 @@ Fresh, high-reach never-scored long-form uploads receive bounded priority over r
 - [x] GREEN: preserve partial cache results, partition target dependencies, and score ready targets; confirm focused and integration tests.
 - [x] RED: add video-page tests for an available baseline without a score row and truthful delayed copy; confirm failure.
 - [x] GREEN: render the canonical typical curve for the unprocessed state and correct the copy; confirm focused tests.
-- [ ] Refine the changed seams without changing behavior; run focused suites, broader scoring/app suites, type/build gates, design lint, and a local rendered desktop/mobile check.
-- [ ] Perform the independent standards/spec review, record any operational rollout steps separately, and leave production untouched.
+- [x] Refine the changed seams without changing behavior; run focused suites, broader scoring/app suites, type/build gates, design lint, and a local rendered desktop/mobile check.
+- [x] Perform the independent standards/spec review, record any operational rollout steps separately, and leave production untouched.
+
+## Verification Result
+
+- Focused RED/GREEN suites: queue 6/6, cache/worker 14/14, UI state 63/63.
+- Broad `lib/scoring` + `lib/app`: 1,385/1,386 pass; the lone timezone failure is present at base commit `b628a41` in untouched `app/app/audience/page.tsx`.
+- Production build: pass. Repository-wide standalone TypeScript remains pre-existing red; changed-file filtering reports only `score-videos.ts`'s existing top-level-await configuration errors.
+- Exact live queue plan: 100 rows in 367 ms warm, 1,909 shared reads, no sequential scan on the 4.2 GB `videos` table; target `1w3XaMSIeR8` is priority claim 6.
+- UI: design lint pass; authenticated local desktop and 390×844 renders show `Score delayed — awaiting processing` and the canonical typical line (about 1.7M at the shown horizon).
+- Isolated PostgreSQL integration: 15 tests skipped because `EVENT_MATERIALIZATION_TEST_DATABASE_URL` is not configured; no production writes substituted for it.
+- Review: no score-math, raw-history, generation-safety, livestream, or legacy-curve regression found. Production rollout remains intentionally unperformed.
 
 ## Verification Handoff
 
