@@ -79,25 +79,53 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
   const values: unknown[] = [];
   const bind = (value: unknown) => { values.push(value); return `$${values.length}`; };
   const channels = options.channels.length ? `and v.channel_id = any(${bind(options.channels)})` : '';
+  // Keep fresh, high-reach uploads responsive without letting them starve ordinary refreshes.
+  // At most one quarter of each bounded fetch is reserved for never-scored videos published in
+  // the last week; the rest continues to drain in the queue's established due-time order.
+  const initialLimit = bind(Math.max(1, Math.ceil(options.limit / 4)));
   const limit = bind(options.limit);
+  const eligible = `${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
+       and v.published_at is not null ${channels}`;
   return {
     text: `/* trace:score.queue-targets */
-    select v.id, v.channel_id, v.published_at::text as published_at, d.generation::text as generation
-      from score_dirty d
-      join videos v on v.id = d.video_id
-      left join video_scores sc on sc.video_id = v.id
-     where d.not_before <= now()
-       and ${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
-       and v.published_at is not null ${channels}
-       and (sc.scored_at is null or now() >= sc.scored_at +
-         case
+    with initial as materialized (
+      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at
+        from score_dirty d
+        join videos v on v.id = d.video_id
+        left join video_scores sc on sc.video_id = v.id
+       where d.not_before <= now() and sc.video_id is null
+         and v.published_at >= now() - interval '7 days'
+         and ${eligible}
+       order by v.view_count desc nulls last, v.published_at desc, d.marked_at, d.video_id
+       limit ${initialLimit}
+    ), refresh as materialized (
+      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at
+        from score_dirty d
+        join videos v on v.id = d.video_id
+        left join video_scores sc on sc.video_id = v.id
+       where d.not_before <= now()
+         and ${eligible}
+         and not exists (select 1 from initial i where i.id = v.id)
+         and (sc.video_id is null or now() >= sc.scored_at + case
            when now() - v.published_at < interval '1 day' then interval '5 minutes'
            when now() - v.published_at < interval '7 days' then interval '1 hour'
            when now() - v.published_at < interval '30 days' then interval '1 day'
            when now() - v.published_at < interval '60 days' then interval '3 days'
            else interval '7 days'
          end)
-     order by d.not_before, d.marked_at, d.video_id
+       order by d.not_before, d.marked_at, d.video_id
+       limit (select greatest(${limit} - count(*), 0) from initial)
+    ), picked as (
+      select i.*, 0 as lane from initial i
+      union all
+      select r.*, 1 as lane from refresh r
+    )
+    select id, channel_id, published_at::text as published_at, generation::text as generation
+      from picked
+     order by lane,
+              case when lane = 0 then view_count end desc nulls last,
+              case when lane = 0 then published_at end desc,
+              not_before, marked_at, id
      limit ${limit}`,
     values,
   };
