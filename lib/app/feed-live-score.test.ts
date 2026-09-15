@@ -107,9 +107,9 @@ describe('a card with no score says why, instead of showing nothing', () => {
     expect(cardScoreNote(card)).toBe("Jay Clouse's recent videos are still too young to set a baseline");
   });
 
-  it('says a video with no score row at all is simply not scored yet', () => {
+  it('describes an unprocessed video without promising a specific scoring run', () => {
     const [card] = cardsOf([noScore({})]);
-    expect(cardScoreNote(card)).toBe('Not scored yet — the next scoring run picks it up');
+    expect(cardScoreNote(card)).toBe('Score delayed — awaiting processing');
   });
 
   it('says nothing at all once there is a score to show', () => {

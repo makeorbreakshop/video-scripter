@@ -250,9 +250,10 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
   // The typical line is channelCurve itself now -- the score's own denominator at every age
   // (lib/app/typical-curve.ts), not C(30) dragged along the global growth shape, which is a
   // different curve and was suppressed entirely for v5 rows. Pre-v5 rows, which have no
-  // stored same-age denominator, keep the old shape.
+  // stored same-age denominator, keep the old shape. No score row is not a legacy row: the
+  // canonical prior loader can still supply the exact curve the current scorer will use.
   const builtCurve: TypicalPoint[] = broadcast.isBroadcast ? []
-    : isSameAgeScore(score) ? typical
+    : score == null || isSameAgeScore(score) ? typical
     : channelCurve(builtSeries, score?.baseline ?? null, mult, longtail);
 
   const variantOf = new Map(states.map((s) => [s.version, s]));
