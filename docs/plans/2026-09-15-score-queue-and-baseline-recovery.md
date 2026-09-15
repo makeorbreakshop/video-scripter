@@ -44,8 +44,8 @@ Fresh, high-reach never-scored long-form uploads receive bounded priority over r
 
 - [x] RED: add outcome tests for never-scored queue priority and reserved refresh capacity; confirm failure.
 - [x] GREEN: implement the bounded two-lane target query; confirm focused tests and inspect its live plan with a bounded `EXPLAIN (ANALYZE, BUFFERS)`.
-- [ ] RED: add outcome tests proving a missing cache blocks only dependent targets; confirm failure.
-- [ ] GREEN: preserve partial cache results, partition target dependencies, and score ready targets; confirm focused and integration tests.
+- [x] RED: add outcome tests proving a missing cache blocks only dependent targets; confirm failure.
+- [x] GREEN: preserve partial cache results, partition target dependencies, and score ready targets; confirm focused and integration tests.
 - [ ] RED: add video-page tests for an available baseline without a score row and truthful delayed copy; confirm failure.
 - [ ] GREEN: render the canonical typical curve for the unprocessed state and correct the copy; confirm focused tests.
 - [ ] Refine the changed seams without changing behavior; run focused suites, broader scoring/app suites, type/build gates, design lint, and a local rendered desktop/mobile check.

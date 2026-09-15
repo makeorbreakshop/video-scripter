@@ -6,15 +6,24 @@ test('the default scorer is queue-driven and statically incapable of raw-history
   const hourly = script.slice(script.indexOf('async function score('), script.indexOf('async function final('));
   expect(hourly).toContain('scoreDirtyTargetsSql({');
   expect(hourly).toContain('DEFAULT_SCORE_RUN_LIMIT');
-  expect(hourly).toContain('ObservationCacheMissError');
+  expect(hourly).not.toContain('ObservationCacheMissError');
   expect(hourly).toContain('SCORE_DIRTY_DEFER_SQL');
   expect(hourly).not.toContain('incrementalScoreTargetsSql({');
   expect(script).toContain('explicit scoring modes require --limit');
   expect(script).toContain('MAX_SCORE_RUN_LIMIT = 5_000');
+  expect(script).toContain('throw new ObservationCacheMissError(loaded.missingIds, 0)');
 
   const batch = script.slice(script.indexOf('async function v5Batch('), script.indexOf('async function channelsSlowerThan('));
-  expect(batch).toContain('rawMissBudget: 0');
   expect(batch).toContain('requireFormat2: true');
+  expect(batch).toContain('loadCachedRecords');
+  expect(batch).toContain('partitionTargetsByCacheDependencies');
+  expect(batch).not.toContain('Promise.allSettled');
+  expect(batch).not.toMatch(/\brecords\(/);
+
+  // A miss is handled per dependency set: healthy scores are written and only blocked claims wait.
+  expect(hourly).toContain('batch.scores');
+  expect(hourly).toContain('batch.blocked');
+  expect(hourly).toContain('batch.missingIds');
 
   const writes = script.slice(script.indexOf('async function writeScores('), script.indexOf('function rowFromV5('));
   expect(writes).toContain('SCORE_DIRTY_CLEAR_SQL');

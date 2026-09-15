@@ -36,7 +36,8 @@ import {
 } from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import {
-  curvePriorsFrom, loadMeta, loadPriorRefs, loadRecords, ObservationCacheMissError,
+  curvePriorsFrom, loadCachedRecords, loadMeta, loadPriorRefs, loadRecords,
+  ObservationCacheMissError, partitionTargetsByCacheDependencies,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
 import type { ObservationState } from '../lib/scoring/observation-state';
@@ -438,27 +439,19 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
   const ids = group.map((r) => r.id);
   const priorsOf = await priorsFor(ids);
   const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
-  const cacheOnly = { rawMissBudget: 0, requireFormat2: true } as const;
+  const cacheOnly = { requireFormat2: true } as const;
   const priorStates = new Map<string, ObservationState>();
   const truth = new Map<string, number>();
-  const [targetResult, priorResult] = await Promise.allSettled([
-    records(ids, cacheOnly),
-    records(priorIds, { ...cacheOnly, stateSink: priorStates, day30Sink: truth }),
+  const [targetResult, priorResult] = await Promise.all([
+    loadCachedRecords(q, ids, cacheOnly),
+    loadCachedRecords(q, priorIds, { ...cacheOnly, stateSink: priorStates, day30Sink: truth }),
   ]);
-  const misses = [targetResult, priorResult]
-    .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-    .map((result) => result.reason)
-    .filter((error): error is ObservationCacheMissError => error instanceof ObservationCacheMissError);
-  if (misses.length) {
-    throw new ObservationCacheMissError([...new Set(misses.flatMap((error) => error.missingIds))], 0);
-  }
-  if (targetResult.status === 'rejected') throw targetResult.reason;
-  if (priorResult.status === 'rejected') throw priorResult.reason;
   const priorMeta = await meta(priorIds);
-  const rec = targetResult.value;
-  const priorRec = priorResult.value;
+  const rec = targetResult.records;
+  const priorRec = priorResult.records;
+  const partition = partitionTargetsByCacheDependencies(group, priorsOf, rec, priorRec);
   const out: { t: { id: string; channel_id: string }; views: number; o: ReturnType<typeof scoreV5> }[] = [];
-  for (const t of group) {
+  for (const t of partition.ready) {
     const snaps = rec.get(t.id);
     if (!snaps?.length) continue;
     const latest = snaps[snaps.length - 1];
@@ -480,7 +473,7 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
       o: scoreV5({ vt: latest.views, age: latest.day, snaps, priors: curvePriors, priorMultLogs, params }),
     });
   }
-  return out;
+  return { scores: out, blocked: partition.blocked, missingIds: partition.missingIds };
 }
 
 /**
@@ -558,32 +551,29 @@ async function score(signal: AbortSignal) {
     for (const group of scoringTargetBatches(targets)) {
       if (signal.aborted) return false;
       const readStartedAt = new Date();
-      let batch: Awaited<ReturnType<typeof v5Batch>>;
-      try {
-        batch = await v5Batch(group, params);
-      } catch (error) {
-        if (!(error instanceof ObservationCacheMissError)) throw error;
-        const request = ensureObservationMaterializationSql(error.missingIds);
-        if (error.missingIds.length) await q(request.text, request.values as any[]);
-        const claims = group.filter((row) => row.generation !== undefined).map((row) => ({
-          video_id: row.id, generation: Number(row.generation),
-        }));
-        if (claims.length) await q(SCORE_DIRTY_DEFER_SQL, [JSON.stringify(claims), 300]);
-        deferred += group.length;
-        log(`score: deferred ${group.length}; ${error.missingIds.length} cache row(s) need materialization`);
-        continue;
+      const batch = await v5Batch(group, params);
+      const request = ensureObservationMaterializationSql(batch.missingIds);
+      if (batch.missingIds.length) await q(request.text, request.values as any[]);
+      const blockedIds = new Set(batch.blocked.map((row) => row.id));
+      const blockedClaims = group.filter((row) => row.generation !== undefined && blockedIds.has(row.id)).map((row) => ({
+        video_id: row.id, generation: Number(row.generation),
+      }));
+      if (blockedClaims.length) await q(SCORE_DIRTY_DEFER_SQL, [JSON.stringify(blockedClaims), 300]);
+      deferred += batch.blocked.length;
+      if (batch.blocked.length) {
+        log(`score: deferred ${batch.blocked.length}; ${batch.missingIds.length} cache row(s) need materialization`);
       }
-      for (const b of batch) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
-      const scoredIds = new Set(batch.map((b) => b.t.id));
+      for (const b of batch.scores) { if (b.o.belowAgeFloor) tooYoung++; else if (b.o.score == null) noCurve++; }
+      const scoredIds = new Set(batch.scores.map((b) => b.t.id));
       const claims = group.filter((row) => row.generation !== undefined && scoredIds.has(row.id)).map((row) => ({
         video_id: row.id, generation: Number(row.generation),
       }));
       written += await writeScores(
-        batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, SCORE_ROW_VERSION, b.views, b.o)),
+        batch.scores.map((b) => rowFromV5(b.t.id, b.t.channel_id, SCORE_ROW_VERSION, b.views, b.o)),
         readStartedAt,
         claims,
       );
-      const unscorable = group.filter((row) => row.generation !== undefined && !scoredIds.has(row.id)).map((row) => ({
+      const unscorable = group.filter((row) => row.generation !== undefined && !blockedIds.has(row.id) && !scoredIds.has(row.id)).map((row) => ({
         video_id: row.id, generation: Number(row.generation),
       }));
       if (unscorable.length) {
@@ -636,7 +626,9 @@ async function final(signal: AbortSignal) {
   for (const group of scoringTargetBatches(targets)) {
     if (signal.aborted) break;
     const readStartedAt = new Date();
-    const batch = await v5Batch(group, params);
+    const loaded = await v5Batch(group, params);
+    if (loaded.missingIds.length) throw new ObservationCacheMissError(loaded.missingIds, 0);
+    const batch = loaded.scores;
     for (const b of batch) if (b.o.score == null) noCurve++;
     written += await writeScores(batch.map((b) => rowFromV5(b.t.id, b.t.channel_id, FINAL_VERSION, b.views, b.o)), readStartedAt);
     if (written % 5000 < 500) log(`final: ${written} written`);
@@ -689,7 +681,9 @@ async function v5(signal: AbortSignal) {
 
   for (const group of scoringTargetBatches(targets)) {
     if (signal.aborted) break;
-    for (const { t, views, o } of await v5Batch(group, params)) {
+    const loaded = await v5Batch(group, params);
+    if (loaded.missingIds.length) throw new ObservationCacheMissError(loaded.missingIds, 0);
+    for (const { t, views, o } of loaded.scores) {
       if (o.score == null) noCurve++;
       scored++;
       lines.push([
