@@ -26,8 +26,23 @@ test('the live scorer selects only the bounded queue and applies age-aware caden
   expect(q.text).toContain("interval '3 days'");
   expect(q.text).toContain("interval '7 days'");
   expect(q.text).not.toMatch(/rss_samples|view_samples|view_snapshots/);
-  expect(q.values).toEqual([100]);
+  expect(q.values).toEqual([25, 100]);
   expect(() => scoreDirtyTargetsSql({ limit: 101, channels: [] })).toThrow('100');
+});
+
+test('every score run reserves bounded capacity for fresh high-reach uploads without starving refreshes', () => {
+  const q = scoreDirtyTargetsSql({ limit: 100, channels: [] });
+
+  // A fresh breakout with no score must not wait behind days of routine refresh work.
+  expect(q.text).toMatch(/initial[\s\S]*sc\.video_id is null/i);
+  expect(q.text).toMatch(/initial[\s\S]*published_at >= now\(\) - interval '7 days'/i);
+  expect(q.text).toMatch(/initial[\s\S]*order by v\.view_count desc nulls last, v\.published_at desc/i);
+  // The priority lane is bounded and the unused part of its reservation returns to refresh work.
+  expect(q.text).toMatch(/limit \$1/i);
+  expect(q.text).toMatch(/refresh[\s\S]*greatest\(\$2\s*-\s*count\(\*\)/i);
+  // Never-scored backlog remains eligible in the ordinary lane, so priority cannot starve it.
+  expect(q.text).toMatch(/refresh[\s\S]*sc\.video_id is null or now\(\) >= sc\.scored_at/i);
+  expect(q.values).toEqual([25, 100]);
 });
 
 test('the migration captures every source at statement scope and protects internal queues', () => {

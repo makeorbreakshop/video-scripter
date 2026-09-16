@@ -99,7 +99,7 @@ export function gapReasonWords(b: GapBucket, channelName: string | null | undefi
       return 'No view measurements yet — the first lands within a day';
     case 'outside-scoring-window':
     case 'never-scored-in-window':
-      return 'Not scored yet — the next scoring run picks it up';
+      return 'Score delayed — awaiting processing';
     case 'other':
       return 'No score yet for this video';
   }

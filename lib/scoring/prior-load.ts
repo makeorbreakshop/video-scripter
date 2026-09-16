@@ -34,6 +34,11 @@ export interface RecordLoadOptions {
   /** Exact day-30 snapshot projection returned by the same compact cache query. */
   day30Sink?: Map<string, number>;
 }
+export type CachedRecordLoadOptions = Omit<RecordLoadOptions, 'rawMissBudget'>;
+export interface CachedRecordLoadResult {
+  records: Map<string, Snapshot[]>;
+  missingIds: string[];
+}
 
 export class ObservationCacheMissError extends Error {
   constructor(public readonly missingIds: string[], public readonly rawMissBudget: number) {
@@ -74,27 +79,22 @@ export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise
   return out;
 }
 
-/**
- * The canonical observation record for a set of videos, at TRUE age: snapshots, high-res samples
- * and RSS merged by lib/scoring/observations. Key arrays are bounded — a very large IN set turns
- * these reads into corpus-wide scans.
- */
-export async function loadRecords(
+/** Current cached observation records plus explicit misses; never reads raw history. */
+export async function loadCachedRecords(
   q: QueryFn,
   ids: readonly string[],
-  options: RecordLoadOptions = {},
-): Promise<Map<string, Snapshot[]>> {
+  options: CachedRecordLoadOptions = {},
+): Promise<CachedRecordLoadResult> {
   const out = new Map<string, Snapshot[]>();
-  if (!ids.length) return out;
-  const raw: string[] = [];
-  const rawMissBudget = options.rawMissBudget ?? 25;
-  for (const part of chunk([...ids], 100)) {
+  if (!ids.length) return { records: out, missingIds: [] };
+  const missingIds: string[] = [];
+  for (const part of chunk([...new Set(ids)], 100)) {
     // The cache holds the versioned source state and returns nothing unless its watermark is
     // current. Miss handling is explicit: scheduled scoring passes a zero budget and defers;
     // interactive reads retain a small allowance for availability during rollout.
     let hits = 0;
     if (obsCacheEnabled()) {
-      let rows: { video_id: string; obs: Buffer; format?: number }[] = [];
+      let rows: { video_id: string; obs: Buffer; format?: number; day30_views?: number | null }[] = [];
       try {
         rows = await q(OBS_CACHE_READ_SQL, [part]);
       } catch (err) {
@@ -120,13 +120,49 @@ export async function loadRecords(
     }
     obsCacheStats.hits += hits;
     obsCacheStats.misses += part.length - hits;
-    for (const id of part) if (!out.has(id)) raw.push(id);
+    for (const id of part) if (!out.has(id)) missingIds.push(id);
   }
+  return { records: out, missingIds };
+}
+
+export async function loadRecords(
+  q: QueryFn,
+  ids: readonly string[],
+  options: RecordLoadOptions = {},
+): Promise<Map<string, Snapshot[]>> {
+  const { records: out, missingIds: raw } = await loadCachedRecords(q, ids, options);
+  const rawMissBudget = options.rawMissBudget ?? 25;
   if (raw.length > rawMissBudget) throw new ObservationCacheMissError(raw, rawMissBudget);
   for (const part of chunk(raw, 100)) {
     for (const [id, points] of observationRecords(await q(OBSERVATION_RECORDS_SQL, [part]))) out.set(id, points);
   }
   return out;
+}
+
+/** Partition a batch without ever scoring a target against an incomplete canonical prior set. */
+export function partitionTargetsByCacheDependencies<T extends { id: string }>(
+  targets: readonly T[],
+  priorsOf: ReadonlyMap<string, readonly PriorRef[]>,
+  targetRecords: ReadonlyMap<string, Snapshot[]>,
+  priorRecords: ReadonlyMap<string, Snapshot[]>,
+): { ready: T[]; blocked: T[]; missingIds: string[] } {
+  const ready: T[] = [];
+  const blocked: T[] = [];
+  const missingIds = new Set<string>();
+  for (const target of targets) {
+    let missing = false;
+    if (!targetRecords.has(target.id)) {
+      missing = true;
+      missingIds.add(target.id);
+    }
+    for (const prior of priorsOf.get(target.id) ?? []) {
+      if (priorRecords.has(prior.id)) continue;
+      missing = true;
+      missingIds.add(prior.id);
+    }
+    (missing ? blocked : ready).push(target);
+  }
+  return { ready, blocked, missingIds: [...missingIds] };
 }
 
 /** One line per process, not one per chunk, when the cache table is not there at all. */

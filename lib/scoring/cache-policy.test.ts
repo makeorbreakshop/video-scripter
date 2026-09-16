@@ -1,4 +1,9 @@
-import { loadRecords, ObservationCacheMissError } from './prior-load';
+import {
+  loadCachedRecords,
+  loadRecords,
+  ObservationCacheMissError,
+  partitionTargetsByCacheDependencies,
+} from './prior-load';
 import { OBS_CACHE_SERIES_READ_SQL, OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
 import { encodeObservationState, type ObservationState } from './observation-state';
 
@@ -32,6 +37,46 @@ test('an explicit interactive budget permits only that many raw misses', async (
   await expect(loadRecords(q, ['a', 'b'], { rawMissBudget: 1 }))
     .rejects.toEqual(expect.objectContaining({ missingIds: ['a', 'b'] }));
   expect(q).toHaveBeenCalledTimes(1);
+});
+
+test('a cache-only batch preserves healthy records while reporting every miss', async () => {
+  const state: ObservationState = {
+    v: 2,
+    videoId: 'healthy',
+    publishedAt: '2026-01-01T00:00:00.000Z',
+    lastChangeId: 1,
+    points: [{ source: 'sample', at: '2026-01-02T00:00:00.000Z', views: 100,
+      modelEligible: true, conflicted: false }],
+  };
+  const q = jest.fn(async () => [{
+    video_id: 'healthy', obs: encodeObservationState(state), format: 2, last_change_id: 1,
+    day30_views: null,
+  }]);
+
+  const result = await loadCachedRecords(q, ['healthy', 'missing'], { requireFormat2: true });
+
+  expect(result.records.get('healthy')).toHaveLength(1);
+  expect(result.missingIds).toEqual(['missing']);
+  expect(q).toHaveBeenCalledTimes(1);
+});
+
+test('one missing prior blocks only targets that depend on it', () => {
+  const targets = [{ id: 'blocked' }, { id: 'ready' }];
+  const priorsOf = new Map([
+    ['blocked', [{ id: 'missing-prior', pub: 1, ageDays: 1 }]],
+    ['ready', [{ id: 'healthy-prior', pub: 1, ageDays: 1 }]],
+  ]);
+  const targetRecords = new Map([
+    ['blocked', [{ day: 1, views: 10 }]],
+    ['ready', [{ day: 1, views: 20 }]],
+  ]);
+  const priorRecords = new Map([['healthy-prior', [{ day: 1, views: 5 }]]]);
+
+  const result = partitionTargetsByCacheDependencies(targets, priorsOf, targetRecords, priorRecords);
+
+  expect(result.ready).toEqual([{ id: 'ready' }]);
+  expect(result.blocked).toEqual([{ id: 'blocked' }]);
+  expect(result.missingIds).toEqual(['missing-prior']);
 });
 
 test('a cache-only scorer receives exact day-30 truth with the state it already fetched', async () => {

@@ -104,3 +104,20 @@ test('the typical line the page draws IS the line the score divides by', async (
   const atScoredAge = view!.curve.find((c) => c.day === 9.8)!;
   expect(108438 / atScoredAge.expected!).toBeCloseTo(4.78, 2);
 });
+
+test('an unprocessed current video still draws its independently computable typical curve', async () => {
+  const typical = [
+    { day: 1, expected: 100 }, { day: 3, expected: 250 }, { day: 9.8, expected: 500 },
+  ];
+  jest.mocked(videoTypicalCurve).mockResolvedValue(typical);
+  const s = scenario(data.videos[0].id);
+  jest.mocked(videoPage).mockResolvedValue({
+    ...s, thumbs: [], titles: [], mult: params.mult, longtail: params.longtail, bands: null,
+    score: null,
+  } as any);
+
+  const view = await loadVideoPage(s.video.id, capturedAt);
+
+  expect(view!.score).toBeNull();
+  expect(view!.curve).toEqual(typical);
+});

@@ -71,6 +71,11 @@ describe('an unscorable video says why, in words', () => {
     expect(gapReasonWords('no-channel-baseline', null)).toBe('Not enough channel history yet for a baseline');
   });
 
+  it('describes processing delay without promising the next scheduler pass', () => {
+    expect(gapReasonWords('never-scored-in-window', 'X')).toBe('Score delayed — awaiting processing');
+    expect(gapReasonWords('never-scored-in-window', 'X')).not.toContain('next scoring run');
+  });
+
   it('says something for every bucket', () => {
     for (const b of GAP_BUCKETS) expect(gapReasonWords(b, 'X').length).toBeGreaterThan(10);
   });

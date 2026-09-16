@@ -49,8 +49,10 @@ describe('verdict names the reason there is no score', () => {
     expect(v.under).toContain('too young to set a baseline');
   });
 
-  it('says a video with no score row at all has simply not been scored yet', () => {
-    expect(verdict({ ...base, observations: 4 }).under).toContain('Not scored yet');
+  it('says a video with no score row at all is delayed without promising a specific run', () => {
+    const words = verdict({ ...base, observations: 4 }).under;
+    expect(words).toContain('Score delayed — awaiting processing');
+    expect(words).not.toContain('next scoring run');
   });
 
   it('says the video has not been measured yet when nothing has been sampled', () => {
