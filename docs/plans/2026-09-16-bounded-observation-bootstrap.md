@@ -45,7 +45,7 @@ Replace the 100-video FIFO bootstrap trickle with one bounded 500-video batch ev
 - [x] Implement the bounded two-lane claim and scheduler capacity; make focused tests GREEN.
 - [x] Run focused and broader observation/scoring regression gates.
 - [x] Check current org usage, inspect live plans, and run one dry-run 500-video canary.
-- [ ] If gates pass, install the scheduler definition, observe one live cycle, and verify scorer deferrals and queue health.
+- [x] If gates pass, install the scheduler definition, observe one live cycle, and verify scorer deferrals and queue health.
 - [x] Review the fixed diff and record rollback evidence.
 
 ## Verification Handoff
@@ -72,3 +72,5 @@ Replace the 100-video FIFO bootstrap trickle with one bounded 500-video batch ev
 - The 500-video dry run read 6,028 raw rows, produced 226 deltas, estimated 568,931 response bytes, completed in 14.305 seconds, and rolled back successfully.
 - Focused and broader regression gates passed: 7 suites and 45 tests. The production Next.js build also passed.
 - Repository-wide `tsc --noEmit` remains blocked by pre-existing unrelated type errors across generated route types, legacy handlers, tests, and workers.
+- The first committed 500-video cycle completed in 29.644 seconds with 5,128 raw rows, 494,858 estimated response bytes, and zero failures. It reduced the bootstrap queue from 20,334 to 19,834.
+- The following scorer cycle reduced cache misses from 223 to 112 (15.9% to 8.7%) and deferred targets from 63 to 50 while scoring 50 of 100 selected videos.
