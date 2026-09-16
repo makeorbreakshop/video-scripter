@@ -97,9 +97,9 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
     stderr: 'observation-materializer-launchd.err.log',
   },
   {
-    // Slow self-healing for legacy videos discovered after cutover. The preflight count aborts
-    // before a raw read above 100 videos or 20k narrow rows; at twelve runs/hour that also bounds
-    // the recurring raw-read rate while ordinary event materialization remains raw-free.
+    // Slow self-healing for legacy videos discovered after cutover. Each independent transaction
+    // aborts before a raw read above 500 videos or 20k narrow rows. Two sequential transactions
+    // increase drain throughput without adding connections or widening a transaction's blast radius.
     label: 'com.mfm.video-scripter-observation-bootstrap',
     script: 'bootstrap-observation-cache.ts',
     args: [
@@ -107,6 +107,7 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
       '--max-changes', '5000',
       '--raw-video-budget', '500',
       '--raw-row-budget', '20000',
+      '--max-batches', '2',
     ],
     intervalSeconds: 300,
     minuteOffset: 0,

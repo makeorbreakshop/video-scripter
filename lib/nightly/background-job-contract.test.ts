@@ -53,6 +53,7 @@ describe('scheduled background job wiring', () => {
     expect(bootstrap?.args).toEqual([
       '--max-videos', '500', '--max-changes', '5000',
       '--raw-video-budget', '500', '--raw-row-budget', '20000',
+      '--max-batches', '2',
     ]);
     expect(bootstrap?.intervalSeconds).toBe(300);
     expect(score?.args).toEqual(['--limit', '100']);

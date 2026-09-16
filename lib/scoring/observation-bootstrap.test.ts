@@ -11,6 +11,7 @@ import {
   MAX_BOOTSTRAP_R2_CONCURRENCY,
   bootstrapSource,
   observationStateFromRows,
+  runSequentialBootstrapBatches,
   validateBootstrapR2Concurrency,
   validateRawBootstrapBudget,
 } from './observation-bootstrap';
@@ -73,6 +74,54 @@ test('bootstrap reserves a bounded recent-dependency lane without starving FIFO 
   expect(BOOTSTRAP_CLAIM_SQL).toMatch(/fifo as materialized/i);
   expect(BOOTSTRAP_CLAIM_SQL).toMatch(/not exists \(select 1 from recent_dependencies/i);
   expect(BOOTSTRAP_CLAIM_SQL).toMatch(/greatest\(\$1 - \(select count\(\*\) from recent_dependencies\), 0\)/i);
+});
+
+test('scheduled bootstrap runs at most two bounded batches sequentially', async () => {
+  const active = { current: 0, peak: 0 };
+  const runBatch = jest.fn(async () => {
+    active.current++;
+    active.peak = Math.max(active.peak, active.current);
+    await Promise.resolve();
+    active.current--;
+    return { videos: 500 };
+  });
+
+  const results = await runSequentialBootstrapBatches({
+    maxBatches: 99,
+    signal: new AbortController().signal,
+    runBatch,
+  });
+
+  expect(results).toHaveLength(2);
+  expect(runBatch).toHaveBeenCalledTimes(2);
+  expect(active.peak).toBe(1);
+});
+
+test('sequential bootstrap stops after an empty batch or an aborted job budget', async () => {
+  const emptyRun = jest.fn()
+    .mockResolvedValueOnce({ videos: 500 })
+    .mockResolvedValueOnce({ videos: 0 })
+    .mockResolvedValueOnce({ videos: 500 });
+  const emptyResults = await runSequentialBootstrapBatches({
+    maxBatches: 2,
+    signal: new AbortController().signal,
+    runBatch: emptyRun,
+  });
+  expect(emptyResults.map((result) => result.videos)).toEqual([500, 0]);
+  expect(emptyRun).toHaveBeenCalledTimes(2);
+
+  const controller = new AbortController();
+  const budgetRun = jest.fn(async () => {
+    controller.abort();
+    return { videos: 500 };
+  });
+  const budgetResults = await runSequentialBootstrapBatches({
+    maxBatches: 2,
+    signal: controller.signal,
+    runBatch: budgetRun,
+  });
+  expect(budgetResults).toHaveLength(1);
+  expect(budgetRun).toHaveBeenCalledTimes(1);
 });
 
 test('a raw bootstrap preserves source flags and produces the canonical observations', () => {

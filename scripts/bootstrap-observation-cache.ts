@@ -11,8 +11,9 @@ import { r2Config } from '../lib/readings/archive';
 import { mapWithConcurrency } from '../lib/app/import-batch';
 import {
   BOOTSTRAP_CLAIM_SQL, BOOTSTRAP_LATEST_WRITE_SQL, BOOTSTRAP_RAW_COUNT_SQL, BOOTSTRAP_RAW_ROWS_SQL,
-  DEFAULT_BOOTSTRAP_R2_CONCURRENCY, MAX_BOOTSTRAP_RAW_ROWS, MAX_BOOTSTRAP_VIDEOS, bootstrapSource,
-  observationStateFromRows, validateBootstrapR2Concurrency, validateRawBootstrapBudget,
+  DEFAULT_BOOTSTRAP_R2_CONCURRENCY, MAX_BOOTSTRAP_BATCHES, MAX_BOOTSTRAP_RAW_ROWS,
+  MAX_BOOTSTRAP_VIDEOS, bootstrapSource, observationStateFromRows, runSequentialBootstrapBatches,
+  validateBootstrapR2Concurrency, validateRawBootstrapBudget,
   type BootstrapObservationRow,
 } from '../lib/scoring/observation-bootstrap';
 import {
@@ -39,8 +40,10 @@ const r2Concurrency = validateBootstrapR2Concurrency(
 );
 const rawVideoBudget = optionalInt('--raw-video-budget');
 const rawRowBudget = optionalInt('--raw-row-budget');
+const maxBatches = optionalInt('--max-batches') ?? 1;
 const dryRun = args.includes('--dry-run') || args.includes('--dry');
 if (maxVideos > MAX_BOOTSTRAP_VIDEOS) throw new Error(`--max-videos exceeds ${MAX_BOOTSTRAP_VIDEOS}`);
+if (maxBatches > MAX_BOOTSTRAP_BATCHES) throw new Error(`--max-batches exceeds ${MAX_BOOTSTRAP_BATCHES}`);
 if (maxChanges > 5_000) throw new Error('--max-changes exceeds 5000');
 if (rawRowBudget !== undefined && rawRowBudget > MAX_BOOTSTRAP_RAW_ROWS) {
   throw new Error(`--raw-row-budget exceeds hard limit ${MAX_BOOTSTRAP_RAW_ROWS}`);
@@ -58,110 +61,144 @@ const pool = makeTimedPool({
 let client: PoolClient | null = null;
 let tracedClient: { query: (sql: string, values?: any[]) => Promise<any> } | null = null;
 let traceStats: Record<string, number> = {};
+
+interface BootstrapBatchStats {
+  videos: number;
+  raw_videos: number;
+  r2_videos: number;
+  changes: number;
+  compressed_bytes: number;
+}
+
+async function runBatch(batch: number): Promise<BootstrapBatchStats> {
+  if (!tracedClient) throw new Error('bootstrap client unavailable');
+  try {
+    await tracedClient.query('begin isolation level repeatable read');
+    await setLocalApplicationName(tracedClient, supabaseApplicationName('observation-bootstrap'));
+    const claims: Array<{
+      videoId: string;
+      generation: number;
+      publishedAt: string;
+      captureStartedAt: string;
+    }> = (await tracedClient.query(BOOTSTRAP_CLAIM_SQL, [maxVideos])).rows!.map((row: any) => ({
+      videoId: row.video_id as string,
+      generation: Number(row.generation),
+      publishedAt: new Date(row.published_at).toISOString(),
+      captureStartedAt: new Date(row.capture_started_at).toISOString(),
+    }));
+    const cfg = r2Config();
+    const states = new Map<string, ObservationState>();
+    const rawIds: string[] = [];
+    const latestWrites = new Map<string, string | null>();
+    if (claims.length) {
+      const rows = (await tracedClient.query(BOOTSTRAP_LATEST_WRITE_SQL, [claims.map((claim: any) => claim.videoId)])).rows!;
+      for (const row of rows) {
+        latestWrites.set(row.video_id, row.latest_write_at ? new Date(row.latest_write_at).toISOString() : null);
+      }
+    }
+    const r2Reads = await mapWithConcurrency(claims, r2Concurrency, async (claim) => ({
+      claim,
+      file: cfg ? await readSeriesFile(claim.videoId, cfg) : null,
+    }));
+    for (const result of r2Reads) {
+      if (!result.ok) throw result.error;
+      const { claim, file } = result.value;
+      if (bootstrapSource(file, claim.captureStartedAt, latestWrites.get(claim.videoId) ?? null) === 'r2') {
+        states.set(claim.videoId, observationStateFromSeries(file!, 0));
+      } else rawIds.push(claim.videoId);
+    }
+
+    if (rawIds.length) {
+      const count = Number((await tracedClient.query(BOOTSTRAP_RAW_COUNT_SQL, [rawIds])).rows![0]?.n ?? 0);
+      validateRawBootstrapBudget({ videos: rawIds.length, rows: count }, { rawVideoBudget, rawRowBudget });
+      const rows = (await tracedClient.query(BOOTSTRAP_RAW_ROWS_SQL, [rawIds])).rows!;
+      const byVideo = new Map<string, BootstrapObservationRow[]>();
+      for (const row of rows) {
+        const group = byVideo.get(row.video_id) ?? [];
+        group.push(row);
+        byVideo.set(row.video_id, group);
+      }
+      const rawIdSet = new Set(rawIds);
+      for (const claim of claims.filter((row) => rawIdSet.has(row.videoId))) {
+        states.set(claim.videoId, observationStateFromRows(
+          claim.videoId, claim.publishedAt, byVideo.get(claim.videoId) ?? [], claim.generation,
+        ));
+      }
+    }
+
+    const claimPayload = claims.map((claim: any) => ({
+      video_id: claim.videoId, generation: claim.generation, last_change_id: 0,
+    }));
+    const deltaRows = claims.length
+      ? (await tracedClient.query(OBS_CHANGES_FOR_CLAIMS_SQL, [JSON.stringify(claimPayload), maxChanges + 1])).rows!
+      : [];
+    if (deltaRows.length > maxChanges) throw new Error(`bootstrap delta count exceeds ${maxChanges}`);
+    const changesByVideo = new Map<string, ObservationChange[]>();
+    for (const row of deltaRows) {
+      const group = changesByVideo.get(row.video_id) ?? [];
+      group.push({
+        changeId: Number(row.change_id), videoId: row.video_id, source: row.source,
+        operation: row.operation, at: new Date(row.at).toISOString(),
+        views: row.views === null ? null : Number(row.views), timeBasis: row.time_basis,
+        receivedAt: row.received_at ? new Date(row.received_at).toISOString() : null,
+        modelEligible: Boolean(row.model_eligible), conflicted: Boolean(row.conflicted),
+      });
+      changesByVideo.set(row.video_id, group);
+    }
+
+    const ready: { claim: QueueClaim; state: ObservationState; obs: Buffer; n: number }[] = [];
+    let compressedBytes = 0;
+    for (const claim of claims) {
+      const seeded = states.get(claim.videoId);
+      if (!seeded) throw new Error(`no bootstrap source for ${claim.videoId}`);
+      const state = seeded.lastChangeId >= claim.generation
+        ? seeded
+        : applyObservationChanges(seeded, changesByVideo.get(claim.videoId) ?? []);
+      if (state.lastChangeId < claim.generation) throw new Error(`change log gap for ${claim.videoId}`);
+      const obs = encodeObservationState(state);
+      compressedBytes += obs.length;
+      if (compressedBytes > 5_000_000) throw new Error('bootstrap compressed-byte limit exceeded');
+      ready.push({ claim: { video_id: claim.videoId, generation: claim.generation }, state, obs, n: observationsFromState(state).length });
+    }
+    if (ready.length) {
+      await tracedClient.query(OBS_CACHE_V2_UPSERT_SQL, [
+        ready.map((row) => row.claim.video_id), ready.map((row) => row.n), ready.map((row) => row.obs),
+        ready.map((row) => row.state.lastChangeId),
+      ]);
+      await tracedClient.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(ready.map((row) => ({
+        video_id: row.claim.video_id, last_change_id: row.state.lastChangeId,
+      })))]);
+      await tracedClient.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(ready.map((row) => row.claim))]);
+    }
+    await tracedClient.query(dryRun ? 'rollback' : 'commit');
+    const stats = {
+      videos: ready.length, raw_videos: rawIds.length, r2_videos: ready.length - rawIds.length,
+      changes: deltaRows.length, compressed_bytes: compressedBytes,
+    };
+    console.log(`observation bootstrap${dryRun ? ' [dry run]' : ''} batch ${batch}/${maxBatches}: ${ready.length} videos, `
+      + `${rawIds.length} raw, ${ready.length - rawIds.length} R2, ${deltaRows.length} deltas, ${compressedBytes} bytes`);
+    return stats;
+  } catch (error) {
+    await tracedClient.query('rollback').catch(() => {});
+    throw error;
+  }
+}
+
 try {
   client = await pool.connect();
   tracedClient = { query: (sql: string, values?: any[]) => trace.query(client!, sql, values) };
-  await tracedClient.query('begin isolation level repeatable read');
-  await setLocalApplicationName(tracedClient, supabaseApplicationName('observation-bootstrap'));
-  const claims = (await tracedClient.query(BOOTSTRAP_CLAIM_SQL, [maxVideos])).rows!.map((row: any) => ({
-    videoId: row.video_id as string,
-    generation: Number(row.generation),
-    publishedAt: new Date(row.published_at).toISOString(),
-    captureStartedAt: new Date(row.capture_started_at).toISOString(),
-  }));
-  const cfg = r2Config();
-  const states = new Map<string, ObservationState>();
-  const rawIds: string[] = [];
-  const latestWrites = new Map<string, string | null>();
-  if (claims.length) {
-    const rows = (await tracedClient.query(BOOTSTRAP_LATEST_WRITE_SQL, [claims.map((claim: any) => claim.videoId)])).rows!;
-    for (const row of rows) {
-      latestWrites.set(row.video_id, row.latest_write_at ? new Date(row.latest_write_at).toISOString() : null);
-    }
-  }
-  const r2Reads = await mapWithConcurrency(claims, r2Concurrency, async (claim) => ({
-    claim,
-    file: cfg ? await readSeriesFile(claim.videoId, cfg) : null,
-  }));
-  for (const result of r2Reads) {
-    if (!result.ok) throw result.error;
-    const { claim, file } = result.value;
-    if (bootstrapSource(file, claim.captureStartedAt, latestWrites.get(claim.videoId) ?? null) === 'r2') {
-      states.set(claim.videoId, observationStateFromSeries(file!, 0));
-    } else rawIds.push(claim.videoId);
-  }
-
-  if (rawIds.length) {
-    const count = Number((await tracedClient.query(BOOTSTRAP_RAW_COUNT_SQL, [rawIds])).rows![0]?.n ?? 0);
-    validateRawBootstrapBudget({ videos: rawIds.length, rows: count }, { rawVideoBudget, rawRowBudget });
-    const rows = (await tracedClient.query(BOOTSTRAP_RAW_ROWS_SQL, [rawIds])).rows!;
-    const byVideo = new Map<string, BootstrapObservationRow[]>();
-    for (const row of rows) {
-      const group = byVideo.get(row.video_id) ?? [];
-      group.push(row);
-      byVideo.set(row.video_id, group);
-    }
-    for (const claim of claims.filter((row: any) => rawIds.includes(row.videoId))) {
-      states.set(claim.videoId, observationStateFromRows(
-        claim.videoId, claim.publishedAt, byVideo.get(claim.videoId) ?? [], claim.generation,
-      ));
-    }
-  }
-
-  const claimPayload = claims.map((claim: any) => ({
-    video_id: claim.videoId, generation: claim.generation, last_change_id: 0,
-  }));
-  const deltaRows = claims.length
-    ? (await tracedClient.query(OBS_CHANGES_FOR_CLAIMS_SQL, [JSON.stringify(claimPayload), maxChanges + 1])).rows!
-    : [];
-  if (deltaRows.length > maxChanges) throw new Error(`bootstrap delta count exceeds ${maxChanges}`);
-  const changesByVideo = new Map<string, ObservationChange[]>();
-  for (const row of deltaRows) {
-    const group = changesByVideo.get(row.video_id) ?? [];
-    group.push({
-      changeId: Number(row.change_id), videoId: row.video_id, source: row.source,
-      operation: row.operation, at: new Date(row.at).toISOString(),
-      views: row.views === null ? null : Number(row.views), timeBasis: row.time_basis,
-      receivedAt: row.received_at ? new Date(row.received_at).toISOString() : null,
-      modelEligible: Boolean(row.model_eligible), conflicted: Boolean(row.conflicted),
-    });
-    changesByVideo.set(row.video_id, group);
-  }
-
-  const ready: { claim: QueueClaim; state: ObservationState; obs: Buffer; n: number }[] = [];
-  let compressedBytes = 0;
-  for (const claim of claims) {
-    const seeded = states.get(claim.videoId);
-    if (!seeded) throw new Error(`no bootstrap source for ${claim.videoId}`);
-    const state = seeded.lastChangeId >= claim.generation
-      ? seeded
-      : applyObservationChanges(seeded, changesByVideo.get(claim.videoId) ?? []);
-    if (state.lastChangeId < claim.generation) throw new Error(`change log gap for ${claim.videoId}`);
-    const obs = encodeObservationState(state);
-    compressedBytes += obs.length;
-    if (compressedBytes > 5_000_000) throw new Error('bootstrap compressed-byte limit exceeded');
-    ready.push({ claim: { video_id: claim.videoId, generation: claim.generation }, state, obs, n: observationsFromState(state).length });
-  }
-  if (ready.length) {
-    await tracedClient.query(OBS_CACHE_V2_UPSERT_SQL, [
-      ready.map((row) => row.claim.video_id), ready.map((row) => row.n), ready.map((row) => row.obs),
-      ready.map((row) => row.state.lastChangeId),
-    ]);
-    await tracedClient.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(ready.map((row) => ({
-      video_id: row.claim.video_id, last_change_id: row.state.lastChangeId,
-    })))]);
-    await tracedClient.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(ready.map((row) => row.claim))]);
-  }
-  await tracedClient.query(dryRun ? 'rollback' : 'commit');
-  traceStats = {
-    videos: ready.length, raw_videos: rawIds.length, r2_videos: ready.length - rawIds.length,
-    r2_concurrency: r2Concurrency, changes: deltaRows.length, compressed_bytes: compressedBytes,
-  };
-  console.log(`observation bootstrap${dryRun ? ' [dry run]' : ''}: ${ready.length} videos, `
-    + `${rawIds.length} raw, ${ready.length - rawIds.length} R2, ${deltaRows.length} deltas, ${compressedBytes} bytes`);
+  const batches = await runSequentialBootstrapBatches({ maxBatches, signal: job.signal, runBatch });
+  traceStats = batches.reduce<Record<string, number>>((total, batch) => ({
+    batches: (total.batches ?? 0) + 1,
+    videos: (total.videos ?? 0) + batch.videos,
+    raw_videos: (total.raw_videos ?? 0) + batch.raw_videos,
+    r2_videos: (total.r2_videos ?? 0) + batch.r2_videos,
+    changes: (total.changes ?? 0) + batch.changes,
+    compressed_bytes: (total.compressed_bytes ?? 0) + batch.compressed_bytes,
+    r2_concurrency: r2Concurrency,
+  }), {});
 } catch (error) {
   trace.markFailed();
-  if (tracedClient) await tracedClient.query('rollback').catch(() => {});
   throw error;
 } finally {
   client?.release();

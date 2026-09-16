@@ -9,8 +9,24 @@ import {
 
 export const MAX_BOOTSTRAP_VIDEOS = 500;
 export const MAX_BOOTSTRAP_RAW_ROWS = 100_000;
+export const MAX_BOOTSTRAP_BATCHES = 2;
 export const DEFAULT_BOOTSTRAP_R2_CONCURRENCY = 16;
 export const MAX_BOOTSTRAP_R2_CONCURRENCY = 16;
+
+export async function runSequentialBootstrapBatches<T extends { videos: number }>(options: {
+  maxBatches: number;
+  signal: AbortSignal;
+  runBatch: (batch: number) => Promise<T>;
+}): Promise<T[]> {
+  const results: T[] = [];
+  const batchLimit = Math.min(options.maxBatches, MAX_BOOTSTRAP_BATCHES);
+  for (let batch = 1; batch <= batchLimit && !options.signal.aborted; batch++) {
+    const result = await options.runBatch(batch);
+    results.push(result);
+    if (result.videos === 0) break;
+  }
+  return results;
+}
 
 export function validateBootstrapR2Concurrency(value: number): number {
   if (!Number.isInteger(value) || value <= 0) {
