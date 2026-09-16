@@ -81,7 +81,7 @@ therefore the hard runtime ceiling, not merely the scheduled default.
 - [x] Refactor one bootstrap transaction into a batch unit and run at most two units sequentially.
 - [x] Run focused and broader regression gates plus a three-batch dry-run canary.
 - [x] Review the fixed diff and preserve the single-connection/per-batch rollback boundary.
-- [ ] If all gates pass, activate it and verify one two-batch production invocation.
+- [x] If all gates pass, activate it and verify one two-batch production invocation.
 
 ## Gate Evidence
 
@@ -94,3 +94,4 @@ therefore the hard runtime ceiling, not merely the scheduled default.
 - The following scorer cycle reduced cache misses from 223 to 112 (15.9% to 8.7%) and deferred targets from 63 to 50 while scoring 50 of 100 selected videos.
 - The acceleration RED gate failed on the missing sequential runner and scheduler argument; the GREEN gate passed 8 suites / 54 tests plus the production build.
 - Fresh org usage remained 46.588 GB of 250 GB (19%). The rejected three-batch dry run completed in 25.762 seconds but returned 2,093,337 estimated bytes. Its first two transactions completed in 18.083 seconds and returned an estimated 1,395,558 bytes, so production is capped at two.
+- The first production two-batch invocation repaired 1,000 caches in 41.156 seconds through one connection and two separate commits. It returned 1,368,078 estimated bytes with zero failures; the bootstrap queue moved from 17,494 to 16,552 while new dependencies continued to arrive.
