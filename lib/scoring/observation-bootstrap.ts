@@ -7,7 +7,7 @@ import {
   type ObservationState,
 } from './observation-state';
 
-export const MAX_BOOTSTRAP_VIDEOS = 100;
+export const MAX_BOOTSTRAP_VIDEOS = 500;
 export const MAX_BOOTSTRAP_RAW_ROWS = 100_000;
 export const DEFAULT_BOOTSTRAP_R2_CONCURRENCY = 16;
 export const MAX_BOOTSTRAP_R2_CONCURRENCY = 16;
@@ -83,13 +83,33 @@ export function observationStateFromRows(
 
 export const BOOTSTRAP_CLAIM_SQL = `
   /* trace:bootstrap.queue-claim */
-  select d.video_id, d.generation, v.published_at, m.capture_started_at
-    from obs_cache_dirty d
-    join videos v on v.id=d.video_id
+  with recent_dependencies as materialized (
+    select d.video_id, d.generation, d.not_before, d.marked_at
+      from obs_cache_dirty d
+     where d.requires_bootstrap and d.not_before <= now()
+       and d.marked_at >= now() - interval '10 minutes'
+     order by d.marked_at desc, d.not_before, d.video_id
+     limit greatest(1, ceil($1::numeric / 5)::int)
+  ), fifo as materialized (
+    select d.video_id, d.generation, d.not_before, d.marked_at
+      from obs_cache_dirty d
+     where d.requires_bootstrap and d.not_before <= now()
+       and not exists (select 1 from recent_dependencies r where r.video_id=d.video_id)
+     order by d.not_before, d.marked_at, d.video_id
+     limit greatest($1 - (select count(*) from recent_dependencies), 0)
+  ), picked as (
+    select r.*, 0 as lane from recent_dependencies r
+    union all
+    select f.*, 1 as lane from fifo f
+  )
+  select p.video_id, p.generation, v.published_at, m.capture_started_at
+    from picked p
+    join videos v on v.id=p.video_id
     cross join observation_materialization_meta m
-   where d.requires_bootstrap and d.not_before <= now() and m.singleton
-   order by d.not_before, d.marked_at, d.video_id
-   limit $1`;
+   where m.singleton
+   order by lane,
+            case when lane=0 then p.marked_at end desc,
+            p.not_before, p.marked_at, p.video_id`;
 
 /**
  * One timestamp per video, never observation rows. If an R2 series file was built after the last

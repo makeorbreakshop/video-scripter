@@ -58,6 +58,14 @@ test('workers with explicit transactions set attribution after BEGIN', () => {
   }
 });
 
+test('observation bootstrap uses one bounded transaction-pool connection', () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), 'scripts', 'bootstrap-observation-cache.ts'),
+    'utf8',
+  );
+  expect(source).toMatch(/connectionString: process\.env\.DATABASE_URL, max: 1, timeoutMs: 60_000/);
+});
+
 test('an unhealthy pipeline marks the trace run failed before returning a failing exit code', () => {
   const source = fs.readFileSync(
     path.join(process.cwd(), 'scripts', 'observation-pipeline-health.ts'),

@@ -52,7 +52,7 @@ if (!job.acquired) process.exit(0);
 
 const trace = new SupabaseQueryTracer('observation-bootstrap');
 const pool = makeTimedPool({
-  connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000,
+  connectionString: process.env.DATABASE_URL, max: 1, timeoutMs: 60_000,
   application_name: supabaseApplicationName('observation-bootstrap'),
 });
 let client: PoolClient | null = null;
