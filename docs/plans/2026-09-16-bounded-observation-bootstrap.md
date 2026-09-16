@@ -65,6 +65,24 @@ Replace the 100-video FIFO bootstrap trickle with one bounded 500-video batch ev
 - Stop on org egress above 70%, any large-table sequential scan, canary response above 2 MB, statement timeout, serialization failure, or production error.
 - One implementation/review retry at the same boundary before re-planning.
 
+## Acceleration Follow-up
+
+The first two production batches proved that a 500-video transaction is comfortably bounded,
+but the five-minute idle interval is now the dominant drain time. Keep the five-minute schedule
+and one connection, then run at most two independent 500-video transactions sequentially per
+invocation. Stop between transactions when the queue is empty or the managed-job deadline fires.
+Do not combine them into one 1,000-video transaction and do not widen any per-transaction budget.
+
+A three-batch dry-run candidate was rejected: although it completed in 25.762 seconds, its
+2,093,337 estimated response bytes exceeded the predeclared 2 MB canary stop. Two batches are
+therefore the hard runtime ceiling, not merely the scheduled default.
+
+- [x] Add RED contract tests for two scheduled batches, sequential execution, empty-queue stop, and deadline stop.
+- [x] Refactor one bootstrap transaction into a batch unit and run at most two units sequentially.
+- [x] Run focused and broader regression gates plus a three-batch dry-run canary.
+- [x] Review the fixed diff and preserve the single-connection/per-batch rollback boundary.
+- [ ] If all gates pass, activate it and verify one two-batch production invocation.
+
 ## Gate Evidence
 
 - Org egress was 46.586 GB of 250 GB (19%) for the current billing cycle.
@@ -74,3 +92,5 @@ Replace the 100-video FIFO bootstrap trickle with one bounded 500-video batch ev
 - Repository-wide `tsc --noEmit` remains blocked by pre-existing unrelated type errors across generated route types, legacy handlers, tests, and workers.
 - The first committed 500-video cycle completed in 29.644 seconds with 5,128 raw rows, 494,858 estimated response bytes, and zero failures. It reduced the bootstrap queue from 20,334 to 19,834.
 - The following scorer cycle reduced cache misses from 223 to 112 (15.9% to 8.7%) and deferred targets from 63 to 50 while scoring 50 of 100 selected videos.
+- The acceleration RED gate failed on the missing sequential runner and scheduler argument; the GREEN gate passed 8 suites / 54 tests plus the production build.
+- Fresh org usage remained 46.588 GB of 250 GB (19%). The rejected three-batch dry run completed in 25.762 seconds but returned 2,093,337 estimated bytes. Its first two transactions completed in 18.083 seconds and returned an estimated 1,395,558 bytes, so production is capped at two.
