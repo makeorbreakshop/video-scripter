@@ -59,7 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className={`${inter.variable} ${mono.variable} ${pixel.variable} cs-app`}>
       <Preconnects />
-      <AppShell showInspiration={canSeeInspiration(user)} showAudience={isOwner(user)}>{children}</AppShell>
+      <AppShell showInspiration={canSeeInspiration(user)} showAudience={isOwner(user)} showOutliers={isOwner(user)}>{children}</AppShell>
     </div>
   );
 }

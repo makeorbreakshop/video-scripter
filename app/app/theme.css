@@ -299,6 +299,25 @@
   content: ''; position: absolute; left: 3px; right: 3px; top: 6px; height: 1.6px;
   background: var(--cs-line-strong); border-radius: 1px;
 }
+/* filters: three short value groups, so the plate is taller than a list of sort orders. It is
+   still bounded by the viewport — past that it scrolls like any other panel. */
+.cs-menu-panel[data-mode="filters"] { max-height: min(560px, calc(100vh - 24px)); }
+
+/* filters: a small caps heading opening a value group inside the one plate. It names the group,
+   it does not explain it — the rows are the values. */
+.cs-menu-section {
+  padding: 10px 10px 4px; color: var(--cs-muted); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cs-menu-section:first-child { padding-top: 4px; }
+
+/* How many guards are off their default, on the trigger that hides them. */
+.cs-trigger-badge {
+  flex: none; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cs-ink); color: var(--cs-ground); font-size: 10px; font-weight: 700;
+}
+
 .cs-menu-foot {
   display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 8px 10px;
   border-top: 1px solid var(--cs-line); color: var(--cs-muted); font-size: 13px;
@@ -793,6 +812,11 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
 .cs-tab .cs-num { font-size: 12px; color: var(--cs-muted); font-weight: 500; }
 .cs-tabbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   border-bottom: 1px solid var(--cs-line); margin-bottom: 6px; }
+/* A hairline between two groups of filters on the same line — where (channels) and when
+   (published). Narrow viewports wrap the row instead, and a wrap is its own divider, so the
+   hairline goes rather than dangle at the end of a line. */
+.cs-tabbar-sep { flex: none; width: 1px; height: 16px; background: var(--cs-line-strong); }
+@media (max-width: 900px) { .cs-tabbar-sep { display: none; } }
 
 /* "N EDITS" on a grid tile: this video's packaging has moved since it was published. */
 .vg-edits { position: absolute; left: 8px; top: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 5px;

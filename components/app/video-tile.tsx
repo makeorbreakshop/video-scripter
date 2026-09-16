@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import type { GridVideo, SortKey } from '@/lib/app/channel-page';
 import { compact, etDate, ago } from '@/lib/admin/format';
+import { LocalTime } from './local-time';
 import { scoreTone } from '@/lib/app/score-display';
 import { Thumb } from './thumb';
 
@@ -40,8 +41,19 @@ function EditsBadge({ v }: { v: GridVideo }) {
   return <span className="vg-edits" title={v.last_change ? `last change ${ago(v.last_change)}` : undefined}>{label}</span>;
 }
 
-/** `priority` is for the tiles above the fold — the first row or two, never the whole page. */
-export function VideoTile({ v, priority = false }: { v: GridVideo; priority?: boolean }) {
+/**
+ * `priority` is for the tiles above the fold — the first row or two, never the whole page.
+ *
+ * `source` switches the tile from "one of this channel's videos" to "a video from somewhere
+ * else": the channel gets its own line under the title, and the date is the READER's rather
+ * than Brandon's (a channel page has one channel and a date the owner reads in ET; a mixed
+ * grid is a feed, and /app/outliers is read from wherever the reader is).
+ */
+export function VideoTile({ v, priority = false, source }: {
+  v: GridVideo;
+  priority?: boolean;
+  source?: { channelId: string; channelName: string };
+}) {
   return (
     <li className="vg-tile">
       <Link href={`/app/videos/${v.id}`}>
@@ -58,9 +70,17 @@ export function VideoTile({ v, priority = false }: { v: GridVideo; priority?: bo
         </span>
         <h3 className="vg-title">{v.title}</h3>
       </Link>
+      {source && (
+        <Link href={`/app/channels/${source.channelId}`} className="vg-meta vg-clip vg-channel">
+          {source.channelName}
+        </Link>
+      )}
       <div className="vg-foot">
         <span className="vg-meta vg-clip">
-          {etDate(v.published_at)} · <span className="cs-num">{compact(v.view_count)}</span> views
+          {source
+            ? <LocalTime ms={Date.parse(v.published_at)} format="day" />
+            : etDate(v.published_at)}
+          {' · '}<span className="cs-num">{compact(v.view_count)}</span> views
         </span>
         <ScoreChip score={v.score} />
       </div>

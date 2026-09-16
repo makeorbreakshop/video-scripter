@@ -1,12 +1,16 @@
 'use client';
 
-// The app's one popover. Every dropdown in /app is this component in one of three modes —
+// The app's one popover. Every dropdown in /app is this component in one of four modes —
 // a native select element cannot hold a checkmark row, a tri-state box, a colour dot or a
 // destructive row, and it cannot be made to look like the rest of the controls.
 //
 //   single  — sort, range, the feed's channel picker. Checkmark on the chosen row; picking closes.
 //   multi   — add-to-group. Tri-state boxes; the panel stays open.
 //   actions — the row "…". Plain rows, destructive ones in --cs-bad; picking closes.
+//   filters — one plate holding several small value groups (Outliers' quality guards). Rows read
+//             like `single` (checkmark, no boxes: a box promises "many", and a group like the
+//             baseline floor picks one) but the panel stays open, so a viewer can set the whole
+//             filter in one visit. `section` on the first item of a group titles it.
 //
 // The panel is a fixed-position plate in a portal, so a chip row that scrolls horizontally or a
 // table cell with overflow cannot clip it. It is measured on open and flipped above the trigger
@@ -14,11 +18,11 @@
 // and focus returns to the trigger; arrow keys walk the rows.
 
 import {
-  useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode,
+  Fragment, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 
-export type MenuMode = 'single' | 'multi' | 'actions';
+export type MenuMode = 'single' | 'multi' | 'actions' | 'filters';
 
 export interface MenuItem {
   /** Identity of the row, and what `onSelect`/`onToggle` is handed. */
@@ -28,8 +32,10 @@ export interface MenuItem {
   count?: number;
   /** A colour dot before the label — a group colour, e.g. `var(--cs-g-teal)`. */
   color?: string;
-  /** multi only. Defaults to 'off'. */
+  /** multi | filters only. Defaults to 'off'. */
   state?: 'on' | 'off' | 'mixed';
+  /** filters only: a heading rendered above this row, opening a group. */
+  section?: string;
   /** actions only: paints the row in --cs-bad. */
   destructive?: boolean;
   disabled?: boolean;
@@ -46,7 +52,7 @@ export interface MenuProps {
   value?: string | null;
   /** single | actions. */
   onSelect?: (key: string) => void;
-  /** multi. The panel stays open. */
+  /** multi | filters. The panel stays open. */
   onToggle?: (key: string) => void;
   /** Which trigger edge the panel lines up with. */
   align?: 'start' | 'end';
@@ -154,13 +160,15 @@ export function Menu({
 
   const pick = (item: MenuItem) => {
     if (item.disabled) return;
-    if (mode === 'multi') { onToggle?.(item.key); return; }
+    if (mode === 'multi' || mode === 'filters') { onToggle?.(item.key); return; }
     onSelect?.(item.key);
     close();
   };
 
   const panelRole = mode === 'single' ? 'listbox' : 'menu';
-  const rowRole = mode === 'single' ? 'option' : mode === 'multi' ? 'menuitemcheckbox' : 'menuitem';
+  const rowRole = mode === 'single' ? 'option'
+    : mode === 'multi' || mode === 'filters' ? 'menuitemcheckbox' : 'menuitem';
+  const checks = mode === 'single' || mode === 'filters';
 
   return (
     <>
@@ -204,8 +212,9 @@ export function Menu({
           {items.map((item, i) => {
             const on = mode === 'single' ? item.key === value : item.state === 'on';
             return (
+              <Fragment key={item.key}>
+              {item.section && <div className="cs-menu-section" role="presentation">{item.section}</div>}
               <button
-                key={item.key}
                 ref={(el) => { rows.current[i] = el; }}
                 type="button"
                 role={rowRole}
@@ -215,7 +224,8 @@ export function Menu({
                 disabled={item.disabled}
                 tabIndex={-1}
                 aria-selected={mode === 'single' ? on : undefined}
-                aria-checked={mode === 'multi' ? (item.state === 'mixed' ? 'mixed' : on) : undefined}
+                aria-checked={mode === 'multi' || mode === 'filters'
+                  ? (item.state === 'mixed' ? 'mixed' : on) : undefined}
                 onKeyDown={(e) => onRowKey(e, i)}
                 onClick={() => pick(item)}
               >
@@ -231,8 +241,9 @@ export function Menu({
                 )}
                 <span className="cs-menu-label">{item.label}</span>
                 {item.count !== undefined && <span className="cs-menu-count cs-num">{item.count}</span>}
-                {mode === 'single' && <Check on={on} />}
+                {checks && <Check on={on} />}
               </button>
+              </Fragment>
             );
           })}
           {footer && <div className="cs-menu-foot">{footer(close)}</div>}

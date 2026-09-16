@@ -28,6 +28,9 @@ export function VideoGridStyles() {
                   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       .vg-tile:hover .vg-title { color: var(--cs-accent); }
       .vg-meta { font-size: 11px; color: var(--cs-muted); }
+      /* The channel line, for a grid that mixes channels (see VideoTile's source prop). */
+      .vg-channel { display: block; margin-top: 6px; text-decoration: none; }
+      .vg-channel:hover { color: var(--cs-ink); }
       .vg-clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
       .vg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
       /* Score tones. Only the outlier is coloured and bold — it is the one case the product
