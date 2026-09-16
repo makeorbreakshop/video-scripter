@@ -7,6 +7,7 @@ import {
   BOOTSTRAP_LATEST_WRITE_SQL,
   BOOTSTRAP_CLAIM_SQL,
   DEFAULT_BOOTSTRAP_R2_CONCURRENCY,
+  MAX_BOOTSTRAP_VIDEOS,
   MAX_BOOTSTRAP_R2_CONCURRENCY,
   bootstrapSource,
   observationStateFromRows,
@@ -62,6 +63,16 @@ test('the tiny count query is separate from and precedes the raw-row query', () 
   expect(script).toContain('--raw-row-budget');
   expect(script.indexOf('BOOTSTRAP_LATEST_WRITE_SQL')).toBeLessThan(script.indexOf('BOOTSTRAP_RAW_COUNT_SQL'));
   expect(script.indexOf('BOOTSTRAP_RAW_COUNT_SQL')).toBeLessThan(script.indexOf('BOOTSTRAP_RAW_ROWS_SQL'));
+});
+
+test('bootstrap reserves a bounded recent-dependency lane without starving FIFO repair', () => {
+  expect(MAX_BOOTSTRAP_VIDEOS).toBe(500);
+  expect(BOOTSTRAP_CLAIM_SQL).toMatch(/recent_dependencies as materialized/i);
+  expect(BOOTSTRAP_CLAIM_SQL).toContain("marked_at >= now() - interval '10 minutes'");
+  expect(BOOTSTRAP_CLAIM_SQL).toMatch(/ceil\(\$1::numeric \/ 5\)/i);
+  expect(BOOTSTRAP_CLAIM_SQL).toMatch(/fifo as materialized/i);
+  expect(BOOTSTRAP_CLAIM_SQL).toMatch(/not exists \(select 1 from recent_dependencies/i);
+  expect(BOOTSTRAP_CLAIM_SQL).toMatch(/greatest\(\$1 - \(select count\(\*\) from recent_dependencies\), 0\)/i);
 });
 
 test('a raw bootstrap preserves source flags and produces the canonical observations', () => {

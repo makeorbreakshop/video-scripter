@@ -103,9 +103,9 @@ export const BACKGROUND_JOBS: BackgroundJob[] = [
     label: 'com.mfm.video-scripter-observation-bootstrap',
     script: 'bootstrap-observation-cache.ts',
     args: [
-      '--max-videos', '100',
+      '--max-videos', '500',
       '--max-changes', '5000',
-      '--raw-video-budget', '100',
+      '--raw-video-budget', '500',
       '--raw-row-budget', '20000',
     ],
     intervalSeconds: 300,
