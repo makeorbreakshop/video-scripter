@@ -20,6 +20,7 @@
 // Routine drains never read raw observation history from Postgres. They read the compact v2
 // projection produced by materialize-observations.ts, plus the small metadata tables needed by
 // the chart. Existing R2 files are merged back in so already-archived history is retained.
+import { hybridChartsEnabled } from '../lib/readings/hybrid-chart';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
@@ -39,6 +40,12 @@ const has = (f: string) => args.includes(f);
 const arg = (f: string): string | undefined => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
 
 const drain = has('--drain');
+// Activate only after the hybrid web reader has passed production read-only verification.
+// Batched raw archives, ingestion, materialization and scoring continue independently.
+if (drain && hybridChartsEnabled()) {
+  console.log('hybrid charts: scheduled series publication disabled (0 database reads, 0 R2 writes)');
+  process.exit(0);
+}
 const all = has('--all');
 const dry = has('--dry-run') || has('--dry');
 const withArchive = has('--with-archive');

@@ -36,6 +36,8 @@ export interface ObservationState {
   publishedAt: string;
   lastChangeId: number;
   points: ObservationStatePoint[];
+  /** Real corrections only. Retention deletes suppress deltas and never enter this set. */
+  deleted?: Array<{ source: ObservationSource; at: string }>;
 }
 
 const sourceOrder: Record<ObservationSource, number> = { snapshot: 0, rss: 1, sample: 2 };
@@ -57,13 +59,18 @@ export function applyObservationChanges(
   changes: readonly ObservationChange[],
 ): ObservationState {
   const points = new Map(state.points.map((point) => [keyOf(point), point]));
+  const deleted = new Map((state.deleted ?? []).map(point => [keyOf(point), point]));
   let lastChangeId = state.lastChangeId;
   for (const change of [...changes].sort((a, b) => a.changeId - b.changeId)) {
     if (change.changeId <= state.lastChangeId) continue;
     const at = iso(change.at);
     const key = keyOf({ source: change.source, at });
-    if (change.operation === 'delete') points.delete(key);
-    else points.set(key, {
+    if (change.operation === 'delete') {
+      points.delete(key);
+      deleted.set(key, { source: change.source, at });
+    } else {
+      deleted.delete(key);
+      points.set(key, {
       source: change.source,
       at,
       views: change.views === null ? null : Number(change.views),
@@ -71,10 +78,13 @@ export function applyObservationChanges(
       ...(change.receivedAt == null ? {} : { receivedAt: iso(change.receivedAt) }),
       modelEligible: change.source === 'rss' ? change.modelEligible !== false : true,
       conflicted: change.source === 'rss' ? Boolean(change.conflicted) : false,
-    });
+      });
+    }
     lastChangeId = Math.max(lastChangeId, change.changeId);
   }
-  return { ...state, lastChangeId, points: canonical(points.values()) };
+  const { deleted: _previousDeleted, ...rest } = state;
+  return { ...rest, lastChangeId, points: canonical(points.values()),
+    ...(deleted.size ? { deleted: [...deleted.values()].sort((a, b) => keyOf(a).localeCompare(keyOf(b))) } : {}) };
 }
 
 /** Run the one canonical merge implementation at read time; the stored raw subset remains mutable. */

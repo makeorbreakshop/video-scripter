@@ -3,6 +3,8 @@ import { unstable_cache } from 'next/cache';
 import { tableFromRows, type BandTable } from '../scoring/bands';
 import { q, one } from './db';
 import { readSeriesFile, noteSeriesRead } from '../readings/series-store';
+import { hybridChartsEnabled, type ChartSnapshot } from '../readings/hybrid-chart';
+import { readHybridChart } from '../readings/chart-runtime';
 import { seriesRss } from '../readings/series';
 import { labelByPhash, hamming } from '../thumbs/phash';
 import { longformSql } from '../scoring/longform';
@@ -290,6 +292,8 @@ export async function channelScores(channelId: string) {
 // Everything the admin video page needs: the video, both actual series, packaging history,
 // the stored model-v3 score, and the fitted global multipliers that draw the expected curve.
 export type VideoPageData = {
+  chartStatus?: ChartSnapshot['status'];
+  chartAsOf?: string | null;
   video: any;
   /**
    * `at` is the historical noon-UTC anchor on snapshot_date. `created_at` is when the tracker
@@ -322,7 +326,7 @@ export type VideoPageData = {
  * DRAWS. A hit here removes three range scans over view_snapshots, view_samples and rss_samples
  * from every page view; a miss falls back and says so, so the fallback rate is measurable.
  */
-async function videoSeriesParts(id: string): Promise<Pick<VideoPageData, 'snapshots' | 'samples' | 'rss' | 'thumbs' | 'titles'>> {
+async function videoSeriesParts(id: string): Promise<Pick<VideoPageData, 'snapshots' | 'samples' | 'rss' | 'thumbs' | 'titles' | 'chartStatus' | 'chartAsOf'>> {
   // OPT-IN, and off by default until the backfill has covered the corpus.
   //
   // A miss is not free: it is a 121 ms R2 round trip (measured, 60 recent videos) ON TOP OF the
@@ -334,10 +338,15 @@ async function videoSeriesParts(id: string): Promise<Pick<VideoPageData, 'snapsh
   //     SERIES_DISABLE=1     hard off, overriding SERIES_READ — the rollback, and the control
   //                          arm of lib/readings/series-equality.integration.test.ts
   const on = process.env.SERIES_READ === '1' && process.env.SERIES_DISABLE !== '1';
-  const file = on ? await readSeriesFile(id) : null;
-  if (on) noteSeriesRead(id, file);
+  const hybrid = hybridChartsEnabled();
+  const chart = hybrid ? await readHybridChart(id) : null;
+  const file = hybrid ? chart!.file : on ? await readSeriesFile(id) : null;
+  const status = chart ? { chartStatus: chart.status, chartAsOf: chart.asOf } : {};
+  if (hybrid && !file) return { snapshots: [], samples: [], rss: [], thumbs: [], titles: [], ...status };
+  if (on && !hybrid) noteSeriesRead(id, file);
   if (file) {
     return {
+      ...status,
       snapshots: file.snapshots.map((r) => ({
         at: r.at, created_at: r.created_at, views: r.views,
         days_since_published: r.days_since_published as number, like_count: r.like_count as number,

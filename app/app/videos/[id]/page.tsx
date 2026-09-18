@@ -58,7 +58,17 @@ async function VideoBody({ id, channelId, raw }: { id: string; channelId: string
       <section className="cs-section" style={{ marginTop: 18 }}>
         {!v.broadcastNotice && <h2>Views since publish</h2>}
         {rawNote && <p className="cs-sub">{rawNote}</p>}
-        <VideoChart
+        {v.chartStatus === 'saved' && <p className="cs-sub" role="status">
+          Showing saved chart data{v.chartAsOf && <> from <LocalTime ms={Date.parse(v.chartAsOf)} /></>}.
+          {' '}Latest readings are temporarily unavailable.
+        </p>}
+        {v.chartStatus === 'partial' && <p className="cs-sub" role="status">
+          Recent readings are available. Some older history could not be loaded.
+        </p>}
+        {v.chartStatus === 'unavailable' && <p className="cs-sub" role="status">
+          Chart data is temporarily unavailable. Please try again shortly.
+        </p>}
+        {v.chartStatus !== 'unavailable' && <VideoChart
           actuals={actuals}
           publishedAt={v.chartOriginAt}
           curve={v.curve}
@@ -67,7 +77,7 @@ async function VideoBody({ id, channelId, raw }: { id: string; channelId: string
           events={v.packagingEvents ?? []}
           score={v.broadcastNotice ? null : v.score?.score ?? null}
           comparison={v.comparison}
-        />
+        />}
       </section>
 
       {/* One card is a history too: card 0 is the publish. A video that never changed its

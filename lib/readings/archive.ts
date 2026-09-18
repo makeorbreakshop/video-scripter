@@ -72,13 +72,30 @@ export async function putObject(cfg: R2Config, key: string, body: Buffer, conten
 }
 
 /** null for a key that is not there — a missing day is a fact, not an error. */
-export async function getObject(cfg: R2Config, key: string): Promise<Buffer | null> {
+export async function getObject(cfg: R2Config, key: string, bounds?: {
+  maxBytes: number; timeoutMs: number;
+}): Promise<Buffer | null> {
   const { GetObjectCommand } = await import('@aws-sdk/client-s3');
   const c = await s3(cfg);
   try {
-    const res = await c.send(new GetObjectCommand({ Bucket: cfg.bucket, Key: key }));
+    const res = await c.send(new GetObjectCommand({ Bucket: cfg.bucket, Key: key }),
+      bounds ? { abortSignal: AbortSignal.timeout(bounds.timeoutMs) } : undefined);
     const chunks: Buffer[] = [];
-    for await (const chunk of res.Body as AsyncIterable<Uint8Array>) chunks.push(Buffer.from(chunk));
+    let bytes = 0;
+    const rejectOversize = () => {
+      if (bounds && bytes > bounds.maxBytes) {
+        (res.Body as { destroy?: () => void })?.destroy?.();
+        throw new Error(`object exceeds ${bounds.maxBytes}-byte read budget`);
+      }
+    };
+    bytes = Number(res.ContentLength ?? 0);
+    rejectOversize();
+    bytes = 0;
+    for await (const chunk of res.Body as AsyncIterable<Uint8Array>) {
+      bytes += chunk.byteLength;
+      rejectOversize();
+      chunks.push(Buffer.from(chunk));
+    }
     return Buffer.concat(chunks);
   } catch (e) {
     const name = (e as { name?: string; $metadata?: { httpStatusCode?: number } });

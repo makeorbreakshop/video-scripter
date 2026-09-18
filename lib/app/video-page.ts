@@ -31,6 +31,8 @@ export type ThumbVersionView = { version: number; first_seen: string; url: strin
 export type TitleVersionView = { version: number; title: string; first_seen: string };
 
 export type VideoPageView = {
+  chartStatus?: VideoPageData['chartStatus'];
+  chartAsOf?: string | null;
   ageDays: number;
   pace: number | null; // views now ÷ what a typical video on the channel has at this age
   /** What a typical video on this channel has by now — the denominator of `pace`. */
@@ -196,7 +198,8 @@ export async function loadVideoHead(id: string, now: number = Date.now()): Promi
 }
 
 export async function loadVideoPage(id: string, now: number = Date.now()): Promise<VideoPageView | null> {
-  const { video: v, snapshots: rawSnapshots, samples, rss, thumbs, titles, score, mult, longtail, bands } = await adminVideoPage(id);
+  const { video: v, snapshots: rawSnapshots, samples, rss, thumbs, titles, score, mult, longtail, bands,
+    chartStatus, chartAsOf } = await adminVideoPage(id);
   if (!v) return null;
 
   // Use the scorer's accepted date-only anchor; created_at may be an import or an earlier
@@ -260,6 +263,7 @@ export async function loadVideoPage(id: string, now: number = Date.now()): Promi
 
   return {
     id,
+    chartStatus, chartAsOf,
     title: v.title,
     channelId: v.channel_id,
     channelName: v.channel_name,

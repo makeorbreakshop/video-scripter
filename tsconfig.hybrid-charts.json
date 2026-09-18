@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "types/parquetjs-lite.d.ts",
+    "lib/readings/hybrid-*.ts",
+    "lib/readings/chart-*.ts",
+    "lib/scoring/observation-state.ts",
+    "lib/scoring/observation-state.test.ts",
+    "lib/admin/queries.ts",
+    "lib/app/cached.ts",
+    "lib/app/video-page.ts",
+    "app/app/videos/[id]/page.tsx",
+    "scripts/rebuild-series.ts",
+    "scripts/verify-hybrid-charts.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

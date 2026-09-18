@@ -72,3 +72,14 @@ test('the v2 projection has a deterministic gzip round trip', () => {
   expect(decodeObservationState(encodeObservationState(state))).toEqual(state);
   expect(encodeObservationState(state)).toEqual(encodeObservationState(state));
 });
+
+test('correction tombstones survive encoding and clear on a later source-key upsert', () => {
+  const initial = emptyObservationState('v', '2026-09-01T00:00:00Z');
+  const change = { videoId: 'v', source: 'sample' as const, at: '2026-09-01T01:00:00Z', views: 10 };
+  const deleted = applyObservationChanges(initial, [{ ...change, changeId: 1, operation: 'delete' }]);
+  expect((decodeObservationState(encodeObservationState(deleted)) as any).deleted).toEqual([
+    { source: 'sample', at: '2026-09-01T01:00:00.000Z' },
+  ]);
+  const restored = applyObservationChanges(deleted, [{ ...change, changeId: 2, operation: 'upsert' }]);
+  expect((restored as any).deleted ?? []).toEqual([]);
+});

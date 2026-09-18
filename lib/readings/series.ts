@@ -72,6 +72,8 @@ export interface VideoSeriesFile {
   rss: SeriesRss[];
   thumbs: SeriesThumb[];
   titles: SeriesTitle[];
+  /** Optional overlay corrections; legacy version-1 files remain readable. */
+  deleted?: Array<{ source: 'snapshot' | 'sample' | 'rss'; at: string }>;
 }
 
 /** `series/<video_id>.json.gz`. Flat: R2 has no directories and a video id is already unique. */

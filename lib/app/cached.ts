@@ -13,6 +13,7 @@
 //
 // Invalidation is by tag: `channel:<id>` and `video:<id>` (lib/app/revalidate.ts).
 import { unstable_cache } from 'next/cache';
+import { hybridChartsEnabled } from '../readings/hybrid-chart';
 import {
   channelHeader as channelHeaderUncached,
   channelVideos as channelVideosUncached,
@@ -100,8 +101,8 @@ export function cachedVideoPage(videoId: string, channelId?: string | null): Pro
     // v2: the entry's SHAPE changed (packagingEvents / packagingCards). A cached v1 entry has
     // neither, and the page reading `.length` off undefined is a server-side exception served
     // to every reader whose video was already warm. A new shape is a new key.
-    ['video-page-v2', videoId],
-    { revalidate: VIDEO_TTL, tags }
+    [hybridChartsEnabled() ? 'video-page-hybrid-v1' : 'video-page-v2', videoId],
+    { revalidate: hybridChartsEnabled() ? 60 : VIDEO_TTL, tags }
   )();
 }
 
