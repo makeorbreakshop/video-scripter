@@ -18,9 +18,12 @@ test('a chart preserves archived history and overlays corrected/latest observati
   expect(result.asOf).toBe(at);
 });
 
-test('a first-ever chart is built from compact state without requiring a saved file', async () => {
-  const read = createHybridChartReader({ baseline: async () => null, current: async () => latest() });
+test('a chart without a saved baseline renders compact state without claiming verified historical coverage', async () => {
+  const current = jest.fn(async () => latest());
+  const read = createHybridChartReader({ baseline: async () => null, current });
   expect((await read('video')).file?.samples[0].views).toBe(200);
+  expect((await read('video')).status).toBe('partial');
+  expect(current).toHaveBeenCalledTimes(1);
 });
 
 test('50 concurrent views share one assembly and repeated views use the short cache', async () => {
@@ -56,7 +59,7 @@ test('failed reads recover on retry instead of retaining a rejected promise', as
   const current = jest.fn().mockRejectedValueOnce(Error('down')).mockResolvedValue(latest());
   const read = createHybridChartReader({ baseline: async () => null, current });
   expect((await read('video')).status).toBe('unavailable');
-  expect((await read('video')).status).toBe('current');
+  expect((await read('video')).status).toBe('partial');
 });
 
 test('rejects a cross-video object rather than displaying another video history', async () => {

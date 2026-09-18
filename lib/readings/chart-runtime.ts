@@ -3,7 +3,7 @@ import pg from 'pg';
 import { poolWithTimeout } from '../admin/db';
 import { getObject, r2Config } from './archive';
 import { seriesKey, type VideoSeriesFile } from './series';
-import { readCurrentChart, MAX_CHART_DECODED_BYTES } from './chart-current';
+import { readOrRequestCurrentChart, MAX_CHART_DECODED_BYTES } from './chart-current';
 import { createHybridChartReader } from './hybrid-chart';
 
 let chartPool: pg.Pool | undefined;
@@ -29,6 +29,6 @@ export async function readChartBaseline(id: string): Promise<VideoSeriesFile | n
 export const readHybridChart = createHybridChartReader({
   baseline: readChartBaseline,
   current: (id) => poolWithTimeout(getChartPool(), 750, async (client) =>
-    readCurrentChart(id, async <T>(sql: string, params: unknown[]) =>
+    readOrRequestCurrentChart(id, async <T>(sql: string, params: unknown[]) =>
       (await client.query(sql, params)).rows as T[]), 'video-scripter:chart-read'),
 });

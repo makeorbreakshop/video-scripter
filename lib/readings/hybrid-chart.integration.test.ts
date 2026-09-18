@@ -1,5 +1,5 @@
 import pg from 'pg';
-import { readCurrentChart, CURRENT_CHART_SQL, MAX_CHART_STATE_BYTES, MAX_CHART_METADATA_BYTES } from './chart-current';
+import { readCurrentChart, readOrRequestCurrentChart, REQUEST_CHART_BOOTSTRAP_SQL, CURRENT_CHART_SQL, MAX_CHART_STATE_BYTES, MAX_CHART_METADATA_BYTES } from './chart-current';
 import { createHybridChartReader } from './hybrid-chart';
 import { buildSeriesFile } from './series';
 import { emptyObservationState, applyObservationChanges, encodeObservationState } from '../scoring/observation-state';
@@ -21,7 +21,9 @@ suite('hybrid chart on isolated local PostgreSQL', () => {
       create table videos(id text primary key, published_at timestamptz);
       create table video_obs_cache(video_id text primary key, obs bytea, built_at timestamptz,
         last_change_id bigint, format int);
-      create table obs_cache_dirty(video_id text primary key, generation bigint, requires_bootstrap boolean default false);
+      create table obs_cache_dirty(video_id text primary key, generation bigint, requires_bootstrap boolean default false,
+        marked_at timestamptz default now(),not_before timestamptz default now());
+      create table observation_change_log(video_id text,change_id bigint,primary key(video_id,change_id));
       create table thumbnail_versions(video_id text, version int, first_seen timestamptz, last_checked timestamptz,
         sha256 text, phash text, r2_uploaded_at timestamptz, primary key(video_id, version));
       create table title_versions(video_id text, version int, title text, first_seen timestamptz,
@@ -33,13 +35,13 @@ suite('hybrid chart on isolated local PostgreSQL', () => {
     `);
   });
   beforeEach(async () => {
-    await pool.query('delete from obs_cache_dirty; delete from title_versions; delete from thumbnail_versions');
+    await pool.query('delete from obs_cache_dirty; delete from title_versions; delete from thumbnail_versions; delete from observation_change_log');
     await pool.query(`insert into video_obs_cache values ('v',$1,$2,9,2)
       on conflict(video_id) do update set obs=excluded.obs, built_at=excluded.built_at, last_change_id=9,format=2`,
     [encodeObservationState(baseState), at]);
   });
   afterAll(async () => {
-    await pool.query('drop table title_versions,thumbnail_versions,obs_cache_dirty,video_obs_cache,videos');
+    await pool.query('drop table title_versions,thumbnail_versions,obs_cache_dirty,video_obs_cache,videos,observation_change_log');
     await pool.end();
   });
 
@@ -82,6 +84,30 @@ suite('hybrid chart on isolated local PostgreSQL', () => {
     const result = await read('v');
     expect(result.file?.samples.map(p => p.views)).toEqual([300]);
     expect(result.file?.rss.map(p => p.views)).toEqual([90]);
+  });
+
+  test('missing existing video requests one recovery at the captured generation and becomes readable after bootstrap', async () => {
+    await pool.query("delete from video_obs_cache where video_id='v'");
+    await pool.query("insert into observation_change_log values('v',7),('v',9)");
+    expect(await readOrRequestCurrentChart('v', query)).toBeNull();
+    await readOrRequestCurrentChart('v', query);
+    expect((await pool.query('select video_id,generation,requires_bootstrap from obs_cache_dirty')).rows)
+      .toEqual([{ video_id: 'v', generation: '9', requires_bootstrap: true }]);
+    await pool.query("insert into video_obs_cache values('v',$1,$2,9,2)", [encodeObservationState(baseState), at]);
+    await pool.query("delete from obs_cache_dirty where video_id='v'");
+    expect((await readOrRequestCurrentChart('v', query))?.samples[0].views).toBe(300);
+    expect((await pool.query('select * from obs_cache_dirty')).rows).toHaveLength(0);
+  });
+
+  test('recovery skips unknown videos/current caches and preserves an existing queue generation', async () => {
+    await query(REQUEST_CHART_BOOTSTRAP_SQL, ['unknown']);
+    await query(REQUEST_CHART_BOOTSTRAP_SQL, ['v']);
+    expect((await pool.query('select * from obs_cache_dirty')).rows).toHaveLength(0);
+    await pool.query("delete from video_obs_cache where video_id='v'");
+    await pool.query("insert into obs_cache_dirty(video_id,generation,requires_bootstrap) values('v',99,false)");
+    await query(REQUEST_CHART_BOOTSTRAP_SQL, ['v']);
+    expect((await pool.query('select generation,requires_bootstrap from obs_cache_dirty')).rows)
+      .toEqual([{generation: '99', requires_bootstrap: false}]);
   });
 
   test('EXPLAIN uses an indexed video-state lookup', async () => {

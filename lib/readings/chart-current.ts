@@ -7,6 +7,23 @@ export const MAX_CHART_METADATA_BYTES = 128_000;
 export const MAX_CHART_DECODED_BYTES = 8 * 1024 * 1024;
 export interface ChartQuery { <T>(sql: string, params: unknown[]): Promise<T[]> }
 
+/** One deduplicated recovery request; the existing byte-bounded worker owns raw bootstrap. */
+export const REQUEST_CHART_BOOTSTRAP_SQL = `
+  /* trace:chart.request-bootstrap */
+  insert into obs_cache_dirty(video_id,generation,requires_bootstrap,marked_at,not_before)
+  select v.id, coalesce((select change_id from observation_change_log
+    where video_id=v.id order by change_id desc limit 1),0), true, now(), now()
+  from videos v where v.id=$1 and v.published_at is not null
+    and not exists(select 1 from video_obs_cache c where c.video_id=v.id and c.format=2)
+    and not exists(select 1 from obs_cache_dirty d where d.video_id=v.id)
+  on conflict(video_id) do nothing`;
+
+export async function readOrRequestCurrentChart(id: string, query: ChartQuery): Promise<VideoSeriesFile | null> {
+  const file = await readCurrentChart(id, query);
+  if (!file) await query(REQUEST_CHART_BOOTSTRAP_SQL, [id]);
+  return file;
+}
+
 /**
  * One primary-key lookup plus two bounded packaging index reads. Reject before returning bytea
  * or JSON if either exceeds its budget; never ship a truncated chart as a complete result.

@@ -63,7 +63,7 @@ async function VideoBody({ id, channelId, raw }: { id: string; channelId: string
           {' '}Latest readings are temporarily unavailable.
         </p>}
         {v.chartStatus === 'partial' && <p className="cs-sub" role="status">
-          Recent readings are available. Some older history could not be loaded.
+          Available readings are shown. Historical coverage has not been fully verified.
         </p>}
         {v.chartStatus === 'unavailable' && <p className="cs-sub" role="status">
           Chart data is temporarily unavailable. Please try again shortly.

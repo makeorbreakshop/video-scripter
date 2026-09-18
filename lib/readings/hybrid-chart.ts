@@ -88,8 +88,8 @@ function validFile(file: VideoSeriesFile | null, id: string): file is VideoSerie
 }
 
 /**
- * Read-only assembly. No PUT, raw-history query, archive scan or queue write can be triggered by
- * this interface. Single-flight is per process; separate instances may perform duplicate reads,
+ * Read-only assembly. Adapters may request bounded background recovery on a compact-state miss,
+ * but never read raw history or publish R2 objects. Single-flight is per process; instances may duplicate reads,
  * but never duplicate publications. All data is public video history, not user-specific state.
  */
 export function createHybridChartReader(deps: ChartReaderDependencies) {
@@ -122,10 +122,11 @@ export function createHybridChartReader(deps: ChartReaderDependencies) {
       const current = newResult.status === 'fulfilled' && validFile(newResult.value, id) ? newResult.value : null;
       const file = current ? (oldFile ? overlayChart(oldFile, current) : current) : lastGood?.file ?? oldFile;
       const result: ChartSnapshot = {
-        file, status: current ? (oldResult.status === 'rejected' ? 'partial' : 'current') : file ? 'saved' : 'unavailable',
+        // Absence alone cannot distinguish a first-ever chart from an unarchived legacy chart.
+        file, status: current ? (oldFile ? 'current' : 'partial') : file ? 'saved' : 'unavailable',
         asOf: current?.built_at ?? lastGood?.asOf ?? file?.built_at ?? null,
       };
-      if (result.status === 'current') snapshots.set(id, result, now() + CHART_CACHE_MS);
+      if (current && oldResult.status === 'fulfilled') snapshots.set(id, result, now() + CHART_CACHE_MS);
       return result;
     })();
     pending.set(id, work);
