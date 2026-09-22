@@ -8,6 +8,10 @@ import { embedCatalogSince } from './embed-catalog';
 import { embedChannels } from './embed-channels';
 import { embedVideos } from './embed-videos';
 import { chunks, db, floatArg, QDRANT_BATCH_SIZE, READ_BATCH_SIZE, runMain, sinceDate } from './common';
+import {
+  ACQUIRE_SQL, acquireOutcome, BREAK_STALE_SQL, HEARTBEAT_MS, HEARTBEAT_SQL, holderId, LEASE_NAME, LEASE_TTL_MS,
+  LeaseRow, READ_SQL, RELEASE_SQL,
+} from '../../lib/semantic/sync-lease';
 
 // Bounds for the catalog/identity leg of the hourly run. The catalog backfill was a one-time 1.3 GB
 // read; the incremental pass must stay small, so cap both the rows it scans and the dollars it spends.
@@ -88,16 +92,54 @@ async function refreshVideoPayloads(since: Date): Promise<number> {
   return refreshed;
 }
 
-export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } = {}): Promise<void> {
-  const acquired = await db().query<{ acquired: boolean }>(
-    `select pg_try_advisory_lock(hashtext('channelsmith-semantic-sync')) as acquired`,
-  );
-  if (!acquired.rows[0].acquired) {
-    console.log('semantic sync already running; skipped');
-    return;
-  }
+async function readLease(): Promise<LeaseRow | null> {
+  const result = await db().query<LeaseRow>(READ_SQL, [LEASE_NAME]);
+  return result.rows[0] ?? null;
+}
 
+/**
+ * Takes the run lease or reports who holds it. Every run logs one `lease` line: `lock: acquired`
+ * (with `took_over_stale_from` when a dead run's row was displaced) or `lock: skipped` with
+ * `held_by`, `held_since` and `expires_at`. `waited_ms` is the time the acquire round-trip took,
+ * which is where a pooler queue shows up.
+ */
+async function acquireLease(holder: string): Promise<boolean> {
+  const started = Date.now();
+  const before = await readLease();
+  const upsert = await db().query<{ holder: string }>(ACQUIRE_SQL, [LEASE_NAME, holder, LEASE_TTL_MS]);
+  const acquired = upsert.rows.length > 0;
+  const after = acquired ? null : await readLease();
+  const outcome = acquireOutcome(before, acquired, after, new Date(), Date.now() - started);
+  console.log(JSON.stringify({ lease: LEASE_NAME, holder, ttl_ms: LEASE_TTL_MS, ...outcome }));
+  return acquired;
+}
+
+/** `--break-stale-lock`: clears the lease only if it is past its TTL. A live lease is left alone. */
+export async function breakStaleLock(): Promise<void> {
+  const before = await readLease();
+  const cleared = await db().query<{ holder: string; acquired_at: Date }>(BREAK_STALE_SQL, [LEASE_NAME]);
+  console.log(JSON.stringify({
+    lease: LEASE_NAME, action: 'break-stale-lock',
+    cleared: cleared.rows[0]
+      ? { holder: cleared.rows[0].holder, acquired_at: cleared.rows[0].acquired_at.toISOString() }
+      : null,
+    kept: cleared.rows.length || !before
+      ? null
+      : { holder: before.holder, held_since: before.acquired_at.toISOString(), expires_at: before.expires_at.toISOString() },
+  }));
+}
+
+export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } = {}): Promise<void> {
   const startedAt = new Date();
+  const holder = holderId(os.hostname(), process.pid, startedAt);
+  if (!(await acquireLease(holder))) return;
+  // Keep the lease alive for as long as this process is; if it dies, the row expires on its own.
+  const heartbeat = setInterval(() => {
+    db().query(HEARTBEAT_SQL, [LEASE_NAME, holder, LEASE_TTL_MS])
+      .catch((error) => console.error(`lease heartbeat failed: ${error instanceof Error ? error.message : String(error)}`));
+  }, HEARTBEAT_MS);
+  heartbeat.unref();
+
   const windowStart = sinceDate('30d');
   const watermark = await readWatermark(windowStart);
   const changedSince = new Date(Math.max(windowStart.getTime(), watermark.getTime() - 5 * 60_000));
@@ -141,10 +183,13 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
         identity_built: identity.built, identity_skipped: identity.skipped,
       } }));
   } finally {
-    await db().query(`select pg_advisory_unlock(hashtext('channelsmith-semantic-sync'))`);
+    clearInterval(heartbeat);
+    await db().query(RELEASE_SQL, [LEASE_NAME, holder]);
   }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runMain(() => syncSemantic({ dry: process.argv.includes('--dry'), maxUsd: floatArg(process.argv, '--max-usd') ?? undefined }));
+  runMain(() => process.argv.includes('--break-stale-lock')
+    ? breakStaleLock()
+    : syncSemantic({ dry: process.argv.includes('--dry'), maxUsd: floatArg(process.argv, '--max-usd') ?? undefined }));
 }
