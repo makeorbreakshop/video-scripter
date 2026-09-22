@@ -58,7 +58,7 @@ const LONGFORM_PREDICATE = `
   and nullif(btrim(v.title), '') is not null`;
 
 /** Backfill: whole catalog in id order, so a full pass has a stable resumable cursor. */
-async function* pages(since: string | Date | null): AsyncGenerator<Row[]> {
+async function* pages(since: string | Date | null, channelIds: string[] | null = null): AsyncGenerator<Row[]> {
   let cursor = '';
   for (;;) {
     const { rows } = await db().query<Row>(
@@ -66,9 +66,10 @@ async function* pages(since: string | Date | null): AsyncGenerator<Row[]> {
         where v.id > $1
           and ${LONGFORM_PREDICATE}
           and ($3::timestamptz is null or v.published_at >= $3)
+          and ($4::text[] is null or v.channel_id = any($4))
         order by v.id
         limit $2`,
-      [cursor, PAGE, since],
+      [cursor, PAGE, since, channelIds],
     );
     if (!rows.length) return;
     yield rows;
@@ -133,6 +134,8 @@ export interface EmbedCatalogOptions {
   limit?: number | null;
   /** Per-page progress lines (on for the backfill, off for the hourly sync). */
   verbose?: boolean;
+  /** Restrict the backfill scan to these channels (ignored by the incremental path). */
+  channelIds?: string[] | null;
 }
 
 export interface EmbedCatalogResult {
@@ -154,7 +157,7 @@ export async function embedCatalog(options: EmbedCatalogOptions = {}): Promise<E
   const started = Date.now();
   const source = options.updatedSince
     ? incrementalPages(options.publishedFrom ?? new Date(Date.now() - 30 * 86_400_000), options.updatedSince)
-    : pages(options.since ?? null);
+    : pages(options.since ?? null, options.channelIds ?? null);
   outer: for await (const rows of source) {
     totals.scanned += rows.length;
     for (const r of rows) totals.bytes_read += (r.title?.length ?? 0) + (r.description?.length ?? 0) + 60;
@@ -201,6 +204,9 @@ async function main(): Promise<void> {
     maxUsd: floatArg(process.argv, '--max-usd') ?? 10,
     limit: intArg(process.argv, '--limit'),
     since: argValue(process.argv, '--since'),
+    channelIds: (argValue(process.argv, '--channel-ids') || '').split(',').filter(Boolean).length
+      ? (argValue(process.argv, '--channel-ids') as string).split(',').filter(Boolean)
+      : null,
     verbose: true,
   });
   const qdrant = new SemanticQdrant({ timeoutMs: 60_000 });

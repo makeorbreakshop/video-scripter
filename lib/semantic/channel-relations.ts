@@ -11,12 +11,23 @@ export interface RelatedChannel {
   channel_name: string;
   score: number;
   medoid_title: string | null;
+  /**
+   * How much this channel looks like the channels ChannelSmith's users track — see
+   * scripts/semantic/creator-likeness.ts. null when the point predates that script.
+   */
+  creator_likeness: number | null;
 }
 
 export interface ChannelRelations {
   thresholds: BucketThresholds;
   near: RelatedChannel[];
   adjacent: RelatedChannel[];
+  /**
+   * The ranked far band, still in similarity order. Carried rather than counted because "far"
+   * on /app/angles is a distance band you walk outwards through — closest-first — not the rest
+   * of the world; a consumer that only wants the size still has far_count.
+   */
+  far: RelatedChannel[];
   far_count: number;
 }
 
@@ -24,6 +35,7 @@ interface IdentityPayload {
   channel_id?: string;
   channel_name?: string;
   medoid_title?: string;
+  creator_likeness?: number;
 }
 
 export async function channelRelations(
@@ -51,8 +63,9 @@ export async function channelRelations(
       channel_name: point.payload.channel_name ?? (point.payload.channel_id as string),
       score: point.score,
       medoid_title: point.payload.medoid_title ?? null,
+      creator_likeness: typeof point.payload.creator_likeness === 'number' ? point.payload.creator_likeness : null,
     }));
 
   const { thresholds, near, adjacent, far } = channelBuckets(neighbors);
-  return { thresholds, near, adjacent, far_count: far.length };
+  return { thresholds, near, adjacent, far, far_count: far.length };
 }

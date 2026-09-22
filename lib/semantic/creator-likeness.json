@@ -1,0 +1,9 @@
+{
+  "floor": 0.6758,
+  "k": 5,
+  "percentile": 5,
+  "reference_channels": 434,
+  "identity_channels": 6467,
+  "below_floor": 2133,
+  "computed_at": "2026-09-16T18:06:57.730Z"
+}

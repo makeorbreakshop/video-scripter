@@ -169,6 +169,7 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
       usd: +catalog.actual_usd.toFixed(6), est_usd: +catalog.est_usd.toFixed(6), tokens: catalog.tokens,
       channels_touched: catalog.channel_ids.length, identity_channels: identityChannels.length,
       identity_built: identity.built, identity_skipped: identity.skipped,
+      identity_missing_likeness: identity.missingLikeness,
       capped: catalog.scanned >= CATALOG_MAX_ROWS || catalog.channel_ids.length > identityChannels.length,
       t_s: +((Date.now() - catalogStarted) / 1_000).toFixed(1),
     }));
@@ -181,6 +182,10 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
         usd: +catalog.actual_usd.toFixed(6), est_usd: +catalog.est_usd.toFixed(6),
         channels_touched: catalog.channel_ids.length,
         identity_built: identity.built, identity_skipped: identity.skipped,
+        // Rebuilt identity points that went out without creator_likeness. Must be 0: a whole-point
+        // upsert replaces the payload, so anything else means the hourly run is deleting the value
+        // scripts/semantic/creator-likeness.ts wrote.
+        identity_missing_likeness: identity.missingLikeness,
       } }));
   } finally {
     clearInterval(heartbeat);

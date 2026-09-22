@@ -9,8 +9,10 @@
 //        npx tsx scripts/semantic/build-channel-identity.ts --probe UCxxxx [--k 25]
 import { EMBEDDING_DIMS } from '../../lib/semantic/documents';
 import { SemanticQdrant, uuid5ForId } from '../../lib/semantic/qdrant';
+import { likenessScores, mergeLikenessPayload, type TrackedVector } from '../../lib/semantic/creator-likeness';
 import { argValue, chunks, db, intArg, runMain } from './common';
 import { CATALOG_COLLECTION } from './embed-catalog';
+import { loadTrackedVectors } from './creator-likeness';
 
 export const IDENTITY_COLLECTION = 'channels_identity_v1';
 const GUARDED_COLLECTION = 'videos_guarded_v1';
@@ -135,6 +137,56 @@ export interface BuildIdentityOptions {
   scores?: Map<string, number>;
   names?: Map<string, string>;
   nowSec?: number;
+  /** Preloaded tracked reference vectors; loaded once per call when omitted. */
+  trackedVectors?: TrackedVector[] | null;
+}
+
+export interface BuildIdentityResult {
+  built: number;
+  skipped: number;
+  /** Rebuilt points written without `creator_likeness`. Expected to be zero; anything else is data loss. */
+  missingLikeness: number;
+}
+
+interface PendingPoint {
+  channelId: string;
+  mean: number[];
+  point: { id: string; vector: Record<string, number[]>; payload: Record<string, unknown> };
+}
+
+/**
+ * Give every pending point a `creator_likeness` before it is written.
+ *
+ * An upsert replaces the whole payload, so a rebuild that omits this field deletes the value
+ * scripts/semantic/creator-likeness.ts wrote — which is exactly what happened to 2,149 points
+ * between 2026-09-16 and 2026-09-19. Fresh computation is the normal path; reading the existing
+ * point back is the fallback for when the tracked reference set cannot be loaded at all.
+ */
+async function withLikeness(
+  pending: PendingPoint[],
+  tracked: TrackedVector[] | null,
+  qdrant: SemanticQdrant,
+): Promise<Array<PendingPoint['point']>> {
+  const scores = tracked
+    ? likenessScores(new Map(pending.map((p) => [p.channelId, p.mean])), tracked)
+    : new Map<string, number>();
+  const carry = new Map<string, Record<string, unknown>>();
+  const uncovered = pending.filter((p) => !scores.has(p.channelId)).map((p) => p.channelId);
+  if (uncovered.length) {
+    try {
+      const existing = await qdrant.points<Record<string, unknown>>(IDENTITY_COLLECTION, uncovered);
+      for (const point of existing) {
+        const channelId = point.payload?.channel_id;
+        if (typeof channelId === 'string') carry.set(channelId, point.payload);
+      }
+    } catch (error) {
+      console.warn(`identity: could not read existing creator_likeness for ${uncovered.length} channels: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return pending.map((p) => ({
+    ...p.point,
+    payload: mergeLikenessPayload(p.point.payload, scores.get(p.channelId), carry.get(p.channelId)),
+  }));
 }
 
 /**
@@ -144,18 +196,36 @@ export interface BuildIdentityOptions {
 export async function buildIdentityFor(
   channelIds: string[],
   options: BuildIdentityOptions = {},
-): Promise<{ built: number; skipped: number }> {
-  if (!channelIds.length) return { built: 0, skipped: 0 };
+): Promise<BuildIdentityResult> {
+  if (!channelIds.length) return { built: 0, skipped: 0, missingLikeness: 0 };
   const qdrant = options.qdrant ?? new SemanticQdrant({ timeoutMs: 60_000 });
   const write = options.write ?? false;
   const minVideos = options.minVideos ?? 8;
   const scores = options.scores ?? await guardedScores(qdrant);
   const names = options.names ?? await channelNames(channelIds);
   const nowSec = options.nowSec ?? Math.floor(Date.now() / 1_000);
+  let tracked: TrackedVector[] | null = options.trackedVectors?.length ? options.trackedVectors : null;
+  if (!tracked) {
+    try {
+      const loaded = await loadTrackedVectors();
+      tracked = loaded.length ? loaded : null;
+    } catch (error) {
+      tracked = null;
+      console.warn(`identity: tracked reference set unavailable, carrying creator_likeness forward: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (!tracked) console.warn('identity: no tracked reference vectors; creator_likeness will be carried forward from existing points');
+  }
   if (write) await ensureCollection();
 
-  let built = 0; let skipped = 0;
-  let batch: Array<{ id: string; vector: Record<string, number[]>; payload: Record<string, unknown> }> = [];
+  let built = 0; let skipped = 0; let missingLikeness = 0;
+  let batch: PendingPoint[] = [];
+  const flush = async (): Promise<void> => {
+    if (!batch.length) return;
+    const points = await withLikeness(batch, tracked, qdrant);
+    missingLikeness += points.filter((p) => p.payload.creator_likeness == null).length;
+    if (write) await qdrant.upsert(IDENTITY_COLLECTION, points);
+    batch = [];
+  };
   for (const channelId of channelIds) {
     const all = await channelVideos(qdrant, channelId, scores);
     const recent = selectRecent(all, nowSec);
@@ -163,20 +233,24 @@ export async function buildIdentityFor(
     const mean = weightedMean(recent);
     const med = medoid(recent);
     batch.push({
-      id: uuid5ForId(channelId),
-      vector: { mean, medoid: normalize(med.vector) },
-      payload: {
-        entity_id: channelId, channel_id: channelId, channel_name: names.get(channelId) ?? channelId,
-        n_videos: recent.length, n_catalog: all.length, n_downweighted: recent.filter((v) => v.weight < 1).length,
-        medoid_video_id: med.id, medoid_title: med.title,
-        window_days: WINDOW_DAYS, built_at: nowSec, recipe: 'catalog-v4-scoreweighted-mean+medoid-v1',
+      channelId,
+      mean,
+      point: {
+        id: uuid5ForId(channelId),
+        vector: { mean, medoid: normalize(med.vector) },
+        payload: {
+          entity_id: channelId, channel_id: channelId, channel_name: names.get(channelId) ?? channelId,
+          n_videos: recent.length, n_catalog: all.length, n_downweighted: recent.filter((v) => v.weight < 1).length,
+          medoid_video_id: med.id, medoid_title: med.title,
+          window_days: WINDOW_DAYS, built_at: nowSec, recipe: 'catalog-v4-scoreweighted-mean+medoid-v1',
+        },
       },
     });
     built += 1;
-    if (write && batch.length >= 100) { await qdrant.upsert(IDENTITY_COLLECTION, batch); batch = []; }
+    if (batch.length >= 100) await flush();
   }
-  if (write && batch.length) await qdrant.upsert(IDENTITY_COLLECTION, batch);
-  return { built, skipped };
+  await flush();
+  return { built, skipped, missingLikeness };
 }
 
 async function channelList(minVideos: number, limit: number | null): Promise<Array<{ channel_id: string; name: string; n: number }>> {
@@ -232,14 +306,15 @@ async function main(): Promise<void> {
   const channels = await channelList(minVideos, limit);
   console.log(JSON.stringify({ mode: write ? 'write' : 'dry-run', channels: channels.length, guarded_scores: scores.size, min_videos: minVideos }));
   const nowSec = Math.floor(Date.now() / 1_000);
-  let built = 0; let skipped = 0; const started = Date.now();
+  let built = 0; let skipped = 0; let missingLikeness = 0; const started = Date.now();
   const names = new Map(channels.map((c) => [c.channel_id, c.name]));
+  const trackedVectors = await loadTrackedVectors().catch(() => null);
   for (const group of chunks(channels.map((c) => c.channel_id), 500)) {
-    const result = await buildIdentityFor(group, { write, minVideos, qdrant, scores, names, nowSec });
-    built += result.built; skipped += result.skipped;
-    console.log(JSON.stringify({ t_min: ((Date.now() - started) / 60_000).toFixed(1), built, skipped }));
+    const result = await buildIdentityFor(group, { write, minVideos, qdrant, scores, names, nowSec, trackedVectors });
+    built += result.built; skipped += result.skipped; missingLikeness += result.missingLikeness;
+    console.log(JSON.stringify({ t_min: ((Date.now() - started) / 60_000).toFixed(1), built, skipped, missing_likeness: missingLikeness }));
   }
-  console.log(JSON.stringify({ mode: write ? 'write' : 'dry-run', built, skipped, count: write ? await qdrant.count(IDENTITY_COLLECTION) : undefined }));
+  console.log(JSON.stringify({ mode: write ? 'write' : 'dry-run', built, skipped, missing_likeness: missingLikeness, count: write ? await qdrant.count(IDENTITY_COLLECTION) : undefined }));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) runMain(main);
