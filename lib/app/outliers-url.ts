@@ -9,7 +9,7 @@ export const OUTLIER_PAGE = 60;
 export const OUTLIER_MAX_ROWS = 240;
 
 export type Bucket = 'near' | 'adjacent' | 'far';
-export type OutlierSort = 'score' | 'published';
+export type OutlierSort = 'score' | 'views' | 'published';
 export type OutlierRange = '7d' | '30d' | '90d';
 
 export const RANGE_DAYS: Record<OutlierRange, number> = { '7d': 7, '30d': 30, '90d': 90 };
@@ -49,8 +49,10 @@ export function parseBucket(value: string | string[] | null | undefined): Bucket
   return v === 'adjacent' || v === 'far' ? v : 'near';
 }
 
+/** `score` is the default and the fallback; `views` and `published` are the two other rankings. */
 export function parseOutlierSort(value: string | string[] | null | undefined): OutlierSort {
-  return first(value) === 'published' ? 'published' : 'score';
+  const v = first(value);
+  return v === 'published' || v === 'views' ? v : 'score';
 }
 
 export function parseOutlierRange(value: string | string[] | null | undefined): OutlierRange {

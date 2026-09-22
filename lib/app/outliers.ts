@@ -4,8 +4,9 @@
 // Three buckets, one query each. `near` and `adjacent` are id lists, so Postgres drives off
 // idx_videos_channel_published_longform (one index scan per channel, ~70 of them) and probes
 // video_scores by primary key. `far` is the complement, so it drives off the score guard
-// (idx_video_scores_score) or the published index and probes videos by id — no sequential scan
-// on either table in any of the six sort/bucket combinations. See the EXPLAIN notes below.
+// (idx_video_scores_score) or the published index (idx_videos_longtail_watch) and probes the
+// other table by id — no sequential scan on either table in any of the nine sort/bucket
+// combinations. See the EXPLAIN notes below.
 //
 // Direct Postgres only (lib/admin/db.ts) — never supabase-js (2026-08-31 org-wide egress incident).
 import { q } from '../admin/db';
@@ -24,12 +25,16 @@ export * from './outliers-url';
 // changes when the collection is rebuilt, so one anchor's relations are cached for an hour rather
 // than re-queried on every page view and every "more".
 const RELATIONS_TTL_MS = 60 * 60 * 1000;
+// A miss is cached for one minute, not an hour: null usually means Qdrant was briefly unreachable
+// (2026-09-22 — Colima was down and the page showed the whole pool, bucketless, for an hour after it
+// came back), and a real "no identity vector" anchor is cheap to re-ask.
+const RELATIONS_MISS_TTL_MS = 60 * 1000;
 const relationsCache = new Map<string, { at: number; value: ChannelRelations | null }>();
 
 /** null when the anchor has no identity vector (or Qdrant is down): the page renders without buckets. */
 export async function cachedRelations(anchor: string): Promise<ChannelRelations | null> {
   const hit = relationsCache.get(anchor);
-  if (hit && Date.now() - hit.at < RELATIONS_TTL_MS) return hit.value;
+  if (hit && Date.now() - hit.at < (hit.value ? RELATIONS_TTL_MS : RELATIONS_MISS_TTL_MS)) return hit.value;
   let value: ChannelRelations | null = null;
   try {
     value = await channelRelations(anchor, { limit: 2_000 });
@@ -46,8 +51,17 @@ export function clearRelationsCache(): void {
   relationsCache.clear();
 }
 
-const SORTS: Record<OutlierSort, string> = {
+/**
+ * The three rankings, as ORDER BY text. Not a parameter — `OutlierSort` is a closed union parsed
+ * out of the URL, and this map is the only place it becomes SQL.
+ *
+ * Each carries `v.published_at` as the tie-break so a page boundary is stable: view_count and
+ * score both tie often enough that an unordered remainder would shuffle rows between "More"
+ * clicks. NULLS LAST throughout — a video with no view count ranks below one with zero views.
+ */
+export const SORTS: Record<OutlierSort, string> = {
   score: 's.score desc nulls last, v.published_at desc nulls last',
+  views: 'v.view_count desc nulls last, v.published_at desc nulls last',
   published: 'v.published_at desc nulls last',
 };
 
@@ -85,12 +99,24 @@ const guardParams = (g: Guards) => [g.min, g.conf, g.floor];
  *
  * video_scores is keyed on video_id, so "the latest row per video" is the row.
  *
- * EXPLAIN (ANALYZE, BUFFERS), 2026-09-15, 69 near ids / 346 excluded ids, 30d, limit 61, at the
+ * EXPLAIN (ANALYZE, BUFFERS), 2026-09-22, 74 near ids / 343 excluded ids, 30d, limit 61, at the
  * defaults (score >= 2, confirmed|likely, baseline >= 500):
- *   near  + score     Index Scan idx_videos_channel_published_longform → pkey probes, ~250 ms warm
- *   far   + score     Parallel Index Scan idx_video_scores_score → videos_pkey probes, ~90 ms warm
- * No sequential scan on videos or video_scores. Dropping the baseline floor from 5000 to 500
- * does not change either plan shape — the floor was never the driving condition.
+ *   near  + score      Index Scan idx_videos_channel_published_longform → video_scores_pkey, 4 ms
+ *   near  + views      same plan — 315 candidate rows, the ORDER BY is a 43 kB quicksort, 4 ms
+ *   near  + published  same plan, 4 ms
+ *   far   + score      Parallel Index Scan idx_video_scores_score → videos_pkey probes, 29 ms
+ *   far   + views      Parallel Index Scan idx_videos_longtail_watch → video_scores_pkey, 141 ms
+ *   far   + published  same plan as far+views, 257 ms
+ * Warm wall-clock over five runs: near 38-110 ms, far+score 66-102, far+views 180-309,
+ * far+published 229-262. No sequential scan on videos or video_scores in any of the six.
+ *
+ * far+views drives off the published-at index rather than the score index — view_count has no
+ * index that survives the bucket predicate — so it materialises the whole 30-day long-form
+ * window (~29K rows/worker) and sorts it on disk, exactly as far+published already did. That is
+ * the honest plan: every qualifying row is considered, so the page shows the true top-by-views,
+ * and it costs about the same as the sort this page has always shipped.
+ * Dropping the baseline floor from 5000 to 500 does not change any plan shape — the floor was
+ * never the driving condition.
  */
 export async function outlierPage(opts: {
   ids: string[];

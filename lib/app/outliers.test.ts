@@ -4,8 +4,9 @@ import {
   parseMin, parseConfidence, parseFloor, outliersHref, floorLabel,
   bucketIds, OUTLIER_PAGE, OUTLIER_MAX_ROWS, DEFAULT_MIN, DEFAULT_CONF, DEFAULT_FLOOR,
 } from './outliers-url';
+import { SORTS } from './outliers';
 
-const ch = (id: string) => ({ channel_id: id, channel_name: id, score: 0.9, medoid_title: null });
+const ch = (id: string) => ({ channel_id: id, channel_name: id, score: 0.9, medoid_title: null, creator_likeness: null });
 const relations = {
   near: [ch('UCnear1'), ch('UCnear2')],
   adjacent: [ch('UCadj1')],
@@ -16,7 +17,7 @@ describe('URL parameters', () => {
     expect(parseBucket(undefined)).toBe('near');
     expect(parseBucket('nonsense')).toBe('near');
     expect(parseOutlierSort(undefined)).toBe('score');
-    expect(parseOutlierSort('views')).toBe('score');
+    expect(parseOutlierSort('newest')).toBe('score');
     expect(parseOutlierRange(undefined)).toBe('30d');
     expect(parseOutlierRange('all')).toBe('30d');
   });
@@ -25,6 +26,8 @@ describe('URL parameters', () => {
     expect(parseBucket('adjacent')).toBe('adjacent');
     expect(parseBucket(['far', 'near'])).toBe('far');
     expect(parseOutlierSort('published')).toBe('published');
+    expect(parseOutlierSort('views')).toBe('views');
+    expect(parseOutlierSort(['views', 'score'])).toBe('views');
     expect(parseOutlierRange('7d')).toBe('7d');
     expect(parseOutlierRange(['90d'])).toBe('90d');
   });
@@ -43,6 +46,31 @@ describe('URL parameters', () => {
     expect(parseRows('120')).toBe(120);
     expect(parseRows('9999')).toBe(OUTLIER_MAX_ROWS);
     expect(parseRows('banana')).toBe(OUTLIER_PAGE);
+  });
+});
+
+describe('the three rankings', () => {
+  it('each parse round-trips through the href builder', () => {
+    const base = { bucket: 'near' as const, range: '30d' as const, anchor: null };
+    expect(outliersHref({ ...base, sort: 'score' })).toBe('/app/outliers');
+    expect(outliersHref({ ...base, sort: 'views' })).toBe('/app/outliers?sort=views');
+    expect(outliersHref({ ...base, sort: 'published' })).toBe('/app/outliers?sort=published');
+    for (const sort of ['score', 'views', 'published'] as const) {
+      const href = outliersHref({ ...base, sort });
+      const p = new URLSearchParams(href.split('?')[1] ?? '');
+      expect(parseOutlierSort(p.get('sort'))).toBe(sort);
+    }
+  });
+
+  it('maps each one to an ORDER BY that ends NULLS LAST and names no parameter', () => {
+    expect(Object.keys(SORTS).sort()).toEqual(['published', 'score', 'views']);
+    expect(SORTS.score).toBe('s.score desc nulls last, v.published_at desc nulls last');
+    expect(SORTS.views).toBe('v.view_count desc nulls last, v.published_at desc nulls last');
+    expect(SORTS.published).toBe('v.published_at desc nulls last');
+    for (const sql of Object.values(SORTS)) {
+      for (const key of sql.split(',')) expect(key.trim()).toMatch(/ desc nulls last$/);
+      expect(sql).not.toMatch(/\$\d/);
+    }
   });
 });
 
