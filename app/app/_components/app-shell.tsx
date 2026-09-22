@@ -22,16 +22,18 @@ const NAV = [
   { href: '/app/inspiration', label: 'Inspiration' },
   { href: '/app/audience', label: 'Audience' },
   { href: '/app/outliers', label: 'Outliers' },
+  { href: '/app/angles', label: 'Angles' },
   { href: '/app/channels', label: 'Channels' },
   { href: '/app/settings', label: 'Settings' },
 ];
 
-function Nav({ className, showInspiration, showAudience, showOutliers }: { className: string; showInspiration: boolean; showAudience: boolean; showOutliers: boolean }) {
+function Nav({ className, showInspiration, showAudience, showOutliers, showAngles }: { className: string; showInspiration: boolean; showAudience: boolean; showOutliers: boolean; showAngles: boolean }) {
   const path = usePathname() || '';
   if (path.startsWith('/app/onboarding')) return null;
   const items = NAV.filter((n) => (showInspiration || n.href !== '/app/inspiration') &&
     (showAudience || n.href !== '/app/audience') &&
-    (showOutliers || n.href !== '/app/outliers'));
+    (showOutliers || n.href !== '/app/outliers') &&
+    (showAngles || n.href !== '/app/angles'));
   return (
     <nav className={className}>
       {items.map((n) => (
@@ -43,7 +45,7 @@ function Nav({ className, showInspiration, showAudience, showOutliers }: { class
   );
 }
 
-export default function AppShell({ children, showInspiration = false, showAudience = false, showOutliers = false }: { children: React.ReactNode; showInspiration?: boolean; showAudience?: boolean; showOutliers?: boolean }) {
+export default function AppShell({ children, showInspiration = false, showAudience = false, showOutliers = false, showAngles = false }: { children: React.ReactNode; showInspiration?: boolean; showAudience?: boolean; showOutliers?: boolean; showAngles?: boolean }) {
   return (
     <ThemeProvider>
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
@@ -55,14 +57,14 @@ export default function AppShell({ children, showInspiration = false, showAudien
             <Mark />
             CHANNELSMITH
           </Link>
-          <Nav className="cs-nav" showInspiration={showInspiration} showAudience={showAudience} showOutliers={showOutliers} />
+          <Nav className="cs-nav" showInspiration={showInspiration} showAudience={showAudience} showOutliers={showOutliers} showAngles={showAngles} />
           <div className="cs-header-right">
             <ThemeToggle />
             <UserButton />
           </div>
         </div>
         <div className="cs-wrap">
-          <Nav className={`cs-nav cs-nav-mobile ${styles.compactMobile}`} showInspiration={showInspiration} showAudience={showAudience} showOutliers={showOutliers} />
+          <Nav className={`cs-nav cs-nav-mobile ${styles.compactMobile}`} showInspiration={showInspiration} showAudience={showAudience} showOutliers={showOutliers} showAngles={showAngles} />
         </div>
       </header>
       <main className="cs-wrap cs-main">{children}</main>

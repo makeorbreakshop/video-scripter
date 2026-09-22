@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['<rootDir>/lib/**/*.test.ts'],
+  testMatch: ['<rootDir>/lib/**/*.test.ts', '<rootDir>/scripts/angles/**/*.test.ts'],
   // lib/orchestrator is dormant Idea Heist code with long-broken tests. Keep
   // integration tests out of the default command: some intentionally read or
   // refresh derived production state and must be targeted with an explicit opt-in.

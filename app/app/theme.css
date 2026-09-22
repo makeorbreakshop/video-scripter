@@ -817,6 +817,12 @@ a.cs-byline-chan:focus-visible { outline: 2px solid var(--cs-accent); outline-of
    hairline goes rather than dangle at the end of a line. */
 .cs-tabbar-sep { flex: none; width: 1px; height: 16px; background: var(--cs-line-strong); }
 @media (max-width: 900px) { .cs-tabbar-sep { display: none; } }
+/* Sort is not a filter, so it never shares a group with one: margin-left:auto (from .cs-controls)
+   holds it at the right edge of the line, and below the wrap point it takes a whole line of its
+   own — still right-aligned, still visibly apart from the filters above it. */
+@media (max-width: 900px) {
+  .cs-tabbar > .cs-controls-sort { flex-basis: 100%; justify-content: flex-end; padding-bottom: 6px; }
+}
 
 /* "N EDITS" on a grid tile: this video's packaging has moved since it was published. */
 .vg-edits { position: absolute; left: 8px; top: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 5px;

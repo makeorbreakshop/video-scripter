@@ -1,0 +1,452 @@
+{
+  "taxonomy_version": 3,
+  "note": "The working angle library: the union of the enum title angles the free-text framing data reproduced (top 33 by single-cluster concentration, n>=8, in scratchpad/angle-clusters) and the sharp emergent v2 framings (scratchpad/framing-v2/angles_v2.json). Content-type entries (guides, tips, overviews, announcements, showcases, behind-the-scenes) and topical clusters are deliberately absent: they describe what a video IS, not how its packaging frames the subject. Every definition here is the literal Jev noul `instructions` string, so edits to it change the measurement.",
+  "families": [
+    { "family_id": "challenge_constraint", "family_label": "Challenge", "family_definition": "The packaging imposes a rule, limit, or contest on the creator or the viewer.", "surface": "title" },
+    { "family_id": "contrarian_claim", "family_label": "Contrarian", "family_definition": "The packaging contradicts a belief the audience is assumed to hold.", "surface": "title" },
+    { "family_id": "cost_value", "family_label": "Cost", "family_definition": "The packaging makes money the axis the video turns on.", "surface": "title" },
+    { "family_id": "enumerated_rules", "family_label": "Rules", "family_definition": "The packaging promises a counted, bounded list.", "surface": "title" },
+    { "family_id": "explainer_stakes", "family_label": "Explainer", "family_definition": "The packaging raises what is at risk in order to earn the explanation.", "surface": "title" },
+    { "family_id": "head_to_head", "family_label": "Head to head", "family_definition": "The packaging stages two or more named options against each other.", "surface": "title" },
+    { "family_id": "identity_callout", "family_label": "Identity", "family_definition": "The packaging addresses a specific kind of person, or borrows one.", "surface": "title" },
+    { "family_id": "mystery_withholding", "family_label": "Mystery", "family_definition": "The packaging keeps something back on purpose.", "surface": "title" },
+    { "family_id": "ranking_tiering", "family_label": "Ranking", "family_definition": "The packaging orders things against each other.", "surface": "title" },
+    { "family_id": "reveal_transformation", "family_label": "Reveal", "family_definition": "The packaging promises to show an interior or a change of state.", "surface": "title" },
+    { "family_id": "solution_promise", "family_label": "Solution", "family_definition": "The packaging promises the problem is already solved.", "surface": "title" },
+    { "family_id": "tested_trial", "family_label": "Tested", "family_definition": "The packaging puts the subject through a trial the creator ran.", "surface": "title" },
+    { "family_id": "warning_prohibition", "family_label": "Warning", "family_definition": "The packaging tells the viewer to stop, avoid, or brace.", "surface": "title" }
+  ],
+  "angles": [
+    {
+      "angle_id": "tier_letter_grid",
+      "family_id": "ranking_tiering",
+      "angle_label": "Tier list",
+      "source": "enum",
+      "definition": "Does the title frame the subject by sorting things into explicit named tiers or letter grades (S/A/B/C/D/F tier, a tier list, a grading scale)?",
+      "criteria": {
+        "true": "The title names a tier system or letter grade as the organising device: 'S Tier', 'tier list', 'I ranked every X S to F', 'grading the...'.",
+        "false": "The title ranks by number or position instead of tiers, or does not sort at all. A plain 'best'/'top' claim with no tier vocabulary is false."
+      }
+    },
+    {
+      "angle_id": "earnings_disclosure",
+      "family_id": "cost_value",
+      "angle_label": "Earnings disclosure",
+      "source": "enum",
+      "definition": "Does the title frame the subject by disclosing how much money was made, earned, or paid out, as the headline fact?",
+      "criteria": {
+        "true": "A revenue, income, payout, salary, or profit figure (stated or explicitly promised) is the thing the title sells: 'How much I made from...', 'My $47,000 month', 'What YouTube paid me for 1M views'.",
+        "false": "Money appears only as a price, a budget, or a cost to the buyer, or no money is disclosed. Spending is not earning."
+      }
+    },
+    {
+      "angle_id": "alarm_escalation",
+      "family_id": "warning_prohibition",
+      "angle_label": "Alarm escalation",
+      "source": "enum",
+      "definition": "Does the title frame the subject as an urgent, escalating threat that is arriving now and affects the viewer or the whole field?",
+      "criteria": {
+        "true": "The title raises an alarm about something imminent and systemic, with urgency in the wording: 'It's worse than we thought', 'This changes everything, and not for the better', 'Act before...', 'X is coming for Y'.",
+        "false": "The title merely warns about a mistake, a purchase, or a personal pitfall without imminence or escalation, or carries no threat at all."
+      }
+    },
+    {
+      "angle_id": "bar_none_superlative",
+      "family_id": "ranking_tiering",
+      "angle_label": "Sets the bar",
+      "source": "merged",
+      "merged_from": ["A009 Sets high standard surpassing all competitors"],
+      "definition": "Does the title frame the subject with an absolute superlative claim - the best, the greatest, unbeaten, a new standard nothing else matches - without actually showing a ranking?",
+      "criteria": {
+        "true": "One thing is asserted to top everything: 'the best X ever made', 'nothing else comes close', 'this sets a new standard', 'the ultimate X'. The claim is declared, not demonstrated by a list.",
+        "false": "The title presents a ranked list, a countdown, or a head-to-head comparison, or makes no superlative claim. A qualified 'best budget X under $200' inside a comparison is false."
+      }
+    },
+    {
+      "angle_id": "n_mistakes",
+      "family_id": "warning_prohibition",
+      "angle_label": "N mistakes",
+      "source": "merged",
+      "merged_from": ["n_mistakes_to_avoid"],
+      "definition": "Does the title frame the subject as a counted list of mistakes, errors, or things people get wrong?",
+      "criteria": {
+        "true": "A number and the word mistake/error/wrong/pitfall/fail are both present as the structure: '7 mistakes beginners make', '5 things you're doing wrong', 'the 3 errors that cost me...'.",
+        "false": "The title lists tips, steps, or items that are not framed as errors, or warns about errors without counting them."
+      }
+    },
+    {
+      "angle_id": "borrowed_authority",
+      "family_id": "identity_callout",
+      "angle_label": "Borrowed authority",
+      "source": "enum",
+      "definition": "Does the title frame the subject by attaching a named famous person, brand, or institution whose reputation does the pulling?",
+      "criteria": {
+        "true": "A specific well-known name is the draw: 'What Elon said about...', 'I asked a NASA engineer', 'MrBeast's editor explains...', 'Apple just...'. The name is doing the persuading, not merely identifying a product under test.",
+        "false": "No named outside authority, or the named thing is the product being reviewed/compared rather than a borrowed reputation."
+      }
+    },
+    {
+      "angle_id": "your_result_explained",
+      "family_id": "identity_callout",
+      "angle_label": "Your result explained",
+      "source": "enum",
+      "definition": "Does the title frame the subject as an explanation of an outcome the viewer themselves is already experiencing?",
+      "criteria": {
+        "true": "The title names something happening to 'you' and promises the cause: 'Why your prints keep failing', 'This is why your views dropped', 'Your X isn't working - here's why'.",
+        "false": "The title addresses the viewer without diagnosing their outcome ('you need this'), or explains a general phenomenon not framed as the viewer's own result."
+      }
+    },
+    {
+      "angle_id": "cheap_vs_premium",
+      "family_id": "head_to_head",
+      "angle_label": "Cheap vs premium",
+      "source": "merged",
+      "merged_from": ["A037 Sets up cost and performance comparison"],
+      "definition": "Does the title frame the subject by setting a cheap option against an expensive one, so price tier is the axis of the comparison?",
+      "criteria": {
+        "true": "Two or more options separated mainly by price are staged against each other: '$20 vs $2000', 'cheap vs expensive X', 'budget vs pro', 'does the $500 one beat the $5000 one?'. A comparison whose explicit terms are cost and performance counts.",
+        "false": "The comparison is between options of similar price or on non-price grounds, only one option is discussed, or the title simply recommends a budget pick without staging the expensive one against it."
+      }
+    },
+    {
+      "angle_id": "daily_series",
+      "family_id": "challenge_constraint",
+      "angle_label": "Day N of",
+      "source": "enum",
+      "definition": "Does the title frame the subject as one instalment of a publicly serialised, counted run the creator has committed to?",
+      "criteria": {
+        "true": "The title marks a position in an ongoing series with a counter: 'Day 43 of...', 'Week 3 of building...', 'Episode 12: ...', '100 days of X - day 7'.",
+        "false": "The title describes a one-off video, or a duration spent ('I did X for 30 days') that is not an instalment in a running count."
+      }
+    },
+    {
+      "angle_id": "top_n_countdown",
+      "family_id": "ranking_tiering",
+      "angle_label": "Top N countdown",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a numbered ranking of N items counted down or up to a best or worst?",
+      "criteria": {
+        "true": "A count and a ranking are both present: 'Top 10 X', '5 best Y of 2026', 'the 7 worst...'. The number tells you how many ranked items are coming.",
+        "false": "A counted list that is not ranked ('5 tips for X'), a ranking with no count ('the best X'), or a tier list using letter grades."
+      }
+    },
+    {
+      "angle_id": "boring_but_works",
+      "family_id": "contrarian_claim",
+      "angle_label": "Boring but works",
+      "source": "enum",
+      "definition": "Does the title frame the subject as an unglamorous, simple, or old-fashioned method that outperforms the exciting one?",
+      "criteria": {
+        "true": "The title concedes the thing is dull, cheap, basic, or unfashionable and claims it wins anyway: 'the boring setup that beats every fancy rig', 'nobody wants to hear this, but it works', 'the ugly method that outperforms'.",
+        "false": "The title praises something without conceding it is unexciting, or calls something underrated without the boring-beats-flashy contrast."
+      }
+    },
+    {
+      "angle_id": "dont_do_x_do_this",
+      "family_id": "warning_prohibition",
+      "angle_label": "Do this instead",
+      "source": "enum",
+      "definition": "Does the title frame the subject by forbidding a common practice and naming the replacement in the same breath?",
+      "criteria": {
+        "true": "Both halves are present - a prohibition and a substitute: 'Stop using X, use Y', 'Don't do this - do this instead', 'Never X. Always Y.'",
+        "false": "Only the prohibition appears with no stated replacement, or only advice appears with nothing forbidden."
+      }
+    },
+    {
+      "angle_id": "single_winner_declared",
+      "family_id": "ranking_tiering",
+      "angle_label": "One winner declared",
+      "source": "enum",
+      "definition": "Does the title frame the subject by collapsing a field of options down to one named pick the viewer should get?",
+      "criteria": {
+        "true": "A comparison is implied or stated and the title hands over the single answer: 'The only X worth buying', 'I tested 12 and this one wins', 'This is THE one'.",
+        "false": "The title ranks several options without collapsing to one, reviews a single product with no field behind it, or makes an absolute superlative claim with no field of candidates."
+      }
+    },
+    {
+      "angle_id": "unboxing_first_impression",
+      "family_id": "tested_trial",
+      "angle_label": "First contact",
+      "source": "enum",
+      "definition": "Does the title frame the subject as the creator's first physical encounter with the thing - opening it, receiving it, seeing it for the first time?",
+      "criteria": {
+        "true": "The moment of arrival or first use is the event: 'Unboxing the...', 'It finally arrived', 'My first time using X', 'First look at the new...'.",
+        "false": "The title describes a considered review, a long-term verdict, or a comparison, even of a new product. Newness alone is not first contact."
+      }
+    },
+    {
+      "angle_id": "stop_doing_x",
+      "family_id": "warning_prohibition",
+      "angle_label": "Stop doing X",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a direct imperative to stop, quit, or never do a named thing?",
+      "criteria": {
+        "true": "A stop/quit/never/don't imperative aimed at the viewer is the core of the title: 'Stop buying X', 'Quit doing this to your Y', 'Never do this again'.",
+        "false": "The prohibition is paired with an explicit replacement (that is Do this instead), or the title warns without commanding."
+      }
+    },
+    {
+      "angle_id": "the_real_reason",
+      "family_id": "mystery_withholding",
+      "angle_label": "The real reason",
+      "source": "merged",
+      "merged_from": ["A010 Reveals hidden truths behind familiar"],
+      "definition": "Does the title frame the subject by claiming the obvious or familiar explanation is not the true one, and promising the hidden cause behind something ordinary?",
+      "criteria": {
+        "true": "The title asserts a concealed truth under a familiar surface: 'The real reason X happened', 'What's actually going on inside your Y', 'The hidden purpose of this everyday thing', 'It's not what you think'.",
+        "false": "The title explains how something works without claiming the usual account is wrong, or withholds the subject entirely without promising a cause."
+      }
+    },
+    {
+      "angle_id": "if_i_started_over",
+      "family_id": "identity_callout",
+      "angle_label": "If I started over",
+      "source": "enum",
+      "definition": "Does the title frame the subject as the creator's hindsight - what they would do differently if they began again today?",
+      "criteria": {
+        "true": "The counterfactual restart is explicit: 'If I started X today', 'What I'd do differently', 'Starting over in 2026 - my exact plan', 'What I wish I knew before...'.",
+        "false": "The title gives beginner advice without the creator's own restart framing, or recounts their history without the 'again' hypothesis."
+      }
+    },
+    {
+      "angle_id": "worth_it_verdict",
+      "family_id": "cost_value",
+      "angle_label": "Worth it?",
+      "source": "merged",
+      "merged_from": ["A030 Evaluates upgrade worth and impact"],
+      "definition": "Does the title frame the subject as a verdict on whether a spend or an upgrade is justified?",
+      "criteria": {
+        "true": "The question or answer of whether the money is worth it is the payload: 'Is the Pro worth it?', '$3000 later - was it worth it', 'Should you upgrade to X?', 'Worth every penny or waste of money'.",
+        "false": "The title compares options on price without judging whether spending is justified, or reviews something with no spend/upgrade decision at stake."
+      }
+    },
+    {
+      "angle_id": "beware_change",
+      "family_id": "warning_prohibition",
+      "angle_label": "The rules changed",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a rule, policy, algorithm, or price that has just changed in a way that will hurt the viewer?",
+      "criteria": {
+        "true": "A named change is the news and the consequence lands on the viewer: 'YouTube changed the rules again', 'The new pricing kills X', 'This update breaks your Y'.",
+        "false": "The change is presented as an improvement or a feature announcement, or nothing has changed and the title warns about a standing risk."
+      }
+    },
+    {
+      "angle_id": "obituary",
+      "family_id": "contrarian_claim",
+      "angle_label": "It's over",
+      "source": "enum",
+      "definition": "Does the title frame the subject by declaring a product, method, company, or era finished, dead, or obsolete?",
+      "criteria": {
+        "true": "The end is declared: 'X is dead', 'The end of Y', 'RIP Z', 'This kills the...'. The claim is that the thing no longer has a future.",
+        "false": "The title asks whether something is finished without asserting it, or reports a decline without calling it over."
+      }
+    },
+    {
+      "angle_id": "without_x",
+      "family_id": "challenge_constraint",
+      "angle_label": "Without X",
+      "source": "enum",
+      "definition": "Does the title frame the subject as an attempt made with a named ordinary tool, material, or resource deliberately forbidden?",
+      "criteria": {
+        "true": "A specific thing is named as banned from the attempt: 'Building a PC without a case', 'No power tools', 'I made this with zero budget', 'without using any X'.",
+        "false": "The task is simply cheap, simple, or minimal without a named prohibition, or the constraint is time/quantity rather than a forbidden resource."
+      }
+    },
+    {
+      "angle_id": "inside_access",
+      "family_id": "reveal_transformation",
+      "angle_label": "Inside access",
+      "source": "merged",
+      "merged_from": ["A034 Takes viewers inside manufacturing"],
+      "definition": "Does the title frame the subject by promising entry into a physical or organisational interior the viewer cannot normally get into - a factory, a vault, a restricted site, a company's inner workings?",
+      "criteria": {
+        "true": "Getting inside somewhere is the promise: 'Inside the factory that makes...', 'I got into the secret warehouse', 'Behind the doors at X', 'Touring the plant where Y is built'.",
+        "false": "The title promises a process explanation with no place entered, or shows the creator's own familiar workspace. Behind-the-scenes of the creator's own production is false."
+      }
+    },
+    {
+      "angle_id": "best_practice_inverted",
+      "family_id": "contrarian_claim",
+      "angle_label": "The advice is the trap",
+      "source": "enum",
+      "definition": "Does the title frame the subject by claiming the widely recommended practice is itself the thing causing the problem?",
+      "criteria": {
+        "true": "A named standard recommendation is turned into the cause of harm: 'The advice everyone gives is ruining your X', 'Why best practice Y is a trap', 'Doing the recommended thing is why you're stuck'.",
+        "false": "The title says a belief is factually wrong without it being a recommended practice, or lists mistakes that were never advice."
+      }
+    },
+    {
+      "angle_id": "matchup_preview",
+      "family_id": "head_to_head",
+      "angle_label": "Matchup preview",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a contest between named sides set up before it is resolved, so the outcome is still open?",
+      "criteria": {
+        "true": "Named contenders are billed against each other and the title does not give away the result: 'X vs Y - who wins?', 'The showdown nobody expected', 'Can X beat Y?'.",
+        "false": "The title announces the winner, or the comparison is on price tiers, or there is only one contender."
+      }
+    },
+    {
+      "angle_id": "consensus_is_wrong",
+      "family_id": "contrarian_claim",
+      "angle_label": "Everyone's wrong",
+      "source": "merged",
+      "merged_from": ["A024 Debunks myths and warns beginners"],
+      "definition": "Does the title frame the subject by asserting that a belief the field or the audience widely holds is simply false?",
+      "criteria": {
+        "true": "A myth, a consensus, or a named authority's position is declared wrong: 'The biggest myth about X, debunked', 'Everything you've been told about Y is false', 'Experts got this wrong'.",
+        "false": "The title disagrees with a recommended practice specifically (that is The advice is the trap), reports a crowd's behaviour without calling the belief false, or corrects nothing."
+      }
+    },
+    {
+      "angle_id": "new_to_x_watch_first",
+      "family_id": "identity_callout",
+      "angle_label": "Watch this first",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a gate a newcomer must pass through before starting or buying?",
+      "criteria": {
+        "true": "The title addresses beginners and positions itself as the prerequisite step: 'Watch this before you start X', 'New to Y? Start here', 'The first thing every beginner should do'.",
+        "false": "The title warns specifically before a purchase (that is Before you buy), or teaches beginners without gating anything."
+      }
+    },
+    {
+      "angle_id": "everyone_is_doing_x_but",
+      "family_id": "contrarian_claim",
+      "angle_label": "Everyone's doing X, but",
+      "source": "enum",
+      "definition": "Does the title frame the subject by naming what the crowd is currently doing and setting the creator's own contrary finding against it?",
+      "criteria": {
+        "true": "Both the crowd behaviour and the creator's dissent are present: 'Everyone's buying X - I went the other way', 'The whole internet switched to Y. I didn't.', 'Why I'm not doing what everyone else is'.",
+        "false": "The title says a belief is wrong without naming a crowd behaviour, or reports a trend without dissent."
+      }
+    },
+    {
+      "angle_id": "ranked_worst_to_best",
+      "family_id": "ranking_tiering",
+      "angle_label": "Worst to best",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a ranking led by its bad end - the worst, the failures, the ones to avoid?",
+      "criteria": {
+        "true": "The ranking is oriented downward or explicitly starts at the bottom: 'Ranking every X from worst to best', 'The worst Y I've ever used', 'Every Z ranked - the bad ones first'.",
+        "false": "The ranking is led by the best, or uses tiers, or nothing is ranked."
+      }
+    },
+    {
+      "angle_id": "alternative_to_default",
+      "family_id": "head_to_head",
+      "angle_label": "Replace the default",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a replacement for the option everyone reaches for by default?",
+      "criteria": {
+        "true": "A dominant default is named and something is offered in its place: 'Ditch Photoshop - use this', 'The X alternative that finally works', 'Replace your Y with this'.",
+        "false": "The replacement is framed primarily as the cheap option beating expensive ones, or the title compares options without an incumbent default to displace."
+      }
+    },
+    {
+      "angle_id": "rescue_restoration",
+      "family_id": "reveal_transformation",
+      "angle_label": "Brought back",
+      "source": "enum",
+      "definition": "Does the title frame the subject as something broken, abandoned, or neglected being restored to working order?",
+      "criteria": {
+        "true": "The before-state is damaged or discarded and the promise is revival: 'Restoring a rusted X', 'I saved this from the dump', 'Bringing a dead Y back to life'.",
+        "false": "The title promises a makeover or upgrade of something already working, or builds something new."
+      }
+    },
+    {
+      "angle_id": "before_you_buy",
+      "family_id": "warning_prohibition",
+      "angle_label": "Before you buy",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a caution placed in front of a purchase the viewer is about to make?",
+      "criteria": {
+        "true": "The title positions itself between the viewer and a buy: 'Watch this before you buy an X', 'Don't buy Y until you see this', 'What they don't tell you before you order'.",
+        "false": "The title gates a beginner's start rather than a purchase, or reviews a product without warning a prospective buyer off."
+      }
+    },
+    {
+      "angle_id": "close_call",
+      "family_id": "explainer_stakes",
+      "angle_label": "Close call",
+      "source": "enum",
+      "definition": "Does the title frame the subject as a near-disaster - something that almost went catastrophically wrong?",
+      "criteria": {
+        "true": "The narrow escape is the hook: 'This almost killed me', 'We nearly lost everything', 'How close X came to total failure'.",
+        "false": "The title describes a failure that actually happened with no near-miss framing, or raises stakes without a brush with disaster."
+      }
+    },
+    {
+      "angle_id": "quick_guaranteed_fix",
+      "family_id": "solution_promise",
+      "angle_label": "The quick fix",
+      "source": "emergent",
+      "emergent_id": "A004",
+      "definition": "Does the title frame the subject as a fast, simple, guaranteed solution to a problem the viewer already has?",
+      "criteria": {
+        "true": "The title promises the problem is solved easily and reliably: 'The 2-minute fix for X', 'This solves Y for good', 'One simple trick that actually works', 'Never deal with Z again'.",
+        "false": "The title teaches a process without promising it is quick or guaranteed, or names a problem without offering the fix."
+      }
+    },
+    {
+      "angle_id": "stakes_raised_by_update",
+      "family_id": "explainer_stakes",
+      "angle_label": "Stakes just went up",
+      "source": "emergent",
+      "emergent_id": "A007",
+      "definition": "Does the title frame the subject by reporting a new development that raises what is now at stake - more money, more risk, a bigger prize, a sudden escalation?",
+      "criteria": {
+        "true": "Something newly happened and the title says the consequences are now larger: 'They just doubled the payout', 'This changes the whole game', 'The stakes just got a lot higher', 'A surprise ruling puts everything on the line'.",
+        "false": "The update is a routine feature announcement with no escalation, or the stakes are standing rather than newly raised, or the framing is a warning of harm (that is The rules changed / Alarm escalation)."
+      }
+    },
+    {
+      "angle_id": "withholds_the_subject",
+      "family_id": "mystery_withholding",
+      "angle_label": "Withholds the subject",
+      "source": "emergent",
+      "emergent_id": "A011",
+      "definition": "Does the title deliberately refuse to name the thing the video is about, so the viewer must click to find out what it is?",
+      "criteria": {
+        "true": "The subject is replaced by a placeholder or a tease: 'This thing changed everything', 'I found something I wasn't supposed to', 'You won't believe what was inside', 'The mystery item nobody could identify'.",
+        "false": "The title names its subject, even vaguely by category, or promises a hidden cause behind a named familiar thing (that is The real reason)."
+      }
+    },
+    {
+      "angle_id": "budget_pick_beats_premium",
+      "family_id": "cost_value",
+      "angle_label": "Budget pick wins",
+      "source": "emergent",
+      "emergent_id": "A019",
+      "definition": "Does the title frame the subject by recommending a cheap or free option on the grounds that it outperforms the expensive ones?",
+      "criteria": {
+        "true": "A budget choice is named as the winner, not merely compared: 'This $40 X beats the $400 one', 'The cheap Y everyone should be buying', 'You don't need the expensive Z - get this'.",
+        "false": "The title only stages a price comparison without picking the budget side (that is Cheap vs premium), or recommends something without price being the argument."
+      }
+    },
+    {
+      "angle_id": "hype_put_to_test",
+      "family_id": "tested_trial",
+      "angle_label": "Hype tested",
+      "source": "emergent",
+      "emergent_id": "A023",
+      "definition": "Does the title frame the subject as a currently trending or hyped thing the creator is testing to see whether it holds up?",
+      "criteria": {
+        "true": "Both the hype and the scepticism are present: 'Does the viral X actually work?', 'I tested the trend everyone's posting', 'Is Y really as good as they say?', 'The hype, tested'.",
+        "false": "The creator tests something with no trend or hype invoked, or comments on a trend without testing it, or flatly declares a belief false (that is Everyone's wrong)."
+      }
+    },
+    {
+      "angle_id": "viewer_challenged",
+      "family_id": "challenge_constraint",
+      "angle_label": "Can you do this?",
+      "source": "emergent",
+      "emergent_id": "A032",
+      "definition": "Does the title dare the viewer themselves to attempt, guess, or beat something?",
+      "criteria": {
+        "true": "The challenge is aimed at the viewer, not the creator: 'Can you spot the difference?', 'Try to beat my time', 'Only 1% can do this', 'Test your X knowledge'.",
+        "false": "The creator is the one taking on the challenge or constraint, or the title makes no demand of the viewer."
+      }
+    }
+  ]
+}
