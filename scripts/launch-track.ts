@@ -24,6 +24,7 @@ import { readStatsResponse } from '../lib/nightly/stats-response';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
 import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
 import { CURRENT_RSS_RESPONSES_SQL } from '../lib/rss/current-response';
+import { LAUNCH_ENROLL_SQL } from '../lib/nightly/launch-enroll';
 
 // Per-run batch-call cap. 288 runs/day against a 10,000-unit videos:batchGetStats bucket =
 // 34.7 units/run of average headroom; 25 keeps a saturated run at 7,200 units/day (72% of the
@@ -41,29 +42,7 @@ pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 1200
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 // --- 1. Enroll: any non-short video published in the last 30 days not yet scheduled ---
-const enrolled = DRY ? { rowCount: 0 } : await pool.query(
-  `insert into track_schedule (video_id, channel_id, published_at, phase, next_check, launch_until, entered_reason,
-                               last_sample_at, last_views)
-   select v.id, v.channel_id, v.published_at,
-          case when v.published_at > now() - interval '24 hours' then 'launch' else 'fixed' end,
-          case when recent.sampled_at > now() - interval '5 minutes' and recent.sampled_at <= now()
-               then recent.sampled_at + interval '5 minutes' else now() end,
-          case when v.published_at > now() - interval '24 hours' then v.published_at + interval '24 hours' end,
-          case when v.published_at > now() - interval '24 hours' then 'publish' else 'backfill' end,
-          case when recent.sampled_at > now() - interval '5 minutes' and recent.sampled_at <= now()
-               then recent.sampled_at end,
-          case when recent.sampled_at > now() - interval '5 minutes' and recent.sampled_at <= now()
-               then recent.view_count end
-   from videos v
-   left join lateral (
-     select s.sampled_at, s.view_count from view_samples s
-      where s.video_id = v.id order by s.sampled_at desc limit 1
-   ) recent on true
-   where v.published_at > now() - interval '30 days'
-     and ${longformSql('v')}
-     and not exists (select 1 from track_schedule t where t.video_id = v.id)
-   on conflict (video_id) do nothing`
-);
+const enrolled = DRY ? { rowCount: 0 } : await pool.query(LAUNCH_ENROLL_SQL);
 log(`enrolled ${enrolled.rowCount} new videos`);
 
 // --- 2. Re-entry on thumbnail change (detector = thumbnail-watch.ts writing thumbnail_versions) ---
