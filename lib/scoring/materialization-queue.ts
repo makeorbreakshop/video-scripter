@@ -10,17 +10,21 @@ export interface ScoreDirtyTarget {
 
 export const OBS_DIRTY_CLAIM_SQL = `
   /* trace:observation.queue-claim */
-  with candidates as materialized (
-    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at,
-           c.format, c.last_change_id, c.obs, v.published_at,
-           coalesce(octet_length(c.obs), 0)::bigint as cache_bytes
+  -- Limit on the queue's own due index first; join caches/videos only for that slice, and
+  -- detoast obs blobs only for rows that fit the running byte budget.
+  with due as materialized (
+    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at
       from obs_cache_dirty d
-      left join video_obs_cache c on c.video_id = d.video_id
-      left join videos v on v.id = d.video_id
      where d.not_before <= now() and not d.requires_bootstrap
-       and coalesce(octet_length(c.obs), 0) <= $2
      order by d.not_before, d.marked_at, d.video_id
      limit $1
+  ), candidates as materialized (
+    select d.*, c.format, c.last_change_id, v.published_at,
+           coalesce(octet_length(c.obs), 0)::bigint as cache_bytes
+      from due d
+      left join video_obs_cache c on c.video_id = d.video_id
+      left join videos v on v.id = d.video_id
+     where coalesce(octet_length(c.obs), 0) <= $2
   ), budgeted as (
     select c.*, sum(c.cache_bytes) over (
       order by c.not_before, c.marked_at, c.video_id
@@ -28,9 +32,10 @@ export const OBS_DIRTY_CLAIM_SQL = `
       from candidates c
   )
   select b.video_id, b.generation, b.requires_bootstrap, b.format, b.last_change_id,
-         b.obs, b.published_at
+         oc.obs, b.published_at
     from budgeted b
     join obs_cache_dirty d on d.video_id=b.video_id and d.generation=b.generation
+    left join video_obs_cache oc on oc.video_id=b.video_id
    where b.running_bytes <= $2
    order by b.not_before, b.marked_at, b.video_id`;
 

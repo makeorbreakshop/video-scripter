@@ -48,10 +48,12 @@ try {
   const s = result.stats;
   traceStats = {
     videos: s.videos, changes: s.changes, completed: s.completed,
-    partial: s.partial, bootstraps: s.bootstraps, compressed_bytes: s.compressedBytes,
+    partial: s.partial, bootstraps: s.bootstraps,
+    deferred: s.deferred, oversize: s.oversize, compressed_bytes: s.compressedBytes,
   };
   console.log(`observation materializer${dryRun ? ' [dry run]' : ''}: ${s.videos} videos, ${s.changes} deltas, `
-    + `${s.completed} complete, ${s.partial} partial, ${s.bootstraps} bootstrap, ${s.compressedBytes} compressed bytes`);
+    + `${s.completed} complete, ${s.partial} partial, ${s.bootstraps} bootstrap, `
+    + `${s.deferred} deferred, ${s.oversize} oversize, ${s.compressedBytes} compressed bytes`);
 } catch (error) {
   trace.markFailed();
   throw error;

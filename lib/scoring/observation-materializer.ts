@@ -40,7 +40,14 @@ export interface ObservationMaterializationPlan {
   completed: QueueClaim[];
   partial: QueueClaim[];
   needsBootstrap: QueueClaim[];
-  stats: { videos: number; changes: number; completed: number; partial: number; bootstraps: number; compressedBytes: number };
+  /** Left untouched in the queue because this run's output byte budget was spent. */
+  deferred: QueueClaim[];
+  /** A single video whose encoded state alone exceeds the per-run output budget. */
+  oversize: QueueClaim[];
+  stats: {
+    videos: number; changes: number; completed: number; partial: number; bootstraps: number;
+    deferred: number; oversize: number; compressedBytes: number;
+  };
 }
 
 export interface MaterializationLimits {
@@ -73,10 +80,19 @@ export function planObservationMaterialization(
   const completed: QueueClaim[] = [];
   const partial: QueueClaim[] = [];
   const needsBootstrap: QueueClaim[] = [];
+  const deferred: QueueClaim[] = [];
+  const oversize: QueueClaim[] = [];
   let compressedBytes = 0;
+  let budgetSpent = false;
 
   for (const claim of claims) {
     const key = claimKey(claim);
+    // The output budget is a per-run slice boundary, not a failure: once it is spent, every
+    // remaining claim stays queued exactly as it is and the next run picks it up (oldest-first).
+    if (budgetSpent) {
+      deferred.push(key);
+      continue;
+    }
     if (claim.requiresBootstrap || !claim.publishedAt) {
       needsBootstrap.push(key);
       continue;
@@ -100,10 +116,16 @@ export function planObservationMaterialization(
     }
     const state = applyObservationChanges(current, relevant);
     const obs = encodeObservationState(state);
-    compressedBytes += obs.length;
-    if (compressedBytes > limits.maxCompressedBytes) {
-      throw new Error(`materializer compressed-byte limit exceeded (${limits.maxCompressedBytes})`);
+    if (obs.length > limits.maxCompressedBytes) {
+      oversize.push(key);
+      continue;
     }
+    if (compressedBytes + obs.length > limits.maxCompressedBytes) {
+      budgetSpent = true;
+      deferred.push(key);
+      continue;
+    }
+    compressedBytes += obs.length;
     upserts.push({
       videoId: claim.videoId,
       state,
@@ -117,13 +139,15 @@ export function planObservationMaterialization(
   }
 
   return {
-    upserts, completed, partial, needsBootstrap,
+    upserts, completed, partial, needsBootstrap, deferred, oversize,
     stats: {
       videos: claims.length,
       changes: changes.length,
       completed: completed.length,
       partial: partial.length,
       bootstraps: needsBootstrap.length,
+      deferred: deferred.length,
+      oversize: oversize.length,
       compressedBytes,
     },
   };
@@ -154,6 +178,15 @@ export const OBS_DIRTY_REQUIRE_BOOTSTRAP_SQL = `
      set requires_bootstrap=true, attempts=d.attempts+1,
          not_before=greatest(d.not_before, now() + interval '5 minutes'),
          last_error='v2 source state unavailable or change log incomplete'
+    from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
+   where d.video_id=x.video_id and d.generation=x.generation`;
+
+export const OBS_DIRTY_OVERSIZE_SQL = `
+  /* trace:observation.queue-oversize */
+  update obs_cache_dirty d
+     set attempts=d.attempts+1,
+         not_before=greatest(d.not_before, now() + interval '1 hour'),
+         last_error='encoded v2 state exceeds the per-run compressed-byte budget'
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id=x.video_id and d.generation=x.generation`;
 
@@ -221,6 +254,7 @@ export async function materializeObservationBatch(
       }))) ]);
     }
     if (plan.completed.length) await client.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(plan.completed)]);
+    if (plan.oversize.length) await client.query(OBS_DIRTY_OVERSIZE_SQL, [JSON.stringify(plan.oversize)]);
     if (plan.needsBootstrap.length) {
       await client.query(OBS_DIRTY_REQUIRE_BOOTSTRAP_SQL, [JSON.stringify(plan.needsBootstrap)]);
     }

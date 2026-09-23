@@ -68,7 +68,7 @@ test('missing, legacy, and gapped state is routed to bootstrap instead of guesse
   }
 });
 
-test('hard video, delta, and compressed-byte ceilings fail before producing writes', () => {
+test('hard video and delta ceilings fail before producing writes', () => {
   const opts = { maxVideos: MATERIALIZER_LIMITS.videos, maxChanges: MATERIALIZER_LIMITS.changes,
     maxCompressedBytes: MATERIALIZER_LIMITS.compressedBytes, changesTruncated: false };
   expect(() => planObservationMaterialization(
@@ -77,8 +77,31 @@ test('hard video, delta, and compressed-byte ceilings fail before producing writ
   expect(() => planObservationMaterialization(
     [baseClaim()], Array.from({ length: MATERIALIZER_LIMITS.changes + 1 }, (_, i) => delta(i + 1, i)), opts,
   )).toThrow(String(MATERIALIZER_LIMITS.changes));
-  expect(() => planObservationMaterialization([baseClaim()], [delta(1, 10)], { ...opts, maxCompressedBytes: 1 }))
-    .toThrow('compressed');
+});
+
+test('the compressed-byte cap ends the slice: earlier videos commit, later ones stay queued', () => {
+  const probe = planObservationMaterialization([baseClaim({ generation: 1 })], [delta(1, 10)], {
+    maxVideos: 1, maxChanges: 10, maxCompressedBytes: 5_000_000, changesTruncated: false,
+  });
+  const one = probe.stats.compressedBytes;
+  const claims = ['a', 'b', 'c'].map((id) => baseClaim({ videoId: id, generation: 1 }));
+  const changes = ['a', 'b', 'c'].map((id) => ({ ...delta(1, 10), videoId: id }));
+  const plan = planObservationMaterialization(claims, changes, {
+    maxVideos: 100, maxChanges: 5000, maxCompressedBytes: Math.floor(one * 1.5), changesTruncated: false,
+  });
+  expect(plan.upserts.map((u) => u.videoId)).toEqual(['a']);
+  expect(plan.stats.compressedBytes).toBeLessThanOrEqual(Math.floor(one * 1.5));
+  expect(plan.deferred.map((c) => c.video_id)).toEqual(['b', 'c']);
+  expect(plan.completed.map((c) => c.video_id)).toEqual(['a']);
+});
+
+test('a single video larger than the whole budget is backed off instead of stalling the queue', () => {
+  const plan = planObservationMaterialization(
+    [baseClaim({ videoId: 'huge', generation: 1 }), baseClaim({ videoId: 'next', generation: 1 })],
+    [{ ...delta(1, 10), videoId: 'huge' }], { maxVideos: 100, maxChanges: 5000, maxCompressedBytes: 1, changesTruncated: false },
+  );
+  expect(plan.oversize).toEqual([{ video_id: 'huge', generation: 1 }]);
+  expect(plan.upserts).toEqual([]);
 });
 
 test('the recurring claim is capped by both video count and cache bytes on the server', () => {
