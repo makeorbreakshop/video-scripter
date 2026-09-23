@@ -212,13 +212,12 @@ export function unknownEntryPlan(
  * The last stored reading per video, for the ids this tick's feeds mentioned. ONE set-based
  * query in the poller's SNAPSHOT phase — never a per-channel query inside the fetch loop
  * (the shape that cost ~0.40 s/channel before the 2026-09-03 rewrite). $1 = video ids.
+ * Reads rss_latest, the trigger-maintained newest rss_samples row per video: probing the
+ * 2 GB raw table cost ~48 MB of cold reads per chunk (2026-09-23).
  */
-export const LAST_SAMPLES_SQL = `select latest.video_id, latest.views, latest.at
-  from unnest($1::text[]) as requested(video_id)
-  cross join lateral (
-    select s.video_id, s.views, s.at from rss_samples s
-    where s.video_id = requested.video_id order by s.at desc limit 1
-  ) latest`;
+export const LAST_SAMPLES_SQL = `select l.video_id, l.views, l.at
+  from rss_latest l
+ where l.video_id = any($1::text[])`;
 
 /** Byte-change telemetry only. Even unchanged bodies must reach sample heartbeat/title checks. */
 export function hasFeedBodyChanged(

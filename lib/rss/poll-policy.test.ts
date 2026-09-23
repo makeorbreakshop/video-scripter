@@ -158,9 +158,11 @@ describe('shouldStoreSample (the change-based rss_samples rule)', () => {
   });
 
   it('the last-reading lookup is one set-based query keyed on the feed video ids', () => {
-    expect(LAST_SAMPLES_SQL).toContain('cross join lateral');
-    expect(LAST_SAMPLES_SQL).toContain('unnest($1::text[])');
-    expect(LAST_SAMPLES_SQL).toContain('order by s.at desc limit 1');
+    // rss_latest is trigger-maintained from rss_samples (one row per video). Reading the 2 GB
+    // raw table here cost ~48 MB of cold reads per snapshot chunk (measured 2026-09-23).
+    expect(LAST_SAMPLES_SQL).toContain('from rss_latest');
+    expect(LAST_SAMPLES_SQL).toContain('= any($1::text[])');
+    expect(LAST_SAMPLES_SQL).not.toContain('rss_samples');
   });
 });
 
