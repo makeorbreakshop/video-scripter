@@ -8,7 +8,7 @@
 import {
   moveWindowSql, nullWindowSql, CLEARED_COLUMNS,
   TEXT_COLUMNS, MIRROR_TRIGGER_SQL, NULL_COVERAGE_SQL, MOVED_COUNT_SQL,
-  LLM_SUMMARY_HOLDING_SQL,
+  LLM_SUMMARY_HOLDING_SQL, LONG_RUNNING_QUERY_SQL,
 } from './video-text-move';
 
 // THE SECOND DEFECT (2026-09-15 .. 09-26): the mover's batch was `where v.id > $1 and not exists
@@ -185,5 +185,14 @@ describe('the null-out locks the side rows it relies on (review P1-1, 2026-09-26
   it('reads video_text for the window FOR SHARE and proves equality against those rows', () => {
     expect(sql).toMatch(/locked as \(\s*select vt\.video_id, vt\.llm_summary\s+from video_text vt\s+where vt\.video_id in \(select id from win\)\s+for share\s*\)/);
     expect(sql).toMatch(/update videos v\s+set llm_summary = null\s+from locked vt/);
+  });
+});
+
+describe('the back-off probe ignores autovacuum (2026-09-26)', () => {
+  // The null-out's own UPDATEs make autovacuum work the toast table for minutes; counting that as
+  // "a heavy query" made the pass stand itself down mid-run.
+  it('counts only client backends', () => {
+    expect(LONG_RUNNING_QUERY_SQL).toMatch(/backend_type = 'client backend'/);
+    expect(LONG_RUNNING_QUERY_SQL).toMatch(/interval '2 minutes'/);
   });
 });

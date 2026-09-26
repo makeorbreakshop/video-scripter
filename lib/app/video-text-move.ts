@@ -248,3 +248,14 @@ export const NULL_COVERAGE_SQL = `
  * sequential scan of a 1.3 GB heap for a number that only ever appears in a report.
  */
 export const MOVED_COUNT_SQL = `select greatest(reltuples, 0)::bigint::text as n from pg_class where oid = 'video_text'::regclass`;
+
+/**
+ * The back-off probe the mover and the null-out run every few windows: is anything else running
+ * long? Client backends only — the null-out's own UPDATEs make autovacuum work the toast table for
+ * minutes, and counting that stood the 2026-09-26 pass down mid-run.
+ */
+export const LONG_RUNNING_QUERY_SQL = `
+  select count(*)::text as n from pg_stat_activity
+   where state = 'active' and backend_type = 'client backend'
+     and now() - query_start > interval '2 minutes'
+     and query not ilike '%pg_stat_activity%'`;

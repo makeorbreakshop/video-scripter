@@ -59,7 +59,7 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
   { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 600, maxGrowthMbPerDay: 40, targetMb: 150,
     enforcedBy: '14 days (scripts/thin-readings.ts). Steady ~20 K rows/day ≈ 130 MB; a full rescore adds ~360 MB for 14 days. DELETE-based retention left 1,280 MB at 92.7 % free until pg_repack (1,392 → 98 MB, 2026-09-26); daily partitions make retention a DROP (sql/2026-09-26-partition-video-score-history.sql, awaiting approval)' },
   { table: 'view_snapshots', policy: 'append-forever', budgetMb: 1300, maxGrowthMbPerDay: 15,
-    enforcedBy: 'NOTHING. ~33 K rows/day (~10 MB/day); CLAUDE.md promises a monthly cleanup of >1-year rows that does not exist (rows from 2025-06-30 remain)' },
+    enforcedBy: 'NOTHING YET. ~51 K rows/day (~15 MB/day). Proposed, tested, not wired: lib/readings/snapshot-retention.ts (archive to R2 first; by video age: full to 30 d, weekly to 1 y, then 30-day; first+last always; newest 90 d untouched). CLAUDE.md promises a monthly >1-year cleanup that does not exist' },
   { table: 'observation_change_log', policy: 'queue', budgetMb: 800,
     enforcedBy: 'scripts/materialize-observations.ts deletes consumed changes (OBS_CHANGES_DELETE_SQL)' },
   { table: 'view_samples', policy: 'bounded-retention', budgetMb: 800, maxGrowthMbPerDay: 20,

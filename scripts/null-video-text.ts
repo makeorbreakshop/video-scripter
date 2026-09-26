@@ -27,6 +27,7 @@ import {
   nullWindowSql, MIRROR_TRIGGER_SQL, NULL_COVERAGE_SQL, MOVED_COUNT_SQL, TEXT_COLUMNS, CLEARED_COLUMNS,
   type TextColumn,
 } from '../lib/app/video-text-move';
+import { LONG_RUNNING_QUERY_SQL } from '../lib/app/video-text-move';
 import { planNullOut, summarizeNullPass, recentIdleFullPass, type NullWindow } from '../lib/app/null-out-gate';
 import { recordOutcome, readOutcomes } from '../lib/ops/job-outcomes';
 
@@ -58,10 +59,7 @@ const q = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => (awa
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function heavy(): Promise<string | null> {
-  const rows = await q<{ n: string }>(
-    `select count(*)::text as n from pg_stat_activity
-      where state = 'active' and now() - query_start > interval '2 minutes'
-        and query not ilike '%pg_stat_activity%'`);
+  const rows = await q<{ n: string }>(LONG_RUNNING_QUERY_SQL);
   return Number(rows[0]?.n ?? 0) > 0 ? 'a query has been running over two minutes' : null;
 }
 
