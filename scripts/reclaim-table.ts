@@ -33,7 +33,9 @@ async function measure() {
   const c = await pool.connect();
   try {
     await c.query(`begin read only`);
-    await c.query(`set local statement_timeout = '120s'`);
+    // pgstattuple_approx reads every page not yet all-visible: right after a mass update that is
+    // most of the heap and the toast (2026-09-26: > 120 s on videos). Read-only; bounded at 15 min.
+    await c.query(`set local statement_timeout = '15min'`);
     const [r] = (await c.query(`
       select pg_total_relation_size(c.oid)::float8 as total, pg_relation_size(c.oid)::float8 as heap,
              coalesce(pg_total_relation_size(nullif(c.reltoastrelid, 0)), 0)::float8 as toast,
