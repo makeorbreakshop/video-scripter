@@ -17,6 +17,7 @@
 -- writer) and then WAITS for every older transaction that might use the index — the observation
 -- materializer's run minutes. Those waits count against lock_timeout; 5 s timed out on 2026-09-26.
 set lock_timeout = '5min';
+set statement_timeout = '15min'; -- the session default (2 min) is shorter than the wait on old transactions
 drop index concurrently if exists public.idx_videos_llm_summary_status;
 drop index concurrently if exists public.idx_videos_llm_summary_null;
 drop index concurrently if exists public.idx_videos_id_llm_summary;

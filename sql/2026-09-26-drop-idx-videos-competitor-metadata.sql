@@ -6,4 +6,5 @@
 -- null-out UPDATE that clears metadata is non-HOT: measured 2026-09-26 at ~15 ms/row with a new
 -- entry in each of the remaining 42 indexes. Rollback: sql/rollback/2026-09-26-drop-idx-videos-competitor-metadata.sql
 set lock_timeout = '5min';
+set statement_timeout = '15min'; -- the session default (2 min) is shorter than the wait on old transactions
 drop index concurrently if exists public.idx_videos_competitor_metadata;
