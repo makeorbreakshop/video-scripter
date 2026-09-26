@@ -68,11 +68,15 @@ export const SCHEDULED_JOBS: ScheduledJob[] = [
 
 /**
  * Jobs outside this repo whose silence has already cost us once. The egress alarm threw on every
- * run from 2026-09-10 to 2026-09-26 (a 403 on one project's api-keys) and its .log just stopped.
+ * run from 2026-09-10 to 2026-09-26 (HTTP 403 from the api-keys endpoint — for every project: the
+ * PAT no longer has access) and its .log just stopped.
  */
 export const EXTERNAL_HEARTBEATS: Heartbeat[] = [
+  // A fresh log is not enough: with an expired PAT every project 403s and the script used to log
+  // "0.0 GB/day across 0 projects" — an all-clear built from no data. It now logs NO DATA.
   { kind: 'file', job: 'supabase-egress-check', everyHours: 24,
-    path: path.join(os.homedir(), 'shared-memory', 'logs', 'supabase-egress-check.log') },
+    path: path.join(os.homedir(), 'shared-memory', 'logs', 'supabase-egress-check.log'),
+    failIfLastLine: /NO DATA|NO TOKEN|across 0 projects/ },
 ];
 
 /** Heartbeats for every registered job: a stdout-log freshness check, plus the ledger where kept. */
