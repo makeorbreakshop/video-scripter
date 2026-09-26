@@ -1,49 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  06:00 ET: clear videos.llm_summary for every row video_text has proved a copy of, then drop
-  idx_videos_id_llm_summary (189 MB). The only irreversible step in the reclaim sequence.
+  06:00 ET: one bounded, resumable pass of the null-out (scripts/null-video-text-tonight.ts →
+  scripts/null-video-text.ts). Clears videos.<col> for every row whose video_text copy is proved
+  byte-equal in the same statement, for the columns in CLEARED_COLUMNS (lib/app/video-text-move.ts;
+  llm_summary as of 2026-09-26). Rows not yet moved are left for a later night.
 
-  llm_summary ONLY. Not description, not metadata. As of 2026-09-14 the sweep in
-  lib/app/video-text-sweep.ts finds 0 direct readers of llm_summary, 10 of description and 18 of
-  metadata — and five of the description ones WRITE it back into `videos` on every import, so
-  clearing it would be undone by the next ingest. lib/app/video-text-access.test.ts is the gate;
-  add a column here only when that test says it is cleared.
+  2026-09-14..26 this job waited for ZERO unmoved videos corpus-wide by 05:48 — while starting at
+  06:00 and while ingest added 3-30 K a day — and stood down 12 nights of 12. There is no such gate
+  now (lib/app/null-out-gate.ts). Each run writes an outcome to logs/job-outcomes.jsonl;
+  scripts/storage-guard.ts alerts if three runs in a row did nothing with text still held.
 
-  PRECONDITION, AND IT IS NOT OPTIONAL. Apply sql/2026-09-14-retire-video-text-mirror.sql first.
-  video_text_mirror_upd fires AFTER UPDATE ON videos when one of the three columns changes —
-  which is exactly what this job does — and copies the new value into video_text. Left in place
-  it turns the null-out into a delete of the side table, silently, with every other safety check
-  still passing. Both the wrapper and scripts/null-video-text.ts refuse to run while it exists,
-  and --force does not override that one.
-
-  WHY A WRAPPER AND NOT scripts/null-video-text.ts DIRECTLY. scripts/move-video-text.ts starts
-  at 05:30 with 1,097,222 rows to go; at the measured rate that finishes about 05:48, twelve
-  minutes before this job. Twelve minutes is a coincidence, not a margin — the mover stops
-  itself whenever anything has been running in Postgres for over two minutes, and both the 04:15
-  fit and the 05:05 packaging counts can overrun into its window. So the wrapper polls for the
-  move to actually finish, waits until 05:48 ET, and if it has not finished it exits 0 having
-  changed nothing and tries again tomorrow. Standing down is the correct outcome: the null-out
-  is irreversible, and not running tonight costs one night of disk.
-
-  DAILY, not one-shot, because "reschedule itself" is what standing down means. Remove it once
-  it has actually run — the log ends with "done: llm_summary cleared".
+  The old `--deadline 05:48` argument is accepted and ignored, so an installed copy of the previous
+  plist keeps working. Refuses while the mirror trigger exists (it would null video_text too).
 
   Install:
     cp scripts/launchd/com.mfm.video-scripter-null-video-text.plist ~/Library/LaunchAgents/
+    launchctl bootout gui/$UID/com.mfm.video-scripter-null-video-text 2>/dev/null
     launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-null-video-text.plist
-
-  Watch it, the morning after:
-    tail -n 100 logs/null-video-text-launchd.log
-    npx tsx scripts/null-video-text.ts --verify
-
-  Remove once it has run:
-    launchctl bootout gui/$UID/com.mfm.video-scripter-null-video-text
-    rm ~/Library/LaunchAgents/com.mfm.video-scripter-null-video-text.plist
-
-  Rehearse without touching anything:
+  Rehearse:
     npx tsx scripts/null-video-text.ts --dry-run
-    npx tsx scripts/null-video-text-tonight.ts --dry-run --deadline 23:59
 -->
 <plist version="1.0"><dict>
   <key>Label</key><string>com.mfm.video-scripter-null-video-text</string>
@@ -53,7 +29,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>npx tsx scripts/null-video-text-tonight.ts --deadline 05:48</string>
+    <string>npx tsx scripts/null-video-text-tonight.ts</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
   <key>StartCalendarInterval</key><dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>

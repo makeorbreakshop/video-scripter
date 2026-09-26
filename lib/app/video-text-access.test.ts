@@ -63,6 +63,10 @@ const BLOCKED: Record<string, string[]> = {
     'app/api/youtube/refresh-channel-analytics/route.ts',
     'app/api/youtube/sync-channel/route.ts',
     'lib/vector-db-service.ts',
+    // Scheduled every 5 minutes; reads the stored description as the baseline for
+    // description_versions. Invisible to this gate until it learned to scan scheduled scripts
+    // (lib/ops/scheduled-jobs.ts, 2026-09-26).
+    'scripts/rss-poll.ts',
   ],
   metadata: [
     // None of these were ever on the original list, because it never grepped for `metadata`.

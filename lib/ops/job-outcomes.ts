@@ -37,19 +37,33 @@ export interface JobOutcome {
 export const DEFAULT_LEDGER = process.env.JOB_OUTCOMES_LEDGER || path.join(process.cwd(), 'logs', 'job-outcomes.jsonl');
 const DEFAULT_MAX_BYTES = 2_000_000;
 
+/** Append one JSON line, trimming the file to its newest half-budget when it outgrows maxBytes. */
+export function appendJsonLine(file: string, value: unknown, maxBytes: number): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.appendFileSync(file, JSON.stringify(value) + '\n');
+  if (fs.statSync(file).size > maxBytes) {
+    const buf = fs.readFileSync(file);
+    const from = buf.indexOf(0x0a, buf.length - Math.floor(maxBytes / 2)) + 1;
+    fs.writeFileSync(file, buf.subarray(from));
+  }
+}
+
+/** Every parseable JSON line of a file, skipping torn ones; [] when the file does not exist. */
+export function readJsonLines<T>(file: string, keep: (v: any) => boolean = () => true): T[] {
+  let text: string;
+  try { text = fs.readFileSync(file, 'utf8'); } catch { return []; }
+  const out: T[] = [];
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    try { const v = JSON.parse(line); if (v && keep(v)) out.push(v); } catch { /* torn write */ }
+  }
+  return out;
+}
+
 /** Append one outcome. Never throws: a ledger problem must not fail the job that did the work. */
 export function appendOutcome(o: JobOutcome, file = DEFAULT_LEDGER, { maxBytes = DEFAULT_MAX_BYTES } = {}): void {
   try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.appendFileSync(file, JSON.stringify(o) + '\n');
-    const size = fs.statSync(file).size;
-    if (size > maxBytes) {
-      // Keep the newest half of the budget, cut at a line boundary.
-      const buf = fs.readFileSync(file);
-      let from = buf.length - Math.floor(maxBytes / 2);
-      from = buf.indexOf(0x0a, from) + 1;
-      fs.writeFileSync(file, buf.subarray(from));
-    }
+    appendJsonLine(file, o, maxBytes);
   } catch (err) {
     console.error(`[job-outcomes] could not record ${o.job}: ${(err as Error).message}`);
   }
@@ -65,17 +79,9 @@ export function recordOutcome(o: Omit<JobOutcome, 'at'>, file = DEFAULT_LEDGER):
 
 /** Every parseable outcome in the ledger, oldest first. Torn lines are skipped. */
 export function readOutcomes(file = DEFAULT_LEDGER): JobOutcome[] {
-  let text: string;
-  try { text = fs.readFileSync(file, 'utf8'); } catch { return []; }
-  const out: JobOutcome[] = [];
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue;
-    try {
-      const o = JSON.parse(line);
-      if (o && typeof o.job === 'string' && typeof o.at === 'string' && typeof o.status === 'string') out.push(o);
-    } catch { /* a torn write from a killed process */ }
-  }
-  return out.sort((a, b) => a.at.localeCompare(b.at));
+  return readJsonLines<JobOutcome>(file, (o) =>
+    typeof o.job === 'string' && typeof o.at === 'string' && typeof o.status === 'string')
+    .sort((a, b) => a.at.localeCompare(b.at));
 }
 
 /** What a job is expected to do, and how the guard checks it did. */

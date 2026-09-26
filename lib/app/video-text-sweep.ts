@@ -18,6 +18,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { SCHEDULED_SCRIPTS } from '../ops/scheduled-jobs';
 
 export const MOVED_COLUMNS = ['description', 'metadata', 'llm_summary'] as const;
 export type MovedColumn = (typeof MOVED_COLUMNS)[number];
@@ -143,7 +144,14 @@ export function directReaders(root: string, columns: readonly MovedColumn[] = MO
   if (res.error) throw res.error;
   if (res.status !== 0 && res.status !== 1) throw new Error(`rg exited ${res.status}: ${res.stderr}`);
 
-  const files = ((res.stdout ?? '').trim() ? res.stdout.trim().split('\n') : [])
+  // Plus every script a LaunchAgent runs (lib/ops/scheduled-jobs.ts). The globs above never
+  // covered scripts/, so scripts/rss-poll.ts — reading videos.description every five minutes —
+  // was invisible to this gate until 2026-09-26.
+  const mentions = new RegExp(`\\b(${columns.join('|')})\\b`);
+  const scheduled = SCHEDULED_SCRIPTS.filter((f) => {
+    try { return mentions.test(fs.readFileSync(path.join(root, f), 'utf8')); } catch { return false; }
+  });
+  const files = [...new Set([...((res.stdout ?? '').trim() ? res.stdout.trim().split('\n') : []), ...scheduled])]
     .map((f) => f.replace(/^\.\//, ''))
     // Tests are not runtime readers: they quote this SQL on purpose, to pin it.
     .filter((f) => !ALLOWED.includes(f) && !/\.test\.tsx?$/.test(f))

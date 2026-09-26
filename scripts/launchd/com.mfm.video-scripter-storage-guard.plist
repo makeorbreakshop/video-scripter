@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  07:15 ET daily: the storage guard (scripts/storage-guard.ts). After the whole night shift
+  (02:30 archive/thin, 05:30 move, 06:00 null-out) has written its outcomes.
+
+  Snapshots relation sizes to logs/storage-snapshots.jsonl (catalog only), checks every table
+  against lib/ops/storage-contract.ts, projects days until the /data volume hits Supabase's 90 %
+  autoscale trigger, and flags any scheduled job (lib/ops/scheduled-jobs.ts) whose log went quiet
+  or whose outcomes show it doing nothing with work waiting. Alerts: macOS notification + Pulse
+  operations receipt; exit 2 when anything is wrong.
+
+  Install (after the branch is on main):
+    cp scripts/launchd/com.mfm.video-scripter-storage-guard.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mfm.video-scripter-storage-guard.plist
+  Rehearse:
+    npx tsx scripts/storage-guard.ts --no-alert
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.mfm.video-scripter-storage-guard</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>PULSE_OPERATIONS_TOKEN_FILE</key><string>/Users/brandoncullum/Library/Application Support/Pulse/control/operations-token</string>
+  </dict>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>npx tsx scripts/storage-guard.ts</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>15</integer></dict>
+  <key>Nice</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/storage-guard-launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/storage-guard-launchd.err.log</string>
+</dict></plist>

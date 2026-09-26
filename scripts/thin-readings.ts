@@ -30,6 +30,7 @@ import {
 } from '../lib/readings/sql';
 import { decideThin, type LedgerRow, type ThinnedTier } from '../lib/readings/chain';
 import { isRetryableLockError, retryDelaysMs, chunk } from '../lib/readings/thin-safety';
+import { recordOutcome } from '../lib/ops/job-outcomes';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -203,4 +204,16 @@ if (!oldestHistory) {
 
 log(`done: ${deletedTotal.toLocaleString()} rows deleted, ${skipped} day(s) skipped for lack of a ` +
     `verified archive, ${noop} day(s) already at their tier` + (dry ? ' (DRY RUN, nothing deleted)' : ''));
+// A night that skipped days for lack of a verified archive and deleted nothing is the shape of the
+// 2026-09-08..14 incident (six nights of `archive && thin` never thinning): record it as a no-op
+// with backlog, so scripts/storage-guard.ts alerts on the third in a row.
+if (!dry) {
+  recordOutcome({
+    job: 'thin-readings',
+    status: deletedTotal > 0 ? 'progressed' : skipped > 0 ? 'noop' : 'idle',
+    progressed: deletedTotal,
+    backlog: skipped,
+    detail: `${deletedTotal} rows deleted, ${skipped} day(s) skipped (no verified archive), ${noop} already at tier`,
+  });
+}
 await pool.end();
