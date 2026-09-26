@@ -64,3 +64,24 @@ describe('reading the data volume from the Prometheus text', () => {
     expect(parseDiskMetrics('node_cpu_seconds_total 1')).toBeNull();
   });
 });
+
+describe('temp-file spills', () => {
+  const GB = 1024 ** 3;
+  const t = (day: number, tempGb: number): StorageSnapshot => ({ ...snap(day, 10_000, []), tempBytes: tempGb * GB });
+
+  it('reports the daily spill rate and stays quiet below the threshold', () => {
+    const r = buildGuardReport([t(25, 100), t(26, 103.5)], [], []);
+    expect(r.summary).toMatch(/temp spills 3\.5 GB\/day/);
+    expect(r.alerts).toEqual([]);
+  });
+
+  it('alerts above it', () => {
+    const r = buildGuardReport([t(25, 100), t(26, 160)], [], []);
+    expect(r.alerts.join(' ')).toMatch(/temp-file spills 60\.0 GB\/day/);
+  });
+
+  it('ignores an interval across a stats reset', () => {
+    const r = buildGuardReport([t(25, 900), t(26, 2)], [], []);
+    expect(r.alerts).toEqual([]);
+  });
+});

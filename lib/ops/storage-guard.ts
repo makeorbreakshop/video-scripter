@@ -17,6 +17,12 @@ export const DISK_WARN_DAYS = 30;
 export const AUTOSCALE_TRIGGER = 0.9;
 /** Warn regardless of rate above this fraction used. */
 export const DISK_WARN_FRACTION = 0.8;
+/**
+ * Warn when queries spill more than this to temp files per day. Spills are transient, but they
+ * land on the same volume the 90 % trigger watches. Since 2026-09-04 the rate has been ~3.5 GB/day
+ * and near zero once the observation queue-claim and rss_response_state rewrites landed.
+ */
+export const TEMP_WARN_GB_PER_DAY = 20;
 
 export interface GuardReport {
   status: 'pass' | 'warn';
@@ -57,11 +63,27 @@ export function buildGuardReport(
     }
   }
 
+  const withTemp = sorted.filter((s) => typeof s.tempBytes === 'number');
+  let tempLine = '';
+  if (withTemp.length >= 2) {
+    const a = withTemp.at(-2)!, b = withTemp.at(-1)!;
+    const days = (new Date(b.at).getTime() - new Date(a.at).getTime()) / 86_400_000;
+    // A stats reset makes the counter go backwards; skip that interval.
+    if (days >= 0.5 && b.tempBytes! >= a.tempBytes!) {
+      const gbDay = (b.tempBytes! - a.tempBytes!) / 1024 ** 3 / days;
+      tempLine = `; temp spills ${gbDay.toFixed(1)} GB/day`;
+      if (gbDay > TEMP_WARN_GB_PER_DAY) {
+        alerts.push(`temp-file spills ${gbDay.toFixed(1)} GB/day (over ${TEMP_WARN_GB_PER_DAY}); top spillers: ` +
+                    'pg_stat_statements order by temp_blks_written');
+      }
+    }
+  }
+
   for (const a of detectSilentJobs(outcomes, heartbeats, now)) alerts.push(a.message);
 
   const top = [...last.relations].sort((a, b) => b.totalBytes - a.totalBytes).slice(0, 3)
     .map((r) => `${r.name} ${fmt(r.totalBytes / MB)}`).join(', ');
-  const summary = `${diskLine}; db ${fmt(last.dbBytes / MB)} MB; top: ${top}; ${alerts.length} alert(s)`;
+  const summary = `${diskLine}; db ${fmt(last.dbBytes / MB)} MB${tempLine}; top: ${top}; ${alerts.length} alert(s)`;
   return { status: alerts.length ? 'warn' : 'pass', summary, alerts };
 }
 

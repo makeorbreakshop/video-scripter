@@ -50,8 +50,11 @@ function pulse(status: 'pass' | 'warn' | 'fail', summary: string) {
 const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 1, timeoutMs: 20_000 });
 try {
   const relations = (await pool.query(CATALOG_SIZES_SQL)).rows.map(rowToRelation);
-  const dbBytes = Number((await pool.query(`select pg_database_size(current_database())::float8 as b`)).rows[0].b);
-  const snapshot: StorageSnapshot = { at: new Date().toISOString(), dbBytes, disk: await fetchDiskMetrics(), relations };
+  const [db] = (await pool.query(
+    `select pg_database_size(current_database())::float8 as b,
+            (select temp_bytes::float8 from pg_stat_database where datname = current_database()) as t`)).rows;
+  const snapshot: StorageSnapshot = { at: new Date().toISOString(), dbBytes: Number(db.b), tempBytes: Number(db.t),
+                                      disk: await fetchDiskMetrics(), relations };
   appendJsonLine(SNAPSHOTS, snapshot, 8_000_000);
 
   const history = readJsonLines<StorageSnapshot>(SNAPSHOTS, (s) => typeof s.at === 'string' && Array.isArray(s.relations));

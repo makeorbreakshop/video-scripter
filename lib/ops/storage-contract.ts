@@ -118,6 +118,8 @@ export interface StorageSnapshot {
   /** The Supabase data volume, from the project metrics endpoint; null when unavailable. */
   disk: { sizeBytes: number; availBytes: number } | null;
   relations: RelationSize[];
+  /** pg_stat_database.temp_bytes (cumulative since stats reset). Optional: older snapshots lack it. */
+  tempBytes?: number;
 }
 
 export interface Violation {
