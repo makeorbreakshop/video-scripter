@@ -12,6 +12,7 @@ import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { ingestWrites } from '../lib/ingest/first-sample';
+import { videoInsertSql, videoInsertParams, SYSTEM_USER } from '../lib/ingest/video-insert';
 import {
   PRIORITY_LANE, PRIORITY_MODES, selectPriorityRows, orderByPublishedDesc,
   isPriorityImport, quotaUnits, channelFromSourceUrl,
@@ -38,22 +39,9 @@ async function insertVideo(v: any, tier = 1): Promise<boolean> {
 }
 
 async function insertVideoOnce(v: any, tier: number, sn: any, st: any, cls: InsertClassification): Promise<void> {
-  await pool.query(
-    `insert into videos (id, title, description, channel_id, channel_name, published_at,
-                         view_count, like_count, comment_count, duration, thumbnail_url,
-                         data_source, is_competitor, import_date, updated_at, user_id,
-                         is_short, shorts_checked_at)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000',
-             $12, case when $13::boolean then now() else null end)
-     on conflict (id) do update set
-       is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
-       shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
-    [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId, sn.channelTitle || '',
-     sn.publishedAt, clampCount(parseInt(st.viewCount || '0', 10)), clampCount(parseInt(st.likeCount || '0', 10)),
-     clampCount(parseInt(st.commentCount || '0', 10)), v.contentDetails?.duration || null,
-     sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
-     cls.is_short, cls.shorts_checked_at === 'now']
-  );
+  // One statement for the row AND its text (lib/ingest/video-insert.ts).
+  await pool.query(videoInsertSql(),
+    videoInsertParams(v, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
   // A sample, a daily snapshot and a tracking row, in that order (lib/ingest/first-sample.ts).
   // The videos.list response in hand IS an observation at a known instant, so it is written as
   // a view_samples row now rather than leaving the video unmeasured until the next tracker tick

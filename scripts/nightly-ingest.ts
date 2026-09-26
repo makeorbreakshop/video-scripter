@@ -9,6 +9,7 @@ import { clampCount, chunk, parseRssVideoIds } from '../lib/nightly/tracking-cor
 import { planEnrollment, KnownChannels } from '../lib/nightly/enrollment-core';
 import { classifyForInsert, skipForInsert } from '../lib/ingest/classify';
 import { firstSampleWrite, broadcastMetadataWrite } from '../lib/ingest/first-sample';
+import { videoInsertSql, videoInsertParams, SYSTEM_USER } from '../lib/ingest/video-insert';
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { refreshChannelStatsSql } from '../lib/app/channel-stats';
 import { revalidateRemote } from '../lib/app/revalidate-remote';
@@ -170,32 +171,10 @@ for (const group of chunk(newIds, 50)) {
     const sn = v.snippet || {};
     const st = v.statistics || {};
     try {
-      await pool.query(
-        `insert into videos (id, title, description, channel_id, channel_name, published_at,
-                             view_count, like_count, comment_count, duration, thumbnail_url,
-                             data_source, is_competitor, import_date, updated_at, user_id,
-                             is_short, shorts_checked_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'competitor',true,now(),now(),'00000000-0000-0000-0000-000000000000',
-                 $12, case when $13::boolean then now() else null end)
-         on conflict (id) do update set
-           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
-           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
-        [
-          v.id,
-          sn.title || '',
-          (sn.description || '').slice(0, 50000),
-          sn.channelId,
-          sn.channelTitle || '',
-          sn.publishedAt,
-          clampCount(parseInt(st.viewCount || '0', 10)),
-          clampCount(parseInt(st.likeCount || '0', 10)),
-          clampCount(parseInt(st.commentCount || '0', 10)),
-          v.contentDetails?.duration || null,
-          sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
-          cls.is_short,
-          cls.shorts_checked_at === 'now',
-        ]
-      );
+      // One statement for the row AND its text (lib/ingest/video-insert.ts): a new video is never
+      // born "unmoved".
+      await pool.query(videoInsertSql(),
+        videoInsertParams(v, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
       // RSS finds a video 1-2 days after publish; the response that produced this row already
       // has its view count at a known instant, so record it as a sample now instead of leaving
       // the video unmeasured until the next tracker tick (lib/ingest/first-sample.ts).

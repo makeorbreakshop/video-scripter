@@ -6,120 +6,124 @@
 // walk started there, found almost nothing above it, and reported success after 19,659 of
 // 1,107,961 rows — for six nights, while `videos` stayed at 4 GB.
 import {
-  moveBatchSql, MOVE_COUNT_REMAINING_SQL,
-  nullBatchSql, NULL_COUNT_REMAINING_SQL, NULL_VERIFY_SQL,
+  moveWindowSql, nullWindowSql, CLEARED_COLUMNS,
   TEXT_COLUMNS, MIRROR_TRIGGER_SQL, NULL_COVERAGE_SQL, MOVED_COUNT_SQL,
-  nullCountRemainingSql, nullVerifySql,
+  LLM_SUMMARY_HOLDING_SQL,
 } from './video-text-move';
 
-describe('the mover cursor', () => {
-  const sql = moveBatchSql(false);
+// THE SECOND DEFECT (2026-09-15 .. 09-26): the mover's batch was `where v.id > $1 and not exists
+// (…video_text…) order by v.id limit 2000`. Once the unmoved rows were sparse — 4,853 of
+// 1.17 M — one statement had to walk the whole primary key to find 2,000 of them, and the
+// 120 s statement timeout killed it (57014 in logs/move-video-text-launchd.err.log, 9.6 MB of
+// temp spill per call in pg_stat_statements). The cure is a window: each statement looks at the
+// next N primary keys, whatever it finds there, and says where it stopped.
+describe('the mover walks the primary key in bounded windows', () => {
+  const sql = moveWindowSql(false);
 
   it('never derives its resume point from video_text', () => {
-    // The whole defect in one assertion. The cursor is a parameter driven by the walk over
-    // `videos`; nothing about where to resume may come from the destination table, because the
-    // trigger keeps the destination's max fresh.
     expect(sql).not.toMatch(/max\s*\(\s*video_id\s*\)/i);
     expect(sql).not.toMatch(/max\s*\(\s*vt\./i);
   });
 
-  it('walks `videos` in primary-key order from a parameterised cursor', () => {
-    expect(sql).toMatch(/from videos v\s+where v\.id > \$1/);
-    expect(sql).toMatch(/order by v\.id/);
-    expect(sql).not.toMatch(/\boffset\b/i); // a 1.1 M-row OFFSET walk is quadratic
+  it('bounds every statement to a window of primary keys, however sparse the work is', () => {
+    expect(sql).toMatch(/select id from videos where id > \$1 order by id limit \$2/);
+    expect(sql).not.toMatch(/\boffset\b/i);
   });
 
-  it('selects only videos not already in video_text (anti-join, not a cursor guess)', () => {
-    expect(sql).toMatch(/not exists\s*\(\s*select 1 from video_text vt where vt\.video_id = v\.id\s*\)/);
+  it('returns where the window ended, so the cursor advances even when nothing was moved', () => {
+    expect(sql).toMatch(/as next_cursor/);
+    expect(sql).toMatch(/as scanned/);
+    expect(sql).toMatch(/as moved/);
   });
 
-  it('is bounded: every batch takes a LIMIT', () => {
-    expect(sql).toMatch(/limit \$2/);
+  it('anti-joins video_text: only videos with no side row are copied', () => {
+    expect(sql).toMatch(/not exists\s*\(\s*select 1 from video_text vt where vt\.video_id = win\.id\s*\)/);
+    // …on the window's keys alone, before any wide `videos` row is fetched.
+    expect(sql).toMatch(/unmoved as materialized/);
+    expect(sql).toMatch(/from unmoved u join videos v on v\.id = u\.id/);
   });
 
-  it('is idempotent: a re-run of the same batch overwrites rather than duplicating', () => {
-    expect(sql).toMatch(/on conflict \(video_id\) do update/);
+  it('never overwrites a side row a writer produced concurrently', () => {
+    expect(sql).toMatch(/on conflict \(video_id\) do nothing/);
   });
 
-  it('moves exactly the three columns that are 86 % of a videos row, and no others', () => {
+  it('moves exactly the three columns, and no others', () => {
     expect(TEXT_COLUMNS).toEqual(['description', 'metadata', 'llm_summary']);
     for (const c of TEXT_COLUMNS) expect(sql).toContain(c);
   });
 
   it('the dry-run form writes nothing', () => {
-    const dryRun = moveBatchSql(true);
-    expect(dryRun).not.toMatch(/\binsert\b/i);
-    expect(dryRun).not.toMatch(/\bupdate\b/i);
-  });
-
-  it('reports what is left over the whole table, not over what has been moved', () => {
-    expect(MOVE_COUNT_REMAINING_SQL).toMatch(/from videos v/);
-    expect(MOVE_COUNT_REMAINING_SQL).toMatch(/not exists/);
+    const dry = moveWindowSql(true);
+    expect(dry).not.toMatch(/\binsert\b/i);
+    expect(dry).not.toMatch(/\bupdate\b/i);
+    expect(dry).toMatch(/as next_cursor/);
   });
 });
 
-describe('the null-out', () => {
-  const sql = nullBatchSql();
+describe('the null-out clears per row, per window, and proves each row first', () => {
+  const sql = nullWindowSql(['llm_summary']);
 
-  it('nulls only rows whose copy in video_text is byte-for-byte equal', () => {
-    // `is not distinct from` and not `=`: `=` is null-propagating, so a row where both copies
-    // are NULL would not match and would never be cleared, and — far worse — a row where the
-    // side copy is NULL against a real description would compare UNKNOWN, not false. Nulling on
-    // an UNKNOWN would destroy the only copy.
-    for (const c of TEXT_COLUMNS) {
-      expect(sql).toMatch(new RegExp(`v\\.${c} is not distinct from vt\\.${c}`));
-    }
-    expect(sql).not.toMatch(/v\.description = vt\.description/);
+  it('clears only rows whose side copy is byte-for-byte equal, checked on the UPDATE target', () => {
+    // The predicate sits in the UPDATE's own WHERE, against `videos` as the target. Under READ
+    // COMMITTED a row changed concurrently is re-checked against its NEW version (EvalPlanQual),
+    // so a value written after our snapshot can never be nulled on the strength of an old match.
+    expect(sql).toMatch(/update videos v\s+set llm_summary = null\s+from video_text vt/);
+    expect(sql).toMatch(/where vt\.video_id = v\.id/);
+    expect(sql).toMatch(/v\.llm_summary is not distinct from vt\.llm_summary/);
+    expect(sql).not.toMatch(/v\.llm_summary = vt\.llm_summary/);
   });
 
-  it('requires a video_text row to exist at all — an unmoved video is never touched', () => {
-    expect(sql).toMatch(/join video_text vt on vt\.video_id = v\.id/);
-    expect(sql).not.toMatch(/left join video_text/);
+  it('requires a side row — an unmoved video is never touched', () => {
+    expect(sql).toMatch(/from video_text vt/);
+    expect(sql).not.toMatch(/update videos v\s+set[^;]*left join/);
   });
 
-  it('sets exactly the three columns to NULL', () => {
-    for (const c of TEXT_COLUMNS) expect(sql).toMatch(new RegExp(`${c} = null`));
+  it('is idempotent: a row already clear is not selected again', () => {
+    expect(sql).toMatch(/\(v\.llm_summary is not null\)/);
   });
 
-  it('is bounded and resumable: keyset cursor, ordered, limited', () => {
-    expect(sql).toMatch(/v\.id > \$1/);
-    expect(sql).toMatch(/order by v\.id/);
-    expect(sql).toMatch(/limit \$2/);
-    expect(sql).not.toMatch(/\boffset\b/i);
+  it('is bounded to a window of primary keys and reports where it stopped', () => {
+    expect(sql).toMatch(/select id from videos where id > \$1 order by id limit \$2/);
+    expect(sql).toMatch(/as next_cursor/);
+    expect(sql).toMatch(/as cleared/);
   });
 
-  it('is idempotent: an already-nulled row is not selected a second time', () => {
-    // All three already NULL and equal to a NULL side copy would otherwise match forever.
-    expect(sql).toMatch(/v\.description is not null or v\.metadata is not null or v\.llm_summary is not null/);
+  it('counts, in the same window, what it could NOT clear and why', () => {
+    expect(sql).toMatch(/as disagree/);
+    expect(sql).toMatch(/as unmoved_holding/);
   });
 
-  it('returns the ids it changed, so the cursor advances on fact not on hope', () => {
-    expect(sql).toMatch(/returning/i);
+  it('clears exactly the columns it was given', () => {
+    expect(sql).toMatch(/llm_summary = null/);
+    expect(sql).not.toMatch(/description = null/);
+    expect(sql).not.toMatch(/metadata = null/);
+    const all = nullWindowSql(TEXT_COLUMNS);
+    for (const c of TEXT_COLUMNS) expect(all).toMatch(new RegExp(`${c} = null`));
   });
 
-  it('the verification query looks for DISAGREEMENT, and finds none when all is well', () => {
-    for (const c of TEXT_COLUMNS) {
-      expect(NULL_VERIFY_SQL).toMatch(new RegExp(`v\\.${c} is distinct from vt\\.${c}`));
-    }
+  it('refuses an empty list, or a column that is not one of the three', () => {
+    expect(() => nullWindowSql([] as any)).toThrow(/at least one column/i);
+    expect(() => nullWindowSql(['title'] as any)).toThrow(/title/);
   });
 
-  it('does not call a NULL original a disagreement — there is nothing there to lose', () => {
-    // Once the writers stop populating videos.description/metadata/llm_summary and write only
-    // to video_text, the ordinary state of a freshly-summarised row is: videos.llm_summary
-    // NULL, video_text.llm_summary a real summary. The bare `is distinct from` form calls that
-    // a disagreement, so the gate would refuse to let the null-out run at all — on rows where
-    // there is, by definition, nothing to destroy. The gate exists to protect text that only
-    // `videos` holds, so it must look only at originals that are not null.
-    for (const c of TEXT_COLUMNS) {
-      expect(NULL_VERIFY_SQL).toMatch(new RegExp(`v\\.${c} is not null and v\\.${c} is distinct from vt\\.${c}`));
-    }
-  });
-
-  it('counts what remains against videos that have been moved', () => {
-    expect(NULL_COUNT_REMAINING_SQL).toMatch(/join video_text/);
+  it('has no corpus-wide count or scan anywhere in it', () => {
+    // The old verify/remaining queries joined 1.17 M rows to 1.17 M rows with no index-backed
+    // predicate; one of them was cancelled by the statement timeout on 2026-09-14.
+    expect(sql).not.toMatch(/count\(\*\)[^)]*from videos v\s+join video_text/);
   });
 });
 
+describe('which columns are cleared is one list, shared by the null-out, the ingest and the ratchet', () => {
+  it('is llm_summary alone until the description/metadata readers are repointed', () => {
+    expect([...CLEARED_COLUMNS].sort()).toEqual(expect.arrayContaining(['llm_summary']));
+    for (const c of CLEARED_COLUMNS) expect(TEXT_COLUMNS).toContain(c);
+  });
+
+  it('can say cheaply whether any llm_summary is still held on videos (partial-index count)', () => {
+    expect(LLM_SUMMARY_HOLDING_SQL).toMatch(/where llm_summary is not null/);
+    expect(LLM_SUMMARY_HOLDING_SQL).toMatch(/limit 1/);
+  });
+});
 
 describe('the mirror trigger, which the null-out must not run underneath', () => {
   it('is looked for by name before anything is cleared', () => {
@@ -166,54 +170,9 @@ describe('the dry-run coverage report', () => {
     expect(NULL_COVERAGE_SQL).toMatch(/limit \$1/);
   });
 
-  it('counts what has been moved over video_text alone, not over the wide table', () => {
-    expect(MOVED_COUNT_SQL).toMatch(/from video_text/);
-    expect(MOVED_COUNT_SQL).not.toMatch(/videos/);
-  });
-});
-
-describe('clearing one column at a time', () => {
-  // The three columns did not become safe together, and waiting for the slowest is a choice to
-  // reclaim nothing. As of 2026-09-14 the sweep says: llm_summary 0 direct readers,
-  // description 10, metadata 18. So llm_summary can be cleared now and the other two cannot.
-  const only = ['llm_summary'] as const;
-
-  it('clears exactly the columns it was given', () => {
-    const sql = nullBatchSql(only);
-    expect(sql).toMatch(/llm_summary = null/);
-    expect(sql).not.toMatch(/description = null/);
-    expect(sql).not.toMatch(/metadata = null/);
-  });
-
-  it('proves equality only for the columns it is about to clear', () => {
-    // Requiring description to agree before clearing llm_summary would block every row whose
-    // description the mover has not reached — which is 98 % of them.
-    const sql = nullBatchSql(only);
-    expect(sql).toMatch(/v\.llm_summary is not distinct from vt\.llm_summary/);
-    expect(sql).not.toMatch(/v\.description is not distinct from vt\.description/);
-  });
-
-  it('stays idempotent within the columns it clears', () => {
-    expect(nullBatchSql(only)).toMatch(/\(v\.llm_summary is not null\)/);
-  });
-
-  it('still defaults to all three, so nothing silently narrows', () => {
-    const sql = nullBatchSql();
-    for (const c of TEXT_COLUMNS) expect(sql).toMatch(new RegExp(`${c} = null`));
-  });
-
-  it('refuses an empty column list rather than emitting `set` with nothing after it', () => {
-    expect(() => nullBatchSql([] as any)).toThrow(/at least one column/i);
-  });
-
-  it('refuses a column that is not one of the three', () => {
-    expect(() => nullBatchSql(['title'] as any)).toThrow(/title/);
-  });
-
-  it('scopes the remaining-work count and the verification gate the same way', () => {
-    expect(nullCountRemainingSql(only)).toMatch(/v\.llm_summary is not null/);
-    expect(nullCountRemainingSql(only)).not.toMatch(/v\.description/);
-    expect(nullVerifySql(only)).toMatch(/v\.llm_summary is not null and v\.llm_summary is distinct from vt\.llm_summary/);
-    expect(nullVerifySql(only)).not.toMatch(/v\.description/);
+  it('reports what has been moved from the catalog estimate — no scan of either table', () => {
+    expect(MOVED_COUNT_SQL).toMatch(/reltuples/);
+    expect(MOVED_COUNT_SQL).toMatch(/'video_text'::regclass/);
+    expect(MOVED_COUNT_SQL).not.toMatch(/from videos|from video_text/);
   });
 });

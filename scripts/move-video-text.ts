@@ -1,32 +1,35 @@
-// Copy videos.description / metadata / llm_summary into video_text, in throttled batches.
+// Copy videos.description / metadata / llm_summary into video_text for videos that have no side
+// row yet, in bounded windows of primary keys.
 //
-// This is the one job in the speed work that walks the whole 4 GB `videos` table, so every
-// safeguard is on: a keyset cursor on the primary key (never an OFFSET), a small batch, a sleep
-// between batches, a check of pg_stat_activity every few batches that stops the run if anything
-// heavy has appeared, and full resumability — the cursor is derived from what is already in
-// video_text, so an interrupted run picks up where it stopped.
+// Since 2026-09-26 the ingest writers insert the side row themselves (lib/ingest/video-insert.ts),
+// so this nightly pass only catches what legacy writers (manual API routes) still create. It
+// walks the whole key space in windows of --batch primary keys: each statement's cost is bounded
+// by the window, however few rows are actually left to move — the previous `limit 2000` search
+// walked the entire key space once the work was sparse and died on the statement timeout
+// (57014, logs/move-video-text-launchd.err.log, 2026-09-15..26).
 //
-// It COPIES. Nothing is nulled or dropped here; `videos` stays authoritative until the readers
-// are switched and verified. --verify re-reads a sample and compares both copies.
+// It COPIES. Nothing is nulled here.
 //
 // Usage:
 //   npx tsx scripts/move-video-text.ts --dry-run
-//   npx tsx scripts/move-video-text.ts --batch 2000 --sleep-ms 250     # nightly
-//   npx tsx scripts/move-video-text.ts --verify --sample 500
+//   npx tsx scripts/move-video-text.ts --batch 5000 --sleep-ms 100 --max-seconds 1200   # nightly
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { makeTimedPool } from '../lib/admin/db';
-import { moveBatchSql, MOVE_COUNT_REMAINING_SQL } from '../lib/app/video-text-move';
+import { moveWindowSql } from '../lib/app/video-text-move';
+import { recordOutcome } from '../lib/ops/job-outcomes';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
 const arg = (f: string, d?: string) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
 const DRY = has('--dry-run') || has('--dry');
-const BATCH = Number(arg('--batch', '2000'));
-const SLEEP = Number(arg('--sleep-ms', '250'));
-const MAX_BATCHES = Number(arg('--max-batches', '0'));
+const WINDOW = Number(arg('--batch', '5000'));
+const SLEEP = Number(arg('--sleep-ms', '100'));
+const MAX_WINDOWS = Number(arg('--max-windows', '0'));
+const MAX_SECONDS = Number(arg('--max-seconds', '1200'));
+const JOB = 'move-video-text';
 
-const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 120_000 });
+const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 1, timeoutMs: 60_000 });
 const q = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => (await pool.query(sql, params)).rows as T[];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -38,50 +41,51 @@ async function heavy(): Promise<string | null> {
   return Number(rows[0]?.n ?? 0) > 0 ? 'a query has been running over two minutes' : null;
 }
 
-if (has('--verify')) {
-  const sample = Number(arg('--sample', '500'));
-  const bad = await q<{ id: string }>(
-    `select v.id from video_text vt join videos v on v.id = vt.video_id
-      where v.description is distinct from vt.description
-         or v.metadata is distinct from vt.metadata
-         or v.llm_summary is distinct from vt.llm_summary
-      limit $1`, [sample]);
-  const moved = Number((await q<{ n: string }>(`select count(*)::text as n from video_text`))[0].n);
-  console.log(`verify: ${moved} row(s) moved, ${bad.length} mismatch(es)${bad.length ? ': ' + bad.slice(0, 5).map((r) => r.id).join(', ') : ''}`);
-  await pool.end();
-  process.exit(bad.length ? 1 : 0);
-}
-
-const stop = await heavy();
-if (stop && !has('--force')) { console.error(`refusing to run: ${stop}`); await pool.end(); process.exit(2); }
-
-// The cursor ALWAYS starts at '' and the anti-join does the resuming. See
-// lib/app/video-text-move.ts for the defect this replaces: resuming from max(video_id) in
-// video_text read a value the mirror trigger keeps fresh, so the walk started near the top of
-// the key space and reported success after 19,659 of 1,107,961 rows — six nights running.
-let cursor = '';
-const remaining = Number((await q<{ n: string }>(MOVE_COUNT_REMAINING_SQL))[0].n);
-console.log(`move-video-text: batch ${BATCH}, sleep ${SLEEP}ms${DRY ? ' [dry run]' : ''}, ` +
-            `${remaining.toLocaleString()} video(s) still to move`);
-
-let moved = 0, batches = 0, bytes = 0;
+let moved = 0, scanned = 0, windows = 0, bytes = 0, wrapped = false, stoppedFor: string | null = null;
 const t0 = Date.now();
-for (;;) {
-  const rows = await q<{ id: string; b: string }>(moveBatchSql(DRY), [cursor, BATCH]);
-  if (!rows.length) { console.log('nothing left to move'); break; }
-  cursor = rows[rows.length - 1].id;
-  moved += rows.length;
-  bytes += rows.reduce((s, r) => s + Number(r.b ?? 0), 0);
-  batches++;
-  if (batches % 5 === 0) {
-    const busy = await heavy();
-    if (busy && !has('--force')) { console.error(`stopping early: ${busy} (${moved} moved — rerun to resume)`); break; }
-    console.log(`  ${moved} moved · ${(bytes / 1e6).toFixed(0)} MB · ${((Date.now() - t0) / 1000).toFixed(0)}s · at '${cursor}'`);
+try {
+  const busy = await heavy();
+  if (busy && !has('--force')) {
+    stoppedFor = busy;
+  } else {
+    console.log(`move-video-text: window ${WINDOW}, sleep ${SLEEP}ms, budget ${MAX_SECONDS}s${DRY ? ' [dry run]' : ''}`);
+    let cursor = '';
+    for (;;) {
+      const [r] = await q<{ next_cursor: string | null; scanned: number; moved: number; bytes: string }>(
+        moveWindowSql(DRY), [cursor, WINDOW]);
+      if (!r || r.next_cursor == null) { wrapped = true; break; }
+      cursor = r.next_cursor;
+      scanned += Number(r.scanned); moved += Number(r.moved); bytes += Number(r.bytes);
+      windows++;
+      if (windows % 20 === 0) {
+        console.log(`  ${scanned.toLocaleString()} scanned · ${moved.toLocaleString()} moved · ` +
+                    `${((Date.now() - t0) / 1000).toFixed(0)}s · at '${cursor}'`);
+        const b = await heavy();
+        if (b && !has('--force')) { stoppedFor = b; break; }
+      }
+      if (MAX_WINDOWS && windows >= MAX_WINDOWS) { stoppedFor = `--max-windows ${MAX_WINDOWS}`; break; }
+      if ((Date.now() - t0) / 1000 > MAX_SECONDS) { stoppedFor = `--max-seconds ${MAX_SECONDS}`; break; }
+      await sleep(SLEEP);
+    }
   }
-  if (MAX_BATCHES && batches >= MAX_BATCHES) { console.log(`--max-batches ${MAX_BATCHES} reached`); break; }
-  await sleep(SLEEP);
+  const detail = `${moved} moved of ${scanned} scanned in ${windows} window(s), ${(bytes / 1e6).toFixed(1)} MB, ` +
+                 `${((Date.now() - t0) / 1000).toFixed(0)}s${wrapped ? ', full pass' : ''}${stoppedFor ? `; stopped: ${stoppedFor}` : ''}`;
+  console.log(`done: ${detail}`);
+  if (!DRY) {
+    recordOutcome({
+      job: JOB,
+      status: moved > 0 ? 'progressed' : wrapped ? 'idle' : 'stood_down',
+      progressed: moved,
+      // A pass that stopped early cannot say how much is left; a full pass that moved nothing
+      // has nothing left.
+      backlog: wrapped ? 0 : null,
+      detail,
+    });
+  }
+} catch (err) {
+  if (!DRY) recordOutcome({ job: JOB, status: 'failed', progressed: moved, backlog: null, detail: (err as Error).message });
+  console.error(err);
+  process.exitCode = 1;
+} finally {
+  await pool.end();
 }
-const left = Number((await q<{ n: string }>(MOVE_COUNT_REMAINING_SQL))[0].n);
-console.log(`done: ${moved} row(s), ${(bytes / 1e6).toFixed(0)} MB of text, ` +
-            `${((Date.now() - t0) / 1000).toFixed(0)}s, ${left.toLocaleString()} still to move`);
-await pool.end();

@@ -110,3 +110,5 @@ data/thumbnails/
 
 # API key plaintext, written once at creation and never committed
 .secrets/
+/logs/*.jsonl
+/logs/state/

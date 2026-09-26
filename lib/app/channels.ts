@@ -15,6 +15,7 @@ import { metaFromListItem, saveChannelMeta } from './channel-meta';
 import { searchTerms, normalizeName } from './channel-search';
 import { classifyForInsert, skipForInsert } from '../ingest/classify';
 import { firstSampleWrite, broadcastMetadataWrite } from '../ingest/first-sample';
+import { videoInsertSql, videoInsertParams } from '../ingest/video-insert';
 import { SERIES_DIRTY_MARK_SQL } from '../readings/series-store';
 import { refreshChannelStats } from './channel-stats';
 import { revalidateChannel } from './revalidate';
@@ -398,22 +399,8 @@ export async function insertVideos(items: any[], dataSource: 'user' | 'competito
     const likes = clampCount(parseInt(st.likeCount || '0', 10));
     const comments = clampCount(parseInt(st.commentCount || '0', 10));
     try {
-      await q(
-        `insert into videos (id, title, description, channel_id, channel_name, published_at,
-                             view_count, like_count, comment_count, duration, thumbnail_url,
-                             data_source, is_competitor, import_date, updated_at, user_id,
-                             is_short, shorts_checked_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,now(),now(),$13,
-                 $14, case when $15::boolean then now() else null end)
-         on conflict (id) do update set
-           is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
-           shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)`,
-        [v.id, sn.title || '', (sn.description || '').slice(0, 50000), sn.channelId,
-         sn.channelTitle || '', sn.publishedAt, views, likes, comments,
-         v.contentDetails?.duration || null,
-         sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || null,
-         dataSource, SYSTEM_USER, cls.is_short, cls.shorts_checked_at === 'now']
-      );
+      // One statement for the row AND its text (lib/ingest/video-insert.ts).
+      await q(videoInsertSql(), videoInsertParams(v, cls, { dataSource, userId: SYSTEM_USER }));
       // The response we just read IS an observation at a known instant, so it is recorded as
       // a sample too: a video imported days after publish is otherwise unmeasured until the
       // next tracker tick (lib/ingest/first-sample.ts).

@@ -10,6 +10,7 @@
 // null-out). Writing both keeps those routes correct while the side table is proven, and the
 // verification step is exactly "do the two agree for every row".
 import { q } from '../admin/db';
+import { CLEARED_COLUMNS, type TextColumn } from './video-text-move';
 
 export interface VideoText {
   videoId: string;
@@ -144,3 +145,70 @@ export const NEEDS_SUMMARY_EMBEDDING_COUNT_SQL = `
     from videos v ${VIDEO_TEXT_JOIN}
    where ${coalesced('llm_summary')} is not null
      and v.llm_summary_embedding_synced = false`;
+
+// ---- the ingest writers ---------------------------------------------------------------
+//
+// The two statements that bring text in from YouTube. They live here, not in lib/ingest, because
+// this is the one module allowed to name the text columns against `videos` — the ratchet
+// (video-text-access.test.ts) cannot see through a template that splices column lists, so the
+// only honest place for such a template is inside the allowed module.
+
+/**
+ * The one INSERT that brings a new video into the corpus — and its text into video_text.
+ * Params: lib/ingest/video-insert.ts videoInsertParams.
+ */
+export function videoInsertSql(cleared: readonly TextColumn[] = CLEARED_COLUMNS): string {
+  const withDescription = !cleared.includes('description');
+  const cols = ['id', 'title', ...(withDescription ? ['description'] : []), 'channel_id', 'channel_name',
+    'published_at', 'view_count', 'like_count', 'comment_count', 'duration', 'thumbnail_url', 'data_source',
+    'is_competitor', 'import_date', 'updated_at', 'user_id', 'is_short', 'shorts_checked_at'];
+  const vals = ['$1', '$2', ...(withDescription ? ['$3'] : []), '$4', '$5', '$6', '$7', '$8', '$9', '$10',
+    '$11', '$12', 'true', 'now()', 'now()', '$13', '$14', 'case when $15::boolean then now() else null end'];
+  return `
+    with ins as (
+      insert into videos (${cols.join(', ')})
+      values (${vals.join(', ')})
+      on conflict (id) do update set
+        is_short = case when excluded.shorts_checked_at is not null then excluded.is_short else videos.is_short end,
+        shorts_checked_at = coalesce(excluded.shorts_checked_at, videos.shorts_checked_at)
+      returning id, (xmax = 0) as inserted
+    )
+    insert into video_text (video_id, description, metadata, llm_summary, moved_at)
+    select id, $3::text, null, null, now() from ins where inserted
+    on conflict (video_id) do nothing`;
+}
+
+/** The broadcast-field merge, applied to whichever copy of `metadata` is named. */
+const mergeBroadcast = (m: string) => `jsonb_set(
+      (case when jsonb_typeof(${m}) = 'object' then ${m} else '{}'::jsonb end) || jsonb_build_object('live_broadcast_content', $2::text),
+      '{live_streaming_details}',
+      (case when jsonb_typeof(${m}->'live_streaming_details') = 'object'
+        then ${m}->'live_streaming_details' else '{}'::jsonb end) || $3::jsonb, true)`;
+
+/**
+ * The live-broadcast metadata write. $1 id, $2 live_broadcast_content, $3 live_streaming_details
+ * json. Merges only broadcast fields; retains existing start/end when an API part omits them.
+ *
+ * Both copies of `metadata` stay byte-equal (2026-09-26). While `metadata` still has direct
+ * readers on `videos` (lib/app/video-text-access.test.ts) this updates `videos` and mirrors the
+ * result into video_text in the same statement; the null-out can only ever clear a row whose two
+ * copies agree, so a write to one copy alone would strand that row. A first side row copies all
+ * three columns — a metadata-only row would have a NULL description, and the mover's anti-join
+ * would then never copy the real one. Once `metadata` is cleared, only video_text is written.
+ */
+export function broadcastMetadataSql(cleared: readonly TextColumn[] = CLEARED_COLUMNS): string {
+  if (cleared.includes('metadata')) {
+    return `insert into video_text (video_id, description, metadata, llm_summary, moved_at)
+      select v.id, v.description, ${mergeBroadcast('v.metadata')}, v.llm_summary, now()
+        from videos v where v.id = $1
+      on conflict (video_id) do update set metadata = ${mergeBroadcast('video_text.metadata')}, moved_at = now()`;
+  }
+  return `with upd as (
+      update videos set metadata = ${mergeBroadcast('metadata')}
+      where id = $1
+      returning id, description, metadata, llm_summary
+    )
+    insert into video_text (video_id, description, metadata, llm_summary, moved_at)
+    select id, description, metadata, llm_summary, now() from upd
+    on conflict (video_id) do update set metadata = excluded.metadata`;
+}

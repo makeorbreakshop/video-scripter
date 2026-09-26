@@ -25,6 +25,7 @@
 // to reclaim nothing.
 import path from 'node:path';
 import { directReaders, MOVED_COLUMNS, type MovedColumn } from './video-text-sweep';
+import { CLEARED_COLUMNS } from './video-text-move';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 
@@ -32,12 +33,14 @@ const readersOf = (col: MovedColumn) =>
   directReaders(ROOT, [col]).map((h) => h.file).sort();
 
 /**
- * CLEARED: columns with no direct readers left. The null-out may clear these.
+ * CLEARED: columns with no direct readers left. The null-out may clear these, and the ingest
+ * writers stop writing them to `videos`. The list itself lives in lib/app/video-text-move.ts
+ * (CLEARED_COLUMNS) so the runtime and this ratchet can never disagree about it.
  *
  * llm_summary got here on 2026-09-14: seven workers collapsed into one, five services and
  * fourteen routes repointed at the accessor.
  */
-const CLEARED: MovedColumn[] = ['llm_summary'];
+const CLEARED: MovedColumn[] = [...CLEARED_COLUMNS];
 
 /**
  * BLOCKED: columns that still have direct readers, with the exact list. Each entry has to be
@@ -59,7 +62,6 @@ const BLOCKED: Record<string, string[]> = {
     'app/api/youtube/backfill-rss/route.ts',
     'app/api/youtube/refresh-channel-analytics/route.ts',
     'app/api/youtube/sync-channel/route.ts',
-    'lib/app/channels.ts',
     'lib/vector-db-service.ts',
   ],
   metadata: [
@@ -77,7 +79,6 @@ const BLOCKED: Record<string, string[]> = {
     'lib/admin/queries.ts',
     'lib/app/video-page.ts',          // the video detail page's own server query
     'lib/collaboration-mining-discovery.ts',
-    'lib/ingest/first-sample.ts',     // live ingest: WRITES metadata every night
     'lib/multi-channel-shelves-discovery.ts',
     'lib/playlist-creator-discovery.ts',
     'lib/vector-db-service.ts',

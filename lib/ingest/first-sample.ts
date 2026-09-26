@@ -9,6 +9,8 @@ import { broadcastMetadata } from '../youtube/broadcast';
 // the part we could.
 import { clampCount } from '../nightly/tracking-core';
 import { seriesDirtyWrite } from '../readings/series-store';
+import { CLEARED_COLUMNS, type TextColumn } from '../app/video-text-move';
+import { broadcastMetadataSql } from '../app/video-text';
 
 export interface Write { sql: string; params: any[] }
 
@@ -58,17 +60,13 @@ export function ingestWrites(item: any, tier: number, at: Date): Write[] {
   return out;
 }
 
-/** Merge only broadcast fields; retain existing start/end when an API part omits them. */
-export function broadcastMetadataWrite(item: any): Write | null {
+/**
+ * Merge only broadcast fields into `metadata`, keeping both copies byte-equal
+ * (lib/app/video-text.ts broadcastMetadataSql says how and why).
+ */
+export function broadcastMetadataWrite(item: any, cleared: readonly TextColumn[] = CLEARED_COLUMNS): Write | null {
   const patch = broadcastMetadata(item);
   if (!item?.id || !patch) return null;
-  return {
-    sql: `update videos set metadata = jsonb_set(
-      (case when jsonb_typeof(metadata) = 'object' then metadata else '{}'::jsonb end) || jsonb_build_object('live_broadcast_content', $2::text),
-      '{live_streaming_details}',
-      (case when jsonb_typeof(metadata->'live_streaming_details') = 'object'
-        then metadata->'live_streaming_details' else '{}'::jsonb end) || $3::jsonb, true)
-      where id = $1`,
-    params: [item.id, patch.live_broadcast_content, JSON.stringify(patch.live_streaming_details)],
-  };
+  const params = [item.id, patch.live_broadcast_content, JSON.stringify(patch.live_streaming_details)];
+  return { sql: broadcastMetadataSql(cleared), params };
 }

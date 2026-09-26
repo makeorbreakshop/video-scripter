@@ -16,82 +16,22 @@
 // `videos` in primary-key order and anti-join what `video_text` already holds. The cursor is
 // then just a keyset over `videos`, and the anti-join makes the whole thing idempotent and
 // restartable from anywhere — including from '' — regardless of what the trigger did.
+//
+// 2026-09-26: every statement is now a bounded WINDOW of primary keys (moveWindowSql,
+// nullWindowSql), and the null-out has no corpus-wide gate. Both defects are described where
+// the SQL is built.
 
 /** The columns that move. Exactly these three; the list is asserted in the test. */
 export const TEXT_COLUMNS = ['description', 'metadata', 'llm_summary'] as const;
-
-/**
- * One batch of the move. $1 = keyset cursor over videos.id (use '' to start), $2 = batch size.
- *
- * `not exists (… video_text …)` is the correctness guarantee and `v.id > $1` is only the
- * performance one: with the anti-join alone the query would still be correct but would rescan
- * from the start of the table each time; with the keyset each batch is one ordered index range.
- */
-export function moveBatchSql(dry: boolean): string {
-  const cols = TEXT_COLUMNS.join(', ');
-  const page = `
-    with page as (
-      select id, ${cols}
-        from videos v
-       where v.id > $1
-         and not exists (select 1 from video_text vt where vt.video_id = v.id)
-       order by v.id
-       limit $2
-    )`;
-  if (dry) {
-    return `${page}
-    select id,
-           (coalesce(length(description), 0) + coalesce(length(metadata::text), 0))::text as b
-      from page`;
-  }
-  return `${page}, ins as (
-      insert into video_text (video_id, ${cols}, moved_at)
-      select id, ${cols}, now() from page
-      on conflict (video_id) do update
-         set description = excluded.description, metadata = excluded.metadata,
-             llm_summary = excluded.llm_summary, moved_at = excluded.moved_at
-      returning video_id
-    )
-    select p.id,
-           (coalesce(length(p.description), 0) + coalesce(length(p.metadata::text), 0))::text as b
-      from page p
-     where exists (select 1 from ins)`;
-}
-
-/**
- * How many videos still have no row in video_text.
- *
- * Deliberately counted over `videos`, not over `video_text`: `count(*) from video_text` is what
- * made the broken run look finished. 19,659 rows moved is a true statement and a useless one.
- */
-export const MOVE_COUNT_REMAINING_SQL = `
-  select count(*)::text as n
-    from videos v
-   where not exists (select 1 from video_text vt where vt.video_id = v.id)`;
-
-// ---- the null-out ---------------------------------------------------------------------
-// Copying does not reclaim anything: until the originals are NULL, `videos` still holds every
-// byte. This is the step that actually shrinks the table — and the only irreversible one, so it
-// refuses to touch a row it has not just proved is already safely in video_text.
-
-/**
- * One batch of the null-out. $1 = keyset cursor over videos.id, $2 = batch size.
- *
- * THE SAFETY PROPERTY: a row is cleared only when video_text holds a copy that is byte-for-byte
- * identical in all three columns, checked in the same statement that does the clearing — so
- * there is no window in which the comparison could be stale.
- *
- * `is not distinct from`, never `=`. `=` yields UNKNOWN when either side is NULL, and a WHERE
- * clause treats UNKNOWN as false, so `=` would silently skip every row with a NULL column
- * (6.7 % have no description, 26 % no metadata) and leave them forever. Worse, the inverse
- * mistake — writing the predicate so UNKNOWN passes — would clear a row whose side copy is NULL
- * against a real description, destroying the only copy. `is not distinct from` is exact on NULLs
- * in both directions.
- *
- * The `is not null` disjunction makes it idempotent: a row already cleared is equal to its
- * (also NULL) side copy and would otherwise match this predicate for ever.
- */
 export type TextColumn = (typeof TEXT_COLUMNS)[number];
+
+/**
+ * Which moved columns have no direct readers left, and may therefore be cleared on `videos` and
+ * written only to video_text. ONE list, read by the null-out (scripts/null-video-text.ts), by the
+ * ingest writers (lib/ingest/video-insert.ts) and by the ratchet (video-text-access.test.ts).
+ * A column joins it only when lib/app/video-text-access.test.ts says it has no readers left.
+ */
+export const CLEARED_COLUMNS: readonly TextColumn[] = ['llm_summary'];
 
 /** Reject anything that is not one of the three, and reject an empty list. */
 function checkColumns(cols: readonly TextColumn[]): readonly TextColumn[] {
@@ -104,64 +44,113 @@ function checkColumns(cols: readonly TextColumn[]): readonly TextColumn[] {
   return cols;
 }
 
-export function nullBatchSql(columns: readonly TextColumn[] = TEXT_COLUMNS): string {
-  const cols = checkColumns(columns);
-  const equal = cols.map((c) => `v.${c} is not distinct from vt.${c}`).join('\n           and ');
-  const anyNotNull = cols.map((c) => `v.${c} is not null`).join(' or ');
-  const sets = cols.map((c) => `${c} = null`).join(', ');
-  return `
-    with page as (
-      select v.id
-        from videos v
-        join video_text vt on vt.video_id = v.id
-       where v.id > $1
-         and ${equal}
-         and (${anyNotNull})
-       order by v.id
-       limit $2
-    )
-    update videos v
-       set ${sets}
-      from page p
-     where v.id = p.id
-    returning v.id`;
-}
-
-/** Rows that have been moved and still hold their originals, in the given columns. */
-export function nullCountRemainingSql(columns: readonly TextColumn[] = TEXT_COLUMNS): string {
-  const anyNotNull = checkColumns(columns).map((c) => `v.${c} is not null`).join(' or ');
-  return `
-  select count(*)::text as n
-    from videos v
-    join video_text vt on vt.video_id = v.id
-   where (${anyNotNull})`;
-}
+/**
+ * The next window of primary keys. Every statement below starts from this, so its cost is
+ * bounded by $2 however sparse the actual work has become.
+ *
+ * 2026-09-15..26: the previous form, `where v.id > $1 and not exists (…) order by v.id limit
+ * 2000`, had to walk the whole primary key to find 2,000 unmoved rows once only ~5,000 of
+ * 1.17 M were left — the 120 s statement timeout killed it (57014). A window cannot do that.
+ */
+const WINDOW = `win as materialized (select id from videos where id > $1 order by id limit $2)`;
 
 /**
- * Disagreements between the two copies, in the given columns. Must return zero rows before any
- * null-out runs: a non-empty result means the mover and the mirror trigger have diverged, and
- * clearing on that basis would lose text. $1 = limit.
+ * One window of the move. $1 = cursor ('' to start), $2 = window size.
+ * Returns one row: next_cursor (null once the window is empty), scanned, moved, bytes.
  *
- * `v.<col> is not null and ...`: once the writers stop populating the `videos` columns and write
- * only to video_text, the ordinary state of a freshly-written row is a NULL original against a
- * real side copy. The bare `is distinct from` form calls that a disagreement and the gate would
- * refuse to run at all — on rows where there is, by definition, nothing to destroy. This gate
- * exists to protect text that only `videos` still holds.
+ * `not exists (… video_text …)` is the correctness guarantee; the window is only the cost bound.
+ * The anti-join runs on the window's keys alone (index-only on both primary keys) BEFORE any
+ * `videos` heap row is fetched: fetching first cost 2.6 s per 5,000-key window (EXPLAIN ANALYZE,
+ * 2026-09-26) to find 16-25 unmoved rows in it.
+ * `on conflict do nothing`: a side row that appeared since the snapshot came from a writer that
+ * already wrote the current text (lib/ingest/video-insert.ts) — never overwrite it with ours.
  */
-export function nullVerifySql(columns: readonly TextColumn[] = TEXT_COLUMNS): string {
-  const bad = checkColumns(columns)
-    .map((c) => `(v.${c} is not null and v.${c} is distinct from vt.${c})`).join('\n      or ');
-  return `
-  select v.id
-    from videos v
-    join video_text vt on vt.video_id = v.id
-   where ${bad}
-   limit $1`;
+export function moveWindowSql(dry: boolean): string {
+  const cols = TEXT_COLUMNS.join(', ');
+  const page = `
+    with ${WINDOW},
+    unmoved as materialized (
+      select win.id from win
+       where not exists (select 1 from video_text vt where vt.video_id = win.id)
+    ),
+    page as (
+      select v.id, ${TEXT_COLUMNS.map((c) => `v.${c}`).join(', ')}
+        from unmoved u join videos v on v.id = u.id
+    )`;
+  const tail = (moved: string) => `
+    select (select max(id) from win) as next_cursor,
+           (select count(*) from win)::int as scanned,
+           ${moved} as moved,
+           (select coalesce(sum(coalesce(length(description), 0) + coalesce(length(metadata::text), 0)), 0)
+              from page)::bigint as bytes`;
+  if (dry) return `${page}${tail('(select count(*) from page)::int')}`;
+  return `${page},
+    ins as (
+      insert into video_text (video_id, ${cols}, moved_at)
+      select id, ${cols}, now() from page
+      on conflict (video_id) do nothing
+      returning video_id
+    )${tail('(select count(*) from ins)::int')}`;
 }
 
-/** Back-compat aliases for the all-three case. */
-export const NULL_COUNT_REMAINING_SQL = nullCountRemainingSql();
-export const NULL_VERIFY_SQL = nullVerifySql();
+// ---- the null-out ---------------------------------------------------------------------
+// Copying reclaims nothing: until the originals are NULL, `videos` still holds every byte. This
+// is the only irreversible step, so it clears a row only after proving, in the same statement,
+// that video_text holds the same bytes.
+//
+// THE DEFECT IT REPLACES (2026-09-14..26): the scheduled wrapper ran only when ZERO videos were
+// unmoved, corpus-wide, by 05:48 — while daily ingest kept 3-30 K unmoved and the job itself
+// started at 06:00. It stood down twelve nights out of twelve. There is no global gate now: each
+// window clears what it can prove and counts what it cannot; tomorrow's pass picks up the rest.
+
+/**
+ * One window of the null-out. $1 = cursor, $2 = window size.
+ * Returns one row: next_cursor, scanned, cleared, disagree, unmoved_holding.
+ *
+ * THE SAFETY PROPERTY. The equality predicate is in the UPDATE's own WHERE, on `videos` as the
+ * target: `v.<col> is not distinct from vt.<col>`. Under READ COMMITTED a target row that was
+ * changed after our snapshot is re-checked against its new version (EvalPlanQual), so a value
+ * written concurrently is never nulled on the strength of an old match. `is not distinct from`,
+ * never `=`: `=` is UNKNOWN on NULLs, which would skip rows forever or — written the other way —
+ * clear a real original against a NULL side copy.
+ *
+ * `(v.<col> is not null or …)` keeps it idempotent. The `stats` CTE reads the same snapshot the
+ * UPDATE started from, so disagree / unmoved_holding describe the rows it had to leave alone.
+ */
+export function nullWindowSql(columns: readonly TextColumn[]): string {
+  const cols = checkColumns(columns);
+  const equal = cols.map((c) => `v.${c} is not distinct from vt.${c}`).join('\n       and ');
+  const holds = `(${cols.map((c) => `v.${c} is not null`).join(' or ')})`;
+  const sets = cols.map((c) => `${c} = null`).join(', ');
+  return `
+    with ${WINDOW},
+    stats as (
+      select count(*) filter (where ${holds} and vt.video_id is not null
+                               and not (${equal}))::int as disagree,
+             count(*) filter (where ${holds} and vt.video_id is null)::int as unmoved_holding
+        from win join videos v on v.id = win.id
+        left join video_text vt on vt.video_id = v.id
+    ),
+    upd as (
+      update videos v
+         set ${sets}
+        from video_text vt
+       where vt.video_id = v.id
+         and v.id in (select id from win)
+         and ${holds}
+         and ${equal}
+      returning v.id
+    )
+    select (select max(id) from win) as next_cursor,
+           (select count(*) from win)::int as scanned,
+           (select count(*) from upd)::int as cleared,
+           stats.disagree as disagree,
+           stats.unmoved_holding as unmoved_holding
+      from stats`;
+}
+
+/** Is any llm_summary still held on `videos`? Answered from the partial index, not the heap. */
+export const LLM_SUMMARY_HOLDING_SQL = `select 1 as held from videos where llm_summary is not null limit 1`;
 
 // ---- the trigger the null-out must not run underneath ---------------------------------
 //
@@ -170,7 +159,7 @@ export const NULL_VERIFY_SQL = nullVerifySql();
 // kept the two copies honest while the readers were being switched, and it is now the single
 // most dangerous object in this migration.
 //
-// nullBatchSql() is `update videos set description = null, metadata = null, llm_summary = null`.
+// nullWindowSql() is `update videos set description = null, metadata = null, llm_summary = null`.
 // That is precisely the WHEN condition. The trigger fires and upserts NULL, NULL, NULL into
 // video_text. So the null-out does not free 2 GB of text — it DESTROYS it, one batch at a
 // time, and every safety check in scripts/null-video-text.ts still passes at every step,
@@ -242,5 +231,8 @@ export const NULL_COVERAGE_SQL = `
   from sample s
   join videos v on v.id = s.video_id`;
 
-/** How many rows the mover has placed. Over video_text alone — never touches `videos`. */
-export const MOVED_COUNT_SQL = `select count(*)::text as n from video_text`;
+/**
+ * How many rows the mover has placed — the planner's estimate, from pg_class. An exact count is a
+ * sequential scan of a 1.3 GB heap for a number that only ever appears in a report.
+ */
+export const MOVED_COUNT_SQL = `select greatest(reltuples, 0)::bigint::text as n from pg_class where oid = 'video_text'::regclass`;
