@@ -146,7 +146,7 @@ crashing, or worse, reporting 0 GB/day from zero projects); **the PAT needs rene
 | 2 | drop the three llm_summary indexes (**before** the null-out, so its updates can be HOT) | `psql "$DATABASE_SESSION_URL" -v ON_ERROR_STOP=1 -f sql/2026-09-26-drop-llm-summary-indexes.sql` | `DROP INDEX CONCURRENTLY`: no blocking lock | **242 MB** now |
 | 3 | the llm_summary null-out then runs nightly by itself (or now) | `npx tsx scripts/null-video-text.ts --dry-run` then without `--dry-run` | row locks per 5,000-key window | frees ~90 MB inside the heap |
 | 4 | partition `video_score_history` | `psql "$DATABASE_SESSION_URL" -v ON_ERROR_STOP=1 -f sql/2026-09-26-partition-video-score-history.sql`, then the straggler copy + `drop table video_score_history_unpartitioned` in its header | writers blocked ~2–5 s (1.3 s on the clone, without WAL); readers not | future bursts leave by themselves |
-| 5 | clear `description` / `metadata` (see §1c) | flip `CLEARED_COLUMNS`; apply the metadata DB-object migration first | — | ~1.06 GB of live text leaves `videos` |
+| 5 | clear `description` / `metadata` (see §1c: readers already repointed; audit 12 `select('*')` routes + unified-import first) | add to `CLEARED_COLUMNS`; for metadata apply `sql/2026-09-26-metadata-db-readers.sql` first | recreated dashboard matviews: readers of each wait 1–3 min; nothing else | ~1.06 GB of live text leaves `videos` |
 | 6 | `pg_repack videos` after 5 has completed a full pass | `npx tsx scripts/reclaim-table.ts --table videos --dry-run`, then `--approved` | **online**: ACCESS EXCLUSIVE only at start and swap (seconds, `--wait-timeout 60`); total run est. 2–10 min (score-history ran at 76 MB/s; `videos` rebuilds 45 indexes, so expect the slow end); needs ~3 GB free (10.7 GB free today) | `videos` 4,152 → **~2.5 GB** |
 | 7 | readings terminal tier (§3) | decision | deletes archived readings | ~50–100 MB/day of growth stops |
 | 8 | `temp_file_limit` | `alter role postgres set temp_file_limit = '2GB';` (and the app role) | config | no single query can spill toward the 90 % trigger (max ever: 542 MB) |
@@ -160,12 +160,35 @@ it; the text columns must be cleared first.
 
 ### §1c — clearing description and metadata
 
-The code readers are being repointed at the accessor on `fix/disk-growth-readers` (see the PR
-notes when merged). `metadata` is additionally blocked by four live database objects —
-`competitor_youtube_channels` (live ingest), `competitor_channel_summary`, `analytics_stats`,
-`database_channel_health` and the functions `get_competitor_channel_stats`, `get_random_video_ids`
-— which need redefinition to read `video_text` before `metadata` may join `CLEARED_COLUMNS`
-(`lib/app/video-text-db-objects.db.test.ts` enforces it).
+**Done on this branch (merge `a516999`):** all 27 ratchet entries (10 `description`, 17 `metadata`)
+plus `discover-new-videos` now read and write through `lib/app/video-text.ts`
+(`videosTextPayload` + `writeVideoTextFields` for writers, `VIDEO_TEXT_JOIN` + coalesce or
+`videoTextFor`/`hydrateVideoTextFields` for readers). Both `BLOCKED` lists are empty. The three
+`description ilike '%#shorts%'` filters now use the verified `is_short` (deliberate). Evidence for
+the `metadata->>'youtube_channel_id'` rewrites (TABLESAMPLE 1 %, one-row aggregates): wherever the
+key exists it equals `channel_id` (7,475/7,475), but ~35 % of competitor rows lack it, so presence
+checks still go through the side table.
+
+**`CLEARED_COLUMNS` is deliberately still `['llm_summary']`.** Before adding `description` or
+`metadata`:
+
+1. Audit the `select('*')` readers the scanner cannot see (payload/row variables): `vector/videos`,
+   `vector/process-video`, `lib/pinecone-summary-service.ts`, `tools/find-content-gaps`,
+   `search/unified`, `tools/detect-novelty-factors`, `tools/suggest-pattern-hypotheses`,
+   `app/actions/skyscraper-analysis.ts`, `skyscraper/analyze-stream`,
+   `tools/find-competitive-successes`, `classification/auto-run`,
+   `tools/get-comprehensive-video-analysis`.
+2. Fix `lib/unified-video-import.ts`'s small-batch `.upsert(videos)`: it writes all three text
+   columns (including the already-cleared `llm_summary`) into `videos` and no `video_text`. Safe for
+   the null-out (a disagreeing row is never cleared, a missing side row is moved first) but it
+   re-duplicates text.
+3. For `metadata` only: apply `sql/2026-09-26-metadata-db-readers.sql` (awaiting approval) so no
+   live database object reads it (`lib/app/video-text-db-objects.db.test.ts`). It freezes
+   `competitor_youtube_channels` rather than recomputing it.
+4. Deploy the app before the next 06:00 null-out after the flip.
+
+After the flip the nightly null-out clears the column by itself (description/metadata are not
+indexed except `idx_videos_competitor_metadata`, which then becomes dead weight: 28 MB).
 
 Cheaper alternative, for the record: null the **side** copies of description/metadata in
 `video_text` instead (the accessor already falls back to `videos`), then repack `video_text`.
