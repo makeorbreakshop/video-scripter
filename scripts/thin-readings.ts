@@ -28,7 +28,7 @@ import {
   HISTORY_DELETE_BATCH_SQL, HISTORY_COUNT_DAY_SQL, HISTORY_OLDEST_DAY_SQL,
   ARCHIVE_LEDGER_DDL, ARCHIVE_LEDGER_THINNED_DDL, LEDGER_SELECT_SQL, LEDGER_THINNED_UPSERT_SQL,
 } from '../lib/readings/sql';
-import { decideThin, type LedgerRow, type ThinnedTier } from '../lib/readings/chain';
+import { decideThin, ledgerTier, bucketFor, daysBehindPolicy, type LedgerRow } from '../lib/readings/chain';
 import { isRetryableLockError, retryDelaysMs, chunk } from '../lib/readings/thin-safety';
 import { recordOutcome } from '../lib/ops/job-outcomes';
 import {
@@ -97,24 +97,28 @@ async function thinBatch(sql: string, day: string, ids: string[]): Promise<numbe
  * the hourly window plus a few days either side of the 30-day boundary covers both transitions.
  * `--all` walks everything, for a backfill or after a policy change.
  */
-function candidateDays(oldest: string): string[] {
+function candidateDays(source: ReadingSource, oldest: string): string[] {
   const days = dayRange(oldest, newest);
   if (all || onlyDay) return onlyDay ? [onlyDay] : days;
   const hourlyStart = utcDay(now.getTime() - (READING_RETENTION.hourlyWindowDays + 3) * 86_400_000);
-  return days.filter((d) => d >= hourlyStart);
+  // Plus every older day the ledger says is behind today's policy — a day crossing into the weekly
+  // tier at 60 days, or one thinned under the pre-2026-09-26 daily rule. Pure ledger read, no counts.
+  const behind = new Set(daysBehindPolicy(ledger, source, now));
+  return days.filter((d) => d >= hourlyStart || behind.has(d));
 }
 
 async function thinDay(source: ReadingSource, day: string) {
   // The tier is decided from the day's own end, so a day only ever moves dense → hourly → daily.
   const tier = tierOf(Date.parse(`${day}T23:59:59.999Z`), now);
-  if (tier === 'dense') return;
-  const bucket: ThinnedTier = tier === 'hourly' ? 'hour' : 'day';
+  const bucket = bucketFor(day, now);
+  if (!bucket) return;
+  const recorded = ledgerTier(bucket);
 
   const [{ n: beforeN }] = await q<{ n: string }>(countDaySql(source), [day]);
   const before = Number(beforeN);
 
   // THE RULE, and then the cost. lib/readings/chain.ts decideThin() owns both.
-  const decision = decideThin(day, source, bucket, before, ledger);
+  const decision = decideThin(day, source, recorded, before, ledger);
   if (decision.action === 'skip') {
     if (decision.reason === 'unverified') {
       skipped++;
@@ -160,16 +164,16 @@ async function thinDay(source: ReadingSource, day: string) {
   const [{ n: afterN }] = await q<{ n: string }>(countDaySql(source), [day]);
   const after = Number(afterN);
   // Record where this day was left, so tomorrow night can skip it without walking it.
-  await pool.query(LEDGER_THINNED_UPSERT_SQL, [day, source, bucket, after]);
+  await pool.query(LEDGER_THINNED_UPSERT_SQL, [day, source, recorded, after]);
   const row = ledger.find((d) => d.day === day && d.source === source);
-  if (row) { row.thinned_tier = bucket; row.thinned_rows = after; }
+  if (row) { row.thinned_tier = recorded; row.thinned_rows = after; }
   log(`THINNED ${source} ${day} (${tier}): ${before.toLocaleString()} → ${after.toLocaleString()} rows (−${deleted.toLocaleString()})`);
 }
 
 for (const source of ['rss', 'api'] as ReadingSource[]) {
   const [{ day: oldest }] = await q<{ day: string | null }>(oldestDaySql(source));
   if (!oldest) { log(`${source}: table is empty`); continue; }
-  const days = candidateDays(oldest).slice(0, maxDays);
+  const days = candidateDays(source, oldest).slice(0, maxDays);
   if (!days.length) { log(`${source}: nothing outside the ${READING_RETENTION.denseWindowDays}-day dense window`); continue; }
   for (const day of days) await thinDay(source, day);
 }

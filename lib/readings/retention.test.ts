@@ -29,7 +29,8 @@ describe('tiers', () => {
     expect(tierOf(ago(4.01), NOW)).toBe('hourly');
     expect(tierOf(ago(13.99), NOW)).toBe('hourly');
     expect(tierOf(ago(14.01), NOW)).toBe('daily');
-    expect(tierOf(ago(400), NOW)).toBe('daily');
+    expect(tierOf(ago(40), NOW)).toBe('daily');
+    expect(tierOf(ago(400), NOW)).toBe('weekly');
   });
 
   test('the boundaries are exactly 4 and 14 days, not 3.5 or 15', () => {
@@ -88,13 +89,13 @@ describe('survivingReadings', () => {
     expect(survivingReadings(rows, NOW)).toHaveLength(2);
   });
 
-  test('past 30 days it is the first and last reading per video per UTC day', () => {
-    const day = '2026-06-01';
+  test('past 14 days it is the last reading per video per UTC day, plus the video\'s first', () => {
+    const day = '2026-08-01';
     const rows = [
       r('v1', `${day}T01:00:00.000Z`, 1),
       r('v1', `${day}T13:00:00.000Z`, 2),
       r('v1', `${day}T23:59:00.000Z`, 3),
-      r('v1', '2026-06-02T00:01:00.000Z', 4),
+      r('v1', '2026-08-02T00:01:00.000Z', 4),
     ];
     expect(survivingReadings(rows, NOW).map((k) => k.views)).toEqual([1, 3, 4]);
   });
@@ -415,5 +416,90 @@ describe('the SQL agrees with the pure policy', () => {
 
   test('an unknown source cannot be turned into SQL', () => {
     expect(() => tableFor('videos' as never)).toThrow();
+  });
+});
+
+// 2026-09-26: the daily tier had no end — up to two readings per video per day kept for ever
+// (~46 MB/day of routine rss+api rows). Two changes, both preserving what growthExponent() reads
+// (the video's earliest and latest readings) by construction:
+//   1. past the hourly tier the "first reading" rule is first of the VIDEO, not first of each day;
+//   2. past weeklyAfterDays (60) one reading per video per ISO week (the last) survives.
+describe('the terminal tiers (2026-09-26)', () => {
+  test('the weekly tier starts at 60 days', () => {
+    expect(READING_RETENTION.weeklyAfterDays).toBe(60);
+    expect(tierOf(ago(59.99), NOW)).toBe('daily');
+    expect(tierOf(ago(60.01), NOW)).toBe('weekly');
+  });
+
+  test('in the daily tier the first reading of each later day is no longer kept', () => {
+    const rows = [
+      r('v1', '2026-08-01T01:00:00.000Z', 10),  // first of the video: kept
+      r('v1', '2026-08-01T23:00:00.000Z', 11),  // last of day 1: kept
+      r('v1', '2026-08-02T01:00:00.000Z', 12),  // first of day 2: NOT kept any more
+      r('v1', '2026-08-02T23:00:00.000Z', 13),  // last of day 2: kept
+    ];
+    expect(survivingReadings(rows, NOW).map((k) => k.views)).toEqual([10, 11, 13]);
+  });
+
+  test('in the weekly tier only the last reading of each ISO week survives, plus the first of the video', () => {
+    // 2026-06-01 is a Monday; the week runs to Sunday 2026-06-07.
+    const rows = [
+      r('v1', '2026-06-01T05:00:00.000Z', 100), // first of the video
+      r('v1', '2026-06-03T05:00:00.000Z', 130),
+      r('v1', '2026-06-07T22:00:00.000Z', 170), // last of week 1
+      r('v1', '2026-06-08T05:00:00.000Z', 180),
+      r('v1', '2026-06-10T05:00:00.000Z', 200), // last of week 2 (and of the video)
+    ];
+    expect(survivingReadings(rows, NOW).map((k) => k.views)).toEqual([100, 170, 200]);
+  });
+
+  test('growthExponent endpoints survive in every tier: earliest and latest positive readings', () => {
+    const rows: Reading[] = [];
+    for (let d = 0; d < 120; d++) rows.push(r('v1', ago(200 - d, 3_600_000), 1000 + d));
+    const kept = survivingReadings(rows, NOW);
+    const t = (x: Reading) => Date.parse(String(x.at));
+    expect(Math.min(...kept.map(t))).toBe(Math.min(...rows.map(t)));
+    expect(Math.max(...kept.map(t))).toBe(Math.max(...rows.map(t)));
+    expect(kept.length).toBeLessThanOrEqual(20); // ~17 weeks + the first
+  });
+
+  test('a first positive reading after zeros is kept (growthExponent drops non-positive readings)', () => {
+    const rows = [
+      r('v1', '2026-06-01T05:00:00.000Z', 0),
+      r('v1', '2026-06-02T05:00:00.000Z', 50),  // first POSITIVE: kept
+      r('v1', '2026-06-07T22:00:00.000Z', 90),
+    ];
+    expect(survivingReadings(rows, NOW).map((k) => k.views)).toEqual([0, 50, 90]);
+  });
+
+  test('the launch window keeps hourly resolution for ever, weekly tier included', () => {
+    const published = '2026-06-01T00:00:00.000Z';
+    const p = (h: number, views: number): Reading => ({ video_id: 'v1', published_at: published, views,
+      at: new Date(Date.parse(published) + h * 3_600_000).toISOString() });
+    const rows = [p(10, 100), p(11, 110), p(12, 120)];
+    expect(survivingReadings(rows, NOW)).toHaveLength(3);
+  });
+});
+
+describe('the terminal tiers in SQL', () => {
+  test('daily and weekly use first-of-VIDEO, by an index probe on the primary key', () => {
+    for (const b of ['day', 'week'] as const) {
+      const sql = thinBatchSql('rss', b);
+      expect(sql).toMatch(/not exists \(select 1 from rss_samples e\s+where e\.video_id = s0\.video_id and e\.at < s0\.at\s+and \(coalesce\(e\.views, 0\) > 0\) = \(coalesce\(s0\.views, 0\) > 0\)\) as first_of_video/);
+    }
+    expect(thinBatchSql('rss', 'hour')).not.toMatch(/first_of_video/);
+  });
+
+  test('weekly keeps the last reading of the ISO week, found across days', () => {
+    const sql = thinBatchSql('api', 'week');
+    expect(sql).toMatch(/date_trunc\('week', s0\.sampled_at at time zone 'UTC'\)/);
+    expect(sql).toMatch(/as last_of_week/);
+  });
+
+  test('every bucket stays bounded to one day and an explicit video list', () => {
+    for (const b of ['hour', 'day', 'week'] as const) {
+      expect(thinBatchSql('rss', b)).toContain('s0.video_id = any($2)');
+      expect(thinBatchSql('rss', b)).toContain('$1::date');
+    }
   });
 });

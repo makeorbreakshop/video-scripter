@@ -132,7 +132,7 @@ export function dayVideosSql(source: ReadingSource): string {
            order by video_id ${C}`;
 }
 
-export type Bucket = 'hour' | 'day';
+export type Bucket = 'hour' | 'day' | 'week';
 
 /**
  * Delete everything but (a) the last reading of each (video, bucket) and (b) the first reading
@@ -145,13 +145,35 @@ export type Bucket = 'hour' | 'day';
  */
 export function thinBatchSql(source: ReadingSource, bucket: Bucket): string {
   const t = tableFor(source);
-  // In the daily tier the bucket is still the hour for readings inside the video's launch
-  // window — see READING_RETENTION.launchWindowDays and the 213 % deviation it was added for.
+  const ts = `s0.${t.ts}`;
+  const views = `coalesce(s0.${t.views}, 0) > 0`;
+  // In the daily (and weekly) tier the bucket is still the hour for readings inside the video's
+  // launch window — see READING_RETENTION.launchWindowDays and the 213 % deviation it was added for.
+  const inLaunchWindow = `${ts} < v.published_at + interval '${LAUNCH_WINDOW_SQL}'`;
   const part = bucket === 'hour'
-    ? `date_trunc('hour', s0.${t.ts} at time zone 'UTC')`
-    : `case when s0.${t.ts} < v.published_at + interval '${LAUNCH_WINDOW_SQL}'
-             then date_trunc('hour', s0.${t.ts} at time zone 'UTC')
-             else date_trunc('day',  s0.${t.ts} at time zone 'UTC') end`;
+    ? `date_trunc('hour', ${ts} at time zone 'UTC')`
+    : `case when ${inLaunchWindow}
+             then date_trunc('hour', ${ts} at time zone 'UTC')
+             else date_trunc('day',  ${ts} at time zone 'UTC') end`;
+  // Past the hourly tier the first-reading rule is first of the VIDEO (2026-09-26): an index probe
+  // on the primary key (video_id, <ts>) for any earlier reading in the same positive/zero class.
+  // growthExponent() reads the earliest positive reading and nothing in between.
+  const firstOfVideo = bucket === 'hour' ? '' : `,
+               not exists (select 1 from ${t.table} e
+                            where e.video_id = s0.video_id and e.${t.ts} < ${ts}
+                              and (coalesce(e.${t.views}, 0) > 0) = (${views})) as first_of_video`;
+  // Weekly: the last reading of the ISO week survives, found across days by a primary-key probe
+  // for any later reading before the week ends (days are thinned one at a time).
+  const lastOfWeek = bucket !== 'week' ? '' : `,
+               not exists (select 1 from ${t.table} e
+                            where e.video_id = s0.video_id and e.${t.ts} > ${ts}
+                              and e.${t.ts} < (date_trunc('week', ${ts} at time zone 'UTC') + interval '7 days') at time zone 'UTC'
+                           ) as last_of_week,
+               (${inLaunchWindow}) as in_launch_window`;
+  const firstKeep = bucket === 'hour' ? 'rn_first > 1' : 'not first_of_video';
+  const doomed = bucket === 'week'
+    ? `not launch_dense and ${firstKeep} and ((in_launch_window and rn > 1) or (not in_launch_window and not last_of_week))`
+    : `rn > 1 and ${firstKeep} and not launch_dense`;
   // Doomed rows are identified by the PRIMARY KEY (video_id, <ts>) and deleted in that order.
   //
   // This used to select and delete by `ctid`. ctid names a row just as exactly, but it is
@@ -164,22 +186,22 @@ export function thinBatchSql(source: ReadingSource, bucket: Bucket): string {
   return `
     with doomed as (
       select video_id, ${t.ts} from (
-        select s0.video_id, s0.${t.ts},
+        select s0.video_id, ${ts},
                row_number() over (
                  partition by s0.video_id, ${part}
-                 order by s0.${t.ts} desc, s0.ctid desc
+                 order by ${ts} desc, s0.ctid desc
                ) as rn,
                row_number() over (
-                 partition by s0.video_id, (s0.${t.ts} at time zone 'UTC')::date,
-                              (coalesce(s0.${t.views}, 0) > 0)
-                 order by s0.${t.ts} asc, s0.ctid asc
+                 partition by s0.video_id, (${ts} at time zone 'UTC')::date,
+                              (${views})
+                 order by ${ts} asc, s0.ctid asc
                ) as rn_first,
-               (s0.${t.ts} < v.published_at + interval '${LAUNCH_DENSE_SQL}') as launch_dense
+               (${ts} < v.published_at + interval '${LAUNCH_DENSE_SQL}') as launch_dense${firstOfVideo}${lastOfWeek}
           from ${t.table} s0
           join videos v on v.id = s0.video_id
-         where s0.${t.ts} >= $1::date and s0.${t.ts} < ($1::date + interval '1 day')
+         where ${ts} >= $1::date and ${ts} < ($1::date + interval '1 day')
            and s0.video_id = any($2)
-      ) x where rn > 1 and rn_first > 1 and not launch_dense
+      ) x where ${doomed}
       order by video_id ${C}, ${t.ts}
     )
     delete from ${t.table} s using doomed d
@@ -280,7 +302,7 @@ export const ARCHIVE_LEDGER_DDL = `
     verified_at timestamptz,
     -- What the last thinning pass reduced this day to. Same tier + unchanged row count means
     -- tonight's pass has provably nothing to do and can skip the walk entirely.
-    thinned_tier text check (thinned_tier is null or thinned_tier in ('hour','day')),
+    thinned_tier text check (thinned_tier is null or thinned_tier in ('hour','day','day-v2','week-v2')),
     thinned_rows bigint,
     primary key (day, source)
   )`;
@@ -290,6 +312,13 @@ export const ARCHIVE_LEDGER_THINNED_DDL = `
   alter table readings_archive_days
     add column if not exists thinned_tier text,
     add column if not exists thinned_rows bigint`;
+
+/**
+ * The 2026-09-26 policy version: thinned_tier may also be 'day-v2' / 'week-v2'
+ * (lib/readings/chain.ts ledgerTier). Applied once by sql/2026-09-26-ledger-tiers.sql; kept here so
+ * a freshly created ledger has it too.
+ */
+export const LEDGER_TIER_CHECK = `thinned_tier is null or thinned_tier in ('hour','day','day-v2','week-v2')`;
 
 /** Idempotent: re-running a day overwrites its ledger row, as it overwrites its R2 key. */
 export const LEDGER_UPSERT_SQL = `

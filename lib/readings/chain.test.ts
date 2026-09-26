@@ -5,7 +5,7 @@
 // failure and `archive && thin` never reached the thin step; and one morning where re-archiving
 // 17 already-verified days wrote 737 MB to R2 to produce byte-identical objects.
 import {
-  decideArchive, decideThin, archiveExitCode, summarizeArchive,
+  decideArchive, decideThin, archiveExitCode, summarizeArchive, ledgerTier, daysBehindPolicy,
   type LedgerRow,
 } from './chain';
 
@@ -114,5 +114,34 @@ describe('decideThin', () => {
   it('skips an empty day without work', () => {
     const ledger = [led({ day, source, rows: 0 })];
     expect(decideThin(day, source, 'hour', 0, ledger)).toEqual({ action: 'skip', reason: 'empty' });
+  });
+});
+
+describe('policy versions in the ledger (2026-09-26)', () => {
+  it('a day thinned under the old daily rule is thinned again under the new one', () => {
+    const ledger = [led({ day: '2026-09-09', source: 'rss', thinned_tier: 'day', thinned_rows: 374_480 })];
+    expect(decideThin('2026-09-09', 'rss', ledgerTier('day'), 374_480, ledger)).toEqual({ action: 'thin' });
+  });
+
+  it('and then skipped, once recorded at the new tier', () => {
+    const ledger = [led({ day: '2026-09-09', source: 'rss', thinned_tier: 'day-v2', thinned_rows: 330_000 })];
+    expect(decideThin('2026-09-09', 'rss', ledgerTier('day'), 330_000, ledger)).toEqual({ action: 'skip', reason: 'already-thinned' });
+  });
+
+  it('names the tiers the ledger records', () => {
+    expect(ledgerTier('hour')).toBe('hour');
+    expect(ledgerTier('day')).toBe('day-v2');
+    expect(ledgerTier('week')).toBe('week-v2');
+  });
+
+  it('lists days whose recorded tier is behind today\'s policy, whatever their age', () => {
+    const now = new Date('2026-11-15T12:00:00Z');
+    const ledger = [
+      led({ day: '2026-09-09', source: 'rss', thinned_tier: 'day-v2' }),  // now 67 days old → weekly
+      led({ day: '2026-10-20', source: 'rss', thinned_tier: 'day' }),     // daily, old rule → re-thin
+      led({ day: '2026-10-21', source: 'rss', thinned_tier: 'day-v2' }),  // up to date
+      led({ day: '2026-11-14', source: 'rss', thinned_tier: null }),      // dense: nothing to do
+    ];
+    expect(daysBehindPolicy(ledger, 'rss', now)).toEqual(['2026-09-09', '2026-10-20']);
   });
 });

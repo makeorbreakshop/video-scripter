@@ -53,7 +53,7 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
   // Declared at today's measured rate so the growth alert fires only if it gets WORSE; the budget
   // is the forcing function for the terminal-tier decision (~2 weeks at today's rate).
   { table: 'rss_samples', policy: 'bounded-retention', budgetMb: 4000, maxGrowthMbPerDay: 120,
-    enforcedBy: 'scripts/thin-readings.ts tiers (lib/readings/retention.ts). The daily tier has NO end: ~477 K rows/day kept for ever (~120 MB/day). Terminal tier awaiting decision (runbook 2026-09-26 §3)' },
+    enforcedBy: 'scripts/thin-readings.ts tiers (lib/readings/retention.ts): dense 4 d, hourly to 14 d, daily (last-of-day + first-of-video) to 60 d, then weekly — since 2026-09-26. Launch windows (~46 MB/day) stay hourly by design' },
   { table: 'video_text', policy: 'entity', budgetMb: 2600, maxGrowthMbPerDay: 20,
     enforcedBy: 'one row per video, written at ingest (lib/app/video-text.ts videoInsertSql); the text home once videos is cleared' },
   { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 600, maxGrowthMbPerDay: 40, targetMb: 150,
@@ -63,7 +63,7 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
   { table: 'observation_change_log', policy: 'queue', budgetMb: 800,
     enforcedBy: 'scripts/materialize-observations.ts deletes consumed changes (OBS_CHANGES_DELETE_SQL)' },
   { table: 'view_samples', policy: 'bounded-retention', budgetMb: 800, maxGrowthMbPerDay: 20,
-    enforcedBy: 'scripts/thin-readings.ts api tiers; daily tier has no end (~100 K rows/day kept)' },
+    enforcedBy: 'scripts/thin-readings.ts api tiers, same terminal weekly tier as rss since 2026-09-26' },
   { table: 'video_obs_cache', policy: 'derived-cache', budgetMb: 650,
     enforcedBy: 'one row per video, rebuilt by the observation materializer' },
   { table: 'feed_events', policy: 'append-forever', budgetMb: 450, maxGrowthMbPerDay: 5,

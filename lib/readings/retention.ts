@@ -29,6 +29,12 @@ export const READING_RETENTION = {
   /** Between denseWindowDays and this, one reading per video per UTC hour survives. */
   hourlyWindowDays: 14,
   /**
+   * Past this, one reading per video per ISO week (the last) survives, plus the video's first.
+   * 2026-09-26: the daily tier had no end, so ~46 MB/day of routine readings accumulated for ever
+   * (docs/runbooks/2026-09-26-disk-growth.md §3). R2 keeps every raw reading regardless.
+   */
+  weeklyAfterDays: 60,
+  /**
    * A video's first days are never thinned below hourly, however old the readings get.
    *
    * This is not a nicety. Verified 2026-09-08 with scripts/verify-archive.ts: applying the plain
@@ -90,13 +96,20 @@ export function utcDay(at: Date | string | number): string {
   return new Date(ms(at)).toISOString().slice(0, 10);
 }
 
+/** The ISO week a reading falls in, keyed by its Monday (UTC), `YYYY-MM-DD`. Postgres date_trunc('week'). */
+export function utcWeek(at: Date | string | number): string {
+  const t = ms(at);
+  const dow = (new Date(t).getUTCDay() + 6) % 7; // Monday = 0
+  return utcDay(Date.UTC(new Date(t).getUTCFullYear(), new Date(t).getUTCMonth(), new Date(t).getUTCDate() - dow));
+}
+
 /** UTC hour bucket key, `YYYY-MM-DDTHH`. */
 export function utcHour(at: Date | string | number): string {
   return new Date(ms(at)).toISOString().slice(0, 13);
 }
 
 /** The tier a reading falls in at a given moment. */
-export type Tier = 'dense' | 'hourly' | 'daily';
+export type Tier = 'dense' | 'hourly' | 'daily' | 'weekly';
 
 export function tierOf(
   at: Date | string | number,
@@ -106,7 +119,8 @@ export function tierOf(
   const age = (ms(now) - ms(at)) / DAY_MS;
   if (age < policy.denseWindowDays) return 'dense';
   if (age < policy.hourlyWindowDays) return 'hourly';
-  return 'daily';
+  if (age < policy.weeklyAfterDays) return 'daily';
+  return 'weekly';
 }
 
 /**
@@ -168,14 +182,20 @@ export function survivingReadings<T extends Reading>(
     if (!Number.isFinite(t)) { keep.add(r); continue; }
     const tier = tierOf(t, now, policy);
     if (tier === 'dense' || inLaunchDense(r, t, policy)) { keep.add(r); continue; }
-    const bucket = tier === 'hourly' || inLaunchWindow(r, t, policy) ? utcHour(t) : utcDay(t);
+    const bucket = tier === 'hourly' || inLaunchWindow(r, t, policy) ? utcHour(t)
+      : tier === 'daily' ? utcDay(t) : `w${utcWeek(t)}`;
     const lk = `${r.video_id} ${bucket}`;
     const cur = last.get(lk);
     if (!cur || newer(r, cur)) last.set(lk, r);
-    // Partitioned on positive-vs-zero as well as on the day, because growthExponent() drops
-    // non-positive readings before taking the first one: without this, a video whose first
-    // reading is a zero would have its first REAL reading thinned away and q would move.
-    const fk = `${r.video_id} ${utcDay(t)} ${Number(r.views) > 0}`;
+    // Partitioned on positive-vs-zero as well, because growthExponent() drops non-positive
+    // readings before taking the first one: without this, a video whose first reading is a zero
+    // would have its first REAL reading thinned away and q would move.
+    //
+    // In the hourly tier the first reading of each DAY is kept (unchanged since 2026-09-14). Past
+    // it, only the first of the VIDEO (2026-09-26): growthExponent() reads the earliest reading
+    // and nothing in between, so a first-of-day row every day was ~half the daily tier for nothing.
+    const scope = tier === 'hourly' ? utcDay(t) : '*';
+    const fk = `${r.video_id} ${scope} ${Number(r.views) > 0}`;
     const f = first.get(fk);
     if (!f || newer(f, r)) first.set(fk, r);
   }

@@ -17,10 +17,40 @@
 //     — the day had already been thinned to the hourly tier six days earlier, and the run
 //     re-walked every video in it to delete nothing. The ledger now records the tier a day was
 //     thinned to and the row count it was left at. See decideThin().
-import type { ReadingSource } from './retention';
+import { tierOf, READING_RETENTION, type ReadingSource } from './retention';
+import type { Bucket } from './sql';
 
-/** The thinning tier a day was last reduced to. Mirrors sql.ts `Bucket`. */
-export type ThinnedTier = 'hour' | 'day';
+/**
+ * The thinning tier a day was last reduced to, as the ledger records it. 'day' is the pre-2026-09-26
+ * daily rule (first AND last of every day); 'day-v2' / 'week-v2' are the rules with a first-of-video
+ * guard and the weekly terminal tier. A different label means the day has not been thinned under
+ * today's policy, so decideThin() walks it again.
+ */
+export type ThinnedTier = 'hour' | 'day' | 'day-v2' | 'week-v2';
+
+/** The ledger label for thinning a day to `bucket` under the current policy. */
+export function ledgerTier(bucket: Bucket): ThinnedTier {
+  return bucket === 'hour' ? 'hour' : bucket === 'day' ? 'day-v2' : 'week-v2';
+}
+
+/** The bucket today's policy wants for a day, or null while it is still dense. */
+export function bucketFor(day: string, now: Date | number, policy: typeof READING_RETENTION = READING_RETENTION): Bucket | null {
+  const tier = tierOf(Date.parse(`${day}T23:59:59.999Z`), now, policy);
+  return tier === 'dense' ? null : tier === 'hourly' ? 'hour' : tier === 'daily' ? 'day' : 'week';
+}
+
+/**
+ * Days whose recorded tier is behind today's policy — the ones a nightly run must walk however old
+ * they are: a day crossing into the weekly tier at 60 days, or one thinned under an older rule.
+ * Pure: reads the ledger only, no counts.
+ */
+export function daysBehindPolicy(ledger: readonly LedgerRow[], source: ReadingSource, now: Date | number): string[] {
+  return ledger
+    .filter((r) => r.source === source)
+    .filter((r) => { const b = bucketFor(r.day, now); return b != null && r.thinned_tier !== ledgerTier(b); })
+    .map((r) => r.day)
+    .sort();
+}
 
 /** One row of readings_archive_days, including the thinning state added 2026-09-14. */
 export interface LedgerRow {
