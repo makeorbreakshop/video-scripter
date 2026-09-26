@@ -212,3 +212,162 @@ export function broadcastMetadataSql(cleared: readonly TextColumn[] = CLEARED_CO
     select id, description, metadata, llm_summary, now() from upd
     on conflict (video_id) do update set metadata = excluded.metadata`;
 }
+
+// ---- the legacy writers ----------------------------------------------------------------
+//
+// Routes and services that insert or upsert description / metadata into `videos` themselves
+// (youtube/backfill-rss, import-rss, refresh-channel-analytics, sync-channel, vector-db-service).
+// Each builds its `videos` payload with videosTextPayload() — which drops whatever CLEARED_COLUMNS
+// says is gone, so clearing a column is not undone by the next import — and writes the side copy
+// with writeVideoTextFields(). Both copies therefore agree while a column is still dual-written,
+// and only video_text is written once it is cleared.
+
+/** The two text fields a legacy writer supplies. llm_summary has its own path (writeLlmSummaries). */
+export type WritableTextField = 'description' | 'metadata';
+const WRITABLE: readonly WritableTextField[] = ['description', 'metadata'];
+
+export interface VideoTextFields {
+  videoId: string;
+  description?: string | null;
+  metadata?: Record<string, any> | null;
+}
+
+/** The subset of `fields` still written to `videos`: those NOT in CLEARED_COLUMNS. Spread it into
+ *  the existing videos payload. A field the caller did not supply is never added. */
+export function videosTextPayload<F extends Partial<Record<WritableTextField, unknown>>>(
+  fields: F,
+  cleared: readonly TextColumn[] = CLEARED_COLUMNS,
+): Partial<F> {
+  const out: Partial<F> = {};
+  for (const k of WRITABLE) {
+    if (k in fields && !cleared.includes(k)) (out as any)[k] = (fields as any)[k];
+  }
+  return out;
+}
+
+/**
+ * Upsert ONLY the named fields into video_text. $1 = video ids, then one array per field in the
+ * order given (description text[], metadata jsonb[]).
+ *
+ * 'update' — the writer overwrote these fields on `videos`, so overwrite them here too; every
+ *   other column of an existing side row (llm_summary above all) is left alone.
+ * 'nothing' — the writer ignored duplicates, so an existing side row is never touched, and a new
+ *   one prefers the `videos` copy (the one the ignored write left in place) over the payload.
+ *
+ * Either way, a side row created here copies every field it was not given from `videos`: a
+ * description-only row would have NULL metadata, and the mover's anti-join would then never copy
+ * the real metadata across (the same reasoning as broadcastMetadataSql). An inner join: an id
+ * whose `videos` write failed gets no orphan side row.
+ */
+export function videoTextFieldsUpsertSql(
+  fields: readonly WritableTextField[],
+  onConflict: 'update' | 'nothing',
+): string {
+  if (!fields.length) throw new Error('writeVideoTextFields needs at least one field');
+  for (const f of fields) {
+    if (!WRITABLE.includes(f)) throw new Error(`${f} is not a writable text field (${WRITABLE.join(', ')})`);
+  }
+  const types: Record<WritableTextField, string> = { description: 'text', metadata: 'jsonb' };
+  const unnest = ['$1::text[]', ...fields.map((f, i) => `$${i + 2}::${types[f]}[]`)].join(', ');
+  const value = (c: WritableTextField) => {
+    if (!fields.includes(c)) return `v.${c}`;
+    return onConflict === 'nothing' ? `coalesce(v.${c}, x.${c})` : `x.${c}`;
+  };
+  const conflict = onConflict === 'nothing'
+    ? 'do nothing'
+    : `do update\n     set ${fields.map((f) => `${f} = excluded.${f}`).join(', ')}, moved_at = now()`;
+  return `
+  insert into video_text (video_id, description, metadata, llm_summary, moved_at)
+  select x.video_id, ${value('description')}, ${value('metadata')}, v.llm_summary, now()
+    from unnest(${unnest}) as x(video_id, ${fields.join(', ')})
+    join videos v on v.id = x.video_id
+  on conflict (video_id) ${conflict}`;
+}
+
+/** Write the side copy for rows that all carry the same fields. Call it AFTER the videos write. */
+export async function writeVideoTextFields(
+  rows: readonly VideoTextFields[],
+  opts: { onConflict: 'update' | 'nothing' },
+): Promise<number> {
+  if (!rows.length) return 0;
+  const fields = WRITABLE.filter((f) => f in rows[0]);
+  for (const r of rows) {
+    // A missing key and an explicit null mean different things (leave alone vs. set to NULL), so
+    // one statement cannot serve rows that disagree.
+    if (WRITABLE.some((f) => (f in r) !== fields.includes(f))) {
+      throw new Error('writeVideoTextFields: every row must carry the same text fields');
+    }
+  }
+  await q(videoTextFieldsUpsertSql(fields, opts.onConflict), [
+    rows.map((r) => r.videoId),
+    ...fields.map((f) => rows.map((r) => {
+      const v = r[f];
+      return f === 'metadata' && v != null ? JSON.stringify(v) : v ?? null;
+    })),
+  ]);
+  return rows.length;
+}
+
+/** Put the asked-for text fields back on rows selected without them (supabase-js readers).
+ *  Order and length preserved; a video with no text gets null. */
+export async function hydrateVideoTextFields<T extends { id: string }, F extends WritableTextField>(
+  rows: readonly T[],
+  fields: readonly F[],
+): Promise<Array<T & { [K in F]: K extends 'metadata' ? Record<string, any> | null : string | null }>> {
+  if (!rows.length) return [];
+  const text = await videoTextFor(rows.map((r) => r.id));
+  return rows.map((r) => {
+    const t = text.get(r.id);
+    const add: Record<string, unknown> = {};
+    for (const f of fields) add[f] = t?.[f] ?? null;
+    return { ...r, ...add } as any;
+  });
+}
+
+// ---- metadata->>'youtube_channel_id' --------------------------------------------------
+//
+// Seven legacy call sites filtered or read videos.metadata->>'youtube_channel_id'. Measured with
+// TABLESAMPLE SYSTEM (1) on 2026-09-26: wherever the key exists it equals videos.channel_id
+// (7,475 of 7,475 sampled rows; every sampled channel_id is a UC… id), but ~35 % of competitor
+// rows do not carry the key at all. So channel_id is an exact substitute for the key's VALUE and
+// not for its PRESENCE; the presence is read here, through the side table.
+
+/** Competitor youtube_channel_id values, one per row (callers de-duplicate), at most $1 rows. */
+export const COMPETITOR_YOUTUBE_CHANNEL_IDS_SQL = `
+  select coalesce(vt.metadata, v.metadata)->>'youtube_channel_id' as youtube_channel_id
+    from videos v ${VIDEO_TEXT_JOIN}
+   where v.is_competitor = true
+     and coalesce(vt.metadata, v.metadata)->>'youtube_channel_id' is not null
+   limit $1`;
+
+export async function competitorYoutubeChannelIds(limit: number): Promise<string[]> {
+  const rows = await q<{ youtube_channel_id: string }>(COMPETITOR_YOUTUBE_CHANNEL_IDS_SQL, [limit]);
+  return rows.map((r) => r.youtube_channel_id);
+}
+
+/**
+ * Which of $1 have at least one video whose metadata carries that youtube_channel_id. One EXISTS
+ * per requested id, driven by the channel_id index (the key's value equals channel_id wherever
+ * it exists) and confirmed on the key itself, so the answer matches the old
+ * `.in('metadata->>youtube_channel_id', ids)` without scanning the table — and without the old
+ * form's 1,000-row PostgREST cap silently dropping channels.
+ */
+export function youtubeChannelIdsPresentSql(competitorOnly: boolean): string {
+  return `
+  select c.id
+    from unnest($1::text[]) as c(id)
+   where exists (
+     select 1 from videos v ${VIDEO_TEXT_JOIN}
+      where v.channel_id = c.id${competitorOnly ? '\n        and v.is_competitor = true' : ''}
+        and coalesce(vt.metadata, v.metadata)->>'youtube_channel_id' = c.id)`;
+}
+
+export async function youtubeChannelIdsPresent(
+  ids: readonly string[],
+  opts: { competitorOnly: boolean },
+): Promise<string[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (!unique.length) return [];
+  const rows = await q<{ id: string }>(youtubeChannelIdsPresentSql(opts.competitorOnly), [unique]);
+  return rows.map((r) => r.id);
+}
