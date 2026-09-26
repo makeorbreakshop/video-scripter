@@ -18,7 +18,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { makeTimedPool } from '../lib/admin/db';
 import { CATALOG_SIZES_SQL, rowToRelation, type StorageSnapshot } from '../lib/ops/storage-contract';
-import { buildGuardReport, parseDiskMetrics } from '../lib/ops/storage-guard';
+import { buildGuardReport } from '../lib/ops/storage-guard';
+import { fetchDiskMetrics } from '../lib/ops/supabase-metrics';
 import { appendJsonLine, readJsonLines, readOutcomes, recordOutcome } from '../lib/ops/job-outcomes';
 import { SCHEDULED_JOBS, EXTERNAL_HEARTBEATS, heartbeatsFor } from '../lib/ops/scheduled-jobs';
 
@@ -27,23 +28,6 @@ const NO_ALERT = process.argv.includes('--no-alert');
 const ROOT = (() => { const i = process.argv.indexOf('--root'); return i >= 0 ? path.resolve(process.argv[i + 1]) : process.cwd(); })();
 const SNAPSHOTS = path.join(process.cwd(), 'logs', 'storage-snapshots.jsonl');
 const JOB = 'storage-guard';
-
-async function diskFromMetrics(): Promise<StorageSnapshot['disk']> {
-  const ref = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').match(/https:\/\/([^.]+)\./)?.[1];
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!ref || !key) return null;
-  try {
-    const res = await fetch(`https://${ref}.supabase.co/customer/v1/privileged/metrics`, {
-      headers: { Authorization: `Basic ${Buffer.from(`service_role:${key}`).toString('base64')}` },
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!res.ok) { console.error(`metrics endpoint: HTTP ${res.status}`); return null; }
-    return parseDiskMetrics(await res.text());
-  } catch (err) {
-    console.error(`metrics endpoint: ${(err as Error).message}`);
-    return null;
-  }
-}
 
 function notify(title: string, msg: string) {
   const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').slice(0, 240);
@@ -67,7 +51,7 @@ const pool = makeTimedPool({ connectionString: process.env.DATABASE_URL, max: 1,
 try {
   const relations = (await pool.query(CATALOG_SIZES_SQL)).rows.map(rowToRelation);
   const dbBytes = Number((await pool.query(`select pg_database_size(current_database())::float8 as b`)).rows[0].b);
-  const snapshot: StorageSnapshot = { at: new Date().toISOString(), dbBytes, disk: await diskFromMetrics(), relations };
+  const snapshot: StorageSnapshot = { at: new Date().toISOString(), dbBytes, disk: await fetchDiskMetrics(), relations };
   appendJsonLine(SNAPSHOTS, snapshot, 8_000_000);
 
   const history = readJsonLines<StorageSnapshot>(SNAPSHOTS, (s) => typeof s.at === 'string' && Array.isArray(s.relations));

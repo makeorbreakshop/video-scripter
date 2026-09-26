@@ -33,7 +33,7 @@ describe('every table over the threshold must declare how it is kept bounded', (
     // video_score_history on 2026-09-26: 1,392 MB against a 14-day retention that should hold ~130 MB.
     const v = evaluateContracts([rel('video_score_history', 1392)], STORAGE_CONTRACTS);
     expect(v[0]).toMatchObject({ table: 'video_score_history', kind: 'over-budget' });
-    expect(v[0].message).toMatch(/1,392 MB.*budget 300 MB/);
+    expect(v[0].message).toMatch(/1,392 MB.*budget 600 MB/);
   });
 
   it('flags heavy bloat on a big table even when it is within budget', () => {
@@ -87,6 +87,11 @@ describe('the catalog query', () => {
     expect(CATALOG_SIZES_SQL).toMatch(/from pg_class c/);
     expect(CATALOG_SIZES_SQL).not.toMatch(/count\(\*\)/);
     expect(CATALOG_SIZES_SQL).not.toMatch(/pgstattuple/);
+  });
+
+  it('rolls partitions up into their parent and never lists a partition on its own', () => {
+    expect(CATALOG_SIZES_SQL).toMatch(/pg_partition_tree/);
+    expect(CATALOG_SIZES_SQL).toMatch(/not c\.relispartition/);
   });
 
   it('is byte-bounded: a size floor and a row limit', () => {

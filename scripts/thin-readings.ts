@@ -31,6 +31,10 @@ import {
 import { decideThin, type LedgerRow, type ThinnedTier } from '../lib/readings/chain';
 import { isRetryableLockError, retryDelaysMs, chunk } from '../lib/readings/thin-safety';
 import { recordOutcome } from '../lib/ops/job-outcomes';
+import {
+  HISTORY, HISTORY_PARTITIONED_SQL, LIST_PARTITIONS_SQL, DEFAULT_PARTITION_ROWS_SQL,
+  createPartitionSql, dropPartitionSql, partitionDays, planPartitions,
+} from '../lib/readings/history-partitions';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -171,34 +175,62 @@ for (const source of ['rss', 'api'] as ReadingSource[]) {
 }
 
 // ---- video_score_history: no tiers, just an expiry. Nothing reads it (2026-09-08 audit).
+//
+// Once the table is partitioned by day (sql/2026-09-26-partition-video-score-history.sql),
+// retention is DROP of an archived day's partition — the only form that returns disk after a
+// rescoring burst — and the next week of partitions is created ahead. Until then, DELETE.
 const historyNewest = utcDay(now.getTime() - READING_RETENTION.historyDays * 86_400_000);
-const [{ day: oldestHistory }] = await q<{ day: string | null }>(HISTORY_OLDEST_DAY_SQL);
-if (!oldestHistory) {
-  log('history: table is empty');
+const [{ partitioned }] = await q<{ partitioned: boolean }>(HISTORY_PARTITIONED_SQL);
+if (partitioned) {
+  const existing = partitionDays((await q<{ relname: string }>(LIST_PARTITIONS_SQL)).map((r) => r.relname));
+  const plan = planPartitions(existing, now, {
+    keepDays: READING_RETENTION.historyDays, aheadDays: 7,
+    isArchived: (d) => isThinnable(d, 'history', ledger as unknown as ArchivedDay[]),
+  });
+  for (const d of plan.create) {
+    if (dry) { log(`DRY history: would create partition ${d}`); continue; }
+    await pool.query(createPartitionSql(HISTORY, d));
+    log(`history: created partition ${d}`);
+  }
+  for (const d of plan.blocked) { skipped++; log(`SKIP history ${d}: not verified in R2; partition kept`); }
+  for (const d of plan.drop.slice(0, maxDays)) {
+    const [{ n }] = await q<{ n: string }>(HISTORY_COUNT_DAY_SQL, [d]);
+    if (dry) { log(`DRY history ${d}: would drop partition (${Number(n).toLocaleString()} rows, verified in R2)`); continue; }
+    await pool.query(dropPartitionSql(HISTORY, d));
+    deletedTotal += Number(n);
+    log(`DROPPED history partition ${d}: ${Number(n).toLocaleString()} rows`);
+  }
+  const [{ n: stray }] = await q<{ n: number }>(DEFAULT_PARTITION_ROWS_SQL);
+  if (stray) log(`WARNING history: ${stray} row(s) in video_score_history_default — a day arrived with no partition`);
 } else {
-  const days = (onlyDay ? [onlyDay] : dayRange(oldestHistory, historyNewest))
-    .filter((d) => d <= historyNewest).slice(0, maxDays);
-  if (!days.length) log(`history: nothing older than ${historyNewest}`);
-  for (const day of days) {
-    if (!isThinnable(day, 'history', ledger as unknown as ArchivedDay[])) {
-      skipped++;
-      log(`SKIP history ${day}: not verified in R2`);
-      continue;
+  const [{ day: oldestHistory }] = await q<{ day: string | null }>(HISTORY_OLDEST_DAY_SQL);
+  if (!oldestHistory) {
+    log('history: table is empty');
+  } else {
+    const days = (onlyDay ? [onlyDay] : dayRange(oldestHistory, historyNewest))
+      .filter((d) => d <= historyNewest).slice(0, maxDays);
+    if (!days.length) log(`history: nothing older than ${historyNewest}`);
+    for (const day of days) {
+      if (!isThinnable(day, 'history', ledger as unknown as ArchivedDay[])) {
+        skipped++;
+        log(`SKIP history ${day}: not verified in R2`);
+        continue;
+      }
+      const [{ n }] = await q<{ n: string }>(HISTORY_COUNT_DAY_SQL, [day]);
+      const before = Number(n);
+      if (!before) continue;
+      if (dry) { log(`DRY history ${day}: ${before.toLocaleString()} rows, verified in R2 — would delete all`); continue; }
+      let cursor = '0', deleted = 0;
+      for (;;) {
+        const res = await q<{ id: string }>(HISTORY_DELETE_BATCH_SQL, [day, cursor, READING_RETENTION.batchSize]);
+        if (!res.length) break;
+        deleted += res.length;
+        cursor = res[res.length - 1].id;
+        if (res.length < READING_RETENTION.batchSize) break;
+      }
+      deletedTotal += deleted;
+      log(`DELETED history ${day}: ${deleted.toLocaleString()} rows`);
     }
-    const [{ n }] = await q<{ n: string }>(HISTORY_COUNT_DAY_SQL, [day]);
-    const before = Number(n);
-    if (!before) continue;
-    if (dry) { log(`DRY history ${day}: ${before.toLocaleString()} rows, verified in R2 — would delete all`); continue; }
-    let cursor = '0', deleted = 0;
-    for (;;) {
-      const res = await q<{ id: string }>(HISTORY_DELETE_BATCH_SQL, [day, cursor, READING_RETENTION.batchSize]);
-      if (!res.length) break;
-      deleted += res.length;
-      cursor = res[res.length - 1].id;
-      if (res.length < READING_RETENTION.batchSize) break;
-    }
-    deletedTotal += deleted;
-    log(`DELETED history ${day}: ${deleted.toLocaleString()} rows`);
   }
 }
 

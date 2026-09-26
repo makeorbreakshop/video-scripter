@@ -54,8 +54,8 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
     enforcedBy: 'scripts/thin-readings.ts tiers (lib/readings/retention.ts). The daily tier has NO end: ~477 K rows/day kept for ever (~120 MB/day). Terminal tier awaiting decision (runbook 2026-09-26 §3)' },
   { table: 'video_text', policy: 'entity', budgetMb: 2600, maxGrowthMbPerDay: 20,
     enforcedBy: 'one row per video, written at ingest (lib/app/video-text.ts videoInsertSql); the text home once videos is cleared' },
-  { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 300, maxGrowthMbPerDay: 25, targetMb: 150,
-    enforcedBy: '14-day DELETE in scripts/thin-readings.ts. Deletes do not return disk: a rescoring burst leaves the file at its high-water mark (1,280 MB heap, 92.7 % free on 2026-09-26). Reclaim: scripts/reclaim-table.ts; structural fix: partition by day (sql/2026-09-26-partition-video-score-history.sql, awaiting approval)' },
+  { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 600, maxGrowthMbPerDay: 40, targetMb: 150,
+    enforcedBy: '14 days (scripts/thin-readings.ts). Steady ~20 K rows/day ≈ 130 MB; a full rescore adds ~360 MB for 14 days. DELETE-based retention left 1,280 MB at 92.7 % free until pg_repack (1,392 → 98 MB, 2026-09-26); daily partitions make retention a DROP (sql/2026-09-26-partition-video-score-history.sql, awaiting approval)' },
   { table: 'view_snapshots', policy: 'append-forever', budgetMb: 1300, maxGrowthMbPerDay: 15,
     enforcedBy: 'NOTHING. ~33 K rows/day (~10 MB/day); CLAUDE.md promises a monthly cleanup of >1-year rows that does not exist (rows from 2025-06-30 remain)' },
   { table: 'observation_change_log', policy: 'queue', budgetMb: 800,
@@ -141,26 +141,45 @@ export const CATALOG_SIZES_SQL = `
   with w as (
     select schemaname, tablename, sum(avg_width)::float8 + 28 as row_bytes
       from pg_stats group by 1, 2
+  ),
+  -- A partitioned table's own size is 0: its data is in the partitions. Roll each leaf up to its
+  -- top-level parent, so video_score_history is one line under one contract however many days
+  -- it is split into, and a partition is never reported as an undeclared table of its own.
+  sized as (
+    select c.oid,
+           case when c.relkind = 'p' then
+             (select coalesce(sum(pg_total_relation_size(t.relid)), 0) from pg_partition_tree(c.oid) t where t.isleaf)
+           else pg_total_relation_size(c.oid) end::float8 as total_bytes,
+           case when c.relkind = 'p' then
+             (select coalesce(sum(pg_relation_size(t.relid)), 0) from pg_partition_tree(c.oid) t where t.isleaf)
+           else pg_relation_size(c.oid) end::float8 as heap_bytes,
+           case when c.relkind = 'p' then
+             (select coalesce(sum(pg_indexes_size(t.relid)), 0) from pg_partition_tree(c.oid) t where t.isleaf)
+           else pg_indexes_size(c.oid) end::float8 as index_bytes
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+     where c.relkind in ('r', 'm', 'p')
+       and not c.relispartition
+       and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
   )
   select case when n.nspname = 'public' then c.relname else n.nspname || '.' || c.relname end as name,
          c.relkind as kind,
-         pg_total_relation_size(c.oid)::float8 as total_bytes,
-         pg_relation_size(c.oid)::float8 as heap_bytes,
+         z.total_bytes,
+         z.heap_bytes,
          coalesce(pg_total_relation_size(nullif(c.reltoastrelid, 0)), 0)::float8 as toast_bytes,
-         pg_indexes_size(c.oid)::float8 as index_bytes,
+         z.index_bytes,
          coalesce(s.n_live_tup, c.reltuples, 0)::float8 as live_tuples,
          coalesce(s.n_dead_tup, 0)::float8 as dead_tuples,
-         case when pg_relation_size(c.oid) > 0 and w.row_bytes is not null
-              then greatest(0, 100 * (1 - coalesce(s.n_live_tup, 0) * w.row_bytes / pg_relation_size(c.oid)))
+         case when c.relkind <> 'p' and z.heap_bytes > 0 and w.row_bytes is not null
+              then greatest(0, 100 * (1 - coalesce(s.n_live_tup, 0) * w.row_bytes / z.heap_bytes))
               else 0 end::float8 as est_bloat_pct
-    from pg_class c
+    from sized z
+    join pg_class c on c.oid = z.oid
     join pg_namespace n on n.oid = c.relnamespace
     left join pg_stat_all_tables s on s.relid = c.oid
     left join w on w.schemaname = n.nspname and w.tablename = c.relname
-   where c.relkind in ('r', 'm', 'p')
-     and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
-     and pg_total_relation_size(c.oid) > 1048576
-   order by pg_total_relation_size(c.oid) desc
+   where z.total_bytes > 1048576
+   order by z.total_bytes desc
    limit 300`;
 
 export function rowToRelation(r: Record<string, unknown>): RelationSize {
