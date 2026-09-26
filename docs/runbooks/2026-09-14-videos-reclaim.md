@@ -1,5 +1,8 @@
 # Reclaiming `videos` — move, null, repack — 2026-09-14
 
+> 2026-09-26: the null-out gate, the mover and the repack procedure described below are superseded by
+> `docs/runbooks/2026-09-26-disk-growth.md` (the 06:00 gate stood down 12 nights of 12).
+
 `videos` is **3,984 MB** (heap 1,734 / indexes 1,352 / toast ~890) with 1,107,961 rows, against a
 512 MB `shared_buffers`. `description`, `metadata` and `llm_summary` are **86 %** of the tuple
 width (measured 2026-09-08: 1,038 + 742 + 210 bytes of a 2,065-byte row). Every page that joins

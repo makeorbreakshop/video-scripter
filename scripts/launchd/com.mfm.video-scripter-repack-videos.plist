@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
+  2026-09-26: prefer `npx tsx scripts/reclaim-table.ts --table videos --dry-run` (then --approved):
+  it measures, checks headroom, refuses while the rewrite is not worth it (today: ~330 MB, 8 %),
+  runs this same pg_repack invocation and measures again. Order and numbers:
+  docs/runbooks/2026-09-26-disk-growth.md.
+
   ONE-SHOT. pg_repack the `videos` heap after scripts/null-video-text.ts has cleared the
   description / metadata / llm_summary columns.
 

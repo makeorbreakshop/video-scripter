@@ -46,8 +46,9 @@ export interface ReclaimPlan {
 const MB = 1024 * 1024;
 /**
  * Sequential throughput assumed for a rewrite on this instance, MB/s. The low end is the Small
- * compute's baseline disk throughput; the high end allows for burst and a warm cache. Calibrated
- * against the measured video_score_history reclaim (runbook 2026-09-26).
+ * compute's baseline disk throughput; the high end allows for burst and a warm cache. Measured
+ * 2026-09-26: pg_repack of video_score_history did ~1,470 MB of work in 19.4 s ≈ 76 MB/s — the fast
+ * end, on a table with two indexes. `videos` has 45; expect nearer the slow end.
  */
 export const REWRITE_MBPS = { slow: 20, fast: 80 };
 /** A rewrite bigger than this (live data) needs --approved. */
