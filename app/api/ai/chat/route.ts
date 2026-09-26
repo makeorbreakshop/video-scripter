@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { getSupabaseClient } from '@/lib/supabase-client';
 import { createEmbeddings } from '@/lib/server/openai-embeddings';
-import { hybridSearchVideoContent } from '@/lib/vector-db-service';
+import { hybridSearchVideoContent } from '@/lib/vector-search';
 import { 
   getOpenAIApiKey, 
   getAnthropicApiKey, 
