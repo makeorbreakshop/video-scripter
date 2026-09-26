@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor, videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
 
 
 interface YouTubeSearchResponse {
@@ -89,15 +90,19 @@ export async function POST(request: NextRequest) {
       usedManualId = true;
       console.log(`✅ Using manual channel ID: ${channelName} (${channelId})`);
     } else {
-      const { data: existingVideo } = await supabase
+      const { data: existingRow } = await supabase
         .from('videos')
-        .select('metadata')
+        .select('id')
         .eq('channel_id', channelName)
         .limit(1)
         .single();
+      // metadata lives in video_text; read it through the accessor.
+      const existingMetadata = existingRow
+        ? (await videoTextFor([existingRow.id as string])).get(existingRow.id as string)?.metadata
+        : null;
 
-      if (existingVideo?.metadata?.youtube_channel_id) {
-        channelId = existingVideo.metadata.youtube_channel_id;
+      if (existingMetadata?.youtube_channel_id) {
+        channelId = existingMetadata.youtube_channel_id;
         console.log(`✅ Found channel ID from existing data: ${channelName} (${channelId})`);
       } else {
         // Fallback: Search for channel using YouTube API (costs 100 units)
@@ -329,13 +334,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback: Prepare videos for database insertion (no static performance ratios - calculated dynamically)
+    const textById = new Map<string, { description: string; metadata: Record<string, any> }>();
     const videosToInsert = newVideos.map(video => {
       const viewCount = parseInt(video.statistics.viewCount) || 0;
+
+      const text = {
+        description: video.snippet.description,
+        metadata: {
+          tags: video.snippet.tags || [],
+          categoryId: video.snippet.categoryId || '',
+          research_expansion: true,
+          youtube_channel_id: video.snippet.channelId,
+          expansion_settings: {
+            time_period: 'all',
+            exclude_shorts: excludeShorts,
+            search_method: 'youtube_search_api'
+          }
+        }
+      };
+      textById.set(video.id, text);
 
       return {
         id: video.id,
         title: video.snippet.title,
-        description: video.snippet.description,
+        // description/metadata only while they are still stored on videos (CLEARED_COLUMNS)
+        ...videosTextPayload(text),
         channel_id: video.snippet.channelTitle,
         published_at: video.snippet.publishedAt,
         duration: video.contentDetails.duration,
@@ -350,17 +373,6 @@ export async function POST(request: NextRequest) {
         imported_by: userId === 'test-user' ? '00000000-0000-0000-0000-000000000000' : userId,
         import_date: new Date().toISOString(),
         user_id: userId === 'test-user' ? '00000000-0000-0000-0000-000000000000' : userId,
-        metadata: {
-          tags: video.snippet.tags || [],
-          categoryId: video.snippet.categoryId || '',
-          research_expansion: true,
-          youtube_channel_id: video.snippet.channelId,
-          expansion_settings: {
-            time_period: 'all',
-            exclude_shorts: excludeShorts,
-            search_method: 'youtube_search_api'
-          }
-        }
       };
     });
 
@@ -378,6 +390,11 @@ export async function POST(request: NextRequest) {
       }
 
       insertedCount = insertedVideos?.length || 0;
+      // The side copy of the text, for exactly the rows just inserted.
+      await writeVideoTextFields(
+        (insertedVideos ?? []).map((v) => ({ videoId: v.id as string, ...textById.get(v.id as string)! })),
+        { onConflict: 'update' },
+      );
       console.log(`✅ Successfully inserted ${insertedCount} new videos`);
     }
 

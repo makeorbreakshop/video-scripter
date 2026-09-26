@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { fetchChannelRSSFeed, filterNewVideos } from '@/lib/rss-channel-monitor';
+import { videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
 
 
 export async function POST(request: NextRequest) {
@@ -54,12 +55,15 @@ export async function POST(request: NextRequest) {
             throw new Error(rssResult.error);
           }
 
-          // Get existing videos for this channel to determine what's new
-          // Use YouTube channel ID from metadata for accurate filtering
+          // Get existing videos for this channel to determine what's new.
+          // channel_id alone: wherever metadata.youtube_channel_id exists it equals channel_id
+          // (TABLESAMPLE SYSTEM (1), 2026-09-26: 7,475 of 7,475 sampled rows, 0 differ), so the
+          // old `or metadata->>youtube_channel_id = X` disjunct matched nothing extra, and
+          // filterNewVideos' `metadata?.youtube_channel_id || channel_id` resolves to channel_id.
           const { data: existingVideos, error: fetchError } = await supabase
             .from('videos')
-            .select('id, published_at, channel_id, metadata')
-            .or(`channel_id.eq.${channelId},metadata->>youtube_channel_id.eq.${channelId}`)
+            .select('id, published_at, channel_id')
+            .eq('channel_id', channelId)
             .order('published_at', { ascending: false });
 
           if (fetchError) {
@@ -247,10 +251,17 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          // The text goes through the accessor: into `videos` only while not yet cleared
+          // (CLEARED_COLUMNS), and always into video_text.
+          const textRows = videosToInsert.map((v: any) => ({ videoId: v.id, description: v.description, metadata: v.metadata }));
+          const videoRows = videosToInsert.map(({ description, metadata, ...rest }: any) => ({
+            ...rest, ...videosTextPayload({ description, metadata }),
+          }));
+
           // Insert new videos
           const { data: insertedVideos, error: insertError } = await supabase
             .from('videos')
-            .upsert(videosToInsert, { 
+            .upsert(videoRows, { 
               onConflict: 'id',
               ignoreDuplicates: true 
             })
@@ -259,6 +270,8 @@ export async function POST(request: NextRequest) {
           if (insertError) {
             throw new Error(`Failed to insert videos: ${insertError.message}`);
           }
+          // Duplicates were ignored on `videos`, so never overwrite an existing side row either.
+          await writeVideoTextFields(textRows, { onConflict: 'nothing' });
 
           // Note: Vectorization will be handled in bulk by daily monitor API
           // to avoid timeouts and improve performance

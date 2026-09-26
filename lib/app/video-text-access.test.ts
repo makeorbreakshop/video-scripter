@@ -48,46 +48,14 @@ const CLEARED: MovedColumn[] = [...CLEARED_COLUMNS];
  * counted so the diff shows which one was fixed, and so a NEW one fails this test loudly.
  */
 const BLOCKED: Record<string, string[]> = {
-  description: [
-    // `.not('description','ilike','%#shorts%')` — a FILTER. After the null-out it matches no
-    // rows at all, so both of these searches return empty and nothing reports an error.
-    'app/api/concept-search/route.ts',
-    'app/api/concept-search-multi/route.ts',
-    'lib/pinecone-service.ts',
-    // selects the description and renders it as the bundle summary
-    'app/api/tools/get-video-bundle/route.ts',
-    'app/api/classification/batch-with-insights/route.ts',
-    // WRITERS: these insert or upsert description back into `videos`. Until they are repointed,
-    // clearing the column reclaims space that the next import puts straight back.
-    'app/api/youtube/backfill-rss/route.ts',
-    'app/api/youtube/refresh-channel-analytics/route.ts',
-    'app/api/youtube/sync-channel/route.ts',
-    'lib/vector-db-service.ts',
-    // Scheduled every 5 minutes; reads the stored description as the baseline for
-    // description_versions. Invisible to this gate until it learned to scan scheduled scripts
-    // (lib/ops/scheduled-jobs.ts, 2026-09-26).
-    'scripts/rss-poll.ts',
-  ],
-  metadata: [
-    // None of these were ever on the original list, because it never grepped for `metadata`.
-    'app/api/videos/search/route.ts',
-    'app/api/youtube/backfill-rss/route.ts',
-    'app/api/youtube/check-existing-channels/route.ts',
-    'app/api/youtube/competitor-channels/route.ts',
-    'app/api/youtube/discovery/collaborations/route.ts',
-    'app/api/youtube/discovery/search/route.ts',
-    'app/api/youtube/expand-research-channel/route.ts',
-    'app/api/youtube/fix-channel-ids/route.ts',
-    'app/api/youtube/import-rss/route.ts',
-    'app/api/youtube/refresh-competitor-channel/route.ts',
-    'lib/admin/queries.ts',
-    'lib/app/video-page.ts',          // the video detail page's own server query
-    'lib/collaboration-mining-discovery.ts',
-    'lib/multi-channel-shelves-discovery.ts',
-    'lib/playlist-creator-discovery.ts',
-    'lib/vector-db-service.ts',
-    'workers/daily-topic-classifier.js',
-  ],
+  // Both emptied on 2026-09-26 (branch fix/disk-growth-readers): the ten description readers and
+  // seventeen metadata readers were repointed at lib/app/video-text.ts — raw SQL through
+  // VIDEO_TEXT_JOIN + coalesce, supabase-js reads hydrated with videoTextFor, writers through
+  // videosTextPayload + writeVideoTextFields, and the `description ilike '%#shorts%'` filters
+  // replaced by is_short. The keys stay, empty, until CLEARED_COLUMNS
+  // (lib/app/video-text-move.ts) takes the column: that flip is a separate, deliberate decision.
+  description: [],
+  metadata: [],
 };
 
 describe.each(CLEARED)('%s — cleared for the null-out', (col) => {

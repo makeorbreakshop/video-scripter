@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
 
 
 interface YouTubeVideoResponse {
@@ -253,15 +254,25 @@ export async function POST(request: NextRequest) {
     // Step 8a: Insert new videos into database
     let insertedCount = 0;
     if (videosToInsert.length > 0) {
+      // The text goes through the accessor: into `videos` only while not yet cleared
+      // (CLEARED_COLUMNS), and into video_text for the rows actually inserted.
+      const textById = new Map(videosToInsert.map((v) => [v.id, { description: v.description, metadata: v.metadata }]));
+      const videoRows = videosToInsert.map(({ description, metadata, ...rest }) => ({
+        ...rest, ...videosTextPayload({ description, metadata }),
+      }));
       const { data: insertedVideos, error: insertError } = await supabase
         .from('videos')
-        .insert(videosToInsert)
+        .insert(videoRows)
         .select('id, title, view_count, performance_ratio');
 
       if (insertError) {
         console.error('Error inserting videos:', insertError);
         throw insertError;
       }
+      await writeVideoTextFields(
+        (insertedVideos ?? []).map((v) => ({ videoId: v.id as string, ...textById.get(v.id as string)! })),
+        { onConflict: 'update' },
+      );
 
       insertedCount = insertedVideos?.length || 0;
       console.log(`✅ Successfully inserted ${insertedCount} new videos`);
@@ -276,6 +287,26 @@ export async function POST(request: NextRequest) {
         const viewCount = parseInt(video.statistics.viewCount) || 0;
         const performanceRatio = channelAvgViews > 0 ? viewCount / channelAvgViews : 1;
 
+        const text = {
+          metadata: {
+            ...video.metadata || {},
+            tags: video.snippet.tags || [],
+            categoryId: video.snippet.categoryId || '',
+            last_refresh: new Date().toISOString(),
+            youtube_channel_id: video.snippet.channelId,
+            channel_stats: {
+              subscriber_count: parseInt(channelStats.subscriberCount || '0'),
+              total_video_count: parseInt(channelStats.videoCount || '0'),
+              total_view_count: parseInt(channelStats.viewCount || '0'),
+              channel_thumbnail: channelSnippet.thumbnails?.default?.url || channelSnippet.thumbnails?.medium?.url,
+              last_updated: new Date().toISOString()
+            },
+            refresh_settings: {
+              exclude_shorts: true,
+              search_method: 'youtube_uploads_playlist'
+            }
+          }
+        };
         const { error } = await supabase
           .from('videos')
           .update({
@@ -285,24 +316,8 @@ export async function POST(request: NextRequest) {
             performance_ratio: performanceRatio,
             channel_avg_views: Math.round(channelAvgViews),
             updated_at: new Date().toISOString(),
-            metadata: {
-              ...video.metadata || {},
-              tags: video.snippet.tags || [],
-              categoryId: video.snippet.categoryId || '',
-              last_refresh: new Date().toISOString(),
-              youtube_channel_id: video.snippet.channelId,
-              channel_stats: {
-                subscriber_count: parseInt(channelStats.subscriberCount || '0'),
-                total_video_count: parseInt(channelStats.videoCount || '0'),
-                total_view_count: parseInt(channelStats.viewCount || '0'),
-                channel_thumbnail: channelSnippet.thumbnails?.default?.url || channelSnippet.thumbnails?.medium?.url,
-                last_updated: new Date().toISOString()
-              },
-              refresh_settings: {
-                exclude_shorts: true,
-                search_method: 'youtube_uploads_playlist'
-              }
-            }
+            // metadata only while it is still stored on videos (CLEARED_COLUMNS)
+            ...videosTextPayload(text),
           })
           .eq('id', video.id);
 
@@ -310,6 +325,8 @@ export async function POST(request: NextRequest) {
           console.error(`Error updating video ${video.id}:`, error);
           return false;
         }
+        // The update overwrote metadata, so overwrite the side copy too (description untouched).
+        await writeVideoTextFields([{ videoId: video.id, ...text }], { onConflict: 'update' });
         return true;
       });
 

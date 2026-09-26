@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { VideoBundle, ToolResponse } from '@/types/tools';
 import { wrapTool, createToolContext } from '@/lib/tools/base-wrapper';
+import { videoTextFor } from '@/lib/app/video-text';
 
 // Initialize Supabase client
 
@@ -46,7 +47,6 @@ async function getVideoBundleHandler(
         topic_niche,
         topic_cluster_id,
         thumbnail_url,
-        description,
         duration
       `)
       .eq('id', video_id)
@@ -79,6 +79,12 @@ async function getVideoBundleHandler(
     // Use default baseline if missing
     const baseline = video.channel_baseline_at_publish || 1.0;
 
+    // The description is only a fallback summary, and it lives in video_text now: read it through
+    // the accessor, and only when the analysis has no summary.
+    const description = analysis?.summary
+      ? null
+      : (await videoTextFor([video_id])).get(video_id)?.description ?? null;
+
     // Construct video bundle
     const bundle: VideoBundle = {
       id: video.id,
@@ -94,7 +100,7 @@ async function getVideoBundleHandler(
       topic_niche: video.topic_niche,
       topic_cluster_id: video.topic_cluster_id,
       thumbnail_url: video.thumbnail_url,
-      summary: analysis?.summary || video.description?.substring(0, 500) || null,
+      summary: analysis?.summary || description?.substring(0, 500) || null,
       tags: [], // Tags not available in current schema
       duration: video.duration
     };

@@ -5,6 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { q } from '@/lib/admin/db';
+import { VIDEO_TEXT_JOIN } from '@/lib/app/video-text';
+
+// `metadata` lives in video_text; read it through the side table with the accessor's coalesce
+// idiom, so this keeps working once videos.metadata is cleared.
+const NEEDS_FIX_WHERE = `
+   where coalesce(vt.metadata, v.metadata)->>'rss_import' = 'true'
+     and v.channel_id like 'UC%'`;
 
 
 export async function POST(request: NextRequest) {
@@ -13,12 +21,17 @@ export async function POST(request: NextRequest) {
     const { batchSize = 100 } = await request.json();
 
     // Get videos with YouTube channel IDs that need fixing
-    const { data: videosNeedingFix, error: fetchError } = await supabase
-      .from('videos')
-      .select('id, channel_id, metadata')
-      .filter('metadata->>rss_import', 'eq', 'true')
-      .like('channel_id', 'UC%')
-      .limit(batchSize);
+    let videosNeedingFix: { id: string; channel_id: string; metadata: any }[] | null = null;
+    let fetchError: unknown = null;
+    try {
+      videosNeedingFix = await q<{ id: string; channel_id: string; metadata: any }>(
+        `select v.id, v.channel_id, coalesce(vt.metadata, v.metadata) as metadata
+           from videos v ${VIDEO_TEXT_JOIN} ${NEEDS_FIX_WHERE} limit $1`,
+        [batchSize],
+      );
+    } catch (e) {
+      fetchError = e;
+    }
 
     if (fetchError) {
       console.error('Error fetching videos for channel ID fix:', fetchError);
@@ -101,14 +114,16 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = getSupabase();
   try {
-    // Get count of videos that need channel ID fixing
-    const { data: needsFix, error } = await supabase
-      .from('videos')
-      .select('id', { count: 'exact' })
-      .filter('metadata->>rss_import', 'eq', 'true')
-      .like('channel_id', 'UC%');
+    // Get count of videos that need channel ID fixing — a count, not every id shipped to take .length.
+    let needsFix = 0;
+    let error: unknown = null;
+    try {
+      const [row] = await q<{ n: number }>(`select count(*)::int as n from videos v ${VIDEO_TEXT_JOIN} ${NEEDS_FIX_WHERE}`);
+      needsFix = row?.n ?? 0;
+    } catch (e) {
+      error = e;
+    }
 
     if (error) {
       return NextResponse.json(
@@ -118,7 +133,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      videos_needing_channel_fix: needsFix?.length || 0,
+      videos_needing_channel_fix: needsFix,
       status: 'ready'
     });
 

@@ -5,9 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { collaborationMiningDiscovery } from '@/lib/collaboration-mining-discovery';
 import { youtubeDiscoveryAPI } from '@/lib/youtube-discovery-api';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { competitorYoutubeChannelIds } from '@/lib/app/video-text';
 
 export async function POST(request: NextRequest) {
-  const supabase = getSupabaseClient();
   try {
     const body = await request.json();
     const { 
@@ -33,21 +33,16 @@ export async function POST(request: NextRequest) {
     if (sourceChannelIds.includes('all')) {
       console.log('🔍 Getting all imported channels for collaboration mining discovery');
       
-      const { data: allChannels, error } = await supabase
-        .from('videos')
-        .select('metadata')
-        .eq('is_competitor', true)
-        .not('metadata->youtube_channel_id', 'is', null);
-
-      if (error) {
-        throw new Error(`Failed to fetch channels: ${error.message}`);
+      // metadata->>youtube_channel_id, read through the side table (lib/app/video-text.ts).
+      // 1,000 rows: the PostgREST max-rows cap the unbounded supabase-js select always ran under.
+      let allChannels: string[];
+      try {
+        allChannels = await competitorYoutubeChannelIds(1000);
+      } catch (error) {
+        throw new Error(`Failed to fetch channels: ${error instanceof Error ? error.message : error}`);
       }
 
-      const uniqueChannelIds = [...new Set(
-        allChannels
-          ?.map(v => v.metadata?.youtube_channel_id)
-          .filter(Boolean) || []
-      )];
+      const uniqueChannelIds = [...new Set(allChannels.filter(Boolean))];
       channelsToProcess = uniqueChannelIds;
       
       console.log(`📊 Found ${uniqueChannelIds.length} unique competitor channels with YouTube IDs`);

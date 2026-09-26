@@ -81,7 +81,9 @@ class DailyTopicClassifier {
     
     const { data: videos, error } = await supabase
       .from('videos')
-      .select('id, title, metadata')
+      // metadata was selected here but never read; dropped rather than routed through
+      // lib/app/video-text.ts (it moves to video_text and is cleared on videos).
+      .select('id, title')
       .is('topic_cluster_id', null)
       .gte('created_at', cutoffTime.toISOString())
       .order('created_at', { ascending: false });

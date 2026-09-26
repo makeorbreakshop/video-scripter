@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor, hydrateVideoTextFields } from '@/lib/app/video-text';
 
 export async function GET(request: NextRequest) {
   const supabase = getSupabase();
@@ -49,17 +50,14 @@ export async function GET(request: NextRequest) {
       .slice(0, limit);
 
     const selectedIds = videos.map(video => video.id);
-    const { data: metadataRows, error: metadataError } = selectedIds.length
-      ? await supabase.from('videos').select('id, metadata').in('id', selectedIds)
-      : { data: [], error: null };
-
-    if (metadataError) {
+    // metadata lives in video_text; read it through the accessor.
+    let metadataById = new Map<string, unknown>();
+    try {
+      const text = await videoTextFor(selectedIds as string[]);
+      metadataById = new Map([...text].map(([id, t]) => [id, t.metadata]));
+    } catch (metadataError) {
       console.error('Metadata lookup error:', metadataError);
     }
-
-    const metadataById = new Map(
-      (metadataRows || []).map(row => [row.id, row.metadata])
-    );
 
     // Process videos to extract channel data
     const processedVideos = videos?.map(video => {
@@ -67,7 +65,7 @@ export async function GET(request: NextRequest) {
       
       // Try to extract subscriber count from metadata
       try {
-        const videoMetadata = metadataById.get(video.id);
+        const videoMetadata = metadataById.get(video.id as string);
         if (videoMetadata && typeof videoMetadata === 'object') {
           const metadata = videoMetadata as any;
           if (metadata.channel_stats && metadata.channel_stats.subscriber_count) {
@@ -121,13 +119,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get channel statistics
-    const { data: channelVideos, error } = await supabase
+    const { data: channelRows, error } = await supabase
       .from('videos')
       .select(`
+        id,
         title,
         format_type,
-        topic_cluster_id,
-        metadata
+        topic_cluster_id
       `)
       .eq('channel_id', channel_id)
       .not('format_type', 'is', null)
@@ -141,6 +139,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // metadata lives in video_text; hydrate it through the accessor.
+    const channelVideos = await hydrateVideoTextFields((channelRows ?? []) as Array<{ id: string } & Record<string, any>>, ['metadata']);
 
     if (!channelVideos || channelVideos.length === 0) {
       return NextResponse.json(
