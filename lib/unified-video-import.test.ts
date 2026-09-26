@@ -76,3 +76,20 @@ describe('the metadata read behind the summary embeddings', () => {
     expect(SUMMARY_EMBED_META_COLUMNS).toEqual(['id', 'title', 'channel_name', 'view_count']);
   });
 });
+
+describe('the small-batch path (< 100 videos) writes text only to video_text (audit 2026-09-26)', () => {
+  // `.upsert(videos, …)` sent whole rows — description, metadata AND the cleared llm_summary —
+  // into `videos` and wrote no side row: every small import re-duplicated its text, and the
+  // reader sweep could not see it because the payload is a variable.
+  const src: string = require('node:fs').readFileSync(require('node:path').join(__dirname, 'unified-video-import.ts'), 'utf8');
+  const body = src.slice(src.indexOf('async storeVideoData(videos'), src.indexOf('async storeVideoDataChunked'));
+
+  it('never upserts unstripped rows into videos', () => {
+    expect(body).not.toMatch(/\.upsert\(videos\s*,/);
+    expect(body).toMatch(/\.upsert\(videos\.map\(\(v\) => stripVideoText\(v as any\)\)/);
+  });
+
+  it('writes the side rows after the videos upsert', () => {
+    expect(body).toMatch(/await writeVideoText\(videoTextRowsFrom\(videos as any\)\)/);
+  });
+});

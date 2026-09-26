@@ -32,9 +32,11 @@ describe('the refusals that remain are per-row or per-column, never global backl
   });
 
   it('refuses a column that still has direct readers (not in CLEARED_COLUMNS)', () => {
-    const plan = planNullOut({ mirrorTriggers: [], columns: ['llm_summary', 'description'] as any });
+    // All three moved columns are cleared as of 2026-09-26, so exercise the rule with a column
+    // that is not in the list.
+    const plan = planNullOut({ mirrorTriggers: [], columns: ['llm_summary', 'title'] as any });
     expect(plan.action).toBe('refuse');
-    if (plan.action === 'refuse') expect(plan.reason).toMatch(/description/);
+    if (plan.action === 'refuse') expect(plan.reason).toMatch(/title/);
   });
 
   it('refuses an empty column list rather than walking the table for nothing', () => {

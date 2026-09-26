@@ -721,9 +721,11 @@ export class VideoImportService {
     } else {
       // For smaller batches, use regular Supabase API
       try {
+        // Text goes to video_text only (lib/app/video-text.ts): whole rows here used to re-duplicate
+        // description/metadata/llm_summary into `videos` on every small import.
         const { error } = await supabase
           .from('videos')
-          .upsert(videos, {
+          .upsert(videos.map((v) => stripVideoText(v as any)), {
             onConflict: 'id',
             ignoreDuplicates: false
           });
@@ -740,6 +742,7 @@ export class VideoImportService {
           throw new Error(`Failed to store video data: ${error.message}`);
         }
         
+        await writeVideoText(videoTextRowsFrom(videos as any));
         console.log(`✅ Database storage complete (${videos.length} videos)`);
       } catch (error) {
         // Check if it's a timeout-related error

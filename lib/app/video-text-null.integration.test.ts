@@ -93,9 +93,10 @@ maybe('video_text null-out and ingest, in a rolled-back transaction', () => {
     const item = { id: E, snippet: { title: 'E', description: 'the real description', channelId: 'UCzzzzDiskGrowth',
       channelTitle: 'Z', publishedAt: '2026-09-25T10:00:00Z' }, statistics: { viewCount: '5' }, contentDetails: { duration: 'PT10M' } };
     const cls = { is_short: false, shorts_checked_at: 'now' as const };
-    await c.query(videoInsertSql(), videoInsertParams(item, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
+    // Blocked-description form first (dual write), so the broadcast test below has both copies.
+    await c.query(videoInsertSql(['llm_summary']), videoInsertParams(item, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
     const again = { ...item, snippet: { ...item.snippet, description: 'changed upstream' } };
-    await c.query(videoInsertSql(), videoInsertParams(again, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
+    await c.query(videoInsertSql(['llm_summary']), videoInsertParams(again, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
     const [row] = (await c.query(
       `select v.description as v_desc, vt.description as vt_desc from videos v join video_text vt on vt.video_id = v.id
         where v.id = $1`, [E])).rows;
@@ -104,12 +105,22 @@ maybe('video_text null-out and ingest, in a rolled-back transaction', () => {
 
   it('the live-broadcast metadata write leaves both copies byte-equal', async () => {
     const w = broadcastMetadataWrite({ id: E, snippet: { liveBroadcastContent: 'upcoming' },
-      liveStreamingDetails: { scheduledStartTime: '2026-09-27T00:00:00Z' } })!;
+      liveStreamingDetails: { scheduledStartTime: '2026-09-27T00:00:00Z' } }, ['llm_summary'])!;
     await c.query(w.sql, w.params);
     const [row] = (await c.query(
       `select v.metadata = vt.metadata as equal, vt.metadata->>'live_broadcast_content' as lbc
          from videos v join video_text vt on vt.video_id = v.id where v.id = $1`, [E])).rows;
     expect(row).toEqual({ equal: true, lbc: 'upcoming' });
+  });
+
+  it('with every column cleared (the production default), a new video\'s text lands only in video_text', async () => {
+    const F = `${P}F`;
+    const item = { id: F, snippet: { title: 'F', description: 'only in the side table', channelId: 'UCzzzzDiskGrowth',
+      channelTitle: 'Z', publishedAt: '2026-09-25T10:00:00Z' }, statistics: { viewCount: '5' }, contentDetails: { duration: 'PT10M' } };
+    await c.query(videoInsertSql(), videoInsertParams(item, { is_short: false, shorts_checked_at: 'now' }, { dataSource: 'competitor', userId: SYSTEM_USER }));
+    const [row] = (await c.query(
+      `select v.description as v_desc, vt.description as vt_desc from videos v join video_text vt on vt.video_id = v.id where v.id = $1`, [F])).rows;
+    expect(row).toEqual({ v_desc: null, vt_desc: 'only in the side table' });
   });
 
   it('once metadata is cleared, a broadcast write moves the newer value to video_text and clears the stale original', async () => {

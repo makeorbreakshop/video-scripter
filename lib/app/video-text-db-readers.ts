@@ -9,7 +9,7 @@
  */
 export function readsFromVideos(def: string, col: string): boolean {
   const masked = def
-    .replace(new RegExp(`coalesce\\(\\s*vt\\.${col}\\s*,\\s*v\\.${col}\\s*\\)`, 'gi'), '')
+    .replace(new RegExp(`coalesce\\(\\s*vt\\w*\\.${col}\\s*,\\s*v(?:_\\d+)?\\.${col}\\s*\\)`, 'gi'), '')
     .replace(new RegExp(`\\bvt\\.${col}\\b`, 'gi'), '');
   return new RegExp(`\\b${col}\\b`, 'i').test(masked);
 }

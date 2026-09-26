@@ -90,6 +90,7 @@ $function$;
 -- 3. Dashboard matviews: recreated over video_text, one transaction each.
 begin;
 set local lock_timeout = '5s';
+set local statement_timeout = '20min'; -- WITH DATA scans videos; the 2 min role default cancelled database_channel_health on 2026-09-26
 drop materialized view public.competitor_channel_summary;
 create materialized view public.competitor_channel_summary as
   with channel_aggregates as (
@@ -123,6 +124,7 @@ commit;
 
 begin;
 set local lock_timeout = '5s';
+set local statement_timeout = '20min'; -- WITH DATA scans videos; the 2 min role default cancelled database_channel_health on 2026-09-26
 drop materialized view public.analytics_stats;
 create materialized view public.analytics_stats as
   with video_stats as (
@@ -155,6 +157,7 @@ commit;
 
 begin;
 set local lock_timeout = '5s';
+set local statement_timeout = '20min'; -- WITH DATA scans videos; the 2 min role default cancelled database_channel_health on 2026-09-26
 drop materialized view public.database_channel_health;
 create materialized view public.database_channel_health as
   with channel_activity as (

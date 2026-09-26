@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videoTextFor } from '@/lib/app/video-text';
 import { pineconeService } from '@/lib/pinecone-service';
 import { generateQueryEmbedding } from '@/lib/title-embeddings';
 import { searchResultsCache, channelCache, embedingCache } from '@/lib/search-cache';
@@ -582,6 +583,8 @@ async function searchDirectVideo(videoId: string): Promise<SearchResult[]> {
       .single();
 
     if (error || !data) return [];
+    // The text columns are cleared on `videos`; the description comes from the accessor.
+    const text = (await videoTextFor([String(data.id)])).get(String(data.id));
 
     return [{
       id: data.id,
@@ -595,7 +598,7 @@ async function searchDirectVideo(videoId: string): Promise<SearchResult[]> {
       score: 1, // Perfect match
       match_type: 'direct' as const,
       thumbnail_url: `https://i.ytimg.com/vi/${data.id}/hqdefault.jpg`,
-      description: data.description
+      description: text?.description ?? undefined
     }];
   } catch (error) {
     console.error('Direct video search error:', error);

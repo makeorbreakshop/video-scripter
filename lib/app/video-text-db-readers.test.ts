@@ -11,6 +11,10 @@ describe('reading a database definition the way the code sweep reads code', () =
       'metadata')).toBe(false);
   });
 
+  it('accepts the idiom when Postgres has renamed the videos alias (v → v_1 in pg_get_viewdef)', () => {
+    expect(readsFromVideos("WHERE (COALESCE(vt.metadata, v_1.metadata) ->> 'source') = 'rss'", 'metadata')).toBe(false);
+  });
+
   it('accepts a plain read of the side table', () => {
     expect(readsFromVideos('select vt.description from video_text vt join videos v on v.id = vt.video_id', 'description')).toBe(false);
   });

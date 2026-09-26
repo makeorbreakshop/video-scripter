@@ -40,13 +40,10 @@ export const DB_READERS: DbReader[] = [
   { name: 'llm_summary_status', kind: 'view', columns: ['description', 'llm_summary'], status: 'dead', note: 'scripts/sync-summary-embeddings.js only' },
   { name: 'database_data_quality', kind: 'matview', columns: ['llm_summary'], status: 'stale-matview', note: 'dashboard stats; not refreshed by any job' },
   { name: 'heistable_videos', kind: 'matview', columns: ['llm_summary'], status: 'stale-matview', note: 'legacy-baselines scripts; cron 16 inactive' },
-  { name: 'get_competitor_channel_stats', kind: 'function', columns: ['metadata'], status: 'live', note: 'app/api/youtube/competitor-channels' },
-  { name: 'get_random_video_ids', kind: 'function', columns: ['metadata'], status: 'live', note: 'app/api/idea-radar (category filter)' },
+  // 2026-09-26: sql/2026-09-26-metadata-db-readers.sql repointed get_competitor_channel_stats,
+  // get_random_video_ids, analytics_stats, database_channel_health and competitor_channel_summary
+  // at coalesce(vt.metadata, v.metadata), and froze competitor_youtube_channels as a table.
   { name: 'get_youtube_channel_ids', kind: 'function', columns: ['metadata'], status: 'dead', note: 'scripts/migration/backfill-youtube-channel-ids.js only' },
-  { name: 'analytics_stats', kind: 'matview', columns: ['metadata'], status: 'live', note: 'database-stats dashboard; refreshed on demand' },
-  { name: 'database_channel_health', kind: 'matview', columns: ['metadata'], status: 'live', note: 'database-stats dashboard' },
-  { name: 'competitor_channel_summary', kind: 'matview', columns: ['metadata'], status: 'live', note: 'refresh-competitor-view route' },
-  { name: 'competitor_youtube_channels', kind: 'matview', columns: ['metadata'], status: 'live', note: 'LIVE INGEST tracked-channel set (priority-lane, nightly-ingest, drain-touch-queue, extension-api). Last refreshed ~2025-07-31 (818 rows); a refresh after metadata is cleared would empty it' },
 ];
 
 const CATALOG_SQL = `

@@ -30,8 +30,11 @@ export type TextColumn = (typeof TEXT_COLUMNS)[number];
  * written only to video_text. ONE list, read by the null-out (scripts/null-video-text.ts), by the
  * ingest writers (lib/ingest/video-insert.ts) and by the ratchet (video-text-access.test.ts).
  * A column joins it only when lib/app/video-text-access.test.ts says it has no readers left.
+ * description and metadata joined on 2026-09-26: 27 code readers repointed, the select('*') audit
+ * (video-text-select-star.test.ts), and the database readers migrated
+ * (sql/2026-09-26-metadata-db-readers.sql, video-text-db-objects.db.test.ts).
  */
-export const CLEARED_COLUMNS: readonly TextColumn[] = ['llm_summary'];
+export const CLEARED_COLUMNS: readonly TextColumn[] = ['llm_summary', 'description', 'metadata'];
 
 /** Reject anything that is not one of the three, and reject an empty list. */
 function checkColumns(cols: readonly TextColumn[]): readonly TextColumn[] {

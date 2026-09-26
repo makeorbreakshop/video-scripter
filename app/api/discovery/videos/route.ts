@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase-lazy'
+import { videoTextFor } from '@/lib/app/video-text'
 
 export async function GET(request: NextRequest) {
   const supabase = getSupabase();
@@ -70,6 +71,10 @@ export async function GET(request: NextRequest) {
     
     console.log(`Query returned ${data?.length || 0} videos (mode: ${sampleMode})`)
     
+    // select('*') returns the text columns, which are cleared on `videos`; the response keeps its
+    // shape by taking them from the accessor (lib/app/video-text-select-star.test.ts).
+    const text = await videoTextFor((data ?? []).map((v: any) => v.id))
+
     // Process videos to add outlier status
     const processedVideos = data?.map(video => {
       // Calculate performance ratio if missing
@@ -78,8 +83,12 @@ export async function GET(request: NextRequest) {
         performanceRatio = video.view_count / video.channel_avg_views
       }
       
+      const t = text.get(String(video.id))
       return {
         ...video,
+        description: t?.description ?? null,
+        metadata: t?.metadata ?? null,
+        llm_summary: t?.llmSummary ?? null,
         performance_ratio: performanceRatio || 0,
         isOutlier: performanceRatio && performanceRatio >= 3.0,
         formattedViews: video.view_count?.toLocaleString() || '0',

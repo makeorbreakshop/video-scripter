@@ -48,14 +48,9 @@ const CLEARED: MovedColumn[] = [...CLEARED_COLUMNS];
  * counted so the diff shows which one was fixed, and so a NEW one fails this test loudly.
  */
 const BLOCKED: Record<string, string[]> = {
-  // Both emptied on 2026-09-26 (branch fix/disk-growth-readers): the ten description readers and
-  // seventeen metadata readers were repointed at lib/app/video-text.ts — raw SQL through
-  // VIDEO_TEXT_JOIN + coalesce, supabase-js reads hydrated with videoTextFor, writers through
-  // videosTextPayload + writeVideoTextFields, and the `description ilike '%#shorts%'` filters
-  // replaced by is_short. The keys stay, empty, until CLEARED_COLUMNS
-  // (lib/app/video-text-move.ts) takes the column: that flip is a separate, deliberate decision.
-  description: [],
-  metadata: [],
+  // Empty since 2026-09-26: description and metadata joined CLEARED_COLUMNS once their 27 code
+  // readers were repointed, the select('*') files audited and the database readers migrated.
+  // A column that ever needs blocking again gets its key back, with the exact list of readers.
 };
 
 describe.each(CLEARED)('%s — cleared for the null-out', (col) => {
