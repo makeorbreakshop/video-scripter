@@ -17,6 +17,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import pg from 'pg';
 import { CLEARED_COLUMNS, TEXT_COLUMNS, type TextColumn } from './video-text-move';
+import { readsFromVideos } from './video-text-db-readers';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 const DSN = process.env.DATABASE_URL;
@@ -65,14 +66,14 @@ maybe('database objects that read the moved text columns', () => {
       try {
         await c.query('begin read only');
         await c.query(`set local statement_timeout = '20s'`);
-        // Definitions stay server-side: the filter runs there and only names come back.
+        // Only candidate objects come back (~13 definitions, a few KB each).
         const rows = (await c.query(
-          `select name, kind,
-                  ${TEXT_COLUMNS.map((col) => `def ~* '\\m${col}\\M' as "${col}"`).join(', ')}
-             from (${CATALOG_SQL}) d
+          `select name, kind, def from (${CATALOG_SQL}) d
             where def ~* '\\mvideos\\M' and def ~* '\\m(${TEXT_COLUMNS.join('|')})\\M'`)).rows;
         await c.query('commit');
-        found = rows.map((r) => ({ name: r.name, kind: r.kind, columns: TEXT_COLUMNS.filter((col) => r[col]) }));
+        found = rows
+          .map((r) => ({ name: r.name, kind: r.kind, columns: TEXT_COLUMNS.filter((col) => readsFromVideos(r.def, col)) }))
+          .filter((r) => r.columns.length);
       } finally { c.release(); }
     } finally { await pool.end(); }
   }, 60_000);
