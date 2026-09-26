@@ -138,6 +138,18 @@ crashing, or worse, reporting 0 GB/day from zero projects); **the PAT needs rene
   does not declare. First run found the egress alarm's log silent for 407 h.
 - **DB half of the ratchet** — `lib/app/video-text-db-objects.db.test.ts`.
 
+## Independent review
+
+A separate review pass over the branch found one data-loss path — `VIDEO_TEXT_UPSERT_SQL` set
+`llm_summary = excluded.llm_summary`, and the unified import never carries a summary, so a re-import
+after the null-out would have destroyed the only copy — plus: the null-out trusted an unlocked
+`video_text` row (now `FOR SHARE`), a cleared-metadata broadcast write left a permanently
+disagreeing original, VACUUM FULL could never run (multi-statement `-c`), and the partition
+straggler copy used `id > max(id)` on a shared sequence. All fixed test-first in `f94cf84`, with six
+robustness fixes. Accepted as-is: `move-video-text` has no persisted cursor (a full pass is 79 s
+against a 1,200 s budget); the ledger trim can race a concurrent append (one lost line at worst);
+`pg_repack` receives the session URL as a docker argument (visible in local `ps`).
+
 ## Awaiting Brandon (in this order)
 
 | # | what | command | lock / impact | returns |
@@ -181,7 +193,8 @@ checks still go through the side table.
 2. Fix `lib/unified-video-import.ts`'s small-batch `.upsert(videos)`: it writes all three text
    columns (including the already-cleared `llm_summary`) into `videos` and no `video_text`. Safe for
    the null-out (a disagreeing row is never cleared, a missing side row is moved first) but it
-   re-duplicates text.
+   re-duplicates text. (Its other path, `writeVideoText`, used to NULL `video_text.llm_summary` on
+   every re-import — fixed in `f94cf84`; see Review.)
 3. For `metadata` only: apply `sql/2026-09-26-metadata-db-readers.sql` (awaiting approval) so no
    live database object reads it (`lib/app/video-text-db-objects.db.test.ts`). It freezes
    `competitor_youtube_channels` rather than recomputing it.
