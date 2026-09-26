@@ -13,7 +13,10 @@
 -- CONCURRENTLY cannot run in a transaction: psql on the session pooler, statement by statement.
 --   psql "$DATABASE_SESSION_URL" -v ON_ERROR_STOP=1 -f sql/2026-09-26-drop-llm-summary-indexes.sql
 -- Rollback: sql/rollback/2026-09-26-drop-llm-summary-indexes.sql (rebuilds, ~1-3 min, online).
-set lock_timeout = '5s';
+-- 5 min, not 5 s: DROP INDEX CONCURRENTLY holds only SHARE UPDATE EXCLUSIVE (blocks no reader or
+-- writer) and then WAITS for every older transaction that might use the index — the observation
+-- materializer's run minutes. Those waits count against lock_timeout; 5 s timed out on 2026-09-26.
+set lock_timeout = '5min';
 drop index concurrently if exists public.idx_videos_llm_summary_status;
 drop index concurrently if exists public.idx_videos_llm_summary_null;
 drop index concurrently if exists public.idx_videos_id_llm_summary;
