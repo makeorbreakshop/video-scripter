@@ -241,3 +241,25 @@ windows (~46 MB/day, proportional to new uploads) are unchanged by design.
 4. "Nothing reads this column" must include scheduled scripts and the database's own functions,
    views and matviews.
 5. A monitor that reports "0" from zero inputs is worse than one that crashes.
+
+## Executed 2026-09-26 (Brandon: "Do it all") — 10:53–14:45 ET
+
+| # | item | result |
+|---|---|---|
+| 1 | merge + deploy + LaunchAgents | main fast-forwarded (the checkout's uncommitted 09-22 work preserved on top; backup patch kept), pushed. First Vercel build **failed**: the Edge route `app/api/ai/chat` now reached `pg` through vector-db-service → accessor. Fixed test-first (`lib/vector-search.ts` split + `lib/ops/edge-runtime-imports.test.ts`), local `npm run build` green, redeployed Ready. Every import after the 10:53 merge has its `video_text` row (0 of 196 before, 140 of 140 after within the hour). storage-guard / null-video-text / move-video-text agents installed. |
+| 2 | drop 3 llm_summary indexes | done, CONCURRENTLY; 5 s lock_timeout was too short for the wait on old transactions (left one index invalid, dropped on retry with 5 min). −243 MB. |
+| 3 | partition video_score_history | done, 5.3 s; 203,279 rows, 22 daily partitions, 0 stragglers, old table dropped. |
+| 4 | audit + clear description/metadata | 39 `select('*')` files audited (2 hydrate now; guard test); unified-import small batch fixed; `sql/2026-09-26-metadata-db-readers.sql` applied (dashboard matview block needed a 20 min timeout); `idx_videos_competitor_metadata` dropped first so the updates could be HOT (15 → 3 ms/row). Equality verified on a 50 K head sample and a random 2 % (23,989 rows): 0 disagreements. Clear-out pass: **1,186,660 rows** in bounded windows, 0 disagree; a 1 % sample afterwards holds no text. The back-off probe was standing down on autovacuum — fixed (client backends only). |
+| 5 | pg_repack videos | 2,980 → **1,156 MB** in 533 s, online (autovacuum had already truncated the toast 920 → 16 MB). At the swap pg_repack cancelled two conflicting backends (launch-track, materializer), both ran clean on their next tick. 1,187,082 rows in videos and video_text. |
+| 6 | readings terminal tier | first-of-video past 14 d, weekly past 60 d; SQL mirrors the pure policy; harness at +70 d: chart lines 0.80 % / 0.74 %, 0 of 191 growth exponents changed. Ledger labels `day-v2` / `week-v2` (constraint applied). Only R2-verified days are thinned; tonight re-thins the 20 daily-tier days (all verified). |
+| 7 | temp_file_limit | **blocked**: `permission denied to set parameter "temp_file_limit"` — Supabase's `postgres` role cannot set it. Needs the Management API (PAT) or dashboard. |
+| + | video_score_history access | RLS on, anon/authenticated revoked on parent, partitions, default and the view; new partitions close themselves. All callers are direct Postgres as BYPASSRLS roles. `history-access.db.test.ts`. |
+| + | view_snapshots | proposal only (`lib/readings/snapshot-retention.ts`), nothing deleted. Estimate: 3,396,729 rows → keep 3,024,541, removable 372,188 (~111 MB, all > 1 year). The tracking cadence already thins by age, so the policy saves little; the bigger lever is its indexes (701 MB on a 307 MB heap: uuid pkey, a unique (video_id, date) and an INCLUDE copy of it). |
+
+**After:** database 15.1 → **11.0 GB**; `/data` 60 % → **46 %** of 27,106 MiB. Guard (run via the
+LaunchAgent at 14:12): exit 2 with two expected alerts (thin-readings has not recorded yet; egress
+alarm NO DATA — PAT). macOS notification path ran; the Pulse receipt got HTTP 404 and is queued in
+the outbox (Pulse's receipt endpoint, same as other jobs today).
+
+**Projection:** ~12 GB of headroom to the 90 % trigger. Growth ≈ 80–120 MB/day (corpus-driven)
+→ roughly 100–150 days; the guard recomputes daily and warns at 30.
