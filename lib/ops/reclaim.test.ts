@@ -27,6 +27,12 @@ describe('planning a one-time reclaim', () => {
     expect(p.notes.join(' ')).toMatch(/free disk/);
   });
 
+  it('refuses a rewrite whose second copy would cross the 90 % autoscale trigger', () => {
+    const p = planReclaim({ ...base, diskAvailBytes: 400 * MB, diskSizeBytes: 3000 * MB });
+    expect(p.method).toBe('refuse');
+    expect(p.notes.join(' ')).toMatch(/autoscale/);
+  });
+
   it('refuses a big rewrite without an explicit approval — videos is Brandon\'s call', () => {
     const p = planReclaim({ ...base, table: 'videos', totalBytes: 4152 * MB, heapBytes: 1782 * MB,
       toastBytes: 920 * MB, indexBytes: 1449 * MB, liveBytes: 1476 * MB });
@@ -62,8 +68,11 @@ describe('the commands', () => {
 
   it('never queues VACUUM FULL behind a long transaction — a lock_timeout fails it fast instead', () => {
     // An ACCESS EXCLUSIVE request waiting in the lock queue blocks every later reader too.
-    expect(VACUUM_FULL_SQL('video_score_history')).toMatch(/set lock_timeout = '5s'/);
-    expect(VACUUM_FULL_SQL('video_score_history')).toMatch(/vacuum \(full, analyze, verbose\) public\.video_score_history/);
+    const stmts = VACUUM_FULL_SQL('video_score_history');
+    expect(stmts[0]).toBe(`set lock_timeout = '5s'`);
+    expect(stmts.at(-1)).toBe('vacuum (full, analyze, verbose) public.video_score_history');
+    // Separate statements: psql runs one multi-statement -c as a transaction, and VACUUM refuses that.
+    for (const s of stmts) expect(s).not.toMatch(/;/);
   });
 
   it('refuses an identifier that is not a plain table name', () => {

@@ -6,7 +6,7 @@ set local statement_timeout = '300s';
 lock table public.video_score_history in share row exclusive mode;
 insert into public.video_score_history_unpartitioned
   select * from public.video_score_history h
-   where h.id > (select coalesce(max(id), 0) from public.video_score_history_unpartitioned);
+   where not exists (select 1 from public.video_score_history_unpartitioned u where u.id = h.id);
 alter sequence public.video_score_history_id_seq owned by public.video_score_history_unpartitioned.id;
 alter table public.video_score_history rename to video_score_history_partitioned;
 alter table public.video_score_history_unpartitioned rename to video_score_history;

@@ -170,8 +170,10 @@ export function detectSilentJobs(outcomes: readonly JobOutcome[], heartbeats: re
         message: `${hb.job}: ${tail.length} consecutive runs failed; last: ${last.detail ?? '(no detail)'}` });
       continue;
     }
-    const silent = (o: JobOutcome) =>
-      (o.status === 'noop' || o.status === 'stood_down') && o.progressed === 0 && (o.backlog ?? 1) > 0;
+    // A failure is also a run that did no work; a mixed tail of failures and no-ops is as silent
+    // as either alone (review P2-1).
+    const silent = (o: JobOutcome) => o.status === 'failed' ||
+      ((o.status === 'noop' || o.status === 'stood_down') && o.progressed === 0 && (o.backlog ?? 1) > 0);
     if (tail.every(silent)) {
       alerts.push({ job: hb.job, kind: 'silent-noop',
         message: `${hb.job}: ${tail.length} consecutive runs did no work with work outstanding ` +

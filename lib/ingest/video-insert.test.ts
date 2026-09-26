@@ -88,8 +88,10 @@ describe('the live-broadcast metadata write keeps both copies equal', () => {
 
   it('once metadata is cleared: writes video_text only', () => {
     const w = broadcastMetadataWrite(live, ['llm_summary', 'metadata'])!;
-    expect(w.sql).not.toMatch(/update videos/);
+    expect(w.sql).not.toMatch(/update videos set metadata = jsonb/);
     expect(w.sql).toMatch(/insert into video_text/);
+    // …and clears a stale original, which would otherwise disagree for ever (review P1-2).
+    expect(w.sql).toMatch(/update videos set metadata = null where id in \(select video_id from vt_up\)/);
     expect(w.sql).toMatch(/on conflict \(video_id\) do update set metadata = /);
     expect(w.sql).toMatch(/video_text\.metadata/);
   });

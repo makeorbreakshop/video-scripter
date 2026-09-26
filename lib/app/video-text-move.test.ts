@@ -67,14 +67,14 @@ describe('the null-out clears per row, per window, and proves each row first', (
     // The predicate sits in the UPDATE's own WHERE, against `videos` as the target. Under READ
     // COMMITTED a row changed concurrently is re-checked against its NEW version (EvalPlanQual),
     // so a value written after our snapshot can never be nulled on the strength of an old match.
-    expect(sql).toMatch(/update videos v\s+set llm_summary = null\s+from video_text vt/);
+    expect(sql).toMatch(/update videos v\s+set llm_summary = null\s+from locked vt/);
     expect(sql).toMatch(/where vt\.video_id = v\.id/);
     expect(sql).toMatch(/v\.llm_summary is not distinct from vt\.llm_summary/);
     expect(sql).not.toMatch(/v\.llm_summary = vt\.llm_summary/);
   });
 
   it('requires a side row — an unmoved video is never touched', () => {
-    expect(sql).toMatch(/from video_text vt/);
+    expect(sql).toMatch(/from locked vt/);
     expect(sql).not.toMatch(/update videos v\s+set[^;]*left join/);
   });
 
@@ -174,5 +174,16 @@ describe('the dry-run coverage report', () => {
     expect(MOVED_COUNT_SQL).toMatch(/reltuples/);
     expect(MOVED_COUNT_SQL).toMatch(/'video_text'::regclass/);
     expect(MOVED_COUNT_SQL).not.toMatch(/from videos|from video_text/);
+  });
+});
+
+describe('the null-out locks the side rows it relies on (review P1-1, 2026-09-26)', () => {
+  // EvalPlanQual re-reads the UPDATE target (`videos`) only. A side row changed or deleted after
+  // the snapshot would still be trusted, so the proof is taken against rows locked FOR SHARE —
+  // the latest committed version, held until commit.
+  const sql = nullWindowSql(['llm_summary']);
+  it('reads video_text for the window FOR SHARE and proves equality against those rows', () => {
+    expect(sql).toMatch(/locked as \(\s*select vt\.video_id, vt\.llm_summary\s+from video_text vt\s+where vt\.video_id in \(select id from win\)\s+for share\s*\)/);
+    expect(sql).toMatch(/update videos v\s+set llm_summary = null\s+from locked vt/);
   });
 });

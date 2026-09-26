@@ -48,8 +48,13 @@ export const VIDEO_TEXT_UPSERT_SQL = `
     from unnest($1::text[], $2::text[], $3::jsonb[], $4::text[])
       as x(video_id, description, metadata, llm_summary)
   on conflict (video_id) do update
-     set description = excluded.description, metadata = excluded.metadata,
-         llm_summary = excluded.llm_summary, moved_at = excluded.moved_at`;
+     -- coalesce: a writer that does not carry a field (the unified import never carries
+     -- llm_summary) must not blank it. Once the null-out has cleared videos.<col>, the side copy
+     -- is the only copy (review P0-1, 2026-09-26).
+     set description = coalesce(excluded.description, video_text.description),
+         metadata = coalesce(excluded.metadata, video_text.metadata),
+         llm_summary = coalesce(excluded.llm_summary, video_text.llm_summary),
+         moved_at = excluded.moved_at`;
 
 export async function writeVideoText(rows: readonly VideoText[]): Promise<number> {
   if (!rows.length) return 0;
@@ -198,10 +203,17 @@ const mergeBroadcast = (m: string) => `jsonb_set(
  */
 export function broadcastMetadataSql(cleared: readonly TextColumn[] = CLEARED_COLUMNS): string {
   if (cleared.includes('metadata')) {
-    return `insert into video_text (video_id, description, metadata, llm_summary, moved_at)
+    // The side copy is now newer than any original still on `videos`, so the original is cleared
+    // in the same statement; left in place it would disagree for ever and the null-out would
+    // count it every night (review P1-2).
+    return `with vt_up as (
+      insert into video_text (video_id, description, metadata, llm_summary, moved_at)
       select v.id, v.description, ${mergeBroadcast('v.metadata')}, v.llm_summary, now()
         from videos v where v.id = $1
-      on conflict (video_id) do update set metadata = ${mergeBroadcast('video_text.metadata')}, moved_at = now()`;
+      on conflict (video_id) do update set metadata = ${mergeBroadcast('video_text.metadata')}, moved_at = now()
+      returning video_id
+    )
+    update videos set metadata = null where id in (select video_id from vt_up) and metadata is not null`;
   }
   return `with upd as (
       update videos set metadata = ${mergeBroadcast('metadata')}

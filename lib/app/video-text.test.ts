@@ -51,7 +51,7 @@ describe('the summary worker write path', () => {
     // would set both to NULL for every row it touched, which is the whole corpus.
     expect(LLM_SUMMARY_UPSERT_SQL).not.toMatch(/set[\s\S]*description\s*=/i);
     expect(LLM_SUMMARY_UPSERT_SQL).not.toMatch(/set[\s\S]*metadata\s*=/i);
-    expect(VIDEO_TEXT_UPSERT_SQL).toMatch(/description = excluded\.description/); // the full-row form still does
+    expect(VIDEO_TEXT_UPSERT_SQL).toMatch(/description = coalesce\(excluded\.description, video_text\.description\)/); // the full-row form still does
   });
 });
 
@@ -84,5 +84,14 @@ describe('the vectorization worker read path', () => {
   it('counts with the predicate it selects with', () => {
     expect(NEEDS_SUMMARY_EMBEDDING_COUNT_SQL).toMatch(/coalesce\(vt\.llm_summary, v\.llm_summary\) is not null/);
     expect(NEEDS_SUMMARY_EMBEDDING_COUNT_SQL).toMatch(/v\.llm_summary_embedding_synced = false/);
+  });
+});
+
+describe('the full-row upsert never blanks text it was not given (review P0-1, 2026-09-26)', () => {
+  // lib/unified-video-import.ts writes rows with no llm_summary. With `llm_summary =
+  // excluded.llm_summary` every re-import set the side copy to NULL — harmless while videos still
+  // held a copy, permanent loss once the null-out had cleared it.
+  it.each(['description', 'metadata', 'llm_summary'])('keeps the existing %s when the write carries NULL', (c) => {
+    expect(VIDEO_TEXT_UPSERT_SQL).toMatch(new RegExp(`${c} = coalesce\\(excluded\\.${c}, video_text\\.${c}\\)`));
   });
 });

@@ -132,3 +132,15 @@ describe('the ledger file', () => {
     expect(() => appendOutcome(run('a', 26), '/dev/null/cannot/write.jsonl')).not.toThrow();
   });
 });
+
+describe('a mixed tail of failures and no-ops is still silent (review P2-1)', () => {
+  it('alerts on failed, noop, failed', () => {
+    const hb: Heartbeat = { kind: 'ledger', job: 'j', everyHours: 24, maxSilentRuns: 3 };
+    const ledger = [
+      run('j', 22, { status: 'failed', progressed: 0, backlog: null }),
+      run('j', 23, { status: 'noop', progressed: 0, backlog: 5 }),
+      run('j', 24, { status: 'failed', progressed: 0, backlog: null }),
+    ];
+    expect(detectSilentJobs(ledger, [hb], new Date(at(24, 7)))[0]).toMatchObject({ kind: 'silent-noop' });
+  });
+});

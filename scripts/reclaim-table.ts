@@ -63,13 +63,13 @@ try {
   const dockerImage = spawnSync('docker', ['image', 'inspect', 'pg-repack:1.5.2-pg15'], { stdio: 'ignore' }).status === 0;
   plan = planReclaim({
     table: TABLE, totalBytes: before.total, heapBytes: before.heap, toastBytes: before.toast, indexBytes: before.idx,
-    liveBytes: before.live, diskAvailBytes: disk?.availBytes ?? null, hasPrimaryKey: before.has_pk,
-    repackAvailable: before.repack_ext && dockerImage, approved: has('--approved'),
+    liveBytes: before.live, diskAvailBytes: disk?.availBytes ?? null, diskSizeBytes: disk?.sizeBytes ?? null,
+    hasPrimaryKey: before.has_pk, repackAvailable: before.repack_ext && dockerImage, approved: has('--approved'),
   });
   if (arg('--method') === 'vacuum_full' && plan.method === 'pg_repack') {
     plan = planReclaim({ table: TABLE, totalBytes: before.total, heapBytes: before.heap, toastBytes: before.toast,
       indexBytes: before.idx, liveBytes: before.live, diskAvailBytes: disk?.availBytes ?? null,
-      hasPrimaryKey: before.has_pk, repackAvailable: false, approved: has('--approved') });
+      diskSizeBytes: disk?.sizeBytes ?? null, hasPrimaryKey: before.has_pk, repackAvailable: false, approved: has('--approved') });
   }
   console.log(`plan: ${plan.method}; reclaim ~${plan.reclaimMb} MB → ~${plan.afterMb} MB; ` +
               `lock ${plan.lockSeconds.min}-${plan.lockSeconds.max} s; run ${plan.runSeconds.min}-${plan.runSeconds.max} s` +
@@ -88,7 +88,8 @@ try {
       status = spawnSync('/bin/sh', ['-c', repackCommand(TABLE)], { stdio: 'inherit' }).status;
     } else {
       // VACUUM cannot run in a transaction block; psql on the SESSION pooler, one session.
-      status = spawnSync('/bin/sh', ['-c', `set -a; . ./.env.local; set +a; psql "$DATABASE_SESSION_URL" -X -v ON_ERROR_STOP=1 -c "${VACUUM_FULL_SQL(TABLE)}"`],
+      const cs = VACUUM_FULL_SQL(TABLE).map((sql) => `-c "${sql}"`).join(' ');
+      status = spawnSync('/bin/sh', ['-c', `set -a; . ./.env.local; set +a; psql "$DATABASE_SESSION_URL" -X -v ON_ERROR_STOP=1 ${cs}`],
                          { stdio: 'inherit' }).status;
     }
     const secs = (Date.now() - t0) / 1000;

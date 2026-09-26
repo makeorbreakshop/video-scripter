@@ -56,7 +56,7 @@ export interface NullPassSummary {
   /** progressed: cleared rows. idle: nothing held text. noop: text held, nothing cleared. */
   status: 'progressed' | 'idle' | 'noop';
   progressed: number;
-  /** Rows seen still holding text that this pass could not clear (unmoved + disagreeing). */
+  /** Rows seen still holding text that a later pass will clear (not yet moved). */
   backlog: number;
   scanned: number;
   disagree: number;
@@ -71,7 +71,9 @@ export function summarizeNullPass(windows: readonly NullWindow[], { wrapped }: {
   const progressed = sum('cleared');
   const disagree = sum('disagree');
   const unmovedHolding = sum('unmovedHolding');
-  const backlog = disagree + unmovedHolding;
+  // Disagreeing rows are never cleared by design; they are a warning, not work waiting. Counting
+  // them as backlog made every pass a permanent "noop" (review P2-2).
+  const backlog = unmovedHolding;
   const warnings: string[] = [];
   if (disagree) warnings.push(`${disagree} row(s) disagree with their side copy and were left alone`);
   const status = progressed > 0 ? 'progressed' : backlog > 0 ? 'noop' : 'idle';

@@ -63,7 +63,7 @@ describe('the outcome of one pass', () => {
     // This is the exact shape of the 12 silent nights: work exists, none was done. The job
     // outcome ledger (lib/ops/job-outcomes.ts) alerts after N of these in a row.
     const s = summarizeNullPass([w({ unmovedHolding: 40, disagree: 2 })], { wrapped: true });
-    expect(s).toMatchObject({ status: 'noop', progressed: 0, backlog: 42 });
+    expect(s).toMatchObject({ status: 'noop', progressed: 0, backlog: 40 });
   });
 
   it('keeps disagreements visible — they are never cleared and must never be silent', () => {
@@ -106,5 +106,17 @@ describe('skipping the walk when a recent full pass found nothing to do', () => 
   it('looks past its own skip records, so the skip lasts the whole window rather than alternating', () => {
     const skip = { ...idle('2026-10-04T10:00:00Z'), meta: { columns: ['llm_summary'], fullPass: false, skipped: true } };
     expect(recentIdleFullPass([idle('2026-10-01T10:00:00Z'), skip], ['llm_summary'], now, 7)).toBeTruthy();
+  });
+});
+
+describe('disagreements are warnings, not backlog (review P2-2)', () => {
+  // A row whose copies disagree is never cleared by design; counting it as backlog would make every
+  // pass a permanent "noop" (daily silent-job alert, and no weekly idle skip).
+  const w = (o: Partial<NullWindow>): NullWindow =>
+    ({ nextCursor: 'x', scanned: 5000, cleared: 0, disagree: 0, unmovedHolding: 0, ...o });
+  it('a pass with only disagreements is idle, with a warning', () => {
+    const s = summarizeNullPass([w({ disagree: 4 })], { wrapped: true });
+    expect(s).toMatchObject({ status: 'idle', backlog: 0, disagree: 4 });
+    expect(s.warnings).toHaveLength(1);
   });
 });

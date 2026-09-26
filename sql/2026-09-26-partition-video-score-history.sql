@@ -5,12 +5,13 @@
 -- archived day (scripts/thin-readings.ts), so a burst leaves on its own after 14 days.
 --
 -- Run on the SESSION pooler (single transaction, ~200 K rows / ~90 MB copied; writers blocked for
--- the copy, readers unaffected; measured on a clone in lib/readings/history-partitions.integration.test.ts):
+-- the copy; new readers may queue up to 5 s at the rename; measured on a clone in lib/readings/history-partitions.integration.test.ts):
 --   psql "$DATABASE_SESSION_URL" -v ON_ERROR_STOP=1 -f sql/2026-09-26-partition-video-score-history.sql
 -- Then, after a minute, copy into the new table any straggler rows a writer that was queued behind
 -- the lock put into the renamed old one:
 --   insert into video_score_history select * from video_score_history_unpartitioned u
---    where u.id > (select max(id) from video_score_history) on conflict do nothing;
+--    where not exists (select 1 from video_score_history n where n.id = u.id);
+-- (not `id > max(id)`: the sequence is shared, so a straggler can sit below a newer row.)
 --   drop table video_score_history_unpartitioned;
 -- Rollback (before the drop): sql/rollback/2026-09-26-partition-video-score-history.sql
 

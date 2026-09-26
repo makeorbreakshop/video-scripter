@@ -112,6 +112,17 @@ maybe('video_text null-out and ingest, in a rolled-back transaction', () => {
     expect(row).toEqual({ equal: true, lbc: 'upcoming' });
   });
 
+  it('once metadata is cleared, a broadcast write moves the newer value to video_text and clears the stale original', async () => {
+    const w = broadcastMetadataWrite({ id: E, snippet: { liveBroadcastContent: 'live' },
+      liveStreamingDetails: { actualStartTime: '2026-09-27T00:05:00Z' } }, ['llm_summary', 'metadata'])!;
+    await c.query(w.sql, w.params);
+    const [row] = (await c.query(
+      `select v.metadata as v_meta, vt.metadata->>'live_broadcast_content' as lbc,
+              vt.metadata->'live_streaming_details'->>'scheduledStartTime' as kept
+         from videos v join video_text vt on vt.video_id = v.id where v.id = $1`, [E])).rows;
+    expect(row).toEqual({ v_meta: null, lbc: 'live', kept: '2026-09-27T00:00:00Z' });
+  });
+
   it('EXPLAIN: each window statement is bounded by the primary-key window, not a table scan', async () => {
     const plan = (await c.query(`explain ${nullWindowSql(['llm_summary'])}`, ['', 5000])).rows
       .map((r) => r['QUERY PLAN']).join('\n');

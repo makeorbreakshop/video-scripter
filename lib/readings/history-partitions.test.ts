@@ -18,7 +18,7 @@ describe('naming and bounds', () => {
 
   it('bounds each partition to one UTC day, half-open', () => {
     const sql = createPartitionSql(HISTORY, '2026-09-26');
-    expect(sql).toMatch(/create table if not exists public\.video_score_history_p20260926\s+partition of public\.video_score_history/);
+    expect(sql).toMatch(/set local lock_timeout = '5s'; create table if not exists public\.video_score_history_p20260926\s+partition of public\.video_score_history/);
     expect(sql).toMatch(/for values from \('2026-09-26 00:00:00\+00'\) to \('2026-09-27 00:00:00\+00'\)/);
   });
 
@@ -26,6 +26,7 @@ describe('naming and bounds', () => {
     const sql = dropPartitionSql(HISTORY, '2026-09-12');
     expect(sql).toMatch(/set local lock_timeout = '5s'/);
     expect(sql).toMatch(/drop table if exists public\.video_score_history_p20260912/);
+    expect(sql).not.toMatch(/\bbegin\b|\bcommit\b/); // runs inside the pool's own transaction
   });
 
   it('rejects a malformed day rather than building SQL from it', () => {

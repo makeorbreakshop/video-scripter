@@ -131,10 +131,19 @@ export function nullWindowSql(columns: readonly TextColumn[]): string {
         from win join videos v on v.id = win.id
         left join video_text vt on vt.video_id = v.id
     ),
+    -- The side rows the proof relies on, locked: EvalPlanQual re-reads only the UPDATE target, so
+    -- without this a side row changed or deleted after the snapshot would still be trusted
+    -- (review P1-1). FOR SHARE returns the latest committed version and holds it until commit.
+    locked as (
+      select vt.video_id, ${cols.map((c) => `vt.${c}`).join(', ')}
+        from video_text vt
+       where vt.video_id in (select id from win)
+         for share
+    ),
     upd as (
       update videos v
          set ${sets}
-        from video_text vt
+        from locked vt
        where vt.video_id = v.id
          and v.id in (select id from win)
          and ${holds}

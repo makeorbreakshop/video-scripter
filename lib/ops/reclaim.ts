@@ -25,6 +25,8 @@ export interface ReclaimInput {
   /** Live tuple bytes (pgstattuple_approx.approx_tuple_len, or an estimate). */
   liveBytes: number;
   diskAvailBytes: number | null;
+  /** The volume's size; when known, the rewrite must also stay under the 90 % autoscale trigger. */
+  diskSizeBytes?: number | null;
   hasPrimaryKey: boolean;
   repackAvailable: boolean;
   approved?: boolean;
@@ -98,6 +100,11 @@ export function planReclaim(i: ReclaimInput): ReclaimPlan {
   } else if (i.diskAvailBytes < need) {
     notes.push(`free disk ${Math.round(i.diskAvailBytes / MB)} MB < ${Math.round(need / MB)} MB needed for the second copy`);
     plan.method = 'refuse';
+  } else if (i.diskSizeBytes && (i.diskSizeBytes - i.diskAvailBytes) + need / 2 > 0.9 * i.diskSizeBytes) {
+    // The copy exists alongside the original until the swap. Crossing 90 % triggers a Supabase
+    // autoscale, and the disk never shrinks back (review P2-5).
+    notes.push('the second copy would push the volume past the 90 % autoscale trigger');
+    plan.method = 'refuse';
   }
   if (reclaim / MB < MIN_RECLAIM_MB || reclaim / i.totalBytes < MIN_RECLAIM_SHARE) {
     notes.push(`not worth a rewrite: ~${plan.reclaimMb} MB (${Math.round((100 * reclaim) / i.totalBytes)} %) reclaimable`);
@@ -116,7 +123,10 @@ export function repackCommand(table: string, waitTimeoutSeconds = 60): string {
          `-d "$DATABASE_SESSION_URL" -t public.${ident(table)} --wait-timeout ${waitTimeoutSeconds} --elevel=INFO`;
 }
 
-/** VACUUM FULL with a lock_timeout, for a session connection (it cannot run in a transaction). */
-export function VACUUM_FULL_SQL(table: string): string {
-  return `set lock_timeout = '5s'; set statement_timeout = '15min'; vacuum (full, analyze, verbose) public.${ident(table)};`;
+/**
+ * VACUUM FULL with a lock_timeout, as SEPARATE statements for one session connection: psql sends a
+ * single `-c` string as one implicit transaction, and VACUUM refuses to run inside one (review P1-3).
+ */
+export function VACUUM_FULL_SQL(table: string): string[] {
+  return [`set lock_timeout = '5s'`, `set statement_timeout = '15min'`, `vacuum (full, analyze, verbose) public.${ident(table)}`];
 }

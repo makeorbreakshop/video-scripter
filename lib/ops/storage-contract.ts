@@ -50,7 +50,9 @@ export const BLOAT_ALERT_PCT = 50;
 export const STORAGE_CONTRACTS: StorageContract[] = [
   { table: 'videos', policy: 'entity', budgetMb: 4600, maxGrowthMbPerDay: 25, targetMb: 2000,
     enforcedBy: 'grows with ingest (~14 MB/day 09-14..26); ~2 GB of text leaves via null-video-text + pg_repack (runbook 2026-09-26)' },
-  { table: 'rss_samples', policy: 'bounded-retention', budgetMb: 3500, maxGrowthMbPerDay: 30,
+  // Declared at today's measured rate so the growth alert fires only if it gets WORSE; the budget
+  // is the forcing function for the terminal-tier decision (~2 weeks at today's rate).
+  { table: 'rss_samples', policy: 'bounded-retention', budgetMb: 4000, maxGrowthMbPerDay: 120,
     enforcedBy: 'scripts/thin-readings.ts tiers (lib/readings/retention.ts). The daily tier has NO end: ~477 K rows/day kept for ever (~120 MB/day). Terminal tier awaiting decision (runbook 2026-09-26 §3)' },
   { table: 'video_text', policy: 'entity', budgetMb: 2600, maxGrowthMbPerDay: 20,
     enforcedBy: 'one row per video, written at ingest (lib/app/video-text.ts videoInsertSql); the text home once videos is cleared' },
@@ -142,7 +144,7 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 export const CATALOG_SIZES_SQL = `
   with w as (
     select schemaname, tablename, sum(avg_width)::float8 + 28 as row_bytes
-      from pg_stats group by 1, 2
+      from pg_stats where not inherited group by 1, 2
   ),
   -- A partitioned table's own size is 0: its data is in the partitions. Roll each leaf up to its
   -- top-level parent, so video_score_history is one line under one contract however many days
@@ -173,7 +175,8 @@ export const CATALOG_SIZES_SQL = `
          coalesce(s.n_live_tup, c.reltuples, 0)::float8 as live_tuples,
          coalesce(s.n_dead_tup, 0)::float8 as dead_tuples,
          case when c.relkind <> 'p' and z.heap_bytes > 0 and w.row_bytes is not null
-              then greatest(0, 100 * (1 - coalesce(s.n_live_tup, 0) * w.row_bytes / z.heap_bytes))
+              -- n_live_tup is 0 after a stats reset; fall back to the planner's reltuples then.
+              then greatest(0, 100 * (1 - greatest(coalesce(s.n_live_tup, 0), c.reltuples) * w.row_bytes / z.heap_bytes))
               else 0 end::float8 as est_bloat_pct
     from sized z
     join pg_class c on c.oid = z.oid

@@ -46,15 +46,20 @@ export function partitionName(t: HistoryTable, d: string): string {
   return `${id(t.schema)}.${id(t.table)}_p${day(d).replace(/-/g, '')}`;
 }
 
+/**
+ * Both statements take ACCESS EXCLUSIVE on the parent, so both carry a lock_timeout; they run
+ * inside makeTimedPool's wrapper transaction, so `set local` and no begin/commit of their own
+ * (review P2-3/P2-4).
+ */
 export function createPartitionSql(t: HistoryTable, d: string): string {
-  return `create table if not exists ${partitionName(t, d)}
+  return `set local lock_timeout = '5s'; create table if not exists ${partitionName(t, d)}
     partition of ${id(t.schema)}.${id(t.table)}
     for values from ('${d} 00:00:00+00') to ('${nextDay(d)} 00:00:00+00')`;
 }
 
 /** Dropping a partition takes ACCESS EXCLUSIVE on the parent briefly; never queue for it. */
 export function dropPartitionSql(t: HistoryTable, d: string): string {
-  return `begin; set local lock_timeout = '5s'; drop table if exists ${partitionName(t, d)}; commit;`;
+  return `set local lock_timeout = '5s'; drop table if exists ${partitionName(t, d)}`;
 }
 
 /** Is the table partitioned yet? Before the migration, retention keeps using DELETE. */
