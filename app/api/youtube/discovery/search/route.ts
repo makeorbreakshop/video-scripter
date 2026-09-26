@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { youtubeChannelIdsPresent } from '@/lib/app/video-text';
 
 
 interface SearchFilters {
@@ -189,11 +190,11 @@ export async function POST(request: NextRequest) {
           .from('channel_discovery')
           .select('discovered_channel_id')
           .in('discovered_channel_id', filteredChannels.map(c => c.channelId)),
-        // Check imported videos by actual YouTube channel ID from metadata
-        supabase
-          .from('videos')
-          .select('metadata')
-          .in('metadata->>youtube_channel_id', filteredChannels.map(c => c.channelId)),
+        // Check imported videos by actual YouTube channel ID from metadata (through the side
+        // table, lib/app/video-text.ts)
+        youtubeChannelIdsPresent(filteredChannels.map(c => c.channelId), { competitorOnly: false })
+          // a failed lookup meant an empty `data` before too, not a failed search
+          .then((ids) => ({ data: ids }), () => ({ data: [] as string[] })),
         // Check imported videos by channel name
         supabase
           .from('videos')
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
           .in('channel_name', filteredChannels.map(c => c.title))
       ]).then(([discoveryResult, videosByIdResult, videosByNameResult]) => {
         const discoveryIds = discoveryResult.data?.map(d => d.discovered_channel_id) || [];
-        const videoChannelIds = videosByIdResult.data?.map(d => d.metadata?.youtube_channel_id).filter(Boolean) || [];
+        const videoChannelIds = videosByIdResult.data || [];
         const videoChannelNames = videosByNameResult.data?.map(d => d.channel_name) || [];
         
         // Create a set of channel IDs to exclude
@@ -462,17 +463,17 @@ async function handleVideoSearch(searchTerm: string, filters: SearchFilters, max
           .from('channel_discovery')
           .select('discovered_channel_id')
           .in('discovered_channel_id', filteredChannels.map(c => c.channelId)),
-        supabase
-          .from('videos')
-          .select('metadata')
-          .in('metadata->>youtube_channel_id', filteredChannels.map(c => c.channelId)),
+        // metadata->>youtube_channel_id, through the side table (lib/app/video-text.ts)
+        youtubeChannelIdsPresent(filteredChannels.map(c => c.channelId), { competitorOnly: false })
+          // a failed lookup meant an empty `data` before too, not a failed search
+          .then((ids) => ({ data: ids }), () => ({ data: [] as string[] })),
         supabase
           .from('videos')
           .select('channel_name')
           .in('channel_name', filteredChannels.map(c => c.title))
       ]).then(([discoveryResult, videosByIdResult, videosByNameResult]) => {
         const discoveryIds = discoveryResult.data?.map(d => d.discovered_channel_id) || [];
-        const videoChannelIds = videosByIdResult.data?.map(d => d.metadata?.youtube_channel_id).filter(Boolean) || [];
+        const videoChannelIds = videosByIdResult.data || [];
         const videoChannelNames = videosByNameResult.data?.map(d => d.channel_name) || [];
         
         const excludeIds = new Set(discoveryIds);

@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { quotaTracker } from '@/lib/youtube-quota-tracker';
+import { videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
 
 
 interface YouTubeVideoResponse {
@@ -259,9 +260,15 @@ export async function POST(request: NextRequest) {
     });
 
     // Insert new videos into database
+    // The text goes through the accessor: into `videos` only while not yet cleared
+    // (CLEARED_COLUMNS), and always into video_text.
+    const textRows = videosToInsert.map((v: any) => ({ videoId: v.id, description: v.description, metadata: v.metadata }));
+    const videoRows = videosToInsert.map(({ description, metadata, ...rest }: any) => ({
+      ...rest, ...videosTextPayload({ description, metadata }),
+    }));
     const { data: insertedVideos, error: insertError } = await supabase
       .from('videos')
-      .upsert(videosToInsert, { 
+      .upsert(videoRows, { 
         onConflict: 'id',
         ignoreDuplicates: false 
       })
@@ -274,6 +281,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    // The upsert overwrote both fields, so overwrite the side copy too.
+    await writeVideoTextFields(textRows, { onConflict: 'update' });
 
     const importedCount = insertedVideos?.length || 0;
     

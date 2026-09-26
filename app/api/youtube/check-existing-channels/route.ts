@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { youtubeChannelIdsPresent } from '@/lib/app/video-text';
 
 
 export async function POST(request: NextRequest) {
@@ -21,13 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check competitor channels (from videos table)
-    const { data: competitorChannels, error: competitorError } = await supabase
-      .from('videos')
-      .select('metadata')
-      .eq('is_competitor', true)
-      .in('metadata->>youtube_channel_id', channelIds);
-
-    if (competitorError) {
+    // metadata->>youtube_channel_id is read through the side table (lib/app/video-text.ts).
+    let competitorChannelIds: string[] | null = null;
+    try {
+      competitorChannelIds = await youtubeChannelIdsPresent(channelIds, { competitorOnly: true });
+    } catch (competitorError) {
       console.error('Error checking competitor channels:', competitorError);
     }
 
@@ -45,13 +44,8 @@ export async function POST(request: NextRequest) {
     const existingChannelIds = new Set<string>();
 
     // Add competitor channel IDs
-    if (competitorChannels) {
-      competitorChannels.forEach(video => {
-        const youtubeChannelId = video.metadata?.youtube_channel_id;
-        if (youtubeChannelId) {
-          existingChannelIds.add(youtubeChannelId);
-        }
-      });
+    if (competitorChannelIds) {
+      competitorChannelIds.forEach(youtubeChannelId => existingChannelIds.add(youtubeChannelId));
     }
 
     // Add discovery channel IDs
@@ -65,7 +59,7 @@ export async function POST(request: NextRequest) {
     const channelStatus = channelIds.map(channelId => ({
       channelId,
       isExisting: existingChannelIds.has(channelId),
-      source: competitorChannels?.some(v => v.metadata?.youtube_channel_id === channelId) 
+      source: competitorChannelIds?.includes(channelId) 
         ? 'competitor' 
         : discoveryChannels?.some(d => d.discovered_channel_id === channelId)
         ? 'discovery'

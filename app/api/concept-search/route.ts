@@ -88,7 +88,10 @@ export async function POST(request: NextRequest) {
           .select('id, temporal_performance_score, duration')
           .in('id', videoIds)
           .not('title', 'ilike', '%#shorts%')
-          .not('description', 'ilike', '%#shorts%')
+          // Shorts are excluded by the verified is_short column, the only Shorts truth (routing
+          // verdict). This deliberately replaces a `description ilike '%#shorts%'` text filter,
+          // which misclassified and would match nothing once videos.description is cleared.
+          .or('is_short.is.null,is_short.eq.false')
           .not('duration', 'in', '("PT1M","PT59S","PT58S","PT57S","PT56S","PT55S","PT54S","PT53S","PT52S","PT51S","PT50S","PT49S","PT48S","PT47S","PT46S","PT45S","PT44S","PT43S","PT42S","PT41S","PT40S","PT39S","PT38S","PT37S","PT36S","PT35S","PT34S","PT33S","PT32S","PT31S","PT30S","PT29S","PT28S","PT27S","PT26S","PT25S","PT24S","PT23S","PT22S","PT21S","PT20S","PT19S","PT18S","PT17S","PT16S","PT15S","PT14S","PT13S","PT12S","PT11S","PT10S","PT9S","PT8S","PT7S","PT6S","PT5S","PT4S","PT3S","PT2S","PT1S")');
 
         const temporalScoreMap = new Map(

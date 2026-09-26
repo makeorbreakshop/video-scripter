@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
 import { videoClassificationService } from '@/lib/video-classification-service';
 import { pineconeService } from '@/lib/pinecone-service';
+import { videoTextFor } from '@/lib/app/video-text';
 
 export async function POST(request: Request) {
   const supabase = getSupabase();
@@ -12,14 +13,17 @@ export async function POST(request: Request) {
     videoClassificationService.resetStatistics();
     
     // Get unclassified videos
-    const { data: videos, error } = await supabase
+    const { data: rows, error } = await supabase
       .from('videos')
-      .select('id, title, channel_name, description')
+      .select('id, title, channel_name')
       .is('classified_at', null)
       .limit(batchSize);
       
     if (error) throw error;
-    if (!videos || videos.length === 0) {
+    // description lives in video_text; hydrate it through the accessor.
+    const text = await videoTextFor((rows ?? []).map((v) => v.id as string));
+    const videos = (rows ?? []).map((v) => ({ ...v, description: text.get(v.id as string)?.description ?? null }));
+    if (videos.length === 0) {
       return NextResponse.json({ 
         message: 'No unclassified videos found',
         processed: 0 

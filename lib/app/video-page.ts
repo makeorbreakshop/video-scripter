@@ -8,6 +8,7 @@ import { broadcastContext } from '../youtube/broadcast';
 // the result to the page as plain serialisable data.
 import { videoPage as adminVideoPage, type VideoPageData } from '../admin/queries';
 import { q, one } from '../admin/db';
+import { VIDEO_TEXT_JOIN } from './video-text';
 import {
   mergeActuals,
   type Actual, type TypicalPoint,
@@ -145,8 +146,10 @@ export type VideoHeadView = {
 export async function loadVideoHead(id: string, now: number = Date.now()): Promise<VideoHeadView | null> {
   const [v, score, params, thumbs, obs] = await Promise.all([
     one<any>(
-      `select id, title, channel_id, channel_name, published_at, view_count, thumbnail_url, duration, metadata
-         from videos where id = $1`,
+      // metadata through the side table (./video-text): correct before and after the null-out.
+      `select v.id, v.title, v.channel_id, v.channel_name, v.published_at, v.view_count, v.thumbnail_url,
+              v.duration, coalesce(vt.metadata, v.metadata) as metadata
+         from videos v ${VIDEO_TEXT_JOIN} where v.id = $1`,
       [id]
     ),
     one<any>(`select s.*, s.snapshot_day as day from video_scores s where s.video_id = $1`, [id]),

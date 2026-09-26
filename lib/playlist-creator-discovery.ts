@@ -4,6 +4,7 @@
 import { supabase } from './supabase-client.ts';
 import type { ChannelValidationResult } from './youtube-discovery-api.ts';
 import { youtubeDiscoveryAPI } from './youtube-discovery-api.ts';
+import { competitorYoutubeChannelIds } from './app/video-text';
 
 export interface PlaylistCreatorResult {
   sourceChannelId: string;
@@ -49,18 +50,10 @@ export class PlaylistCreatorDiscovery {
       
       if (searchUntilResults) {
         // Get all channels from the database if we're searching until results
-        const { data: allChannels } = await supabase
-          .from('videos')
-          .select('metadata')
-          .eq('is_competitor', true)
-          .not('metadata->youtube_channel_id', 'is', null)
-          .limit(maxChannelsToSearch);
+        // metadata->>youtube_channel_id, read through the side table (lib/app/video-text.ts)
+        const allChannels = await competitorYoutubeChannelIds(maxChannelsToSearch).catch(() => [] as string[]);
         
-        const allChannelIds = [...new Set(
-          allChannels
-            ?.map(v => v.metadata?.youtube_channel_id)
-            .filter(Boolean) || []
-        )];
+        const allChannelIds = [...new Set(allChannels.filter(Boolean))];
         console.log(`📊 Expanded search to ${allChannelIds.length} available YouTube channel IDs for comprehensive search`);
         channelsToProcess = allChannelIds;
       }

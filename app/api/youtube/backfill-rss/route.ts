@@ -5,6 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { q } from '@/lib/admin/db';
+import { VIDEO_TEXT_JOIN, videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
+
+// `metadata` lives in video_text; the rss_import flag is read through the side table, with the
+// accessor's coalesce idiom, so this keeps working once videos.metadata is cleared.
+const NEEDS_BACKFILL_WHERE = `
+   where coalesce(vt.metadata, v.metadata)->>'rss_import' = 'true'
+     and (v.view_count = 0 or v.duration = 'PT0S')`;
 
 interface YouTubeVideoResponse {
   items: Array<{
@@ -50,12 +58,16 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.YOUTUBE_API_KEY;
 
     // Get videos that need backfilling
-    const { data: videosNeedingUpdate, error: fetchError } = await supabase
-      .from('videos')
-      .select('id, title, channel_id')
-      .filter('metadata->>rss_import', 'eq', 'true')
-      .or('view_count.eq.0,duration.eq.PT0S')
-      .limit(batchSize);
+    let videosNeedingUpdate: { id: string; title: string; channel_id: string }[] | null = null;
+    let fetchError: unknown = null;
+    try {
+      videosNeedingUpdate = await q<{ id: string; title: string; channel_id: string }>(
+        `select v.id, v.title, v.channel_id from videos v ${VIDEO_TEXT_JOIN} ${NEEDS_BACKFILL_WHERE} limit $1`,
+        [batchSize],
+      );
+    } catch (e) {
+      fetchError = e;
+    }
 
     if (fetchError) {
       console.error('Error fetching videos for backfill:', fetchError);
@@ -102,11 +114,25 @@ export async function POST(request: NextRequest) {
               const likeCount = parseInt(video.statistics.likeCount) || 0;
               const commentCount = parseInt(video.statistics.commentCount) || 0;
 
+              const text = {
+                description: video.snippet.description || '',
+                metadata: {
+                  ...chunk.find(v => v.id === video.id) ? {} : {},
+                  rss_import: true,
+                  backfilled: true,
+                  backfill_date: new Date().toISOString(),
+                  youtube_channel_id: video.snippet.channelId,
+                  tags: video.snippet.tags || [],
+                  categoryId: video.snippet.categoryId || '',
+                  channel_title: video.snippet.channelTitle
+                }
+              };
               const { error: updateError } = await supabase
                 .from('videos')
                 .update({
                   title: video.snippet.title,
-                  description: video.snippet.description || '',
+                  // description/metadata only while they are still stored on videos (CLEARED_COLUMNS)
+                  ...videosTextPayload(text),
                   channel_id: video.snippet.channelTitle, // Use channel name for consistency
                   duration: video.contentDetails.duration,
                   view_count: viewCount,
@@ -115,16 +141,6 @@ export async function POST(request: NextRequest) {
                   thumbnail_url: video.snippet.thumbnails.maxres?.url || 
                                 video.snippet.thumbnails.high?.url || 
                                 video.snippet.thumbnails.medium?.url,
-                  metadata: {
-                    ...chunk.find(v => v.id === video.id) ? {} : {},
-                    rss_import: true,
-                    backfilled: true,
-                    backfill_date: new Date().toISOString(),
-                    youtube_channel_id: video.snippet.channelId,
-                    tags: video.snippet.tags || [],
-                    categoryId: video.snippet.categoryId || '',
-                    channel_title: video.snippet.channelTitle
-                  }
                 })
                 .eq('id', video.id);
 
@@ -133,6 +149,8 @@ export async function POST(request: NextRequest) {
                 totalFailed++;
                 errors.push(`${video.id}: ${updateError.message}`);
               } else {
+                // The update overwrote both fields, so overwrite the side copy too.
+                await writeVideoTextFields([{ videoId: video.id, ...text }], { onConflict: 'update' });
                 totalUpdated++;
                 console.log(`✅ Updated video: ${video.snippet.title}`);
               }
@@ -180,14 +198,19 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = getSupabase();
   try {
     // Get count of videos that need backfilling
-    const { data: needsBackfill, error } = await supabase
-      .from('videos')
-      .select('id', { count: 'exact' })
-      .filter('metadata->>rss_import', 'eq', 'true')
-      .or('view_count.eq.0,duration.eq.PT0S');
+    // A count, not every matching id shipped to the client just to take .length.
+    let needsBackfill = 0;
+    let error: unknown = null;
+    try {
+      const [row] = await q<{ n: number }>(
+        `select count(*)::int as n from videos v ${VIDEO_TEXT_JOIN} ${NEEDS_BACKFILL_WHERE}`,
+      );
+      needsBackfill = row?.n ?? 0;
+    } catch (e) {
+      error = e;
+    }
 
     if (error) {
       return NextResponse.json(
@@ -197,7 +220,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      videos_needing_backfill: needsBackfill?.length || 0,
+      videos_needing_backfill: needsBackfill,
       status: 'ready'
     });
 

@@ -6,6 +6,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "./supabase.ts";
 import { batchCreateEmbeddings } from "./server/openai-embeddings.ts";
+import { videoTextFor, videosTextPayload, writeVideoTextFields } from "./app/video-text";
 
 // Define the Chunk interface since we can't import from transcript-chunker yet
 interface Chunk {
@@ -58,13 +59,15 @@ export async function storeVideoMetadata(
   try {
     console.log(`💾 Storing metadata for video ${videoMetadata.id}`);
     
+    const text = { description: videoMetadata.description || "", metadata: videoMetadata.metadata || {} };
     const { error } = await client
       .from('videos')
       .upsert({
         id: videoMetadata.id,
         channel_id: videoMetadata.channelId,
         title: videoMetadata.title,
-        description: videoMetadata.description || "",
+        // description/metadata only while they are still stored on videos (CLEARED_COLUMNS)
+        ...videosTextPayload(text),
         published_at: videoMetadata.publishedAt,
         view_count: videoMetadata.viewCount,
         like_count: videoMetadata.likeCount,
@@ -72,7 +75,6 @@ export async function storeVideoMetadata(
         duration: videoMetadata.duration,
         channel_avg_views: videoMetadata.channelAvgViews,
         performance_ratio: videoMetadata.performanceRatio,
-        metadata: videoMetadata.metadata || {},
         user_id: userId,
         updated_at: new Date().toISOString()
       }, {
@@ -83,6 +85,8 @@ export async function storeVideoMetadata(
       console.error("🚨 Error storing video metadata:", error);
       return false;
     }
+    // The upsert overwrote both fields, so overwrite the side copy too.
+    await writeVideoTextFields([{ videoId: videoMetadata.id, ...text }], { onConflict: 'update' });
     
     console.log(`✅ Successfully stored metadata for video ${videoMetadata.id}`);
     return true;
@@ -352,12 +356,16 @@ export async function getVideoMetadata(
       return null;
     }
     
+    // select('*') no longer carries the text columns once they are cleared; read them through
+    // the accessor (lib/app/video-text.ts).
+    const text = (await videoTextFor([data.id])).get(data.id);
+
     // Map from database format to our interface
     return {
       id: data.id,
       channelId: data.channel_id,
       title: data.title,
-      description: data.description,
+      description: text?.description ?? data.description,
       publishedAt: data.published_at,
       viewCount: data.view_count,
       likeCount: data.like_count,
@@ -365,7 +373,7 @@ export async function getVideoMetadata(
       duration: data.duration,
       channelAvgViews: data.channel_avg_views,
       performanceRatio: data.performance_ratio,
-      metadata: data.metadata,
+      metadata: text?.metadata ?? data.metadata,
       updated_at: data.updated_at
     };
   } catch (error) {
@@ -404,12 +412,16 @@ export async function getUserVideos(
     
     console.log(`✅ Found ${data.length} videos for user ${userId}`);
     
+    // select('*') no longer carries the text columns once they are cleared; read them through
+    // the accessor (lib/app/video-text.ts).
+    const text = await videoTextFor(data.map((item) => item.id));
+
     // Map from database format to our interface
     return data.map(item => ({
       id: item.id,
       channelId: item.channel_id,
       title: item.title,
-      description: item.description,
+      description: text.get(item.id)?.description ?? item.description,
       publishedAt: item.published_at,
       viewCount: item.view_count,
       likeCount: item.like_count,
@@ -417,7 +429,7 @@ export async function getUserVideos(
       duration: item.duration,
       channelAvgViews: item.channel_avg_views,
       performanceRatio: item.performance_ratio,
-      metadata: item.metadata,
+      metadata: text.get(item.id)?.metadata ?? item.metadata,
       updated_at: item.updated_at
     }));
   } catch (error) {

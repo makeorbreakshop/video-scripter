@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-lazy';
+import { videosTextPayload, writeVideoTextFields } from '@/lib/app/video-text';
 
 
 /**
@@ -415,13 +416,15 @@ async function importVideosBatch(videos: any[], channelId: string) {
 
   for (const video of videos) {
     try {
+      const text = { description: video.description || '' };
       // Insert into videos table
       const { error: videoError } = await supabase
         .from('videos')
         .insert({
           id: video.id,
           title: video.title,
-          description: video.description || '',
+          // description only while it is still stored on videos (CLEARED_COLUMNS)
+          ...videosTextPayload(text),
           published_at: video.publishedAt,
           channel_id: channelId,
           channel_title: video.channelTitle || channelId,
@@ -443,6 +446,7 @@ async function importVideosBatch(videos: any[], channelId: string) {
         });
         continue;
       }
+      await writeVideoTextFields([{ videoId: video.id, ...text }], { onConflict: 'update' });
 
       // Create baseline analytics record with current view count
       const { error: baselineError } = await supabase

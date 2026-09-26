@@ -40,6 +40,7 @@ import { reenter } from '../lib/nightly/launch-core';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../lib/rss/title-change';
 import { markSeriesDirty } from '../lib/readings/series-store';
+import { VIDEO_TEXT_JOIN } from '../lib/app/video-text';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -385,7 +386,9 @@ for (const part of chunk(allIds, CHUNK)) {
   // Baseline text only for videos with no description_versions row yet (rare after the first pass).
   const needText = v.rows.filter((r: any) => !d.rows.some((x: any) => x.video_id === r.id)).map((r: any) => r.id);
   if (needText.length) {
-    const tx = await pool.query(`select id, description from videos where id = any($1)`, [needText]);
+    // Through the side table (lib/app/video-text.ts): correct before and after videos.description is cleared.
+    const tx = await pool.query(`select v.id, coalesce(vt.description, v.description) as description
+                                   from videos v ${VIDEO_TEXT_JOIN} where v.id = any($1)`, [needText]);
     for (const r of tx.rows) { const s = snap.get(r.id); if (s) s.description = r.description; }
   }
   for (const r of t.rows) { const s = snap.get(r.video_id); if (s) s.titleMaxVersion = r.v; }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { VIDEO_TEXT_JOIN } from '@/lib/app/video-text';
 
 // Use service role to bypass RLS
 const supabaseAdmin = createClient(
@@ -15,7 +16,8 @@ const supabaseAdmin = createClient(
 
 export async function GET() {
   try {
-    // Use a raw SQL query with the Supabase SQL editor endpoint
+    // Use a raw SQL query with the Supabase SQL editor endpoint. metadata is read through the
+    // side table (lib/app/video-text.ts) so this survives videos.metadata being cleared.
     const query = `
       WITH channel_aggregates AS (
         SELECT 
@@ -23,14 +25,14 @@ export async function GET() {
           COUNT(*) as video_count,
           MAX(v.import_date) as last_import,
           (ARRAY_AGG(
-            v.metadata ORDER BY 
+            coalesce(vt.metadata, v.metadata) ORDER BY 
             CASE 
-              WHEN v.metadata->'channel_stats' IS NOT NULL THEN 0
+              WHEN coalesce(vt.metadata, v.metadata)->'channel_stats' IS NOT NULL THEN 0
               ELSE 1
             END,
             v.import_date DESC
           ))[1] as best_metadata
-        FROM videos v
+        FROM videos v ${VIDEO_TEXT_JOIN}
         WHERE v.is_competitor = true
         GROUP BY v.channel_id
       )

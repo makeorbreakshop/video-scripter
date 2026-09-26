@@ -196,7 +196,10 @@ export async function POST(request: NextRequest) {
       .gte('temporal_performance_score', min_performance_ratio)
       .lte('temporal_performance_score', 100) // Cap to exclude corrupted data
       .not('title', 'ilike', '%#shorts%')
-      .not('description', 'ilike', '%#shorts%')
+      // Shorts are excluded by the verified is_short column, the only Shorts truth (routing
+      // verdict). This deliberately replaces a `description ilike '%#shorts%'` text filter,
+      // which misclassified and would match nothing once videos.description is cleared.
+      .or('is_short.is.null,is_short.eq.false')
       .order('temporal_performance_score', { ascending: false })
       .limit(limit);
 
