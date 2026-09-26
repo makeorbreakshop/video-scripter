@@ -101,3 +101,14 @@ describe('the one-time migration', () => {
     expect(LIST_PARTITIONS_SQL).toMatch(/pg_inherits/);
   });
 });
+
+describe('a new daily partition is never exposed to the public API roles (2026-09-26)', () => {
+  // Supabase's default privileges grant ALL on every new public table to anon and authenticated,
+  // and PostgREST exposes partitions as tables of their own. Every caller of the score history is
+  // direct Postgres as a role that bypasses RLS (postgres, service_role, channelsmith_app).
+  const sql = createPartitionSql(HISTORY, '2026-09-26');
+  it('enables RLS and revokes anon/authenticated in the same statement batch', () => {
+    expect(sql).toMatch(/alter table public\.video_score_history_p20260926 enable row level security/);
+    expect(sql).toMatch(/revoke all on public\.video_score_history_p20260926 from anon, authenticated/);
+  });
+});

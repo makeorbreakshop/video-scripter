@@ -52,9 +52,14 @@ export function partitionName(t: HistoryTable, d: string): string {
  * (review P2-3/P2-4).
  */
 export function createPartitionSql(t: HistoryTable, d: string): string {
-  return `set local lock_timeout = '5s'; create table if not exists ${partitionName(t, d)}
+  const p = partitionName(t, d);
+  // Supabase's default privileges give every new public table to anon/authenticated, and PostgREST
+  // exposes a partition as a table of its own: close it in the same batch (2026-09-26).
+  return `set local lock_timeout = '5s'; create table if not exists ${p}
     partition of ${id(t.schema)}.${id(t.table)}
-    for values from ('${d} 00:00:00+00') to ('${nextDay(d)} 00:00:00+00')`;
+    for values from ('${d} 00:00:00+00') to ('${nextDay(d)} 00:00:00+00');
+    alter table ${p} enable row level security;
+    revoke all on ${p} from anon, authenticated`;
 }
 
 /** Dropping a partition takes ACCESS EXCLUSIVE on the parent briefly; never queue for it. */
