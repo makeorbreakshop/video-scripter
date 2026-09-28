@@ -15,4 +15,11 @@ describe('LAUNCH_ENROLL_SQL', () => {
     expect(LAUNCH_ENROLL_SQL).toContain('from fresh f');
     expect(LAUNCH_ENROLL_SQL).toContain('on conflict (video_id) do nothing');
   });
+
+  it('fetches each fresh id by primary key (lateral), never by joining a long-form scan', () => {
+    expect(LAUNCH_ENROLL_SQL).toMatch(/cross join lateral \(\s*select v\.\* from videos v\s+where v\.id = f\.id/);
+    expect(LAUNCH_ENROLL_SQL).not.toMatch(/join videos v on v\.id = f\.id/);
+    // Without a fence Postgres flattens the lateral straight back into the hash join.
+    expect(LAUNCH_ENROLL_SQL).toMatch(/where v\.id = f\.id[\s\S]*?limit 1[\s\S]*?\) v/);
+  });
 });

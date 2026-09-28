@@ -26,10 +26,17 @@ export const LAUNCH_ENROLL_SQL = `
          case when recent.sampled_at > now() - interval '5 minutes' and recent.sampled_at <= now()
               then recent.view_count end
     from fresh f
-    join videos v on v.id = f.id
+    -- One primary-key probe per fresh id. As a plain join the planner hash-joined ~600 ids
+    -- against a bitmap scan of ~944 K long-form videos: 21 s and ~90 MB of temp spill every
+    -- 5-minute run (2026-09-28, the database's top spiller).
+    cross join lateral (
+      select v.* from videos v
+       where v.id = f.id
+         and ${longformSql('v')}
+       limit 1  -- id is unique; the LIMIT stops the planner flattening this back into that join
+    ) v
     left join lateral (
       select s.sampled_at, s.view_count from view_samples s
        where s.video_id = v.id order by s.sampled_at desc limit 1
     ) recent on true
-   where ${longformSql('v')}
   on conflict (video_id) do nothing`;

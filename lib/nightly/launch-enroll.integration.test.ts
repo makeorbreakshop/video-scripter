@@ -15,6 +15,12 @@ maybe('launch enrollment plan', () => {
     try {
       const plan = (await pool.query(`explain ${LAUNCH_ENROLL_SQL}`)).rows.map(r => r['QUERY PLAN']).join('\n');
       expect(plan).toMatch(/Index Only Scan using videos_published_id_idx on videos/);
+      // 2026-09-28: the planner hash-joined the ~600 fresh ids against a bitmap scan of 944 K
+      // long-form videos (idx_videos_longtail_watch): 21 s and ~90 MB of temp spill every run,
+      // 16 GB/2 days — the top spiller. Each fresh id must be fetched by primary key instead.
+      expect(plan).not.toMatch(/idx_videos_longtail_watch/);
+      expect(plan).not.toMatch(/Hash Join/);
+      expect(plan).toMatch(/Index Scan using videos_pkey on videos/);
     } finally {
       await pool.end();
     }
