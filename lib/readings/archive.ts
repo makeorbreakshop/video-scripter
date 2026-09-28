@@ -17,12 +17,13 @@
 // Without R2_* credentials every entry point here returns null / throws a named error rather
 // than half-working, so the callers can run in --dry-run and say so out loud.
 
+import { snapshotChecksum, type ArchivedSnapshot } from './snapshot-retention';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {
-  checksum, checksumStream, ms, readingsKey, readingsIndexKey, historyKey, buildRowIndex, sortForArchive,
+  checksum, checksumStream, ms, assertDay, readingsKey, readingsIndexKey, historyKey, buildRowIndex, sortForArchive,
   utcDay, dayRange, type Reading, type ReadingSource, type RowRangeIndex,
 } from './retention';
 
@@ -448,6 +449,64 @@ export async function rawReadings(
     }
   }
   return out.sort((a, b) => ms(a.at) - ms(b.at));
+}
+
+// ---- view_snapshots (2026-09-28) ---------------------------------------------------------------
+//
+// snapshots/day=YYYY-MM-DD/part-0.parquet — every column of one snapshot_date, written, read back
+// and checksummed (snapshotChecksum) before scripts/thin-snapshots.ts may delete from that day.
+
+export function snapshotKey(day: string): string {
+  assertDay(day);
+  return `snapshots/day=${day}/part-0.parquet`;
+}
+
+async function snapshotSchema() {
+  const pq = await parquet();
+  const P = pq.ParquetSchema ?? pq.default?.ParquetSchema;
+  return new P({
+    id: { type: 'UTF8' },
+    video_id: { type: 'UTF8' },
+    snapshot_date: { type: 'UTF8' },
+    view_count: { type: 'INT64', optional: true },
+    like_count: { type: 'INT64', optional: true },
+    comment_count: { type: 'INT64', optional: true },
+    days_since_published: { type: 'INT64', optional: true },
+    daily_views_rate: { type: 'DOUBLE', optional: true },
+    created_at: { type: 'INT64', optional: true },
+  });
+}
+
+export async function encodeSnapshotParquet(rows: readonly ArchivedSnapshot[]): Promise<Buffer> {
+  return writeParquet(await snapshotSchema(), rows.map((r) => ({
+    id: String(r.id), video_id: String(r.video_id), snapshot_date: String(r.snapshot_date).slice(0, 10),
+    view_count: int(r.view_count), like_count: int(r.like_count), comment_count: int(r.comment_count),
+    days_since_published: int(r.days_since_published), daily_views_rate: num(r.daily_views_rate),
+    created_at: r.created_at == null ? null : ms(r.created_at as string | Date),
+  })));
+}
+
+export async function decodeSnapshotParquet(buf: Buffer): Promise<ArchivedSnapshot[]> {
+  const n = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+  return (await readParquet(buf)).map((r) => ({
+    id: String(r.id), video_id: String(r.video_id), snapshot_date: String(r.snapshot_date),
+    view_count: n(r.view_count), like_count: n(r.like_count), comment_count: n(r.comment_count),
+    days_since_published: n(r.days_since_published), daily_views_rate: n(r.daily_views_rate),
+    created_at: r.created_at == null ? null : new Date(Number(r.created_at)).toISOString(),
+  }));
+}
+
+/** Write one snapshot day, read it back, and compare count + checksum. Only ok may precede a delete. */
+export async function archiveSnapshotDay(cfg: R2Config, day: string, rows: readonly ArchivedSnapshot[]) {
+  const key = snapshotKey(day);
+  const buf = await encodeSnapshotParquet(rows);
+  await putObject(cfg, key, buf, 'application/vnd.apache.parquet');
+  const back = await getObject(cfg, key);
+  const readBack = back ? await decodeSnapshotParquet(back) : [];
+  const pgChecksum = snapshotChecksum(rows);
+  const r2Checksum = snapshotChecksum(readBack);
+  return { day, key, rows: rows.length, bytes: buf.length, checksum: pgChecksum,
+           ok: !!back && readBack.length === rows.length && r2Checksum === pgChecksum };
 }
 
 export { utcDay };

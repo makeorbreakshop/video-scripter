@@ -20,13 +20,13 @@ describe('the scheduled-job registry', () => {
   it('declares a ledger for every job that can stand down or hold back work', () => {
     // The three jobs whose "success" can be doing nothing: the ones this whole file exists for.
     const ledgered = SCHEDULED_JOBS.filter((j) => j.ledger).map((j) => j.ledger!.job).sort();
-    expect(ledgered).toEqual(['move-video-text', 'null-video-text', 'thin-readings']);
+    expect(ledgered).toEqual(['move-video-text', 'null-video-text', 'thin-readings', 'thin-snapshots']);
   });
 
   it('turns every job into a file heartbeat, plus a ledger heartbeat where it keeps one', () => {
     const hb = heartbeatsFor(SCHEDULED_JOBS, '/repo');
     expect(hb.filter((h) => h.kind === 'file')).toHaveLength(SCHEDULED_JOBS.length);
-    expect(hb.filter((h) => h.kind === 'ledger')).toHaveLength(3);
+    expect(hb.filter((h) => h.kind === 'ledger')).toHaveLength(4);
     const nullOut = hb.find((h) => h.kind === 'file' && h.job.endsWith('null-video-text'))!;
     expect(nullOut).toMatchObject({ path: '/repo/logs/null-video-text-launchd.log', everyHours: 13 });
   });

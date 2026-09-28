@@ -62,7 +62,7 @@ describe('growth, from daily snapshots', () => {
   it('alerts when an append-forever table grows faster than it declared', () => {
     // view_snapshots: no retention, declared at 15 MB/day.
     const rates = new Map([['view_snapshots', 40]]);
-    const v = evaluateGrowth(rates, STORAGE_CONTRACTS, new Map([['view_snapshots', 1008]]));
+    const v = evaluateGrowth(rates, STORAGE_CONTRACTS, new Map([['view_snapshots', 720]]));
     expect(v[0]).toMatchObject({ table: 'view_snapshots', kind: 'growth' });
     expect(v[0].message).toMatch(/40 MB\/day.*budget in 7 days/);
   });

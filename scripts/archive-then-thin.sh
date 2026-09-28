@@ -32,9 +32,14 @@ npx tsx scripts/thin-readings.ts
 thin_status=$?
 echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) thin-readings exit=${thin_status}"
 
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) archive-then-thin: archive=${archive_status} thin=${thin_status}"
+# view_snapshots retention (2026-09-28): archive each day to R2, read it back, then thin to policy.
+npx tsx scripts/thin-snapshots.ts --max-days 30
+snap_status=$?
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) thin-snapshots exit=${snap_status}"
 
-if [ "${archive_status}" -ne 0 ] || [ "${thin_status}" -ne 0 ]; then
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) archive-then-thin: archive=${archive_status} thin=${thin_status} snapshots=${snap_status}"
+
+if [ "${archive_status}" -ne 0 ] || [ "${thin_status}" -ne 0 ] || [ "${snap_status}" -ne 0 ]; then
   exit 1
 fi
 exit 0

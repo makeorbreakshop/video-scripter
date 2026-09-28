@@ -33,10 +33,13 @@ const L = (name: string) => `logs/${name}-launchd.log`;
 const P = 'com.mfm.video-scripter-';
 
 export const SCHEDULED_JOBS: ScheduledJob[] = [
-  { label: `${P}archive-readings`, scripts: ['scripts/archive-then-thin.sh', 'scripts/archive-readings.ts', 'scripts/thin-readings.ts'],
+  { label: `${P}archive-readings`, scripts: ['scripts/archive-then-thin.sh', 'scripts/archive-readings.ts', 'scripts/thin-readings.ts', 'scripts/thin-snapshots.ts'],
     log: L('archive-readings'), staleAfterHours: 26,
     ledger: { job: 'thin-readings', everyHours: 24, maxSilentRuns: 3 },
-    failIfLastLine: /archive-then-thin: .*(archive|thin)=[1-9]/ },
+    failIfLastLine: /archive-then-thin: .*(archive|thin|snapshots)=[1-9]/ },
+  // Same LaunchAgent, second ledger: the snapshot thinning it runs after thin-readings.
+  { label: `${P}archive-readings#snapshots`, scripts: ['scripts/thin-snapshots.ts'], log: L('archive-readings'), staleAfterHours: 26,
+    ledger: { job: 'thin-snapshots', everyHours: 24, maxSilentRuns: 3 } },
   { label: `${P}daily-ingest`, scripts: ['scripts/nightly-ingest.ts'], log: L('daily-ingest'), staleAfterHours: 26 },
   { label: `${P}export-tables`, scripts: ['scripts/export-tables.ts'], log: L('export-tables'), staleAfterHours: 26 },
   // Long-running server; its log only moves on restarts and errors.

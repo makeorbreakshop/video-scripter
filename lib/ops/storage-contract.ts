@@ -58,8 +58,8 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
     enforcedBy: 'one row per video, written at ingest (lib/app/video-text.ts videoInsertSql); the text home once videos is cleared' },
   { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 600, maxGrowthMbPerDay: 40, targetMb: 150,
     enforcedBy: '14 days (scripts/thin-readings.ts). Steady ~20 K rows/day ≈ 130 MB; a full rescore adds ~360 MB for 14 days. DELETE-based retention left 1,280 MB at 92.7 % free until pg_repack (1,392 → 98 MB, 2026-09-26); daily partitions make retention a DROP (sql/2026-09-26-partition-video-score-history.sql, awaiting approval)' },
-  { table: 'view_snapshots', policy: 'append-forever', budgetMb: 1300, maxGrowthMbPerDay: 15,
-    enforcedBy: 'NOTHING YET. ~51 K rows/day (~15 MB/day). Proposed, tested, not wired: lib/readings/snapshot-retention.ts (archive to R2 first; by video age: full to 30 d, weekly to 1 y, then 30-day; first+last always; newest 90 d untouched). CLAUDE.md promises a monthly >1-year cleanup that does not exist' },
+  { table: 'view_snapshots', policy: 'bounded-retention', budgetMb: 1000, maxGrowthMbPerDay: 15,
+    enforcedBy: 'scripts/thin-snapshots.ts nightly (archive-then-thin.sh), archive-first to R2: by video age, full to 30 d, weekly to 1 y, then 30-day; first+last always; newest 90 d untouched (lib/readings/snapshot-retention.ts). 2026-09-28: 372,188 rows thinned; indexes 701 → 504 MB' },
   { table: 'observation_change_log', policy: 'queue', budgetMb: 800,
     enforcedBy: 'scripts/materialize-observations.ts deletes consumed changes (OBS_CHANGES_DELETE_SQL)' },
   { table: 'view_samples', policy: 'bounded-retention', budgetMb: 800, maxGrowthMbPerDay: 20,
@@ -122,7 +122,34 @@ export interface StorageSnapshot {
   relations: RelationSize[];
   /** pg_stat_database.temp_bytes (cumulative since stats reset). Optional: older snapshots lack it. */
   tempBytes?: number;
+  /** WAL position in bytes (pg_wal_lsn_diff(pg_current_wal_lsn(), '0/0')). WAL is shipped off-host. */
+  walBytes?: number;
+  /** node_network_transmit_bytes_total of the database host (the metric the egress alarm reads). */
+  transmitBytes?: number;
+  /** Cumulative pg_stat_statements counters for the top query families, for per-day attribution. */
+  statements?: StatementCounters[];
 }
+
+export interface StatementCounters {
+  queryid: string;
+  label: string;
+  calls: number;
+  rows: number;
+  tempBytes: number;
+  walBytes: number;
+}
+
+/** Top query families by temp, WAL and rows, cumulative. One statement, ≤ 120 rows. */
+export const STATEMENT_COUNTERS_SQL = `
+  with s as (
+    select queryid::text as queryid, left(regexp_replace(query, '\s+', ' ', 'g'), 90) as label,
+           calls::float8 as calls, rows::float8 as rows,
+           (temp_blks_written * 8192)::float8 as temp_bytes, wal_bytes::float8 as wal_bytes
+      from pg_stat_statements
+  )
+  select * from (select * from s order by temp_bytes desc limit 40) a
+  union select * from (select * from s order by wal_bytes desc limit 40) b
+  union select * from (select * from s order by rows desc limit 40) c`;
 
 export interface Violation {
   table: string;
