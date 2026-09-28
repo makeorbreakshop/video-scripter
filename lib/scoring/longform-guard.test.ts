@@ -46,6 +46,17 @@ const FILTER_PATTERNS = [
   /'\^PT\(\(\[0-5\]/,                            // the old <=72s duration regex
 ];
 
+/**
+ * Only files git tracks. Untracked scratch work (scripts/scratch/, 2026-09-26) is not the codebase
+ * and made this guard fail on every machine that had some.
+ */
+function trackedFiles(): Set<string> {
+  const r = require('node:child_process').spawnSync('git', ['ls-files', '-z', ...SCANNED_ROOTS],
+    { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (r.status !== 0) throw new Error(`git ls-files failed: ${r.stderr}`);
+  return new Set((r.stdout as string).split('\0').filter(Boolean));
+}
+
 function walk(dir: string, out: string[] = []): string[] {
   if (!fs.existsSync(dir)) return out;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -63,10 +74,11 @@ function allowed(rel: string): boolean {
 describe('long-form rule guard', () => {
   test('no ChannelSmith query filters Shorts by hand instead of longformSql / isLongform', () => {
     const offenders: string[] = [];
+    const tracked = trackedFiles();
     for (const root of SCANNED_ROOTS) {
       for (const file of walk(path.join(ROOT, root))) {
         const rel = path.relative(ROOT, file).split(path.sep).join('/');
-        if (allowed(rel)) continue;
+        if (allowed(rel) || !tracked.has(rel)) continue;
         const lines = fs.readFileSync(file, 'utf8').split('\n');
         lines.forEach((line, i) => {
           if (FILTER_PATTERNS.some((re) => re.test(line))) offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 100)}`);
@@ -78,10 +90,11 @@ describe('long-form rule guard', () => {
 
   test('no ingest path carries its own duration rule instead of lib/ingest/classify.ts', () => {
     const offenders: string[] = [];
+    const tracked = trackedFiles();
     for (const root of SCANNED_ROOTS) {
       for (const file of walk(path.join(ROOT, root))) {
         const rel = path.relative(ROOT, file).split(path.sep).join('/');
-        if (allowed(rel)) continue;
+        if (allowed(rel) || !tracked.has(rel)) continue;
         const lines = fs.readFileSync(file, 'utf8').split('\n');
         lines.forEach((line, i) => {
           if (DURATION_RULE_PATTERNS.some((re) => re.test(line))) offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 100)}`);
@@ -95,5 +108,19 @@ describe('long-form rule guard', () => {
     for (const k of Object.keys(ALLOWLIST)) {
       expect({ path: k, exists: fs.existsSync(path.join(ROOT, k)) }).toEqual({ path: k, exists: true });
     }
+  });
+});
+
+describe('the guard scans the codebase, not scratch work', () => {
+  test('an untracked file is ignored; a tracked one is scanned', () => {
+    const tracked = trackedFiles();
+    expect(tracked.has('lib/scoring/longform-guard.test.ts')).toBe(true);
+    // A file created now is untracked by definition; it must not be scanned even with an offending line.
+    const probe = path.join(ROOT, 'scripts', 'scratch', `zz-guard-probe-${process.pid}.ts`);
+    fs.mkdirSync(path.dirname(probe), { recursive: true });
+    fs.writeFileSync(probe, "const q = 'select 1 from videos where is_short = false';\n");
+    try {
+      expect(trackedFiles().has(path.relative(ROOT, probe))).toBe(false);
+    } finally { fs.rmSync(probe, { force: true }); }
   });
 });
