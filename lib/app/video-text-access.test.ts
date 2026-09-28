@@ -59,7 +59,8 @@ describe.each(CLEARED)('%s — cleared for the null-out', (col) => {
   });
 });
 
-describe.each(Object.keys(BLOCKED))('%s — still blocked', (col) => {
+// Jest refuses describe.each over an empty table; with nothing blocked there is nothing to check.
+(Object.keys(BLOCKED).length ? describe.each(Object.keys(BLOCKED)) : (() => () => {}) as unknown as typeof describe.each)('%s — still blocked', (col: string) => {
   it('has not grown — a new direct reader must use lib/app/video-text.ts instead', () => {
     const added = readersOf(col as MovedColumn).filter((f) => !BLOCKED[col].includes(f));
     expect(added).toEqual([]);
