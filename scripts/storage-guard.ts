@@ -17,9 +17,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { makeTimedPool } from '../lib/admin/db';
-import { CATALOG_SIZES_SQL, rowToRelation, type StorageSnapshot } from '../lib/ops/storage-contract';
+import { CATALOG_SIZES_SQL, STATEMENT_COUNTERS_SQL, rowToRelation, type StorageSnapshot } from '../lib/ops/storage-contract';
 import { buildGuardReport } from '../lib/ops/storage-guard';
-import { fetchDiskMetrics } from '../lib/ops/supabase-metrics';
+import { fetchHostMetrics } from '../lib/ops/supabase-metrics';
 import { appendJsonLine, readJsonLines, readOutcomes, recordOutcome } from '../lib/ops/job-outcomes';
 import { SCHEDULED_JOBS, EXTERNAL_HEARTBEATS, heartbeatsFor } from '../lib/ops/scheduled-jobs';
 
@@ -52,9 +52,16 @@ try {
   const relations = (await pool.query(CATALOG_SIZES_SQL)).rows.map(rowToRelation);
   const [db] = (await pool.query(
     `select pg_database_size(current_database())::float8 as b,
-            (select temp_bytes::float8 from pg_stat_database where datname = current_database()) as t`)).rows;
+            (select temp_bytes::float8 from pg_stat_database where datname = current_database()) as t,
+            pg_wal_lsn_diff(pg_current_wal_lsn(), '0/0')::float8 as w`)).rows;
+  const statements = (await pool.query(STATEMENT_COUNTERS_SQL)).rows.map((r: any) => ({
+    queryid: String(r.queryid), label: String(r.label), calls: Number(r.calls), rows: Number(r.rows),
+    tempBytes: Number(r.temp_bytes), walBytes: Number(r.wal_bytes),
+  }));
+  const host = await fetchHostMetrics();
   const snapshot: StorageSnapshot = { at: new Date().toISOString(), dbBytes: Number(db.b), tempBytes: Number(db.t),
-                                      disk: await fetchDiskMetrics(), relations };
+                                      walBytes: Number(db.w), transmitBytes: host.transmitBytes ?? undefined,
+                                      disk: host.disk, relations, statements };
   appendJsonLine(SNAPSHOTS, snapshot, 8_000_000);
 
   const history = readJsonLines<StorageSnapshot>(SNAPSHOTS, (s) => typeof s.at === 'string' && Array.isArray(s.relations));

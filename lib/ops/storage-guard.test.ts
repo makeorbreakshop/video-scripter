@@ -85,3 +85,46 @@ describe('temp-file spills', () => {
     expect(r.alerts).toEqual([]);
   });
 });
+
+describe('per-day deltas over a ~24 h window, attributed to query families (2026-09-28)', () => {
+  const GB = 1024 ** 3;
+  const at = (h: number) => new Date(Date.UTC(2026, 8, 27, 11) + h * 3_600_000).toISOString();
+  const s = (h: number, o: Partial<StorageSnapshot>): StorageSnapshot => ({
+    at: at(h), dbBytes: 0, disk: { sizeBytes: SIZE, availBytes: SIZE / 2 }, relations: [], ...o });
+
+  it('measures against the snapshot nearest 24 h earlier, not merely the previous one', () => {
+    // A manual run 2 h after the daily one used to make "per day" an extrapolated 2 h.
+    const snaps = [s(0, { tempBytes: 0 }), s(22, { tempBytes: 10 * GB }), s(24, { tempBytes: 12 * GB })];
+    const r = buildGuardReport(snaps, [], []);
+    expect(r.summary).toMatch(/temp spills 12\.0 GB\/day/);
+  });
+
+  it('names the query families behind temp spills, WAL and rows', () => {
+    const st = (id: string, label: string, temp: number, wal: number, rows: number) => ({ queryid: id, label, tempBytes: temp, walBytes: wal, rows, calls: 1 });
+    const snaps = [
+      s(0, { tempBytes: 0, walBytes: 0, transmitBytes: 0, statements: [st('1', 'launch enroll', 0, 0, 0), st('2', 'cache upsert', 0, 0, 0)] }),
+      s(24, { tempBytes: 30 * GB, walBytes: 50 * GB, transmitBytes: 60 * GB,
+              statements: [st('1', 'launch enroll', 25 * GB, 1 * GB, 100), st('2', 'cache upsert', 5 * GB, 40 * GB, 5_000_000)] }),
+    ];
+    const r = buildGuardReport(snaps, [], []);
+    const all = r.alerts.join('\n');
+    expect(all).toMatch(/temp-file spills 30\.0 GB\/day.*launch enroll 25\.0 GB/);
+    expect(all).toMatch(/WAL 50\.0 GB\/day.*cache upsert 40\.0 GB/);
+    expect(all).toMatch(/network transmit 60\.0 GB\/day/);
+  });
+
+  it('skips a counter that went backwards (stats reset) instead of reporting a negative rate', () => {
+    const r = buildGuardReport([s(0, { walBytes: 10 * GB }), s(24, { walBytes: 1 * GB })], [], []);
+    expect(r.alerts.join(' ')).not.toMatch(/WAL/);
+  });
+});
+
+describe('reading the transmit counter from the Prometheus text', () => {
+  it('sums non-loopback interfaces', async () => {
+    const { parseTransmitBytes } = await import('./supabase-metrics');
+    const text = ['node_network_transmit_bytes_total{device="ens5"} 1.2e+12',
+                  'node_network_transmit_bytes_total{device="lo"} 9e+12'].join('\n');
+    expect(parseTransmitBytes(text)).toBe(1.2e12);
+    expect(parseTransmitBytes('x 1')).toBeNull();
+  });
+});

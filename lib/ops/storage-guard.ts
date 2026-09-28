@@ -24,6 +24,52 @@ export const DISK_WARN_FRACTION = 0.8;
  */
 export const TEMP_WARN_GB_PER_DAY = 20;
 
+/** WAL above this per day is worth attributing: it is shipped off-host (backups/PITR). */
+export const WAL_WARN_GB_PER_DAY = 20;
+/** 250 GB org quota / 31 days. The per-project share is the alarm's job; this is a backstop. */
+export const TRANSMIT_WARN_GB_PER_DAY = 8;
+const GB = 1024 ** 3;
+
+export interface DailyDeltas {
+  hours: number;
+  temp: number | null;
+  wal: number | null;
+  transmit: number | null;
+  families: { queryid: string; label: string; tempBytes: number; walBytes: number; rows: number }[];
+}
+
+/**
+ * Per-day deltas of the cumulative counters, measured against the snapshot NEAREST 24 h before
+ * the latest (at least 12 h old), scaled to 24 h. The previous form used the immediately previous
+ * snapshot, so a manual run two hours after the daily one extrapolated two hours to a day.
+ * A counter that went backwards (stats reset) yields null rather than a negative rate.
+ */
+export function perDay(snapshots: readonly StorageSnapshot[]): DailyDeltas | null {
+  const sorted = [...snapshots].sort((a, b) => a.at.localeCompare(b.at));
+  const last = sorted.at(-1);
+  if (!last) return null;
+  const t1 = new Date(last.at).getTime();
+  const candidates = sorted.filter((s) => t1 - new Date(s.at).getTime() >= 12 * 3_600_000);
+  if (!candidates.length) return null;
+  const ref = candidates.reduce((best, s) =>
+    Math.abs(t1 - new Date(s.at).getTime() - 86_400_000) < Math.abs(t1 - new Date(best.at).getTime() - 86_400_000) ? s : best);
+  const hours = (t1 - new Date(ref.at).getTime()) / 3_600_000;
+  const scale = 24 / hours;
+  const d = (k: 'tempBytes' | 'walBytes' | 'transmitBytes') => {
+    const a = ref[k], b = last[k];
+    return typeof a === 'number' && typeof b === 'number' && b >= a ? (b - a) * scale : null;
+  };
+  const before = new Map((ref.statements ?? []).map((s) => [s.queryid, s]));
+  const families = (last.statements ?? []).flatMap((s) => {
+    const p = before.get(s.queryid);
+    if (!p) return [];
+    const diff = (x: number, y: number) => Math.max(0, x - y) * scale;
+    return [{ queryid: s.queryid, label: s.label, tempBytes: diff(s.tempBytes, p.tempBytes),
+              walBytes: diff(s.walBytes, p.walBytes), rows: diff(s.rows, p.rows) }];
+  });
+  return { hours, temp: d('tempBytes'), wal: d('walBytes'), transmit: d('transmitBytes'), families };
+}
+
 export interface GuardReport {
   status: 'pass' | 'warn';
   summary: string;
@@ -63,19 +109,25 @@ export function buildGuardReport(
     }
   }
 
-  const withTemp = sorted.filter((s) => typeof s.tempBytes === 'number');
+  const daily = perDay(sorted);
   let tempLine = '';
-  if (withTemp.length >= 2) {
-    const a = withTemp.at(-2)!, b = withTemp.at(-1)!;
-    const days = (new Date(b.at).getTime() - new Date(a.at).getTime()) / 86_400_000;
-    // A stats reset makes the counter go backwards; skip that interval.
-    if (days >= 0.5 && b.tempBytes! >= a.tempBytes!) {
-      const gbDay = (b.tempBytes! - a.tempBytes!) / 1024 ** 3 / days;
-      tempLine = `; temp spills ${gbDay.toFixed(1)} GB/day`;
-      if (gbDay > TEMP_WARN_GB_PER_DAY) {
-        alerts.push(`temp-file spills ${gbDay.toFixed(1)} GB/day (over ${TEMP_WARN_GB_PER_DAY}); top spillers: ` +
-                    'pg_stat_statements order by temp_blks_written');
+  if (daily) {
+    const top = (k: 'tempBytes' | 'walBytes') => daily.families
+      .filter((f) => f[k] > 0).sort((x, y) => y[k] - x[k]).slice(0, 3)
+      .map((f) => `${f.label} ${(f[k] / GB).toFixed(1)} GB`).join('; ');
+    if (daily.temp != null) {
+      tempLine = `; temp spills ${(daily.temp / GB).toFixed(1)} GB/day`;
+      if (daily.temp / GB > TEMP_WARN_GB_PER_DAY) {
+        alerts.push(`temp-file spills ${(daily.temp / GB).toFixed(1)} GB/day (over ${TEMP_WARN_GB_PER_DAY})` +
+                    (top('tempBytes') ? `; top: ${top('tempBytes')}` : ''));
       }
+    }
+    if (daily.wal != null && daily.wal / GB > WAL_WARN_GB_PER_DAY) {
+      alerts.push(`WAL ${(daily.wal / GB).toFixed(1)} GB/day (over ${WAL_WARN_GB_PER_DAY}; WAL is archived off-host and shows up as network transmit)` +
+                  (top('walBytes') ? `; top: ${top('walBytes')}` : ''));
+    }
+    if (daily.transmit != null && daily.transmit / GB > TRANSMIT_WARN_GB_PER_DAY) {
+      alerts.push(`network transmit ${(daily.transmit / GB).toFixed(1)} GB/day (over ${TRANSMIT_WARN_GB_PER_DAY}, the org egress break-even)`);
     }
   }
 
