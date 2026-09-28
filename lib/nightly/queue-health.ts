@@ -5,9 +5,10 @@
 
 export const QUEUE_HEALTH_SQL = `/* trace:pipeline.queue-health */
   select
-    (select count(*)::int from obs_cache_dirty where not requires_bootstrap) as observation_depth,
-    (select coalesce(extract(epoch from now()-min(marked_at)),0)::int
-       from obs_cache_dirty where not requires_bootstrap) as observation_oldest_seconds,
+    -- Due rows only (2026-09-28): marks for older videos wait up to 6 h by design.
+    (select count(*)::int from obs_cache_dirty where not requires_bootstrap and not_before <= now()) as observation_depth,
+    (select coalesce(extract(epoch from now()-min(not_before)),0)::int
+       from obs_cache_dirty where not requires_bootstrap and not_before <= now()) as observation_oldest_seconds,
     (select count(*)::int from score_dirty where not_before <= now()) as score_depth,
     (select coalesce(extract(epoch from now()-min(not_before)),0)::int
        from score_dirty where not_before <= now()) as score_oldest_seconds,

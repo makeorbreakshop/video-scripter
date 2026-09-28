@@ -32,3 +32,10 @@ test('under hybrid charts the disabled series drain alerts only on runaway depth
 test('score age is measured from when a row became due, not when it was marked', () => {
   expect(QUEUE_HEALTH_SQL).toMatch(/now\(\)-min\(not_before\)\),0\)::int\s+from score_dirty where not_before <= now\(\)/);
 });
+
+test('the observation queue is judged on DUE rows, like the score queue (2026-09-28 cadence)', () => {
+  // Marks for older videos now wait up to 6 h by design (enqueue_observation_changes), so the
+  // oldest marked_at is not a stall; the oldest overdue not_before is.
+  expect(QUEUE_HEALTH_SQL).toMatch(/from obs_cache_dirty where not requires_bootstrap and not_before <= now\(\)\) as observation_depth/);
+  expect(QUEUE_HEALTH_SQL).toMatch(/extract\(epoch from now\(\)-min\(not_before\)\),0\)::int\s+from obs_cache_dirty where not requires_bootstrap and not_before <= now\(\)\) as observation_oldest_seconds/);
+});
