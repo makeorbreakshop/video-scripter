@@ -8,6 +8,7 @@ import {
   type ObservationState,
 } from './observation-state';
 import { OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
+import { chunkByBytes, UPSERT_CHUNK_BYTES } from './upsert-chunks';
 import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLEAR_SQL, type QueueClaim } from './materialization-queue';
 
 export const MATERIALIZER_LIMITS = {
@@ -196,6 +197,25 @@ export interface TransactionClient {
 
 const number = (value: unknown): number => Number(value ?? 0);
 
+/**
+ * Write cache rows in statements of at most `maxBytes` of obs each: one unnest() of up to 25 MB
+ * spilled ~24 MB to temp per statement (upsert-chunks.ts, 2026-09-28).
+ */
+export async function upsertCacheRows(
+  client: TransactionClient,
+  rows: readonly { videoId: string; n: number; obs: Buffer; lastChangeId: number }[],
+  maxBytes = UPSERT_CHUNK_BYTES,
+): Promise<void> {
+  for (const chunk of chunkByBytes(rows, (r) => r.obs.length, maxBytes)) {
+    await client.query(OBS_CACHE_V2_UPSERT_SQL, [
+      chunk.map((row) => row.videoId),
+      chunk.map((row) => row.n),
+      chunk.map((row) => row.obs),
+      chunk.map((row) => row.lastChangeId),
+    ]);
+  }
+}
+
 export async function materializeObservationBatch(
   client: TransactionClient,
   options: {
@@ -243,12 +263,7 @@ export async function materializeObservationBatch(
       ...options, changesTruncated,
     });
     if (plan.upserts.length) {
-      await client.query(OBS_CACHE_V2_UPSERT_SQL, [
-        plan.upserts.map((row) => row.videoId),
-        plan.upserts.map((row) => row.n),
-        plan.upserts.map((row) => row.obs),
-        plan.upserts.map((row) => row.lastChangeId),
-      ]);
+      await upsertCacheRows(client, plan.upserts);
       await client.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(plan.upserts.map((row) => ({
         video_id: row.videoId, last_change_id: row.lastChangeId,
       }))) ]);

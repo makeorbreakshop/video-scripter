@@ -20,7 +20,7 @@ import {
   applyObservationChanges, encodeObservationState, observationStateFromSeries,
   observationsFromState, type ObservationChange, type ObservationState,
 } from '../lib/scoring/observation-state';
-import { OBS_CACHE_V2_UPSERT_SQL } from '../lib/scoring/obs-cache';
+import { upsertCacheRows } from '../lib/scoring/observation-materializer';
 import { OBS_DIRTY_CLEAR_SQL, type QueueClaim } from '../lib/scoring/materialization-queue';
 import { OBS_CHANGES_DELETE_SQL, OBS_CHANGES_FOR_CLAIMS_SQL } from '../lib/scoring/observation-materializer';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
@@ -161,10 +161,10 @@ async function runBatch(batch: number): Promise<BootstrapBatchStats> {
       ready.push({ claim: { video_id: claim.videoId, generation: claim.generation }, state, obs, n: observationsFromState(state).length });
     }
     if (ready.length) {
-      await tracedClient.query(OBS_CACHE_V2_UPSERT_SQL, [
-        ready.map((row) => row.claim.video_id), ready.map((row) => row.n), ready.map((row) => row.obs),
-        ready.map((row) => row.state.lastChangeId),
-      ]);
+      // Chunked under work_mem: one 5 MB unnest() spills to temp (lib/scoring/upsert-chunks.ts).
+      await upsertCacheRows(tracedClient as any, ready.map((row) => ({
+        videoId: row.claim.video_id, n: row.n, obs: row.obs, lastChangeId: row.state.lastChangeId,
+      })));
       await tracedClient.query(OBS_CHANGES_DELETE_SQL, [JSON.stringify(ready.map((row) => ({
         video_id: row.claim.video_id, last_change_id: row.state.lastChangeId,
       })))]);
