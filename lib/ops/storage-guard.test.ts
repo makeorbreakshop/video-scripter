@@ -80,6 +80,13 @@ describe('temp-file spills', () => {
     expect(r.alerts.join(' ')).toMatch(/temp-file spills 60\.0 GB\/day/);
   });
 
+  it('does not page on temp that no query family accounts for (transient, not disk)', () => {
+    const fam = (t: number) => [{ queryid: '1', label: 'x', calls: 1, rows: 0, tempBytes: t * GB, walBytes: 0 }];
+    const r = buildGuardReport([{ ...t(25, 100), statements: fam(0) }, { ...t(26, 160), statements: fam(1) }], [], []);
+    expect(r.alerts.join(' ')).not.toMatch(/temp-file/);
+    expect(r.summary).toMatch(/temp spills 60\.0 GB\/day \(1\.0 attributed\)/);
+  });
+
   it('ignores an interval across a stats reset', () => {
     const r = buildGuardReport([t(25, 900), t(26, 2)], [], []);
     expect(r.alerts).toEqual([]);
@@ -108,7 +115,7 @@ describe('per-day deltas over a ~24 h window, attributed to query families (2026
     ];
     const r = buildGuardReport(snaps, [], []);
     const all = r.alerts.join('\n');
-    expect(all).toMatch(/temp-file spills 30\.0 GB\/day.*launch enroll 25\.0 GB/);
+    expect(all).toMatch(/temp-file spills 30\.0 GB\/day attributed.*launch enroll 25\.0 GB/);
     expect(all).toMatch(/WAL 50\.0 GB\/day.*cache upsert 40\.0 GB/);
     expect(all).toMatch(/network transmit 60\.0 GB\/day/);
   });

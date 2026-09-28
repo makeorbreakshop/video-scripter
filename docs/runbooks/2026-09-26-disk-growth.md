@@ -252,7 +252,7 @@ windows (~46 MB/day, proportional to new uploads) are unchanged by design.
 | 4 | audit + clear description/metadata | 39 `select('*')` files audited (2 hydrate now; guard test); unified-import small batch fixed; `sql/2026-09-26-metadata-db-readers.sql` applied (dashboard matview block needed a 20 min timeout); `idx_videos_competitor_metadata` dropped first so the updates could be HOT (15 → 3 ms/row). Equality verified on a 50 K head sample and a random 2 % (23,989 rows): 0 disagreements. Clear-out pass: **1,186,660 rows** in bounded windows, 0 disagree; a 1 % sample afterwards holds no text. The back-off probe was standing down on autovacuum — fixed (client backends only). |
 | 5 | pg_repack videos | 2,980 → **1,156 MB** in 533 s, online (autovacuum had already truncated the toast 920 → 16 MB). At the swap pg_repack cancelled two conflicting backends (launch-track, materializer), both ran clean on their next tick. 1,187,082 rows in videos and video_text. |
 | 6 | readings terminal tier | first-of-video past 14 d, weekly past 60 d; SQL mirrors the pure policy; harness at +70 d: chart lines 0.80 % / 0.74 %, 0 of 191 growth exponents changed. Ledger labels `day-v2` / `week-v2` (constraint applied). Only R2-verified days are thinned; tonight re-thins the 20 daily-tier days (all verified). |
-| 7 | temp_file_limit | **blocked**: `permission denied to set parameter "temp_file_limit"` — Supabase's `postgres` role cannot set it. Needs the Management API (PAT) or dashboard. |
+| 7 | temp_file_limit | **impossible on Supabase** (dropped 2026-09-28): the `postgres` role gets `permission denied to set parameter "temp_file_limit"`, and the Management API rejects it (`400 Unrecognized key: "temp_file_limit"`). Spills are instead fixed at the query and watched daily by the guard. |
 | + | video_score_history access | RLS on, anon/authenticated revoked on parent, partitions, default and the view; new partitions close themselves. All callers are direct Postgres as BYPASSRLS roles. `history-access.db.test.ts`. |
 | + | view_snapshots | proposal only (`lib/readings/snapshot-retention.ts`), nothing deleted. Estimate: 3,396,729 rows → keep 3,024,541, removable 372,188 (~111 MB, all > 1 year). The tracking cadence already thins by age, so the policy saves little; the bigger lever is its indexes (701 MB on a 307 MB heap: uuid pkey, a unique (video_id, date) and an INCLUDE copy of it). |
 
@@ -263,3 +263,34 @@ the outbox (Pulse's receipt endpoint, same as other jobs today).
 
 **Projection:** ~12 GB of headroom to the 90 % trigger. Growth ≈ 80–120 MB/day (corpus-driven)
 → roughly 100–150 days; the guard recomputes daily and warns at 30.
+
+## 2026-09-28 — "just get this finished"
+
+| item | before | after |
+|---|---|---|
+| **P0 "egress" (host network transmit)** | 64–78 GB/day | 58 GB/day — and it is **not billed egress**: over 12 min transmit tracked WAL shipping within 7 % (648 MB vs 603 MB; ~80 % full-page images). Supabase bills data returned to clients. |
+| billed client egress, traced jobs | materializer 104 MB / 20 min (~7.5 GB/day), score 18 MB / 20 min | materializer **8.5 MB / 20 min (~0.6 GB/day, −92 %)**, score ~1.4 GB/day |
+| obs-cache share of WAL (pg_walinspect) | ~40 % | ~7 % |
+| launch-track enrollment | 21.5 s, 11,508 temp blocks per run | 0.56 s, 0 temp |
+| obs-cache upsert | ~9 MB temp per 25 MB statement | chunks ≤ 4 MB, 0 temp |
+| pg_stat_statements temp | ~16–20 GB/day | ~0.8 GB/day |
+| view_snapshots | 1,028 MB, 3.46 M rows, indexes 701 MB | 817 MB, −372,188 rows (55 days archived to R2 and verified first), indexes 504 MB |
+| Pulse receipts | 404, 401 queued | 351 delivered; 50 remain (malformed by their producers or 409 duplicates — not this bug) |
+
+- **P0 fix:** `enqueue_observation_changes` sets `obs_cache_dirty.not_before = now() + least(score_cadence, 6 h)`
+  (`sql/2026-09-28-materialization-cadence.sql`, rollback beside it). Under a day old: still 5 min;
+  no cache refreshes less often than its score. Charts of videos older than a week may lag up to 6 h.
+- **Remaining WAL (~60 GB/day, backup traffic):** rss_samples pkey ~22 %, videos ~15 % (the
+  `trigger_sync_video_view_count` update on every snapshot: non-HOT, 40 indexes), track_schedule,
+  rss_latest. Levers, not applied: `checkpoint_timeout` 5 → 30 min (FPIs are ~80 % of WAL; needs
+  approval), and making the view_count update HOT (drop the four indexes that contain view_count or
+  temporal_performance_score, one of them heavily used).
+- **Temp:** ~60 GB/day of `pg_stat_database.temp_bytes` is sub-second files that pg_stat_statements
+  never attributes (1 s polling of `pg_ls_tmpdir()` saw none). Transient, not disk. The guard now pages
+  only on attributable spills and reports the total. `temp_file_limit` is impossible on Supabase
+  (role refused; Management API: 400 Unrecognized key).
+- **rss_samples** is growing ~400 MB/day: RSS now writes ~2 M readings/day for ~125 K videos (was
+  ~1 M), all inside the 4-day dense window. It converges once those days are thinned, at a higher
+  level; the budget alert will fire until then.
+- Guard: per-day deltas against the snapshot nearest 24 h earlier; WAL/day and transmit/day with the
+  top query families. Long-form guard test scans tracked files only.

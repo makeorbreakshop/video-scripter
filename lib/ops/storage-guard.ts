@@ -116,9 +116,14 @@ export function buildGuardReport(
       .filter((f) => f[k] > 0).sort((x, y) => y[k] - x[k]).slice(0, 3)
       .map((f) => `${f.label} ${(f[k] / GB).toFixed(1)} GB`).join('; ');
     if (daily.temp != null) {
-      tempLine = `; temp spills ${(daily.temp / GB).toFixed(1)} GB/day`;
-      if (daily.temp / GB > TEMP_WARN_GB_PER_DAY) {
-        alerts.push(`temp-file spills ${(daily.temp / GB).toFixed(1)} GB/day (over ${TEMP_WARN_GB_PER_DAY})` +
+      // Alert on what a query family can be named for. Temp files are transient (not persistent
+      // disk); on 2026-09-28 ~60 GB/day of pg_stat_database temp_bytes was sub-second files that
+      // pg_stat_statements never attributes — reported, not paged on.
+      const attributed = daily.families.length
+        ? daily.families.reduce((sum, f) => sum + f.tempBytes, 0) : daily.temp;
+      tempLine = `; temp spills ${(daily.temp / GB).toFixed(1)} GB/day (${(attributed / GB).toFixed(1)} attributed)`;
+      if (attributed / GB > TEMP_WARN_GB_PER_DAY) {
+        alerts.push(`temp-file spills ${(attributed / GB).toFixed(1)} GB/day attributed (over ${TEMP_WARN_GB_PER_DAY}; ${(daily.temp / GB).toFixed(1)} total)` +
                     (top('tempBytes') ? `; top: ${top('tempBytes')}` : ''));
       }
     }
