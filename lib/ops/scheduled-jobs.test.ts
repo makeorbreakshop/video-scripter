@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { SCHEDULED_JOBS, SCHEDULED_SCRIPTS, heartbeatsFor, unregisteredAgents, installedAgentLabels } from './scheduled-jobs';
+import { SCHEDULED_JOBS, SCHEDULED_SCRIPTS, heartbeatsFor, unregisteredAgents, installedAgentLabels,
+         OTHER_REPO_AGENTS, egressJobName, meterEnvFor, agentsMissingMeter } from './scheduled-jobs';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 
@@ -55,5 +56,31 @@ describe('a LaunchAgent cannot exist without a declared heartbeat', () => {
   (fs.existsSync(agents) ? it : it.skip)('THIS machine: every installed video-scripter agent is registered', () => {
     // Fails the moment someone installs a job without saying how it will be watched.
     expect(unregisteredAgents(installedAgentLabels(agents), SCHEDULED_JOBS)).toEqual([]);
+  });
+});
+
+describe('every agent carries the client egress meter', () => {
+  it('names the job after the label and preloads the meter from the repo', () => {
+    expect(meterEnvFor('com.mfm.video-scripter-score', '/repo')).toEqual({
+      NODE_OPTIONS: '--import /repo/lib/ops/egress-meter.ts', EGRESS_JOB: 'score' });
+    expect(egressJobName('com.mfm.channelsmith-backfill')).toBe('channelsmith-backfill');
+  });
+
+  it('reports agents whose environment lacks the meter or names the wrong job', () => {
+    const envs: Record<string, Record<string, string>> = {
+      '/a/com.mfm.video-scripter-ok.plist': meterEnvFor('com.mfm.video-scripter-ok', '/repo'),
+      '/a/com.mfm.video-scripter-wrong.plist': { ...meterEnvFor('com.mfm.video-scripter-ok', '/repo') },
+      '/a/com.mfm.video-scripter-none.plist': { PATH: '/bin' },
+    };
+    expect(agentsMissingMeter('/a', ['com.mfm.video-scripter-ok', 'com.mfm.video-scripter-wrong', 'com.mfm.video-scripter-none'],
+                              '/repo', (p) => envs[p] ?? {}))
+      .toEqual(['com.mfm.video-scripter-wrong', 'com.mfm.video-scripter-none']);
+  });
+
+  const agents = path.join(os.homedir(), 'Library', 'LaunchAgents');
+  const prod = '/Users/brandoncullum/video-scripter-v2/video-scripter';
+  (fs.existsSync(agents) && ROOT === prod ? it : it.skip)('THIS machine: every agent that runs this repo is metered', () => {
+    const labels = [...installedAgentLabels(agents), ...OTHER_REPO_AGENTS.filter((l) => fs.existsSync(path.join(agents, `${l}.plist`)))];
+    expect(agentsMissingMeter(agents, labels, prod)).toEqual([]);
   });
 });

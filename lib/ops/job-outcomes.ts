@@ -16,6 +16,7 @@
 // that runs every job. Bounded by trimming on append.
 import fs from 'node:fs';
 import path from 'node:path';
+import { processMeter, billed } from './egress-meter';
 
 export type JobStatus = 'progressed' | 'idle' | 'noop' | 'stood_down' | 'failed';
 
@@ -31,6 +32,8 @@ export interface JobOutcome {
   detail?: string;
   /** Small structured facts a job wants to read back on its next run. */
   meta?: Record<string, unknown>;
+  /** Bytes this process had received from Supabase when it recorded (lib/ops/egress-meter.ts). */
+  rxBytes?: number;
 }
 
 /** Every LaunchAgent runs with WorkingDirectory = the repo root. (No __dirname: the scripts are ESM.) */
@@ -71,7 +74,8 @@ export function appendOutcome(o: JobOutcome, file = DEFAULT_LEDGER, { maxBytes =
 
 /** Convenience for scripts: stamp `at` now and append. */
 export function recordOutcome(o: Omit<JobOutcome, 'at'>, file = DEFAULT_LEDGER): JobOutcome {
-  const full = { ...o, at: new Date().toISOString() };
+  const meter = processMeter();
+  const full = { ...o, at: new Date().toISOString(), ...(meter ? { rxBytes: billed(meter.totals()) } : {}) };
   appendOutcome(full, file);
   console.log(`[outcome] ${JSON.stringify(full)}`);
   return full;

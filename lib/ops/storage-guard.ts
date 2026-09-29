@@ -6,6 +6,7 @@
 //   3. When does the data volume hit Supabase's 90 % autoscale trigger at the current rate?
 //   4. Has any scheduled job gone quiet, kept failing, or kept doing nothing with work waiting?
 //                                                        (lib/ops/job-outcomes.ts)
+import { summarizeEgress, egressBudgetAlerts, EGRESS_BUDGETS, type EgressRecord } from './egress-meter';
 import {
   evaluateContracts, evaluateGrowth, growthRates, projectDisk, type StorageSnapshot,
 } from './storage-contract';
@@ -82,6 +83,8 @@ const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 export function buildGuardReport(
   snapshots: readonly StorageSnapshot[], outcomes: readonly JobOutcome[], heartbeats: readonly Heartbeat[],
   now = new Date(),
+  /** The client egress meter's ledger (logs/job-egress.jsonl); omitted = not judged. */
+  egress?: readonly EgressRecord[],
 ): GuardReport {
   const sorted = [...snapshots].sort((a, b) => a.at.localeCompare(b.at));
   const last = sorted.at(-1);
@@ -136,11 +139,19 @@ export function buildGuardReport(
     }
   }
 
+  let egressLine = '';
+  if (egress) {
+    const s = summarizeEgress(egress, new Date(now.getTime() - 24 * 3_600_000), now);
+    egressLine = `; client egress ${(s.totalPerDay / 1e9).toFixed(2)} GB/day` +
+      (s.jobs.length ? ` (${s.jobs.slice(0, 3).map((j) => `${j.job} ${(j.perDay / 1e9).toFixed(2)}`).join(', ')})` : '');
+    alerts.push(...egressBudgetAlerts(s, EGRESS_BUDGETS));
+  }
+
   for (const a of detectSilentJobs(outcomes, heartbeats, now)) alerts.push(a.message);
 
   const top = [...last.relations].sort((a, b) => b.totalBytes - a.totalBytes).slice(0, 3)
     .map((r) => `${r.name} ${fmt(r.totalBytes / MB)}`).join(', ');
-  const summary = `${diskLine}; db ${fmt(last.dbBytes / MB)} MB${tempLine}; top: ${top}; ${alerts.length} alert(s)`;
+  const summary = `${diskLine}; db ${fmt(last.dbBytes / MB)} MB${tempLine}${egressLine}; top: ${top}; ${alerts.length} alert(s)`;
   return { status: alerts.length ? 'warn' : 'pass', summary, alerts };
 }
 

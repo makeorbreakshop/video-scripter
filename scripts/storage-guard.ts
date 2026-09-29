@@ -21,6 +21,7 @@ import { CATALOG_SIZES_SQL, STATEMENT_COUNTERS_SQL, rowToRelation, type StorageS
 import { buildGuardReport } from '../lib/ops/storage-guard';
 import { fetchHostMetrics } from '../lib/ops/supabase-metrics';
 import { appendJsonLine, readJsonLines, readOutcomes, recordOutcome } from '../lib/ops/job-outcomes';
+import { readEgress } from '../lib/ops/egress-meter';
 import { SCHEDULED_JOBS, EXTERNAL_HEARTBEATS, heartbeatsFor } from '../lib/ops/scheduled-jobs';
 
 const NO_ALERT = process.argv.includes('--no-alert');
@@ -67,7 +68,8 @@ try {
   const history = readJsonLines<StorageSnapshot>(SNAPSHOTS, (s) => typeof s.at === 'string' && Array.isArray(s.relations));
   const heartbeats = [...heartbeatsFor(SCHEDULED_JOBS.filter((j) => j.label !== 'com.mfm.video-scripter-storage-guard'), ROOT),
                       ...EXTERNAL_HEARTBEATS];
-  const report = buildGuardReport(history, readOutcomes(path.join(ROOT, 'logs', 'job-outcomes.jsonl')), heartbeats);
+  const report = buildGuardReport(history, readOutcomes(path.join(ROOT, 'logs', 'job-outcomes.jsonl')), heartbeats,
+                                  new Date(), readEgress(path.join(ROOT, 'logs', 'job-egress.jsonl')));
 
   console.log(`[${new Date().toISOString()}] ${report.summary}`);
   for (const a of report.alerts) console.log(`  ALERT ${a}`);

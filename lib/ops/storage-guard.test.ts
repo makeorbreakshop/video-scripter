@@ -135,3 +135,23 @@ describe('reading the transmit counter from the Prometheus text', () => {
     expect(parseTransmitBytes('x 1')).toBeNull();
   });
 });
+
+describe('client egress in the daily report (lib/ops/egress-meter.ts ledger)', () => {
+  const now = new Date(Date.UTC(2026, 8, 26, 12));
+  const snaps = [snap(19, 10_000, []), snap(26, 10_010, [])];
+  const e = (job: string, hoursAgo: number, postgres: number) => ({
+    job, script: job, pid: 1, from: new Date(now.getTime() - hoursAgo * 3.6e6 - 60_000).toISOString(),
+    at: new Date(now.getTime() - hoursAgo * 3.6e6).toISOString(), postgres, supabaseHttp: 0, other: 0, connections: 1 });
+
+  it('reports the last 24 h of metered egress and pages over the total and per-job budgets', () => {
+    const r = buildGuardReport(snaps, [], [], now, [e('score', 1, 2.5e9), e('rss-poll', 2, 0.9e9), e('rss-poll', 30, 50e9)]);
+    expect(r.summary).toMatch(/client egress 3\.40 GB\/day \(score 2\.50, rss-poll 0\.90\)/);
+    expect(r.alerts.some((a) => /^client egress 3\.40 GB\/day \(budget 3\.00\)/.test(a))).toBe(true);
+    expect(r.alerts.some((a) => /^score: client egress 2\.50 GB\/day/.test(a))).toBe(true);
+  });
+
+  it('is quiet under budget, and pages when the meter has gone silent', () => {
+    expect(buildGuardReport(snaps, [], [], now, [e('score', 1, 0.2e9)]).alerts).toEqual([]);
+    expect(buildGuardReport(snaps, [], [], now, []).alerts[0]).toMatch(/no meter records/);
+  });
+});

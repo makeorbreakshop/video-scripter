@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 import type { Heartbeat } from './job-outcomes';
 
 export interface ScheduledJob {
@@ -111,4 +112,34 @@ export function installedAgentLabels(dir: string): string[] {
 export function unregisteredAgents(installed: readonly string[], jobs: readonly ScheduledJob[]): string[] {
   const known = new Set(jobs.map((j) => j.label));
   return installed.filter((l) => !known.has(l));
+}
+
+// ---- Client egress meter (lib/ops/egress-meter.ts) on every agent that runs this repo's code ----
+
+/** Agents outside the video-scripter prefix that still run this repo against Supabase. */
+export const OTHER_REPO_AGENTS = ['com.mfm.channelsmith-backfill'];
+
+/** The job name egress is filed under: the label without its prefix ("score", "rss-poll" …). */
+export const egressJobName = (label: string) => label.replace(/^com\.mfm\.(video-scripter-)?/, '');
+
+/** The environment a LaunchAgent needs for the meter: preload it, and name the job. */
+export function meterEnvFor(label: string, repo: string): { NODE_OPTIONS: string; EGRESS_JOB: string } {
+  return { NODE_OPTIONS: `--import ${path.join(repo, 'lib', 'ops', 'egress-meter.ts')}`, EGRESS_JOB: egressJobName(label) };
+}
+
+/** Labels whose plist environment does not match meterEnvFor — each is a job with no egress number. */
+export function agentsMissingMeter(dir: string, labels: readonly string[], repo: string,
+                                   readEnv: (plist: string) => Record<string, string> = plistEnv): string[] {
+  return labels.filter((l) => {
+    const want = meterEnvFor(l, repo);
+    const env = readEnv(path.join(dir, `${l}.plist`));
+    return env.NODE_OPTIONS !== want.NODE_OPTIONS || env.EGRESS_JOB !== want.EGRESS_JOB;
+  });
+}
+
+function plistEnv(plist: string): Record<string, string> {
+  try {
+    const out = execFileSync('plutil', ['-extract', 'EnvironmentVariables', 'json', '-o', '-', plist], { encoding: 'utf8' });
+    return JSON.parse(out);
+  } catch { return {}; }
 }
