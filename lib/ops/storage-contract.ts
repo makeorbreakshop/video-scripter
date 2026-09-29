@@ -52,8 +52,8 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
     enforcedBy: 'grows with ingest (~14 MB/day 09-14..26); ~2 GB of text leaves via null-video-text + pg_repack (runbook 2026-09-26)' },
   // Declared at today's measured rate so the growth alert fires only if it gets WORSE; the budget
   // is the forcing function for the terminal-tier decision (~2 weeks at today's rate).
-  { table: 'rss_samples', policy: 'bounded-retention', budgetMb: 4000, maxGrowthMbPerDay: 120,
-    enforcedBy: 'scripts/thin-readings.ts tiers (lib/readings/retention.ts): dense 4 d, hourly to 14 d, daily (last-of-day + first-of-video) to 60 d, then weekly — since 2026-09-26. Launch windows (~46 MB/day) stay hourly by design' },
+  { table: 'rss_samples', policy: 'bounded-retention', budgetMb: 8000, maxGrowthMbPerDay: 450,
+    enforcedBy: '2026-09-29: budget sized to the plateau, not today. The 09-23 poller fix raised readings to ~2.1 M/day (~17 per video, every row a real view change) and the tiers only restarted after the 09-11→09-22 outage, so they fill until ~11-21; then tighten maxGrowthMbPerDay back toward 120. scripts/thin-readings.ts tiers (lib/readings/retention.ts): dense 4 d, hourly to 14 d, daily (last-of-day + first-of-video) to 60 d, then weekly — since 2026-09-26. Launch windows (~46 MB/day) stay hourly by design' },
   { table: 'video_text', policy: 'entity', budgetMb: 2600, maxGrowthMbPerDay: 20,
     enforcedBy: 'one row per video, written at ingest (lib/app/video-text.ts videoInsertSql); the text home once videos is cleared' },
   { table: 'video_score_history', policy: 'bounded-retention', budgetMb: 600, maxGrowthMbPerDay: 40, targetMb: 150,
