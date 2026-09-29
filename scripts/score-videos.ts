@@ -44,6 +44,8 @@ import type { ObservationState } from '../lib/scoring/observation-state';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
+import path from 'node:path';
+import { DiskObsBlobStore } from '../lib/scoring/obs-blob-store';
 import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { activeParamsQuery } from '../lib/scoring/params-status';
@@ -114,6 +116,9 @@ const pool = makeTimedPool({
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 const q = async (sql: string, params?: any[]): Promise<any[]> =>
   (await trace.query(pool, sql, params)).rows as any[];
+// Local copies of observation-cache blobs: a run fetches only the blobs whose md5 changed
+// (lib/scoring/obs-blob-store.ts). Was ~5.5 MB of re-read prior blobs per 5-minute run.
+const BLOB_STORE = new DiskObsBlobStore(process.env.OBS_BLOB_DIR || path.join(process.cwd(), '.cache', 'obs-blobs'));
 
 // Snapshot record for a set of videos: daily snapshots + high-res samples, as true-age days.
 async function records(ids: string[], options: RecordLoadOptions = {}): Promise<Map<string, Snapshot[]>> {
@@ -439,7 +444,7 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
   const ids = group.map((r) => r.id);
   const priorsOf = await priorsFor(ids);
   const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
-  const cacheOnly = { requireFormat2: true } as const;
+  const cacheOnly = { requireFormat2: true, blobStore: BLOB_STORE } as const;
   const priorStates = new Map<string, ObservationState>();
   const truth = new Map<string, number>();
   const [targetResult, priorResult] = await Promise.all([

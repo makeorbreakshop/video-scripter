@@ -10,6 +10,8 @@ import {
   materializeObservationBatch,
 } from '../lib/scoring/observation-materializer';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
+import path from 'node:path';
+import { DiskObsBlobStore } from '../lib/scoring/obs-blob-store';
 
 const args = process.argv.slice(2);
 const arg = (name: string, fallback: number): number => {
@@ -40,6 +42,9 @@ try {
   const tracedClient = { query: (sql: string, values?: any[]) => trace.query(client!, sql, values) };
   const result = await materializeObservationBatch(tracedClient, {
     maxVideos, maxChanges, maxCacheBytes, maxCompressedBytes, dryRun,
+    // Claim md5s, fetch only blobs not held locally; the scorer shares the same store, so what
+    // this writes it no longer downloads (2026-09-29: claims were 6.3 MB/run of re-read blobs).
+    blobStore: new DiskObsBlobStore(process.env.OBS_BLOB_DIR || path.join(process.cwd(), '.cache', 'obs-blobs')),
     afterBegin: (transaction) => setLocalApplicationName(
       transaction,
       supabaseApplicationName('observation-materializer'),

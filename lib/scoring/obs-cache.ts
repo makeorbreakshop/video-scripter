@@ -61,6 +61,22 @@ export const OBS_CACHE_READ_SQL = `
      and (d.video_id is null or c.last_change_id >= d.generation)`;
 
 /**
+ * OBS_CACHE_READ_SQL for a caller holding local copies (lib/scoring/obs-blob-store.ts): $2 is the
+ * md5 of the blob it holds for each id in $1 (null when none). Same rows, same watermark filter;
+ * the bytea comes back only when its content differs from what the caller already has.
+ */
+export const OBS_CACHE_READ_VERSIONED_SQL = `
+  /* trace:observation.cache-read-versioned */
+  select c.video_id,
+         case when md5(c.obs) = k.version then null else c.obs end as obs,
+         c.format, c.last_change_id, t.views as day30_views
+    from unnest($1::text[], $2::text[]) as k(video_id, version)
+    join video_obs_cache c on c.video_id = k.video_id
+    left join obs_cache_dirty d on d.video_id = c.video_id
+    left join video_day30_truth t on t.video_id = c.video_id
+   where (d.video_id is null or c.last_change_id >= d.generation)`;
+
+/**
  * Series drains enforce their remaining run budget before returning any bytea in the chunk. A
  * null-video sentinel reports the rejected chunk's size using only one tiny row.
  */

@@ -12,13 +12,14 @@ import { chunk } from '../nightly/tracking-core';
 import { PRIOR_STALE_DAYS, PRIOR_WINDOW, type Snapshot } from './core';
 import { longformSql } from './longform';
 import { OBSERVATION_RECORDS_SQL, observationRecords } from './observations';
-import { OBS_CACHE_READ_SQL, decodeCachedObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
+import { OBS_CACHE_READ_SQL, OBS_CACHE_READ_VERSIONED_SQL, decodeCachedObservations, obsCacheEnabled, obsCacheStats } from './obs-cache';
 import {
   decodeObservationState,
   observationsFromState,
   type ObservationState,
 } from './observation-state';
 import type { CurvePrior } from './curve';
+import type { ObsBlobStore } from './obs-blob-store';
 
 export type QueryFn = (sql: string, params?: any[]) => Promise<any[]>;
 
@@ -33,6 +34,8 @@ export interface RecordLoadOptions {
   stateSink?: Map<string, ObservationState>;
   /** Exact day-30 snapshot projection returned by the same compact cache query. */
   day30Sink?: Map<string, number>;
+  /** Local blob copies: only blobs whose content changed are fetched (obs-blob-store.ts). */
+  blobStore?: ObsBlobStore;
 }
 export type CachedRecordLoadOptions = Omit<RecordLoadOptions, 'rawMissBudget'>;
 export interface CachedRecordLoadResult {
@@ -94,26 +97,41 @@ export async function loadCachedRecords(
     // interactive reads retain a small allowance for availability during rollout.
     let hits = 0;
     if (obsCacheEnabled()) {
-      let rows: { video_id: string; obs: Buffer; format?: number; day30_views?: number | null }[] = [];
+      let rows: { video_id: string; obs: Buffer | null; format?: number; day30_views?: number | null }[] = [];
+      const store = options.blobStore;
+      const held = store ? part.map((id) => store.get(id)) : [];
       try {
-        rows = await q(OBS_CACHE_READ_SQL, [part]);
+        rows = store
+          ? await q(OBS_CACHE_READ_VERSIONED_SQL, [part, held.map((h) => h?.version ?? null)])
+          : await q(OBS_CACHE_READ_SQL, [part]);
       } catch (err) {
         // A missing table on a database that has not run the migration is a miss; the caller's
         // budget still decides whether raw access is allowed.
         if (!warnedObsCache) { warnedObsCache = true; console.warn(`[obs-cache] unavailable: ${(err as Error).message}`); }
       }
+      const heldOf = new Map(part.map((id, i) => [id, held[i]]));
       for (const r of rows) {
+        if (store) {
+          if (r.obs == null) {
+            // Unchanged on the server: use the local copy. No copy (or a different format) = a miss.
+            const h = heldOf.get(r.video_id);
+            if (!h || h.format !== Number(r.format ?? 1)) continue;
+            r.obs = h.obs;
+          } else {
+            try { store.put(r.video_id, Number(r.format ?? 1), Buffer.from(r.obs)); } catch { /* cache only */ }
+          }
+        }
         const format = Number(r.format ?? 1);
         if (options.requireFormat2 && format !== 2) continue;
         if (format === 2) {
-          const state = decodeObservationState(r.obs);
+          const state = decodeObservationState(r.obs!);
           options.stateSink?.set(r.video_id, state);
           if (r.day30_views !== null && r.day30_views !== undefined) {
             options.day30Sink?.set(r.video_id, Number(r.day30_views));
           }
           out.set(r.video_id, observationsFromState(state));
         } else {
-          out.set(r.video_id, decodeCachedObservations(format, r.obs));
+          out.set(r.video_id, decodeCachedObservations(format, r.obs!));
         }
         hits++;
       }

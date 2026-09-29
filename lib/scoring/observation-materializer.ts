@@ -9,7 +9,8 @@ import {
 } from './observation-state';
 import { OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
 import { chunkByBytes, UPSERT_CHUNK_BYTES } from './upsert-chunks';
-import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLEAR_SQL, type QueueClaim } from './materialization-queue';
+import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLAIM_VERSIONED_SQL, OBS_CACHE_BLOBS_SQL, OBS_DIRTY_CLEAR_SQL, type QueueClaim } from './materialization-queue';
+import type { ObsBlobStore } from './obs-blob-store';
 
 export const MATERIALIZER_LIMITS = {
   videos: 20_000,
@@ -225,6 +226,8 @@ export async function materializeObservationBatch(
     maxCompressedBytes: number;
     dryRun?: boolean;
     afterBegin?: (transaction: TransactionClient) => Promise<void>;
+    /** Local blob copies: claim md5s and fetch only the blobs not held (obs-blob-store.ts). */
+    blobStore?: ObsBlobStore;
   },
 ): Promise<ObservationMaterializationPlan> {
   if (options.maxVideos > MATERIALIZER_LIMITS.videos || options.maxChanges > MATERIALIZER_LIMITS.changes
@@ -235,7 +238,28 @@ export async function materializeObservationBatch(
   await client.query('begin');
   try {
     if (options.afterBegin) await options.afterBegin(client);
-    const claimRows = (await client.query(OBS_DIRTY_CLAIM_SQL, [options.maxVideos, options.maxCacheBytes])).rows;
+    const store = options.blobStore;
+    const claimRows = (await client.query(store ? OBS_DIRTY_CLAIM_VERSIONED_SQL : OBS_DIRTY_CLAIM_SQL,
+                                          [options.maxVideos, options.maxCacheBytes])).rows;
+    if (store) {
+      // Fill row.obs from the local copy when its md5 matches; fetch the rest in one read.
+      const need: string[] = [];
+      for (const row of claimRows) {
+        if (!row.obs_md5) { row.obs = null; continue; }
+        const held = store.get(row.video_id);
+        if (held && held.version === row.obs_md5) row.obs = held.obs; else need.push(row.video_id);
+      }
+      if (need.length) {
+        const fetched = new Map((await client.query(OBS_CACHE_BLOBS_SQL, [need])).rows
+          .map((r: any) => [r.video_id as string, Buffer.from(r.obs)]));
+        for (const row of claimRows) {
+          const obs = fetched.get(row.video_id);
+          if (!obs) continue;
+          row.obs = obs;
+          try { store.put(row.video_id, number(row.format), obs); } catch { /* cache only */ }
+        }
+      }
+    }
     const claims: ObservationMaterializationClaim[] = claimRows.map((row) => ({
       videoId: row.video_id,
       generation: number(row.generation),
@@ -274,6 +298,11 @@ export async function materializeObservationBatch(
       await client.query(OBS_DIRTY_REQUIRE_BOOTSTRAP_SQL, [JSON.stringify(plan.needsBootstrap)]);
     }
     await client.query(options.dryRun ? 'rollback' : 'commit');
+    if (store && !options.dryRun) {
+      // What we just committed is the server's blob now (unless a newer writer won the upsert
+      // guard — then the md5 differs and the next claim fetches it).
+      for (const row of plan.upserts) { try { store.put(row.videoId, 2, row.obs); } catch { /* cache only */ } }
+    }
     return plan;
   } catch (error) {
     await client.query('rollback').catch(() => {});
