@@ -6,7 +6,7 @@ test('scheduled poller preserves HTTP evidence through its pending buffer and fi
   expect(source).toContain("res.headers.get('date')");
   expect(source).toContain("res.headers.get('age')");
   expect(source).toContain("res.headers.get('cache-control')");
-  expect(source).toContain('saveRssObservations(pool, b.samples, b.responses)');
+  expect(source).toContain('saveRssObservations(pool, b.samples, b.responses, RESPONSE_STATE_CACHE)');
   expect(source).not.toContain('insert into rss_samples');
   expect(source).toContain('buf.responses.push(');
 });

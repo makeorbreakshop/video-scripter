@@ -34,6 +34,8 @@ import path from 'path';
 import { chunk } from '../lib/nightly/tracking-core';
 import { archiveResponses } from '../lib/rss/response-archive';
 import { saveRssObservations } from '../lib/rss/response-store';
+import { DiskStateCache } from '../lib/rss/response-state-cache';
+import { SNAPSHOT_TRIAGE_SQL, Triage, triageParams, type TriageEntry } from '../lib/rss/snapshot-triage';
 import type { FeedResponse, ResponseEvidence } from '../lib/rss/response-freshness';
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { reenter } from '../lib/nightly/launch-core';
@@ -51,6 +53,7 @@ import {
   isNewUpload,
   unknownEntryPlan,
   shouldStoreSample,
+  SAMPLE_HEARTBEAT_MS,
   rssSamplesEnabled,
   completedChannelRows,
   LAST_SAMPLES_SQL,
@@ -112,6 +115,9 @@ const empty = (): Buffers => ({
   responses: [], samples: [], observed: [], titleVersions: [], videoTitles: [], reentries: [],
   titleChecks: [], descVersions: [], dueNow: [], touchQueue: [], channels: [],
 });
+// Local rss_response_state copies, versioned by the server's md5: the state read returns jsonb
+// only for channels whose state changed elsewhere (was ~2.2 KB per polled channel per tick).
+const RESPONSE_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state'));
 
 // ---------------------------------------------------------------- flush
 
@@ -145,7 +151,7 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
     written[name] = (written[name] ?? 0) + n;
   };
 
-  written['rss_samples'] = await saveRssObservations(pool, b.samples, b.responses);
+  written['rss_samples'] = await saveRssObservations(pool, b.samples, b.responses, RESPONSE_STATE_CACHE);
   // saveRssObservations queues the videos whose readings moved; a title change moves the
   // packaging markers the same chart draws, so those videos are queued here too.
   await markSeriesDirty(pool, b.titleVersions.map((r: any) => r.video_id));
@@ -356,12 +362,27 @@ interface Snap {
   descVersion?: number; descSha?: string;
   titleMaxVersion?: number;
   thumbVersion?: number; thumbLastChecked?: Date;
+  /** Triaged quiet (lib/rss/snapshot-triage.ts): every title/description/thumbnail branch is a no-op. */
+  quiet?: boolean;
 }
 const snap = new Map<string, Snap>();
 const lastSamples = new Map<string, { views: number | null; at: Date }>();
 // Chunked so no single statement carries a 60K-element array.
 let snapshotComplete = true;
-for (const part of chunk(allIds, CHUNK)) {
+// Triage first (lib/rss/snapshot-triage.ts, 2026-09-29): send what the feeds say, get back a row
+// only for an entry that is unknown or may have changed. The full five-table read below then runs
+// for title/description/thumbnail suspects only — it was ~253 B per feed id, ~9.8 MB a full tick.
+const triage = new Triage();
+const triageItems: TriageEntry[] = fetched.flatMap((f) => f.entries.map((entry) => ({ entry, observedAt: f.observedAt })));
+for (const part of chunk(triageItems, CHUNK)) {
+  if (job.signal.aborted) { snapshotComplete = false; break; }
+  triage.add((await pool.query(SNAPSHOT_TRIAGE_SQL, triageParams(part, sha, SAMPLE_HEARTBEAT_MS))).rows);
+}
+for (const [id, s] of triage.lastSamples) lastSamples.set(id, s);
+for (const id of snapshotComplete ? triage.quietKnownIds(allIds) : []) {
+  snap.set(id, { title: null, description: null, published_at: null, title_observed_at: null, quiet: true });
+}
+for (const part of chunk(snapshotComplete ? triage.fullReadIds() : [], CHUNK)) {
   // A partial snapshot is worse than none: a video missing from `snap` looks like an unknown id
   // and would be queued as a new upload, and its real title/description diff would be missed.
   if (job.signal.aborted) { snapshotComplete = false; break; }
@@ -428,14 +449,14 @@ for (const f of snapshotComplete ? fetched : []) {
       const plan = unknownEntryPlan(e, observedAt, lastSamples.get(e.video_id));
       if (plan.queue) buf.touchQueue.push({ ref: e.video_id, source_url: `feed:/rss/${f.channel_id}` });
       else skippedOld++;
-      if (storeSamples && plan.sample) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
+      if (storeSamples && plan.sample && triage.sampleMayStore(e.video_id)) { buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes }); sampled++; }
       continue;
     }
 
     // Free stats trace for EVERY entry the feed carries, deduped on change rather than on age
     // (shouldStoreSample). The old 30-day gate threw away the back-catalogue readings the
     // long-tail fit has no data for, and still wrote a repeat row every tick for young videos.
-    if (storeSamples && shouldStoreSample(lastSamples.get(e.video_id), e.views, observedAt)) {
+    if (storeSamples && triage.sampleMayStore(e.video_id) && shouldStoreSample(lastSamples.get(e.video_id), e.views, observedAt)) {
       buf.samples.push({ video_id: e.video_id, at: nowIso, views: e.views, likes: e.likes });
       sampled++;
     } else {
@@ -465,7 +486,7 @@ for (const f of snapshotComplete ? fetched : []) {
     }
 
     // --- description --- (archived only; no feed event, explicitly out of scope in the plan)
-    if (e.description != null) {
+    if (e.description != null && !cur.quiet) {
       const feedSha = sha(e.description);
       const isSync = classifyTitleDiff(evidence, now) === 'sync';
       if (cur.descVersion == null) {
