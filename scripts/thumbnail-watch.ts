@@ -30,6 +30,7 @@ import { markSeriesDirty } from '../lib/readings/series-store';
 import {
   HOT_TARGETS_SQL,
   LONG_TAIL_TARGETS_SQL,
+  THUMB_CHECKED_BATCH_SQL,
   TIER_COUNTS_SQL,
   TIER_ORDER,
   LONG_TAIL_MAX_PER_RUN,
@@ -107,27 +108,32 @@ let shorts = 0;
 let notModified = 0;
 // Concurrency 50 (was 20): with the ETag path most checks are a bodyless 304, so the run is
 // latency-bound, not bandwidth-bound. Measured 2026-09-03: 4,000 targets took 152.8 s at 20.
-for (const group of chunk(targets, 50)) {
+// Egress (2026-09-29): the latest version and ETag arrive with the target, so the common case —
+// a bodyless 304 — reads nothing per video, and its last_checked stamps go out once per group.
+// Before, every target cost its own select (~280 B) and update round trip: ~1.8 MB a run.
+for (const group of chunk(targets as { id: string; version: number | null; etag: string | null }[], 50)) {
   if (job.signal.aborted) break;
+  const unchanged: { id: string; version: number }[] = [];
   await Promise.all(
-    group.map(async ({ id }) => {
+    group.map(async (target) => {
+      const { id } = target;
       try {
-        // Read first: the stored ETag turns most checks into a bodyless 304.
-        const { rows: cur } = await pool.query(
-          `select version, sha256, phash, etag from thumbnail_versions where video_id=$1 order by version desc limit 1`,
-          [id]
-        );
         const res = await fetch(`https://i.ytimg.com/vi/${id}/hqdefault.jpg`, {
-          headers: cur.length && cur[0].etag ? { 'If-None-Match': cur[0].etag } : {},
+          headers: target.version != null && target.etag ? { 'If-None-Match': target.etag } : {},
           signal: AbortSignal.timeout(10000),
         });
         if (res.status === 304) {
           notModified++;
           checked++;
-          await pool.query(`update thumbnail_versions set last_checked=now() where video_id=$1 and version=$2`, [id, cur[0].version]);
+          unchanged.push({ id, version: Number(target.version) });
           return;
         }
         if (!res.ok) return;
+        // New bytes: now read the full latest row (sha256/phash) to classify them.
+        const { rows: cur } = await pool.query(
+          `select version, sha256, phash, etag from thumbnail_versions where video_id=$1 order by version desc limit 1`,
+          [id]
+        );
         const buf = Buffer.from(await res.arrayBuffer());
         checked++;
         const etag = res.headers.get('etag');
@@ -202,6 +208,10 @@ for (const group of chunk(targets, 50)) {
       } catch { /* transient */ }
     })
   );
+  if (unchanged.length) {
+    await pool.query(THUMB_CHECKED_BATCH_SQL, [unchanged.map((u) => u.id), unchanged.map((u) => u.version)])
+      .catch((err) => console.error(`last_checked batch: ${(err as Error).message}`));
+  }
 }
 console.log(
   `Done. ${checked} checked (${notModified} x 304 not-modified), ${news} first-captures, ` +

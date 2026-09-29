@@ -170,6 +170,13 @@ describe('SQL shape', () => {
     expect(LONG_TAIL_TARGETS_SQL).toContain('left join lateral');
   });
 
+  it('carries the latest version and ETag with each target, so a 304 needs no per-video read (egress 2026-09-29)', () => {
+    for (const sql of [HOT_TARGETS_SQL, LONG_TAIL_TARGETS_SQL]) {
+      expect(sql).toMatch(/^select v\.id, l\.version, l\.etag from videos v/);
+      expect(sql).toContain('select t.last_checked, t.version, t.etag from thumbnail_versions t');
+    }
+  });
+
   it('the hot and long-tail queries partition the corpus at 30 days with no overlap', () => {
     expect(HOT_TARGETS_SQL).toContain("v.published_at > now() - interval '30 days'");
     expect(LONG_TAIL_TARGETS_SQL).toContain("v.published_at <= now() - interval '30 days'");

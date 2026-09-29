@@ -166,9 +166,9 @@ const dueBoth = (lastChecked: string, window: 'hot' | 'long-tail') =>
         or (not ${ON_NEW_LADDER} and (${dueSql('legacy', lastChecked, window)})))`;
 
 /** Everything under 30 days. $1 = subset gate on?, $2 = limit. */
-export const HOT_TARGETS_SQL = `select v.id from videos v
+export const HOT_TARGETS_SQL = `select v.id, l.version, l.etag from videos v
    left join lateral (
-     select t.last_checked from thumbnail_versions t
+     select t.last_checked, t.version, t.etag from thumbnail_versions t
      where t.video_id = v.id order by t.version desc limit 1
    ) l on true
    where v.published_at > now() - ${sql(LONG_TAIL_AFTER)}
@@ -181,9 +181,14 @@ export const HOT_TARGETS_SQL = `select v.id from videos v
  * Shape matters: the LATERAL (not a materialized `latest` CTE) lets Postgres walk
  * idx_videos_longtail_watch backwards from the 30-day boundary and stop as soon as the
  * LIMIT is filled, instead of seq-scanning ~560K rows every run. */
-export const LONG_TAIL_TARGETS_SQL = `select v.id from videos v
+/** Checked-and-unchanged stamps for a whole group in one statement. $1 ids, $2 versions. */
+export const THUMB_CHECKED_BATCH_SQL = `update thumbnail_versions t set last_checked = now()
+    from unnest($1::text[], $2::int[]) as x(video_id, version)
+   where t.video_id = x.video_id and t.version = x.version`;
+
+export const LONG_TAIL_TARGETS_SQL = `select v.id, l.version, l.etag from videos v
    left join lateral (
-     select t.last_checked from thumbnail_versions t
+     select t.last_checked, t.version, t.etag from thumbnail_versions t
      where t.video_id = v.id order by t.version desc limit 1
    ) l on true
    where v.published_at <= now() - ${sql(LONG_TAIL_AFTER)}
