@@ -294,3 +294,41 @@ the outbox (Pulse's receipt endpoint, same as other jobs today).
   level; the budget alert will fire until then.
 - Guard: per-day deltas against the snapshot nearest 24 h earlier; WAL/day and transmit/day with the
   top query families. Long-form guard test scans tracked files only.
+
+## 2026-09-29 — client egress (billed), measured per job
+
+Host transmit is WAL shipping (above). Billed egress is what the clients RECEIVE. The main session
+measured it with nettop at ~7.5–13 GB/day, which is 225–390 GB a cycle against a 250 GB org quota
+shared with machinesformakers.com.
+
+**Meter (owned number):** every LaunchAgent preloads `lib/ops/egress-meter.ts`
+(`NODE_OPTIONS=--import …/egress-meter.ts`, `EGRESS_JOB=<label suffix>`, installed by
+`scripts/install-egress-meter.ts`; `scheduled-jobs.test.ts` fails if an agent lacks it). It wraps
+`net.Socket.prototype.connect` and sums `bytesRead` for :5432/:6543 and `*.supabase.co`. It writes
+to `logs/job-egress.jsonl`, and `recordOutcome` carries `rxBytes`. The storage guard pages when the
+24 h total is over 3 GB/day or any job is over 0.5 GB/day, and when the meter goes silent.
+`npx tsx scripts/egress-report.ts --hours 1` attributes any window. Cross-check over 12:23–12:33 UTC:
+nettop per connection read 22.6 MB and the meter read 23.2 MB.
+
+| job | before (07:41–07:58 ET) | after (08:23–08:33 ET, caches warming) | cut |
+|---|---|---|---|
+| observation-materializer | 3.75 GB/day | 1.49 → falling | claims md5s, fetches only blobs it lacks, keeps what it commits |
+| rss-poll | 3.13 | 0.67 | snapshot triage in SQL + local rss_response_state |
+| score | 2.17 | 0.53 | local obs-blob store (md5-versioned read) |
+| thumbnail-watch | 0.61 | 0.08 | ETag/version with the target; 304 stamps batched |
+| launch-track | 0.35 | 0.32 | — |
+| track-drain, extension-api, rest | 0.15 | 0.22 | — |
+| **total** | **10.15 GB/day** | **3.31 GB/day** | |
+
+- **Content-versioned local copies** (`.cache/obs-blobs`, `.cache/rss-response-state`): the read
+  sends the md5 it holds, and Postgres returns the bytes only when `md5(x)` differs. The writer
+  stores what it commits, so the copies stay current. A 300-blob spot check was 300/300 current.
+  The one-time warm-up costs roughly the active blobs (~300 MB), spread over the first hours.
+- **Snapshot triage** (`lib/rss/snapshot-triage.ts`): the tick sends what the feeds say, which is
+  ingress and not billed. SQL returns a bitmask row only for unknown or possibly-changed entries,
+  and the old full read runs for those suspects only. Parity on 20 K real archived entries, with
+  perturbations: 0 mismatches.
+- **Not changed:** ingest, uploads, launch sampling, or any cadence.
+- **cfb-recruit-tracker** (other project, jjzydagxubsjqornuvpi, same pooler region):
+  `scripts/atc/attribute.ts` received 14.0 MB in 10 min (≈2 GB/day). It runs from the hourly
+  `com.cfb.atc-match` chain, and one run lasted over an hour. Reported, not changed.
