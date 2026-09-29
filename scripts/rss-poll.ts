@@ -374,9 +374,12 @@ let snapshotComplete = true;
 // for title/description/thumbnail suspects only — it was ~253 B per feed id, ~9.8 MB a full tick.
 const triage = new Triage();
 const triageItems: TriageEntry[] = fetched.flatMap((f) => f.entries.map((entry) => ({ entry, observedAt: f.observedAt })));
-for (const part of chunk(triageItems, CHUNK)) {
+// Four chunks at a time (the pool's size): each is index-bound, ~3.6 s per 5,000 entries cold.
+for (const parts of chunk(chunk(triageItems, CHUNK), 4)) {
   if (job.signal.aborted) { snapshotComplete = false; break; }
-  triage.add((await pool.query(SNAPSHOT_TRIAGE_SQL, triageParams(part, sha, SAMPLE_HEARTBEAT_MS))).rows);
+  const results = await Promise.all(parts.map((part) =>
+    pool.query(SNAPSHOT_TRIAGE_SQL, triageParams(part, sha, SAMPLE_HEARTBEAT_MS))));
+  for (const r of results) triage.add(r.rows);
 }
 for (const [id, s] of triage.lastSamples) lastSamples.set(id, s);
 for (const id of snapshotComplete ? triage.quietKnownIds(allIds) : []) {
