@@ -36,11 +36,10 @@ import {
 } from '../lib/scoring/growth';
 import { scoreV5, type CurvePrior } from '../lib/scoring/curve';
 import {
-  curvePriorsFrom, loadCachedRecords, loadMeta, loadPriorRefs, loadRecords,
-  ObservationCacheMissError, partitionTargetsByCacheDependencies,
+  curvePriorsFrom, loadScoringDependencies, loadMeta, loadPriorRefs, loadRecords,
+  ObservationCacheMissError,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
-import type { ObservationState } from '../lib/scoring/observation-state';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
@@ -437,24 +436,21 @@ function rowFromV5(
 }
 
 /**
- * Everything scoreV5 needs for one batch of targets, in four reads. Shared by --v5 (CSV) and the
- * write paths, so the dry run and production cannot answer differently.
+ * Load bodies only for ready dependency sets. Shared by --v5 (CSV) and write paths,
+ * so the dry run and production use the same inputs and math.
  */
 async function v5Batch(group: { id: string; channel_id: string }[], params: GlobalParams) {
   const ids = group.map((r) => r.id);
   const priorsOf = await priorsFor(ids);
-  const priorIds: string[] = [...new Set([...priorsOf.values()].flat().map((pp) => pp.id))];
-  const cacheOnly = { requireFormat2: true, blobStore: BLOB_STORE } as const;
-  const priorStates = new Map<string, ObservationState>();
   const truth = new Map<string, number>();
-  const [targetResult, priorResult] = await Promise.all([
-    loadCachedRecords(q, ids, cacheOnly),
-    loadCachedRecords(q, priorIds, { ...cacheOnly, stateSink: priorStates, day30Sink: truth }),
-  ]);
+  const partition = await loadScoringDependencies(q, group, priorsOf, {
+    blobStore: BLOB_STORE, day30Sink: truth,
+  });
+  const priorIds = [...new Set(partition.ready.flatMap(t => (priorsOf.get(t.id) ?? []).map(p => p.id)))];
   const priorMeta = await meta(priorIds);
-  const rec = targetResult.records;
-  const priorRec = priorResult.records;
-  const partition = partitionTargetsByCacheDependencies(group, priorsOf, rec, priorRec);
+  const rec = partition.records;
+  const priorRec = partition.records;
+  log(`score: dependency preflight skipped ${partition.skippedBodyIds} body loads; ${partition.ready.length}/${group.length} ready`);
   const out: { t: { id: string; channel_id: string }; views: number; o: ReturnType<typeof scoreV5> }[] = [];
   for (const t of partition.ready) {
     const snaps = rec.get(t.id);

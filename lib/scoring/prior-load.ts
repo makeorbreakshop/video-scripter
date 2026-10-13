@@ -157,6 +157,49 @@ export async function loadRecords(
   return out;
 }
 
+/** A bounded metadata probe: never detoast or transfer observation bodies for blocked work. */
+export const SCORING_CACHE_READY_SQL = `
+  /* trace:score.cache-ready */
+  select c.video_id
+    from unnest($1::text[]) as requested(video_id)
+    join video_obs_cache c on c.video_id = requested.video_id
+    left join obs_cache_dirty d on d.video_id = c.video_id
+   where c.format = 2
+     and (d.video_id is null or c.last_change_id >= d.generation)`;
+
+/**
+ * Establish complete dependency sets before fetching bodies. The body read still checks the
+ * authoritative watermark: preflight is an optimization, never permission to use stale data.
+ * Missing IDs remain explicit so the scorer still requests their materialization.
+ */
+export async function loadScoringDependencies<T extends { id: string }>(
+  q: QueryFn,
+  targets: readonly T[],
+  priorsOf: ReadonlyMap<string, readonly PriorRef[]>,
+  options: Omit<CachedRecordLoadOptions, 'requireFormat2'> = {},
+) {
+  const allIds = [...new Set(targets.flatMap(t => [t.id, ...(priorsOf.get(t.id) ?? []).map(p => p.id)]))];
+  const available = new Map<string, Snapshot[]>();
+  if (obsCacheEnabled()) {
+    for (const part of chunk(allIds, 100)) {
+      for (const row of await q(SCORING_CACHE_READY_SQL, [part])) available.set(row.video_id, []);
+    }
+  }
+  const preflight = partitionTargetsByCacheDependencies(targets, priorsOf, available, available);
+  const needed = [...new Set(preflight.ready.flatMap(t => [t.id, ...(priorsOf.get(t.id) ?? []).map(p => p.id)]))];
+  // Targets and priors share one load, including identities that appear in both roles.
+  const loaded = await loadCachedRecords(q, needed, { ...options, requireFormat2: true });
+  const confirmed = partitionTargetsByCacheDependencies(preflight.ready, priorsOf, loaded.records, loaded.records);
+  const readyIds = new Set(confirmed.ready.map(t => t.id));
+  return {
+    ready: confirmed.ready,
+    blocked: targets.filter(t => !readyIds.has(t.id)),
+    missingIds: [...new Set([...preflight.missingIds, ...confirmed.missingIds])],
+    records: loaded.records,
+    skippedBodyIds: allIds.length - needed.length,
+  };
+}
+
 /** Partition a batch without ever scoring a target against an incomplete canonical prior set. */
 export function partitionTargetsByCacheDependencies<T extends { id: string }>(
   targets: readonly T[],

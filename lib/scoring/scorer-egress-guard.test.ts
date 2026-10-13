@@ -14,12 +14,12 @@ test('the default scorer is queue-driven and statically incapable of raw-history
   expect(script).toContain('throw new ObservationCacheMissError(loaded.missingIds, 0)');
 
   const batch = script.slice(script.indexOf('async function v5Batch('), script.indexOf('async function channelsSlowerThan('));
-  expect(batch).toContain('requireFormat2: true');
+  expect(fs.readFileSync(path.join(process.cwd(), 'lib/scoring/prior-load.ts'), 'utf8')).toContain('requireFormat2: true');
   // 2026-09-29: the cache read sends the md5 of each local copy; only changed blobs come back.
   expect(batch).toContain('blobStore: BLOB_STORE');
   expect(script).toMatch(/const BLOB_STORE = new DiskObsBlobStore\(/);
-  expect(batch).toContain('loadCachedRecords');
-  expect(batch).toContain('partitionTargetsByCacheDependencies');
+  expect(batch).toContain('loadScoringDependencies');
+  expect(batch).toContain('partition.ready');
   expect(batch).not.toContain('Promise.allSettled');
   expect(batch).not.toMatch(/\brecords\(/);
 

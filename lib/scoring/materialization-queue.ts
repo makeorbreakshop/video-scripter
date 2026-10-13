@@ -114,7 +114,10 @@ export function ensureObservationMaterializationSql(ids: readonly string[]): { t
       generation=greatest(obs_cache_dirty.generation,excluded.generation),
       requires_bootstrap=obs_cache_dirty.requires_bootstrap or excluded.requires_bootstrap,
       marked_at=excluded.marked_at,
-      not_before=least(obs_cache_dirty.not_before,excluded.not_before)`,
+      not_before=least(obs_cache_dirty.not_before,excluded.not_before)
+    where excluded.generation > obs_cache_dirty.generation
+       or (excluded.requires_bootstrap and not obs_cache_dirty.requires_bootstrap)
+       or excluded.not_before < obs_cache_dirty.not_before`,
     values: [unique],
   };
 }
