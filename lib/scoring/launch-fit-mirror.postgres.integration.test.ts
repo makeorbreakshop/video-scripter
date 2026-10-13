@@ -2,6 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';import pg from 'pg';
 import {ExportRowMirror} from '../readings/export-row-mirror';
 import {loadLaunchFitRows,LEGACY_LAUNCH_ROWS_SQL,LAUNCH_FIT_IDS_SQL} from './launch-fit-mirror';
+import * as fitApi from './launch-fit-mirror';
 import {fitLaunchLadderV5} from './growth';
 
 test('launch fitting reuses unchanged source-validated history with identical inputs and model',{
@@ -35,6 +36,22 @@ test('launch fitting reuses unchanged source-validated history with identical in
  assert.deepEqual(sort(await loadLaunchFitRows(q,mirror,['v'],'2026-08-01')),sort(await legacy()),'ambiguous day1 ties retain the legacy selection path');
  await assert.rejects(loadLaunchFitRows(q,mirror,['v'],'2026-08-01',{maxRows:1}),/budget/);
  await assert.rejects(loadLaunchFitRows(q,mirror,['v'],'2026-08-01',{maxBytes:1}),/budget/);
+ const captureSql=fs.readFileSync(path.join(process.cwd(),'sql/2026-10-13-incremental-mirrors.sql'),'utf8').split('-- Fixture databases')[0];
+ await c.query(captureSql);
+ await c.query("select install_mirror_capture('launch-fit','videos','id','id,published_at,is_short,duration,shorts_checked_at');select install_mirror_capture('launch-fit','view_samples','video_id','video_id,sampled_at,view_count');select install_mirror_capture('launch-fit','view_snapshots','video_id','video_id,snapshot_date,view_count')");
+ // No ambiguous fallback here: change to a uniquely closest day-1 point.
+ await c.query("insert into view_samples values('v','2026-08-02',2000)");
+ let projections=0;const iq=async(sql:string,params?:any[])=>{if(sql.includes('bodies AS MATERIALIZED'))projections++;return q(sql,params);};
+ const incremental=()=>typeof (fitApi as any).loadIncrementalLaunchFitRows==='function'
+  ? (fitApi as any).loadIncrementalLaunchFitRows(iq,mirror!,'2026-08-01','fixture-fit-owner')
+  : loadLaunchFitRows(iq,mirror!,['v','empty'],'2026-08-01');
+ await incremental();projections=0;
+ assert.deepEqual(sort(await incremental()),sort(await legacy()));
+ assert.equal(projections,0,'unchanged fit must reuse complete verified local inputs without projecting source histories');
+ await c.query("insert into view_samples values('v','2026-09-01',50000)");
+ assert.equal((await c.query("select count(*)::int n from mirror_dirty where dataset='launch-fit'")).rows[0].n,0,'observations outside the fitting window must not queue unchanged history');
+ await c.query("update view_samples set view_count=12345 where sampled_at='2026-08-01 03:00'");
+ assert.deepEqual(sort(await incremental()),sort(await legacy()));
  await c.query(`insert into videos select 'bulk-'||g,'2026-08-01',false,'PT10M',now() from generate_series(1,200001) g`);
  assert.equal((await q(LAUNCH_FIT_IDS_SQL,['2026-08-01'])).length,200003,'enumeration must cover the live population, not silently truncate at the former limit');
  await c.query("delete from videos where id='v'");assert.deepEqual(await loadLaunchFitRows(q,mirror,['v'],'2026-08-01'),[]);

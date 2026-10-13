@@ -1,3 +1,4 @@
+import { PRIOR_WINDOW, PRIOR_STALE_DAYS } from './core';
 import { longformSql } from './longform';
 
 export interface QueueClaim { video_id: string; generation: number }
@@ -140,7 +141,7 @@ export function ensureObservationMaterializationSql(ids: readonly string[]): { t
   };
 }
 
-export function scoreDirtyTargetsSql(options: { limit: number; channels: string[] }): { text: string; values: unknown[] } {
+export function scoreDirtyTargetsSql(options: { limit: number; channels: string[]; prepareOnly?: boolean }): { text: string; values: unknown[] } {
   if (!(options.limit > 0) || options.limit > 100) throw new Error('score dirty page limit must be 1..100');
   const values: unknown[] = [];
   const bind = (value: unknown) => { values.push(value); return `$${values.length}`; };
@@ -159,10 +160,15 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
            when now() - v.published_at < interval '60 days' then interval '3 days'
            else interval '7 days' end)`;
   return {
-    text: `/* trace:score.queue-targets */
-    with initial as materialized (
+    text: `/* trace:${options.prepareOnly ? 'score.prepare' : 'score.queue-targets'} */
+    with recent_keys as materialized (
+      -- Priority is a bounded newest-key window. Every other due video remains in FIFO.
+      select id from videos where published_at >= now()-interval '7 days'
+      order by published_at desc limit 2000
+    ), initial as materialized (
       select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at, d.ready_at
-        from score_dirty d
+        from recent_keys k
+        join score_dirty d on d.video_id=k.id
         join videos v on v.id = d.video_id
         left join video_scores sc on sc.video_id = v.id
        where d.not_before <= now() and (d.waiting_until is null or d.waiting_until <= now()) and sc.video_id is null
@@ -199,7 +205,28 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
       select r.*, 1 as lane from resumed r
       union all
       select f.*, 2 as lane from refresh f
-    ), locked as materialized (
+    )${options.prepareOnly ? `, refs AS MATERIALIZED (
+      SELECT t.id AS target_id,p.id AS dependency_id FROM picked t
+      JOIN LATERAL (
+        SELECT p.id,p.published_at FROM videos p
+        WHERE p.channel_id=t.channel_id AND p.published_at<t.published_at
+          AND ${longformSql('p')} AND coalesce(p.privacy_status,'public')='public'
+          AND coalesce(p.view_count,0)>0
+        ORDER BY p.published_at DESC NULLS LAST LIMIT ${PRIOR_WINDOW}
+      ) p ON extract(epoch from(t.published_at-p.published_at))/86400.0<=${PRIOR_STALE_DAYS}
+    ), dependencies AS MATERIALIZED (
+      SELECT id AS target_id,id AS dependency_id FROM picked UNION SELECT * FROM refs
+    ), missing AS MATERIALIZED (
+      SELECT dep.target_id,array_agg(dep.dependency_id ORDER BY dep.dependency_id) AS missing_ids
+      FROM dependencies dep LEFT JOIN video_obs_cache c ON c.video_id=dep.dependency_id
+      LEFT JOIN obs_cache_dirty d ON d.video_id=dep.dependency_id
+      WHERE c.format IS DISTINCT FROM 2 OR c.last_change_id IS NULL OR c.last_change_id<d.generation
+      GROUP BY dep.target_id
+    )
+    SELECT p.id,p.channel_id,p.published_at::text,p.generation::text,p.ready_at::text,
+           coalesce(m.missing_ids,ARRAY[]::text[]) AS missing_ids
+    FROM picked p LEFT JOIN missing m ON m.target_id=p.id
+    ORDER BY p.lane,p.not_before,p.marked_at,p.id` : `, locked as materialized (
       -- Producers lock queue keys in video-id order. Use that same order for a batch.
       select d.video_id, d.generation
         from score_dirty d join picked p on p.id = d.video_id and p.generation = d.generation
@@ -220,7 +247,7 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
               case when lane = 0 then view_count end desc nulls last,
               case when lane = 0 then published_at end desc,
               not_before, marked_at, id
-     limit ${limit}`,
+     limit ${limit}`}`,
     values,
   };
 }
@@ -277,7 +304,7 @@ export const SCORE_DEPENDENCIES_READY_SQL = `
   with candidates as materialized (
     select d.video_id,d.generation from score_dirty d
      where d.waiting_until is not null and d.waiting_on && $1::text[]
-     order by d.video_id limit 1000
+     order by d.video_id limit 1000 for update of d skip locked
   )
   update score_dirty d set waiting_on=null,waiting_until=null,ready_at=clock_timestamp(),
          not_before=least(d.not_before,now())
@@ -291,3 +318,39 @@ export const SCORE_DEPENDENCIES_READY_SQL = `
        where c.format is distinct from 2 or c.last_change_id is null
           or (o.video_id is not null and c.last_change_id < o.generation)
      )`;
+
+
+/** Cheap database-side readiness preparation; blocked graphs never cross the wire.
+ * Parking and claiming still use exact generations. The scorer rechecks source watermarks
+ * after claim; a race may defer a ready item but can never authorize stale input.
+ */
+export async function prepareScoreDirtyPage(
+ q:(sql:string,values?:any[])=>Promise<any[]>,
+ options:{limit:number;channels:string[];maxCandidates:number},
+):Promise<{targets:ScoreDirtyTarget[];inspected:number;blocked:number}>{
+ if(!Number.isInteger(options.maxCandidates)||options.maxCandidates<0||options.maxCandidates>1500)throw Error('invalid score preparation budget');
+ let inspected=0,blocked=0;
+ while(inspected<options.maxCandidates){
+  const statement=scoreDirtyTargetsSql({limit:Math.min(options.limit,options.maxCandidates-inspected),channels:options.channels,prepareOnly:true});
+  const rows=await q(statement.text,statement.values);
+  if(!rows.length)break;inspected+=rows.length;
+  const waiting=rows.filter(r=>r.missing_ids.length);
+  blocked+=waiting.length;
+  if(waiting.length){
+   const ensure=ensureObservationMaterializationSql(waiting.flatMap(r=>r.missing_ids));await q(ensure.text,ensure.values);
+   await q(SCORE_DIRTY_WAIT_SQL,[JSON.stringify(waiting.map(r=>({video_id:r.id,generation:r.generation,dependency_ids:r.missing_ids})))]);
+  }
+  const ready=rows.filter(r=>!r.missing_ids.length);
+  if(ready.length){
+   const claimed=await q(`/* trace:score.ready-claim */ WITH locked AS MATERIALIZED (
+    SELECT d.video_id,d.generation FROM score_dirty d
+    JOIN jsonb_to_recordset($1::jsonb) x(id text,generation bigint) ON x.id=d.video_id AND x.generation=d.generation
+    ORDER BY d.video_id FOR UPDATE OF d SKIP LOCKED
+   ) UPDATE score_dirty d SET claimed_at=clock_timestamp() FROM locked l
+    WHERE d.video_id=l.video_id AND d.generation=l.generation RETURNING d.video_id,d.generation::text`,[JSON.stringify(ready)]);
+   const held=new Set(claimed.map(r=>`${r.video_id}:${r.generation}`));
+   return {targets:ready.filter(r=>held.has(`${r.id}:${r.generation}`)).map(({missing_ids,...target})=>target),inspected,blocked};
+  }
+ }
+ return {targets:[],inspected,blocked};
+}

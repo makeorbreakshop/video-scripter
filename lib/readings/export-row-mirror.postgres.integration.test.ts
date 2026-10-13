@@ -45,6 +45,8 @@ test('fresh exports reuse unchanged rows and faithfully apply inserts, correctio
   await c.query(`create view view_snapshots as select id,video_id,snapshot_date,views as view_count,
     null::bigint like_count,null::bigint comment_count,null::int days_since_published,
     '2026-10-13'::timestamptz created_at from fixture`);
+  const captureSql=(await import('node:fs')).readFileSync(path.join(process.cwd(),'sql/2026-10-13-incremental-mirrors.sql'),'utf8').split('-- Fixture databases')[0];
+  await c.query(captureSql);await c.query("select install_mirror_capture('view_snapshots','fixture','id','id,video_id,snapshot_date,views')");
   const artifact=path.join(dir,'verified.parquet'),capture=path.join(dir,'capture.mjs');
   writeFileSync(capture,`import {promises as fs} from 'node:fs';
     const remove=fs.rm;fs.rm=async(p,o)=>String(p).endsWith('.parquet')?fs.rename(p,process.env.TEST_PARQUET_PATH):remove(p,o);`);

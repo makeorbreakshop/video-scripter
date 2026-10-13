@@ -34,7 +34,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { acquireJobLease } from '../lib/nightly/job-lifecycle';
-import { ExportRowMirror, syncExportMirror, type ExportMirrorSpec } from '../lib/readings/export-row-mirror';
+import { ExportRowMirror, syncIncrementalMirror, type ExportMirrorSpec } from '../lib/readings/export-row-mirror';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -191,7 +191,8 @@ async function exportTable(name: string): Promise<{ rows: number; bytes: number 
       const mirror=new ExportRowMirror(path.join(cacheDir,`${name}-${digest}.sqlite`));
       try {
         mirror.bind(identity);
-        const stats=await syncExportMirror(mirror,spec.source,(sql,values)=>pool.query(sql,values),{
+        const stats=await syncIncrementalMirror(mirror,spec.source,(sql,values)=>pool.query(sql,values),{
+          owner:`${os.hostname()}:${path.resolve(cacheDir)}`,
           batch:Math.min(BATCH,10000), maxRows:Number(arg('--max-rows') ?? 10000000),
           maxBytes:Number(arg('--max-response-bytes') ?? 2500000000),
           onPage: s=>{if(s.rows && s.rows%100000===0)console.log(`  ${name}: ${s.rows} checked, ${s.changed} changed, ${(s.bytes/1e6).toFixed(1)} MB returned`);},

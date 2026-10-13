@@ -1,3 +1,4 @@
+import {readSemanticChangeWindow,type SemanticCursor} from '../../lib/semantic/change-window';
 // Embed the whole long-form catalog (title + channel + cleaned description, v4 document) into its own
 // Qdrant collection so channel identity vectors can be built from a channel's typical videos, not its
 // top-20 titles or its outliers. Streams the `videos` table in keyset pages so memory stays flat and
@@ -78,30 +79,20 @@ async function* pages(since: string | Date | null, channelIds: string[] | null =
   }
 }
 
-/**
- * Incremental: rows touched since the watermark, keyset on (published_at, id) so the plan rides
- * idx_videos_longtail_watch. `publishedFrom` bounds the scan the way embed-videos does — without it
- * an updated_at predicate has no index and the statement times out at 45 s.
- */
+/** Index-backed changed-key windows; an empty eligible page still advances the source cursor. */
 async function* incrementalPages(publishedFrom: Date, updatedSince: Date): AsyncGenerator<Row[]> {
-  let cursorPublished: Date | null = null;
-  let cursorId = '';
+  let cursor:SemanticCursor|null=null;let scannedKeys=0;
   for (;;) {
-    const { rows }: { rows: Row[] } = await db().query<Row>(
-      `${ROW_SELECT}
-        where v.published_at >= $1
-          and ${LONGFORM_PREDICATE}
-          and ($2::timestamptz is null or (v.published_at, v.id) > ($2::timestamptz, $3))
-          and (v.updated_at >= $4 or v.published_at >= $4)
-        order by v.published_at, v.id
-        limit $5`,
-      [publishedFrom, cursorPublished, cursorId, updatedSince, PAGE],
-    );
-    if (!rows.length) return;
-    yield rows;
-    if (rows.length < PAGE) return;
-    cursorPublished = rows[rows.length - 1].published_at;
-    cursorId = rows[rows.length - 1].id;
+    const window=await readSemanticChangeWindow(db(),updatedSince,cursor,PAGE);
+    scannedKeys+=window.ids.length;if(scannedKeys>100000)throw Error('semantic incremental key budget exhausted');
+    if(window.ids.length){
+      const {rows}=await db().query<Row>(`${ROW_SELECT}
+        where v.id=any($1::text[]) and v.published_at >= $2 and ${LONGFORM_PREDICATE}`,
+        [window.ids,publishedFrom]);
+      if(rows.length)yield rows;
+    }
+    if(window.done)return;
+    cursor=window.cursor;
   }
 }
 

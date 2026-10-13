@@ -11,7 +11,7 @@ test('the legacy refresh predicate remains available only for explicit rollout/b
   const script = fs.readFileSync(path.join(process.cwd(), 'scripts/score-videos.ts'), 'utf8');
   const hourly = script.slice(script.indexOf('async function score('), script.indexOf('async function final('));
   expect(hourly).toContain(': ALL && FORCE');
-  expect(hourly).toContain('scoreDirtyTargetsSql({');
+  expect(hourly).toContain('prepareScoreDirtyPage(q,');
   expect(hourly).not.toContain('incrementalScoreTargetsSql({');
 });
 

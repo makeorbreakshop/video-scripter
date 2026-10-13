@@ -1,3 +1,4 @@
+import { rememberCommittedRssCandidates } from '../scoring/observation-candidates';
 import type pg from 'pg';
 import { advanceResponse, assessResponse, type ResponseState, type FeedResponse } from './response-freshness';
 import { markSeriesDirty } from '../readings/series-store';
@@ -82,6 +83,7 @@ export async function saveRssObservations(pool: pg.Pool, samples: RssSampleWrite
     // queue can never miss a video whose readings committed.
     await markSeriesDirty(client, kept.map(s => s.video_id), { transactional: true });
     await client.query('commit');
+    rememberCommittedRssCandidates(kept);
     if (stateCache) {
       const byId = new Map(updates.map((u) => [u.channel_id, u.state]));
       for (const r of updated.rows as { channel_id: string; version: string | null }[]) {

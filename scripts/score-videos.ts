@@ -1,3 +1,5 @@
+import { acquireJobLease } from '../lib/nightly/job-lifecycle';
+import os from 'node:os';
 // Model v5 scorer with versioned RSS observation contract. Direct Postgres only.
 //   npx tsx scripts/score-videos.ts --fit        refit global params from the last 12 months (nightly).
 //                                                Since 2026-09-08 the fit writes a CANDIDATE row:
@@ -40,7 +42,7 @@ import {
   ObservationCacheMissError,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
-import { loadLaunchFitRows, LAUNCH_FIT_IDS_SQL, LAUNCH_FIT_SPEC } from '../lib/scoring/launch-fit-mirror';
+import { loadIncrementalLaunchFitRows, LAUNCH_FIT_SPEC } from '../lib/scoring/launch-fit-mirror';
 import { ExportRowMirror } from '../lib/readings/export-row-mirror';
 import { createHash } from 'node:crypto';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
@@ -52,11 +54,12 @@ import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { activeParamsQuery } from '../lib/scoring/params-status';
 import {
-  SCORE_DIRTY_CLEAR_SQL, SCORE_DIRTY_DEFER_SQL, SCORE_DIRTY_WAIT_SQL, ensureObservationMaterializationSql,
-  scoreDirtyTargetsSql, walkScoreDirtyTargets, type QueueClaim, type ScoreDirtyTarget,
+  prepareScoreDirtyPage, SCORE_DIRTY_CLEAR_SQL, SCORE_DIRTY_DEFER_SQL, SCORE_DIRTY_WAIT_SQL, ensureObservationMaterializationSql,
+  walkScoreDirtyTargets, type QueueClaim, type ScoreDirtyTarget,
 } from '../lib/scoring/materialization-queue';
 
 const FIT = process.argv.includes('--fit');
+if(FIT){const lease=acquireJobLease({name:'score-fit'});if(!lease.acquired)throw Error('score-fit already running');process.once('exit',lease.release);}
 const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
 const FORCE = process.argv.includes('--force');
@@ -270,8 +273,6 @@ async function fit() {
 // query used. The day-1 side accepts either source, because at 24h a snapshot's midday stamp is
 // within the tolerance that matters.
 async function launchRows(): Promise<LaunchRow5[]> {
-  const ids = (await q(LAUNCH_FIT_IDS_SQL, [LAUNCH_FIT_SINCE])).map(r => String(r.id));
-  if (ids.length > 1000000) throw new Error('launch-fit video budget exceeded');
   const dbUrl = new URL(process.env.DATABASE_URL!);
   const identity = JSON.stringify({ host:dbUrl.hostname,database:dbUrl.pathname,project:dbUrl.username,
     source:LAUNCH_FIT_SPEC,since:LAUNCH_FIT_SINCE,version:1 });
@@ -280,7 +281,7 @@ async function launchRows(): Promise<LaunchRow5[]> {
   const mirror = new ExportRowMirror(path.join(dir,createHash('sha256').update(identity).digest('hex').slice(0,16)+'.sqlite'));
   try {
     mirror.bind(identity);
-    const rows = await loadLaunchFitRows(q,mirror,ids,LAUNCH_FIT_SINCE,{
+    const rows = await loadIncrementalLaunchFitRows(q,mirror,LAUNCH_FIT_SINCE,`${os.hostname()}:${path.resolve(dir)}`,{
       onPage:s=>{if(s.videos%5000===0)log(`fit mirror: ${s.videos} videos, ${s.changed} changed, ${s.bytes} body bytes`);},
     });
     log(`fit: launch ladder fed by ${rows.length} source-validated (view_samples, day-1) pairs since ${LAUNCH_FIT_SINCE}`);
@@ -589,12 +590,15 @@ async function score(signal: AbortSignal) {
     log(`score: ${selected} videos to score${SINCE ? ` (--since ${SINCE}d)` : ' (--all --force)'}`);
     await processTargets(bulkTargets);
   } else {
+    let preparationRemaining=Math.min(1500,LIMIT ?? DEFAULT_SCORE_RUN_LIMIT);
     selected = await walkScoreDirtyTargets<ScoreDirtyTarget>({
       limit: LIMIT ?? DEFAULT_SCORE_RUN_LIMIT,
       signal,
       fetchPage: async (limit) => {
-        const query = scoreDirtyTargetsSql({ channels: CHANNELS, limit });
-        return q(query.text, query.values);
+        const prepared=await prepareScoreDirtyPage(q,{channels:CHANNELS,limit,maxCandidates:preparationRemaining});
+        preparationRemaining-=prepared.inspected;
+        log(`score: prepared ${prepared.inspected}, parked ${prepared.blocked}, ready ${prepared.targets.length}`);
+        return prepared.targets;
       },
       onPage: processTargets,
     });

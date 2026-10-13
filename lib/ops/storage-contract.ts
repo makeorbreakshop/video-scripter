@@ -79,6 +79,8 @@ export const STORAGE_CONTRACTS: StorageContract[] = [
     enforcedBy: 'one row per video thumbnail version; 31 M updates on 212 K rows keep ~10 % free space' },
   { table: 'touch_queue', policy: 'append-forever', budgetMb: 120, maxGrowthMbPerDay: 2,
     enforcedBy: 'processed rows are the dedupe memory for (kind, ref); never deleted by design' },
+  { table: 'mirror_dirty', policy: 'queue', budgetMb: 300, maxGrowthMbPerDay: 100,
+    enforcedBy: 'one pending key per dataset/entity; nightly export + fit exact-generation ACK removes consumed work. Alerts if consumers stop; no raw event bodies retained' },
   { table: 'obs_cache_dirty', policy: 'queue', budgetMb: 120, enforcedBy: 'drained by the observation materializer' },
   { table: 'score_dirty', policy: 'queue', budgetMb: 100, enforcedBy: 'drained by scripts/score-videos.ts' },
   { table: 'chunks', policy: 'static', budgetMb: 60, enforcedBy: 'legacy transcript chunks; not written since 2025-06' },

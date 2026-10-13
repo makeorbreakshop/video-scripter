@@ -1,3 +1,4 @@
+import {commitSemanticWatermark} from '../../lib/semantic/watermark-commit';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
@@ -175,7 +176,9 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
     }));
 
     const payloadsRefreshed = options.dry ? 0 : await refreshVideoPayloads(new Date(Date.now() - 60 * 60_000));
-    if (!options.dry) await writeWatermark(startedAt);
+    await commitSemanticWatermark({dry:!!options.dry,
+      capped:catalog.scanned>=CATALOG_MAX_ROWS || catalog.channel_ids.length>identityChannels.length,
+    },()=>writeWatermark(startedAt));
     console.log(JSON.stringify({ status: 'ok', dry: !!options.dry, changed_since: changedSince.toISOString(), videos, channels, payloads_refreshed: payloadsRefreshed,
       catalog: {
         scanned: catalog.scanned, pending: catalog.pending, embedded: catalog.embedded,

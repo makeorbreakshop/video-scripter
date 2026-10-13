@@ -1,3 +1,4 @@
+import { loadVerifiedObservationChanges, type ObservationCandidates } from './observation-candidates';
 import {
   applyObservationChanges,
   decodeObservationState,
@@ -228,6 +229,7 @@ export async function materializeObservationBatch(
     afterBegin?: (transaction: TransactionClient) => Promise<void>;
     /** Local blob copies: claim md5s and fetch only the blobs not held (obs-blob-store.ts). */
     blobStore?: ObsBlobStore;
+    deltaStore?: ObservationCandidates;
   },
 ): Promise<ObservationMaterializationPlan> {
   if (options.maxVideos > MATERIALIZER_LIMITS.videos || options.maxChanges > MATERIALIZER_LIMITS.changes
@@ -273,7 +275,9 @@ export async function materializeObservationBatch(
       video_id: claim.videoId, generation: claim.generation, last_change_id: claim.lastChangeId,
     })));
     const changeRows = claims.length
-      ? (await client.query(OBS_CHANGES_FOR_CLAIMS_SQL, [claimJson, options.maxChanges + 1])).rows
+      ? options.deltaStore
+        ? await loadVerifiedObservationChanges(client,claimJson,options.maxChanges+1,options.deltaStore)
+        : (await client.query(OBS_CHANGES_FOR_CLAIMS_SQL, [claimJson, options.maxChanges + 1])).rows
       : [];
     const changesTruncated = changeRows.length > options.maxChanges;
     const changes: ObservationChange[] = changeRows.slice(0, options.maxChanges).map((row) => ({

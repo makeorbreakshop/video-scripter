@@ -1,3 +1,4 @@
+import { ObservationCandidates, observationCandidatesPath } from '../lib/scoring/observation-candidates';
 // Bounded steady-state observation materializer. It reads only compact cache rows plus the
 // delta log captured by the database triggers; it never reads raw history tables.
 import dotenv from 'dotenv';
@@ -35,13 +36,15 @@ const pool = makeTimedPool({
   connectionString: process.env.DATABASE_URL, max: 2, timeoutMs: 60_000,
   application_name: supabaseApplicationName('observation-materializer'),
 });
+let deltaStore:ObservationCandidates|undefined;
+try{deltaStore=new ObservationCandidates(observationCandidatesPath());}catch(e){console.warn(`observation candidate cache unavailable: ${(e as Error).message}`);}
 let client: PoolClient | null = null;
 let traceStats: Record<string, number> = {};
 try {
   client = await pool.connect();
   const tracedClient = { query: (sql: string, values?: any[]) => trace.query(client!, sql, values) };
   const result = await materializeObservationBatch(tracedClient, {
-    maxVideos, maxChanges, maxCacheBytes, maxCompressedBytes, dryRun,
+    maxVideos, maxChanges, maxCacheBytes, maxCompressedBytes, dryRun,deltaStore,
     // Claim md5s, fetch only blobs not held locally; the scorer shares the same store, so what
     // this writes it no longer downloads (2026-09-29: claims were 6.3 MB/run of re-read blobs).
     blobStore: new DiskObsBlobStore(process.env.OBS_BLOB_DIR || path.join(process.cwd(), '.cache', 'obs-blobs')),
@@ -53,6 +56,7 @@ try {
   const s = result.stats;
   traceStats = {
     videos: s.videos, changes: s.changes, completed: s.completed,
+    local_delta_hits:deltaStore?.hits??0,local_delta_misses:deltaStore?.misses??0,
     partial: s.partial, bootstraps: s.bootstraps,
     deferred: s.deferred, oversize: s.oversize, compressed_bytes: s.compressedBytes,
   };
@@ -63,6 +67,7 @@ try {
   trace.markFailed();
   throw error;
 } finally {
+  deltaStore?.close();
   client?.release();
   await pool.end();
   trace.finish(traceStats);

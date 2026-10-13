@@ -70,6 +70,7 @@ export async function loadPriorRefs(q: QueryFn, ids: readonly string[]): Promise
                         and ${longformSql('p')}
                         and coalesce(p.privacy_status,'public') = 'public' and coalesce(p.view_count,0) > 0
                       order by p.published_at desc nulls last limit ${PRIOR_WINDOW}) p on true
+      where extract(epoch from (v.published_at-p.published_at))/86400.0 <= ${PRIOR_STALE_DAYS}
       order by r.id, p.published_at desc`,
     [ids as string[]]
   );

@@ -1,7 +1,7 @@
 import type { QueryFn } from './prior-load';
 import { longformSql } from './longform';
 import type { LaunchRow5 } from './growth';
-import { mirrorPageSql, type ExportRowMirror, type ExportMirrorSpec } from '../readings/export-row-mirror';
+import { syncIncrementalMirror, mirrorPageSql, type ExportRowMirror, type ExportMirrorSpec } from '../readings/export-row-mirror';
 import { chunk } from '../nightly/tracking-core';
 
 /** Original fit query, with a required finite video scope for parity and ambiguous ties. */
@@ -89,4 +89,38 @@ export async function loadLaunchFitRows(
    stats.rows=out.length;options.onPage?.({...stats});
  }
  mirror.finishScan();return out;
+}
+
+/** Complete local inputs plus only keys changed since the last committed synchronization. */
+export async function loadIncrementalLaunchFitRows(
+ q:QueryFn,mirror:ExportRowMirror,since:string,owner:string,
+ options:{maxBytes?:number;maxRows?:number;onPage?:(s:{videos:number;changed:number;bytes:number;rows:number})=>void}={},
+):Promise<LaunchRow5[]>{
+ const maxBytes=options.maxBytes??250_000_000,maxRows=options.maxRows??10_000_000;
+ if(![maxBytes,maxRows].every(n=>Number.isSafeInteger(n)&&n>0)||maxBytes>250_000_000||maxRows>10_000_000)throw Error('invalid launch-fit budgets');
+ const stats=await syncIncrementalMirror(mirror,LAUNCH_FIT_SPEC,async(sql,values)=>({rows:await q(sql,values)}),{
+  batch:500,maxRows:1_000_000,maxBytes,owner,scopeValue:since,
+  bootstrap:async()=>{
+   const ids=(await q(LAUNCH_FIT_IDS_SQL,[since])).map(r=>String(r.id));
+   if(ids.length>1_000_000)throw Error('launch-fit video budget exceeded');
+   let bytes=0,changed=0;
+   await loadLaunchFitRows(q,mirror,ids,since,{maxBytes,maxRows,onPage:s=>{bytes=s.bytes;changed=s.changed;options.onPage?.(s);}});
+   return {rows:mirror.count(),bytes,changed};
+  },
+ });
+ const out:LaunchRow5[]=[],ambiguous:string[]=[];
+ for(const row of mirror.rows()){
+  if(row.ambiguous){ambiguous.push(String(row.video_id));continue;}
+  if(!Array.isArray(row.pairs))throw Error('invalid launch-fit cached rows');
+  for(const p of row.pairs){out.push({hours:Number(p[0]),vh:Number(p[1]),v1:Number(p[2])});if(out.length>maxRows)throw Error('launch-fit row budget exceeded');}
+ }
+ let bytes=stats.bytes;
+ for(const ids of chunk(ambiguous,500)){
+  const rows=await q(LEGACY_LAUNCH_ROWS_SQL+' limit $3',[since,ids,50001]);
+  bytes+=Buffer.byteLength(JSON.stringify(rows));
+  if(rows.length>50000||bytes>maxBytes||out.length+rows.length>maxRows)throw Error('ambiguous launch-fit fallback budget exceeded');
+  out.push(...rows.map(r=>({hours:Number(r.hours),vh:Number(r.vh),v1:Number(r.v1)})));
+ }
+ options.onPage?.({videos:stats.rows,changed:stats.changed,bytes,rows:out.length});
+ return out;
 }

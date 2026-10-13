@@ -4,7 +4,7 @@ import path from 'node:path';
 test('the default scorer is queue-driven and statically incapable of raw-history fallback', () => {
   const script = fs.readFileSync(path.join(process.cwd(), 'scripts/score-videos.ts'), 'utf8');
   const hourly = script.slice(script.indexOf('async function score('), script.indexOf('async function final('));
-  expect(hourly).toContain('scoreDirtyTargetsSql({');
+  expect(hourly).toContain('prepareScoreDirtyPage(q,');
   expect(hourly).toContain('DEFAULT_SCORE_RUN_LIMIT');
   expect(hourly).not.toContain('ObservationCacheMissError');
   expect(hourly).toContain('SCORE_DIRTY_DEFER_SQL');

@@ -1,3 +1,4 @@
+import {readSemanticChangeWindow,type SemanticCursor} from '../../lib/semantic/change-window';
 import {
   buildVideoDocument,
   docHash,
@@ -60,6 +61,7 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
     [options.since],
   );
   const sqlCount = Number(countResult.rows[0].count);
+  let changeCursor:SemanticCursor|null=null;let scannedKeys=0;
   let cursorPublished: Date | null = null;
   let cursorId = '';
   let selected = 0;
@@ -68,17 +70,22 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
 
   while (options.limit == null || selected < options.limit) {
     const pageLimit = Math.min(READ_BATCH_SIZE, options.limit == null ? READ_BATCH_SIZE : options.limit - selected);
-    const rows = (await db().query<VideoRow>(
-      `${VIDEO_SELECT}
-        where v.published_at > $1
-          and coalesce(v.is_short, false) = false and v.duration <> 'P0D'
-          and ($2::timestamptz is null or (v.published_at, v.id) > ($2::timestamptz, $3))
-          and ($4::timestamptz is null or v.updated_at >= $4 or v.published_at >= $4)
-        order by v.published_at, v.id
-        limit $5`,
-      [options.since, cursorPublished, cursorId, options.updatedSince ?? null, pageLimit],
-    )).rows as VideoRow[];
-    if (!rows.length) break;
+    let rows:VideoRow[];let incrementalDone=false;
+    if(options.updatedSince){
+      const window=await readSemanticChangeWindow(db(),options.updatedSince,changeCursor,pageLimit);
+      scannedKeys+=window.ids.length;if(scannedKeys>100000)throw Error('semantic incremental key budget exhausted');
+      changeCursor=window.cursor;incrementalDone=window.done;
+      rows=window.ids.length?(await db().query<VideoRow>(`${VIDEO_SELECT}
+        where v.id=any($1::text[]) and v.published_at>$2
+          and coalesce(v.is_short,false)=false and v.duration<>'P0D'`,[window.ids,options.since])).rows:[];
+      if(!rows.length){if(incrementalDone)break;else continue;}
+    }else{
+      rows=(await db().query<VideoRow>(`${VIDEO_SELECT}
+        where v.published_at>$1 and coalesce(v.is_short,false)=false and v.duration<>'P0D'
+          and ($2::timestamptz is null or (v.published_at,v.id)>($2::timestamptz,$3))
+        order by v.published_at,v.id limit $4`,[options.since,cursorPublished,cursorId,pageLimit])).rows;
+      if(!rows.length)break;
+    }
     selected += rows.length;
     const hashes = await currentHashes('video', rows.map((row) => row.id), options.dimensions);
     const prepared: PreparedVideo[] = rows.map((row) => {
@@ -97,7 +104,7 @@ export async function embedVideos(options: EmbedVideosOptions): Promise<{ sqlCou
     cursorPublished = last.published_at;
     cursorId = last.id;
     console.log(`videos: scanned=${selected} changed=${toEmbed.length}`);
-    if (rows.length < pageLimit) break;
+    if (options.updatedSince ? incrementalDone : rows.length < pageLimit) break;
   }
 
   const estimate = estimateEmbeddingRun(toEmbed.map((item) => item.document));
