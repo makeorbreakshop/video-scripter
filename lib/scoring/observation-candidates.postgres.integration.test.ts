@@ -14,6 +14,12 @@ test('materializer reuses producer data only when the authoritative event digest
   const expected=(await c.query(OBS_CHANGES_FOR_CLAIMS_SQL,[claims,101])).rows;
   const modulePath=path.join(process.cwd(),'lib/scoring/observation-candidates.ts');const api=fs.existsSync(modulePath)?await import(modulePath):null;
   if(api){store=new api.ObservationCandidates(path.join(dir,'cache.sqlite'));store.putRss(expected.map((r:any)=>({...r,at:r.at.toISOString(),received_at:r.received_at.toISOString()})));}
+  const cold=new api.ObservationCandidates(path.join(dir,'cold.sqlite'));const coldQueries:string[]=[];
+  const coldClient={query:async(sql:string,values:any[])=>{coldQueries.push(sql);return c.query(sql,values);}};
+  try{
+   await api.loadVerifiedObservationChanges(coldClient,claims,101,cold);
+   assert.ok(coldQueries.some(s=>s===OBS_CHANGES_FOR_CLAIMS_SQL),'cold candidates should fall back after a tiny probe, not download all references plus all bodies');
+  }finally{cold.close();}
   let bytes=0;const client={query:async(sql:string,values:any[])=>{const r=await c.query(sql,values);bytes+=Buffer.byteLength(JSON.stringify(r.rows));return r;}};
   const load=()=>api?api.loadVerifiedObservationChanges(client,claims,101,store):client.query(OBS_CHANGES_FOR_CLAIMS_SQL,[claims,101]).then(r=>r.rows);
   const normalize=(rs:any[])=>rs.map(r=>({...r,at:new Date(r.at).toISOString(),received_at:r.received_at?new Date(r.received_at).toISOString():null}));

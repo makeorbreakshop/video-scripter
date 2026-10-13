@@ -56,6 +56,7 @@ try {
   const s = result.stats;
   traceStats = {
     videos: s.videos, changes: s.changes, completed: s.completed,
+    direct_delta_rows:deltaStore?.rawFallbackRows??0,
     local_delta_hits:deltaStore?.hits??0,local_delta_misses:deltaStore?.misses??0,
     partial: s.partial, bootstraps: s.bootstraps,
     deferred: s.deferred, oversize: s.oversize, compressed_bytes: s.compressedBytes,

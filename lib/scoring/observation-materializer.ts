@@ -1,4 +1,4 @@
-import { loadVerifiedObservationChanges, type ObservationCandidates } from './observation-candidates';
+import { OBS_CHANGES_FOR_CLAIMS_SQL, loadVerifiedObservationChanges, type ObservationCandidates } from './observation-candidates';
 import {
   applyObservationChanges,
   decodeObservationState,
@@ -156,18 +156,7 @@ export function planObservationMaterialization(
   };
 }
 
-export const OBS_CHANGES_FOR_CLAIMS_SQL = `
-  /* trace:observation.delta-read */
-  with claims as (
-    select * from jsonb_to_recordset($1::jsonb)
-      as x(video_id text, generation bigint, last_change_id bigint)
-  )
-  select l.change_id::text, l.video_id, l.source, l.operation, l.at, l.views,
-         l.time_basis, l.received_at, l.model_eligible, l.conflicted
-    from observation_change_log l join claims c using(video_id)
-   where l.change_id > c.last_change_id and l.change_id <= c.generation
-   order by l.change_id
-   limit $2`;
+export { OBS_CHANGES_FOR_CLAIMS_SQL } from './observation-candidates';
 
 export const OBS_CHANGES_DELETE_SQL = `
   /* trace:observation.delta-clear */
