@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { DatabaseSync } from 'node:sqlite';
 import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir,userInfo } from 'node:os';
@@ -7,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { ExportRowMirror,syncExportMirror,type ExportMirrorSpec } from './export-row-mirror';
 
-test('fresh exports reuse unchanged rows and faithfully apply inserts, corrections, deletes and duplicate video dates', {timeout:60000}, async()=>{
+test('fresh exports reuse unchanged rows and faithfully apply inserts, corrections, deletes and duplicate video dates', {skip:process.env.RUN_LOCAL_PG_TESTS!=='1',timeout:60000}, async()=>{
  const dir=mkdtempSync(path.join(tmpdir(),'export-mirror-pg-')),data=path.join(dir,'pg');
  execFileSync('initdb',['-D',data,'--no-locale','--auth-local=trust','--auth-host=reject'],{stdio:'pipe'});
  execFileSync('pg_ctl',['-D',data,'-l',path.join(dir,'pg.log'),'-o',`-k ${dir} -h '' -c shared_buffers=16MB`,'-w','start'],{stdio:'pipe'});
@@ -23,6 +24,13 @@ test('fresh exports reuse unchanged rows and faithfully apply inserts, correctio
   const query=async(sql:string,values:unknown[])=>c.query(sql,values);
   const first=await syncExportMirror(mirror,spec,query,options);assert.equal(first.changed,5);
   const warm=await syncExportMirror(mirror,spec,query,options);assert.equal(warm.changed,0);assert.equal(warm.bytes,0);
+  // A valid JSON body can be corrupted while its stored fingerprint is intact.
+  const disk=new DatabaseSync(path.join(dir,'cache.sqlite'));
+  disk.prepare('update rows set body=? where key=?').run(JSON.stringify({id:uuid(4),video_id:'wrong',snapshot_date:'2026-10-13',views:123456}),uuid(4));
+  disk.close();
+  const repaired=await syncExportMirror(mirror,spec,query,options);
+  assert.equal(repaired.changed,1,'a corrupt local body must be refetched, not accepted as unchanged');
+  assert.deepEqual([...mirror.rows()],(await c.query('select id,video_id,snapshot_date::text,views from fixture order by id')).rows);
   await c.query('delete from fixture where id=any($1::uuid[])',[[uuid(0),uuid(2),uuid(8)]]);
   await c.query('update fixture set views=900 where id=$1',[uuid(4)]);
   for(const n of [1,3,5,7,9])await c.query("insert into fixture values($1,'same-video','2026-10-13',$2)",[uuid(n),n]);

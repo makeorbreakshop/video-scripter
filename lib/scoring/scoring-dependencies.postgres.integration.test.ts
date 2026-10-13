@@ -18,13 +18,13 @@ test('native watermarks, dependency parity, concurrent dirtying, and repair coal
   c=new pg.Client({host:dir,database:'postgres',user:os.userInfo().username});await c.connect();
   await c.query(`set statement_timeout='10s';
     create table video_obs_cache(video_id text primary key, format int, last_change_id bigint, obs bytea);
-    create table obs_cache_dirty(video_id text primary key,generation bigint,requires_bootstrap boolean,marked_at timestamptz,not_before timestamptz);
+    create table obs_cache_dirty(video_id text primary key,generation bigint,requires_bootstrap boolean,marked_at timestamptz,not_before timestamptz,requested_at timestamptz);
     create table observation_change_log(video_id text,change_id bigint);
     create table video_day30_truth(video_id text,views bigint);`);
   const targets=[{id:'a'},{id:'b'},{id:'c'},{id:'d'}];
   const refs=new Map([['a',[{id:'p',pub:0,ageDays:1}]],['b',[{id:'q',pub:0,ageDays:1}]]]);
   for(const id of ['a','b','c','d','p','q'])await c.query('insert into video_obs_cache values($1,2,10,$2)',[id,encodeObservationState({...emptyObservationState(id,'2026-01-01T00:00:00Z'),lastChangeId:10,points:[{source:'rss',at:'2026-01-02T00:00:00Z',views:100,modelEligible:true,conflicted:false}]})]);
-  await c.query("insert into obs_cache_dirty values('q',11,false,now(),now()); update video_obs_cache set format=1 where video_id='c'; delete from video_obs_cache where video_id='d'");
+  await c.query("insert into obs_cache_dirty values('q',11,false,now(),now(),now()); update video_obs_cache set format=1 where video_id='c'; delete from video_obs_cache where video_id='d'");
   const q=async(sql:string,args?:any[])=>(await c!.query(sql,args)).rows;
   const old=await loadCachedRecords(q,['a','b','c','d','p','q'],{requireFormat2:true});
   const oldPartition=partitionTargetsByCacheDependencies(targets,refs,old.records,old.records);
@@ -35,7 +35,7 @@ test('native watermarks, dependency parity, concurrent dirtying, and repair coal
   // Freshness changes after the lightweight probe; the ordinary body query rejects it.
   let raced=false;const concurrent=async(sql:string,args?:any[])=>{
    const rows=await q(sql,args);
-   if(sql===SCORING_CACHE_READY_SQL&&!raced){raced=true;await c!.query("insert into obs_cache_dirty values('p',11,false,now(),now())");}
+   if(sql===SCORING_CACHE_READY_SQL&&!raced){raced=true;await c!.query("insert into obs_cache_dirty values('p',11,false,now(),now(),null)");}
    return rows;
   };
   assert.deepEqual((await loadScoringDependencies(concurrent,[{id:'a'}],refs)).missingIds,['p']);

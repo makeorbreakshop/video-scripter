@@ -39,6 +39,7 @@ suite('event materialization migration (real local PostgreSQL)', () => {
         snapshot_date date not null,
         view_count bigint,
         created_at timestamptz not null default now(),
+        days_since_published integer,
         primary key(video_id,snapshot_date)
       );
       create table public.view_samples (
@@ -71,13 +72,15 @@ suite('event materialization migration (real local PostgreSQL)', () => {
     `);
     const migration = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/20260911153000_event_driven_scoring.sql'), 'utf8');
     await pool.query(migration);
+    const waits=fs.readFileSync(path.join(process.cwd(),'sql/2026-10-13-score-dependency-waits.sql'),'utf8');
+    for(const statement of waits.replace(/^--.*$/gm,'').split(';').filter(s=>s.trim()))await pool.query(statement);
     const integrity = fs.readFileSync(path.join(process.cwd(), 'supabase/migrations/20260911221000_derived_video_foreign_keys.sql'), 'utf8');
     await pool.query(integrity);
   }, 30_000);
 
   beforeEach(async () => {
     await pool.query(`truncate view_snapshots,view_samples,rss_samples,video_scores,videos,observation_change_log,
-      obs_cache_dirty,score_dirty,series_dirty,video_obs_cache restart identity`);
+      obs_cache_dirty,score_dirty,series_dirty,video_obs_cache,video_day30_truth restart identity`);
   });
 
   afterAll(async () => {

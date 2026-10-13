@@ -21,7 +21,7 @@ import {
   observationsFromState, type ObservationChange, type ObservationState,
 } from '../lib/scoring/observation-state';
 import { upsertCacheRows } from '../lib/scoring/observation-materializer';
-import { OBS_DIRTY_CLEAR_SQL, type QueueClaim } from '../lib/scoring/materialization-queue';
+import { OBS_DIRTY_CLEAR_SQL, SCORE_DEPENDENCIES_READY_SQL, type QueueClaim } from '../lib/scoring/materialization-queue';
 import { OBS_CHANGES_DELETE_SQL, OBS_CHANGES_FOR_CLAIMS_SQL } from '../lib/scoring/observation-materializer';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
 
@@ -170,6 +170,7 @@ async function runBatch(batch: number): Promise<BootstrapBatchStats> {
       })))]);
       await tracedClient.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(ready.map((row) => row.claim))]);
     }
+    if (ready.length) await tracedClient.query(SCORE_DEPENDENCIES_READY_SQL, [ready.map(row => row.claim.video_id)]);
     await tracedClient.query(dryRun ? 'rollback' : 'commit');
     const stats = {
       videos: ready.length, raw_videos: rawIds.length, r2_videos: ready.length - rawIds.length,

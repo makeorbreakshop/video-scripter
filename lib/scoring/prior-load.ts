@@ -193,10 +193,15 @@ export async function loadScoringDependencies<T extends { id: string }>(
   const loaded = await loadCachedRecords(q, needed, { ...options, requireFormat2: true });
   const confirmed = partitionTargetsByCacheDependencies(preflight.ready, priorsOf, loaded.records, loaded.records);
   const readyIds = new Set(confirmed.ready.map(t => t.id));
+  const missingIds = [...new Set([...preflight.missingIds, ...confirmed.missingIds])];
+  const missing = new Set(missingIds);
+  const missingByTarget = new Map(targets.filter(t => !readyIds.has(t.id)).map(t => [t.id,
+    [...new Set([t.id, ...(priorsOf.get(t.id) ?? []).map(p => p.id)])].filter(id => missing.has(id)),
+  ]));
   return {
     ready: confirmed.ready,
     blocked: targets.filter(t => !readyIds.has(t.id)),
-    missingIds: [...new Set([...preflight.missingIds, ...confirmed.missingIds])],
+    missingIds, missingByTarget,
     records: loaded.records,
     skippedBodyIds: allIds.length - needed.length,
   };

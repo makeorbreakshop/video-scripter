@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import { createHash } from 'node:crypto';
 
 export interface ExportMirrorSpec {
   name:string;
@@ -47,8 +48,12 @@ export class ExportRowMirror {
   }
   beginScan():void{this.db.exec('UPDATE rows SET seen=0');}
   held(keys:string[]):Record<string,string>{
-    const result:Record<string,string>={};const get=this.db.prepare('SELECT hash FROM rows WHERE key=?');
-    for(const key of keys){const row=get.get(key);if(row)result[key]=String(row.hash);}
+    const result:Record<string,string>={};const get=this.db.prepare('SELECT hash,body FROM rows WHERE key=?');
+    for(const key of keys){
+      const row=get.get(key);
+      // Only offer a fingerprint for bytes we actually hold. A corrupt cache is a miss.
+      if(row && createHash('md5').update(String(row.body)).digest('hex')===row.hash)result[key]=String(row.hash);
+    }
     return result;
   }
   apply(keys:string[],page:Delta):void{
@@ -65,7 +70,12 @@ export class ExportRowMirror {
     }catch(e){this.db.exec('ROLLBACK');throw e;}
   }
   finishScan():void{this.db.exec('DELETE FROM rows WHERE seen=0');}
-  *rows():Generator<Record<string,unknown>>{for(const r of this.db.prepare('SELECT body FROM rows ORDER BY key').iterate())yield JSON.parse(String(r.body));}
+  *rows(keys?:readonly string[]):Generator<Record<string,unknown>>{
+    if(keys){
+      const get=this.db.prepare('SELECT body FROM rows WHERE key=?');
+      for(const key of keys){const row=get.get(key);if(row)yield JSON.parse(String(row.body));}
+    }else for(const row of this.db.prepare('SELECT body FROM rows ORDER BY key').iterate())yield JSON.parse(String(row.body));
+  }
   close():void{this.db.close();}
 }
 export async function syncExportMirror(

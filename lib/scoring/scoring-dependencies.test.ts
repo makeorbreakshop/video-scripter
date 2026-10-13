@@ -23,16 +23,16 @@ test('does not download any histories for incomplete dependency sets',async()=>{
  const db=database(['a','b','p']);
  const result=await loadScoringDependencies(db.q,targets,refs);
  expect(result.ready).toEqual([{id:'a'}]);expect(result.blocked).toEqual([{id:'b'}]);
- expect(result.missingIds).toEqual(['q']);
+ expect(result.missingIds).toEqual(['q']);expect([...result.missingByTarget]).toEqual([['b',['q']]]);
  expect(db.bodyIds.flat().sort()).toEqual(['a','p']);
 });
 test('all blocked means zero body reads, while missing IDs still request repair',async()=>{
  const db=database(['a','b']);const result=await loadScoringDependencies(db.q,targets,refs);
- expect(db.bodyIds).toEqual([]);expect(result.missingIds.sort()).toEqual(['p','q']);
+ expect(db.bodyIds).toEqual([]);expect(result.missingIds.sort()).toEqual(['p','q']);expect([...result.missingByTarget]).toEqual([['a',['p']],['b',['q']]]);
 });
 test('a dependency dirtied after preflight is never scored with stale data',async()=>{
  const db=database(['a','b','p','q'],['p']);const result=await loadScoringDependencies(db.q,targets,refs);
- expect(result.ready).toEqual([{id:'b'}]);expect(result.missingIds).toEqual(['p']);
+ expect(result.ready).toEqual([{id:'b'}]);expect(result.missingIds).toEqual(['p']);expect([...result.missingByTarget]).toEqual([['a',['p']]]);
 });
 test('shared dependencies and overlapping target/prior identities are downloaded once',async()=>{
  const db=database(['a','b','p']);

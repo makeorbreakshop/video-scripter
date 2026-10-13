@@ -40,6 +40,9 @@ import {
   ObservationCacheMissError,
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
+import { loadLaunchFitRows, LAUNCH_FIT_IDS_SQL, LAUNCH_FIT_SPEC } from '../lib/scoring/launch-fit-mirror';
+import { ExportRowMirror } from '../lib/readings/export-row-mirror';
+import { createHash } from 'node:crypto';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
 import fs from 'node:fs';
@@ -49,7 +52,7 @@ import { OBSERVATION_SCORE_VERSION } from '../lib/scoring/observations';
 import { runScoringWorker, scoringTargetBatches } from '../lib/scoring/worker-runner';
 import { activeParamsQuery } from '../lib/scoring/params-status';
 import {
-  SCORE_DIRTY_CLEAR_SQL, SCORE_DIRTY_DEFER_SQL, ensureObservationMaterializationSql,
+  SCORE_DIRTY_CLEAR_SQL, SCORE_DIRTY_DEFER_SQL, SCORE_DIRTY_WAIT_SQL, ensureObservationMaterializationSql,
   scoreDirtyTargetsSql, walkScoreDirtyTargets, type QueueClaim, type ScoreDirtyTarget,
 } from '../lib/scoring/materialization-queue';
 
@@ -267,27 +270,22 @@ async function fit() {
 // query used. The day-1 side accepts either source, because at 24h a snapshot's midday stamp is
 // within the tolerance that matters.
 async function launchRows(): Promise<LaunchRow5[]> {
-  const rows = await q(
-    `with lf as (
-       select v.id, v.published_at from videos v
-        where v.published_at >= $1::date and ${longformSql('v')}),
-     samp as (
-       select s.video_id, extract(epoch from (s.sampled_at - lf.published_at))/3600.0 as hours, s.view_count
-         from view_samples s join lf on lf.id = s.video_id where s.view_count > 0),
-     d1 as (
-       select distinct on (video_id) video_id, view_count as v1 from (
-         select video_id, hours, view_count from samp
-         union all
-         select s.video_id, extract(epoch from (s.snapshot_date::timestamptz + interval '12 hours' - lf.published_at))/3600.0, s.view_count
-           from view_snapshots s join lf on lf.id = s.video_id where s.view_count > 0
-       ) o where hours between 21 and 27 order by video_id, abs(hours - 24))
-     select o.hours, o.view_count as vh, d1.v1
-       from samp o join d1 on d1.video_id = o.video_id
-      where o.hours > 0 and o.hours < 20`,
-    [LAUNCH_FIT_SINCE]
-  );
-  log(`fit: launch ladder fed by ${rows.length} (view_samples, day-1) pairs since ${LAUNCH_FIT_SINCE}`);
-  return rows.map((r: any) => ({ hours: Number(r.hours), vh: Number(r.vh), v1: Number(r.v1) }));
+  const ids = (await q(LAUNCH_FIT_IDS_SQL, [LAUNCH_FIT_SINCE])).map(r => String(r.id));
+  if (ids.length > 1000000) throw new Error('launch-fit video budget exceeded');
+  const dbUrl = new URL(process.env.DATABASE_URL!);
+  const identity = JSON.stringify({ host:dbUrl.hostname,database:dbUrl.pathname,project:dbUrl.username,
+    source:LAUNCH_FIT_SPEC,since:LAUNCH_FIT_SINCE,version:1 });
+  const dir = path.join(process.cwd(), '.cache', 'launch-fit');
+  fs.mkdirSync(dir, {recursive:true,mode:0o700});
+  const mirror = new ExportRowMirror(path.join(dir,createHash('sha256').update(identity).digest('hex').slice(0,16)+'.sqlite'));
+  try {
+    mirror.bind(identity);
+    const rows = await loadLaunchFitRows(q,mirror,ids,LAUNCH_FIT_SINCE,{
+      onPage:s=>{if(s.videos%5000===0)log(`fit mirror: ${s.videos} videos, ${s.changed} changed, ${s.bytes} body bytes`);},
+    });
+    log(`fit: launch ladder fed by ${rows.length} source-validated (view_samples, day-1) pairs since ${LAUNCH_FIT_SINCE}`);
+    return rows;
+  } finally { mirror.close(); }
 }
 
 // Long-tail table: every video with BOTH a day-27..33 snapshot and a later view count at
@@ -474,7 +472,7 @@ async function v5Batch(group: { id: string; channel_id: string }[], params: Glob
       o: scoreV5({ vt: latest.views, age: latest.day, snaps, priors: curvePriors, priorMultLogs, params }),
     });
   }
-  return { scores: out, blocked: partition.blocked, missingIds: partition.missingIds };
+  return { scores: out, blocked: partition.blocked, missingIds: partition.missingIds, missingByTarget: partition.missingByTarget };
 }
 
 /**
@@ -557,9 +555,9 @@ async function score(signal: AbortSignal) {
       if (batch.missingIds.length) await q(request.text, request.values as any[]);
       const blockedIds = new Set(batch.blocked.map((row) => row.id));
       const blockedClaims = group.filter((row) => row.generation !== undefined && blockedIds.has(row.id)).map((row) => ({
-        video_id: row.id, generation: Number(row.generation),
+        video_id: row.id, generation: Number(row.generation), dependency_ids: batch.missingByTarget.get(row.id) ?? [],
       }));
-      if (blockedClaims.length) await q(SCORE_DIRTY_DEFER_SQL, [JSON.stringify(blockedClaims), 300]);
+      if (blockedClaims.length) await q(SCORE_DIRTY_WAIT_SQL, [JSON.stringify(blockedClaims)]);
       deferred += batch.blocked.length;
       if (batch.blocked.length) {
         log(`score: deferred ${batch.blocked.length}; ${batch.missingIds.length} cache row(s) need materialization`);

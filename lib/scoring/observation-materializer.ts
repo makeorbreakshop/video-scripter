@@ -9,7 +9,7 @@ import {
 } from './observation-state';
 import { OBS_CACHE_V2_UPSERT_SQL } from './obs-cache';
 import { chunkByBytes, UPSERT_CHUNK_BYTES } from './upsert-chunks';
-import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLAIM_VERSIONED_SQL, OBS_CACHE_BLOBS_SQL, OBS_DIRTY_CLEAR_SQL, type QueueClaim } from './materialization-queue';
+import { OBS_DIRTY_CLAIM_SQL, OBS_DIRTY_CLAIM_VERSIONED_SQL, OBS_CACHE_BLOBS_SQL, OBS_DIRTY_CLEAR_SQL, SCORE_DEPENDENCIES_READY_SQL, type QueueClaim } from './materialization-queue';
 import type { ObsBlobStore } from './obs-blob-store';
 
 export const MATERIALIZER_LIMITS = {
@@ -293,6 +293,7 @@ export async function materializeObservationBatch(
       }))) ]);
     }
     if (plan.completed.length) await client.query(OBS_DIRTY_CLEAR_SQL, [JSON.stringify(plan.completed)]);
+    if (plan.completed.length) await client.query(SCORE_DEPENDENCIES_READY_SQL, [plan.completed.map(c => c.video_id)]);
     if (plan.oversize.length) await client.query(OBS_DIRTY_OVERSIZE_SQL, [JSON.stringify(plan.oversize)]);
     if (plan.needsBootstrap.length) {
       await client.query(OBS_DIRTY_REQUIRE_BOOTSTRAP_SQL, [JSON.stringify(plan.needsBootstrap)]);

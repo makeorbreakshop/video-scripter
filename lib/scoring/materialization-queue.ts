@@ -8,36 +8,70 @@ export interface ScoreDirtyTarget {
   generation: string | number;
 }
 
+// Reserve half the video slots for requested score inputs; the rest remains oldest-first.
+// Both lanes still share the existing global cache-byte budget.
+const OBS_DUE_CTES = `
+  priority as materialized (
+    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at
+      from obs_cache_dirty d
+     where d.not_before <= now() and not d.requires_bootstrap and d.requested_at is not null
+     order by d.requested_at, d.video_id
+     limit floor($1::numeric / 2)::int
+  ), fifo as materialized (
+    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at
+      from obs_cache_dirty d
+     where d.not_before <= now() and not d.requires_bootstrap
+       and not exists (select 1 from priority p where p.video_id=d.video_id)
+     order by d.not_before, d.marked_at, d.video_id
+     limit $1 - (select count(*) from priority)
+  ), due as materialized (
+    select p.*, 0 as lane from priority p
+    union all
+    select f.*, 1 as lane from fifo f
+  )`;
+
+// Keep FIFO progress at the byte cap too. Large priority blobs join FIFO while both
+// lanes have work. Reserve the oldest FIFO item (or its prefix up to half the cap),
+// give priority the rest, then lend unused priority bytes back to FIFO.
+const OBS_BUDGET_CTES = `
+  candidates as materialized (
+    select d.video_id,d.generation,d.requires_bootstrap,d.not_before,d.marked_at,
+           case when d.lane=0 and coalesce(octet_length(c.obs),0)>$2/2
+                     and exists(select 1 from due where lane=1) then 1 else d.lane end as lane,
+           c.format,c.last_change_id,v.published_at,
+           coalesce(octet_length(c.obs),0)::bigint as cache_bytes
+      from due d
+      left join video_obs_cache c on c.video_id=d.video_id
+      left join videos v on v.id=d.video_id
+     where coalesce(octet_length(c.obs),0)<=$2
+  ), running as materialized (
+    select c.*,sum(cache_bytes) over(partition by lane order by not_before,marked_at,video_id) as running_bytes
+      from candidates c
+  ), reservation as (
+    select greatest(
+      coalesce((select cache_bytes from running where lane=1 order by not_before,marked_at,video_id limit 1),0),
+      coalesce((select max(running_bytes) from running where lane=1 and running_bytes<=$2/2),0)
+    ) as fifo_bytes
+  ), priority_fit as materialized (
+    select r.* from running r cross join reservation b where r.lane=0 and r.running_bytes<=$2-b.fifo_bytes
+  ), budgeted as (
+    select * from priority_fit
+    union all
+    select r.* from running r where r.lane=1
+      and r.running_bytes <= $2-coalesce((select sum(cache_bytes) from priority_fit),0)
+  )`;
+
 export const OBS_DIRTY_CLAIM_SQL = `
   /* trace:observation.queue-claim */
   -- Limit on the queue's own due index first; join caches/videos only for that slice, and
   -- detoast obs blobs only for rows that fit the running byte budget.
-  with due as materialized (
-    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at
-      from obs_cache_dirty d
-     where d.not_before <= now() and not d.requires_bootstrap
-     order by d.not_before, d.marked_at, d.video_id
-     limit $1
-  ), candidates as materialized (
-    select d.*, c.format, c.last_change_id, v.published_at,
-           coalesce(octet_length(c.obs), 0)::bigint as cache_bytes
-      from due d
-      left join video_obs_cache c on c.video_id = d.video_id
-      left join videos v on v.id = d.video_id
-     where coalesce(octet_length(c.obs), 0) <= $2
-  ), budgeted as (
-    select c.*, sum(c.cache_bytes) over (
-      order by c.not_before, c.marked_at, c.video_id
-    ) as running_bytes
-      from candidates c
-  )
+  with ${OBS_DUE_CTES}, ${OBS_BUDGET_CTES}
   select b.video_id, b.generation, b.requires_bootstrap, b.format, b.last_change_id,
          oc.obs, b.published_at
     from budgeted b
     join obs_cache_dirty d on d.video_id=b.video_id and d.generation=b.generation
     left join video_obs_cache oc on oc.video_id=b.video_id
-   where b.running_bytes <= $2
-   order by b.not_before, b.marked_at, b.video_id`;
+   order by b.lane, b.not_before, b.marked_at, b.video_id`;
 
 /**
  * OBS_DIRTY_CLAIM_SQL for a materializer holding local blob copies: the same claim, ordering and
@@ -48,32 +82,13 @@ export const OBS_DIRTY_CLAIM_VERSIONED_SQL = `
   /* trace:observation.queue-claim-versioned */
   -- Limit on the queue's own due index first; join caches/videos only for that slice, and
   -- detoast obs blobs only for rows that fit the running byte budget.
-  with due as materialized (
-    select d.video_id, d.generation, d.requires_bootstrap, d.not_before, d.marked_at
-      from obs_cache_dirty d
-     where d.not_before <= now() and not d.requires_bootstrap
-     order by d.not_before, d.marked_at, d.video_id
-     limit $1
-  ), candidates as materialized (
-    select d.*, c.format, c.last_change_id, v.published_at,
-           coalesce(octet_length(c.obs), 0)::bigint as cache_bytes
-      from due d
-      left join video_obs_cache c on c.video_id = d.video_id
-      left join videos v on v.id = d.video_id
-     where coalesce(octet_length(c.obs), 0) <= $2
-  ), budgeted as (
-    select c.*, sum(c.cache_bytes) over (
-      order by c.not_before, c.marked_at, c.video_id
-    ) as running_bytes
-      from candidates c
-  )
+  with ${OBS_DUE_CTES}, ${OBS_BUDGET_CTES}
   select b.video_id, b.generation, b.requires_bootstrap, b.format, b.last_change_id,
          md5(oc.obs) as obs_md5, b.published_at
     from budgeted b
     join obs_cache_dirty d on d.video_id=b.video_id and d.generation=b.generation
     left join video_obs_cache oc on oc.video_id=b.video_id
-   where b.running_bytes <= $2
-   order by b.not_before, b.marked_at, b.video_id`;
+   order by b.lane, b.not_before, b.marked_at, b.video_id`;
 
 export const OBS_CACHE_BLOBS_SQL = `
   /* trace:observation.cache-blobs */
@@ -92,7 +107,7 @@ export const SCORE_DIRTY_CLEAR_SQL = `
 export const SCORE_DIRTY_DEFER_SQL = `
   /* trace:score.queue-defer */
   update score_dirty d set not_before = greatest(d.not_before, now() + ($2 || ' seconds')::interval),
-         attempts = d.attempts + 1, claimed_at = null
+         attempts = d.attempts + 1, claimed_at = null, waiting_on = null, waiting_until = null
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
@@ -108,14 +123,16 @@ export function ensureObservationMaterializationSql(ids: readonly string[]): { t
         left join video_obs_cache c on c.video_id=r.video_id
        group by r.video_id, c.last_change_id, c.format
     )
-    insert into obs_cache_dirty(video_id,generation,requires_bootstrap,marked_at,not_before)
-    select video_id,generation,not has_v2,now(),now() from state
+    insert into obs_cache_dirty(video_id,generation,requires_bootstrap,marked_at,not_before,requested_at)
+    select video_id,generation,not has_v2,now(),now(),now() from state
     on conflict (video_id) do update set
       generation=greatest(obs_cache_dirty.generation,excluded.generation),
       requires_bootstrap=obs_cache_dirty.requires_bootstrap or excluded.requires_bootstrap,
       marked_at=excluded.marked_at,
+      requested_at=coalesce(obs_cache_dirty.requested_at,excluded.requested_at),
       not_before=least(obs_cache_dirty.not_before,excluded.not_before)
-    where excluded.generation > obs_cache_dirty.generation
+    where obs_cache_dirty.requested_at is null
+       or excluded.generation > obs_cache_dirty.generation
        or (excluded.requires_bootstrap and not obs_cache_dirty.requires_bootstrap)
        or excluded.not_before < obs_cache_dirty.not_before`,
     values: [unique],
@@ -141,7 +158,7 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
         from score_dirty d
         join videos v on v.id = d.video_id
         left join video_scores sc on sc.video_id = v.id
-       where d.not_before <= now() and sc.video_id is null
+       where d.not_before <= now() and (d.waiting_until is null or d.waiting_until <= now()) and sc.video_id is null
          and v.published_at >= now() - interval '7 days'
          and ${eligible}
        order by v.view_count desc nulls last, v.published_at desc, d.marked_at, d.video_id
@@ -151,7 +168,7 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
         from score_dirty d
         join videos v on v.id = d.video_id
         left join video_scores sc on sc.video_id = v.id
-       where d.not_before <= now()
+       where d.not_before <= now() and (d.waiting_until is null or d.waiting_until <= now())
          and ${eligible}
          and not exists (select 1 from initial i where i.id = v.id)
          and (sc.video_id is null or now() >= sc.scored_at + case
@@ -212,3 +229,43 @@ export async function walkScoreDirtyTargets<T extends ScoreDirtyTarget>(options:
   }
   return selected;
 }
+
+// Recovery deadline is independent of not_before: new observations may advance that due time.
+export const SCORE_DIRTY_WAIT_SQL = `
+  /* trace:score.dependency-wait */
+  with requests as (
+    select * from jsonb_to_recordset($1::jsonb)
+      as x(video_id text, generation bigint, dependency_ids text[])
+  )
+  update score_dirty d set
+    waiting_on = x.dependency_ids,
+    waiting_until = case when exists (
+      select 1 from unnest(x.dependency_ids) as needed(video_id)
+      left join video_obs_cache c using(video_id)
+      left join obs_cache_dirty o using(video_id)
+      where c.format is distinct from 2 or c.last_change_id is null
+         or (o.video_id is not null and c.last_change_id < o.generation)
+    ) then now() + interval '15 minutes' else null end,
+    claimed_at = null, attempts = d.attempts + 1,
+    not_before=greatest(d.not_before,now()+interval '5 minutes')
+  from requests x where d.video_id=x.video_id and d.generation=x.generation`;
+
+/** Run after cache upsert and queue-clear, inside their transaction. No change is published early. */
+export const SCORE_DEPENDENCIES_READY_SQL = `
+  /* trace:score.dependency-wake */
+  with candidates as materialized (
+    select d.video_id,d.generation from score_dirty d
+     where d.waiting_until is not null and d.waiting_on && $1::text[]
+     order by d.video_id limit 1000
+  )
+  update score_dirty d set waiting_on=null,waiting_until=null
+    from candidates p
+   where d.video_id=p.video_id and d.generation=p.generation
+     and d.waiting_until is not null
+     and not exists (
+       select 1 from unnest(d.waiting_on) as needed(video_id)
+       left join video_obs_cache c using(video_id)
+       left join obs_cache_dirty o using(video_id)
+       where c.format is distinct from 2 or c.last_change_id is null
+          or (o.video_id is not null and c.last_change_id < o.generation)
+     )`;
