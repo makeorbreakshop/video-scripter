@@ -183,10 +183,7 @@ export async function recordTitleChange(
         where video_id = $4`,
       [r.phase, r.launch_until, r.next_check, videoId]
     );
-  } else {
-    await pool.query(
-      `update track_schedule set last_title_check = now() where video_id = $1`, [videoId]
-    ).catch(() => {});
   }
+  // A sync already stamped video_title_watch above; no duplicate scheduler checkpoint.
   return { kind, version: plan.newVersion };
 }

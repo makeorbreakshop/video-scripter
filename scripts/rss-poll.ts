@@ -83,14 +83,6 @@ const secs = (from: number) => ((Date.now() - from) / 1000).toFixed(1);
 const PENDING = path.join(process.cwd(), 'logs', 'rss-poll-pending.ndjson');
 /** Rows per INSERT. 5K keeps each statement well under the pooler's parameter ceiling. */
 const CHUNK = 5000;
-/**
- * How stale an observation stamp may get before we rewrite it. The CHANGE/SYNC rule only needs
- * evidence inside a 7-day window, so re-stamping the same ~50K videos every 5 minutes is pure
- * write amplification — it was the bulk of a 178.9 s flush. An hour keeps the evidence
- * effectively fresh and makes the steady-state stamp update touch almost nothing.
- */
-const STAMP_MAX_AGE = "interval '1 hour'";
-
 // ---------------------------------------------------------------- buffers
 
 interface Buffers {
@@ -198,11 +190,8 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
       where video_id = any($1)`,
     b.reentries, (p) => { const r = reenter(now); return [p, r.launch_until, r.next_check]; });
 
-  await insert('track_schedule.checked',
-    `update track_schedule set last_title_check = $2
-      where video_id = any($1) and (last_title_check is null or last_title_check < now() - ${STAMP_MAX_AGE})
-      returning 1`,
-    b.titleChecks, (p) => [p, now], true);
+  // video_title_watch is the sole title-observation evidence. The old schedule stamp
+  // has no readers; writing it again costs a second row update for the same check.
 
   await insert('thumbnail_versions.due_now',
     `update thumbnail_versions t set last_checked = 'epoch'

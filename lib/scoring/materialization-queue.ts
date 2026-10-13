@@ -92,7 +92,7 @@ export const SCORE_DIRTY_CLEAR_SQL = `
 export const SCORE_DIRTY_DEFER_SQL = `
   /* trace:score.queue-defer */
   update score_dirty d set not_before = greatest(d.not_before, now() + ($2 || ' seconds')::interval),
-         attempts = d.attempts + 1
+         attempts = d.attempts + 1, claimed_at = null
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
@@ -164,9 +164,23 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
       select i.*, 0 as lane from initial i
       union all
       select r.*, 1 as lane from refresh r
+    ), locked as materialized (
+      -- Producers lock queue keys in video-id order. Use that same order for a batch.
+      select d.video_id, d.generation
+        from score_dirty d join picked p on p.id = d.video_id and p.generation = d.generation
+       order by d.video_id
+       for update of d
+    ), claimed as (
+      -- Commit this marker BEFORE loading score inputs. An enqueue that already holds the
+      -- row lock finishes first; subsequent reads see its evidence. Later enqueues advance
+      -- generation, so an old worker cannot acknowledge their work.
+      update score_dirty d set claimed_at = clock_timestamp()
+        from locked l
+       where d.video_id = l.video_id and d.generation = l.generation
+      returning d.video_id, d.generation
     )
-    select id, channel_id, published_at::text as published_at, generation::text as generation
-      from picked
+    select p.id, p.channel_id, p.published_at::text as published_at, c.generation::text as generation
+      from picked p join claimed c on c.video_id = p.id
      order by lane,
               case when lane = 0 then view_count end desc nulls last,
               case when lane = 0 then published_at end desc,
