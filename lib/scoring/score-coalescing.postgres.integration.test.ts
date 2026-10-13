@@ -1,5 +1,5 @@
 // Isolated native PostgreSQL. Never loads credentials or contacts production.
-// RUN_LOCAL_PG_TESTS=1 node --import tsx --test lib/scoring/score-coalescing.postgres.test.ts
+// RUN_LOCAL_PG_TESTS=1 node --import tsx --test lib/scoring/score-coalescing.postgres.integration.test.ts
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
