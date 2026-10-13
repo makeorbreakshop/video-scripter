@@ -19,7 +19,7 @@ Identical export rows, fit pairs and scores for fixed input; empty warm synchron
 - [x] Reuse same changed-key mechanism for fit inputs with existing exact pair semantics and bounded bootstrap.
 - [x] Semantic content revision, source/no-op delta handling where justified, native outcome tests and actual query-path integration.
 - [x] Ready-score preparation / repeated prior reads and wake-lock regression; preserve producer generations and fairness.
-- [ ] Refine, review, scoped regressions, real indexed plans, bounded canary and reversible deployment; measured traffic receipt.
+- [x] Refine, review, scoped regressions, real indexed plans, bounded canary and reversible deployment; measured traffic receipt.
 ## TDD Progress (each unit)
 - [x] Step1: Write failing test (RED)
 - [x] Step2: Run test - CONFIRM it fails
@@ -35,9 +35,21 @@ Capture adds queue writes; coalesce pending marks and guard exact-generation cla
 No bulk live data reads without fresh usage check and explicit finite budget. Local fixture first. Production catalog/plan reads <=1MB per diagnostic batch, statement timeout10s and lock timeout1s. Bootstrap remains existing finite export/fit limits; do not silently expand them. Two failed fixes at same boundary require re-diagnosis. No provider move or new spending.
 
 ## Deployment progress
-28a1805 installed 2026-10-13 6:52 PM ET. Additive trigger migrations committed before consumer cutover; online semantic index valid (51.2 MB). Bounded indexed production plans captured locally. Independent reviewer passed both rounds; no data deletion or R2 cutover. Snapshot admission capped at4Mkeys/50MBchanged bodies; fit canary1Mvideos/10Mpairs/50MBbodies. Fresh org usage674.798GB, $38.23 cycle egress overage; existing explicit deployment approval covers bounded validation. Final live receipts pending.
+28a1805 installed 2026-10-13 6:52 PM ET. Additive trigger migrations committed before consumer cutover; online semantic index valid (51.2 MB). Bounded indexed production plans captured locally. Independent reviewer passed both rounds; no data deletion or R2 cutover. Snapshot admission capped at4Mkeys/50MBchanged bodies; fit canary1Mvideos/10Mpairs/50MBbodies. Fresh org usage674.798GB, $38.23 cycle egress overage; existing explicit deployment approval covers bounded validation. Final live receipts completed below.
 
 ## Recovery details
 Mirror row completeness and server checkpoints reject missing rows and restored stale files. For an explicit rebuild, stop the dataset job, back up SQLite, change its capture-epoch metadata to a different value, and rerun with finite budgets; never manually forge server checkpoint. TRUNCATE invalidates capture epochs. SQL rollback is `sql/rollback/2026-10-13-incremental-database.sql` plus scoped file backups.
 
 Semantic incremental scans use indexed change-key windows (5000 keys/page,100000 keys/run), preserving SQL timestamp microseconds. A capped catalog/identity pass now fails without advancing its watermark; large bursts still require bounded recovery instead of falsely reporting success. Existing raw history, mathematical scoring rules, RSS cadence and coverage remain intact.
+
+
+## Completed live validation — 7:07 PM ET
+Adaptive correction `abff9f4` installed at 7:01 PM ET after real producer reuse was only 7/5,475; a 16-event probe now avoids duplicate reads on cold batches. Native red/green and independent review passed. First adaptive scheduled run completed 939 videos / 3,076 deltas with 464,486 wire bytes and zero failures.
+
+Snapshot admission: 186,012,561 wire bytes, 3,847,852 complete rows. Next live refresh: 249,062 bytes (99.87% lower for this interval), 666 changed bodies and 3,847,989 complete rows, identical full artifact format. No new R2 cutover/upload.
+
+Fit admission safely hit its initial 50 MB changed-body cap; bounded 150 MB additional-body resume reused partial local content and completed 2,548,270 fitting pairs. Immediate second pass: same pair count, zero changed bodies, 1.255 seconds. Separate 5 MB-capped warm check: 847 actual database bytes, 1.352 seconds, same complete pair count. No training/model parameters were written by these canaries.
+
+First three scheduled scorer runs scored 166/166, 175/175 and 166/166 ready targets, with zero deferrals or failures. Semantic 10-row dry check used 5,628 bytes without watermark changes. All 19 installed file hashes verified; all seven affected schedules loaded. Raw history, scoring math, cadence and R2 hold preserved.
+
+Existing RSS provider HTTP 404/500 responses predate deployment and need separate diagnosis. Videos/video_scores mirrors still need initial scheduled admission. Full post-change daily bill and actual scheduled nightly model fit remain future measurements, not claimed savings. Canonical receipts: `/Users/brandoncullum/shared-memory/knowledge/projects/video-scripter/2026-10-13-supabase-egress/incremental-database-deployed.md` and `incremental-validation/`.
