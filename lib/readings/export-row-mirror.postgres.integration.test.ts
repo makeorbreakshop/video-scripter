@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import assert from 'node:assert/strict';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir,userInfo } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -13,7 +13,7 @@ test('fresh exports reuse unchanged rows and faithfully apply inserts, correctio
  execFileSync('initdb',['-D',data,'--no-locale','--auth-local=trust','--auth-host=reject'],{stdio:'pipe'});
  execFileSync('pg_ctl',['-D',data,'-l',path.join(dir,'pg.log'),'-o',`-k ${dir} -h '' -c shared_buffers=16MB`,'-w','start'],{stdio:'pipe'});
  const c=new pg.Client({host:dir,database:'postgres',user:userInfo().username});await c.connect();
- const mirror=new ExportRowMirror(path.join(dir,'cache.sqlite'));
+ let mirror=new ExportRowMirror(path.join(dir,'cache.sqlite'));
  const spec:ExportMirrorSpec={name:'fixture',from:'fixture',key:'id',keyType:'uuid',projection:'id,video_id,snapshot_date::text,views'};
  const options={batch:2,maxRows:100,maxBytes:100000};
  const uuid=(n:number)=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
@@ -38,6 +38,31 @@ test('fresh exports reuse unchanged rows and faithfully apply inserts, correctio
   const expected=(await c.query('select id,video_id,snapshot_date::text,views from fixture order by id')).rows;
   assert.deepEqual([...mirror.rows()],expected);
   const warmAgain=await syncExportMirror(mirror,spec,query,options);assert.equal(warmAgain.bytes,0);
+  mirror.close();mirror=new ExportRowMirror(path.join(dir,'cache.sqlite'));mirror.bind(JSON.stringify(spec));
+  assert.equal((await syncExportMirror(mirror,spec,query,options)).bytes,0,'restart reuses the complete verified mirror');
+  // Execute the production export entrypoint against this isolated database and decode
+  // its actual Parquet output. Retain the transient file only in the test child process.
+  await c.query(`create view view_snapshots as select id,video_id,snapshot_date,views as view_count,
+    null::bigint like_count,null::bigint comment_count,null::int days_since_published,
+    '2026-10-13'::timestamptz created_at from fixture`);
+  const artifact=path.join(dir,'verified.parquet'),capture=path.join(dir,'capture.mjs');
+  writeFileSync(capture,`import {promises as fs} from 'node:fs';
+    const remove=fs.rm;fs.rm=async(p,o)=>String(p).endsWith('.parquet')?fs.rename(p,process.env.TEST_PARQUET_PATH):remove(p,o);`);
+  const run=()=>execFileSync(process.execPath,['--import','tsx','--import',capture,
+    path.join(process.cwd(),'scripts/export-tables.ts'),'--dry-run','--tables','view_snapshots',
+    '--cache-dir',path.join(dir,'export-cache'),'--batch','2','--max-rows','100','--max-response-bytes','100000'],{
+    cwd:process.cwd(),encoding:'utf8',env:{...process.env,TMPDIR:dir,TEST_PARQUET_PATH:artifact,
+      DATABASE_URL:`postgresql://${userInfo().username}@localhost/postgres?host=${encodeURIComponent(dir)}`},
+  });
+  assert.match(run(),new RegExp(`${expected.length}/${expected.length} changed`));
+  assert.match(run(),new RegExp(`0/${expected.length} changed`));
+  const pq:any=await import('parquetjs-lite');const reader=await (pq.ParquetReader??pq.default.ParquetReader).openFile(artifact);
+  try{
+    const cursor=reader.getCursor();const exported=[];let r;
+    while((r=await cursor.next()))exported.push({video_id:r.video_id,snapshot_date:r.snapshot_date,views:Number(r.view_count)});
+    const order=(a:any,b:any)=>a.views-b.views;
+    assert.deepEqual(exported.sort(order),expected.map(({video_id,snapshot_date,views})=>({video_id,snapshot_date,views})).sort(order));
+  }finally{await reader.close();}
   await c.query('delete from fixture');await syncExportMirror(mirror,spec,query,options);assert.deepEqual([...mirror.rows()],[]);
   await c.query("insert into fixture values($1,'too-big','2026-10-13',1)",[uuid(1)]);
   await assert.rejects(syncExportMirror(mirror,spec,query,{...options,maxBytes:1}),/byte budget/);
