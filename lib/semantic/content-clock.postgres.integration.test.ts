@@ -39,5 +39,10 @@ test('view-only writes do not schedule unchanged semantic text; actual edits and
   assert.deepEqual([...found].sort(),['institution','new','pending','v']);
   assert.equal(new Set(found).size,found.length,'equal clocks must not duplicate or skip keys');
   await c.query('begin');const prev=await clock();await c.query("update videos set topic_niche='changed' where id='v'");await c.query('rollback');assert.equal(await clock(),prev);
+  const beforeRollback=(await c.query('select * from videos order by id')).rows;
+  await c.query(fs.readFileSync(path.join(process.cwd(),'sql/2026-10-13-incremental-mirrors.sql'),'utf8'));
+  await c.query(fs.readFileSync(path.join(process.cwd(),'sql/rollback/2026-10-13-incremental-database.sql'),'utf8'));
+  assert.deepEqual((await c.query('select * from videos order by id')).rows,beforeRollback,'rollback removes capture without touching source data');
+  assert.equal((await c.query("select count(*)::int n from pg_trigger where not tgisinternal and (tgname like 'mirror_%' or tgname='track_semantic_content_change')")).rows[0].n,0);
  }finally{await c.end();execFileSync('pg_ctl',['-D',data,'-m','immediate','-w','stop'],{stdio:'pipe'});}
 });
