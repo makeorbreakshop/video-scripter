@@ -32,7 +32,9 @@ import { longformSql } from '../lib/scoring/longform';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { acquireJobLease } from '../lib/nightly/job-lifecycle';
+import { ExportRowMirror, syncExportMirror, type ExportMirrorSpec } from '../lib/readings/export-row-mirror';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -51,12 +53,15 @@ const only = (arg('--tables') ?? '').split(',').map((s) => s.trim()).filter(Bool
 const scopeChannel = arg('--channel');
 const daySuffix = scopeChannel ? `${day}-channel-${scopeChannel}` : Number.isFinite(limit) ? `${day}-sample-${limit}` : day;
 
+const lease=acquireJobLease({name:'export-tables'});
+if(!lease.acquired){console.error('export-tables already running');process.exit(2);}
+process.once('exit',lease.release);
 const cfg = r2Config();
 if (!cfg && !dry) { console.error(MISSING_CREDENTIALS); process.exit(1); }
 
 const pool = makeTimedPool({
   connectionString: process.env.DATABASE_URL, max: 1,
-  timeoutMs: Number(arg('--timeout-ms') ?? 300_000),
+  timeoutMs: Number(arg('--timeout-ms') ?? 60_000),
 });
 const q = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => (await pool.query(sql, params)).rows as T[];
 
@@ -74,8 +79,7 @@ const pq = async () => (await import('parquetjs-lite')) as any;
  */
 const TABLES: Record<string, {
   schema: Record<string, any>;
-  cursor: string;
-  sql: (cursor: string) => string;
+  source: ExportMirrorSpec;
   row: (r: any) => Record<string, unknown>;
 }> = {
   videos: {
@@ -97,12 +101,11 @@ const TABLES: Record<string, {
       // neither `duration::interval` nor `~`. One definition of long-form, evaluated in Postgres.
       is_longform: { type: 'BOOLEAN', optional: true },
     },
-    cursor: 'id',
-    sql: () => `select id, channel_id, channel_name, title, published_at, view_count, duration,
-                       is_short, is_institutional, privacy_status, shorts_checked_at,
-                       format_type, topic_niche, ${longformSql('videos')} as is_longform
-                  from videos where id > $1 ${scopeChannel ? `and channel_id = '${scopeChannel}'` : ''}
-                 order by id limit $2`,
+    source: {name:'videos',from:'videos',key:'id',keyType:'text',
+      projection:`id, channel_id, channel_name, title, published_at, view_count, duration,
+        is_short, is_institutional, privacy_status, shorts_checked_at, format_type, topic_niche,
+        ${longformSql('videos')} as is_longform`,
+      ...(scopeChannel ? {scope:'channel_id = $6'} : {})},
     row: (r) => ({ ...r, published_at: t(r.published_at), shorts_checked_at: t(r.shorts_checked_at),
                    view_count: n(r.view_count) }),
   },
@@ -121,13 +124,12 @@ const TABLES: Record<string, {
       projection: { type: 'DOUBLE', optional: true }, projection_horizon: { type: 'DOUBLE', optional: true },
       typical_kind: { type: 'UTF8', optional: true }, typical_anchor_age: { type: 'DOUBLE', optional: true },
     },
-    cursor: 'video_id',
-    sql: () => `select video_id, channel_id, model_version, scored_at, snapshot_day, views, q, est30,
-                       baseline, n_baseline, score, same_age_ratio, n_same_age, confidence, age_days,
-                       typical_at_age, n_typical, typical_neff, typical_measured_share, projection,
-                       projection_horizon, typical_kind, typical_anchor_age
-                  from video_scores where video_id > $1 ${scopeChannel ? `and channel_id = '${scopeChannel}'` : ''}
-                 order by video_id limit $2`,
+    source: {name:'video_scores',from:'video_scores',key:'video_id',keyType:'text',
+      projection:`video_id, channel_id, model_version, scored_at, snapshot_day, views, q, est30,
+        baseline, n_baseline, score, same_age_ratio, n_same_age, confidence, age_days,
+        typical_at_age, n_typical, typical_neff, typical_measured_share, projection,
+        projection_horizon, typical_kind, typical_anchor_age`,
+      ...(scopeChannel ? {scope:'channel_id = $6'} : {})},
     row: (r) => ({ ...r, scored_at: t(r.scored_at), views: n(r.views), n_baseline: n(r.n_baseline),
                    n_same_age: n(r.n_same_age), n_typical: n(r.n_typical) }),
   },
@@ -139,14 +141,11 @@ const TABLES: Record<string, {
       days_since_published: { type: 'INT64', optional: true },
       created_at: { type: 'INT64', optional: true },
     },
-    // Keyset on the primary key's leading column, so each batch is a bounded index walk rather
-    // than an OFFSET that re-reads everything before it.
-    cursor: 'video_id',
-    sql: () => `select s.video_id, s.snapshot_date::text as snapshot_date, s.view_count, s.like_count,
-                       s.comment_count, s.days_since_published, s.created_at
-                  from view_snapshots s where s.video_id > $1
-                   ${scopeChannel ? `and exists (select 1 from videos v where v.id = s.video_id and v.channel_id = '${scopeChannel}')` : ''}
-                 order by s.video_id, s.snapshot_date limit $2`,
+    // UUID is the unique primary key. video_id/date is not unique and skipped rows at page boundaries.
+    source: {name:'view_snapshots',from:'view_snapshots s',key:'s.id',keyType:'uuid',
+      projection:`s.video_id, s.snapshot_date::text as snapshot_date, s.view_count, s.like_count,
+        s.comment_count, s.days_since_published, s.created_at`,
+      ...(scopeChannel ? {scope:'exists(select 1 from videos v where v.id=s.video_id and v.channel_id=$6)'} : {})},
     row: (r) => ({ ...r, view_count: n(r.view_count), like_count: n(r.like_count),
                    comment_count: n(r.comment_count), days_since_published: n(r.days_since_published),
                    created_at: t(r.created_at) }),
@@ -183,14 +182,36 @@ async function exportTable(name: string): Promise<{ rows: number; bytes: number 
   let cursor = '';
   let rows = 0;
   try {
-    for (;;) {
+    if (!scopeChannel && !Number.isFinite(limit) && !has('--no-cache')) {
+      const cacheDir=arg('--cache-dir') ?? path.join(os.homedir(),'.cache','video-scripter','table-exports');
+      await fs.mkdir(cacheDir,{recursive:true,mode:0o700});
+      const dbUrl=new URL(process.env.DATABASE_URL!);
+      const identity=JSON.stringify({host:dbUrl.hostname,database:dbUrl.pathname,project:dbUrl.username,source:spec.source,version:2});
+      const digest=createHash('sha256').update(identity).digest('hex').slice(0,16);
+      const mirror=new ExportRowMirror(path.join(cacheDir,`${name}-${digest}.sqlite`));
+      try {
+        mirror.bind(identity);
+        const stats=await syncExportMirror(mirror,spec.source,(sql,values)=>pool.query(sql,values),{
+          batch:Math.min(BATCH,10000), maxRows:Number(arg('--max-rows') ?? 10000000),
+          maxBytes:Number(arg('--max-response-bytes') ?? 2500000000),
+          onPage: s=>{if(s.rows && s.rows%100000===0)console.log(`  ${name}: ${s.rows} checked, ${s.changed} changed, ${(s.bytes/1e6).toFixed(1)} MB returned`);},
+        });
+        for(const r of mirror.rows()){await writer.appendRow(spec.row(r));rows++;}
+        if(rows!==stats.rows)throw new Error('mirror count differs from complete source scan');
+        console.log(`  ${name}: ${stats.changed}/${rows} changed; ${(stats.bytes/1e6).toFixed(1)} MB returned`);
+      } finally {mirror.close();}
+    } else for (;;) {
       const take = Math.min(BATCH, limit - rows);
       if (take <= 0) break;
-      const batch = await q(spec.sql(cursor), [cursor, take]);
+      const src=spec.source;
+      const batch=await q(`SELECT ${src.key}::text AS _key, ${src.projection} FROM ${src.from}
+        WHERE ($1::${src.keyType} IS NULL OR ${src.key}>$1::${src.keyType})
+        ${src.scope ? `AND (${src.scope.replaceAll('$6','$3')})` : ''}
+        ORDER BY ${src.key} LIMIT $2`,[cursor||null,take,...(src.scope?[scopeChannel]:[])]);
       if (!batch.length) break;
       for (const r of batch) await writer.appendRow(spec.row(r));
       rows += batch.length;
-      cursor = String(batch[batch.length - 1][spec.cursor]);
+      cursor = String(batch[batch.length - 1]._key);
       if (rows % (BATCH * 8) === 0) console.log(`  ${name}: ${rows.toLocaleString()} rows`);
       if (batch.length < take) break;
     }
@@ -214,3 +235,4 @@ for (const name of wanted) {
   console.log(`${name}: ${res!.rows.toLocaleString()} rows, ${(res!.bytes / 1e6).toFixed(1)} MB -> ${EXPORT_KEY(daySuffix, name)} (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
 }
 await pool.end();
+lease.release();
