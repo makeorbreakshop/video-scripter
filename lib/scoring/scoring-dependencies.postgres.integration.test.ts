@@ -23,7 +23,7 @@ test('native watermarks, dependency parity, concurrent dirtying, and repair coal
     create table video_day30_truth(video_id text,views bigint);`);
   const targets=[{id:'a'},{id:'b'},{id:'c'},{id:'d'}];
   const refs=new Map([['a',[{id:'p',pub:0,ageDays:1}]],['b',[{id:'q',pub:0,ageDays:1}]]]);
-  for(const id of ['a','b','c','d','p','q'])await c.query('insert into video_obs_cache values($1,2,10,$2)',[id,encodeObservationState(emptyObservationState(id,'2026-01-01T00:00:00Z'))]);
+  for(const id of ['a','b','c','d','p','q'])await c.query('insert into video_obs_cache values($1,2,10,$2)',[id,encodeObservationState({...emptyObservationState(id,'2026-01-01T00:00:00Z'),lastChangeId:10,points:[{source:'rss',at:'2026-01-02T00:00:00Z',views:100,modelEligible:true,conflicted:false}]})]);
   await c.query("insert into obs_cache_dirty values('q',11,false,now(),now()); update video_obs_cache set format=1 where video_id='c'; delete from video_obs_cache where video_id='d'");
   const q=async(sql:string,args?:any[])=>(await c!.query(sql,args)).rows;
   const old=await loadCachedRecords(q,['a','b','c','d','p','q'],{requireFormat2:true});
