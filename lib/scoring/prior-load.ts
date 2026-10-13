@@ -186,6 +186,8 @@ export async function loadScoringDependencies<T extends { id: string }>(
     }
   }
   const preflight = partitionTargetsByCacheDependencies(targets, priorsOf, available, available);
+  // These misses bypass the body loader; keep them visible in the existing health counters.
+  obsCacheStats.misses += preflight.missingIds.length;
   const needed = [...new Set(preflight.ready.flatMap(t => [t.id, ...(priorsOf.get(t.id) ?? []).map(p => p.id)]))];
   // Targets and priors share one load, including identities that appear in both roles.
   const loaded = await loadCachedRecords(q, needed, { ...options, requireFormat2: true });

@@ -58,3 +58,8 @@ test('readiness and body requests stay bounded at 100 distinct IDs',async()=>{
  expect(result.ready).toHaveLength(251);
  for(const call of db.q.mock.calls)expect(call[1]![0].length).toBeLessThanOrEqual(100);
 });
+test('preflight misses remain visible in cache health counters',async()=>{
+ const {obsCacheStats}=await import('./obs-cache');const before=obsCacheStats.misses;
+ const db=database(['a','b']);await loadScoringDependencies(db.q,targets,refs);
+ expect(obsCacheStats.misses-before).toBe(2);
+});
