@@ -6,6 +6,7 @@ export interface ScoreDirtyTarget {
   channel_id: string;
   published_at: string;
   generation: string | number;
+  ready_at?: string | null;
 }
 
 // Reserve half the video slots for requested score inputs; the rest remains oldest-first.
@@ -107,7 +108,7 @@ export const SCORE_DIRTY_CLEAR_SQL = `
 export const SCORE_DIRTY_DEFER_SQL = `
   /* trace:score.queue-defer */
   update score_dirty d set not_before = greatest(d.not_before, now() + ($2 || ' seconds')::interval),
-         attempts = d.attempts + 1, claimed_at = null, waiting_on = null, waiting_until = null
+         attempts = d.attempts + 1, claimed_at = null, waiting_on = null, waiting_until = null, ready_at = null
     from jsonb_to_recordset($1::jsonb) as x(video_id text, generation bigint)
    where d.video_id = x.video_id and d.generation = x.generation`;
 
@@ -146,15 +147,21 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
   const channels = options.channels.length ? `and v.channel_id = any(${bind(options.channels)})` : '';
   // Keep fresh, high-reach uploads responsive without letting them starve ordinary refreshes.
   // At most one quarter of each bounded fetch is reserved for never-scored videos published in
-  // the last week; the rest continues to drain in the queue's established due-time order.
+  // the last week, half is available for completed rebuilds, and the rest drains ordinary FIFO.
   const initialLimit = bind(Math.max(1, Math.ceil(options.limit / 4)));
   const limit = bind(options.limit);
   const eligible = `${longformSql('v')} and coalesce(v.privacy_status,'public') = 'public'
        and v.published_at is not null ${channels}`;
+  const cadence = `(sc.video_id is null or now() >= sc.scored_at + case
+           when now() - v.published_at < interval '1 day' then interval '5 minutes'
+           when now() - v.published_at < interval '7 days' then interval '1 hour'
+           when now() - v.published_at < interval '30 days' then interval '1 day'
+           when now() - v.published_at < interval '60 days' then interval '3 days'
+           else interval '7 days' end)`;
   return {
     text: `/* trace:score.queue-targets */
     with initial as materialized (
-      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at
+      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at, d.ready_at
         from score_dirty d
         join videos v on v.id = d.video_id
         left join video_scores sc on sc.video_id = v.id
@@ -163,27 +170,35 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
          and ${eligible}
        order by v.view_count desc nulls last, v.published_at desc, d.marked_at, d.video_id
        limit ${initialLimit}
+    ), resumed as materialized (
+      select v.id,v.channel_id,v.published_at,v.view_count,d.generation,d.not_before,d.marked_at,d.ready_at
+        from score_dirty d
+        join videos v on v.id=d.video_id
+        left join video_scores sc on sc.video_id=v.id
+       where d.ready_at is not null and d.not_before<=now()
+         and (d.waiting_until is null or d.waiting_until<=now())
+         and ${eligible} and ${cadence}
+         and not exists(select 1 from initial i where i.id=v.id)
+       order by d.not_before,d.marked_at,d.video_id
+       limit (select greatest(least(${limit}-count(*),floor(${limit}::numeric/2)::int),0) from initial)
     ), refresh as materialized (
-      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at
+      select v.id, v.channel_id, v.published_at, v.view_count, d.generation, d.not_before, d.marked_at, d.ready_at
         from score_dirty d
         join videos v on v.id = d.video_id
         left join video_scores sc on sc.video_id = v.id
        where d.not_before <= now() and (d.waiting_until is null or d.waiting_until <= now())
          and ${eligible}
          and not exists (select 1 from initial i where i.id = v.id)
-         and (sc.video_id is null or now() >= sc.scored_at + case
-           when now() - v.published_at < interval '1 day' then interval '5 minutes'
-           when now() - v.published_at < interval '7 days' then interval '1 hour'
-           when now() - v.published_at < interval '30 days' then interval '1 day'
-           when now() - v.published_at < interval '60 days' then interval '3 days'
-           else interval '7 days'
-         end)
+         and not exists(select 1 from resumed r where r.id=v.id)
+         and ${cadence}
        order by d.not_before, d.marked_at, d.video_id
-       limit (select greatest(${limit} - count(*), 0) from initial)
+       limit (select greatest(${limit} - count(*) - (select count(*) from resumed), 0) from initial)
     ), picked as (
       select i.*, 0 as lane from initial i
       union all
-      select r.*, 1 as lane from refresh r
+      select r.*, 1 as lane from resumed r
+      union all
+      select f.*, 2 as lane from refresh f
     ), locked as materialized (
       -- Producers lock queue keys in video-id order. Use that same order for a batch.
       select d.video_id, d.generation
@@ -199,7 +214,7 @@ export function scoreDirtyTargetsSql(options: { limit: number; channels: string[
        where d.video_id = l.video_id and d.generation = l.generation
       returning d.video_id, d.generation
     )
-    select p.id, p.channel_id, p.published_at::text as published_at, c.generation::text as generation
+    select p.id, p.channel_id, p.published_at::text as published_at, c.generation::text as generation,p.ready_at::text as ready_at
       from picked p join claimed c on c.video_id = p.id
      order by lane,
               case when lane = 0 then view_count end desc nulls last,
@@ -221,7 +236,7 @@ export async function walkScoreDirtyTargets<T extends ScoreDirtyTarget>(options:
   while (!options.signal.aborted && selected < options.limit) {
     const page = await options.fetchPage(Math.min(100, options.limit - selected));
     if (!page.length) break;
-    const signature = page.map((row) => `${row.id}:${row.generation}`).join('|');
+    const signature = page.map((row) => `${row.id}:${row.generation}:${row.ready_at ?? ''}`).join('|');
     if (signature === previous) throw new Error('score dirty queue made no progress');
     previous = signature;
     selected += page.length;
@@ -237,18 +252,24 @@ export const SCORE_DIRTY_WAIT_SQL = `
     select * from jsonb_to_recordset($1::jsonb)
       as x(video_id text, generation bigint, dependency_ids text[])
   )
-  update score_dirty d set
-    waiting_on = x.dependency_ids,
-    waiting_until = case when exists (
+  , readiness as materialized (
+    select x.*,exists (
       select 1 from unnest(x.dependency_ids) as needed(video_id)
       left join video_obs_cache c using(video_id)
       left join obs_cache_dirty o using(video_id)
       where c.format is distinct from 2 or c.last_change_id is null
          or (o.video_id is not null and c.last_change_id < o.generation)
-    ) then now() + interval '15 minutes' else null end,
-    claimed_at = null, attempts = d.attempts + 1,
+    ) as blocked from requests x
+  )
+  update score_dirty d set
+    waiting_on=x.dependency_ids,
+    waiting_until=case when x.blocked then now()+interval '15 minutes' else null end,
+    ready_at=case when x.blocked then null else clock_timestamp() end,
+    claimed_at=null,attempts=d.attempts+1,
+    -- A completion already visible here uses the normal retry floor so the same walker
+    -- cannot spin on an unchanged page. A later real wake removes this artificial delay.
     not_before=greatest(d.not_before,now()+interval '5 minutes')
-  from requests x where d.video_id=x.video_id and d.generation=x.generation`;
+  from readiness x where d.video_id=x.video_id and d.generation=x.generation`;
 
 /** Run after cache upsert and queue-clear, inside their transaction. No change is published early. */
 export const SCORE_DEPENDENCIES_READY_SQL = `
@@ -258,7 +279,8 @@ export const SCORE_DEPENDENCIES_READY_SQL = `
      where d.waiting_until is not null and d.waiting_on && $1::text[]
      order by d.video_id limit 1000
   )
-  update score_dirty d set waiting_on=null,waiting_until=null
+  update score_dirty d set waiting_on=null,waiting_until=null,ready_at=clock_timestamp(),
+         not_before=least(d.not_before,now())
     from candidates p
    where d.video_id=p.video_id and d.generation=p.generation
      and d.waiting_until is not null

@@ -21,7 +21,7 @@ test('blocked scores wait durably, wake only when complete, and retain recovery 
    create table video_obs_cache(video_id text primary key,format int,last_change_id bigint,obs bytea,built_at timestamptz,n int);
    create table observation_change_log(video_id text,change_id bigint,source text,operation text,at timestamptz,views bigint,time_basis text,received_at timestamptz,model_eligible boolean,conflicted boolean);
    create table obs_cache_dirty(video_id text primary key,generation bigint,requires_bootstrap boolean,marked_at timestamptz,not_before timestamptz,requested_at timestamptz);
-   create table score_dirty(video_id text primary key,generation bigint,reason text,marked_at timestamptz,not_before timestamptz,attempts int default0,claimed_at timestamptz,waiting_on text[],waiting_until timestamptz);
+   create table score_dirty(video_id text primary key,generation bigint,reason text,marked_at timestamptz,not_before timestamptz,attempts int default0,claimed_at timestamptz,waiting_on text[],waiting_until timestamptz,ready_at timestamptz);
    insert into videos values('target','channel',now()-interval '2 days','public',false,'PT10M',now(),100);
    insert into score_dirty(video_id,generation,reason,marked_at,not_before) values('target',1,'observation',now(),now());`.replace('default0','default 0'));
   const select=async()=>{const q=queue.scoreDirtyTargetsSql({limit:1,channels:[]});return (await c!.query(q.text,q.values)).rows;};
@@ -55,6 +55,20 @@ test('blocked scores wait durably, wake only when complete, and retain recovery 
   const applied=await materializeObservationBatch(c,opts);
   assert.equal(applied.stats.completed,1);assert.equal((await state()).waiting_until,null);
   assert.equal((await c.query("select n from video_obs_cache where video_id='supply'")).rows[0].n,1);
+  assert.ok(new Date((await state()).not_before).getTime()<=Date.now(),'completed rebuild releases the artificial retry delay');
+  await c.query("update videos set published_at=now()-interval '20 days' where id='target';insert into video_scores values('target',now()-interval '2 days')");
+  for(const id of ['backlog-a','backlog-b','backlog-c','backlog-d']){
+    await c.query("insert into videos values($1,'channel',now()-interval '20 days','public',false,'PT10M',now(),1)",[id]);
+    await c.query("insert into score_dirty(video_id,generation,marked_at,not_before) values($1,1,now()-interval '20 days',now()-interval '20 days')",[id]);
+  }
+  const resumedSql=queue.scoreDirtyTargetsSql({limit:4,channels:[]});const resumed=(await c.query(resumedSql.text,resumedSql.values)).rows;
+  assert.ok(resumed.some(r=>r.id==='target'),'newly unblocked scoring gets capacity ahead of older backlog');
+  assert.ok(resumed.some(r=>r.id.startsWith('backlog-')),'ordinary backlog retains scoring capacity');
+  let pages=0;
+  assert.equal(await queue.walkScoreDirtyTargets({limit:2,signal:new AbortController().signal,
+    fetchPage:async()=>[{id:'same',channel_id:'c',published_at:'2026-01-01',generation:1,ready_at:pages++?'2026-10-13T12:00:00Z':null}],
+    onPage:async()=>{},
+  }),2,'a completed dependency wake is real progress even at the same score generation');
   // Requested work gets half the slice, and old FIFO work keeps the other half.
   for(const [id,age] of [['old-a',10],['old-b',9],['urgent-a',1],['urgent-b',1]] as const){
    await c.query("insert into videos(id,published_at) values($1,now()-interval '10 days')",[id]);

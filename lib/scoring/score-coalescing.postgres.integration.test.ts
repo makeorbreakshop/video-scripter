@@ -27,7 +27,7 @@ test('pending scores coalesce, but processing and commit-order races preserve ne
    create table video_obs_cache(video_id text primary key,format int);
    create table observation_change_log(change_id bigserial primary key,video_id text,source text,operation text,at timestamptz,views bigint,time_basis text,received_at timestamptz,model_eligible boolean,conflicted boolean);
    create table obs_cache_dirty(video_id text primary key,generation bigint,requires_bootstrap boolean,marked_at timestamptz,not_before timestamptz);
-   create table score_dirty(video_id text primary key,generation bigint,reason text,marked_at timestamptz,not_before timestamptz,attempts int default 0,claimed_at timestamptz,waiting_on text[],waiting_until timestamptz);
+   create table score_dirty(video_id text primary key,generation bigint,reason text,marked_at timestamptz,not_before timestamptz,attempts int default 0,claimed_at timestamptz,waiting_on text[],waiting_until timestamptz,ready_at timestamptz);
    create table series_dirty(video_id text primary key,marked_at timestamptz,generation bigint);
    insert into videos values('v','channel',now()-interval '2 days',now(),'public',false,'PT10M',now(),100);
    insert into video_scores values('v',now()-interval '2 hours');`);
