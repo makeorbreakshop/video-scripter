@@ -2,13 +2,13 @@ import { dueSamplingCandidatesSql, prioritizeApiCandidates } from './sampling-ca
 
 test('reserves burst windows alongside a bounded oldest-deadline lane', () => {
   const query = dueSamplingCandidatesSql({
-    denseVideoIds: ['dense-video'], denseChannelIds: ['dense-channel'], urgentLimit: 1250, oldestLimit: 5000,
+    urgentLimit: 1250, oldestLimit: 5000,
   });
   expect(query.text).toContain("interval '2 hours'");
   expect(query.text).toContain("interval '1 hour'");
   expect(query.text).toContain("interval '22 hours'");
   expect(query.text).toContain('select video_id from urgent union select video_id from oldest');
-  expect(query.values).toEqual([['dense-video'], ['dense-channel'], 1250, 5000]);
+  expect(query.values).toEqual([1250, 5000]);
 });
 
 test('true bursts lead, while routine launch rows compete with fixed rows by oldest deadline', () => {

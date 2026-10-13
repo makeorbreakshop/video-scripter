@@ -91,29 +91,8 @@ if (titleReentered.rowCount) log(`re-entered ${titleReentered.rowCount} videos a
 // videos that have fallen out of their channel's 15-entry RSS window are covered by the oEmbed
 // check in scripts/thumbnail-watch.ts.
 
-// --- 4. Dense-tier lookup: ONE query per run, not one per video ---
-// Dense = any channel with a packaging change in the trailing 60 days, or any individual video
-// that has already had one (repeat changers are live A/B tests and the highest-value curves).
-const denseRows = await pool.query(
-  `with changed as (
-     select t.video_id from thumbnail_versions t
-      where t.version > 1 and t.first_seen > now() - interval '60 days'
-     union
-     select ti.video_id from title_versions ti
-      where ti.version > 1 and ti.first_seen > now() - interval '60 days')
-   select 'v' as kind, c.video_id as id from changed c
-   union
-   select 'c' as kind, v.channel_id as id from changed c join videos v on v.id = c.video_id
-    where v.channel_id is not null`
-);
-const denseVideos = new Set<string>();
-const denseChannels = new Set<string>();
-for (const r of denseRows.rows as { kind: string; id: string }[]) {
-  (r.kind === 'v' ? denseVideos : denseChannels).add(r.id);
-}
-log(`dense tier: ${denseChannels.size} channels, ${denseVideos.size} videos`);
-const tierOf = (videoId: string, channelId: string | null): Tier =>
-  denseVideos.has(videoId) || (channelId && denseChannels.has(channelId)) ? 'dense' : 'standard';
+// --- 4. Dense-tier membership is computed with the due candidates in Postgres. ---
+// Only the candidate's tier crosses the wire; the full packaging-change history stays there.
 
 // --- 5. Sample due videos ---
 // RSS may remove routine candidates from the API batch, so inspect a bounded multiple of the
@@ -122,7 +101,6 @@ const tierOf = (videoId: string, channelId: string | null): Tier =>
 const apiCapacity = maxCalls * 50;
 const candidateCap = apiCapacity * 4;
 const candidateQuery = dueSamplingCandidatesSql({
-  denseVideoIds: [...denseVideos], denseChannelIds: [...denseChannels],
   urgentLimit: apiCapacity, oldestLimit: candidateCap,
 });
 const due = await pool.query(candidateQuery.text, candidateQuery.values);
@@ -131,7 +109,7 @@ log(`due candidates: ${due.rowCount} (scan cap ${candidateCap + apiCapacity}, AP
 type DueRow = {
   video_id: string; channel_id: string | null; published_at: string;
   change_until: string | null; last_views: number | null; last_sample_at?: string | null;
-  next_check: string; updated_at: string;
+  next_check: string; updated_at: string; is_dense: boolean;
 };
 type RssRow = { video_id: string; at: string; views: number | null };
 
@@ -148,7 +126,7 @@ const rssSatisfied: Array<{ row: DueRow; views: number; phase: string; next: Dat
 const reasons = new Map<string, number>();
 for (const row of candidates) {
   const published = new Date(row.published_at);
-  const tier = tierOf(row.video_id, row.channel_id);
+  const tier: Tier = row.is_dense ? 'dense' : 'standard';
   const schedule = nextCheck({
     published_at: published,
     change_at: changeAtFromLaunchUntil(row.change_until ? new Date(row.change_until) : null),
@@ -245,7 +223,7 @@ for (const batch of chunk(apiDue, 50)) {
     if (!m) continue;
     const st = it.statistics || {};
     const views = clampCount(parseInt(st.viewCount || '0', 10));
-    const tier = tierOf(it.id, m.channel_id);
+    const tier: Tier = m.is_dense ? 'dense' : 'standard';
     const published = new Date(m.published_at);
     const nx = nextCheck({ published_at: published,
       change_at: changeAtFromLaunchUntil(m.change_until ? new Date(m.change_until) : null), tier, last_views: views }, sampledAt);
