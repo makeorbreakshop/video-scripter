@@ -47,3 +47,7 @@ No live corpus bootstrap/fullfit during implementation. Per fitting run: selecte
 - GREEN/refine: native5fixtures pass; real production snapshot/sample statement-trigger functions exercised with actual writeSampleBatch. Native tests cover60videoQbins, µs epsilon, mutation, deletion, restart, corruptbody, cachepruning, tie fallback, SQL-transformed candidate rejection.
 - Jest4suites71tests passed. Logs in receipts/2026-10-14-paid-fit-{native-green,jest}.txt.
 - No live corpus bootstrap; no schema changes. Longtail/past30 retained because measured1.58MB/day does not justify all-corpus/capture expansion.
+
+## Independent review and live gate
+Parent independently reran native5fixtures and diffcheck on e7c21f9: PASS, no blocking findings. Predeploy read-only repeatable-read live20IDcanary seeded from existing local snapshot mirror:463legacyrows,50FitRows exact parameter parity; newpage191.513ms EXPLAIN ANALYZE, no source sequential scans. Serialized results cold9216bytes,warm62bytes,total68877bytes inclplan+legacy (these are not wire). First scheduled fullfit will still cold-populate cache under100MB cap. No fullfit savings estimate claimed.
+Scoped strict helper TypeScript compilation passes; full repo compiler retains existing top-level await/module configuration and other unrelated errors.
