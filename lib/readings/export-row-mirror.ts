@@ -89,6 +89,21 @@ export class ExportRowMirror {
       for(const key of keys){const row=get.get(key);if(row)yield JSON.parse(String(row.body));}
     }else for(const row of this.db.prepare('SELECT body FROM rows ORDER BY key').iterate())yield JSON.parse(String(row.body));
   }
+  /** Optional selected-input caches may evict unselected facts before a pass. */
+  retainKeys(keys:readonly string[]):void{
+    this.db.exec('BEGIN IMMEDIATE');
+    try{
+      this.db.exec('CREATE TEMP TABLE IF NOT EXISTS retained_keys(key TEXT PRIMARY KEY) WITHOUT ROWID; DELETE FROM retained_keys;');
+      const put=this.db.prepare('INSERT OR IGNORE INTO retained_keys VALUES(?)');for(const key of keys)put.run(key);
+      this.db.exec('DELETE FROM rows WHERE key NOT IN(SELECT key FROM retained_keys)');
+      this.setMetadata('expected-count',String(this.count()));this.db.exec('COMMIT');
+    }catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
+  bodyBytes(keys?:readonly string[]):number{
+    if(!keys)return Number(this.db.prepare('SELECT coalesce(sum(length(cast(body AS blob))),0) AS n FROM rows').get()!.n);
+    const get=this.db.prepare('SELECT length(cast(body AS blob)) AS n FROM rows WHERE key=?');
+    return keys.reduce((n,key)=>n+Number(get.get(key)?.n??0),0);
+  }
   count():number{return Number(this.db.prepare('SELECT count(*) AS n FROM rows').get()!.n);}
   metadata(key:string):string|undefined{const row=this.db.prepare('SELECT value FROM metadata WHERE key=?').get(key);return row?String(row.value):undefined;}
   setMetadata(key:string,value:string):void{this.db.prepare('INSERT INTO metadata VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,value);}
@@ -110,7 +125,7 @@ export async function syncExportMirror(
  const stats={rows:0,changed:0,bytes:0};let cursor:string|null=null;let keysChecked=0;
  mirror.beginScan();
  for(;;){
-  const keys=(await query(mirrorKeysSql(spec),[cursor,options.batch,...(spec.scope?[options.scopeValue]:[])])).rows.map(r=>String(r.key));
+  const keys:string[]=(await query(mirrorKeysSql(spec),[cursor,options.batch,...(spec.scope?[options.scopeValue]:[])])).rows.map(r=>String(r.key));
   if(!keys.length)break;
   keysChecked+=keys.length;
   if(keysChecked>options.maxRows)throw new Error('export mirror row budget exhausted');
@@ -119,7 +134,7 @@ export async function syncExportMirror(
   stats.rows+=page.row_count;stats.changed+=page.changes.length;stats.bytes+=page.payload_bytes;
   if(stats.bytes>options.maxBytes)throw new Error('export mirror byte budget exhausted');
   mirror.apply(keys,page);options.onPage?.(stats);
-  const next=keys.at(-1)!;if(next===cursor)throw new Error('export cursor did not advance');cursor=next;
+  const next:string=keys.at(-1)!;if(next===cursor)throw new Error('export cursor did not advance');cursor=next;
  }
  mirror.finishScan();return stats;
 }

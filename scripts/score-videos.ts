@@ -43,6 +43,7 @@ import {
   type PriorRef, type RecordLoadOptions,
 } from '../lib/scoring/prior-load';
 import { loadIncrementalLaunchFitRows, LAUNCH_FIT_SPEC } from '../lib/scoring/launch-fit-mirror';
+import {loadPaidFitRows,PAID_FIT_SPEC} from '../lib/scoring/paid-fit-mirror';
 import { ExportRowMirror } from '../lib/readings/export-row-mirror';
 import { createHash } from 'node:crypto';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
@@ -197,22 +198,16 @@ async function fit() {
   );
   const ids: string[] = vids.map((r: any) => r.video_id as string);
   log(`fit: ${ids.length} videos`);
-  const fitRows: FitRow[] = [];
-  for (const group of chunk(ids, 2000)) {
-    const [rec, truth] = await Promise.all([records(group), day30(group)]);
-    for (const id of group) {
-      const v30 = truth.get(id); const snaps = rec.get(id);
-      if (!v30 || !snaps) continue;
-      for (const b of DAY_BUCKETS) {
-        if (b >= 30) continue;
-        const tol = b <= 3 ? 1 : b <= 7 ? 2 : 3;
-        const near = snaps.filter((s) => Math.abs(s.day - b) <= tol).sort((p, q) => Math.abs(p.day - b) - Math.abs(q.day - b))[0];
-        if (!near) continue;
-        const upto = snaps.filter((s) => s.day <= near.day + 1e-9);
-        fitRows.push({ bucket: b, vt: near.views, v30, q: growthExponent(upto) });
-      }
-    }
-  }
+  const dbUrl = new URL(process.env.DATABASE_URL!);
+  const identity = JSON.stringify({host:dbUrl.hostname,database:dbUrl.pathname,project:dbUrl.username,source:PAID_FIT_SPEC,version:1});
+  const dir = path.join(process.cwd(), '.cache', 'paid-fit');
+  fs.mkdirSync(dir,{recursive:true,mode:0o700});
+  const mirror = new ExportRowMirror(path.join(dir,createHash('sha256').update(identity).digest('hex').slice(0,16)+'.sqlite'));
+  let fitRows:FitRow[];
+  try {
+    mirror.bind(identity);
+    fitRows=await loadPaidFitRows(q,mirror,ids,{onPage:s=>{if(s.videos%5000===0)log(`paid fit mirror: ${s.videos} videos, ${s.changed} changed, ${s.bytes} body bytes`);}});
+  } finally {mirror.close();}
   const params = fitParams(fitRows);
   params.longtail = await fitLongtailTable();
   // v5: prefer the snapshot-pair fit for the buckets it actually supports; fall back to the

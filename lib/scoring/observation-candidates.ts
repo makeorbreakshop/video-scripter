@@ -53,6 +53,20 @@ export class ObservationCandidates {
    r.video_id,'rss','upsert',micros(r.at),r.views==null?null:String(r.views),r.time_basis??null,
    micros(r.received_at),eligible,false,
   ])));
+  this.putBodies(bodies);
+ }
+ putApi(rows:readonly {videoId:string;sampledAt:Date;views:number|string}[]):void{
+  const bodies=rows.flatMap(r=>{
+   const sample=micros(r.sampledAt.toISOString());
+   // Snapshot write uses the UTC date string; a non-UTC database noon is safely a miss.
+   const snapshot=micros(r.sampledAt.toISOString().slice(0,10)+'T12:00:00.000Z');
+   return [canonical([r.videoId,'sample','upsert',sample,String(r.views),null,null,true,false]),
+    canonical([r.videoId,'snapshot','upsert',snapshot,String(r.views),null,null,true,false]),
+    canonical([r.videoId,'snapshot','delete',snapshot,null,null,null,true,false])];
+  });
+  this.putBodies(bodies);
+ }
+ private putBodies(bodies:string[]):void{
   this.db.exec('begin immediate');
   try{
    this.db.prepare('delete from candidates where version in(select version from candidates where created_at<? order by created_at limit 10000)').run(Date.now()-2*86400000);
@@ -76,6 +90,14 @@ export function rememberCommittedRssCandidates(rows:Parameters<ObservationCandid
  try{
   if(!producerStore){producerStore=new ObservationCandidates(observationCandidatesPath());process.once('exit',()=>producerStore?.close());}
   producerStore.putRss(rows);
+ }catch(e){console.warn(`observation candidate cache unavailable: ${(e as Error).message}`);}
+}
+
+/** Called only after the launch tracker transaction commits; no source read is added. */
+export function rememberCommittedApiCandidates(rows:Parameters<ObservationCandidates['putApi']>[0]):void{
+ try{
+  if(!producerStore){producerStore=new ObservationCandidates(observationCandidatesPath());process.once('exit',()=>producerStore?.close());}
+  producerStore.putApi(rows);
  }catch(e){console.warn(`observation candidate cache unavailable: ${(e as Error).message}`);}
 }
 

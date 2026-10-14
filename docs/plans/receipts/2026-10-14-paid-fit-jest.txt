@@ -1,0 +1,12 @@
+(node:5847) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS lib/scoring/growth.test.ts
+PASS lib/scoring/core.test.ts
+PASS lib/nightly/sample-batch.test.ts
+PASS lib/scoring/observations.test.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       71 passed, 71 total
+Snapshots:   0 total
+Time:        0.648 s, estimated 1 s
+Ran all test suites matching lib/scoring/core.test.ts|lib/scoring/growth.test.ts|lib/scoring/observations.test.ts|lib/nightly/sample-batch.test.ts.

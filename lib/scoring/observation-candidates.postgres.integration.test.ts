@@ -25,6 +25,39 @@ test('materializer reuses producer data only when the authoritative event digest
   const normalize=(rs:any[])=>rs.map(r=>({...r,at:new Date(r.at).toISOString(),received_at:r.received_at?new Date(r.received_at).toISOString():null}));
   assert.deepEqual(normalize(await load()),normalize(expected));
   assert.ok(bytes<Buffer.byteLength(JSON.stringify(expected))*0.6,'matched producer rows should transfer compact digests instead of full observations');
+  // API collector's real mix: sample upsert plus snapshot delete/upsert on a stable date key.
+  await c.query(`set timezone='UTC';truncate observation_change_log restart identity;
+   create table view_samples(video_id text,sampled_at timestamptz,view_count bigint,like_count int,comment_count int,primary key(video_id,sampled_at));
+   create table view_snapshots(video_id text,snapshot_date date,view_count bigint,like_count int,comment_count int,days_since_published int,primary key(video_id,snapshot_date));
+   create table track_schedule(video_id text primary key,phase text,next_check timestamptz,checks int,last_sample_at timestamptz,last_views bigint,updated_at timestamptz);
+   create sequence pipeline_generation_seq;
+   create table series_dirty(video_id text primary key,marked_at timestamptz default now(),attempts int default0,generation bigint default1);
+   create function refresh_day30_truth(text[]) returns void language sql as 'select';
+   create function enqueue_observation_changes(payload jsonb) returns void language sql as $$
+    insert into observation_change_log(video_id,source,operation,at,views,time_basis,received_at,model_eligible,conflicted)
+    select x.video_id,x.source,x.operation,x.at,x.views,x.time_basis,x.received_at,coalesce(x.model_eligible,true),coalesce(x.conflicted,false)
+    from jsonb_to_recordset(payload) x(video_id text,source text,operation text,at timestamptz,views bigint,time_basis text,received_at timestamptz,model_eligible bool,conflicted bool)
+   $$;
+   insert into view_snapshots select 'v-'||g,'2026-10-13',1,0,0,1 from generate_series(1,50)g;
+   truncate observation_change_log restart identity;`.replace('default0','default 0').replace('default1','default 1'));
+  const migration=fs.readFileSync(path.join(process.cwd(),'supabase/migrations/20260911153000_event_driven_scoring.sql'),'utf8');
+  const triggers=migration.slice(migration.indexOf('create or replace function public.queue_snapshot_upserts()'),migration.indexOf('create or replace function public.queue_rss_upserts()'));
+  await c.query(triggers);
+  await c.query(`create trigger samples_capture after insert on view_samples referencing new table as new_rows for each statement execute function queue_sample_upserts();
+    create trigger snapshots_insert after insert on view_snapshots referencing new table as new_rows for each statement execute function queue_snapshot_upserts();
+    create trigger snapshots_update after update on view_snapshots referencing old table as old_rows new table as new_rows for each statement execute function queue_snapshot_updates();`);
+  const apiRows=Array.from({length:50},(_,i)=>({videoId:'v-'+(i+1),sampledAt:new Date('2026-10-13T13:00:00.123Z'),views:100+i,likes:0,comments:0,daysSincePublished:1,phase:'fixed',nextCheck:new Date('2026-10-14'),priorNextCheck:'2026-10-13',priorUpdatedAt:'2026-10-13'}));
+  const {writeSampleBatch}=await import('../nightly/sample-batch');
+  await c.query('begin');await writeSampleBatch(c,apiRows);await c.query('commit');
+  if(typeof store.putApi==='function')store.putApi(apiRows);
+  const apiClaims=JSON.stringify(apiRows.map(r=>({video_id:r.videoId,generation:150,last_change_id:0})));
+  const apiExpected=(await c.query(OBS_CHANGES_FOR_CLAIMS_SQL,[apiClaims,151])).rows;bytes=0;
+  assert.deepEqual(normalize(await api.loadVerifiedObservationChanges(client,apiClaims,151,store)),normalize(apiExpected));
+  assert.ok(bytes<Buffer.byteLength(JSON.stringify(apiExpected))*0.6,'committed API update batches must reuse sample + snapshot delete/upsert data');
+  await c.query("update observation_change_log set views=987654,at=at+interval '1 microsecond',conflicted=true where change_id=1");
+  assert.deepEqual(normalize(await api.loadVerifiedObservationChanges(client,apiClaims,151,store)),normalize((await c.query(OBS_CHANGES_FOR_CLAIMS_SQL,[apiClaims,151])).rows),'SQL-transformed API values use authoritative bytes');
+  await c.query(`truncate observation_change_log restart identity;insert into observation_change_log(video_id,source,operation,at,views,time_basis,received_at,model_eligible,conflicted)
+   select 'v','rss','upsert','2026-10-13'::timestamptz+g*interval '1 second',g,'response-date-estimate','2026-10-13'::timestamptz+g*interval '1 second',true,false from generate_series(1,100)g`);
   // A cache candidate is NOT authority: changed or absent rows must use database bytes.
   await c.query("update observation_change_log set views=999,conflicted=true,model_eligible=false where change_id=1;delete from observation_change_log where change_id=2");
   assert.deepEqual(normalize(await load()),normalize((await c.query(OBS_CHANGES_FOR_CLAIMS_SQL,[claims,101])).rows));

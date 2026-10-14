@@ -21,6 +21,7 @@ import {
 } from '../lib/nightly/launch-core';
 import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
 import { readStatsResponse } from '../lib/nightly/stats-response';
+import {rememberCommittedApiCandidates} from '../lib/scoring/observation-candidates';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
 import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
 import { CURRENT_RSS_RESPONSES_SQL } from '../lib/rss/current-response';
@@ -258,6 +259,7 @@ for (const batch of chunk(apiDue, 50)) {
       );
     }
     await client.query('commit');
+    rememberCommittedApiCandidates(writes);
     samples += writes.length;
     tierSamples.standard += batchTiers.standard;
     tierSamples.dense += batchTiers.dense;
