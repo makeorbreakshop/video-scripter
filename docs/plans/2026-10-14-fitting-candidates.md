@@ -17,8 +17,8 @@ Native PostgreSQL fixture: unchanged fitting second run transfers<25% cold bytes
 ## Work Units
 - [x] Main fitting TDD and implementation
 - [x] API candidates TDD and implementation
-- [ ] Refine, scoped regression and parent independent review
-- [ ] Deploy backed-up scoped runtime files while affected jobs idle; bounded canaries
+- [x] Refine, scoped regression and parent independent review
+- [x] Deploy backed-up scoped runtime files while affected jobs idle; bounded canaries
 ## TDD Progress
 Main fitting:
 - [x] Step1 write failing outcome test
@@ -51,3 +51,12 @@ No live corpus bootstrap/fullfit during implementation. Per fitting run: selecte
 ## Independent review and live gate
 Parent independently reran native5fixtures and diffcheck on e7c21f9: PASS, no blocking findings. Predeploy read-only repeatable-read live20IDcanary seeded from existing local snapshot mirror:463legacyrows,50FitRows exact parameter parity; newpage191.513ms EXPLAIN ANALYZE, no source sequential scans. Serialized results cold9216bytes,warm62bytes,total68877bytes inclplan+legacy (these are not wire). First scheduled fullfit will still cold-populate cache under100MB cap. No fullfit savings estimate claimed.
 Scoped strict helper TypeScript compilation passes; full repo compiler retains existing top-level await/module configuration and other unrelated errors.
+
+## Deployment and observed runtime
+Installed9:42:56AM ET October14 under all6idleconsumerlabels. Backup `.cache/paid-fit-deploy-backup-20261014-094256/manifest.json` in canonical runtime; deploymentreceipt contains6SHA256pairs (5runtimefiles+read-onlycanary), loadedlabels and unchangedplist hashes. No schema/source/R2 changes.
+Postdeploy canonical20IDcanary: exact463source/50FitRowparameter parity, query176.933ms/no source sequentialscans; serializedcold9216/warm62bytes. Actualwire86244bytes total inclauthentication/plan/legacy.
+First new normal materializer:4480videos,28904deltas,4446complete/34deferred/0partial/0failures; COMMIT9:46:52AM, exit0, actualwire4840147bytes. This still read older/coldprefix via authoritative fallback; aggregatecandidate savings not established.
+Normal9:47API collector committed50-samplebatches afterdeployment. Boundedread-only proof9:48:10AM:10freshlocallyheld samplehints allmatch exactcommitteddigests,32references/4366serializedbytes,actualwire5241bytes. No synthetic sourcewrites. `check-api-observation-reuse.ts` is a validation-only worktree script, not a new scheduledjob.
+APIcandidatehook covers launch-track collector. Other first-sample/nightly/track-due/backfill/appwriters safely retain digestmiss/rawfallback; they were not silently assumedwarm.
+First scheduled fullpaidfit still coldpopulates under100MBbody/5Msource/60kID bounds. Tail1.58MB/day left original deliberately; measured wholefit savings await a later actualnightly run. No claim that20IDs establishes fullfit economics.
+Executable compounding: native parity/reuse/ambiguity/µs-boundary/corruption/budget/realproducertrigger regression fixtures encode the protected behavior; no additional speculative controls needed.

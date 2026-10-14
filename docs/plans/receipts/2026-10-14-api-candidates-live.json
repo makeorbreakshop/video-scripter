@@ -1,0 +1,7 @@
+{
+  "sampleHints": 10,
+  "allSampleHintsMatchCommittedEvents": true,
+  "referenceRows": 32,
+  "heldMatches": 20,
+  "serializedReferenceBytes": 4366
+}

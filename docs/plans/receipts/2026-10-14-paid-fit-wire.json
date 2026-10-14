@@ -1,0 +1,35 @@
+[
+  {
+    "job": "paid-fit-deploy-canary",
+    "script": "check-paid-fit-reuse",
+    "pid": 10350,
+    "from": "2026-10-14T13:43:18.762Z",
+    "at": "2026-10-14T13:43:20.407Z",
+    "postgres": 86244,
+    "supabaseHttp": 0,
+    "other": 0,
+    "connections": 3
+  },
+  {
+    "job": "observation-materializer",
+    "script": "materialize-observations",
+    "pid": 10286,
+    "from": "2026-10-14T13:43:09.726Z",
+    "at": "2026-10-14T13:47:09.191Z",
+    "postgres": 4840147,
+    "supabaseHttp": 0,
+    "other": 0,
+    "connections": 2
+  },
+  {
+    "job": "api-candidate-deploy-canary",
+    "script": "check-api-observation-reuse",
+    "pid": 13504,
+    "from": "2026-10-14T13:48:10.332Z",
+    "at": "2026-10-14T13:48:10.935Z",
+    "postgres": 5241,
+    "supabaseHttp": 0,
+    "other": 0,
+    "connections": 3
+  }
+]

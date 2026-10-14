@@ -1,0 +1,7 @@
+observation materializer: 1564 videos, 4480 deltas, 1564 complete, 0 partial, 0 bootstrap, 1655285 compressed bytes
+observation materializer: 1063 videos, 4480 deltas, 1063 complete, 0 partial, 0 bootstrap, 0 deferred, 0 oversize, 2608142 compressed bytes
+observation materializer: 2493 videos, 4670 deltas, 2493 complete, 0 partial, 0 bootstrap, 0 deferred, 0 oversize, 5844804 compressed bytes
+{"timestamp":"2026-10-14T13:46:51.739Z","component":"observation-materializer","trace_id":"58506da2-6731-43c3-a6a1-b80d6775cdae","type":"supabase.query","operation":"observation.queue-clear","status":"ok","duration_ms":491,"rows":0,"affected_rows":4446,"estimated_response_bytes":0}
+{"timestamp":"2026-10-14T13:46:52.450Z","component":"observation-materializer","trace_id":"58506da2-6731-43c3-a6a1-b80d6775cdae","type":"supabase.query","operation":"score.dependency-wake","status":"ok","duration_ms":709.4,"rows":0,"affected_rows":125,"estimated_response_bytes":0}
+{"timestamp":"2026-10-14T13:46:52.504Z","component":"observation-materializer","trace_id":"58506da2-6731-43c3-a6a1-b80d6775cdae","type":"supabase.query","operation":"commit","status":"ok","duration_ms":47.3,"rows":0,"affected_rows":0,"estimated_response_bytes":0}
+observation materializer: 4480 videos, 28904 deltas, 4446 complete, 0 partial, 0 bootstrap, 34 deferred, 0 oversize, 24996331 compressed bytes

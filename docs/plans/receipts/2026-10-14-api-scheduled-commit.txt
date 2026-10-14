@@ -1,0 +1,32 @@
+2026-10-14T13:47:15.556Z enrolled 11 new videos
+2026-10-14T13:47:15.912Z re-entered 1 videos after thumbnail change
+2026-10-14T13:47:28.048Z due candidates: 5014 (scan cap 6250, API capacity 1250)
+2026-10-14T13:47:32.020Z sampling plan: 1250 API, 766 RSS; burst=24, missing_rss=3003, api_crosscheck_due=929, stale_rss=258, fresh_rss=766, rss_declined=16, rss_not_newer=18
+2026-10-14T13:47:32.724Z RSS schedule updates: 766 advanced, 0 raced
+2026-10-14T13:47:38.711Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:40.286Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:42.377Z API batch: 49 samples, 49 schedules advanced, 0 raced
+2026-10-14T13:47:44.692Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:45.797Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:46.732Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:47.712Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:48.716Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:52.006Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:53.794Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:55.988Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:47:58.840Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:01.359Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:03.873Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:07.164Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:10.295Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:13.228Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:15.893Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:18.927Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:21.535Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:24.385Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:28.069Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:31.972Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:34.789Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:38.006Z API batch: 50 samples, 50 schedules advanced, 0 raced
+2026-10-14T13:48:38.102Z units: 25 batch (standard ~1.20 from 60 samples, dense ~23.78 from 1189 samples)
+2026-10-14T13:48:38.103Z done: 1249 samples, 25 calls (25 batch-bucket, 0 main)

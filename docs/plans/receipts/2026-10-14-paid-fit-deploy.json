@@ -1,0 +1,39 @@
+{
+  "backup": "/Users/brandoncullum/video-scripter-v2/video-scripter/.cache/paid-fit-deploy-backup-20261014-094256",
+  "deployedAt": "2026-10-14T09:42:56.616265-04:00",
+  "files": {
+    "lib/readings/export-row-mirror.ts": {
+      "before": "c4a420c0e72ba068e505def2c9a65b1626891ca4fe0b79e37bb09ae2241441e7",
+      "after": "0d635a8a3c24bdf74cc63d42e1f56bf8f3a808e2cc53c38fe9ad5371ecbe040c"
+    },
+    "lib/scoring/observation-candidates.ts": {
+      "before": "d3044700220562b687e43bbe42ef5dddc2befd9d9d4691cdf5bad56843e8fbe0",
+      "after": "d10ab0173f6c6cc538cd74f2e686d6c79f3331c5ca8257b04618c87217be00f1"
+    },
+    "lib/scoring/paid-fit-mirror.ts": {
+      "before": null,
+      "after": "8783cb294ba53ba6a602020a4129b368e1059bcfe70bff5f78ace7045eb28362"
+    },
+    "scripts/score-videos.ts": {
+      "before": "788d02a64660fabc4aa81396a6cf4266898ebc37678d9d83e88a462900a8b127",
+      "after": "45228e637e08e9b85480cdded43ff99c60797c3e054928d3158548e2cfb9c01c"
+    },
+    "scripts/launch-track.ts": {
+      "before": "cf73168d498804269782693a37cd5eb3f91e891d211f0bba832adc84039dc4aa",
+      "after": "a51e762368103a650c5a4e438620eee9efbbec61b6053a0828955bfc4dd8c064"
+    },
+    "scripts/check-paid-fit-reuse.ts": {
+      "before": null,
+      "after": "d768577b3119c5979ffce167a099edf9ad4d7431bb7317bfe8f6b385082c9329"
+    }
+  },
+  "labelsLoaded": [
+    "com.mfm.video-scripter-launch-track",
+    "com.mfm.video-scripter-observation-materializer",
+    "com.mfm.video-scripter-score-fit",
+    "com.mfm.video-scripter-score",
+    "com.mfm.video-scripter-export-tables",
+    "com.mfm.video-scripter-weekly-refit"
+  ],
+  "schedulesUnchanged": true
+}
