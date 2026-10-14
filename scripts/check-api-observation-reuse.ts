@@ -2,7 +2,7 @@
 // 10video IDs x10indexed latest events, <=50KB returned canonical reference payload.
 import fs from 'node:fs';import {DatabaseSync} from 'node:sqlite';import pg from 'pg';import dotenv from 'dotenv';import {createHash} from 'node:crypto';import assert from 'node:assert/strict';
 import {observationCandidatesPath,OBSERVATION_CANONICAL_SQL} from '../lib/scoring/observation-candidates';
-dotenv.config({path:process.env.PAID_FIT_ENV_FILE??'.env.local',quiet:true});
+dotenv.config({path:process.env.PAID_FIT_ENV_FILE??'.env.local'});
 const since=Number(process.env.API_CANDIDATE_SINCE_MS);if(!Number.isFinite(since)||since<1)throw Error('API_CANDIDATE_SINCE_MS required');
 const file=observationCandidatesPath();if(!fs.existsSync(file))throw Error('no installed producer candidate cache');
 const local=new DatabaseSync(file,{readOnly:true});const hints=new Map<string,string>();const held=new Map<string,string>();

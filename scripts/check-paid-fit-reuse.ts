@@ -6,7 +6,7 @@ import pg from 'pg';import dotenv from 'dotenv';
 import {ExportRowMirror,mirrorPageSql} from '../lib/readings/export-row-mirror';
 import {loadPaidFitRows,PAID_FIT_SPEC,LEGACY_PAID_FIT_RECORDS_SQL,LEGACY_PAID_FIT_TRUTH_SQL} from '../lib/scoring/paid-fit-mirror';
 import {DAY_BUCKETS,growthExponent,fitParams} from '../lib/scoring/core';import {longformSql} from '../lib/scoring/longform';
-dotenv.config({path:process.env.PAID_FIT_ENV_FILE??'.env.local',quiet:true});
+dotenv.config({path:process.env.PAID_FIT_ENV_FILE??'.env.local'});
 const client=new pg.Client({connectionString:process.env.DATABASE_URL,application_name:'paid-fit-bounded-canary'});
 let total=0;let mirror:ExportRowMirror|undefined;
 try{

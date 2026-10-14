@@ -1,0 +1,6 @@
+{
+  "file": "/Users/brandoncullum/video-scripter-v2/video-scripter/scripts/check-paid-fit-reuse.ts",
+  "before": "d768577b3119c5979ffce167a099edf9ad4d7431bb7317bfe8f6b385082c9329",
+  "after": "572d6f7314c3f24f827a4e0f8413f34d6405198a4f5fc732894a42004caf03a0",
+  "change": "Remove unsupported dotenv quiet option from validation scripts; no scheduled runtime behavior changed."
+}
