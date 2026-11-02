@@ -221,6 +221,9 @@ curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
 |---|---|---|
 | `sort` | `published` | `score`, `published`, or `views` |
 | `limit` | 50 | Max 200 |
+| `offset` | 0 | Skip this many rows, to page past `limit`. Max 5000. Echoed back as `offset`. |
+| `since` / `until` | — | ISO dates on `published_at` |
+| `exclude_live` | — | `1` drops past live streams (`was_live: true`) |
 
 ```bash
 curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
@@ -240,11 +243,14 @@ curl -H "Authorization: Bearer $CHANNELSMITH_KEY" \
       "thumbnail_url": "https://i.ytimg.com/vi/1240OKiYXZg/maxresdefault.jpg",
       "duration": "PT24M58S",
       "is_short": false,
+      "was_live": false,
       "score": { "score": 2.16, "est30": 89135.4, "baseline": 41200.0, "same_age_ratio": 1.94, "confidence": "likely" }
     }
   ]
 }
 ```
+
+`was_live` is true for a past live stream (YouTube reported an `actualStartTime`); it is false when we hold no broadcast data for the video.
 
 `sort=score` puts unscored videos last. `score` is `null` for a video we have not scored.
 
