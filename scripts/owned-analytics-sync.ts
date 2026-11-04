@@ -7,6 +7,11 @@
 //   npx tsx scripts/owned-analytics-sync.ts --days 400 # backfill
 //   npx tsx scripts/owned-analytics-sync.ts --dry
 import dotenv from 'dotenv';
+import {
+  ownedAnalyticsExitCode,
+  ownedAnalyticsFailureReport,
+  type StepFailure,
+} from '../lib/nightly/failure-report';
 dotenv.config({ path: '.env.local' }); dotenv.config({ path: '.env' });
 
 const { q, getPool } = await import('../lib/admin/db');
@@ -20,6 +25,9 @@ const end = new Date(); end.setUTCDate(end.getUTCDate() - 1);      // Analytics 
 const start = new Date(end); start.setUTCDate(start.getUTCDate() - days);
 
 let total = 0;
+// A revoked refresh token used to fail silently every night: the error went to
+// stderr and the script still exited 0. Collect failures and exit non-zero.
+const failures: StepFailure[] = [];
 // One row per (user, channel), so the same owned channel can appear twice if two accounts
 // connected it. The analytics are identical, so sync each channel once, newest grant first.
 const all = await allConnections();
@@ -53,9 +61,13 @@ for (const c of connections) {
     if (!dry) await markSynced(c.user_id, c.channel_id, null);
     console.log(`${label}: ${vids.length} videos, ${written} day-rows ${dry ? '(dry)' : 'upserted'} for ${iso(start)}..${iso(end)}`);
   } catch (e: any) {
+    failures.push({ label, message: e.message });
     console.error(`${label}: ${e.message}`);
     if (!dry) await markSynced(c.user_id, c.channel_id, e.message.slice(0, 300));
   }
 }
 console.log(`done: ${total} rows`);
+// stdout, not stderr: the nightly log and anything tailing it must see this.
+for (const line of ownedAnalyticsFailureReport(failures, connections.length)) console.log(line);
 await getPool().end();
+process.exit(ownedAnalyticsExitCode(failures));
