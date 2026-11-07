@@ -1,4 +1,4 @@
-import { computeRankContext, ScoreRow } from './rank-core';
+import { computeRankContext, computeRankContextWindow, ScoreRow } from './rank-core';
 
 const row = (name: string, score: number): ScoreRow => ({
   player_name: name,
@@ -66,5 +66,26 @@ describe('computeRankContext — normal paths', () => {
     expect(context.map((e) => e.rank)).toEqual(
       Array.from({ length: context.length }, (_, i) => 16 + i)
     );
+  });
+});
+
+describe('computeRankContextWindow — bounded slice of the board', () => {
+  // Full board of 20, scores 2000, 1900, ... 100.
+  const FULL = Array.from({ length: 20 }, (_, i) => row(`p${i}`, 2000 - i * 100));
+
+  it('matches the full-board result when given the slice around the player', () => {
+    const full = computeRankContext(FULL, 'p12', 800);
+    const offset = 12 - 5;
+    const win = computeRankContextWindow(FULL.slice(offset, offset + 60), offset, 'p12', 800);
+    expect(win.playerRank).toBe(full.playerRank);
+    expect(win.context).toEqual(full.context);
+  });
+
+  it('matches the full board for an unsaved score (virtual row)', () => {
+    const full = computeRankContext(FULL, 'new', 1050);
+    // 10 rows score above 1050, so the window starts 5 above that.
+    const win = computeRankContextWindow(FULL.slice(5, 65), 5, 'new', 1050);
+    expect(win.playerRank).toBe(full.playerRank);
+    expect(win.context).toEqual(full.context);
   });
 });
