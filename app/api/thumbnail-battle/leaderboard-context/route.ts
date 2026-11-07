@@ -56,7 +56,7 @@ export async function GET(request: Request) {
             .select('session_id, player_name')
             .in('session_id', sessionIds)
         : { data: [] as { session_id: string; player_name: string }[] };
-      const nameBySession = new Map((players || []).map((p) => [p.session_id, p.player_name]));
+      const nameBySession = new Map<string, string>(((players || []) as any[]).map((p) => [p.session_id, p.player_name]));
 
       const rows: ScoreRow[] = ((gameScores || []) as any[]).map((game) => ({
         player_name: nameBySession.get(game.player_session_id) || 'Unknown',
