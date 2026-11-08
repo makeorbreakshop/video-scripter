@@ -155,6 +155,11 @@ export class SemanticQdrant {
     }
   }
 
+  /** One cheap round trip; throws QdrantUnavailableError when the server cannot be reached. */
+  async assertReachable(): Promise<void> {
+    await this.request('/collections');
+  }
+
   async upsert<Payload>(collection: string, points: Array<QdrantPoint<Payload>>): Promise<void> {
     if (!points.length) return;
     await this.request(`/collections/${collection}/points?wait=true`, {
