@@ -81,3 +81,24 @@ export function computeRankContext(
 
   return { playerRank: playerIndex + 1, context };
 }
+
+// Same as computeRankContext, but for a slice of the board that starts at
+// 0-based position `offset` (so the API can fetch ~60 rows instead of the
+// whole table). Ranks in the result are board ranks, not slice ranks.
+export function computeRankContextWindow(
+  windowRows: ScoreRow[],
+  offset: number,
+  playerName: string,
+  finalScore: number
+): RankContext {
+  const { playerRank, context } = computeRankContext(windowRows, playerName, finalScore);
+  return {
+    playerRank: playerRank + offset,
+    context: context.map((e) => ({ ...e, rank: e.rank + offset })),
+  };
+}
+
+// Rows to fetch around the player's position: 5 above, plus enough below to
+// cover the 5-below context and a run of tied scores.
+export const WINDOW_ABOVE = 5;
+export const WINDOW_BELOW = 55;
