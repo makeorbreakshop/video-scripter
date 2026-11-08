@@ -4,7 +4,9 @@ import os from 'os';
 import path from 'path';
 import { mapVideoPayload, VideoPayloadRow } from '../../lib/semantic/documents';
 import { SemanticQdrant, VIDEOS_COLLECTION } from '../../lib/semantic/qdrant';
-import { assertSemanticTargetsReachable } from '../../lib/semantic/sync-preflight';
+import { assertSemanticTargetsReachable, SemanticSyncPreflightError } from '../../lib/semantic/sync-preflight';
+import { alertQdrantOutage, defaultOutageAlertDeps } from '../../lib/semantic/outage-alert';
+import { channelUpdatedSince } from '../../lib/semantic/catch-up';
 import { buildIdentityFor } from './build-channel-identity';
 import { embedCatalogSince } from './embed-catalog';
 import { embedChannels } from './embed-channels';
@@ -134,7 +136,12 @@ export async function breakStaleLock(): Promise<void> {
 export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } = {}): Promise<void> {
   const startedAt = new Date();
   // Before the lease or any Supabase read: a Qdrant outage must not cost a full re-read every hour.
-  await assertSemanticTargetsReachable(() => new SemanticQdrant().assertReachable());
+  try {
+    await assertSemanticTargetsReachable(() => new SemanticQdrant().assertReachable());
+  } catch (error) {
+    if (!options.dry && error instanceof SemanticSyncPreflightError) alertQdrantOutage(error.message, defaultOutageAlertDeps());
+    throw error;
+  }
   const holder = holderId(os.hostname(), process.pid, startedAt);
   if (!(await acquireLease(holder))) return;
   // Keep the lease alive for as long as this process is; if it dies, the row expires on its own.
@@ -153,7 +160,7 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
     });
     const channels = await embedChannels({
       since: windowStart, limit: null, dry: !!options.dry, includeNiches: true, dimensions: 512,
-      updatedSince: changedSince, refreshPayloads: true,
+      updatedSince: channelUpdatedSince(changedSince, new Date()), refreshPayloads: true,
     });
     // Catalog + identity: embed anything published or updated since the watermark, then rebuild
     // identity vectors only for the channels that actually received points. The scan is bounded to
