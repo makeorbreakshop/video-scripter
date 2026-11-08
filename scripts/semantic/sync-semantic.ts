@@ -6,6 +6,7 @@ import { mapVideoPayload, VideoPayloadRow } from '../../lib/semantic/documents';
 import { SemanticQdrant, VIDEOS_COLLECTION } from '../../lib/semantic/qdrant';
 import { assertSemanticTargetsReachable, SemanticSyncPreflightError } from '../../lib/semantic/sync-preflight';
 import { alertQdrantOutage, defaultOutageAlertDeps } from '../../lib/semantic/outage-alert';
+import { channelUpdatedSince } from '../../lib/semantic/catch-up';
 import { buildIdentityFor } from './build-channel-identity';
 import { embedCatalogSince } from './embed-catalog';
 import { embedChannels } from './embed-channels';
@@ -159,7 +160,7 @@ export async function syncSemantic(options: { dry?: boolean; maxUsd?: number } =
     });
     const channels = await embedChannels({
       since: windowStart, limit: null, dry: !!options.dry, includeNiches: true, dimensions: 512,
-      updatedSince: changedSince, refreshPayloads: true,
+      updatedSince: channelUpdatedSince(changedSince, new Date()), refreshPayloads: true,
     });
     // Catalog + identity: embed anything published or updated since the watermark, then rebuild
     // identity vectors only for the channels that actually received points. The scan is bounded to
