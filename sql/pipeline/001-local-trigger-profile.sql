@@ -32,5 +32,9 @@ begin
   end loop;
 end $$;
 
+-- The replica is filled from the export mirror's projection (scripts/pipeline-load.ts mirror),
+-- which does not carry app-only columns. user_id is the one of those that is NOT NULL upstream.
+alter table public.videos alter column user_id drop not null;
+
 insert into public.observation_materialization_meta default values on conflict do nothing;
 insert into public.series_publication (singleton, marks_enabled) values (true, true) on conflict do nothing;

@@ -83,8 +83,9 @@ reads." Being down while the Mac is down is acceptable.
 
 ## Acceptance Contract
 
-- A1. The local pipeline DB holds every reading Supabase holds (row counts per day and source
-  match). The R2 archive verifies for every archived day.
+- A1. The local pipeline DB holds every reading: for each archived day and source, the local
+  count equals the R2 index's row count (raw, unthinned); for each unarchived day it equals
+  Supabase's count. (`npx tsx scripts/pipeline-load.ts parity`)
 - A2. Every job in `lib/ops/scheduler-jobs.ts` runs with zero statements touching a moved table
   on Supabase (guard test plus the `pg_stat_statements` delta after 24 h).
 - A3. The website's video page, channel page and `/api/v1/videos/[id]` render the same series as
@@ -95,7 +96,7 @@ reads." Being down while the Mac is down is acceptable.
 
 ## Work Units
 
-- [ ] **U1 Stand up the local DB.** Postgres 17 via Homebrew; a tuned config (shared_buffers 16 GB,
+- [x] **U1 Stand up the local DB.** Postgres 17 via Homebrew; a tuned config (shared_buffers 16 GB,
   effective_cache_size 40 GB); a `channelsmith_pipeline` database; a schema for the moved tables
   plus replica `videos`/`video_scores`, extracted from Supabase with pg_dump 17 `--schema-only`;
   triggers and functions ported. Check: an empty-schema smoke test that inserts one rss row
@@ -103,7 +104,7 @@ reads." Being down while the Mac is down is acceptable.
 - [ ] **U2 Bulk load without Supabase egress.** Readings come from R2 parquet days; view_snapshots and
   videos from the export mirrors; the last ~4 unarchived days from Supabase, narrow and bounded.
   Check A1 per day and source.
-- [ ] **U3 Pool split and guard.** `lib/db/pipeline.ts`, plus the guard test (red first: list the
+- [x] **U3 Pool split and guard.** `lib/db/pipeline.ts`, plus the guard test (red first: list the
   current violations).
 - [ ] **U4 RSS slice end to end.** rss-poll writes readings, state and triage locally, and only
   title/thumbnail/description versions and `videos.title` to Supabase. Real path: one tick
@@ -119,6 +120,27 @@ reads." Being down while the Mac is down is acceptable.
 - [ ] **U9 Backups.** Nightly pg_dump to the NAS with a retention policy and a restore test (A6).
 
 Dependencies: U1 → U2 → U3 → (U4, U5) → U6 → U7 → U8. U9 runs after U2.
+
+## Decisions made while building (2026-11-20)
+
+- **Local keeps raw readings.** The archive load restores every R2 reading, not Supabase's
+  thinned subset: local is the system of record, disk is ample (~45 GB at load), and R2's raw
+  day is what A1 checks against. Older-than-4-day readings are therefore denser locally than on
+  Supabase. Before U6 points the materializer, bootstrap or series rebuild at local, either
+  run `scripts/thin-readings.ts` against the local DB (it only needs `DATABASE_URL` and a copied
+  `readings_archive_days` ledger with the thinned columns cleared) or confirm those readers'
+  byte budgets hold on dense history.
+- **Replica `videos` carries the export mirror's projection only.** `videos.user_id` is made
+  nullable locally (sql/pipeline/001). If a moved job needs a column the projection lacks
+  (e.g. `updated_at`, `title_observed_at`), widen the mirror spec instead of reading Supabase.
+- **API readings archived before the tail lose `comment_count`.** R2 never stored it; Supabase's
+  surviving rows have it. No pipeline reader of view_samples uses it (U5 to confirm).
+- **The guard is a ratchet over source text** (`lib/db/pipeline-guard.test.ts`). 110 files are on
+  the backlog, each tagged with the unit that moves it: U4 10, U5 13, U6 30, U7 16, legacy one-offs
+  41 (moved or retired at U8). A file is exempt once it imports `lib/db/pipeline`; that is coarse
+  (such a file could still send moved-table SQL through the Supabase pool), so the runtime
+  `pg_stat_statements` delta stays part of A2. SQL built in a helper is caught in the helper's
+  module (e.g. `lib/readings/sql.ts`), not at its call site.
 
 ## Verification Handoff
 
