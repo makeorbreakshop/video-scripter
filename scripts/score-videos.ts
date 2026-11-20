@@ -45,6 +45,7 @@ import {
 import { loadIncrementalLaunchFitRows, LAUNCH_FIT_SPEC } from '../lib/scoring/launch-fit-mirror';
 import {loadPaidFitRows,PAID_FIT_SPEC} from '../lib/scoring/paid-fit-mirror';
 import { ExportRowMirror } from '../lib/readings/export-row-mirror';
+import { EXPORT_MIRROR_DIR, findExportMirror, fitInputsFromMirrors } from '../lib/scoring/longtail-mirror';
 import { createHash } from 'node:crypto';
 import { obsCacheStats, obsCacheSummary } from '../lib/scoring/obs-cache';
 import { historyInsert } from '../lib/scoring/history';
@@ -60,6 +61,11 @@ import {
 } from '../lib/scoring/materialization-queue';
 
 const FIT = process.argv.includes('--fit');
+// Where the fit reads view_snapshots from. 'mirror' (default): the nightly export's local SQLite
+// copies, zero production reads (lib/scoring/longtail-mirror.ts). 'db': the old production query,
+// which timed out (57014) on most nights in November 2026 -- an explicit escape hatch only.
+const LONGTAIL_SOURCE = (() => { const i = process.argv.indexOf('--longtail-source'); return i >= 0 ? process.argv[i + 1] : 'mirror'; })();
+if (LONGTAIL_SOURCE !== 'mirror' && LONGTAIL_SOURCE !== 'db') throw new Error(`--longtail-source must be mirror or db`);
 if(FIT){const lease=acquireJobLease({name:'score-fit'});if(!lease.acquired)throw Error('score-fit already running');process.once('exit',lease.release);}
 const V5 = process.argv.includes('--v5');
 const ALL = process.argv.includes('--all');
@@ -209,7 +215,13 @@ async function fit() {
     fitRows=await loadPaidFitRows(q,mirror,ids,{onPage:s=>{if(s.videos%5000===0)log(`paid fit mirror: ${s.videos} videos, ${s.changed} changed, ${s.bytes} body bytes`);}});
   } finally {mirror.close();}
   const params = fitParams(fitRows);
-  params.longtail = await fitLongtailTable();
+  // Both view_snapshots-heavy inputs come from the export mirrors in one local pass.
+  const mirrorInputs = LONGTAIL_SOURCE === 'mirror'
+    ? fitInputsFromMirrors(findExportMirror(EXPORT_MIRROR_DIR, 'view_snapshots'), findExportMirror(EXPORT_MIRROR_DIR, 'videos'),
+        { now: Date.now(), maxAgeMs: 36 * 3_600_000, host: dbUrl.hostname, pastMonths: [12, 120] })
+    : null;
+  if (mirrorInputs) log(`fit: long-tail and past-30 inputs read from the export mirrors (${mirrorInputs.longtail.length} long-tail rows)`);
+  params.longtail = mirrorInputs ? fitLongTail(mirrorInputs.longtail) : await fitLongtailTable();
   // v5: prefer the snapshot-pair fit for the buckets it actually supports; fall back to the
   // lifetime-count table bucket by bucket so an unsupported age never loses its multiplier.
   // MEASURED 2026-09-04: a trailing 12-month window yields ZERO same-video (day-30, >=60d)
@@ -218,9 +230,10 @@ async function fit() {
   // only pairs in the corpus come from the first weeks of tracking. So the window is widened
   // until pairs exist, and the fallback is logged rather than hidden -- the temporal claim in
   // the spec ("refit nightly from a trailing window") does not hold for the past-30 buckets yet.
-  let pairs = await fitPast30Table(12);
+  const past30 = async (months: number) => mirrorInputs ? mirrorInputs.past30[months] : fitPast30Table(months);
+  let pairs = await past30(12);
   let pastMonths = 12;
-  if (pairs.length < 100) { pairs = await fitPast30Table(120); pastMonths = 120; log(`fit: past-30 12-month window empty; widened to all time`); }
+  if (pairs.length < 100) { pairs = await past30(120); pastMonths = 120; log(`fit: past-30 12-month window empty; widened to all time`); }
   const past = fitPast30(pairs);
   const lt0 = params.longtail;
   const merged = { ages: [...lt0.ages], mult: [...lt0.mult], n: [...lt0.n] };
