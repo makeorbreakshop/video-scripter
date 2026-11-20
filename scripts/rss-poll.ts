@@ -46,7 +46,7 @@ import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { VIDEO_TEXT_JOIN } from '../lib/app/video-text';
 import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
-import { shadowEnabled, shadowSave } from '../lib/rss/pipeline-shadow';
+import { shadowEnabled, shadowSave, writeChunkBoth, shadowChunkKey, FileShadowLedger } from '../lib/rss/pipeline-shadow';
 import {
   emptyBuffers, mergeBuffers, planReplay, rowCount, chunkId, afterFailure,
   quarantineName, MAX_REPLAY_ATTEMPTS, REPLAY_MAX_SAMPLES, type Buffers, type ReplayAttempts,
@@ -102,7 +102,8 @@ const RESPONSE_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache
 // because the versions are each database's md5 of its own row.
 const SHADOW = shadowEnabled() ? pipelinePool() : null;
 const SHADOW_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state-pipeline'));
-const shadowTotals = { chunks: 0, rows: 0, failed: 0 };
+const SHADOW_LEDGER = new FileShadowLedger(path.join(process.cwd(), 'logs', 'rss-poll-shadow-ledger.json'));
+const shadowTotals = { chunks: 0, rows: 0, skipped: 0, failed: 0 };
 
 // ---------------------------------------------------------------- flush
 
@@ -267,16 +268,27 @@ async function drainPending(label: string): Promise<{ ok: boolean; written: Reco
       return { ok: false, written: total };
     }
     try {
-      const w = await flush(c);
-      for (const [k, v] of Object.entries(w)) total[k] = (total[k] ?? 0) + v;
+      let w: Record<string, number>;
       if (SHADOW) {
-        // After the Supabase commit, never instead of it: a shadow failure is logged and left
-        // for `pipeline-load.ts tail` to refill; it does not touch the pending journal.
-        const r = await shadowSave(SHADOW, { samples: c.samples ?? [], responses: c.responses ?? [] }, SHADOW_STATE_CACHE);
+        // Local first (lib/rss/pipeline-shadow.ts writeChunkBoth): the readings are safe in the
+        // system of record before Supabase is tried, so a Supabase timeout can no longer lose them.
+        // A local failure is logged and never blocks Supabase; the chunk is retried locally on
+        // the next tick that replays it.
+        const sc = { samples: c.samples ?? [], responses: c.responses ?? [] };
+        const both = await writeChunkBoth({
+          id: shadowChunkKey(sc), ledger: SHADOW_LEDGER,
+          local: () => shadowSave(SHADOW, sc, SHADOW_STATE_CACHE),
+          remote: () => flush(c),
+        });
+        w = both.remote;
         shadowTotals.chunks++;
-        if (r.ok) shadowTotals.rows += r.rows;
-        else { shadowTotals.failed++; console.error(`pipeline shadow: chunk ${i + 1}/${chunks.length} not written locally: ${r.error}`); }
+        if (both.local.skipped) shadowTotals.skipped++;
+        else if (both.local.ok) shadowTotals.rows += both.local.rows;
+        else { shadowTotals.failed++; console.error(`pipeline shadow: chunk ${i + 1}/${chunks.length} not written locally: ${both.local.error}`); }
+      } else {
+        w = await flush(c);
       }
+      for (const [k, v] of Object.entries(w)) total[k] = (total[k] ?? 0) + v;
     } catch (e) {
       const msg = (e as Error).message;
       const d = afterFailure(readAttempts(), chunkId(c));
