@@ -18,9 +18,12 @@ export function dueSamplingCandidatesSql(options: CandidateQueryOptions): { text
       select video_id from title_versions
        where version > 1 and first_seen > now() - interval '60 days' and video_id is not null
     ), dense_channels as materialized (
-      select distinct v.channel_id from changed c
-      join lateral (select channel_id from videos where id = c.video_id limit 1) v on true
-       where v.channel_id is not null
+      -- Channel from track_schedule (63 MB, hot) first; videos only for the ~2 % of changed ids
+      -- it lacks. One videos_pkey + heap probe per changed id was ~144K buffers per 5-minute tick
+      -- and the bulk of this statement's 57014s on the cold instance (2026-11-20).
+      select distinct coalesce(t.channel_id,
+             (select v.channel_id from videos v where v.id = c.video_id limit 1)) as channel_id
+        from changed c left join track_schedule t on t.video_id = c.video_id
     ), urgent as materialized (
       select video_id from track_schedule
        where next_check <= now() and published_at <= now()
