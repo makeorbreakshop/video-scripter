@@ -22,8 +22,12 @@ export const SCHEDULER_CONFIG: SchedulerConfig = {
     { name: 'score-fit', script: 'scripts/score-videos.ts', args: ['--fit'], lane: 'heavy', exclusive: true,
       daily: { hour: 23, minute: 30 }, maxSeconds: 3600 },
 
+    // --max-videos 3000, not 20000 (2026-11-20): the claim probes video_obs_cache and videos for
+    // EVERY due candidate before the 25 MB byte budget trims it to the 1-5 K a run actually takes.
+    // Cold on the IO-throttled instance, EXPLAIN ANALYZE at 2,000 took 52.7 s (11,358 reads at
+    // ~4.6 ms), so 20,000 could not finish inside the claim's 120 s timeout (57014 on ~40 % of runs).
     { name: 'observation-materializer', script: 'scripts/materialize-observations.ts', lane: 'heavy',
-      args: ['--max-videos', '20000', '--max-changes', '50000', '--max-cache-bytes', '25000000',
+      args: ['--max-videos', '3000', '--max-changes', '50000', '--max-cache-bytes', '25000000',
         '--max-compressed-bytes', '25000000', '--max-seconds', '240'],
       every: { minutes: 5, offsetSeconds: 210 }, maxSeconds: 300 },
     { name: 'observation-bootstrap', script: 'scripts/bootstrap-observation-cache.ts', lane: 'heavy',

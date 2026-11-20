@@ -35,3 +35,11 @@ describe('SCHEDULER_CONFIG', () => {
     }
   });
 });
+
+describe('observation-materializer claim size', () => {
+  it('claims few enough candidates to finish inside the 120 s claim timeout on a cold cache', () => {
+    const job = SCHEDULER_CONFIG.jobs.find((j) => j.name === 'observation-materializer')!;
+    const n = Number(job.args[job.args.indexOf('--max-videos') + 1]);
+    expect(n).toBeLessThanOrEqual(3000); // 2,000 measured at 52.7 s cold, 2026-11-20
+  });
+});
