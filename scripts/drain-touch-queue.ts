@@ -11,7 +11,10 @@ import { decideVideoRow, corpusTrackedChannels, type TouchResult } from '../lib/
 import { withDeadlockRetry } from '../lib/nightly/pg-retry';
 import { classifyForInsert, skipForInsert, type InsertClassification } from '../lib/ingest/classify';
 import { startManagedJob } from '../lib/nightly/job-lifecycle';
-import { ingestWrites } from '../lib/ingest/first-sample';
+import { ingestWrites, type Write } from '../lib/ingest/first-sample';
+import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowEnabled } from '../lib/rss/pipeline-shadow';
+import { shadowWrites } from '../lib/ingest/ingest-shadow';
 import { videoInsertSql, videoInsertParams, SYSTEM_USER } from '../lib/ingest/video-insert';
 import {
   PRIORITY_LANE, PRIORITY_MODES, selectPriorityRows, orderByPublishedDesc,
@@ -23,6 +26,7 @@ if (!job.acquired) process.exit(0);
 
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
+const SHADOW = shadowEnabled() ? pipelinePool() : null;
 let quota = 0;
 
 async function insertVideo(v: any, tier = 1): Promise<boolean> {
@@ -30,23 +34,35 @@ async function insertVideo(v: any, tier = 1): Promise<boolean> {
   // YouTube; if it cannot be reached the row is stored unverified and longformSql hides it.
   const cls = await classifyForInsert(v);
   if (skipForInsert(cls.kind)) return false;
-  const sn = v.snippet || {}; const st = v.statistics || {};
   // Deadlock-retried: the videos insert fires sync_institutional triggers that
   // can deadlock against concurrent launch-track/nightly-tracking writers
   // (observed 40P01 overnight 2026-09-02).
-  await withDeadlockRetry(() => insertVideoOnce(v, tier, sn, st, cls));
+  // One instant for both databases, so the sample's (video_id, sampled_at) key is the same row.
+  const writes = importWrites(v, tier, cls, new Date());
+  // Local pipeline DB first (lib/ingest/ingest-shadow.ts): the replica gets the new video and its
+  // first readings at once. One transaction, idempotent, never throws.
+  if (SHADOW) {
+    const r = await shadowWrites(SHADOW, writes);
+    if (!r.ok) console.error(`pipeline shadow: import of ${v.id} not written locally: ${r.error}`);
+  }
+  await withDeadlockRetry(() => insertVideoOnce(writes));
   return true;
 }
 
-async function insertVideoOnce(v: any, tier: number, sn: any, st: any, cls: InsertClassification): Promise<void> {
-  // One statement for the row AND its text (lib/ingest/video-insert.ts).
-  await pool.query(videoInsertSql(),
-    videoInsertParams(v, cls, { dataSource: 'competitor', userId: SYSTEM_USER }));
-  // A sample, a daily snapshot and a tracking row, in that order (lib/ingest/first-sample.ts).
-  // The videos.list response in hand IS an observation at a known instant, so it is written as
-  // a view_samples row now rather than leaving the video unmeasured until the next tracker tick
-  // — which for an RSS-discovered video was up to a day after we already knew its view count.
-  for (const w of ingestWrites(v, tier, new Date())) await pool.query(w.sql, w.params);
+function importWrites(v: any, tier: number, cls: InsertClassification, at: Date): Write[] {
+  return [
+    // One statement for the row AND its text (lib/ingest/video-insert.ts).
+    { sql: videoInsertSql(), params: videoInsertParams(v, cls, { dataSource: 'competitor', userId: SYSTEM_USER }) },
+    // A sample, a daily snapshot and a tracking row, in that order (lib/ingest/first-sample.ts).
+    // The videos.list response in hand IS an observation at a known instant, so it is written as
+    // a view_samples row now rather than leaving the video unmeasured until the next tracker tick
+    // — which for an RSS-discovered video was up to a day after we already knew its view count.
+    ...ingestWrites(v, tier, at),
+  ];
+}
+
+async function insertVideoOnce(writes: Write[]): Promise<void> {
+  for (const w of writes) await pool.query(w.sql, w.params);
 }
 
 async function fetchVideos(ids: string[]): Promise<any[]> {
@@ -412,4 +428,5 @@ console.log(
   `Drained ${rows.length} rows: ${priorityImported} tracked-channel uploads (priority lane), ${imported} clicked videos imported, ${candidatesSeen} channel candidates surfaced, ${channelsEnrolled} channels enrolled (+${channelVideos} videos), ${quota} quota units`
 );
 await pool.end();
+await closePipelinePool();
 job.finish();
