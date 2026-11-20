@@ -3,10 +3,12 @@
 #   scripts/install-scheduler.sh          # show what would change
 #   scripts/install-scheduler.sh --apply  # do it (asks nothing; run only with Brandon's go-ahead)
 #   scripts/install-scheduler.sh --rollback
-# Retired plists are moved to ~/Library/LaunchAgents/video-scripter-retired-<date>/, never deleted.
+# Retired plists are moved to ~/Library/LaunchAgents-disabled/<date>-*/, never deleted
+# (the 2026-11-20 install: ~/Library/LaunchAgents-disabled/2026-11-20-audit/).
 set -eu
 cd "$(dirname "$0")/.."
 LA="$HOME/Library/LaunchAgents"
+DISABLED="$HOME/Library/LaunchAgents-disabled"
 UID_=$(id -u)
 STAMP=$(date +%Y%m%d-%H%M)
 MODE=${1:-}
@@ -27,7 +29,7 @@ boot() {
 
 if [ "$MODE" = "--rollback" ]; then
   run launchctl bootout "gui/$UID_/com.mfm.video-scripter-scheduler" || true
-  BACKUP=$(ls -d "$LA"/video-scripter-retired-* | tail -1)
+  BACKUP=$(ls -d "$DISABLED"/*/ | while read d; do [ -f "$d/com.mfm.video-scripter-rss-poll.plist" ] && echo "${d%/}"; done | tail -1)
   for f in $RETIRED; do
     run mv "$BACKUP/$f" "$LA/$f"
     boot "$LA/$f"
@@ -35,7 +37,7 @@ if [ "$MODE" = "--rollback" ]; then
   exit 0
 fi
 
-BACKUP="$LA/video-scripter-retired-$STAMP"
+BACKUP="$DISABLED/$STAMP-scheduler"
 run mkdir -p "$BACKUP"
 for f in $RETIRED; do
   label=${f%.plist}
