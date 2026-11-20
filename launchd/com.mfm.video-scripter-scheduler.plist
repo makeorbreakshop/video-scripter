@@ -4,6 +4,10 @@
 <dict>
 	<key>EnvironmentVariables</key>
 	<dict>
+		<key>EGRESS_JOB</key>
+		<string>scheduler</string>
+		<key>NODE_OPTIONS</key>
+		<string>--import /Users/brandoncullum/video-scripter-v2/video-scripter/lib/ops/egress-meter.ts</string>
 		<key>PATH</key>
 		<string>/opt/homebrew/bin:/usr/bin:/bin</string>
 	</dict>
