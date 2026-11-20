@@ -1,4 +1,4 @@
-import { shadowEnabled, shadowSave, writeChunkBoth, FileShadowLedger, shadowChunkKey } from './pipeline-shadow';
+import { shadowEnabled, shadowSave, shadowChunks, FileShadowLedger, shadowChunkKey } from './pipeline-shadow';
 
 describe('rss-poll pipeline shadow write', () => {
   it('is off unless PIPELINE_SHADOW=1', () => {
@@ -25,57 +25,42 @@ describe('rss-poll pipeline shadow write', () => {
   });
 });
 
-describe('writeChunkBoth: the local pipeline DB is written first, once per chunk', () => {
+describe('shadowChunks: every chunk is written locally before Supabase is tried', () => {
   const ledgerOf = () => {
     const ids = new Set<string>();
     return { ids, has: (id: string) => ids.has(id), add: (id: string) => { ids.add(id); } };
   };
-
-  it('writes local before Supabase and records the chunk', async () => {
-    const order: string[] = [];
-    const ledger = ledgerOf();
-    const r = await writeChunkBoth({
-      id: 'c1', ledger,
-      local: async () => { order.push('local'); return { ok: true, rows: 3 }; },
-      remote: async () => { order.push('remote'); return { rss_samples: 3 }; },
-    });
-    expect(order).toEqual(['local', 'remote']);
-    expect(r.local).toEqual({ ok: true, rows: 3 });
-    expect(ledger.has('c1')).toBe(true);
+  const chunk = (id: string, n = 1) => ({
+    samples: Array.from({ length: n }, (_, k) => ({ video_id: `${id}-${k}`, at: '2026-11-20T20:00:00Z', views: k, likes: 0 })),
+    responses: [{ channelId: id, fetchedAt: '2026-11-20T20:00:00Z', date: null, age: null, cacheControl: null, views: {} }],
   });
 
-  it('keeps the readings locally when Supabase fails (the 57014 that used to lose them)', async () => {
+  it('writes all chunks, so a Supabase stall on chunk 1 no longer holds chunks 2..n back (2026-11-20 20:41 tick)', async () => {
     const ledger = ledgerOf();
-    await expect(writeChunkBoth({
-      id: 'c2', ledger,
-      local: async () => ({ ok: true, rows: 5 }),
-      remote: async () => { throw new Error('canceling statement due to statement timeout'); },
-    })).rejects.toThrow(/statement timeout/);
-    expect(ledger.has('c2')).toBe(true);
+    const seen: string[] = [];
+    const t = await shadowChunks([chunk('a', 2), chunk('b', 3)], ledger, async (c) => { seen.push(c.responses[0].channelId); return { ok: true, rows: c.samples.length }; });
+    expect(seen).toEqual(['a', 'b']);
+    expect(t).toMatchObject({ chunks: 2, rows: 5, skipped: 0, failed: 0 });
+    expect(ledger.ids.size).toBe(2);
   });
 
-  it('does not rewrite locally a chunk it already holds when Supabase retries it', async () => {
+  it('does not rewrite a chunk local already holds when Supabase retries it next tick', async () => {
     const ledger = ledgerOf();
-    ledger.add('c3');
-    let localCalls = 0;
-    const r = await writeChunkBoth({
-      id: 'c3', ledger,
-      local: async () => { localCalls++; return { ok: true, rows: 5 }; },
-      remote: async () => ({ rss_samples: 5 }),
-    });
-    expect(localCalls).toBe(0);
-    expect(r.local).toEqual({ ok: true, rows: 0, skipped: 'already-local' });
+    ledger.add(shadowChunkKey(chunk('a')));
+    let calls = 0;
+    const t = await shadowChunks([chunk('a'), chunk('b')], ledger, async () => { calls++; return { ok: true, rows: 1 }; });
+    expect(calls).toBe(1);
+    expect(t).toMatchObject({ chunks: 2, rows: 1, skipped: 1 });
   });
 
-  it('a local failure never blocks Supabase, and the chunk is retried locally next time', async () => {
+  it('a failed local chunk is reported and left out of the ledger, so the next tick retries it', async () => {
     const ledger = ledgerOf();
-    const r = await writeChunkBoth({
-      id: 'c4', ledger,
-      local: async () => ({ ok: false, rows: 0, error: 'ECONNREFUSED' }),
-      remote: async () => ({ rss_samples: 2 }),
-    });
-    expect(r.remote).toEqual({ rss_samples: 2 });
-    expect(ledger.has('c4')).toBe(false);
+    const t = await shadowChunks([chunk('a'), chunk('b')], ledger,
+      async (c) => c.responses[0].channelId === 'a' ? { ok: false, rows: 0, error: 'ECONNREFUSED' } : { ok: true, rows: 1 });
+    expect(t).toMatchObject({ failed: 1, rows: 1 });
+    expect(t.errors).toEqual(['ECONNREFUSED']);
+    expect(ledger.has(shadowChunkKey(chunk('a')))).toBe(false);
+    expect(ledger.has(shadowChunkKey(chunk('b')))).toBe(true);
   });
 });
 

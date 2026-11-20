@@ -46,7 +46,7 @@ import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { VIDEO_TEXT_JOIN } from '../lib/app/video-text';
 import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
-import { shadowEnabled, shadowSave, writeChunkBoth, shadowChunkKey, FileShadowLedger } from '../lib/rss/pipeline-shadow';
+import { shadowEnabled, shadowSave, shadowChunks, FileShadowLedger } from '../lib/rss/pipeline-shadow';
 import {
   emptyBuffers, mergeBuffers, planReplay, rowCount, chunkId, afterFailure,
   quarantineName, MAX_REPLAY_ATTEMPTS, REPLAY_MAX_SAMPLES, type Buffers, type ReplayAttempts,
@@ -259,6 +259,15 @@ async function drainPending(label: string): Promise<{ ok: boolean; written: Reco
   }
   const lines = chunks.map((c) => JSON.stringify(c));
   writePendingLines(lines); // normalized to one chunk per line before the first write
+  if (SHADOW) {
+    // Local first, all chunks, before the Supabase loop (lib/rss/pipeline-shadow.ts shadowChunks):
+    // the readings are safe in the system of record however Supabase fares below. Already-local
+    // chunks (a Supabase retry) are skipped by content key. Never throws.
+    const st = await shadowChunks(chunks.map((c) => ({ samples: c.samples ?? [], responses: c.responses ?? [] })),
+      SHADOW_LEDGER, (c) => shadowSave(SHADOW, c, SHADOW_STATE_CACHE));
+    for (const k of ['chunks', 'rows', 'skipped', 'failed'] as const) shadowTotals[k] += st[k];
+    for (const e of st.errors) console.error(`pipeline shadow (${label}): chunk not written locally: ${e}`);
+  }
   for (let i = 0; i < chunks.length; i++) {
     const c = chunks[i];
     // Both replay and this tick's own flush stop between chunks at the run budget, so the tick
@@ -268,26 +277,7 @@ async function drainPending(label: string): Promise<{ ok: boolean; written: Reco
       return { ok: false, written: total };
     }
     try {
-      let w: Record<string, number>;
-      if (SHADOW) {
-        // Local first (lib/rss/pipeline-shadow.ts writeChunkBoth): the readings are safe in the
-        // system of record before Supabase is tried, so a Supabase timeout can no longer lose them.
-        // A local failure is logged and never blocks Supabase; the chunk is retried locally on
-        // the next tick that replays it.
-        const sc = { samples: c.samples ?? [], responses: c.responses ?? [] };
-        const both = await writeChunkBoth({
-          id: shadowChunkKey(sc), ledger: SHADOW_LEDGER,
-          local: () => shadowSave(SHADOW, sc, SHADOW_STATE_CACHE),
-          remote: () => flush(c),
-        });
-        w = both.remote;
-        shadowTotals.chunks++;
-        if (both.local.skipped) shadowTotals.skipped++;
-        else if (both.local.ok) shadowTotals.rows += both.local.rows;
-        else { shadowTotals.failed++; console.error(`pipeline shadow: chunk ${i + 1}/${chunks.length} not written locally: ${both.local.error}`); }
-      } else {
-        w = await flush(c);
-      }
+      const w = await flush(c);
       for (const [k, v] of Object.entries(w)) total[k] = (total[k] ?? 0) + v;
     } catch (e) {
       const msg = (e as Error).message;

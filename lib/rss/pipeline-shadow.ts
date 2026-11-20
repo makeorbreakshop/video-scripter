@@ -55,20 +55,25 @@ export function shadowChunkKey(chunk: ShadowChunk): string {
   return createHash('sha256').update(samples.join('\n')).update('\0').update(responses.join('\n')).digest('hex');
 }
 
-export async function writeChunkBoth<R>(args: {
-  id: string; ledger: ShadowLedger;
-  local: () => Promise<ShadowResult>;
-  remote: () => Promise<R>;
-}): Promise<{ local: ShadowResult & { skipped?: string }; remote: R }> {
-  let local: ShadowResult & { skipped?: string };
-  if (args.ledger.has(args.id)) local = { ok: true, rows: 0, skipped: 'already-local' };
-  else {
-    local = await args.local();
-    if (local.ok) args.ledger.add(args.id);
+export interface ShadowTotals { chunks: number; rows: number; skipped: number; failed: number; errors: string[] }
+
+/**
+ * Write every chunk of a flush or replay locally, BEFORE the Supabase loop starts. Writing them
+ * one at a time alongside Supabase tied local progress to Supabase's: on 2026-11-20 at 20:41 ET a
+ * replay's first Supabase chunk timed out, the tick was killed, and local had received 1 of 20.
+ */
+export async function shadowChunks(chunks: ShadowChunk[], ledger: ShadowLedger,
+                                   save: (c: ShadowChunk) => Promise<ShadowResult>): Promise<ShadowTotals> {
+  const t: ShadowTotals = { chunks: 0, rows: 0, skipped: 0, failed: 0, errors: [] };
+  for (const c of chunks) {
+    t.chunks++;
+    const key = shadowChunkKey(c);
+    if (ledger.has(key)) { t.skipped++; continue; }
+    const r = await save(c);
+    if (r.ok) { ledger.add(key); t.rows += r.rows; }
+    else { t.failed++; t.errors.push(r.error ?? 'unknown'); }
   }
-  // Supabase failure propagates unchanged: the pending journal and quarantine still own it.
-  const remote = await args.remote();
-  return { local, remote };
+  return t;
 }
 
 /** JSON file of key -> first-written epoch ms; entries older than maxAgeMs are dropped on load. */
