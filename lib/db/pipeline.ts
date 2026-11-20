@@ -26,6 +26,10 @@ export type PipelineTable = (typeof PIPELINE_TABLES)[number];
  */
 export const REPLICA_TABLES = ['videos', 'video_scores'] as const;
 
+/** A pool connected to the local pipeline DB (pipelinePool()), as a parameter type: SQL sent
+ *  through it may name pipeline tables, and the guard treats an importer as moved. */
+export type PipelinePool = pg.Pool;
+
 let pool: pg.Pool | null = null;
 
 export function pipelineDatabaseUrl(): string {
