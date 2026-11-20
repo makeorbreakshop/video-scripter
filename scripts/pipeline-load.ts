@@ -6,6 +6,7 @@
 //             → videos, video_scores, view_snapshots (the projected columns they hold)
 //   tail      the days R2 does not hold yet, from Supabase, one bounded day per statement
 //   latest    rebuild rss_latest from the loaded rss_samples
+//   quarantine  replay rss-poll's quarantined journals (readings Supabase never took) into local
 //   state     copy rss_response_state (8 MB) — run right before turning PIPELINE_SHADOW on
 //   parity    per day and source: local count vs the R2 index (archived days) and vs Supabase
 //             (unarchived days) — check A1
@@ -24,7 +25,9 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { parse as parseConn } from 'pg-connection-string';
 import { r2Config, getObject, listObjects } from '../lib/readings/archive';
-import { pipelineDatabaseUrl } from '../lib/db/pipeline';
+import { pipelineDatabaseUrl, pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowChunks, shadowSave, FileShadowLedger, type ShadowLedger } from '../lib/rss/pipeline-shadow';
+import { DiskStateCache } from '../lib/rss/response-state-cache';
 
 const PSQL = '/opt/homebrew/opt/postgresql@17/bin/psql';
 const LOCAL = pipelineDatabaseUrl();
@@ -342,6 +345,38 @@ async function parity(): Promise<boolean> {
   return ok;
 }
 
+// ---- quarantined rss-poll journals ---------------------------------------------------------
+
+/**
+ * Readings Supabase never took: every logs/rss-poll-pending.failed-*.ndjson in the production
+ * checkout (RSS_LOGS_DIR), oldest first, written locally through the same path as the live shadow.
+ * Their responses are older than the local response state, so they land as late readings
+ * (model_eligible = false), exactly as a late Supabase replay would. A chunk the live shadow
+ * already wrote (its ledger) or this step already wrote (its own ledger) is skipped.
+ */
+async function loadQuarantine() {
+  const dir = process.env.RSS_LOGS_DIR || path.join(os.homedir(), 'video-scripter-v2', 'video-scripter', 'logs');
+  const files = (await fs.readdir(dir)).filter((f) => /^rss-poll-pending\.failed-.*\.ndjson$/.test(f)).sort();
+  const live = new FileShadowLedger(path.join(dir, 'rss-poll-shadow-ledger.json'));
+  const own = new FileShadowLedger(path.join(dir, 'pipeline-quarantine-ledger.json'), Date.now, 3650 * 86_400_000);
+  const ledger: ShadowLedger = { has: (k) => live.has(k) || own.has(k), add: (k) => own.add(k) };
+  const cache = new DiskStateCache(path.join(os.homedir(), '.cache', 'video-scripter', 'quarantine-state'));
+  const pool = pipelinePool();
+  const all = { files: 0, chunks: 0, rows: 0, skipped: 0, failed: 0 };
+  for (const f of files) {
+    const text = await fs.readFile(path.join(dir, f), 'utf8');
+    const chunks = text.split('\n').filter(Boolean).flatMap((l) => {
+      try { const b = JSON.parse(l); return [{ samples: b.samples ?? [], responses: b.responses ?? [] }]; }
+      catch { return []; }
+    });
+    const t = await shadowChunks(chunks, ledger, (c) => shadowSave(pool, c, cache));
+    all.files++; all.chunks += t.chunks; all.rows += t.rows; all.skipped += t.skipped; all.failed += t.failed;
+    if (t.failed) log(`quarantine ${f}: ${t.failed} chunk(s) failed: ${t.errors[0]}`);
+    if (all.files % 25 === 0 || all.files === files.length) log(`quarantine: ${all.files}/${files.length} files ${JSON.stringify(all)}`);
+  }
+  await closePipelinePool();
+}
+
 // ---- main ----------------------------------------------------------------------------------
 
 await fs.mkdir(CACHE, { recursive: true });
@@ -350,6 +385,7 @@ if (step === 'mirror' || step === 'all') await loadMirrors();
 if (step === 'tail' || step === 'all') await loadTail();
 if (step === 'latest' || step === 'all') await rebuildLatest();
 if (step === 'state' || step === 'all') await copyDay('response_state', 'all');
+if (step === 'quarantine') await loadQuarantine();
 if (step === 'parity' || step === 'all') {
   const ok = await parity();
   log(ok ? 'A1: pass' : 'A1: FAIL');

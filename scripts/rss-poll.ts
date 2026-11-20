@@ -339,6 +339,7 @@ const tooLateToPoll = replay.ok && budgetSec != null && maxChannels == null && r
 if (!replay.ok || tooLateToPoll) {
   if (tooLateToPoll) log(`replay used ${replaySecs.toFixed(0)}s of ${budgetSec}s; polling next tick`);
   process.exitCode = replay.ok ? 0 : 1;
+  if (SHADOW) log(`pipeline shadow: ${JSON.stringify(shadowTotals)}`);
   try {
     const { rows: sil } = await pool.query(`select round(extract(epoch from now() - max(at)) / 60)::int as m from rss_samples`);
     log(`rss_silence_minutes: ${sil[0]?.m ?? 'null'}`);
