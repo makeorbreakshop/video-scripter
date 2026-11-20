@@ -23,6 +23,9 @@ import { decideSamplingSource } from '../lib/nightly/sampling-freshness';
 import { readStatsResponse } from '../lib/nightly/stats-response';
 import {rememberCommittedApiCandidates} from '../lib/scoring/observation-candidates';
 import { writeSampleBatch, type SampleWrite } from '../lib/nightly/sample-batch';
+import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowEnabled } from '../lib/rss/pipeline-shadow';
+import { shadowSampleBatch } from '../lib/nightly/api-readings-shadow';
 import { dueSamplingCandidatesSql, prioritizeApiCandidates } from '../lib/nightly/sampling-candidates';
 import { CURRENT_RSS_RESPONSES_SQL } from '../lib/rss/current-response';
 import { LAUNCH_ENROLL_SQL } from '../lib/nightly/launch-enroll';
@@ -39,6 +42,7 @@ const job = DRY
 if (!job.acquired) process.exit(0);
 const API_KEY = process.env.YOUTUBE_API_KEY!;
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
+const SHADOW = shadowEnabled() ? pipelinePool() : null;
 pool.on('connect', (c: pg.PoolClient) => { c.query('set statement_timeout = 120000').catch(() => {}); });
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
@@ -161,6 +165,7 @@ log(`sampling plan: ${apiDue.length} API, ${rssSatisfied.length} RSS; ${Array.fr
 if (DRY) {
   log('dry run: no enrollment, re-entry, API calls, schedule updates, samples, snapshots, or quota writes');
   await pool.end();
+  await closePipelinePool();
   job.finish();
   process.exit(0);
 }
@@ -234,6 +239,12 @@ for (const batch of chunk(apiDue, 50)) {
       priorNextCheck: m.next_check, priorUpdatedAt: m.updated_at});
     batchTiers[tier]++;
   }
+  // Local pipeline DB first (lib/nightly/api-readings-shadow.ts): the readings are kept even if
+  // every Supabase attempt below fails. Idempotent, never throws.
+  if (SHADOW) {
+    const r = await shadowSampleBatch(SHADOW, writes);
+    if (!r.ok) console.error(`pipeline shadow: ${writes.length} readings not written locally: ${r.error}`);
+  }
   // Retry the entire atomic batch; counters advance only after a successful commit.
   for (let attempt = 0; attempt < 3; attempt++) {
   const client = await pool.connect();
@@ -296,4 +307,5 @@ if (mainCalls) {
 }
 log(`done: ${samples} samples, ${calls} calls (${calls - mainCalls} batch-bucket, ${mainCalls} main)`);
 await pool.end();
+await closePipelinePool();
 job.finish();

@@ -20,6 +20,9 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import pg from 'pg';
+import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowEnabled } from '../lib/rss/pipeline-shadow';
+import { shadowDueSnapshots } from '../lib/nightly/api-readings-shadow';
 import {
   DUE_SELECT_SQL, buildDueRows, dueFetchCap,
   tickBudget, ticksLeftInDay, idCapForBudget,
@@ -48,6 +51,7 @@ const API_KEY = (POOL === 'backup' ? process.env.YOUTUBE_API_KEY_BACKUP : proces
 if (!API_KEY) { console.log(`pool ${POOL}: no key configured, nothing to do.`); process.exit(0); }
 if (POOL === 'backup' && !argv.includes('--failover')) { console.log('pool backup is failover-only; pass --failover to use it deliberately.'); process.exit(0); }
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 4 });
+const SHADOW = shadowEnabled() ? pipelinePool() : null;
 const started = Date.now();
 const now = new Date();
 const elapsed = () => Date.now() - started;
@@ -82,6 +86,11 @@ async function writeRows(rows: DueSnapshotRow[], upsertSnapshot: boolean): Promi
   // Deterministic lock order across concurrent writers (launch-track, drain).
   rows.sort((a, b) => (a.video_id < b.video_id ? -1 : a.video_id > b.video_id ? 1 : 0));
   let written = 0;
+  // Local pipeline DB first (lib/nightly/api-readings-shadow.ts); never throws.
+  if (SHADOW) {
+    const r = await shadowDueSnapshots(SHADOW, rows as never, upsertSnapshot);
+    if (!r.ok) console.error(`pipeline shadow: ${rows.length} snapshots not written locally: ${r.error}`);
+  }
   for (const group of chunk(rows, 1000)) {
     await withDeadlockRetry(async () => {
       const client = await pool.connect();
@@ -211,3 +220,4 @@ console.log(
   `api ${written} snapshots in ${apiCalls} calls (${apiCalls - mainBucketCalls} batch-bucket, ${mainBucketCalls} main-bucket).`
 );
 await pool.end();
+await closePipelinePool();

@@ -16,8 +16,10 @@
 // 474-518 s and 950 took 376-390 s, all overrunning the 300 s LaunchAgent interval.
 //
 // Durability: if the flush fails, the whole buffer is written to logs/rss-poll-pending.ndjson
-// and the NEXT tick replays it before fetching anything. A tick therefore never silently loses
-// a change it detected.
+// and the NEXT tick replays it before fetching anything, in bounded chunks with progress saved
+// after each one (lib/rss/pending-replay.ts). A chunk that fails MAX_REPLAY_ATTEMPTS ticks in a
+// row is quarantined and polling resumes: a single poison buffer blocked all polling for 11 days
+// (2026-09-11 → 09-22) when the replay was one statement that failed closed forever.
 //
 // MEASURED 2026-09-03: this feed sends no ETag and no Last-Modified, so the conditional-request
 // path never fires. "Unchanged" is decided by hashing the body (rss_body_sha), which skips the
@@ -43,6 +45,12 @@ import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../lib/rss/title-change';
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { VIDEO_TEXT_JOIN } from '../lib/app/video-text';
+import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowEnabled, shadowSave, shadowChunks, FileShadowLedger } from '../lib/rss/pipeline-shadow';
+import {
+  emptyBuffers, mergeBuffers, planReplay, rowCount, chunkId, afterFailure,
+  quarantineName, MAX_REPLAY_ATTEMPTS, REPLAY_MAX_SAMPLES, type Buffers, type ReplayAttempts,
+} from '../lib/rss/pending-replay';
 import {
   RSS_POLICY,
   parseRssEntries,
@@ -85,34 +93,22 @@ const PENDING = path.join(process.cwd(), 'logs', 'rss-poll-pending.ndjson');
 const CHUNK = 5000;
 // ---------------------------------------------------------------- buffers
 
-interface Buffers {
-  responses: FeedResponse[];
-  samples: { video_id: string; at: string; views: number | null; likes: number | null }[];
-  /** Videos whose title we looked at, changed or not. This is the evidence the 7-day rule reads. */
-  observed: string[];
-  titleVersions: { video_id: string; version: number; title: string; first_seen: string; backfill: boolean }[];
-  videoTitles: { video_id: string; title: string }[];
-  /** Real changes only: re-open the stats lane's 5-minute ladder. */
-  reentries: string[];
-  /** Syncs and unchanged: just stamp that we looked. */
-  titleChecks: string[];
-  descVersions: { video_id: string; version: number; sha256: string; description: string; first_seen: string; backfill: boolean }[];
-  dueNow: { video_id: string; version: number }[];
-  touchQueue: { ref: string; source_url: string }[];
-  channels: { channel_id: string; status: number | null; body_sha: string | null; etag: string | null;
-              interval_sec: number | null; backoff_until: string | null; clear_woken: boolean }[];
-}
-
-const empty = (): Buffers => ({
-  responses: [], samples: [], observed: [], titleVersions: [], videoTitles: [], reentries: [],
-  titleChecks: [], descVersions: [], dueNow: [], touchQueue: [], channels: [],
-});
+const empty = emptyBuffers;
 // Local rss_response_state copies, versioned by the server's md5: the state read returns jsonb
 // only for channels whose state changed elsewhere (was ~2.2 KB per polled channel per tick).
 const RESPONSE_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state'));
+// U4a (docs/plans/2026-11-20-local-pipeline-db.md): with PIPELINE_SHADOW=1 every chunk that
+// commits on Supabase is also written to the local pipeline database. Its own state cache,
+// because the versions are each database's md5 of its own row.
+const SHADOW = shadowEnabled() ? pipelinePool() : null;
+const SHADOW_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state-pipeline'));
+const SHADOW_LEDGER = new FileShadowLedger(path.join(process.cwd(), 'logs', 'rss-poll-shadow-ledger.json'));
+const shadowTotals = { chunks: 0, rows: 0, skipped: 0, failed: 0 };
 
 // ---------------------------------------------------------------- flush
 
+/** Cumulative ms per flush step this process; logged when a flush is slow. */
+const flushMs: Record<string, number> = {};
 async function flush(b: Buffers): Promise<Record<string, number>> {
   const written: Record<string, number> = {};
   // Sort every buffer on its key before writing: the deterministic order is half of the
@@ -133,6 +129,7 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
   const insert = async (name: string, sql: string, rows: any[], cols: (r: any) => any[], actual = false) => {
     if (!rows.length) return;
     let n = 0;
+    const ts = Date.now();
     for (const part of chunk(rows, CHUNK)) {
       // Deterministic lock order + retry: launch-track, the drainer and this poller all write
       // videos/track_schedule, and two statements taking overlapping ids in different orders
@@ -141,9 +138,12 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
       n += actual ? (res.rowCount ?? 0) : part.length;
     }
     written[name] = (written[name] ?? 0) + n;
+    flushMs[name] = (flushMs[name] ?? 0) + Date.now() - ts;
   };
 
+  const ts0 = Date.now();
   written['rss_samples'] = await saveRssObservations(pool, b.samples, b.responses, RESPONSE_STATE_CACHE);
+  flushMs['rss_samples'] = (flushMs['rss_samples'] ?? 0) + Date.now() - ts0;
   // saveRssObservations queues the videos whose readings moved; a title change moves the
   // packaging markers the same chart draws, so those videos are queued here too.
   await markSeriesDirty(pool, b.titleVersions.map((r: any) => r.video_id));
@@ -214,27 +214,94 @@ async function flush(b: Buffers): Promise<Record<string, number>> {
   return written;
 }
 
-/** Replay a buffer a previous tick could not write, before this tick fetches anything. */
-async function replayPending(): Promise<void> {
-  if (!fs.existsSync(PENDING)) return;
+const ATTEMPTS = path.join(process.cwd(), 'logs', 'rss-poll-pending.attempts');
+/** rss_samples per flush statement set. Env override exists for measuring, not for tuning live. */
+const REPLAY_SAMPLES = Number(process.env.RSS_FLUSH_SAMPLES) || REPLAY_MAX_SAMPLES;
+
+/** Atomically replace the pending file with the chunks still to write (one chunk per line). */
+function writePending(chunks: Buffers[]): void { writePendingLines(chunks.map((c) => JSON.stringify(c))); }
+function writePendingLines(lines: string[]): void {
+  if (!lines.length) { fs.rmSync(PENDING, { force: true }); return; }
+  const tmp = `${PENDING}.tmp`;
+  const fd = fs.openSync(tmp, 'w');
+  try { fs.writeFileSync(fd, lines.join('\n') + '\n'); fs.fsyncSync(fd); }
+  finally { fs.closeSync(fd); }
+  fs.renameSync(tmp, PENDING);
+}
+
+function readAttempts(): ReplayAttempts | null {
+  try { return JSON.parse(fs.readFileSync(ATTEMPTS, 'utf8')); } catch { return null; }
+}
+
+/**
+ * Write whatever is in the pending file, in bounded chunks, persisting progress after each.
+ * Used both to replay a buffer an earlier tick could not write and to flush this tick's own
+ * buffer (journaled first): a full-cap tick carries ~39K rss_samples, and as ONE statement it
+ * times out under the rss_samples statement trigger (2026-09-22 14:11 tick, measured).
+ * Returns ok=true when polling may proceed (nothing left, or quarantined) and ok=false when a
+ * chunk failed and will be retried next tick. Only that in-progress chunk holds polling back,
+ * and only for MAX_REPLAY_ATTEMPTS ticks.
+ */
+async function drainPending(label: string): Promise<{ ok: boolean; written: Record<string, number> }> {
+  const total: Record<string, number> = {};
+  if (!fs.existsSync(PENDING)) { fs.rmSync(ATTEMPTS, { force: true }); return { ok: true, written: total }; }
   const text = fs.readFileSync(PENDING, 'utf8').trim();
-  if (!text) { fs.unlinkSync(PENDING); return; }
-  try {
-    const merged = empty();
-    for (const line of text.split('\n')) {
-      const b = JSON.parse(line) as Buffers;
-      for (const k of Object.keys(merged) as (keyof Buffers)[]) {
-        (merged[k] as any[]).push(...((b[k] as any[]) ?? []));
-      }
-    }
-    const w = await flush(merged);
-    fs.unlinkSync(PENDING);
-    log(`replayed pending buffer: ${JSON.stringify(w)}`);
-  } catch (e) {
-    // Leave the file in place; the next tick tries again rather than dropping detected changes.
-    console.error(`pending replay failed, keeping ${PENDING}: ${(e as Error).message}`);
-    throw e; // fail closed: never collect another buffer over an unreplayed change
+  if (!text) { fs.rmSync(PENDING, { force: true }); fs.rmSync(ATTEMPTS, { force: true }); return { ok: true, written: total }; }
+  const t = Date.now();
+  let parsed: Partial<Buffers>[];
+  try { parsed = text.split('\n').filter(Boolean).map((l) => JSON.parse(l)); }
+  catch (e) { return { ok: quarantine(`unparseable: ${(e as Error).message}`), written: total }; }
+  const { chunks, staleLines } = planReplay(parsed, new Date(), REPLAY_SAMPLES);
+  if (label === 'replay' || chunks.length > 1) {
+    const all = mergeBuffers(chunks);
+    log(`${label}: ${rowCount(all)} rows (${all.samples.length} rss_samples) in ${chunks.length} chunks` +
+        (staleLines ? `; ${staleLines} stale line(s), so their channel state / videos.title / re-entries dropped` : ''));
   }
+  const lines = chunks.map((c) => JSON.stringify(c));
+  writePendingLines(lines); // normalized to one chunk per line before the first write
+  if (SHADOW) {
+    // Local first, all chunks, before the Supabase loop (lib/rss/pipeline-shadow.ts shadowChunks):
+    // the readings are safe in the system of record however Supabase fares below. Already-local
+    // chunks (a Supabase retry) are skipped by content key. Never throws.
+    const st = await shadowChunks(chunks.map((c) => ({ samples: c.samples ?? [], responses: c.responses ?? [] })),
+      SHADOW_LEDGER, (c) => shadowSave(SHADOW, c, SHADOW_STATE_CACHE));
+    for (const k of ['chunks', 'rows', 'skipped', 'failed'] as const) shadowTotals[k] += st[k];
+    for (const e of st.errors) console.error(`pipeline shadow (${label}): chunk not written locally: ${e}`);
+  }
+  for (let i = 0; i < chunks.length; i++) {
+    const c = chunks[i];
+    // Both replay and this tick's own flush stop between chunks at the run budget, so the tick
+    // exits cleanly (summary printed) instead of being force-killed mid-chunk.
+    if (job.signal.aborted) {
+      log(`${label}: run budget reached after ${i}/${chunks.length} chunks; the rest stays pending`);
+      return { ok: false, written: total };
+    }
+    try {
+      const w = await flush(c);
+      for (const [k, v] of Object.entries(w)) total[k] = (total[k] ?? 0) + v;
+    } catch (e) {
+      const msg = (e as Error).message;
+      const d = afterFailure(readAttempts(), chunkId(c));
+      console.error(`${label} chunk ${i + 1}/${chunks.length} failed (attempt ${d.attempts}/${MAX_REPLAY_ATTEMPTS}): ${msg}`);
+      if (d.action === 'quarantine') return { ok: quarantine(msg), written: total };
+      fs.writeFileSync(ATTEMPTS, JSON.stringify({ attempts: d.attempts, chunkId: chunkId(c), lastError: msg, lastAt: new Date().toISOString() }));
+      log(`${label} progress: ${i}/${chunks.length} chunks, ${JSON.stringify(total)}; retrying next tick`);
+      return { ok: false, written: total };
+    }
+    writePendingLines(lines.slice(i + 1)); // progress: a crash from here never re-flushes chunk i
+    fs.rmSync(ATTEMPTS, { force: true });
+  }
+  if (label === 'replay') log(`replayed pending buffer in ${secs(t)}s, ${chunks.length} chunks: ${JSON.stringify(total)}`);
+  return { ok: true, written: total };
+}
+
+function quarantine(reason: string): boolean {
+  const dest = path.join(path.dirname(PENDING), quarantineName(new Date()));
+  fs.renameSync(PENDING, dest);
+  fs.rmSync(ATTEMPTS, { force: true });
+  console.error(`!!! PENDING REPLAY QUARANTINED after ${MAX_REPLAY_ATTEMPTS} failed ticks: ${reason}. ` +
+                `Moved to ${dest}; live polling continues. Replay it by moving it back to ${PENDING}.`);
+  return true;
 }
 
 // ---------------------------------------------------------------- phase 0
@@ -255,11 +322,33 @@ if (dry) {
   const total = rows.reduce((a: number, r: any) => a + r.total, 0);
   console.log(`(per-run cap ${maxChannels ?? perRunCap(total)}, concurrency ${RSS_POLICY.concurrency}, tick ${RSS_POLICY.runIntervalSec}s)`);
   await pool.end();
+  await closePipelinePool();
   job.finish();
   process.exit(0);
 }
 
-await replayPending();
+const replayStart = Date.now();
+const replay = await drainPending('replay');
+const budgetIdx = args.indexOf('--max-seconds');
+const budgetSec = budgetIdx >= 0 ? Number(args[budgetIdx + 1]) || null : null;
+const replaySecs = (Date.now() - replayStart) / 1000;
+// A full tick needs ~150 s of fetch + snapshot before it writes anything (2026-09-22). Starting
+// one after a long replay only gets it killed mid-snapshot, wasting every fetch; the channels
+// stay due and the next tick polls them with the whole budget.
+const tooLateToPoll = replay.ok && budgetSec != null && maxChannels == null && replaySecs > budgetSec * 0.35;
+if (!replay.ok || tooLateToPoll) {
+  if (tooLateToPoll) log(`replay used ${replaySecs.toFixed(0)}s of ${budgetSec}s; polling next tick`);
+  process.exitCode = replay.ok ? 0 : 1;
+  if (SHADOW) log(`pipeline shadow: ${JSON.stringify(shadowTotals)}`);
+  try {
+    const { rows: sil } = await pool.query(`select round(extract(epoch from now() - max(at)) / 60)::int as m from rss_samples`);
+    log(`rss_silence_minutes: ${sil[0]?.m ?? 'null'}`);
+  } catch { /* the summary line is best-effort */ }
+  await pool.end();
+  await closePipelinePool();
+  job.finish();
+  process.exit(process.exitCode);
+}
 
 const { rows: totals } = await pool.query(
   `select count(*)::int as n from channel_rss_state c
@@ -285,8 +374,20 @@ const fetched: Fetched[] = [];
 const receipts: unknown[] = [];
 const archiveName = `${now.getTime()}.jsonl.gz`;
 
+// Fetch deadline: stop fetching once FETCH_BUDGET_SHARE of the run budget is spent, so the
+// snapshot, diff and flush always get the rest. Unfetched channels are simply still due. Measured
+// 2026-09-22 under heavy machine load: fetch 269 s for 2,648 feeds, then the snapshot was cut
+// off and the whole tick wrote nothing — three ticks in a row.
+const FETCH_BUDGET_SHARE = 0.45;
+const fetchDeadline = budgetSec != null ? now.getTime() + budgetSec * FETCH_BUDGET_SHARE * 1000 : Infinity;
+let fetchedGroups = 0;
 for (const group of chunk(due as DueChannel[], RSS_POLICY.concurrency)) {
   if (job.signal.aborted) break;
+  if (Date.now() > fetchDeadline) {
+    log(`fetch deadline (${Math.round(budgetSec! * FETCH_BUDGET_SHARE)}s) reached after ${fetchedGroups * RSS_POLICY.concurrency} of ${due.length} channels; the rest stay due`);
+    break;
+  }
+  fetchedGroups++;
   await Promise.all(group.map(async (c) => {
     let status = 0;
     let recorded = false;
@@ -527,19 +628,17 @@ const diffSecs = secs(t2);
 
 const t3 = Date.now();
 let written: Record<string, number> = {};
-// Journal BEFORE the first write: a hard process exit during flush is replayable too.
+// Journal BEFORE the first write: a hard process exit during flush is replayable too. The
+// pending file is empty here (drainPending ran above), so this tick owns it.
 fs.mkdirSync(path.dirname(PENDING), { recursive: true });
-const pendingTmp = `${PENDING}.tmp`;
-const pendingFd = fs.openSync(pendingTmp, 'w');
-try { fs.writeFileSync(pendingFd, JSON.stringify(buf) + '\n'); fs.fsyncSync(pendingFd); }
-finally { fs.closeSync(pendingFd); }
-fs.renameSync(pendingTmp, PENDING);
-try {
-  written = await flush(buf);
-  fs.unlinkSync(PENDING);
-} catch (e) {
-  console.error(`FLUSH FAILED, buffered to ${PENDING} for the next tick: ${(e as Error).message}`);
+writePending([{ ...buf, journaledAt: now.toISOString() }]);
+const drained = await drainPending('flush');
+written = drained.written;
+if (!drained.ok && !job.signal.aborted) {
+  console.error(`FLUSH INCOMPLETE, remaining chunks kept in ${PENDING} for the next tick`);
   process.exitCode = 1;
+} else if (!drained.ok) {
+  log(`flush paused at the run budget; remaining chunks written first thing next tick`);
 }
 const flushSecs = secs(t3);
 
@@ -552,5 +651,14 @@ log(
   `${buf.dueNow.length} marked due-now, ${written['rss_samples'] ?? 0} rss_samples (${sampled} candidates before freshness/replay filtering; ${skippedSamples} unchanged readings skipped)`
 );
 log(`rows written: ${JSON.stringify(written)}`);
+log(`flush step ms: ${JSON.stringify(flushMs)}`);
+if (SHADOW) log(`pipeline shadow: ${JSON.stringify(shadowTotals)}`);
+// Silence detector: the 2026-09-11 outage wrote nothing for 11 days and nobody noticed.
+// Index-only scan on idx_rss_samples_at (EXPLAIN 2026-09-22: 5 buffers, 0.05 ms).
+try {
+  const { rows: sil } = await pool.query(`select round(extract(epoch from now() - max(at)) / 60)::int as m from rss_samples`);
+  log(`rss_silence_minutes: ${sil[0]?.m ?? 'null'}`);
+} catch (e) { console.error(`rss_silence_minutes: unavailable (${(e as Error).message})`); }
 await pool.end();
+await closePipelinePool();
 job.finish();
