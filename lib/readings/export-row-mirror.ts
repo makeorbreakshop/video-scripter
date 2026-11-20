@@ -140,6 +140,27 @@ export async function syncExportMirror(
 }
 
 
+/**
+ * Advance the checkpoint and delete the acknowledged dirty marks.
+ *
+ * The marks are locked in key order BEFORE the delete. capture_mirror_changes() (the trigger on
+ * every mirrored table) upserts its keys `ORDER BY k`; a DELETE driven by jsonb_to_recordset locked
+ * them in arbitrary order instead, and on 2026-11-20 03:20 the two deadlocked (40P01) while a
+ * scoring batch was writing. Same order on both sides means one simply waits for the other.
+ */
+export const MIRROR_ACK_SQL=`/* trace:mirror.ack */
+   WITH receipt AS (
+    UPDATE mirror_registry SET checkpoint=$4 WHERE dataset=$1 AND owner=$3 AND epoch=$6
+      AND coalesce(checkpoint,'')=$5 RETURNING dataset
+   ), locked AS (
+    SELECT d.dataset,d.key FROM mirror_dirty d
+      JOIN jsonb_to_recordset($2::jsonb) x(key text,generation bigint) ON d.key=x.key AND d.generation=x.generation
+      JOIN receipt r ON d.dataset=r.dataset
+     ORDER BY d.key FOR UPDATE OF d
+   ), removed AS (
+    DELETE FROM mirror_dirty d USING locked l WHERE d.dataset=l.dataset AND d.key=l.key RETURNING 1
+   ) SELECT dataset FROM receipt`;
+
 /** A single durable consumer per dataset. Never advance a sequence high-water mark:
  * a lower sequence may commit later. Applied local rows precede exact-generation ACK.
  * The key cursor bounds a pass through continuously arriving work; later marks remain
@@ -159,14 +180,14 @@ export async function syncIncrementalMirror(
  const stats={rows:0,changed:0,bytes:0};
  let checkpoint=String(reg.checkpoint);
  const acknowledge=async(next:string,claims:unknown[]=[])=>{
-  const result=await query(`/* trace:mirror.ack */
-   WITH receipt AS (
-    UPDATE mirror_registry SET checkpoint=$4 WHERE dataset=$1 AND owner=$3 AND epoch=$6
-      AND coalesce(checkpoint,'')=$5 RETURNING dataset
-   ), removed AS (
-    DELETE FROM mirror_dirty d USING jsonb_to_recordset($2::jsonb) x(key text,generation bigint),receipt r
-    WHERE d.dataset=r.dataset AND d.key=x.key AND d.generation=x.generation RETURNING 1
-   ) SELECT dataset FROM receipt`,[spec.name,JSON.stringify(claims),options.owner,next,checkpoint,reg.epoch]);
+  const params=[spec.name,JSON.stringify(claims),options.owner,next,checkpoint,reg.epoch];
+  let result:{rows:any[]};
+  try{result=await query(MIRROR_ACK_SQL,params);}
+  catch(e){
+   // A deadlock aborts the whole statement, CAS included, so one retry is safe.
+   if((e as {code?:string}).code!=='40P01')throw e;
+   result=await query(MIRROR_ACK_SQL,params);
+  }
   if(result.rows.length!==1)throw Error('mirror checkpoint changed concurrently; retry under the job lease');
   checkpoint=next;
  };

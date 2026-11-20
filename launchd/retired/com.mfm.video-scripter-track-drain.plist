@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>EGRESS_JOB</key>
+		<string>track-drain</string>
+		<key>NODE_OPTIONS</key>
+		<string>--import /Users/brandoncullum/video-scripter-v2/video-scripter/lib/ops/egress-meter.ts</string>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.mfm.video-scripter-track-drain</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/npx</string>
+		<string>tsx</string>
+		<string>scripts/track-drain.ts</string>
+	</array>
+	<key>StandardErrorPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/track-drain-launchd.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/track-drain-launchd.log</string>
+	<key>StartInterval</key>
+	<integer>900</integer>
+	<key>WorkingDirectory</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+</dict>
+</plist>

@@ -35,6 +35,7 @@ import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { acquireJobLease } from '../lib/nightly/job-lifecycle';
 import { ExportRowMirror, syncIncrementalMirror, type ExportMirrorSpec } from '../lib/readings/export-row-mirror';
+import { SYNCED_AT } from '../lib/scoring/longtail-mirror';
 
 const args = process.argv.slice(2);
 const has = (f: string) => args.includes(f);
@@ -197,6 +198,9 @@ async function exportTable(name: string): Promise<{ rows: number; bytes: number 
           maxBytes:Number(arg('--max-response-bytes') ?? 2500000000),
           onPage: s=>{if(s.rows && s.rows%100000===0)console.log(`  ${name}: ${s.rows} checked, ${s.changed} changed, ${(s.bytes/1e6).toFixed(1)} MB returned`);},
         });
+        // The fit reads these mirrors instead of production (lib/scoring/longtail-mirror.ts) and
+        // refuses one without a recent stamp; it is written only after a complete sync.
+        mirror.setMetadata(SYNCED_AT,new Date().toISOString());
         for(const r of mirror.rows()){await writer.appendRow(spec.row(r));rows++;}
         if(rows!==stats.rows)throw new Error('mirror count differs from complete source scan');
         console.log(`  ${name}: ${stats.changed}/${rows} changed; ${(stats.bytes/1e6).toFixed(1)} MB returned`);
