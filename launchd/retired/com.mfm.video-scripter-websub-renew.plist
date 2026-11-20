@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>EGRESS_JOB</key>
+		<string>websub-renew</string>
+		<key>NODE_OPTIONS</key>
+		<string>--import /Users/brandoncullum/video-scripter-v2/video-scripter/lib/ops/egress-meter.ts</string>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin</string>
+		<key>WEBSUB_CALLBACK</key>
+		<string>https://www.channelsmith.com/api/websub</string>
+	</dict>
+	<key>Label</key>
+	<string>com.mfm.video-scripter-websub-renew</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/npx</string>
+		<string>tsx</string>
+		<string>scripts/websub-subscribe.ts</string>
+		<string>--limit</string>
+		<string>400</string>
+	</array>
+	<key>StandardErrorPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/websub-renew-launchd.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/websub-renew-launchd.log</string>
+	<key>StartInterval</key>
+	<integer>1800</integer>
+	<key>WorkingDirectory</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+</dict>
+</plist>

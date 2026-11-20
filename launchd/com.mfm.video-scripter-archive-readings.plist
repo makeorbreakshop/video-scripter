@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>EGRESS_JOB</key>
+		<string>archive-readings</string>
+		<key>NODE_OPTIONS</key>
+		<string>--import /Users/brandoncullum/video-scripter-v2/video-scripter/lib/ops/egress-meter.ts</string>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.mfm.video-scripter-archive-readings</string>
+	<key>LowPriorityIO</key>
+	<true/>
+	<key>Nice</key>
+	<integer>10</integer>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>exec ./scripts/archive-then-thin.sh</string>
+	</array>
+	<key>StandardErrorPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/archive-readings-launchd.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/archive-readings-launchd.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>2</integer>
+		<key>Minute</key>
+		<integer>30</integer>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+</dict>
+</plist>

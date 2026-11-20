@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>EGRESS_JOB</key>
+		<string>packaging-counts</string>
+		<key>NODE_OPTIONS</key>
+		<string>--import /Users/brandoncullum/video-scripter-v2/video-scripter/lib/ops/egress-meter.ts</string>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.mfm.video-scripter-packaging-counts</string>
+	<key>LowPriorityIO</key>
+	<true/>
+	<key>Nice</key>
+	<integer>10</integer>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/node</string>
+		<string>--import</string>
+		<string>tsx</string>
+		<string>scripts/refresh-packaging-counts.ts</string>
+		<string>--sleep-ms</string>
+		<string>150</string>
+	</array>
+	<key>StandardErrorPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/packaging-counts-launchd.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter/logs/packaging-counts-launchd.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>5</integer>
+		<key>Minute</key>
+		<integer>5</integer>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/Users/brandoncullum/video-scripter-v2/video-scripter</string>
+</dict>
+</plist>

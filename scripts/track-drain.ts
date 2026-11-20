@@ -5,8 +5,9 @@ import dotenv from 'dotenv'; dotenv.config({ path: '.env.local' });
 import { execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { longformSql } from '../lib/scoring/longform';
+import { NODE_BIN } from '../lib/ops/scheduler-core';
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
-const run = (args: string[]) => { console.log('>', args.join(' ')); try { console.log(execFileSync('npx', ['tsx', ...args], { encoding: 'utf8', timeout: 20 * 60_000 }).trim().split('\n').slice(-2).join('\n')); } catch (e: any) { console.error('failed:', (e.stdout || '').toString().slice(-300), (e.stderr || '').toString().slice(-300)); } };
+const run = (args: string[]) => { console.log('>', args.join(' ')); try { console.log(execFileSync(NODE_BIN, ['--import', 'tsx', ...args], { encoding: 'utf8', timeout: 20 * 60_000 }).trim().split('\n').slice(-2).join('\n')); } catch (e: any) { console.error('failed:', (e.stdout || '').toString().slice(-300), (e.stderr || '').toString().slice(-300)); } };
 // 1. the due view-tracking queue: everything whose next_track_at has come round, inside this
 //    tick's slice of the day's quota. Replaced the 3 AM nightly on 2026-09-05 — a video is now
 //    read on its own clock (last read + its age tier's interval), not on a batch boundary.
