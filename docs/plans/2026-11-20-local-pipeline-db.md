@@ -127,7 +127,17 @@ reads." Being down while the Mac is down is acceptable.
   Original U4 text: rss-poll writes readings, state and triage locally, and only
   title/thumbnail/description versions and `videos.title` to Supabase. Real path: one tick
   against both DBs, with the quarantine count 0 and the triage statements absent from Supabase stats.
-- [ ] **U5 API sampling slice.** launch-track, track-due and sample-batch write view_samples and
+- [ ] **U5 API sampling slice.** Split like U4:
+  - [x] **U5a readings local first, live 2026-11-20 16:42–16:48 ET.** launch-track (`writeSampleBatch`'s
+    SQL, now shared constants), track-due (its API-overwrites-RSS snapshot rule) and touch-drain
+    (the new video row into the local replica plus its first sample/snapshot, one transaction, one
+    shared instant) write local before Supabase, via lib/nightly/api-readings-shadow.ts and
+    lib/ingest/ingest-shadow.ts. Live parity 16:49–16:57 ET: 448 view_samples on both sides; 27 new
+    videos reached the replica directly. Not shadowed: website trackChannel/first sample (U7 inbox),
+    nightly-ingest.
+  - [ ] **U5b move track_schedule and view_tracking_priority local** (launch-track's candidate query,
+    line 111, still hits 57014 on Supabase).
+  Original U5 text: launch-track, track-due and sample-batch write view_samples and
   view_snapshots locally; track_schedule and view_tracking_priority move.
 - [ ] **U6 Observation and scoring slice.** The materializer, bootstrap and score-videos read locally
   and publish `video_scores`, `channel_stats` and `video_chart_current` to Supabase.
@@ -171,6 +181,10 @@ Dependencies: U1 → U2 → U3 → (U4, U5) → U6 → U7 → U8. U9 runs after 
   Supabase twin until launch-track writes locally. Counts are unaffected.
 - **Supabase still drops RSS chunks.** The real tick's chunk 23/34 hit 57014; production holds
   304 quarantined journals (1.2 GB) to date. These can be replayed into local at no Supabase cost.
+
+- **Local Postgres memory is capped at 8 GB shared_buffers** (2026-11-20; was 16 GB): the Mac
+  Studio's swap was 24 of 25.6 GB while other jobs ran. Config in
+  /opt/homebrew/var/postgresql@17/pipeline.conf.
 
 ## Verification Handoff
 
