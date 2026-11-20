@@ -32,6 +32,21 @@ begin
   end loop;
 end $$;
 
+-- Pipeline tables must accept rows for videos the replica has not caught up with yet (it is
+-- refreshed from the export mirror, up to a day behind). Supabase keeps enforcing the real FK.
+-- 2026-11-20: the first shadow tick could not mark ~1,000 new videos per chunk in series_dirty.
+do $$
+declare r record;
+begin
+  for r in select conrelid::regclass as tbl, conname from pg_constraint
+            where contype = 'f' and confrelid = 'public.videos'::regclass
+              and conrelid::regclass::text in ('obs_cache_dirty','observation_change_log','score_dirty','series_dirty',
+                'video_day30_truth','video_obs_cache','view_snapshots','view_tracking_priority')
+  loop
+    execute format('alter table %s drop constraint %I', r.tbl, r.conname);
+  end loop;
+end $$;
+
 -- The replica is filled from the export mirror's projection (scripts/pipeline-load.ts mirror),
 -- which does not carry app-only columns. user_id is the one of those that is NOT NULL upstream.
 alter table public.videos alter column user_id drop not null;

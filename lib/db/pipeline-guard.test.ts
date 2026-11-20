@@ -1,6 +1,7 @@
 // A2's static half (docs/plans/2026-11-20-local-pipeline-db.md): no statement naming a pipeline
 // table may reach Supabase. A source file that names one must either go through pipelinePool()
-// (import lib/db/pipeline) or sit on MIGRATION_BACKLOG below.
+// (import lib/db/pipeline) or sit on MIGRATION_BACKLOG below. A backlog entry is removed when
+// the file stops sending those tables to Supabase, not when it first imports the local pool.
 //
 // The backlog is a ratchet. It may only shrink: a new file naming a pipeline table fails, and a
 // backlog file that no longer names one (or now imports the pipeline pool) fails until its
@@ -110,7 +111,7 @@ const MIGRATION_BACKLOG: Record<string, string> = {
   'scripts/reclaim-table.ts': 'legacy: move or retire at U8',
   'scripts/recompute-baselines.ts': 'legacy: move or retire at U8',
   'scripts/rss-freshness-report.ts': 'U4 rss',
-  'scripts/rss-poll.ts': 'U4 rss (scheduler job)',
+  'scripts/rss-poll.ts': 'U4 rss (scheduler job) — U4a shadow-writes locally, U4b moves reads',
   'scripts/score-gaps.ts': 'U6 observation+scoring',
   'scripts/score-videos.ts': 'U6 observation+scoring (scheduler job)',
   'scripts/scorecard-refresh.ts': 'U6 observation+scoring',
@@ -147,7 +148,9 @@ function violations(): Map<string, string[]> {
     const text = readFileSync(f, 'utf8');
     const rel = path.relative(ROOT, f);
     if (rel === path.join('lib', 'db', 'pipeline.ts')) continue;
-    if (/from\s+['"](?:@\/|\.{1,2}\/)+(?:lib\/)?db\/pipeline['"]/.test(text)) continue;
+    // A backlog file keeps its entry while it dual-writes (it imports the pipeline pool AND still
+    // sends the same tables to Supabase, as rss-poll does during its shadow stage).
+    if (!(rel in MIGRATION_BACKLOG) && /from\s+['"](?:@\/|\.{1,2}\/)+(?:lib\/)?db\/pipeline['"]/.test(text)) continue;
     const tables = pipelineTablesIn(text);
     if (tables.length) found.set(rel, tables);
   }

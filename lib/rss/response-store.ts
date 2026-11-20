@@ -28,7 +28,8 @@ export const RESPONSE_STATE_UPDATE_SQL = `update rss_response_state s set state=
  * (~2.2 KB jsonb) back from the database — ~5.7 MB per 2,600-channel tick.
  */
 export async function saveRssObservations(pool: pg.Pool, samples: RssSampleWrite[], responses: FeedResponse[],
-                                          stateCache?: StateCache): Promise<number> {
+                                          stateCache?: StateCache,
+                                          opts: { rememberCandidates?: boolean } = {}): Promise<number> {
   // A pre-upgrade pending buffer has no response evidence. Preserve its previous behavior.
   if (!responses.length) {
     const n = (await pool.query(INSERT_RSS_SAMPLES_SQL, [JSON.stringify(samples)])).rowCount ?? 0;
@@ -83,7 +84,7 @@ export async function saveRssObservations(pool: pg.Pool, samples: RssSampleWrite
     // queue can never miss a video whose readings committed.
     await markSeriesDirty(client, kept.map(s => s.video_id), { transactional: true });
     await client.query('commit');
-    rememberCommittedRssCandidates(kept);
+    if (opts.rememberCandidates !== false) rememberCommittedRssCandidates(kept);
     if (stateCache) {
       const byId = new Map(updates.map((u) => [u.channel_id, u.state]));
       for (const r of updated.rows as { channel_id: string; version: string | null }[]) {

@@ -45,6 +45,8 @@ import { startManagedJob } from '../lib/nightly/job-lifecycle';
 import { classifyTitleDiff, titleVersionPlan, TITLE_WATCH_UPSERT_SQL } from '../lib/rss/title-change';
 import { markSeriesDirty } from '../lib/readings/series-store';
 import { VIDEO_TEXT_JOIN } from '../lib/app/video-text';
+import { pipelinePool, closePipelinePool } from '../lib/db/pipeline';
+import { shadowEnabled, shadowSave } from '../lib/rss/pipeline-shadow';
 import {
   emptyBuffers, mergeBuffers, planReplay, rowCount, chunkId, afterFailure,
   quarantineName, MAX_REPLAY_ATTEMPTS, REPLAY_MAX_SAMPLES, type Buffers, type ReplayAttempts,
@@ -95,6 +97,12 @@ const empty = emptyBuffers;
 // Local rss_response_state copies, versioned by the server's md5: the state read returns jsonb
 // only for channels whose state changed elsewhere (was ~2.2 KB per polled channel per tick).
 const RESPONSE_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state'));
+// U4a (docs/plans/2026-11-20-local-pipeline-db.md): with PIPELINE_SHADOW=1 every chunk that
+// commits on Supabase is also written to the local pipeline database. Its own state cache,
+// because the versions are each database's md5 of its own row.
+const SHADOW = shadowEnabled() ? pipelinePool() : null;
+const SHADOW_STATE_CACHE = new DiskStateCache(path.join(process.cwd(), '.cache', 'rss-response-state-pipeline'));
+const shadowTotals = { chunks: 0, rows: 0, failed: 0 };
 
 // ---------------------------------------------------------------- flush
 
@@ -261,6 +269,14 @@ async function drainPending(label: string): Promise<{ ok: boolean; written: Reco
     try {
       const w = await flush(c);
       for (const [k, v] of Object.entries(w)) total[k] = (total[k] ?? 0) + v;
+      if (SHADOW) {
+        // After the Supabase commit, never instead of it: a shadow failure is logged and left
+        // for `pipeline-load.ts tail` to refill; it does not touch the pending journal.
+        const r = await shadowSave(SHADOW, { samples: c.samples ?? [], responses: c.responses ?? [] }, SHADOW_STATE_CACHE);
+        shadowTotals.chunks++;
+        if (r.ok) shadowTotals.rows += r.rows;
+        else { shadowTotals.failed++; console.error(`pipeline shadow: chunk ${i + 1}/${chunks.length} not written locally: ${r.error}`); }
+      }
     } catch (e) {
       const msg = (e as Error).message;
       const d = afterFailure(readAttempts(), chunkId(c));
@@ -304,6 +320,7 @@ if (dry) {
   const total = rows.reduce((a: number, r: any) => a + r.total, 0);
   console.log(`(per-run cap ${maxChannels ?? perRunCap(total)}, concurrency ${RSS_POLICY.concurrency}, tick ${RSS_POLICY.runIntervalSec}s)`);
   await pool.end();
+  await closePipelinePool();
   job.finish();
   process.exit(0);
 }
@@ -325,6 +342,7 @@ if (!replay.ok || tooLateToPoll) {
     log(`rss_silence_minutes: ${sil[0]?.m ?? 'null'}`);
   } catch { /* the summary line is best-effort */ }
   await pool.end();
+  await closePipelinePool();
   job.finish();
   process.exit(process.exitCode);
 }
@@ -631,6 +649,7 @@ log(
 );
 log(`rows written: ${JSON.stringify(written)}`);
 log(`flush step ms: ${JSON.stringify(flushMs)}`);
+if (SHADOW) log(`pipeline shadow: ${JSON.stringify(shadowTotals)}`);
 // Silence detector: the 2026-09-11 outage wrote nothing for 11 days and nobody noticed.
 // Index-only scan on idx_rss_samples_at (EXPLAIN 2026-09-22: 5 buffers, 0.05 ms).
 try {
@@ -638,4 +657,5 @@ try {
   log(`rss_silence_minutes: ${sil[0]?.m ?? 'null'}`);
 } catch (e) { console.error(`rss_silence_minutes: unavailable (${(e as Error).message})`); }
 await pool.end();
+await closePipelinePool();
 job.finish();

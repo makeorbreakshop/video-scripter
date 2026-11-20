@@ -6,6 +6,7 @@
 //             → videos, video_scores, view_snapshots (the projected columns they hold)
 //   tail      the days R2 does not hold yet, from Supabase, one bounded day per statement
 //   latest    rebuild rss_latest from the loaded rss_samples
+//   state     copy rss_response_state (8 MB) — run right before turning PIPELINE_SHADOW on
 //   parity    per day and source: local count vs the R2 index (archived days) and vs Supabase
 //             (unarchived days) — check A1
 //
@@ -13,7 +14,7 @@
 // fan a historical backfill out into the dirty queues. Each step is idempotent (on conflict do
 // nothing), so a rerun only fills gaps.
 //
-// Usage: npx tsx scripts/pipeline-load.ts <readings|mirror|tail|latest|parity|all> [--from D] [--to D]
+// Usage: npx tsx scripts/pipeline-load.ts <readings|mirror|tail|latest|state|parity|all> [--from D] [--to D]
 //   PIPELINE_DATABASE_URL  local target (default postgresql://localhost:5434/channelsmith_pipeline)
 //   DATABASE_SESSION_URL / DATABASE_URL  Supabase, for `tail` and `parity` only
 import { spawn } from 'node:child_process';
@@ -195,7 +196,7 @@ function daysAfter(lastArchived: string, through: string): string[] {
 
 // Readings are copied one UTC hour per statement: a whole rss day (~3 M rows) ran past the
 // 280 s timeout on the IO-bound instance (2026-11-20). `slice` is an ISO hour start.
-const TAIL: Record<Source | 'snapshots', { select: (slice: string) => string; table: string }> = {
+const TAIL: Record<Source | 'snapshots' | 'response_state', { select: (slice: string) => string; table: string; merge?: string }> = {
   rss: {
     select: (h) => `select video_id, at, views, likes, time_basis, received_at, archive_ref, model_eligible, conflicted
                         from rss_samples where at >= '${h}'::timestamptz and at < '${h}'::timestamptz + interval '1 hour'`,
@@ -214,11 +215,18 @@ const TAIL: Record<Source | 'snapshots', { select: (slice: string) => string; ta
                         from view_snapshots where snapshot_date = '${day}'::date`,
     table: 'view_snapshots',
   },
+  // rss-poll's per-channel freshness state (8 MB). Copied whole just before PIPELINE_SHADOW is
+  // turned on; from then the shadow advances it locally. Newer state wins on a re-copy.
+  response_state: {
+    select: () => `select * from rss_response_state`,
+    table: 'rss_response_state',
+    merge: `on conflict (channel_id) do update set state = excluded.state`,
+  },
 };
 
 /** One Supabase day → local, streamed COPY to COPY; no row is materialized in this process. */
-function copyDay(source: Source | 'snapshots', day: string): Promise<void> {
-  const { select, table } = TAIL[source];
+function copyDay(source: Source | 'snapshots' | 'response_state', day: string): Promise<void> {
+  const { select, table, merge = 'on conflict do nothing' } = TAIL[source];
   return new Promise((resolve, reject) => {
     // -q: without it the SET's command tag would be the first line of the COPY stream.
     const src = spawn(PSQL, ['-X', '-q', '-v', 'ON_ERROR_STOP=1',
@@ -229,7 +237,7 @@ function copyDay(source: Source | 'snapshots', day: string): Promise<void> {
       '-c', `create temp table t (like ${table} including defaults)`,
       '-c', `\\copy t from pstdin`,
       '-c', `set session_replication_role = replica`,
-      '-c', `insert into ${table} select * from t on conflict do nothing`], { env: psqlEnv(LOCAL) });
+      '-c', `insert into ${table} select * from t ${merge}`], { env: psqlEnv(LOCAL) });
     let err = '', out = '';
     src.stderr.on('data', (d) => { err += d; });
     dst.stderr.on('data', (d) => { err += d; });
@@ -341,6 +349,7 @@ if (step === 'readings' || step === 'all') await loadReadings();
 if (step === 'mirror' || step === 'all') await loadMirrors();
 if (step === 'tail' || step === 'all') await loadTail();
 if (step === 'latest' || step === 'all') await rebuildLatest();
+if (step === 'state' || step === 'all') await copyDay('response_state', 'all');
 if (step === 'parity' || step === 'all') {
   const ok = await parity();
   log(ok ? 'A1: pass' : 'A1: FAIL');

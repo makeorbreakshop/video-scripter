@@ -106,7 +106,17 @@ reads." Being down while the Mac is down is acceptable.
   Check A1 per day and source.
 - [x] **U3 Pool split and guard.** `lib/db/pipeline.ts`, plus the guard test (red first: list the
   current violations).
-- [ ] **U4 RSS slice end to end.** rss-poll writes readings, state and triage locally, and only
+- [ ] **U4 RSS slice end to end.** Split in two (2026-11-20), because the observation jobs read
+  Supabase rss_samples until U6:
+  - [x] **U4a shadow write.** `PIPELINE_SHADOW=1` makes rss-poll write every chunk that committed on
+    Supabase into local too, through the same `saveRssObservations` (lib/rss/pipeline-shadow.ts).
+    It never fails a tick. Real tick 2026-11-20 15:07 ET: 22 chunks, 21,888 readings on both sides,
+    0 shadow failures. Turning it on in the scheduler needs Brandon's yes; run
+    `pipeline-load.ts tail --from <today>` and `state` right before.
+  - [ ] **U4b move the reads.** Triage, LAST_SAMPLES_SQL, the response-state read and the silence check
+    read local. Triage joins videos, description_versions and thumbnail_versions, so those need
+    current local copies first (rss-poll already writes them; load once, then dual-write).
+  Original U4 text: rss-poll writes readings, state and triage locally, and only
   title/thumbnail/description versions and `videos.title` to Supabase. Real path: one tick
   against both DBs, with the quarantine count 0 and the triage statements absent from Supabase stats.
 - [ ] **U5 API sampling slice.** launch-track, track-due and sample-batch write view_samples and
@@ -141,6 +151,18 @@ Dependencies: U1 → U2 → U3 → (U4, U5) → U6 → U7 → U8. U9 runs after 
   (such a file could still send moved-table SQL through the Supabase pool), so the runtime
   `pg_stat_statements` delta stays part of A2. SQL built in a helper is caught in the helper's
   module (e.g. `lib/readings/sql.ts`), not at its call site.
+
+- **The local video replica must be current before U6.** Of 21,888 shadowed readings, 8,799
+  (40 %) had no local `videos` row. About 90 % of those have no Supabase row either: RSS records
+  feed entries it never imports, and the Supabase trigger skips them the same way. The other
+  ~10 % (~880 videos) are new since the export mirror ran, so their readings make no local queue
+  marks until the replica refreshes. The local FKs from pipeline tables to `videos` are dropped
+  (sql/pipeline/001) so those rows are at least accepted.
+- **Local view_samples lags until U5.** `INSERT_TIMED_RSS_SQL` reads the latest API sample to set
+  `time_basis`/eligibility, so a shadowed reading can carry slightly different flags than its
+  Supabase twin until launch-track writes locally. Counts are unaffected.
+- **Supabase still drops RSS chunks.** The real tick's chunk 23/34 hit 57014; production holds
+  304 quarantined journals (1.2 GB) to date. These can be replayed into local at no Supabase cost.
 
 ## Verification Handoff
 
