@@ -68,6 +68,9 @@ export const SCHEDULED_JOBS: ScheduledJob[] = [
   { label: `${P}websub-renew`, scripts: ['scripts/websub-subscribe.ts'], log: L('websub-renew'), staleAfterHours: 3 },
   { label: `${P}weekly-refit`, scripts: ['scripts/weekly-refit.ts'], log: L('weekly-refit'), staleAfterHours: 24 * 8 },
   { label: `${P}storage-guard`, scripts: ['scripts/storage-guard.ts'], log: L('storage-guard'), staleAfterHours: 26 },
+  // Since 2026-11-20 one KeepAlive process runs the 5-30 minute jobs above (lib/ops/scheduler-jobs.ts);
+  // their own entries stay, keyed by their unchanged logs. The scheduler logs every start and exit.
+  { label: `${P}scheduler`, scripts: ['scripts/scheduler.ts'], log: L('scheduler'), staleAfterHours: 1 },
 ];
 
 /**
