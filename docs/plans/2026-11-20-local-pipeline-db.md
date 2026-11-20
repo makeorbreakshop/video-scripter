@@ -101,7 +101,7 @@ reads." Being down while the Mac is down is acceptable.
   plus replica `videos`/`video_scores`, extracted from Supabase with pg_dump 17 `--schema-only`;
   triggers and functions ported. Check: an empty-schema smoke test that inserts one rss row
   and sees it fan out to obs_cache_dirty, score_dirty and series_dirty.
-- [ ] **U2 Bulk load without Supabase egress.** Readings come from R2 parquet days; view_snapshots and
+- [x] **U2 Bulk load without Supabase egress.** Readings come from R2 parquet days; view_snapshots and
   videos from the export mirrors; the last ~4 unarchived days from Supabase, narrow and bounded.
   Check A1 per day and source.
 - [x] **U3 Pool split and guard.** `lib/db/pipeline.ts`, plus the guard test (red first: list the

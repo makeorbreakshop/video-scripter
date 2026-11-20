@@ -260,8 +260,10 @@ async function loadTail() {
     }
   }
   // The mirror's newest snapshot day may be partial (the export ran mid-day), so it is re-read.
+  // An explicit --from earlier than that re-reads from there (a gap behind an earlier tail).
   const newest = await psql(LOCAL, `select max(snapshot_date)::text from view_snapshots`);
-  for (const day of [newest, ...daysAfter(newest, today)].filter(inRange)) {
+  const start = from && from < newest ? from : newest;
+  for (const day of [start, ...daysAfter(start, today)].filter(inRange)) {
     const t0 = Date.now();
     await copyDay('snapshots', day);
     log(`  (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
@@ -305,8 +307,9 @@ async function parity(): Promise<boolean> {
     const last = (await archivedDays(source, false)).at(-1)!.day;
     for (const day of daysAfter(last, today).filter(inRange)) {
       const t = source === 'rss' ? ['rss_samples', 'at'] : ['view_samples', 'sampled_at'];
-      const want = Number(await psql(sb, `set statement_timeout = '280s';
-        select count(*) from ${t[0]} where ${t[1]} >= '${day}'::date and ${t[1]} < '${day}'::date + 1`));
+      // The last line: psql prints the SET's command tag first.
+      const want = Number((await psql(sb, `set statement_timeout = '280s';
+        select count(*) from ${t[0]} where ${t[1]} >= '${day}'::date and ${t[1]} < '${day}'::date + 1`)).split('\n').pop());
       const have = local.get(day) ?? 0;
       // Today's day is still being written on Supabase; local can only trail it.
       const status = have === want ? 'ok' : day === today ? 'live' : 'MISMATCH';
@@ -314,6 +317,19 @@ async function parity(): Promise<boolean> {
       log(`A1 ${source} ${day}: local ${have} vs Supabase ${want} ${status}`);
     }
     log(`A1 ${source}: ${archived.length} archived day(s) checked against R2`);
+  }
+  // Snapshots: the last week, by snapshot_date (indexed on both sides). Older days came from the
+  // export mirror; Supabase thins them past 30 days, so local may legitimately hold more.
+  const q = `select snapshot_date::text, count(*) from view_snapshots
+              where snapshot_date >= current_date - 7 group by 1 order by 1`;
+  const rows = (u: string) => psql(u, q).then((t) => new Map(t.split('\n').filter(Boolean)
+    .map((l) => { const [d, n] = l.split('|'); return [d, Number(n)] as const; })));
+  const [mine, theirs] = await Promise.all([rows(LOCAL), rows(sb)]);
+  for (const [day, want] of theirs) {
+    const have = mine.get(day) ?? 0;
+    const status = have === want ? 'ok' : day === today ? 'live' : 'MISMATCH';
+    if (status === 'MISMATCH') ok = false;
+    log(`A1 snapshots ${day}: local ${have} vs Supabase ${want} ${status}`);
   }
   return ok;
 }
