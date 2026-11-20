@@ -108,6 +108,14 @@ reads." Being down while the Mac is down is acceptable.
   current violations).
 - [ ] **U4 RSS slice end to end.** Split in two (2026-11-20), because the observation jobs read
   Supabase rss_samples until U6:
+  - [x] **U4a live in production since 2026-11-20 15:37 ET** (files copied into the canonical
+    checkout, `PIPELINE_SHADOW=1` in its `.env.local`; remove that line to roll back). Local is
+    written FIRST, every chunk, before the Supabase loop (`shadowChunks`), so a Supabase 57014 no
+    longer loses readings; a content-keyed ledger (`logs/rss-poll-shadow-ledger.json`) stops a
+    Supabase retry from rewriting a chunk locally. Live: the 20:37 tick's 20 chunks (19,814
+    readings) are local while Supabase failed them on every retry; the next tick skipped 3 already
+    local. `pipeline-load.ts quarantine` replayed all 304 quarantined journals: 5,613,858 readings
+    Supabase never took are now in local, 0 failures.
   - [x] **U4a shadow write.** `PIPELINE_SHADOW=1` makes rss-poll write every chunk that committed on
     Supabase into local too, through the same `saveRssObservations` (lib/rss/pipeline-shadow.ts).
     It never fails a tick. Real tick 2026-11-20 15:07 ET: 22 chunks, 21,888 readings on both sides,
